@@ -646,11 +646,9 @@ namespace ProtoBuf.BuildTools.Generators
                         return Member(diagnostics, atMember, name, symbol.Name, "is read-only");
                 }
 
-                if (GetConditionalPattern(memberSource, symbol.Name) is { } conditional)
-                {
-                    return Member(diagnostics, atMember, name, symbol.Name,
-                        $"is conditional via '{conditional}'");
-                }
+                // the {Name}Specified / ShouldSerialize{Name}() conventions: matched by name, and
+                // they *replace* the trivial-value write guard rather than adding to it
+                var writeCondition = GetConditionalPattern(memberSource, symbol.Name, out var specifiedMember);
 
                 if (GetMemberShape(compilation, memberType, surrogates) is not { } shape)
                 {
@@ -740,7 +738,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -757,7 +755,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly,
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
                         subSerializer: subSerializer));
                 }
                 else
@@ -768,7 +766,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember));
                 }
             }
 
@@ -868,26 +866,44 @@ namespace ProtoBuf.BuildTools.Generators
         /// attribute inspection would find them. They change both the write guard and the read path,
         /// so a member using one cannot be emitted from the member alone.
         /// </remarks>
-        private static string? GetConditionalPattern(INamedTypeSymbol type, string memberName)
+        /// <param name="specifiedMember">
+        /// Set when the <c>{Name}Specified</c> convention is in use, since that one is also assigned
+        /// on read; <c>ShouldSerialize{Name}()</c> affects the write only.
+        /// </param>
+        /// <remarks>
+        /// When a member has both, <c>Specified</c> wins - probed against ref-emit, not assumed.
+        /// Both are matched by *name*, so no amount of attribute inspection would find them.
+        /// </remarks>
+        private static string? GetConditionalPattern(INamedTypeSymbol type, string memberName,
+            out string? specifiedMember)
         {
+            specifiedMember = null;
             var specified = memberName + "Specified";
             var shouldSerialize = "ShouldSerialize" + memberName;
+            string? fallback = null;
 
             foreach (var symbol in type.GetMembers())
             {
                 switch (symbol)
                 {
+                    // it is assigned on read, so it has to be settable from here
                     case IPropertySymbol property when property.Name == specified
-                        && property.Type.SpecialType == SpecialType.System_Boolean:
+                        && property.Type.SpecialType == SpecialType.System_Boolean
+                        && property.DeclaredAccessibility == Accessibility.Public
+                        && property.GetMethod is { DeclaredAccessibility: Accessibility.Public }
+                        && property.SetMethod is { DeclaredAccessibility: Accessibility.Public }:
+                        specifiedMember = specified;
                         return specified;
 
                     case IMethodSymbol method when method.Name == shouldSerialize
                         && !method.IsStatic && method.Parameters.Length == 0
+                        && method.DeclaredAccessibility == Accessibility.Public
                         && method.ReturnType.SpecialType == SpecialType.System_Boolean:
-                        return shouldSerialize + "()";
+                        fallback = shouldSerialize + "()";
+                        continue;
                 }
             }
-            return null;
+            return fallback;
         }
 
         private static string AttributeName(AttributeData attribute)

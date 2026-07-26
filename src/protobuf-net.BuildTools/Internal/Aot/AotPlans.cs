@@ -187,8 +187,11 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool wrappedCollection = false, bool wrappedCollectionGroup = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
-            bool isReadOnly = false, string? subSerializer = null)
+            bool isReadOnly = false, string? subSerializer = null,
+            string? writeCondition = null, string? specifiedMember = null)
         {
+            WriteCondition = writeCondition;
+            SpecifiedMember = specifiedMember;
             SubSerializer = subSerializer;
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
@@ -299,6 +302,19 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public string? SubSerializer { get; }
 
         /// <summary>
+        /// The <c>{Name}Specified</c> property or <c>ShouldSerialize{Name}()</c> call that decides
+        /// whether to write this member, without the leading instance. It <em>replaces</em> the
+        /// trivial-value guard rather than adding to it, and wraps the whole write.
+        /// </summary>
+        public string? WriteCondition { get; }
+
+        /// <summary>
+        /// The <c>{Name}Specified</c> property to set on read, if that is the convention in use;
+        /// <c>ShouldSerialize</c> affects the write only.
+        /// </summary>
+        public string? SpecifiedMember { get; }
+
+        /// <summary>
         /// The resolved compatibility level (200, 240 or 300), already through the
         /// <c>DataFormat.WellKnown</c> promotion. Only the BCL kinds consult it.
         /// </summary>
@@ -356,7 +372,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && WrappedCollectionGroup == other.WrappedCollectionGroup
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
-                && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer;
+                && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer
+                && WriteCondition == other.WriteCondition && SpecifiedMember == other.SpecifiedMember;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);
 

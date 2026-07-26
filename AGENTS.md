@@ -454,7 +454,7 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   member, as the element of a collection, and as an inheritance root, and are a reliable source of
   confusion. Even if the emit behaviour can be matched exactly, a diagnostic saying "this is not
   recommended" is probably wanted **either way**.
-- surrogates, serialization callbacks, `ShouldSerialize`/`Specified`
+- serialization callbacks
 
 ### Golden-file tests
 
@@ -671,6 +671,22 @@ Separately, this established that a **nullable element without the attribute is 
 — `List<int?>` emits plain features and only faults at runtime if a null actually turns up. Those are
 now accepted for scalar elements; nullable enum, message and BCL elements stay refused for want of a
 reference.
+
+### `ShouldSerialize` / `Specified`
+
+The `{Name}Specified` property and `ShouldSerialize{Name}()` method conventions, inherited from
+`System.ComponentModel` / `XmlSerializer` and matched **by name** — no attribute inspection would
+find them, which is why they used to drop the whole contract.
+
+- The condition **replaces** the trivial-value guard rather than adding to it, and wraps the whole
+  write. So a member with `Specified = true` writes an explicit zero, which is the entire point.
+- `{Name}Specified` is also **assigned on read**, and that assignment sits *outside* any null test
+  the read itself carries — a null string still sets `NamedSpecified = true`.
+- `ShouldSerialize{Name}()` affects the **write only**.
+- When a member has both, **`Specified` wins**; probed against ref-emit, not assumed.
+
+`Specified` must be a public get/set `bool`, since we assign it; `ShouldSerialize` must be a public
+parameterless `bool` method.
 
 ### Getter-only members
 

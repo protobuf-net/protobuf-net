@@ -383,6 +383,12 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
                 }
+                // the presence flag is set whatever the value was - note it sits *outside* any null
+                // test the assignment itself carries
+                if (member.SpecifiedMember is { } specified)
+                {
+                    Line(sb, indent + 3, $"{instance}.{specified} = true;");
+                }
                 Line(sb, indent + 3, "break;");
                 Line(sb, indent + 2, "}");
             }
@@ -414,11 +420,21 @@ namespace ProtoBuf.BuildTools.Generators
             => contract.Extensible == ProtoExtensibleKind.Typed ? $", typeof({contract.TypeName})" : "";
 
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
-        private static void EmitWriteMembers(StringBuilder sb, int indent, ProtoContractPlan contract,
+        private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
             string instance = "value")
         {
             foreach (var member in contract.Members)
             {
+                // a conditional member wraps its whole write, and *replaces* the trivial-value guard
+                // rather than adding to it - see WriteGuardSuppressed
+                var condition = member.WriteCondition;
+                if (condition is not null)
+                {
+                    Line(sb, baseIndent, $"if ({instance}.{condition})");
+                    Line(sb, baseIndent, "{");
+                }
+                var indent = condition is null ? baseIndent : baseIndent + 1;
+
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
                 Line(sb, indent, $"var tmp{number} = {instance}.{member.Name};");
@@ -427,7 +443,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (member.WrappedValue && member.Repeated.Factory is null && member.Map.Factory is null)
                 {
                     Line(sb, indent, $"state.WriteAny<{member.DeclaredTypeName}>({number}, {WrappedFeatures(member)}, tmp{number}{WrappedSerializer(member)});");
-                    continue;
+                    goto written;
                 }
 
                 if (member.Map.Factory is not null)
@@ -436,7 +452,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, $"{Map(member)}.WriteMap(ref state, {number}, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
                     Line(sb, indent, "}");
-                    continue;
+                    goto written;
                 }
 
                 if (member.Repeated.Factory is not null)
@@ -445,13 +461,13 @@ namespace ProtoBuf.BuildTools.Generators
                     if (member.Repeated.IsValueType)
                     {
                         Line(sb, indent, writeRepeated);
-                        continue;
+                        goto written;
                     }
                     Line(sb, indent, $"if (tmp{number} != null)");
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, writeRepeated);
                     Line(sb, indent, "}");
-                    continue;
+                    goto written;
                 }
 
                 if (member.IsNullable && member.Kind == ProtoMemberKind.Message)
@@ -462,7 +478,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
                     Line(sb, indent, "}");
-                    continue;
+                    goto written;
                 }
 
                 if (member.IsNullable)
@@ -484,7 +500,7 @@ namespace ProtoBuf.BuildTools.Generators
                         EmitScalarWrite(sb, indent + 1, member, number, $"val{number}");
                     }
                     Line(sb, indent, "}");
-                    continue;
+                    goto written;
                 }
 
                 // a tuple writes every scalar unconditionally: it is rebuilt through a constructor,
@@ -493,7 +509,7 @@ namespace ProtoBuf.BuildTools.Generators
                     or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
                 {
                     EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
-                    continue;
+                    goto written;
                 }
 
                 switch (member.Kind)
@@ -508,7 +524,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // else needs the header emitting separately, as ref-emit does
                     case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default:
                         var int32Write = $"state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});";
-                        Line(sb, indent, member.IsRequired
+                        Line(sb, indent, member.IsRequired || member.WriteCondition is not null
                             ? int32Write
                             : $"if ({ScalarGuard(member, $"tmp{number}")}) {int32Write}");
                         break;
@@ -528,7 +544,7 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Guid:
                     case ProtoMemberKind.Decimal:
                         // IsRequired means field presence, so there is no test to emit at all
-                        if (member.IsRequired)
+                        if (member.IsRequired || member.WriteCondition is not null)
                         {
                             EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
                             break;
@@ -566,12 +582,15 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
                         break;
                 }
+
+            written:
+                if (condition is not null) Line(sb, baseIndent, "}");
             }
 
             // the kept-but-unrecognised fields go out after every declared member
             if (contract.Extensible != ProtoExtensibleKind.None)
             {
-                Line(sb, indent, $"state.AppendExtensionData(value{ExtensionType(contract)});");
+                Line(sb, baseIndent, $"state.AppendExtensionData(value{ExtensionType(contract)});");
             }
         }
 

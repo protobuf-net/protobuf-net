@@ -54,16 +54,6 @@ public class UnrenderableDefault
 }
 
 [ProtoContract]
-public class ConditionalMembers
-{
-    [ProtoMember(1)]
-    public int ByShouldSerialize { get; set; }
-
-    // System.ComponentModel convention, matched by name rather than by attribute
-    public bool ShouldSerializeByShouldSerialize() => ByShouldSerialize > 0;
-}
-
-[ProtoContract]
 public class HasCallback
 {
     [ProtoMember(1)]
@@ -75,7 +65,6 @@ public class HasCallback
 
 [ProtoModel]
 [ProtoSerializable(typeof(UnrenderableDefault))]
-[ProtoSerializable(typeof(ConditionalMembers))]
 [ProtoSerializable(typeof(HasCallback))]
 [ProtoSerializable(typeof(ReferencesDropped))]
 [ProtoSerializable(typeof(NoParameterlessConstructor))]

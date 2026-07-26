@@ -1,0 +1,107 @@
+using System.Reflection;
+using AotFixtures.Conditional;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___ConditionalModel : ISerializer<Conditional>
+{
+	Conditional ISerializer<Conditional>.Read(ref ProtoReader.State state, Conditional value)
+	{
+		if (value == null)
+		{
+			Conditional conditional = new Conditional();
+			value = conditional;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+				value.ValueSpecified = true;
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Text = text;
+				}
+				break;
+			}
+			case 3:
+			{
+				int value2 = state.ReadInt32();
+				value.Both = value2;
+				value.BothSpecified = true;
+				break;
+			}
+			case 4:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Named = text;
+				}
+				value.NamedSpecified = true;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Conditional>.Write(ref ProtoWriter.State state, Conditional value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		if (value.ValueSpecified)
+		{
+			int value2 = value.Value;
+			state.WriteInt32Varint(1, value2);
+		}
+		if (value.ShouldSerializeText())
+		{
+			string text = value.Text;
+			state.WriteString(2, text);
+		}
+		if (value.BothSpecified)
+		{
+			int value2 = value.Both;
+			state.WriteInt32Varint(3, value2);
+		}
+		if (value.NamedSpecified)
+		{
+			string text = value.Named;
+			state.WriteString(4, text);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Conditional>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class ConditionalModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___ConditionalModel, T>();
+	}
+}

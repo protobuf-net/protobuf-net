@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **204** of 1392 (86% emitted)
-of which dropped only by cascade: 38
+contracts dropped: **200** of 1392 (86% emitted)
+of which dropped only by cascade: 39
 
 | count | reason |
 | ---: | --- |
@@ -19,7 +19,6 @@ of which dropped only by cascade: 38
 | 12 | PBN2002 there is no public parameterless constructor |
 | 11 | PBN2003 [ProtoMap] is not supported yet |
 | 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
-| 5 | PBN2001 member '…' is conditional via '…' |
 | 4 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
@@ -66,4 +65,4 @@ Member types we could not handle:
 
 **the generated code does not compile** — these are generator bugs, not gaps:
 - PBN9001: 1393 — 'ProtoBuf.ProtoModelAttribute' is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-- CS0433: 2 — The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
+- CS0433: 3 — The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
