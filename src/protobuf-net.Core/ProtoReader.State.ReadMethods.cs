@@ -2,6 +2,7 @@
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -243,6 +244,111 @@ namespace ProtoBuf
                 } while (TryReadFieldHeader(field));
             }
 
+            /// <summary>
+            /// The maximum number of bytes that could still be read at this point: the lesser of what
+            /// the source can supply and what the enclosing length-based sub-message allows. Negative
+            /// if neither is knowable (an unbounded stream, outside of any sub-message).
+            /// </summary>
+            private readonly long GetMaxRemaining()
+            {
+                var reader = _reader;
+                var fromSource = reader.MaxRemaining;
+
+                var blockEnd = reader.blockEnd64;
+                if (blockEnd == long.MaxValue) return fromSource; // not inside a length-based block
+
+                var fromBlock = blockEnd - reader._longPosition;
+                return fromSource < 0 ? fromBlock : Math.Min(fromSource, fromBlock);
+            }
+
+            /// <summary>
+            /// Rejects a length taken from the payload when the source provably cannot satisfy it; this
+            /// is what stops a tiny message from claiming a huge length. Lengths at or below
+            /// <see cref="ProtoReader.EagerAllocationLimit"/> are not policed, and neither is anything
+            /// on a source whose remaining length is unknowable.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            internal void AssertPlausibleLength(long length)
+            {
+                if (length > ProtoReader.EagerAllocationLimit) AssertPlausibleLengthSlow(length);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void AssertPlausibleLengthSlow(long length)
+            {
+                var remaining = GetMaxRemaining();
+                if (remaining >= 0 && length > remaining) ThrowImplausibleLength(length, remaining);
+            }
+
+            /// <summary>
+            /// Indicates whether it is safe to allocate <paramref name="length"/> bytes for data that
+            /// hasn't been read yet. Throws if the source is known to be too short; returns
+            /// <c>false</c> if the length is large and the source can't confirm it, in which case the
+            /// caller must read the data in bounded chunks rather than trusting the prefix.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            internal bool CanAllocate(long length)
+                => length <= ProtoReader.EagerAllocationLimit || CanAllocateSlow(length);
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private bool CanAllocateSlow(long length)
+            {
+                var remaining = GetMaxRemaining();
+                if (remaining < 0) return false; // unknowable; the caller needs to chunk it
+                if (length > remaining) ThrowImplausibleLength(length, remaining);
+                return true;
+            }
+
+            /// <summary>
+            /// Reads <paramref name="length"/> bytes into a pooled buffer that grows only as data
+            /// actually arrives, so that a payload overstating its length fails with EOF having cost
+            /// an allocation proportional to what it supplied rather than what it claimed. The caller
+            /// must return the buffer to <see cref="ArrayPool{T}.Shared"/>.
+            /// </summary>
+            private byte[] ReadBytesOversized(int length)
+            {
+                var pool = ArrayPool<byte>.Shared;
+                var buffer = pool.Rent(Math.Min(length, ProtoReader.EagerAllocationLimit));
+                try
+                {
+                    int have = 0;
+                    while (have < length)
+                    {
+                        if (have == buffer.Length)
+                        {   // double up, but never past what was claimed
+                            var larger = pool.Rent((int)Math.Min((long)buffer.Length * 2, length));
+                            Buffer.BlockCopy(buffer, 0, larger, 0, have);
+                            pool.Return(buffer);
+                            buffer = larger;
+                        }
+                        // cap each read so that the reader's own buffer stays bounded too
+                        var take = Math.Min(Math.Min(buffer.Length, length) - have, ProtoReader.EagerAllocationLimit);
+                        _reader.ImplReadBytes(ref this, new Span<byte>(buffer, have, take)); // EOF if short
+                        have += take;
+                    }
+                    return buffer;
+                }
+                catch
+                {
+                    pool.Return(buffer);
+                    throw;
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal string ReadStringOversized(int bytes)
+            {
+                var buffer = ReadBytesOversized(bytes);
+                try
+                {
+                    return ProtoReader.UTF8.GetString(buffer, 0, bytes);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
+            }
+
             [MethodImpl(ProtoReader.HotPath)]
             private void ReadPackedScalar<TSerializer, TList, T>(ref TList list, WireType wireType, in TSerializer serializer)
                 where TSerializer : ISerializer<T>
@@ -251,6 +357,7 @@ namespace ProtoBuf
                 var bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
                 if (bytes == 0) return;
                 if (bytes < 0) ThrowInvalidLength(bytes);
+                AssertPlausibleLength(bytes);
                 switch (wireType)
                 {
                     case WireType.Fixed32:
@@ -377,19 +484,31 @@ namespace ProtoBuf
                         if (len == 0) return converter.NonNull(value);
                         if (len < 0) ThrowInvalidLength(len);
 
-                        // expand the storage
+                        // Expand allocates the full claimed length before we've read a byte of it; if
+                        // the source can't confirm that it holds that much, buffer the payload first
+                        // (growing only as data arrives) so that a lie costs us what it supplied
+                        byte[] oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
+                        try
+                        {
+                            // expand the storage
 #if DEBUG
-                        var oldLength = converter.GetLength(value);
+                            var oldLength = converter.GetLength(value);
 #endif
-                        var newChunk = converter.Expand(Context, ref value, len);
+                            var newChunk = converter.Expand(Context, ref value, len);
 #if DEBUG
-                        if (converter.GetLength(value) != (oldLength + len))
-                            ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
-                        if (newChunk.Length != len)
-                            ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
-#endif               
-                        // read the data into the new part
-                        _reader.ImplReadBytes(ref this, newChunk.Span);
+                            if (converter.GetLength(value) != (oldLength + len))
+                                ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
+                            if (newChunk.Length != len)
+                                ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
+#endif
+                            // read the data into the new part
+                            if (oversized is null) _reader.ImplReadBytes(ref this, newChunk.Span);
+                            else new ReadOnlySpan<byte>(oversized, 0, len).CopyTo(newChunk.Span);
+                        }
+                        finally
+                        {
+                            if (oversized is not null) ArrayPool<byte>.Shared.Return(oversized);
+                        }
 
                         return value;
                     //case WireType.Varint:
@@ -515,6 +634,10 @@ namespace ProtoBuf
                     case WireType.String:
                         long len = (long)ReadUInt64Varint();
                         if (len < 0) ThrowInvalidOperationException();
+                        // deliberately *not* vetting len against the source length here: nothing is
+                        // allocated from it, and callers depend on corruption being reported by the
+                        // existing end-group/sub-message checks instead (see issue 697). The
+                        // allocating paths still bound themselves via blockEnd64.
                         long lastEnd = reader.blockEnd64;
                         reader.blockEnd64 = reader._longPosition + len;
                         if (reader.IncrDepth()) ThrowTooDeep();
@@ -822,6 +945,10 @@ namespace ProtoBuf
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowInvalidLength(long length) => ThrowInvalidOperationException("Invalid length: " + length.ToString());
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            internal void ThrowImplausibleLength(long length, long remaining)
+                => ThrowInvalidOperationException($"Invalid length: {length}; the source has at most {remaining} bytes remaining");
 
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowArgumentException(string message)
