@@ -13,6 +13,20 @@ public class Wrapper<T>
     [ProtoMember(1)] public T Value { get; set; }
 }
 
+// an interface is an inheritance root like any other; worth proving under ILC, since the sub-type
+// machinery is where the trim annotations had to be got right
+[ProtoContract]
+[ProtoInclude(10, typeof(Courier))]
+public interface IShipper
+{
+}
+
+[ProtoContract]
+public class Courier : IShipper
+{
+    [ProtoMember(1)] public string Company { get; set; }
+}
+
 [ProtoContract]
 public class Customer
 {
@@ -62,6 +76,9 @@ public class Order
 
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
+
+    // an interface root: the same sub-type machinery as Payment, but reached by implementing
+    [ProtoMember(22)] public IShipper Shipper { get; set; }
 
     // closed generics: each instantiation is its own contract, and the value-type one is the
     // interesting case for ILC, which has to generate concrete code for it rather than share
@@ -208,6 +225,7 @@ internal static class Program
             MaybeNone = [],
             Price = new Money(1999),
             Tag = new Wrapper<string> { Value = "boxed" },
+            Shipper = new Courier { Company = "acme" },
             Count = new Wrapper<int> { Value = 11 },
             Legacy = new Legacy
             {
@@ -264,6 +282,7 @@ internal static class Program
 
         // closed generics, one per instantiation
         Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);
+        Check(ref failures, "Shipper", "acme", (clone.Shipper as Courier)?.Company);
         Check(ref failures, "Count", original.Count.Value, clone.Count?.Value);
 
         // getter-only members, restored by writing the backing field through [UnsafeAccessor]

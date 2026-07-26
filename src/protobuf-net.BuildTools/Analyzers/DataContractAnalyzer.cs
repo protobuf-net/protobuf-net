@@ -198,6 +198,14 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
+            id: "PBN0023",
+            title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
+            messageFormat: "The proto-contract '{0}' is an interface; this is supported but not recommended. Each implementation is serialized as a sub-type layer, so a member declared on both the interface and the implementing type is written twice - consider an abstract base class, or declaring the members only on the implementations.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>
@@ -205,6 +213,8 @@ namespace ProtoBuf.BuildTools.Analyzers
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
             ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.EnumDeclaration
+                // the type switch has always handled TypeKind.Interface; it was simply never reached
+                , SyntaxKind.InterfaceDeclaration
 #if !PLAT_NO_RECORDS
                 , SyntaxKind.RecordDeclaration
 #endif
@@ -463,6 +473,21 @@ namespace ProtoBuf.BuildTools.Analyzers
             }
             if (typeContext is not null)
             {
+                // an interface contract works - it is an inheritance root like any other - but the
+                // layering is a trap: the interface's own declared members are written *in addition
+                // to* the implementation's, so a property declared on both goes on the wire twice
+                if (type.TypeKind == TypeKind.Interface
+                    && typeContext.HasFlag(DataContractContextFlags.IsProtoContract))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        descriptor: DataContractAnalyzer.ProtoContractOnInterface,
+                        location: Utils.PickLocation(ref context, type),
+                        messageArgs: new object[] { type.Name },
+                        additionalLocations: null,
+                        properties: null
+                    ));
+                }
+
                 if (!type.IsAbstract // the library won't be directly creating it, so: N/A
                     && hasAnyConstructor && !hasParameterlessConstructor
                     && typeContext.HasFlag(DataContractContextFlags.IsProtoContract)

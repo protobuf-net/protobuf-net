@@ -726,6 +726,61 @@ public record Test(
             Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
             Assert.Equal("There is no suitable (parameterless) constructor available for the proto-contract, and the SkipConstructor flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
+
+        [Fact]
+        public async Task ReportsProtoContractOnInterface()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo
+{
+    [ProtoMember(1)] string Name {get;set;}
+}
+[ProtoContract]
+public class Bar : IFoo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.ProtoContractOnInterface);
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNonDerivedForAnInterfaceRoot()
+        {
+            // an interface include is a legal hierarchy - protobuf-net treats implementing one exactly
+            // as deriving - so PBN0012 (an *error*) must not fire on it
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo { }
+[ProtoContract]
+public class Bar : IFoo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived));
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeOfAnUnrelatedType()
+        {
+            // ...but the check still has to catch a genuinely unrelated include
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo { }
+[ProtoContract]
+public class Bar
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived);
+        }
     }
 }
 

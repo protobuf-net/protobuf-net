@@ -179,7 +179,14 @@ namespace ProtoBuf.BuildTools.Internal
                         AssertAvailableNumber(include.FieldNumber, include.Blame);
                     }
 
-                    if (!SymbolEqualityComparer.Default.Equals(include.Type.BaseType, type))
+                    // an interface is a legal include root - protobuf-net treats implementing one
+                    // exactly as deriving from a base class - so the base-type test alone reports a
+                    // build *error* for a pattern that works perfectly well at runtime
+                    var linked = SymbolEqualityComparer.Default.Equals(include.Type.BaseType, type)
+                        || (type.TypeKind == TypeKind.Interface
+                            && include.Type.AllInterfaces.Contains(type, SymbolEqualityComparer.Default));
+
+                    if (!linked)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             descriptor: DataContractAnalyzer.IncludeNonDerived,

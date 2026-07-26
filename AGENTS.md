@@ -334,6 +334,36 @@ inherited ones belong to the layer that declares them.
 - A hierarchy is **all-or-nothing** in the cascade: one dropped member anywhere takes the whole
   hierarchy, since the root dispatches to each sub-type by name and every type routes back to the root.
 
+#### Interfaces are inheritance roots
+
+An interface contract is **exactly** an inheritance root and needs no new emit shape — the same
+`ISubTypeSerializer`, `is` chain and `ReadSubType` a class root gets. Probed rather than assumed:
+
+| shape | ref-emit | us |
+| --- | --- | --- |
+| `[ProtoContract]` + `[ProtoInclude]`, unary member | works | emitted |
+| same, as `List<IAnimal>` | works | emitted |
+| same, serialized directly as root | works | emitted |
+| `[ProtoContract]`, **no** `[ProtoInclude]` | **throws** `Unexpected sub-type` on write | refused |
+| interface with no attributes, as a member | **throws** `No serializer defined for type` | refused |
+
+The last two are refusals that *match* ref-emit rather than fall short of it. An interface root is
+implicitly abstract, which "abstract is allowed only as a root" already covers; the changes were
+teaching `DerivesFrom` and `GetLinkedBase` that **implementing** counts as deriving. `GetLinkedBase`
+takes the interface that actually names us in a `[ProtoInclude]` — a type usually implements several,
+and the rest are nothing to do with the hierarchy.
+
+**The trap, and the reason `PBN0023` exists:** the interface layer writes its *own* declared members
+in addition to the implementation's, so a property declared on both goes on the wire **twice**. That
+is consistent — the interface property and the implementing property genuinely are different members
+— but it is not what anyone writing that contract intends, and it is why the analyzer says
+"supported but not recommended". `docs/aot-findings.md` has the decoded bytes.
+
+This also turned up a bug in the *shipped* analyzer: `PBN0012` ("declared as an include, but is not
+a direct sub-type") compared `BaseType` only, so it reported a build **error** for every interface
+hierarchy — a pattern that works perfectly well at runtime. Same class of bug as `PBN0015` on
+surrogated types.
+
 Two library-level things this exposed, both invisible on the JIT differential path:
 
 - `TypeHelper<T>.ValueChecker` reached `StructValueChecker<TStruct>` through `MakeGenericType`, so
@@ -449,32 +479,7 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
   reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
   is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
-- **interfaces as contracts** — currently refused by "only classes and structs are supported", which
-  the coverage sweep puts at 20 contracts. Treat with suspicion: they behave differently as a unary
-  member, as the element of a collection, and as an inheritance root, and are a reliable source of
-  confusion. Even if the emit behaviour can be matched exactly, a diagnostic saying "this is not
-  recommended" is probably wanted **either way**.
-
-  Probed against ref-emit, so the next attempt need not re-derive it — an interface is **exactly an
-  inheritance root**, and needs no new emit shape:
-
-  | shape | ref-emit |
-  | --- | --- |
-  | `[ProtoContract]` + `[ProtoInclude]`, unary member | works; sub-type marker then the root layer |
-  | same, as `List<IAnimal>` | works; each element an ordinary message |
-  | same, serialized directly as root | works |
-  | `[ProtoContract]`, **no** `[ProtoInclude]` | **throws** `Unexpected sub-type` on write |
-  | interface with no attributes, as a member | **throws** `No serializer defined for type` |
-
-  So the work is: accept `TypeKind.Interface` when it carries `[ProtoInclude]`, teach `DerivesFrom`
-  and `GetLinkedBase` that *implementing* counts as deriving, and refuse the other two shapes — both
-  of which ref-emit refuses too, so refusing is a match rather than a limitation. An interface root
-  is implicitly abstract, which the "abstract is allowed only as a root" rule already covers.
-
-  The catch, and the reason for the "not recommended" diagnostic: **the interface layer writes its
-  own declared members in addition to the implementation's**, so a property declared on both goes on
-  the wire twice. See `docs/aot-findings.md` for the decoded bytes.
-- serialization callbacks
+- serialization callbacks (see also the four `[OnDeserialized]`-family entries in the sweep)
 
 ### Golden-file tests
 

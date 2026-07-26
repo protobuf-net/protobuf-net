@@ -18,6 +18,13 @@ PBN0013  | Usage    | Warning  | Include not declared
 PBN0014  | Usage    | Warning  | Sub-type not marked as proto-contract
 PBN0015  | Usage    | Error    | No suitable constructor
 PBN0016  | Usage    | Info     | Missing compatibility-level
+PBN0017  | Usage    | Info     | Redundant `[ProtoEnum]` value
+PBN0018  | Usage    | Error    | Enum value not supported
+PBN0019  | Usage    | Info     | Redundant `[ProtoEnum]` name
+PBN0020  | Usage    | Warning  | Member should declare `[DefaultValue]`
+PBN0021  | Usage    | Warning  | Member should update its `[DefaultValue]`
+PBN0022  | Usage    | Warning  | Member should declare `IsRequired`
+PBN0023  | Usage    | Warning  | `[ProtoContract]` on an interface is not recommended
 PBN2000  | ProtoBuf | Error    | Language version too low for the AOT generator
 PBN2001  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported member
 PBN2002  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported declaration

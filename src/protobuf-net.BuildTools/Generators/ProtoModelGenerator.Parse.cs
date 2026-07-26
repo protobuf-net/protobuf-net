@@ -224,9 +224,10 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var isValueType = type.TypeKind == TypeKind.Struct;
-            if (!isValueType && type.TypeKind != TypeKind.Class)
+            var isInterface = type.TypeKind == TypeKind.Interface;
+            if (!isValueType && !isInterface && type.TypeKind != TypeKind.Class)
             {
-                return Contract(diagnostics, at, name, "only classes and structs are supported");
+                return Contract(diagnostics, at, name, "only classes, structs and interfaces are supported");
             }
             // a *closed* generic is an ordinary contract - Roslyn hands us its members already
             // substituted, so `Wrapper<int>` and `Wrapper<string>` are simply two contracts. An open
@@ -284,7 +285,11 @@ namespace ProtoBuf.BuildTools.Generators
                 // unless the payload actually contains one; an abstract leaf would be useless
                 if (type.IsAbstract && subTypes.Count == 0)
                 {
-                    return Contract(diagnostics, at, name, "abstract types are not supported");
+                    // ref-emit refuses this too, though it does so at *write* time with
+                    // "Unexpected sub-type" - there is nothing it could ever construct
+                    return Contract(diagnostics, at, name, isInterface
+                        ? "an interface contract needs [ProtoInclude] for its implementations"
+                        : "abstract types are not supported");
                 }
                 // note the constructor check is deferred: with a surrogate it is the *surrogate* that
                 // gets constructed, which is exactly what lets an immutable type be surrogated
@@ -1325,6 +1330,17 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 if (SymbolEqualityComparer.Default.Equals(current, baseType)) return true;
             }
+
+            // an interface root is linked by *implementing* it, which is the same relationship as
+            // far as [ProtoInclude] is concerned. AllInterfaces, not Interfaces: the implementation
+            // may reach the contract interface through another one
+            if (baseType.TypeKind == TypeKind.Interface)
+            {
+                foreach (var candidate in derived.AllInterfaces)
+                {
+                    if (SymbolEqualityComparer.Default.Equals(candidate, baseType)) return true;
+                }
+            }
             return false;
         }
 
@@ -1343,14 +1359,28 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static INamedTypeSymbol? GetLinkedBase(INamedTypeSymbol type)
         {
-            if (type.BaseType is not { SpecialType: not SpecialType.System_Object } baseType) return null;
-            if (!TryGetSubTypes(baseType, out var subTypes)) return null;
+            if (Links(type.BaseType)) return type.BaseType;
 
-            foreach (var candidate in subTypes)
+            // an interface is an inheritance root exactly as a base class is, so *implementing* one
+            // that declares [ProtoInclude] for us is the same link. Only the interface that names us
+            // counts: a type commonly implements several, and the rest are nothing to do with this
+            foreach (var candidate in type.Interfaces)
             {
-                if (SymbolEqualityComparer.Default.Equals(candidate.Type, type)) return baseType;
+                if (Links(candidate)) return candidate;
             }
             return null;
+
+            bool Links(INamedTypeSymbol? baseType)
+            {
+                if (baseType is not { SpecialType: not SpecialType.System_Object }) return false;
+                if (!TryGetSubTypes(baseType, out var subTypes)) return false;
+
+                foreach (var candidate in subTypes)
+                {
+                    if (SymbolEqualityComparer.Default.Equals(candidate.Type, type)) return true;
+                }
+                return false;
+            }
         }
 
         /// <summary>

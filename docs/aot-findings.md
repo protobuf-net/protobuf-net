@@ -193,6 +193,15 @@ probably not worth it: the services type is what makes the closed-world guarante
 
 ## Fixed on this branch
 
+- **`PBN0012` reported a build error for every interface hierarchy.** "The type '{0}' is declared as
+  an include, but is not a direct sub-type" compared `include.Type.BaseType` against the contract, so
+  an interface root — where the link is *implementing*, not deriving — could never satisfy it. The
+  severity is `Error`, so `[ProtoContract] interface IAnimal` with `[ProtoInclude(10, typeof(Dog))]`
+  failed the build despite round-tripping correctly at runtime. Same class of bug as the `PBN0015`
+  false positive on surrogated types, and found the same way: by adding the pattern to a fixture and
+  watching the build refuse it. The check now also accepts an implemented interface, and there is a
+  test for each direction, so a genuinely unrelated include still errors.
+
 - **`SerializerCache.Get<TProvider, T>` had no trim annotations**, while the
   `SerializerCache<TProvider>` it forwards to needs `DynamicAccess.Serializer` to preserve the
   constructor `Activator.CreateInstance` uses. ILC trimmed it and the first serialize threw
