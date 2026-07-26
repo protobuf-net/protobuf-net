@@ -1,0 +1,165 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.NativeScalars;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___NativeScalarsModel : ISerializer<Natives>
+{
+	Natives ISerializer<Natives>.Read(ref ProtoReader.State state, Natives value)
+	{
+		if (value == null)
+		{
+			Natives natives = new Natives();
+			value = natives;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				nint handle = state.ReadIntPtr();
+				value.Handle = handle;
+				break;
+			}
+			case 2:
+			{
+				nuint size = state.ReadUIntPtr();
+				value.Size = size;
+				break;
+			}
+			case 3:
+			{
+				IntPtr? maybeHandle = state.ReadIntPtr();
+				value.MaybeHandle = maybeHandle;
+				break;
+			}
+			case 4:
+			{
+				UIntPtr? maybeSize = state.ReadUIntPtr();
+				value.MaybeSize = maybeSize;
+				break;
+			}
+			case 5:
+			{
+				nint handle = state.ReadIntPtr();
+				value.Fixed = handle;
+				break;
+			}
+			case 6:
+			{
+				state.Hint(WireType.SignedVariant);
+				nint handle = state.ReadIntPtr();
+				value.Zigzag = handle;
+				break;
+			}
+			case 7:
+			{
+				List<IntPtr> handles = value.Handles;
+				handles = RepeatedSerializer.CreateList<IntPtr>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, handles);
+				if (handles != null)
+				{
+					value.Handles = handles;
+				}
+				break;
+			}
+			case 8:
+			{
+				IntPtr[] more = value.More;
+				more = RepeatedSerializer.CreateVector<IntPtr>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, more);
+				if (more != null)
+				{
+					value.More = more;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Natives>.Write(ref ProtoWriter.State state, Natives value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		nint handle = value.Handle;
+		if (handle != 0L)
+		{
+			state.WriteFieldHeader(1, WireType.Variant);
+			state.WriteIntPtr(handle);
+		}
+		nuint size = value.Size;
+		if ((long)size != 0L)
+		{
+			state.WriteFieldHeader(2, WireType.Variant);
+			state.WriteUIntPtr(size);
+		}
+		IntPtr? maybeHandle = (nint)value.MaybeHandle;
+		if (maybeHandle.HasValue)
+		{
+			IntPtr valueOrDefault = maybeHandle.GetValueOrDefault();
+			state.WriteFieldHeader(3, WireType.Variant);
+			handle = valueOrDefault;
+			state.WriteIntPtr(handle);
+		}
+		UIntPtr? maybeSize = (nuint)value.MaybeSize;
+		if (maybeSize.HasValue)
+		{
+			UIntPtr valueOrDefault2 = maybeSize.GetValueOrDefault();
+			state.WriteFieldHeader(4, WireType.Variant);
+			size = valueOrDefault2;
+			state.WriteUIntPtr(size);
+		}
+		handle = value.Fixed;
+		if (handle != 0L)
+		{
+			state.WriteFieldHeader(5, WireType.Fixed64);
+			state.WriteIntPtr(handle);
+		}
+		handle = value.Zigzag;
+		if (handle != 0L)
+		{
+			state.WriteFieldHeader(6, WireType.SignedVariant);
+			state.WriteIntPtr(handle);
+		}
+		List<nint> handles = value.Handles;
+		if (handles != null)
+		{
+			List<IntPtr> values = handles;
+			RepeatedSerializer.CreateList<IntPtr>().WriteRepeated(ref state, 7, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values);
+		}
+		nint[] more = value.More;
+		if (more != null)
+		{
+			IntPtr[] values2 = more;
+			RepeatedSerializer.CreateVector<IntPtr>().WriteRepeated(ref state, 8, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values2);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Natives>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class NativeScalarsModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___NativeScalarsModel, T>();
+	}
+}

@@ -7,12 +7,12 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **175** of 1392 (88% emitted)
+contracts dropped: **172** of 1392 (88% emitted)
 of which dropped only by cascade: 35
 
 | count | reason |
 | ---: | --- |
-| 34 | PBN2001 member '…' has unsupported type '…' |
+| 30 | PBN2001 member '…' has unsupported type '…' |
 | 20 | PBN2002 only classes and structs are supported |
 | 15 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
 | 12 | PBN2002 there is no public parameterless constructor |
@@ -26,6 +26,7 @@ of which dropped only by cascade: 35
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [NullWrappedCollection] on a non-collection is not supported yet |
 | 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
+| 2 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
@@ -33,7 +34,6 @@ of which dropped only by cascade: 35
 | 1 | PBN2003 [NullWrappedValue] with [DefaultValue] is not supported yet |
 | 1 | PBN2003 [NullWrappedValue] on a non-nullable value is not supported yet |
 | 1 | PBN2001 member '…' is not public |
-| 1 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |
 | 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |
 | 1 | PBN2003 [ProtoContract(UseProtoMembersOnly = ...)] is not supported yet |
@@ -46,10 +46,7 @@ Member types we could not handle:
 | 4 | `Dictionary<…>` |
 | 4 | `System.Uri` |
 | 3 | `List<…>` |
-| 2 | `nint` |
 | 2 | `System.Net.IPAddress` |
-| 1 | `System.DateOnly` |
-| 1 | `System.DateOnly[]` |
 | 1 | `NodaTime.LocalDate` |
 | 1 | `System.IO.Stream` |
 | 1 | `System.Type[]` |

@@ -777,6 +777,30 @@ Nothing else needed changing: the emitted identifiers already sanitise non-alpha
 `Wrapper<int>` and `Wrapper<string>` get distinct accessor names), and `AotSmoke` covers both a
 reference and a value instantiation, the latter being the one ILC must generate concrete code for.
 
+### `nint`, `DateOnly` and `TimeOnly`
+
+Four types with dedicated built-in serializers in `ValueMember.TryGetCoreSerializer`'s switch, which
+the generator simply did not emit. Facts taken from ref-emit:
+
+- `nint`/`nuint` are ordinary varints. Ref-emit asks `GetIntWireType` for width **64 regardless of
+  the platform**, so `FixedSize` is `Fixed64` on both and the wire form does not vary by
+  architecture — which is the only reason these are safe to support at all.
+- `DateOnly`/`TimeOnly` go through `BclHelpers` like the four compatibility-level types, but under a
+  **varint** header rather than a length prefix, and the compatibility level does not reach them.
+- **Both are written unconditionally**, like `DateTime` and for the same reason: zero is a
+  legitimate date, so there is no trivial value to skip. This was caught by the differential suite,
+  which is what a guess would have got wrong — `TimeSpan`, by contrast, *is* guarded against
+  `TimeSpan.Zero`.
+
+`BclHelpers.ReadDateOnly` lives inside `#if NET6_0_OR_GREATER`, so the generator probes for the
+**method**, not the language type — a consumer below net6.0 has `DateOnly` but nothing to call. Two
+consequences worth knowing before touching `DateOnly.input.cs`:
+
+- the golden tests compile against the **netstandard2.0** BuildTools assembly, so the fixture's
+  golden is deliberately a *drop*; the differential suite (net8.0) is where it is really exercised;
+- `AotRefGen` is net472, where `DateOnly` does not exist at all, so that one fixture is explicitly
+  `<Compile Remove>`d from it and has no `.reference.cs`.
+
 ### Schema-only options
 
 Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.

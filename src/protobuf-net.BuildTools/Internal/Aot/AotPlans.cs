@@ -44,6 +44,20 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         Decimal,
 
         /// <summary>
+        /// <c>nint</c>/<c>nuint</c>. An ordinary varint rather than a compatibility-level type; the
+        /// wire width is fixed at 64 regardless of the platform, so the form does not vary.
+        /// </summary>
+        IntPtr,
+        UIntPtr,
+
+        /// <summary>
+        /// net6.0+ only. Unlike the four compatibility-level types, these go through
+        /// <c>BclHelpers</c> under a <b>varint</b> header rather than a length prefix.
+        /// </summary>
+        DateOnly,
+        TimeOnly,
+
+        /// <summary>
         /// A dictionary. Unlike every other kind this says nothing about the member on its own —
         /// <see cref="ProtoMemberPlan.Map"/> carries both element types.
         /// </summary>

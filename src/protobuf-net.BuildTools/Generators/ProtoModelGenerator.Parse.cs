@@ -1532,7 +1532,18 @@ namespace ProtoBuf.BuildTools.Generators
                 return new MemberShape(kind.Value, isNullable, enumType: enumType);
             }
 
-            if (GetScalarKind(type) is { } scalar) return new MemberShape(scalar, isNullable);
+            if (GetScalarKind(type) is { } scalar)
+            {
+                // DateOnly/TimeOnly reach BclHelpers methods that only exist in the net6.0+ build of
+                // the library, so the *reference* has to be checked, not just the type's presence -
+                // the same reason CreateReadOnySet is probed for
+                if (scalar is ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly
+                    && !SupportsDateOnly(compilation))
+                {
+                    return null;
+                }
+                return new MemberShape(scalar, isNullable);
+            }
 
             // erase tuple element names before anything looks at the type: they are decoration, and
             // leaving them on would key the same shape twice and emit a duplicate ISerializer<>
@@ -1905,6 +1916,19 @@ namespace ProtoBuf.BuildTools.Generators
             return null;
         }
 
+        /// <summary>
+        /// Does the referenced protobuf-net carry the <c>DateOnly</c>/<c>TimeOnly</c> helpers?
+        /// </summary>
+        /// <remarks>
+        /// <c>BclHelpers.ReadDateOnly</c> is inside <c>#if NET6_0_OR_GREATER</c>, so a consumer on a
+        /// lower TFM has the language type but not the method to call. Note the golden tests compile
+        /// against the <b>netstandard2.0</b> BuildTools assembly, so this is false there — which is
+        /// why the fixture for these lives beside the differential suite rather than the goldens.
+        /// </remarks>
+        private static bool SupportsDateOnly(Compilation compilation)
+            => compilation.GetTypeByMetadataName("ProtoBuf.BclHelpers")
+                ?.GetMembers("ReadDateOnly").Length > 0;
+
         private static ProtoMemberKind? GetScalarKind(ITypeSymbol type)
         {
             switch (type.SpecialType)
@@ -1924,13 +1948,18 @@ namespace ProtoBuf.BuildTools.Generators
                 case SpecialType.System_String: return ProtoMemberKind.String;
                 case SpecialType.System_DateTime: return ProtoMemberKind.DateTime;
                 case SpecialType.System_Decimal: return ProtoMemberKind.Decimal;
+                case SpecialType.System_IntPtr: return ProtoMemberKind.IntPtr;
+                case SpecialType.System_UIntPtr: return ProtoMemberKind.UIntPtr;
             }
 
-            // TimeSpan and Guid have no SpecialType, so they go by name
+            // the rest have no SpecialType, so they go by name. DateOnly and TimeOnly exist only on
+            // net6.0+, which needs no probing here: a consumer below that has no such type to match
             return type.ToDisplayString() switch
             {
                 "System.TimeSpan" => ProtoMemberKind.TimeSpan,
                 "System.Guid" => ProtoMemberKind.Guid,
+                "System.DateOnly" => ProtoMemberKind.DateOnly,
+                "System.TimeOnly" => ProtoMemberKind.TimeOnly,
                 _ => (ProtoMemberKind?)null,
             };
         }

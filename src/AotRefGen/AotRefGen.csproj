@@ -23,5 +23,9 @@
     <!-- consume the generator's golden fixtures directly, so the reference output can never
          drift from the input the tests actually run against -->
     <Compile Include="../BuildToolsUnitTests/Aot/Data/*.input.cs" LinkBase="Fixtures" />
+
+    <!-- ...except the ones net472 cannot express. DateOnly/TimeOnly do not exist here, so there is
+         no reference output to generate; the differential suite (net8.0) covers them instead -->
+    <Compile Remove="../BuildToolsUnitTests/Aot/Data/DateOnly.input.cs" />
   </ItemGroup>
 </Project>

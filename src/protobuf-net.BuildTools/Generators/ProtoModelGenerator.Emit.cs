@@ -336,6 +336,10 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.TimeSpan:
                     case ProtoMemberKind.Guid:
                     case ProtoMemberKind.Decimal:
+                    case ProtoMemberKind.DateOnly:
+                    case ProtoMemberKind.TimeOnly:
+                    case ProtoMemberKind.IntPtr:
+                    case ProtoMemberKind.UIntPtr:
                         if (ScalarReadHint(member) is { } hint) Line(sb, indent + 3, hint);
                         Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member, discard: member.IsReadOnly)));
                         break;
@@ -514,9 +518,12 @@ namespace ProtoBuf.BuildTools.Generators
 
                 switch (member.Kind)
                 {
-                    // DateTime alone among the BCL types is written unconditionally - zero is a
-                    // legitimate date, so there is no "trivial" value to skip
+                    // the date/time types are written unconditionally - zero is a legitimate date,
+                    // so there is no "trivial" value to skip. TimeSpan is *not* one of these: it is
+                    // guarded against TimeSpan.Zero
                     case ProtoMemberKind.DateTime:
+                    case ProtoMemberKind.DateOnly:
+                    case ProtoMemberKind.TimeOnly:
                         EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
                         break;
 
@@ -543,6 +550,8 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.TimeSpan:
                     case ProtoMemberKind.Guid:
                     case ProtoMemberKind.Decimal:
+                    case ProtoMemberKind.IntPtr:
+                    case ProtoMemberKind.UIntPtr:
                         // IsRequired means field presence, so there is no test to emit at all
                         if (member.IsRequired || member.WriteCondition is not null)
                         {
@@ -1039,6 +1048,11 @@ namespace ProtoBuf.BuildTools.Generators
                 ? (member.DataFormat == ProtoDataFormat.FixedSize ? "GuidBytes" : "GuidString")
                 : "Guid",
             ProtoMemberKind.Decimal => member.CompatibilityLevel >= 300 ? "DecimalString" : "Decimal",
+
+            // these two also live on BclHelpers, but are *not* compatibility-level types: the level
+            // does not reach them, and the header is a varint rather than a length prefix
+            ProtoMemberKind.DateOnly => "DateOnly",
+            ProtoMemberKind.TimeOnly => "TimeOnly",
             _ => null,
         };
 
@@ -1057,7 +1071,15 @@ namespace ProtoBuf.BuildTools.Generators
         /// level 300 (where it instead selects the 16-byte form); <c>DateTime</c> and
         /// <c>TimeSpan</c> honour both. <c>ZigZag</c> is refused â€” it throws while building the model.
         /// </remarks>
-        private static string BclWireType(ProtoMemberPlan member) => member.DataFormat switch
+        private static string BclWireType(ProtoMemberPlan member) => member.Kind switch
+        {
+            // DateOnly/TimeOnly are BclHelpers calls but not compatibility-level types; ref-emit
+            // gives them a plain varint header, and DataFormat does not shift it
+            ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly => "Varint",
+            _ => BclWireTypeByFormat(member),
+        };
+
+        private static string BclWireTypeByFormat(ProtoMemberPlan member) => member.DataFormat switch
         {
             ProtoDataFormat.Group when member.Kind != ProtoMemberKind.Decimal => "StartGroup",
             ProtoDataFormat.FixedSize when member.Kind
@@ -1112,7 +1134,9 @@ namespace ProtoBuf.BuildTools.Generators
         };
 
         private static bool Is64Bit(ProtoMemberKind kind)
-            => kind is ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.Double;
+            => kind is ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.Double
+                // ref-emit asks GetIntWireType for width 64 regardless of the platform
+                or ProtoMemberKind.IntPtr or ProtoMemberKind.UIntPtr;
 
         /// <summary>
         /// The "is this worth writing" test: a member equal to its default is omitted, where the
