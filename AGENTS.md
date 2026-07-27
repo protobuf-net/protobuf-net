@@ -529,6 +529,26 @@ field, so `AppendBytes` (which *concatenates* byte arrays) and `ReadMessage`'s m
 are otherwise untested. It concatenates every sample's payload — itself a valid protobuf message —
 to manufacture the duplicates.
 
+### Down-level consumers
+
+`src/DownLevelSmoke` is a **net472** consumer, and exists because `[UnsafeAccessor]` is net8.0+ while
+a great deal of real code is not. It is the other end of `AotSmoke`: same generator, no accessors
+available, and the property being pinned is *path of least surprise* —
+
+- the shapes that need an accessor (non-public constructor, `init`, non-public setter) are **dropped
+  as warnings**, each naming the shape *and* that net8.0 would fix it. Three warnings, zero errors;
+- everything else in the model still emits, compiles and round-trips. A down-level consumer gets a
+  **smaller model, not a broken build**;
+- a dropped contract then throws `InvalidOperationException` on use — `TypeModel`'s "no serializer"
+  backstop — which the smoke test asserts, so the failure is loud rather than silent.
+
+Note the project needs `<LangVersion>12.0</LangVersion>` (net4x defaults to 7.3, below the `PBN2000`
+floor) and its own `IsExternalInit` polyfill, since net472 cannot even *compile* `init` without one.
+
+An in-memory test was tried first and abandoned: the test process is net8.0, so its reference set
+always supplies `UnsafeAccessorAttribute`, and a reference set thin enough to exclude it is too thin
+to compile the input (CS0518). Being a real down-level project is the only honest version of this.
+
 ### Native AOT smoke test
 
 `src/AotSmoke` is a `PublishAot` console app that round-trips through a generated model and returns
@@ -728,6 +748,25 @@ and a nullable scalar drops the wrapper too (ref-emit emits a pointless `new int
 That includes a **struct or nullable sub-message**: the read runs into a copy and is discarded, so
 the member writes but never comes back. Pointless, but it is what ref-emit emits, and refusing would
 cost the whole contract.
+
+### Constructors C# will not let us call
+
+A **non-public parameterless constructor** goes through `[UnsafeAccessor(UnsafeAccessorKind.Constructor)]`,
+which puts it in the same family as the setters below and produces the same three-way split, probed
+rather than assumed:
+
+| | persisted dll | `RuntimeTypeModel` | generated |
+|---|---|---|---|
+| non-public parameterless ctor | throws *"Non-public member cannot be used with full dll compilation"* | reflection | accessor |
+| no parameterless ctor at all | throws *"No parameterless constructor found"* | **also throws** | refused |
+
+So the first row matches the runtime model, and the second is a refusal that matches *both* ref-emit
+paths — those contracts do not work in protobuf-net at all, which is exactly what the shipped
+analyzer's `PBN0015` (an **error**) already tells you. Worth knowing before trying to "fix" them:
+every one of the sweep's remaining 12 is that shape, not a non-public constructor, so the corpus
+number does not move.
+
+`[ProtoContract(SkipConstructor = true)]` remains the documented way out, and is unaffected.
 
 ### Reaching a member C# will not let us assign
 

@@ -858,27 +858,49 @@ namespace ProtoBuf.BuildTools.Generators
                 : $"{AccessorName(contract, member)}({self}) = {expression};";
         }
 
+        /// <summary>The accessor that calls a contract's non-public parameterless constructor.</summary>
+        private static string ConstructorAccessorName(ProtoContractPlan contract)
+            => "Create_" + Sanitise(contract.TypeName);
+
         /// <summary>A name unique across the whole services type, since the accessors all live on it.</summary>
         private static string AccessorName(ProtoContractPlan contract, ProtoMemberPlan member)
-        {
-            var name = contract.TypeName;
-            if (name.StartsWith("global::", StringComparison.Ordinal)) name = name.Substring(8);
+            => (member.AccessorField is null ? "Set_" : "Field_")
+                + Sanitise(contract.TypeName) + "_" + member.Name;
 
-            var sb = new StringBuilder(member.AccessorField is null ? "Set_" : "Field_");
-            foreach (var c in name)
+        /// <summary>A type's full name, reduced to something legal in an identifier.</summary>
+        private static string Sanitise(string typeName)
+        {
+            if (typeName.StartsWith("global::", StringComparison.Ordinal)) typeName = typeName.Substring(8);
+
+            var sb = new StringBuilder(typeName.Length);
+            foreach (var c in typeName)
             {
                 sb.Append(char.IsLetterOrDigit(c) ? c : '_');
             }
-            return sb.Append('_').Append(member.Name).ToString();
+            return sb.ToString();
         }
 
         /// <summary>
-        /// The <c>[UnsafeAccessor]</c> declarations for every init-only member in the model.
+        /// The <c>[UnsafeAccessor]</c> declarations for everything C# will not let the generated
+        /// code reach directly: init-only and non-public setters, backing fields, and non-public
+        /// parameterless constructors.
         /// </summary>
         private static void EmitAccessors(StringBuilder sb, int indent, ProtoModelPlan plan)
         {
             foreach (var contract in plan.Contracts)
             {
+                if (contract.UsesConstructorAccessor)
+                {
+                    // the surrogate is what gets constructed when there is one, and it is the
+                    // surrogate the parse checked, so name it here too
+                    var constructed = contract.SurrogateTypeName ?? contract.TypeName;
+                    sb.AppendLine();
+                    Line(sb, indent, "[global::System.Runtime.CompilerServices.UnsafeAccessor("
+                        + "global::System.Runtime.CompilerServices.UnsafeAccessorKind.Constructor)]");
+                    Line(sb, indent, $"private static extern {constructed} "
+                        + $"{ConstructorAccessorName(contract)}();");
+                }
+
                 foreach (var member in contract.Members)
                 {
                     if (!member.UsesAccessor || contract.IsTuple) continue;
@@ -1001,8 +1023,14 @@ namespace ProtoBuf.BuildTools.Generators
         private static string Construct(ProtoContractPlan contract, string? typeName = null)
         {
             typeName ??= contract.TypeName;
-            return contract.SkipConstructor
-                ? $"({typeName})global::ProtoBuf.BclHelpers.GetUninitializedObject(typeof({typeName}))"
+            if (contract.SkipConstructor)
+            {
+                return $"({typeName})global::ProtoBuf.BclHelpers.GetUninitializedObject(typeof({typeName}))";
+            }
+            // C# will not let us call a non-public constructor; IL has no such restriction, which is
+            // why the runtime model reaches it by reflection and we reach it by [UnsafeAccessor]
+            return contract.UsesConstructorAccessor
+                ? $"{ConstructorAccessorName(contract)}()"
                 : $"new {typeName}()";
         }
 

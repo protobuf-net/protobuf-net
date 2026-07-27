@@ -1,6 +1,6 @@
 Generator produced 4 diagnostics:
 Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L31 C14
-Contract 'AotFixtures.Dropped.NoParameterlessConstructor' is omitted from the AOT model: there is no public parameterless constructor.
+Contract 'AotFixtures.Dropped.NoParameterlessConstructor' is omitted from the AOT model: there is no parameterless constructor, and SkipConstructor is not set.
 Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L53 C16
 Contract 'AotFixtures.Dropped.UnrenderableDefault' is omitted from the AOT model: this form of [DefaultValue] is not supported yet.
 Warning PBN2003 Aot/Data/Diagnostics/Dropped.input.cs L63 C17

@@ -459,11 +459,34 @@ namespace ProtoBuf.BuildTools.Generators
 
             // whatever actually gets constructed on read: the surrogate when there is one, which is
             // what lets an immutable type be surrogated at all
+            var usesConstructorAccessor = false;
             if (!isValueType && !memberSource.IsAbstract && !memberSource.InstanceConstructors.Any(
                 static ctor => ctor.Parameters.Length == 0
                     && ctor.DeclaredAccessibility == Accessibility.Public))
             {
-                return Contract(diagnostics, at, name, "there is no public parameterless constructor");
+                // a *non-public* parameterless constructor is reachable through [UnsafeAccessor],
+                // which is how RuntimeTypeModel behaves (it calls it by reflection); only ref-emit's
+                // compiled path refuses these, exactly as it does a non-public setter
+                if (SupportsUnsafeAccessor(compilation) && memberSource.InstanceConstructors.Any(
+                    static ctor => ctor.Parameters.Length == 0))
+                {
+                    usesConstructorAccessor = true;
+                }
+                else if (memberSource.InstanceConstructors.Any(static ctor => ctor.Parameters.Length == 0))
+                {
+                    // it exists but we cannot reach it here; say so, and say what would fix it -
+                    // down-level consumers should not be left guessing why a contract vanished
+                    return Contract(diagnostics, at, name,
+                        "its parameterless constructor is not public, which needs [UnsafeAccessor] (net8.0 or later)");
+                }
+                else
+                {
+                    // ref-emit throws "No parameterless constructor found" for this on *both* paths,
+                    // so there is nothing to match; [ProtoContract(SkipConstructor = true)] is the
+                    // documented way out
+                    return Contract(diagnostics, at, name,
+                        "there is no parameterless constructor, and SkipConstructor is not set");
+                }
             }
 
             var members = new List<ProtoMemberPlan>();
@@ -872,7 +895,8 @@ namespace ProtoBuf.BuildTools.Generators
                 rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible,
                 surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying,
-                surrogateSerializer: surrogateSerializer);
+                surrogateSerializer: surrogateSerializer,
+                usesConstructorAccessor: usesConstructorAccessor);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)

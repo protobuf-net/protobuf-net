@@ -473,8 +473,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
             string? toSurrogate = null, string? toUnderlying = null,
-            string? externalSerializerTypeName = null, string? surrogateSerializer = null)
+            string? externalSerializerTypeName = null, string? surrogateSerializer = null,
+            bool usesConstructorAccessor = false)
         {
+            UsesConstructorAccessor = usesConstructorAccessor;
             ExternalSerializerTypeName = externalSerializerTypeName;
             SurrogateSerializer = surrogateSerializer;
             SurrogateTypeName = surrogateTypeName;
@@ -513,6 +515,17 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// any constructor, and the serializer additionally acts as an <c>IFactory&lt;T&gt;</c>.
         /// </summary>
         public bool SkipConstructor { get; }
+
+        /// <summary>
+        /// The parameterless constructor exists but is not public, so it is reached through
+        /// <c>[UnsafeAccessor]</c> rather than <c>new</c>.
+        /// </summary>
+        /// <remarks>
+        /// This matches <c>RuntimeTypeModel</c>, which calls it by reflection. Ref-emit's *compiled*
+        /// path refuses it outright — "Non-public member cannot be used with full dll compilation" —
+        /// the same split as a non-public setter, and resolved the same way.
+        /// </remarks>
+        public bool UsesConstructorAccessor { get; }
 
         /// <summary>
         /// A struct contract: it needs no construction or null test on read, and cannot have
@@ -588,6 +601,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool Equals(ProtoContractPlan? other)
             => other is not null && TypeName == other.TypeName && Members.Equals(other.Members)
                 && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
+                && UsesConstructorAccessor == other.UsesConstructorAccessor
                 && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
                 && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible

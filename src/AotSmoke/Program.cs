@@ -34,6 +34,19 @@ public class Customer
     [ProtoMember(2)] public string Name { get; set; }
 }
 
+/// <summary>
+/// Constructed through <c>[UnsafeAccessor(UnsafeAccessorKind.Constructor)]</c>, which ILC has to
+/// resolve at publish time — and which ref-emit's compiled path refuses outright.
+/// </summary>
+[ProtoContract]
+public class Ticket
+{
+    private Ticket() { }
+    public Ticket(string code) => Code = code;
+
+    [ProtoMember(1)] public string Code { get; set; }
+}
+
 [ProtoContract]
 public class Order
 {
@@ -76,6 +89,9 @@ public class Order
 
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
+
+    // constructed via a non-public constructor, reached through [UnsafeAccessor]
+    [ProtoMember(23)] public Ticket Ticket { get; set; }
 
     // an interface root: the same sub-type machinery as Payment, but reached by implementing
     [ProtoMember(22)] public IShipper Shipper { get; set; }
@@ -226,6 +242,7 @@ internal static class Program
             Price = new Money(1999),
             Tag = new Wrapper<string> { Value = "boxed" },
             Shipper = new Courier { Company = "acme" },
+            Ticket = new Ticket("T-1"),
             Count = new Wrapper<int> { Value = 11 },
             Legacy = new Legacy
             {
@@ -283,6 +300,7 @@ internal static class Program
         // closed generics, one per instantiation
         Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);
         Check(ref failures, "Shipper", "acme", (clone.Shipper as Courier)?.Company);
+        Check(ref failures, "Ticket", "T-1", clone.Ticket?.Code);
         Check(ref failures, "Count", original.Count.Value, clone.Count?.Value);
 
         // getter-only members, restored by writing the backing field through [UnsafeAccessor]
