@@ -297,13 +297,15 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 // a hierarchy is read through SubTypeState<T>, which never constructs the root
                 // unless the payload actually contains one; an abstract leaf would be useless
-                if (type.IsAbstract && subTypes.Count == 0)
+                // an *interface* with no implementations is refused: ref-emit throws
+                // "Unexpected sub-type" for any value, and there is nothing to construct. An
+                // abstract *class* in the same position is emitted rather than refused - see
+                // ProtoContractPlan.IsAbstract - because refusing it cascaded to referrers that
+                // work perfectly well while the member stays null
+                if (isInterface && subTypes.Count == 0)
                 {
-                    // ref-emit refuses this too, though it does so at *write* time with
-                    // "Unexpected sub-type" - there is nothing it could ever construct
-                    return Contract(diagnostics, at, name, isInterface
-                        ? "an interface contract needs [ProtoInclude] for its implementations"
-                        : "abstract types are not supported");
+                    return Contract(diagnostics, at, name,
+                        "an interface contract needs [ProtoInclude] for its implementations");
                 }
                 // note the constructor check is deferred: with a surrogate it is the *surrogate* that
                 // gets constructed, which is exactly what lets an immutable type be surrogated
@@ -1020,7 +1022,8 @@ namespace ProtoBuf.BuildTools.Generators
                 toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying,
                 surrogateSerializer: surrogateSerializer,
                 usesConstructorAccessor: usesConstructorAccessor,
-                callbacks: new(callbacks));
+                callbacks: new(callbacks),
+                isAbstract: type.IsAbstract && subTypes.Count == 0);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -1625,8 +1628,19 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static string? GetDefaultLiteral(AttributeData attribute, ProtoMemberKind kind, string? enumTypeName)
         {
-            if (attribute.ConstructorArguments.Length != 1) return null;
-            if (attribute.ConstructorArguments[0].Value is not object raw) return null;
+            // the (Type, string) form: DefaultValueAttribute's own constructor runs the string
+            // through TypeDescriptor.GetConverter(type).ConvertFromInvariantString and stores the
+            // *converted* result in Value. Roslyn does not run constructors, so we see the raw
+            // string and do the conversion here - invariant, matching the BCL, which is why "1.5"
+            // is unambiguous
+            var arguments = attribute.ConstructorArguments;
+            var raw = arguments.Length switch
+            {
+                1 => arguments[0].Value,
+                2 when arguments[0].Value is INamedTypeSymbol && arguments[1].Value is string text => text,
+                _ => null,
+            };
+            if (raw is null) return null;
 
             // for an enum the constant is its underlying integral value, so render the underlying
             // literal and cast it back; parentheses matter for negatives

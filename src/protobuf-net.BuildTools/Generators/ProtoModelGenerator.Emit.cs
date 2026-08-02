@@ -196,6 +196,14 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
             }
+            // an abstract type with no sub-types cannot be constructed at all; ref-emit still emits
+            // a serializer for it, whose read throws - which is what keeps its *referrers* working
+            // while the member stays null
+            else if (contract.IsAbstract)
+            {
+                Line(sb, indent + 1, $"if ({instance} is null) global::ProtoBuf.Meta.TypeModel"
+                    + $".ThrowCannotCreateInstance(typeof({bodyType}));");
+            }
             // a struct arrives by value and is never null, so there is nothing to construct
             else if (!contract.IsValueType)
             {

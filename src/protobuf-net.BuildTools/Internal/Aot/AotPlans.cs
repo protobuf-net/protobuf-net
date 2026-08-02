@@ -594,8 +594,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
             string? toSurrogate = null, string? toUnderlying = null,
             string? externalSerializerTypeName = null, string? surrogateSerializer = null,
-            bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default)
+            bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default,
+            bool isAbstract = false)
         {
+            IsAbstract = isAbstract;
             Callbacks = callbacks;
             UsesConstructorAccessor = usesConstructorAccessor;
             ExternalSerializerTypeName = externalSerializerTypeName;
@@ -653,6 +655,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// null <c>MethodName</c> means that point has no callback.
         /// </summary>
         public EquatableArray<ProtoCallbackPlan> Callbacks { get; }
+
+        /// <summary>
+        /// An abstract class with no sub-types, which cannot be constructed. protobuf-net accepts
+        /// such a contract - a null member writes nothing - but any real value throws
+        /// <c>Unexpected sub-type</c>, and the read throws <c>ThrowCannotCreateInstance</c>.
+        /// </summary>
+        public bool IsAbstract { get; }
 
         /// <summary>
         /// A struct contract: it needs no construction or null test on read, and cannot have
@@ -729,7 +738,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             => other is not null && TypeName == other.TypeName && Members.Equals(other.Members)
                 && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
                 && UsesConstructorAccessor == other.UsesConstructorAccessor
-                && Callbacks.Equals(other.Callbacks)
+                && Callbacks.Equals(other.Callbacks) && IsAbstract == other.IsAbstract
                 && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
                 && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible

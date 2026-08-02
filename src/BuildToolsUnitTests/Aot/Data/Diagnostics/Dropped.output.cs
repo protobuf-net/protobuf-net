@@ -14,6 +14,7 @@ partial class DroppedModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Features
@@ -122,6 +123,37 @@ partial class DroppedModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Child;
             state.WriteMessage<global::AotFixtures.Dropped.HasUnsupportedMember>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.Dropped.UnrenderableDefault global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
+        {
+            value ??= new global::AotFixtures.Dropped.UnrenderableDefault();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.Value = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Features
