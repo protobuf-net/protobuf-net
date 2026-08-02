@@ -257,9 +257,26 @@ ref-emit:
 - A message key or value is passed `this`, **positionally**: `, this` for a key alone, `, null, this`
   for a value alone, `, this, this` for both.
 
-`DataFormat` selects only the root wire type, so `Group` is the one value that changes anything and
-`FixedSize`/`ZigZag` are silently ignored — the per-key and per-value formats come from `[ProtoMap]`,
-which is refused. An **enum** on either side is refused for the same reason a repeated enum is: the
+The member's own `DataFormat` selects only the root wire type, so `Group` is the one value that
+changes anything there and `FixedSize`/`ZigZag` are silently ignored. The **per-key and per-value**
+formats come from `[ProtoMap]`, and land on the two wire-type arguments rather than on the features:
+
+- the format only bites where there is something to select. A **`string` key ignores `FixedSize`**
+  entirely, and `Group` is meaningful only on a message value.
+- the `FixedSize` **width comes from the element type**, exactly as for a scalar member —
+  `Dictionary<int, int>` gives `Fixed32`, `Dictionary<long, long>` gives `Fixed64`.
+- **`DisableMap = true` lands on `OptionFailOnDuplicateKey`**, the same flag an invalid map shape
+  already gets, since reading switches from `SetValues` to `AddRange`.
+- `KeyFormat`/`ValueFormat` are read **only when `DisableMap` is not set** — `MetaType` takes the
+  `else` branch — so the two do not compose.
+- `[ProtoMap]` on a non-dictionary member is refused: protobuf-net reads it only for a member that
+  resolved as repeated, so anywhere else it is silently inert.
+
+**Convert the format with `GetDataFormat`, never a cast.** `DataFormat` and `ProtoDataFormat` do not
+share ordinals — `DataFormat.FixedSize` is 3, which is `ProtoDataFormat.Group` — so a cast compiles,
+silently mis-maps, and produces a map that disagrees with ref-emit on the wire. This was caught by
+diffing against `MapFormat.reference.cs`, where `ZigZag` (ordinal 1 in both) worked and everything
+else did not, which is exactly the shape of bug a partial test would miss. An **enum** on either side is refused for the same reason a repeated enum is: the
 serializer is resolved from the model. A **repeated value** is refused too, even though ref-emit
 allows nesting on dictionaries specifically (`TestIfNestedNotSupported` exempts maps).
 
@@ -474,7 +491,6 @@ it, since it is a pure compile-time marker.
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
 
-- `[ProtoMap]` (per-key and per-value `DataFormat`)
 - **null-wrapping** (`SerializerFeatures.OptionWrappedValue` and friends) — the
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
   reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it

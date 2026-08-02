@@ -17,6 +17,7 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
         private const string ProtoReservedAttributeName = "ProtoBuf.ProtoReservedAttribute";
         private const string ProtoSurrogateAttributeName = "ProtoBuf.ProtoSurrogateAttribute";
+        private const string ProtoMapAttributeName = "ProtoBuf.ProtoMapAttribute";
         private const string NullWrappedValueAttributeName = "ProtoBuf.NullWrappedValueAttribute";
         private const string NullWrappedCollectionAttributeName = "ProtoBuf.NullWrappedCollectionAttribute";
         private const string ProtoIgnoreAttributeName = "ProtoBuf.ProtoIgnoreAttribute";
@@ -528,6 +529,10 @@ namespace ProtoBuf.BuildTools.Generators
                 bool wrappedValue = false, wrappedValueGroup = false;
                 bool wrappedCollection = false, wrappedCollectionGroup = false;
                 var dataFormat = ProtoDataFormat.Default;
+                var mapKeyFormat = ProtoDataFormat.Default;
+                var mapValueFormat = ProtoDataFormat.Default;
+                var disableMap = false;
+                var hasProtoMap = false;
                 AttributeData? declaredDefault = null;
                 foreach (var attribute in symbol.GetAttributes())
                 {
@@ -548,6 +553,46 @@ namespace ProtoBuf.BuildTools.Generators
                         or ProtoIgnoreAttributeName)
                     {
                         ignored = true;
+                    }
+                    else if (attributeName == ProtoMapAttributeName)
+                    {
+                        // KeyFormat/ValueFormat select the key and value wire types, which the map
+                        // serializer takes as separate arguments; DisableMap drops out of map
+                        // handling altogether, which is the same OptionFailOnDuplicateKey path an
+                        // invalid map shape already takes
+                        hasProtoMap = true;
+                        foreach (var argument in attribute.NamedArguments)
+                        {
+                            // note GetDataFormat, not a cast: DataFormat and ProtoDataFormat do not
+                            // share ordinals, so casting silently maps FixedSize onto Group
+                            switch (argument.Key)
+                            {
+                                case "KeyFormat" when argument.Value.Value is int key:
+                                    if (GetDataFormat(key) is not { } parsedKey)
+                                    {
+                                        return Option(diagnostics, atMember, name, "this DataFormat");
+                                    }
+                                    mapKeyFormat = parsedKey;
+                                    continue;
+                                case "ValueFormat" when argument.Value.Value is int value:
+                                    if (GetDataFormat(value) is not { } parsedValue)
+                                    {
+                                        return Option(diagnostics, atMember, name, "this DataFormat");
+                                    }
+                                    mapValueFormat = parsedValue;
+                                    continue;
+                                case "DisableMap" when argument.Value.Value is bool disable:
+                                    disableMap = disable;
+                                    continue;
+                            }
+                            return Option(diagnostics, atMember, name, $"this form of [{AttributeName(attribute)}]");
+                        }
+                        // note protobuf-net reads KeyFormat/ValueFormat *only* when DisableMap is
+                        // not set, so the two do not compose
+                        if (disableMap)
+                        {
+                            mapKeyFormat = mapValueFormat = ProtoDataFormat.Default;
+                        }
                     }
                     else if (attributeName is NullWrappedValueAttributeName or NullWrappedCollectionAttributeName)
                     {
@@ -753,6 +798,13 @@ namespace ProtoBuf.BuildTools.Generators
                     return Option(diagnostics, atMember, name, "[NullWrappedCollection] on a non-collection");
                 }
 
+                // protobuf-net reads [ProtoMap] only when the member resolved as repeated, so
+                // anywhere else it is silently inert; refusing keeps the surprise visible
+                if (hasProtoMap && !isMap)
+                {
+                    return Option(diagnostics, atMember, name, "[ProtoMap] on a non-dictionary member");
+                }
+
                 // the compatibility level chooses the encoding for the four BCL types, and nothing
                 // else; resolving it for every member would be wasted work
                 var compatibilityLevel = 200;
@@ -801,7 +853,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -819,7 +871,7 @@ namespace ProtoBuf.BuildTools.Generators
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
-                        accessorField: accessorField, subSerializer: subSerializer));
+                        accessorField: accessorField, subSerializer: subSerializer, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else
                 {
@@ -831,7 +883,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
             }
 
@@ -1472,6 +1524,7 @@ namespace ProtoBuf.BuildTools.Generators
                 case XmlArrayAttributeName:
                 case XmlIgnoreAttributeName:
                 case NonSerializedAttributeName:
+                case ProtoMapAttributeName:
                     return false;
             }
 

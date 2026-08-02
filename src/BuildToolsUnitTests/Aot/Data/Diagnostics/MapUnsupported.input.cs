@@ -27,17 +27,26 @@ public class RepeatedValue
     [ProtoMember(1)] public Dictionary<int, List<int>> Value { get; set; }
 }
 
-// [ProtoMap] carries the per-key and per-value DataFormat, which is the only way to change either;
-// it is refused as a significant ProtoBuf attribute we do not act on
+// [ProtoMap] itself is supported (see MapFormat.input.cs); this one is here to prove the enum
+// refusal still applies through it, since the attribute does not change how the key resolves
 [ProtoContract]
-public class Mapped
+public class MappedEnum
 {
     [ProtoMember(1), ProtoMap(KeyFormat = DataFormat.ZigZag)]
-    public Dictionary<int, int> Value { get; set; }
+    public Dictionary<Shade, int> Value { get; set; }
+}
+
+// ...and on a member that is not a dictionary at all, where protobuf-net silently ignores it
+[ProtoContract]
+public class NotADictionary
+{
+    [ProtoMember(1), ProtoMap(KeyFormat = DataFormat.ZigZag)]
+    public List<int> Value { get; set; }
 }
 
 [ProtoModel]
-[ProtoSerializable(typeof(Mapped))]
+[ProtoSerializable(typeof(MappedEnum))]
+[ProtoSerializable(typeof(NotADictionary))]
 [ProtoSerializable(typeof(EnumValue))]
 [ProtoSerializable(typeof(EnumKey))]
 [ProtoSerializable(typeof(RepeatedValue))]

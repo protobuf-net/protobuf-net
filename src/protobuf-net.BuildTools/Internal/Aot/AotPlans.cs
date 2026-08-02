@@ -210,8 +210,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             bool isReadOnly = false, string? subSerializer = null,
             string? writeCondition = null, string? specifiedMember = null,
-            string? accessorField = null)
+            string? accessorField = null,
+            ProtoDataFormat mapKeyFormat = ProtoDataFormat.Default,
+            ProtoDataFormat mapValueFormat = ProtoDataFormat.Default,
+            bool disableMap = false)
         {
+            MapKeyFormat = mapKeyFormat;
+            MapValueFormat = mapValueFormat;
+            DisableMap = disableMap;
             AccessorField = accessorField;
             WriteCondition = writeCondition;
             SpecifiedMember = specifiedMember;
@@ -331,6 +337,26 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public string? AccessorField { get; }
 
         /// <summary>
+        /// From <c>[ProtoMap(KeyFormat = …, ValueFormat = …)]</c>: these select the key and value
+        /// wire types, which the map serializer takes as arguments separate from the map's own
+        /// features. Note the width comes from the *element* type, as it does for a scalar.
+        /// </summary>
+        public ProtoDataFormat MapKeyFormat { get; }
+
+        /// <summary>See <see cref="MapKeyFormat"/>.</summary>
+        public ProtoDataFormat MapValueFormat { get; }
+
+        /// <summary>
+        /// From <c>[ProtoMap(DisableMap = true)]</c>: duplicates throw rather than replacing, which
+        /// is the same <c>OptionFailOnDuplicateKey</c> an invalid map shape already gets.
+        /// </summary>
+        /// <remarks>
+        /// protobuf-net reads <c>KeyFormat</c>/<c>ValueFormat</c> only when this is <i>not</i> set,
+        /// so the two do not compose — see <c>MetaType.ApplyDefaultBehaviour</c>.
+        /// </remarks>
+        public bool DisableMap { get; }
+
+        /// <summary>
         /// What to pass as the sub-serializer for a message member: normally <c>this</c>, but a
         /// contract with a hand-written serializer needs that one handed over instead.
         /// </summary>
@@ -409,6 +435,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
                 && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer
                 && AccessorField == other.AccessorField
+                && MapKeyFormat == other.MapKeyFormat && MapValueFormat == other.MapValueFormat
+                && DisableMap == other.DisableMap
                 && WriteCondition == other.WriteCondition && SpecifiedMember == other.SpecifiedMember;
 
         public override bool Equals(object? obj) => obj is ProtoMemberPlan other && Equals(other);

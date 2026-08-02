@@ -942,9 +942,9 @@ namespace ProtoBuf.BuildTools.Generators
         /// key and value wire types are passed separately.
         /// </summary>
         /// <remarks>
-        /// <c>DataFormat</c> selects the root wire type and nothing else â€” <c>Group</c> is the only
-        /// value that changes anything, since a map is length-prefixed either way. The per-key and
-        /// per-value formats come from <c>[ProtoMap]</c>, which is refused.
+        /// The member's own <c>DataFormat</c> selects the root wire type and nothing else —
+        /// <c>Group</c> is the only value that changes anything, since a map is length-prefixed
+        /// either way. The per-key and per-value formats come from <c>[ProtoMap]</c>.
         /// <c>OptionFailOnDuplicateKey</c> rides on whether the shape is a real protobuf <c>map</c>.
         /// </remarks>
         private static string MapFeatures(ProtoMemberPlan member)
@@ -961,27 +961,48 @@ namespace ProtoBuf.BuildTools.Generators
                 if (member.WrappedCollectionGroup) result += $" | {Features}.OptionWrappedCollectionGroup";
             }
             if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
-            if (!member.Map.IsValidProtobufMap) result += $" | {Features}.OptionFailOnDuplicateKey";
+            // DisableMap lands on the same flag an invalid map shape does: duplicates throw rather
+            // than replacing, because reading switches from SetValues to AddRange
+            if (!member.Map.IsValidProtobufMap || member.DisableMap)
+            {
+                result += $" | {Features}.OptionFailOnDuplicateKey";
+            }
             return result;
         }
 
         private static string MapElementFeatures(ProtoMemberPlan member)
         {
-            var value = $"{Features}.{MapWireType(member.Map.ValueKind)}";
+            var value = $"{Features}.{MapWireType(member.Map.ValueKind, member.MapValueFormat)}";
             if (member.WrappedValue)
             {
                 value += $" | {Features}.OptionWrappedValue";
                 if (member.WrappedValueGroup) value += $" | {Features}.OptionWrappedValueGroup";
             }
-            return $"{Features}.{MapWireType(member.Map.KeyKind)}, {value}";
+            return $"{Features}.{MapWireType(member.Map.KeyKind, member.MapKeyFormat)}, {value}";
         }
 
-        private static string MapWireType(ProtoMemberKind kind) => kind switch
+        /// <summary>
+        /// The wire type for one side of a map, which <c>[ProtoMap]</c>'s per-key and per-value
+        /// <c>DataFormat</c> selects.
+        /// </summary>
+        /// <remarks>
+        /// The format only bites where there is something to select, which was taken from ref-emit
+        /// rather than assumed: a <c>string</c> key ignores <c>FixedSize</c> entirely, and the
+        /// <c>FixedSize</c> width comes from the <em>element</em> type just as it does for a scalar
+        /// member — <c>int</c> gives <c>Fixed32</c>, <c>long</c> gives <c>Fixed64</c>.
+        /// </remarks>
+        private static string MapWireType(ProtoMemberKind kind, ProtoDataFormat format) => kind switch
         {
+            ProtoMemberKind.String or ProtoMemberKind.Bytes => "WireTypeString",
+            ProtoMemberKind.Message => format == ProtoDataFormat.Group ? "WireTypeStartGroup" : "WireTypeString",
             ProtoMemberKind.Single => "WireTypeFixed32",
             ProtoMemberKind.Double => "WireTypeFixed64",
-            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message => "WireTypeString",
-            _ => "WireTypeVarint",
+            _ => format switch
+            {
+                ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
+                ProtoDataFormat.FixedSize => Is64Bit(kind) ? "WireTypeFixed64" : "WireTypeFixed32",
+                _ => "WireTypeVarint",
+            },
         };
 
         /// <summary>
