@@ -1,0 +1,134 @@
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using AotFixtures.EnumContract;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___EnumContractModel : ISerializer<Holder>, ISerializerProxy<Shade>, ISerializerProxy<Shade?>, ISerializerProxy<Size>, ISerializerProxy<Size?>, ISerializerProxy<Options>, ISerializerProxy<Options?>
+{
+	Holder ISerializer<Holder>.Read(ref ProtoReader.State state, Holder value)
+	{
+		if (value == null)
+		{
+			Holder holder = new Holder();
+			value = holder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Shade shade = (Shade)state.ReadInt32();
+				value.Shade = shade;
+				break;
+			}
+			case 2:
+			{
+				Size size = (Size)state.ReadByte();
+				value.Size = size;
+				break;
+			}
+			case 3:
+			{
+				Options options = (Options)state.ReadInt32();
+				value.Options = options;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Holder>.Write(ref ProtoWriter.State state, Holder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Shade shade = value.Shade;
+		if (shade != Shade.None)
+		{
+			int value2 = (int)shade;
+			state.WriteInt32Varint(1, value2);
+		}
+		Size size = value.Size;
+		if (size != Size.Small)
+		{
+			state.WriteFieldHeader(2, WireType.Variant);
+			byte value3 = (byte)size;
+			state.WriteByte(value3);
+		}
+		Options options = value.Options;
+		if (options != Options.None)
+		{
+			int value2 = (int)options;
+			state.WriteInt32Varint(3, value2);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Holder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	[SpecialName]
+	ISerializer<Shade> ISerializerProxy<Shade>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return EnumSerializer.CreateInt32<Shade>();
+	}
+
+	[SpecialName]
+	ISerializer<Shade?> ISerializerProxy<Shade?>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return EnumSerializer.CreateInt32<Shade>();
+	}
+
+	[SpecialName]
+	ISerializer<Size> ISerializerProxy<Size>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return EnumSerializer.CreateByte<Size>();
+	}
+
+	[SpecialName]
+	ISerializer<Size?> ISerializerProxy<Size?>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return EnumSerializer.CreateByte<Size>();
+	}
+
+	[SpecialName]
+	ISerializer<Options> ISerializerProxy<Options>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return EnumSerializer.CreateInt32<Options>();
+	}
+
+	[SpecialName]
+	ISerializer<Options?> ISerializerProxy<Options?>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return EnumSerializer.CreateInt32<Options>();
+	}
+}
+public sealed class EnumContractModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___EnumContractModel, T>();
+	}
+}

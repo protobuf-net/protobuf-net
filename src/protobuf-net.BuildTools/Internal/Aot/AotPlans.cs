@@ -500,6 +500,30 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// <summary>
     /// One contract type that the model can serialize.
     /// </summary>
+    /// <summary>
+    /// An enum that is a contract in its own right: the type name plus the scalar kind of its
+    /// underlying type, which is all <c>EnumSerializer.Create{X}</c> needs.
+    /// </summary>
+    internal readonly struct ProtoEnumPlan : IEquatable<ProtoEnumPlan>
+    {
+        public ProtoEnumPlan(string typeName, ProtoMemberKind underlying)
+        {
+            TypeName = typeName;
+            Underlying = underlying;
+        }
+
+        public string? TypeName { get; }
+
+        public ProtoMemberKind Underlying { get; }
+
+        public bool Equals(ProtoEnumPlan other)
+            => TypeName == other.TypeName && Underlying == other.Underlying;
+
+        public override bool Equals(object? obj) => obj is ProtoEnumPlan other && Equals(other);
+
+        public override int GetHashCode() => (TypeName?.GetHashCode() ?? 0) ^ ((int)Underlying * 397);
+    }
+
     internal sealed class ProtoContractPlan : IEquatable<ProtoContractPlan>
     {
         public ProtoContractPlan(string typeName, EquatableArray<ProtoMemberPlan> members,
@@ -657,13 +681,25 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     internal sealed class ProtoModelPlan : IEquatable<ProtoModelPlan>
     {
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
-            bool annotateTrimming = false)
+            bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default)
         {
             Namespace = nameSpace;
             TypeName = typeName;
             Contracts = contracts;
             AnnotateTrimming = annotateTrimming;
+            Enums = enums;
         }
+
+        /// <summary>
+        /// Enums seeded directly by <c>[ProtoSerializable]</c>, which are served by the same
+        /// <c>ISerializerProxy&lt;TEnum&gt;</c> a repeated enum member uses.
+        /// </summary>
+        /// <remarks>
+        /// <c>[ProtoContract]</c>'s own <c>AttributeUsage</c> allows enums, and ref-emit's model
+        /// serializes an enum root happily — it emits exactly these proxies and no
+        /// <c>ISerializer&lt;TEnum&gt;</c> body, since <c>EnumSerializer</c> is the serializer.
+        /// </remarks>
+        public EquatableArray<ProtoEnumPlan> Enums { get; }
 
         /// <summary>
         /// Whether <c>[DynamicallyAccessedMembers]</c> is available to the consumer, and so whether

@@ -57,6 +57,7 @@ namespace ProtoBuf.BuildTools.Generators
             var diagnostics = new List<PlanDiagnostic>();
             var surrogates = GetSurrogates(compilation, model, diagnostics);
             var parsed = new Dictionary<string, ProtoContractPlan>(StringComparer.Ordinal);
+            var enums = new Dictionary<string, ProtoEnumPlan>(StringComparer.Ordinal);
             var visited = new HashSet<string>(StringComparer.Ordinal);
             var pending = new Queue<INamedTypeSymbol>();
 
@@ -101,6 +102,16 @@ namespace ProtoBuf.BuildTools.Generators
 
                 locations[key] = PlanLocation.From(type);
 
+                // an enum is a contract in its own right - [ProtoContract] allows it, and ref-emit
+                // serves it with the same ISerializerProxy<TEnum> a repeated enum member uses,
+                // rather than an ISerializer<TEnum> body of its own
+                if (type.TypeKind == TypeKind.Enum)
+                {
+                    if (GetEnumPlan(type) is { } enumPlan) enums[key] = enumPlan;
+                    else Contract(diagnostics, locations[key], key, "its underlying type is not supported");
+                    continue;
+                }
+
                 var contract = ParseContract(compilation, type, diagnostics, surrogates,
                     allowParseableTypes, out var reachable, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
@@ -110,13 +121,14 @@ namespace ProtoBuf.BuildTools.Generators
             DropUnsatisfiable(parsed, locations, diagnostics);
 
             ProtoModelPlan? plan = null;
-            if (parsed.Count != 0)
+            if (parsed.Count != 0 || enums.Count != 0)
             {
                 var contracts = parsed.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
+                var enumPlans = enums.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
                 var nameSpace = model.ContainingNamespace is { IsGlobalNamespace: false } ns
                     ? ns.ToDisplayString() : null;
                 plan = new ProtoModelPlan(nameSpace, model.Name, new(contracts),
-                    annotateTrimming: SupportsTrimAnnotations(compilation));
+                    annotateTrimming: SupportsTrimAnnotations(compilation), enums: new(enumPlans));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
@@ -221,7 +233,8 @@ namespace ProtoBuf.BuildTools.Generators
                 if (ParseTuple(compilation, type, diagnostics, out reachable, cancellationToken) is { } tuple) return tuple;
                 reachable = new List<INamedTypeSymbol>();
                 return Contract(diagnostics, at, name,
-                    "the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple");
+                    "it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net "
+                    + "has no serializer for it either: \"No serializer defined for type\"");
             }
 
             var isValueType = type.TypeKind == TypeKind.Struct;
@@ -385,7 +398,8 @@ namespace ProtoBuf.BuildTools.Generators
             if (!isContract && !isDataContract && !isXmlType)
             {
                 return Contract(diagnostics, at, name,
-                    "the type is not marked [ProtoContract], [DataContract] or [XmlType]");
+                    "it is not marked [ProtoContract], [DataContract] or [XmlType], so protobuf-net has no "
+                    + "serializer for it either: \"No serializer defined for type\"");
             }
 
             // protobuf-net serializes anything that *looks* like a list as a collection, even when it
@@ -483,7 +497,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // so there is nothing to match; [ProtoContract(SkipConstructor = true)] is the
                     // documented way out
                     return Contract(diagnostics, at, name,
-                        "there is no parameterless constructor, and SkipConstructor is not set");
+                        "there is no parameterless constructor and SkipConstructor is not set, which protobuf-net "
+                        + "refuses too: \"No parameterless constructor found\"");
                 }
             }
 
@@ -799,7 +814,9 @@ namespace ProtoBuf.BuildTools.Generators
                 // a map is repeated too, and wraps exactly as a collection does
                 if (wrappedCollection && !isCollection && !isMap)
                 {
-                    return Option(diagnostics, atMember, name, "[NullWrappedCollection] on a non-collection");
+                    return Contract(diagnostics, atMember, name,
+                        $"member '{symbol.Name}' has [NullWrappedCollection] on a non-collection, which protobuf-net "
+                        + "refuses: \"NullWrappedCollection can only be used with collection types\"");
                 }
 
                 // protobuf-net reads [ProtoMap] only when the member resolved as repeated, so
@@ -2111,6 +2128,22 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool SupportsDateOnly(Compilation compilation)
             => compilation.GetTypeByMetadataName("ProtoBuf.BclHelpers")
                 ?.GetMembers("ReadDateOnly").Length > 0;
+
+        /// <summary>
+        /// An enum seeded as a contract: all that is needed is its underlying scalar, which picks
+        /// the <c>EnumSerializer.Create{X}</c> overload.
+        /// </summary>
+        private static ProtoEnumPlan? GetEnumPlan(INamedTypeSymbol type)
+        {
+            if (type.EnumUnderlyingType is not { } underlying) return null;
+            if (GetScalarKind(underlying) is not { } kind) return null;
+
+            // the CLR permits char-backed enums even though C# cannot declare one; there is no way
+            // to test that shape from C#, so it is refused here as it is for a member
+            if (kind == ProtoMemberKind.Char) return null;
+
+            return new ProtoEnumPlan(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), kind);
+        }
 
         private static ProtoMemberKind? GetScalarKind(ITypeSymbol type)
         {

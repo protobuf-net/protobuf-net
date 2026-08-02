@@ -716,6 +716,13 @@ namespace ProtoBuf.BuildTools.Generators
         private static SortedDictionary<string, ProtoMemberKind> EnumProxies(ProtoModelPlan plan)
         {
             var result = new SortedDictionary<string, ProtoMemberKind>(StringComparer.Ordinal);
+
+            // an enum seeded as a contract in its own right is served by the same proxy
+            foreach (var seeded in plan.Enums)
+            {
+                if (seeded.TypeName is { } name) result[name] = seeded.Underlying;
+            }
+
             foreach (var contract in plan.Contracts)
             {
                 foreach (var member in contract.Members)

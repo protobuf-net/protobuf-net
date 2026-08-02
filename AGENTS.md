@@ -487,6 +487,38 @@ the sanitised contract type plus the member; a struct target takes `ref`.
 Note `AotRefGen` is net472 and so predates `IsExternalInit`; `src/AotRefGen/Polyfills.cs` declares
 it, since it is a pure compile-time marker.
 
+### Enums as contracts
+
+`[ProtoContract]`'s own `AttributeUsage` allows **class, struct, enum and interface**, and an enum
+seeded by `[ProtoSerializable]` is a model root in its own right. It needs no new emit shape: ref-emit
+puts `ISerializerProxy<TEnum>` and `ISerializerProxy<TEnum?>` on the services type and **no
+`ISerializer<TEnum>` body at all**, because `EnumSerializer` *is* the serializer — the same proxies a
+repeated or null-wrapped enum member already requires, with the same
+`EnumSerializer.Create{Underlying}<TEnum>()` body.
+
+So a seeded enum joins the proxy set rather than becoming a contract plan; `ProtoEnumPlan` carries
+just the type name and the underlying scalar kind. Reached as a *member* an enum was always an inline
+scalar, and still is — the two paths coexist, which the fixture pins.
+
+### Telling our gaps from protobuf-net's
+
+Several refusals are **matches** rather than shortfalls: protobuf-net throws for them too, so there is
+no behaviour to reproduce and nothing outstanding. These were established by probing
+`RuntimeTypeModel`, and their diagnostics quote what it says so they stop reading as our backlog:
+
+| shape | what protobuf-net does |
+| --- | --- |
+| no parameterless constructor, no `SkipConstructor` | throws *"No parameterless constructor found"* |
+| a member type that is not a contract | throws *"No serializer defined for type"* |
+| lone `[NullWrappedValue]` on a non-scalar / non-nullable / with `[DefaultValue]` | throws |
+| `[NullWrappedCollection]` on a non-collection | throws *"can only be used with collection types"* |
+| `[ProtoInclude(tag, "TypeName")]` | resolves at runtime; throws *"Unable to resolve sub-type"* even for a live type |
+
+**Audit before building.** Three separate features turned out to be already-working or
+already-refused when checked against the runtime model rather than assumed from the sweep table —
+`System.Uri` (inbuilt), null-wrapped collection elements (supported), enums as contracts (supported).
+A category sitting in the drop table is evidence of a *diagnostic*, not of missing capability.
+
 ### Not yet supported
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
