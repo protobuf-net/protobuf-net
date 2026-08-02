@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
 using System.Collections.Generic;
@@ -344,6 +344,18 @@ namespace ProtoBuf.BuildTools.Generators
                         if (ScalarReadHint(member) is { } hint) Line(sb, indent + 3, hint);
                         Line(sb, indent + 3, Assign(contract, member, target, ScalarRead(member, discard: member.IsReadOnly)));
                         break;
+                    case ProtoMemberKind.Uri:
+                        // an empty string means null, and the assignment is guarded on that rather
+                        // than on the string itself - ReadString never returns null for a present field
+                        Line(sb, indent + 3, $"var tmp{number} = state.ReadString();");
+                        if (member.IsReadOnly)
+                        {
+                            Line(sb, indent + 3, $"_ = tmp{number}.Length != 0 ? {NewUri($"tmp{number}")} : null;");
+                            break;
+                        }
+                        Line(sb, indent + 3, $"if (tmp{number}.Length != 0) "
+                            + Assign(contract, member, target, NewUri($"tmp{number}")));
+                        break;
                     case ProtoMemberKind.String when member.IsReadOnly:
                         Line(sb, indent + 3, "state.ReadString();");
                         break;
@@ -589,6 +601,14 @@ namespace ProtoBuf.BuildTools.Generators
                         // a value type is never null, and has no trivial value to compare against
                         EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
                         break;
+                    case ProtoMemberKind.Uri:
+                        // the null test is explicit, unlike a plain string: WriteString(int, string)
+                        // would skip a null itself, but OriginalString would already have thrown
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number}.OriginalString);");
+                        Line(sb, indent, "}");
+                        break;
                     case ProtoMemberKind.Bytes:
                         // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its
                         // own field header, so both are explicit here
@@ -784,7 +804,8 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 ProtoMemberKind.Single => "WireTypeFixed32",
                 ProtoMemberKind.Double => "WireTypeFixed64",
-                ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message => "WireTypeString",
+                ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message
+                    or ProtoMemberKind.Uri => "WireTypeString",
                 _ => "WireTypeVarint",
             },
         };
@@ -993,7 +1014,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static string MapWireType(ProtoMemberKind kind, ProtoDataFormat format) => kind switch
         {
-            ProtoMemberKind.String or ProtoMemberKind.Bytes => "WireTypeString",
+            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Uri => "WireTypeString",
             ProtoMemberKind.Message => format == ProtoDataFormat.Group ? "WireTypeStartGroup" : "WireTypeString",
             ProtoMemberKind.Single => "WireTypeFixed32",
             ProtoMemberKind.Double => "WireTypeFixed64",
@@ -1154,6 +1175,12 @@ namespace ProtoBuf.BuildTools.Generators
                 is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan => "Fixed64",
             _ => "String",
         };
+
+        /// <summary>
+        /// <c>UriDecorator</c>'s read: relative and absolute both round-trip, hence the kind.
+        /// </summary>
+        private static string NewUri(string text)
+            => $"new global::System.Uri({text}, global::System.UriKind.RelativeOrAbsolute)";
 
         private static string ScalarRead(ProtoMemberPlan member, bool discard = false)
         {

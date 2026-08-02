@@ -7,12 +7,12 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **139** of 1392 (91% emitted)
+contracts dropped: **137** of 1392 (91% emitted)
 of which dropped only by cascade: 31
 
 | count | reason |
 | ---: | --- |
-| 30 | PBN2001 member '…' has unsupported type '…' |
+| 27 | PBN2001 member '…' has unsupported type '…' |
 | 14 | PBN2002 only classes, structs and interfaces are supported |
 | 12 | PBN2002 there is no parameterless constructor, and SkipConstructor is not set |
 | 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
@@ -21,10 +21,10 @@ of which dropped only by cascade: 31
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
+| 3 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2003 [NullWrappedCollection] on a non-collection is not supported yet |
 | 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
-| 2 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
@@ -42,9 +42,8 @@ Member types we could not handle:
 
 | count | type |
 | ---: | --- |
-| 5 | `System.Type` |
+| 6 | `System.Type` |
 | 4 | `Dictionary<…>` |
-| 4 | `System.Uri` |
 | 3 | `List<…>` |
 | 2 | `System.Net.IPAddress` |
 | 1 | `NodaTime.LocalDate` |

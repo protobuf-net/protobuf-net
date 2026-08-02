@@ -2136,6 +2136,7 @@ namespace ProtoBuf.BuildTools.Generators
             return type.ToDisplayString() switch
             {
                 "System.TimeSpan" => ProtoMemberKind.TimeSpan,
+                "System.Uri" => ProtoMemberKind.Uri,
                 "System.Guid" => ProtoMemberKind.Guid,
                 "System.DateOnly" => ProtoMemberKind.DateOnly,
                 "System.TimeOnly" => ProtoMemberKind.TimeOnly,

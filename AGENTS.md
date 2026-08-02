@@ -881,6 +881,23 @@ consequences worth knowing before touching `DateOnly.input.cs`:
 - `AotRefGen` is net472, where `DateOnly` does not exist at all, so that one fixture is explicitly
   `<Compile Remove>`d from it and has no `.reference.cs`.
 
+### `System.Uri`
+
+**`Uri` is an inbuilt scalar, not a surrogate case** — worth stating plainly, because it looks like
+the canonical "type you don't own and must surrogate" and is not. `ProtoTypeCode.Uri` resolves to
+`StringSerializer` wrapped in a `UriDecorator`, and `SetSurrogate` on it *throws*: "Data of this type
+has inbuilt behaviour, and cannot be added to a model in this way".
+
+On the wire it is a plain string. Two details from ref-emit rather than inference:
+
+- the write's **null test is explicit**, unlike a plain string where `WriteString(int, string)` skips
+  nulls itself — by then `OriginalString` would already have thrown;
+- the read treats an **empty string as null** (`text.Length != 0 ? new Uri(…) : null`), and the kind
+  is `UriKind.RelativeOrAbsolute`, so relative URIs round-trip.
+
+As an element or a map value it is simply a string-typed scalar; the repeated and map serializers
+handle it with no proxy.
+
 ### Parseable types
 
 A type with a `ToString()` and a `static T Parse(string)` can go on the wire as a string

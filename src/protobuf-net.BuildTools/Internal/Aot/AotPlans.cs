@@ -65,6 +65,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         Parseable,
 
         /// <summary>
+        /// <c>System.Uri</c>, which protobuf-net has inbuilt behaviour for: a plain string on the wire,
+        /// <c>OriginalString</c> out and <c>new Uri(s, UriKind.RelativeOrAbsolute)</c> back, with an
+        /// empty string meaning null. Not a surrogate case - <c>SetSurrogate</c> refuses it outright.
+        /// </summary>
+        Uri,
+
+        /// <summary>
         /// A dictionary. Unlike every other kind this says nothing about the member on its own —
         /// <see cref="ProtoMemberPlan.Map"/> carries both element types.
         /// </summary>
