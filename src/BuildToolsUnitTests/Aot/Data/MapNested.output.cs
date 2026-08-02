@@ -12,6 +12,7 @@ partial class MapNestedModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
         , global::ProtoBuf.Serializers.ISerializerProxy<long[]>
     {
@@ -38,6 +39,13 @@ partial class MapNestedModel
                         var tmp2 = value.Arrays;
                         tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<long, long[]>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
                         if (tmp2 != null) value.Arrays = tmp2;
+                        break;
+                    }
+                    case 3:
+                    {
+                        var tmp3 = value.Maps;
+                        tmp3 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.Collections.Generic.Dictionary<string, string>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp3 != null) value.Maps = tmp3;
                         break;
                     }
                     case 4:
@@ -68,12 +76,20 @@ partial class MapNestedModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<long, long[]>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            var tmp3 = value.Maps;
+            if (tmp3 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.Collections.Generic.Dictionary<string, string>>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
             var tmp4 = value.FloatKeyed;
             if (tmp4 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
+
+        global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<string, string>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>.Serializer
+            => global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>();
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.List<int>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>.Serializer
             => global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>();

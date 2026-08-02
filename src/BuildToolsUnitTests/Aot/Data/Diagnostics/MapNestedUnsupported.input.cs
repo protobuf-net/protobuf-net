@@ -4,17 +4,11 @@ using System.Collections.Generic;
 
 namespace AotFixtures.MapNestedUnsupported;
 
-// A dictionary may nest a *repeated* value (MapNested.input.cs), because the plan only needs that
-// collection's factory. A nested *map* value would need a ProtoMapPlan inside a ProtoMapPlan, which
-// a struct cannot hold - so this one is still refused, and unlike most of the remaining refusals it
-// is genuinely ours rather than protobuf-net's: ref-emit handles it.
-[ProtoContract]
-public class NestedMap
-{
-    [ProtoMember(1)] public Dictionary<string, Dictionary<string, string>> Value { get; set; }
-}
-
-// a repeated *key* is refused for the same reason it always was: no reference to derive from
+// A dictionary may nest a repeated *or map* value (MapNested.input.cs): the plan only needs that
+// collection's factory, and both RepeatedSerializer and MapSerializer implement
+// IRepeatedSerializer<TCollection>, which is an ISerializer<TCollection> the model can serve.
+//
+// A nested *key* is a different matter - there is no reference to derive from - so it stays refused.
 [ProtoContract]
 public class NestedKey
 {
@@ -22,7 +16,6 @@ public class NestedKey
 }
 
 [ProtoModel]
-[ProtoSerializable(typeof(NestedMap))]
 [ProtoSerializable(typeof(NestedKey))]
 public partial class MapNestedUnsupportedModel : TypeModel
 {

@@ -900,7 +900,9 @@ namespace ProtoBuf.BuildTools.Generators
             ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message
                 or ProtoMemberKind.Uri or ProtoMemberKind.Parseable
                 or ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
-                or ProtoMemberKind.Guid or ProtoMemberKind.Decimal => "WireTypeString",
+                or ProtoMemberKind.Guid or ProtoMemberKind.Decimal
+                // a map nested as a map value is length-prefixed like any other sub-message
+                or ProtoMemberKind.Map => "WireTypeString",
             _ => "WireTypeVarint",
         };
 

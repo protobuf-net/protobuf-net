@@ -2053,14 +2053,20 @@ namespace ProtoBuf.BuildTools.Generators
             // proxy for it. A nested *key* has no reference, so it stays refused.
             if (keyShape.Repeated.Factory is not null || keyShape.Map.Factory is not null) return null;
 
-            // a nested *map* value would need a ProtoMapPlan inside a ProtoMapPlan, which a struct
-            // cannot hold; a repeated one only needs its factory, so that is where the line is
-            if (valueShape.Map.Factory is not null) return null;
-
-            var valueFactory = valueShape.Repeated.Factory is null ? null
-                : RepeatedFactory(valueShape.Repeated,
-                    value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                    valueShape.ElementTypeName!);
+            // a nested value - repeated or map - is served by an ISerializer<TCollection> resolved
+            // from the model, so all the plan needs is the factory that produces one. Both
+            // RepeatedSerializer and MapSerializer implement IRepeatedSerializer<TCollection>,
+            // which is an ISerializer<TCollection>, so the two cases differ only in the rendering
+            var valueTypeName = value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            string? valueFactory = null;
+            if (valueShape.Repeated.Factory is not null)
+            {
+                valueFactory = RepeatedFactory(valueShape.Repeated, valueTypeName, valueShape.ElementTypeName!);
+            }
+            else if (valueShape.Map.Factory is not null)
+            {
+                valueFactory = MapFactory(valueShape.Map, valueTypeName);
+            }
 
             // the key is part of the wire identity, so a nullable one has no meaning
             if (keyShape.IsNullable) return null;
@@ -2105,6 +2111,13 @@ namespace ProtoBuf.BuildTools.Generators
         private static string RepeatedFactory(ProtoRepeatedPlan repeated, string declared, string element)
             => $"global::ProtoBuf.Serializers.RepeatedSerializer.{repeated.Factory}"
                 + (repeated.TakesCollectionType ? $"<{declared}, {element}>()" : $"<{element}>()");
+
+        /// <summary>The <c>MapSerializer</c> equivalent, for a dictionary nested as a map value.</summary>
+        private static string MapFactory(ProtoMapPlan map, string declared)
+            => $"global::ProtoBuf.Serializers.MapSerializer.{map.Factory}"
+                + (map.TakesCollectionType
+                    ? $"<{declared}, {map.KeyTypeName}, {map.ValueTypeName}>()"
+                    : $"<{map.KeyTypeName}, {map.ValueTypeName}>()");
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
             ProtoRepeatedPlan repeated, ITypeSymbol declared,

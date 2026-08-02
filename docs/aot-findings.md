@@ -99,6 +99,12 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   ignored entirely** — silently. `IgnoreListHandling = true` is the opt-out. Nothing warns.
 - **A derived `[ProtoContract]` whose base does not `[ProtoInclude]` it is an independent contract
   that silently ignores every inherited member.** Also nothing warns.
+- **The persisted-dll path silently drops a map-of-map member.** A
+  `Dictionary<string, Dictionary<string, string>>` member round-trips correctly through
+  `RuntimeTypeModel`, but the compiled model emits *no code at all* for it — it is absent from the
+  serializer, so the data is written nowhere and read nowhere. Silent data loss rather than a throw,
+  and the two paths disagreeing is the part that makes it a bug rather than a limitation. Found by
+  comparing `MapNested.reference.cs` against the differential suite, which passes.
 - **An interface root writes its own declared members *in addition to* the implementation's**, so a
   property declared on both goes on the wire twice. `[ProtoContract] interface IAnimal` declaring
   `[ProtoMember(1)] Name`, with `Dog` implementing it and declaring `[ProtoMember(1)] Name` itself,
