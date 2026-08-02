@@ -263,18 +263,16 @@ internal static class Program
     }
 
     /// <summary>
-    /// Collapse a member type to its shape: the element of a collection is rarely the interesting
-    /// part, and contract names would make every row unique.
+    /// Shorten a member type for the table: namespaces are noise, but the generic arguments are not.
     /// </summary>
+    /// <remarks>
+    /// This used to collapse to <c>Dictionary&lt;…&gt;</c> on the grounds that the element was
+    /// rarely the interesting part. That stopped being true once collections were supported: a
+    /// collection now only fails *because* of its element, so eliding it hid the actual reason.
+    /// </remarks>
     private static string Generalize(string typeName)
-    {
-        var generic = typeName.IndexOf('<');
-        if (generic < 0) return typeName;
-
-        var outer = typeName[..generic];
-        var dot = outer.LastIndexOf('.');
-        return (dot < 0 ? outer : outer[(dot + 1)..]) + "<…>";
-    }
+        => Regex.Replace(typeName, @"[A-Za-z_]\w*(\.[A-Za-z_]\w*)+",
+            static m => m.Value[(m.Value.LastIndexOf('.') + 1)..]);
 
     private static string Normalize(string message)
     {

@@ -2033,10 +2033,20 @@ namespace ProtoBuf.BuildTools.Generators
             // services type does not expose - the same reason a repeated enum is refused
             if (keyShape.EnumType is not null || valueShape.EnumType is not null) return null;
 
-            // a nested collection is legal for ref-emit (it allows nesting on dictionaries alone) but
-            // needs a repeated serializer resolved from the model, so it goes the same way
-            if (keyShape.Repeated.Factory is not null || valueShape.Repeated.Factory is not null) return null;
-            if (keyShape.Map.Factory is not null || valueShape.Map.Factory is not null) return null;
+            // a nested collection is legal on a dictionary specifically (ref-emit's
+            // TestIfNestedNotSupported exempts maps), and is served by an ISerializer<TCollection>
+            // resolved from the model - so the *value* may be one, and the services type exposes a
+            // proxy for it. A nested *key* has no reference, so it stays refused.
+            if (keyShape.Repeated.Factory is not null || keyShape.Map.Factory is not null) return null;
+
+            // a nested *map* value would need a ProtoMapPlan inside a ProtoMapPlan, which a struct
+            // cannot hold; a repeated one only needs its factory, so that is where the line is
+            if (valueShape.Map.Factory is not null) return null;
+
+            var valueFactory = valueShape.Repeated.Factory is null ? null
+                : RepeatedFactory(valueShape.Repeated,
+                    value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    valueShape.ElementTypeName!);
 
             // the key is part of the wire identity, so a nullable one has no meaning
             if (keyShape.IsNullable) return null;
@@ -2048,7 +2058,7 @@ namespace ProtoBuf.BuildTools.Generators
             var map = new ProtoMapPlan(match.Factory!, match.TakesCollectionType,
                 keyShape.Kind, key.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 valueShape.Kind, value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                IsValidProtobufMap(keyShape, valueShape));
+                IsValidProtobufMap(keyShape, valueShape), valueFactory);
 
             return new MemberShape(ProtoMemberKind.Map, map: map, mapMessages: messages,
                 declaredTypeName: declared.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
@@ -2073,6 +2083,14 @@ namespace ProtoBuf.BuildTools.Generators
             });
             return validKey && value.Repeated.Factory is null && value.Map.Factory is null;
         }
+
+        /// <summary>
+        /// The <c>RepeatedSerializer</c> factory call for a collection, rendered here because a map
+        /// with a repeated value needs it as the value serializer rather than at a member site.
+        /// </summary>
+        private static string RepeatedFactory(ProtoRepeatedPlan repeated, string declared, string element)
+            => $"global::ProtoBuf.Serializers.RepeatedSerializer.{repeated.Factory}"
+                + (repeated.TakesCollectionType ? $"<{declared}, {element}>()" : $"<{element}>()");
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
             ProtoRepeatedPlan repeated, ITypeSymbol declared,

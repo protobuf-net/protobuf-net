@@ -7,12 +7,12 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **110** of 1392 (93% emitted)
+contracts dropped: **108** of 1392 (93% emitted)
 of which dropped only by cascade: 27
 
 | count | reason |
 | ---: | --- |
-| 26 | PBN2001 member '…' has unsupported type '…' |
+| 24 | PBN2001 member '…' has unsupported type '…' |
 | 12 | PBN2002 there is no parameterless constructor and SkipConstructor is not set, which protobuf-net refuses too: "No parameterless constructor found" |
 | 6 | PBN2002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
 | 5 | PBN2002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
@@ -40,21 +40,23 @@ Member types we could not handle:
 
 | count | type |
 | ---: | --- |
-| 6 | `System.Type` |
-| 4 | `Dictionary<…>` |
-| 3 | `List<…>` |
-| 2 | `System.Net.IPAddress` |
-| 1 | `NodaTime.LocalDate` |
-| 1 | `System.IO.Stream` |
-| 1 | `System.Type[]` |
-| 1 | `Examples.ProtoGeneration.MyNonSurrogate` |
-| 1 | `Examples.Issues.I` |
-| 1 | `System.DateTimeOffset` |
-| 1 | `System.DateTimeOffset?` |
+| 6 | `Type` |
+| 2 | `List<OrderCompat>` |
+| 2 | `IPAddress` |
+| 1 | `Dictionary<List<int>, List<string>>` |
+| 1 | `LocalDate` |
+| 1 | `Stream` |
+| 1 | `Type[]` |
+| 1 | `MyNonSurrogate` |
+| 1 | `List<IMobileObject>` |
+| 1 | `I` |
+| 1 | `DateTimeOffset` |
+| 1 | `DateTimeOffset?` |
 | 1 | `object` |
-| 1 | `Examples.Issues.SO19161823.IDummy` |
-| 1 | `Examples.Issues.SurrogateForObjectUsage.FloatData` |
-| 1 | `ProtoBuf.Issues.Issue509.Item` |
+| 1 | `Dictionary<string, Dictionary<string, string>>` |
+| 1 | `IDummy` |
+| 1 | `FloatData` |
+| 1 | `Item` |
 
 **the generated code does not compile** — these are generator bugs, not gaps:
 - PBN9001: 1393 — 'ProtoBuf.ProtoModelAttribute' is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

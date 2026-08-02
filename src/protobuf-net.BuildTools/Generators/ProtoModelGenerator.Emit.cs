@@ -84,6 +84,10 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 2, $", {Serializers}.ISerializerProxy<{enumType.Key}>");
                 Line(sb, indent + 2, $", {Serializers}.ISerializerProxy<{enumType.Key}?>");
             }
+            foreach (var collection in CollectionProxies(plan))
+            {
+                Line(sb, indent + 2, $", {Serializers}.ISerializerProxy<{collection.Key}>");
+            }
             Line(sb, indent + 1, "{");
 
             var first = true;
@@ -95,6 +99,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             EmitEnumProxies(sb, indent + 2, plan);
+            EmitCollectionProxies(sb, indent + 2, plan);
             EmitAccessors(sb, indent + 2, plan);
 
             Line(sb, indent + 1, "}");
@@ -762,6 +767,37 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Collection types the model must serve an <c>ISerializer&lt;TCollection&gt;</c> for: a map
+        /// with a repeated value resolves one from the model rather than taking it inline.
+        /// </summary>
+        private static SortedDictionary<string, string> CollectionProxies(ProtoModelPlan plan)
+        {
+            var result = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            foreach (var contract in plan.Contracts)
+            {
+                foreach (var member in contract.Members)
+                {
+                    if (member.Map.ValueSerializerFactory is { } factory
+                        && member.Map.ValueTypeName is { } name)
+                    {
+                        result[name] = factory;
+                    }
+                }
+            }
+            return result;
+        }
+
+        private static void EmitCollectionProxies(StringBuilder sb, int indent, ProtoModelPlan plan)
+        {
+            foreach (var pair in CollectionProxies(plan))
+            {
+                sb.AppendLine();
+                Line(sb, indent, $"{Serializers}.ISerializer<{pair.Key}> {Serializers}.ISerializerProxy<{pair.Key}>.Serializer");
+                Line(sb, indent + 1, $"=> {pair.Value};");
+            }
         }
 
         private static void EmitEnumProxies(StringBuilder sb, int indent, ProtoModelPlan plan)

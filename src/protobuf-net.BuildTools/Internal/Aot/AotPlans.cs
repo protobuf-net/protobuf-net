@@ -154,8 +154,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     {
         public ProtoMapPlan(string factory, bool takesCollectionType,
             ProtoMemberKind keyKind, string keyTypeName,
-            ProtoMemberKind valueKind, string valueTypeName, bool isValidProtobufMap)
+            ProtoMemberKind valueKind, string valueTypeName, bool isValidProtobufMap,
+            string? valueSerializerFactory = null)
         {
+            ValueSerializerFactory = valueSerializerFactory;
             Factory = factory;
             TakesCollectionType = takesCollectionType;
             KeyKind = keyKind;
@@ -186,11 +188,19 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public bool IsValidProtobufMap { get; }
 
+        /// <summary>
+        /// When the value is itself a collection - legal on a dictionary specifically - the factory
+        /// that serves it. protobuf-net resolves an ISerializer&lt;TCollection&gt; from the model,
+        /// so the services type exposes one, exactly as it does for a repeated enum.
+        /// </summary>
+        public string? ValueSerializerFactory { get; }
+
         public bool Equals(ProtoMapPlan other)
             => Factory == other.Factory && TakesCollectionType == other.TakesCollectionType
                 && KeyKind == other.KeyKind && KeyTypeName == other.KeyTypeName
                 && ValueKind == other.ValueKind && ValueTypeName == other.ValueTypeName
-                && IsValidProtobufMap == other.IsValidProtobufMap;
+                && IsValidProtobufMap == other.IsValidProtobufMap
+                && ValueSerializerFactory == other.ValueSerializerFactory;
 
         public override bool Equals(object? obj) => obj is ProtoMapPlan other && Equals(other);
 

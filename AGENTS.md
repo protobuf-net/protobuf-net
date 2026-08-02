@@ -277,8 +277,19 @@ share ordinals — `DataFormat.FixedSize` is 3, which is `ProtoDataFormat.Group`
 silently mis-maps, and produces a map that disagrees with ref-emit on the wire. This was caught by
 diffing against `MapFormat.reference.cs`, where `ZigZag` (ordinal 1 in both) worked and everything
 else did not, which is exactly the shape of bug a partial test would miss. An **enum** on either side is refused for the same reason a repeated enum is: the
-serializer is resolved from the model. A **repeated value** is refused too, even though ref-emit
-allows nesting on dictionaries specifically (`TestIfNestedNotSupported` exempts maps).
+serializer is resolved from the model.
+
+A **repeated value is supported**, and is the one place nesting is legal at all:
+`TestIfNestedNotSupported` exempts maps, so `Dictionary<int, List<int>>` works where
+`List<List<int>>` throws. Ref-emit passes `this as ISerializer<List<int>>` — it resolves one *from
+the model* — so we emit `ISerializerProxy<List<int>>` returning the same
+`RepeatedSerializer.CreateList<int>()` and pass nothing, exactly as for a repeated enum. The value
+wire type is the **element's** (`WireTypeVarint` for `List<int>`), and such a shape is never a valid
+protobuf map, so it also picks up `OptionFailOnDuplicateKey`.
+
+A nested **map** value and a nested **key** are still refused. The map case is a limit of the plan
+rather than of protobuf-net — a `ProtoMapPlan` inside a `ProtoMapPlan` is not expressible in a struct
+— and is one of the few remaining refusals that is genuinely ours rather than a match.
 
 Collection options are pure features composition, and compose orthogonally:
 `IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*
