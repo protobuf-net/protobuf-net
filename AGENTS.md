@@ -728,10 +728,23 @@ type implements `ISerializerProxy<TEnum?>` rather than `ISerializer<TEnum?>`, an
 cast on a sealed type where IL merely yields null — both end up at
 `serializer ??= TypeModel.GetSerializer<T>(Model)`, which resolves the proxy through the model.
 
-Separately, this established that a **nullable element without the attribute is an ordinary element**
-— `List<int?>` emits plain features and only faults at runtime if a null actually turns up. Those are
-now accepted for scalar elements; nullable enum, message and BCL elements stay refused for want of a
-reference.
+**The line is drawn by scope, not by type.** A *lone* `[NullWrappedValue]` is valid only on a nullable
+scalar; in a **collection**, `docs/nullwrappers.md` says "any scalar or message type will be accepted
+(but not nested collections)", and probing confirms it — message, nullable enum, nullable BCL, string
+and map-value elements all work. So the three lone refusals (non-scalar, non-nullable,
+with `[DefaultValue]`) *match* protobuf-net, which throws while building the model, and are worded to
+say so rather than "not supported yet"; every collection form is supported.
+
+A **nullable element without the attribute is an ordinary element** — `List<int?>` emits plain
+features and only faults at runtime if a null actually turns up. That holds for every element kind,
+including enums and BCL types.
+
+This is also where a **pre-existing wire bug** surfaced: element and map-side wire types were derived
+from a switch that defaulted to `WireTypeVarint`, but the compatibility-level BCL types are
+**length-prefixed** — so `List<DateTime>`, `List<decimal>` and `Dictionary<int, Guid>` all disagreed
+with ref-emit, wrapped or not. `KindWireType` is now the single source for "the wire type a kind
+carries when no `DataFormat` is selecting one", and note it cannot simply ask "is this a BCL kind":
+`DateOnly`/`TimeOnly` use `BclHelpers` under a *varint* header and go the other way.
 
 ### `ShouldSerialize` / `Specified`
 

@@ -7,15 +7,15 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **137** of 1392 (91% emitted)
+contracts dropped: **136** of 1392 (91% emitted)
 of which dropped only by cascade: 31
 
 | count | reason |
 | ---: | --- |
-| 27 | PBN2001 member '…' has unsupported type '…' |
+| 26 | PBN2001 member '…' has unsupported type '…' |
 | 14 | PBN2002 only classes, structs and interfaces are supported |
 | 12 | PBN2002 there is no parameterless constructor, and SkipConstructor is not set |
-| 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
+| 6 | PBN2002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
 | 5 | PBN2002 the type is not marked [ProtoContract], [DataContract] or [XmlType], and is not a tuple |
 | 5 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
@@ -29,8 +29,8 @@ of which dropped only by cascade: 31
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
 | 1 | PBN2003 [ProtoContract(IsGroup = ...)] is not supported yet |
-| 1 | PBN2003 [NullWrappedValue] with [DefaultValue] is not supported yet |
-| 1 | PBN2003 [NullWrappedValue] on a non-nullable value is not supported yet |
+| 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
+| 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
 | 1 | PBN2001 member '…' is not public |
 | 1 | PBN2001 member '…' has no public getter |
 | 1 | PBN2002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
@@ -57,7 +57,6 @@ Member types we could not handle:
 | 1 | `Examples.Issues.SO19161823.IDummy` |
 | 1 | `Examples.Issues.SurrogateForObjectUsage.FloatData` |
 | 1 | `ProtoBuf.Issues.Issue509.Item` |
-| 1 | `ProtoBuf.Issues.Issue713.SomeEnum?[]` |
 
 **the generated code does not compile** — these are generator bugs, not gaps:
 - PBN9001: 1393 — 'ProtoBuf.ProtoModelAttribute' is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.

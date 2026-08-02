@@ -771,22 +771,29 @@ namespace ProtoBuf.BuildTools.Generators
                 var isMap = shape.Map.Factory is not null;
                 if (wrappedValue && !isCollection && !isMap)
                 {
+                    // these three are refusals that *match* protobuf-net rather than fall short of
+                    // it: each throws while building the model, so there is no behaviour to
+                    // reproduce. Worth wording as such - they are not waiting on us
                     if (kind is ProtoMemberKind.Message or ProtoMemberKind.Map
                         or ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
                         or ProtoMemberKind.Guid or ProtoMemberKind.Decimal)
                     {
-                        return Option(diagnostics, atMember, name,
-                            "[NullWrappedValue] on a non-scalar");
+                        return Contract(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' has [NullWrappedValue] on a non-scalar, which protobuf-net "
+                            + "refuses: \"NullWrappedValue can only be used with scalar types, or in a collection\"");
                     }
                     // a reference-type scalar is already nullable; a value type has to say so
                     if (!shape.IsNullable && kind is not (ProtoMemberKind.String or ProtoMemberKind.Bytes))
                     {
-                        return Option(diagnostics, atMember, name,
-                            "[NullWrappedValue] on a non-nullable value");
+                        return Contract(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' has [NullWrappedValue] on a non-nullable value, which "
+                            + "protobuf-net refuses: \"NullWrappedValue cannot be used with non-nullable values\"");
                     }
                     if (declaredDefault is not null)
                     {
-                        return Option(diagnostics, atMember, name, "[NullWrappedValue] with [DefaultValue]");
+                        return Contract(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' combines [NullWrappedValue] with [DefaultValue], which "
+                            + "protobuf-net refuses");
                     }
                 }
                 // a map is repeated too, and wraps exactly as a collection does
@@ -2006,14 +2013,11 @@ namespace ProtoBuf.BuildTools.Generators
             // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
             if (GetMemberShape(compilation, element, surrogates, allowParseableTypes) is not { Repeated.Factory: null } shape) return null;
 
-            // a nullable *scalar* element is an ordinary element as far as the encoding goes - it
-            // only throws at runtime if a null actually turns up, unless [NullWrappedValue] is on
-            // the member. The other kinds have no reference, so they stay refused.
-            if (shape.IsNullable && (shape.EnumType is not null || shape.Message is not null
-                || IsBclKind(shape.Kind)))
-            {
-                return null;
-            }
+            // a nullable element is an ordinary element as far as the encoding goes - it only throws
+            // at runtime if a null actually turns up, unless [NullWrappedValue] is on the member,
+            // which is what makes a null expressible. That holds for every element kind: a nullable
+            // enum resolves its serializer through the model's ISerializerProxy<TEnum?> exactly as a
+            // non-nullable one does, and a nullable BCL element needs no sub-serializer at all.
 
             // an enum element is *not* written inline: RepeatedSerializer resolves an
             // ISerializer<TEnum> from the model, so the services type exposes one via

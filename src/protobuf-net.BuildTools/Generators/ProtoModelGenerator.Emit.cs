@@ -800,14 +800,29 @@ namespace ProtoBuf.BuildTools.Generators
         {
             ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
             ProtoDataFormat.FixedSize => Is64Bit(member.Kind) ? "WireTypeFixed64" : "WireTypeFixed32",
-            _ => member.Kind switch
-            {
-                ProtoMemberKind.Single => "WireTypeFixed32",
-                ProtoMemberKind.Double => "WireTypeFixed64",
-                ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message
-                    or ProtoMemberKind.Uri => "WireTypeString",
-                _ => "WireTypeVarint",
-            },
+            _ => KindWireType(member.Kind),
+        };
+
+        /// <summary>
+        /// The wire type a kind carries when no <c>DataFormat</c> is selecting one — used for
+        /// collection elements and for each side of a map, where the format does not apply.
+        /// </summary>
+        /// <remarks>
+        /// The compatibility-level BCL types are the trap here: they are length-prefixed, not
+        /// varints, so a <c>List&lt;DateTime&gt;</c> whose element defaulted to <c>WireTypeVarint</c>
+        /// disagreed with ref-emit on the wire. <c>DateOnly</c>/<c>TimeOnly</c> go the other way —
+        /// they use <c>BclHelpers</c> but under a varint header — which is why this cannot simply
+        /// ask "is it a BCL kind".
+        /// </remarks>
+        private static string KindWireType(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Single => "WireTypeFixed32",
+            ProtoMemberKind.Double => "WireTypeFixed64",
+            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Message
+                or ProtoMemberKind.Uri or ProtoMemberKind.Parseable
+                or ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                or ProtoMemberKind.Guid or ProtoMemberKind.Decimal => "WireTypeString",
+            _ => "WireTypeVarint",
         };
 
         /// <summary>
@@ -1014,15 +1029,18 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static string MapWireType(ProtoMemberKind kind, ProtoDataFormat format) => kind switch
         {
-            ProtoMemberKind.String or ProtoMemberKind.Bytes or ProtoMemberKind.Uri => "WireTypeString",
             ProtoMemberKind.Message => format == ProtoDataFormat.Group ? "WireTypeStartGroup" : "WireTypeString",
-            ProtoMemberKind.Single => "WireTypeFixed32",
-            ProtoMemberKind.Double => "WireTypeFixed64",
-            _ => format switch
+            _ => KindWireType(kind) switch
             {
-                ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
-                ProtoDataFormat.FixedSize => Is64Bit(kind) ? "WireTypeFixed64" : "WireTypeFixed32",
-                _ => "WireTypeVarint",
+                // the format only bites where the default is a varint - which is why a string key
+                // ignores FixedSize, and why Single/Double keep their own fixed widths
+                "WireTypeVarint" => format switch
+                {
+                    ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
+                    ProtoDataFormat.FixedSize => Is64Bit(kind) ? "WireTypeFixed64" : "WireTypeFixed32",
+                    _ => "WireTypeVarint",
+                },
+                var fixedByKind => fixedByKind,
             },
         };
 
