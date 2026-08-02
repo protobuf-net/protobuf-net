@@ -1,0 +1,304 @@
+using System.Reflection;
+using AotFixtures.Implicit;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___ImplicitModel : ISerializer<AllPublic>, ISerializer<AllFields>, ISerializer<FirstTag>, ISerializer<Mixed>, ISerializer<Ignoring>
+{
+	AllPublic ISerializer<AllPublic>.Read(ref ProtoReader.State state, AllPublic value)
+	{
+		if (value == null)
+		{
+			AllPublic allPublic = new AllPublic();
+			value = allPublic;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Apple = text;
+				}
+				break;
+			}
+			case 2:
+			{
+				int zebra = state.ReadInt32();
+				value.Mango = zebra;
+				break;
+			}
+			case 3:
+			{
+				int zebra = state.ReadInt32();
+				value.Zebra = zebra;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<AllPublic>.Write(ref ProtoWriter.State state, AllPublic value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string apple = value.Apple;
+		state.WriteString(1, apple);
+		int mango = value.Mango;
+		if (mango != 0)
+		{
+			state.WriteInt32Varint(2, mango);
+		}
+		mango = value.Zebra;
+		if (mango != 0)
+		{
+			state.WriteInt32Varint(3, mango);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<AllPublic>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<AllFields>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<FirstTag>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Mixed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Ignoring>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	AllFields ISerializer<AllFields>.Read(ref ProtoReader.State state, AllFields value)
+	{
+		if (value == null)
+		{
+			AllFields allFields = new AllFields();
+			value = allFields;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+				state.ReadInt32();
+				break;
+			case 2:
+			{
+				int zebra = state.ReadInt32();
+				value.Apple = zebra;
+				break;
+			}
+			case 3:
+			{
+				int zebra = state.ReadInt32();
+				value.Zebra = zebra;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<AllFields>.Write(ref ProtoWriter.State state, AllFields value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int ignored = value.Ignored;
+		if (ignored != 0)
+		{
+			state.WriteInt32Varint(1, ignored);
+		}
+		ignored = value.Apple;
+		if (ignored != 0)
+		{
+			state.WriteInt32Varint(2, ignored);
+		}
+		ignored = value.Zebra;
+		if (ignored != 0)
+		{
+			state.WriteInt32Varint(3, ignored);
+		}
+	}
+
+	FirstTag ISerializer<FirstTag>.Read(ref ProtoReader.State state, FirstTag value)
+	{
+		if (value == null)
+		{
+			FirstTag firstTag = new FirstTag();
+			value = firstTag;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 10:
+			{
+				int beta = state.ReadInt32();
+				value.Alpha = beta;
+				break;
+			}
+			case 11:
+			{
+				int beta = state.ReadInt32();
+				value.Beta = beta;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<FirstTag>.Write(ref ProtoWriter.State state, FirstTag value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int alpha = value.Alpha;
+		if (alpha != 0)
+		{
+			state.WriteInt32Varint(10, alpha);
+		}
+		alpha = value.Beta;
+		if (alpha != 0)
+		{
+			state.WriteInt32Varint(11, alpha);
+		}
+	}
+
+	Mixed ISerializer<Mixed>.Read(ref ProtoReader.State state, Mixed value)
+	{
+		if (value == null)
+		{
+			Mixed mixed = new Mixed();
+			value = mixed;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int pinned = state.ReadInt32();
+				value.Alpha = pinned;
+				break;
+			}
+			case 2:
+			{
+				int pinned = state.ReadInt32();
+				value.Zulu = pinned;
+				break;
+			}
+			case 5:
+			{
+				int pinned = state.ReadInt32();
+				value.Pinned = pinned;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Mixed>.Write(ref ProtoWriter.State state, Mixed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int alpha = value.Alpha;
+		if (alpha != 0)
+		{
+			state.WriteInt32Varint(1, alpha);
+		}
+		alpha = value.Zulu;
+		if (alpha != 0)
+		{
+			state.WriteInt32Varint(2, alpha);
+		}
+		alpha = value.Pinned;
+		if (alpha != 0)
+		{
+			state.WriteInt32Varint(5, alpha);
+		}
+	}
+
+	Ignoring ISerializer<Ignoring>.Read(ref ProtoReader.State state, Ignoring value)
+	{
+		if (value == null)
+		{
+			Ignoring ignoring = new Ignoring();
+			value = ignoring;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int kept = state.ReadInt32();
+				value.Kept = kept;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Ignoring>.Write(ref ProtoWriter.State state, Ignoring value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int kept = value.Kept;
+		if (kept != 0)
+		{
+			state.WriteInt32Varint(1, kept);
+		}
+	}
+}
+public sealed class ImplicitModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___ImplicitModel, T>();
+	}
+}

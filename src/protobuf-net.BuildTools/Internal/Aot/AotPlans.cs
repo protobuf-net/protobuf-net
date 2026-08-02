@@ -220,8 +220,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? accessorField = null,
             ProtoDataFormat mapKeyFormat = ProtoDataFormat.Default,
             ProtoDataFormat mapValueFormat = ProtoDataFormat.Default,
-            bool disableMap = false)
+            bool disableMap = false, bool accessorReads = false)
         {
+            AccessorReads = accessorReads;
             MapKeyFormat = mapKeyFormat;
             MapValueFormat = mapValueFormat;
             DisableMap = disableMap;
@@ -344,6 +345,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public string? AccessorField { get; }
 
         /// <summary>
+        /// The member cannot be *read* directly either, so the accessor serves both directions. True
+        /// only for a non-public field (which <c>ImplicitFields.AllFields</c> takes): a property
+        /// reached by backing field still has a public getter, and ref-emit reads through it.
+        /// </summary>
+        public bool AccessorReads { get; }
+
+        /// <summary>
         /// From <c>[ProtoMap(KeyFormat = …, ValueFormat = …)]</c>: these select the key and value
         /// wire types, which the map serializer takes as arguments separate from the map's own
         /// features. Note the width comes from the *element* type, as it does for a scalar.
@@ -441,7 +449,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
                 && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer
-                && AccessorField == other.AccessorField
+                && AccessorField == other.AccessorField && AccessorReads == other.AccessorReads
                 && MapKeyFormat == other.MapKeyFormat && MapValueFormat == other.MapValueFormat
                 && DisableMap == other.DisableMap
                 && WriteCondition == other.WriteCondition && SpecifiedMember == other.SpecifiedMember;

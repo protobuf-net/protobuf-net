@@ -324,6 +324,8 @@ namespace ProtoBuf.BuildTools.Generators
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
             var ignoreListHandling = false;
             var dataMemberOffset = 0;
+            var implicitMode = 0;
+            var implicitFirstTag = 1;
 
             // a model-surrogated type contributes nothing but its identity: the surrogate carries the
             // whole wire shape, so the type's own attributes are irrelevant - and inspecting them
@@ -351,6 +353,15 @@ namespace ProtoBuf.BuildTools.Generators
                                 continue;
                             case "DataMemberOffset" when argument.Value.Value is int offset:
                                 dataMemberOffset = offset;
+                                continue;
+                            // members inferred by convention rather than by attribute; the constants
+                            // are ImplicitFields.AllPublic (1) and AllFields (2) - note that order,
+                            // which is the opposite of the way they read
+                            case "ImplicitFields" when argument.Value.Value is int mode:
+                                implicitMode = mode;
+                                continue;
+                            case "ImplicitFirstTag" when argument.Value.Value is int first && first > 0:
+                                implicitFirstTag = first;
                                 continue;
                             // opts the type *out* of list handling, which is what lets a list-like
                             // contract be serialized as an ordinary message
@@ -502,6 +513,14 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
+            // implicit mode numbers the members itself, which cannot be done member-by-member: the
+            // tags come from sorting the whole set, so they are worked out up-front
+            var implicitTags = GetImplicitTags(memberSource, implicitMode, implicitFirstTag);
+
+            // ...and it also narrows the attribute family to ProtoBuf only, so [DataMember] and
+            // [XmlElement] orders stop applying (MetaType: `family &= AttributeFamily.ProtoBuf`)
+            if (implicitMode != 0) isDataContract = isXmlType = false;
+
             // indexed by ProtoCallbackKind; an unset entry has a null MethodName
             var callbacks = new ProtoCallbackPlan[4];
 
@@ -538,7 +557,11 @@ namespace ProtoBuf.BuildTools.Generators
                     case IPropertySymbol property:
                         memberType = property.Type;
                         break;
-                    case IFieldSymbol { IsImplicitlyDeclared: false } field:
+                    // an implicit field is normally an auto-property's backing field, which the
+                    // property itself covers - except under ImplicitFields.AllFields, where
+                    // protobuf-net takes the backing field *instead* of the property
+                    case IFieldSymbol field when !field.IsImplicitlyDeclared
+                        || implicitTags.ContainsKey(field.Name):
                         memberType = field.Type;
                         break;
                     default:
@@ -550,6 +573,7 @@ namespace ProtoBuf.BuildTools.Generators
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
                 bool usesAccessor = false, isReadOnly = false;
                 string? accessorField = null;
+                var accessorReads = false;
                 bool wrappedValue = false, wrappedValueGroup = false;
                 bool wrappedCollection = false, wrappedCollectionGroup = false;
                 var dataFormat = ProtoDataFormat.Default;
@@ -717,6 +741,7 @@ namespace ProtoBuf.BuildTools.Generators
                 fieldNumber ??= isDataContract && dataMemberOrder >= 1
                     ? dataMemberOrder + dataMemberOffset : null;
                 fieldNumber ??= isXmlType && xmlOrder >= 1 ? xmlOrder : null;
+                fieldNumber ??= implicitTags.TryGetValue(symbol.Name, out var implicitTag) ? implicitTag : null;
                 if (fieldNumber is null) continue;
 
                 if (symbol is IFieldSymbol { IsConst: true })
@@ -726,7 +751,20 @@ namespace ProtoBuf.BuildTools.Generators
                 if (symbol.IsStatic) return Member(diagnostics, atMember, name, symbol.Name, "is static");
                 if (symbol.DeclaredAccessibility != Accessibility.Public)
                 {
-                    return Member(diagnostics, atMember, name, symbol.Name, "is not public");
+                    // AllFields deliberately takes non-public fields; [UnsafeAccessor] reaches them
+                    // by name, which is the same mechanism a non-public setter uses
+                    if (symbol is not IFieldSymbol { IsReadOnly: false, IsConst: false })
+                    {
+                        return Member(diagnostics, atMember, name, symbol.Name, "is not public");
+                    }
+                    if (!SupportsUnsafeAccessor(compilation))
+                    {
+                        return Member(diagnostics, atMember, name, symbol.Name,
+                            "is a non-public field, which needs [UnsafeAccessor] (net8.0 or later)");
+                    }
+                    accessorField = symbol.Name;
+                    usesAccessor = true;
+                    accessorReads = true;
                 }
                 switch (symbol)
                 {
@@ -886,7 +924,7 @@ namespace ProtoBuf.BuildTools.Generators
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         declaredTypeName: declaredTypeName, map: shape.Map,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -904,7 +942,7 @@ namespace ProtoBuf.BuildTools.Generators
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
-                        accessorField: accessorField, subSerializer: subSerializer, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else
                 {
@@ -916,7 +954,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
             }
 
@@ -2141,6 +2179,81 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool SupportsDateOnly(Compilation compilation)
             => compilation.GetTypeByMetadataName("ProtoBuf.BclHelpers")
                 ?.GetMembers("ReadDateOnly").Length > 0;
+
+        /// <summary>
+        /// The tags <c>[ProtoContract(ImplicitFields = …)]</c> assigns, by member name.
+        /// </summary>
+        /// <remarks>
+        /// A port of the numbering in <c>MetaType.ApplyDefaultBehaviour</c>, and it cannot be done
+        /// member-by-member because the tags come from sorting the whole set. The rules, confirmed
+        /// against ref-emit rather than inferred: <c>AllPublic</c> takes any public member (a
+        /// property counts when its <em>getter</em> is public, whatever the setter is),
+        /// <c>AllFields</c> takes any field public or not; members sort by <b>ordinal name</b>, not
+        /// declaration order; numbering runs from <c>ImplicitFirstTag</c>; and a member carrying an
+        /// explicit <c>[ProtoMember]</c> keeps its pinned tag and does <b>not</b> consume a
+        /// sequential number — nor is that number avoided, so 5 pinned alongside 1, 2 is normal.
+        /// </remarks>
+        private static Dictionary<string, int> GetImplicitTags(
+            INamedTypeSymbol type, int implicitMode, int implicitFirstTag)
+        {
+            var result = new Dictionary<string, int>(StringComparer.Ordinal);
+            if (implicitMode == 0) return result;
+
+            const int AllPublic = 1, AllFields = 2;
+            var candidates = new List<(int Tag, string Name)>();
+
+            foreach (var symbol in type.GetMembers())
+            {
+                if (symbol.IsStatic) continue;
+
+                // AllFields means *any* field, including an auto-property's compiler-generated
+                // backing field - so `Ignored { get; set; }` is serialized as
+                // `<Ignored>k__BackingField`, which sorts before every ordinary name because '<'
+                // precedes letters. Surprising, but it is what RuntimeTypeModel does.
+                if (symbol.IsImplicitlyDeclared && !(implicitMode == 2 && symbol is IFieldSymbol)) continue;
+
+                var pinned = 0;
+                var ignored = false;
+                foreach (var attribute in symbol.GetAttributes())
+                {
+                    switch (attribute.AttributeClass?.ToDisplayString())
+                    {
+                        case ProtoIgnoreAttributeName:
+                            ignored = true;
+                            break;
+                        case ProtoMemberAttributeName when attribute.ConstructorArguments.Length >= 1
+                            && attribute.ConstructorArguments[0].Value is int tag:
+                            pinned = tag;
+                            break;
+                    }
+                }
+                if (ignored) continue;
+
+                var forced = symbol switch
+                {
+                    IFieldSymbol { IsConst: false } field => implicitMode == AllFields
+                        || (implicitMode == AllPublic && field.DeclaredAccessibility == Accessibility.Public),
+                    IPropertySymbol property => implicitMode == AllPublic
+                        && property.GetMethod is { DeclaredAccessibility: Accessibility.Public },
+                    _ => false,
+                };
+                if (forced || pinned > 0) candidates.Add((pinned, symbol.Name));
+            }
+
+            candidates.Sort(static (x, y) =>
+            {
+                var byTag = x.Tag.CompareTo(y.Tag);
+                return byTag != 0 ? byTag : string.CompareOrdinal(x.Name, y.Name);
+            });
+
+            var next = implicitFirstTag;
+            foreach (var candidate in candidates)
+            {
+                if (candidate.Tag > 0) continue; // pinned by [ProtoMember], and left alone
+                result[candidate.Name] = next++;
+            }
+            return result;
+        }
 
         /// <summary>
         /// Which serialization callback an attribute denotes, if any.

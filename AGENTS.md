@@ -516,6 +516,36 @@ We accept a narrower set of signatures than `MetaType` does: public, non-static,
 either nothing or a `StreamingContext`. `MetaType` reaches non-public ones by reflection and tolerates
 more shapes; anything outside our subset is refused rather than mis-called.
 
+### `ImplicitFields`
+
+Members are inferred by convention instead of by attribute. `AllPublic` (**= 1**) takes any public
+member — a property counts when its *getter* is public, whatever the setter is; `AllFields` (**= 2**)
+takes any field. Note that numbering: the constants read in the opposite order to their values, and
+getting them backwards silently swaps the two modes.
+
+Tags come from sorting the whole set, so they cannot be worked out member-by-member: candidates sort
+by `(pinnedTag, ordinal name)` and the unpinned ones are numbered from `ImplicitFirstTag`. Confirmed
+against ref-emit rather than inferred:
+
+- ordering is by **name, not declaration order** — `Zebra, Apple, Mango` numbers as `Apple`=1,
+  `Mango`=2, `Zebra`=3;
+- a member with an explicit `[ProtoMember]` keeps its pinned tag and does **not** consume a
+  sequential number, nor is that number avoided — `5` pinned alongside `1, 2` is normal;
+- implicit mode narrows the attribute family to ProtoBuf only, so `[DataMember]`/`[XmlElement]`
+  orders stop applying.
+
+**The trap: `AllFields` takes auto-property backing fields.** `Ignored { get; set; }` is serialized
+as `<Ignored>k__BackingField`, and because `<` precedes letters in ordinal order it sorts *first* and
+takes tag 1 — shifting every real field. This was found by the differential suite disagreeing over
+`Dictionary`-free two-field contract, and only makes sense once you see the backing field in
+`GetFields()`. It also means the member name reaches `AccessorName`, so that sanitises the **member**
+name as well as the type's.
+
+A non-public field needs `[UnsafeAccessor]` for **both directions** — unlike a property reached by
+its backing field, it cannot be read directly either, hence `ProtoMemberPlan.AccessorReads`. That
+also widened explicit `[ProtoMember]` on a private field, which used to be refused: same three-way
+split as a non-public setter, so `ImplicitPrivate.input.cs` has no `.reference.cs`.
+
 ### Telling our gaps from protobuf-net's
 
 Several refusals are **matches** rather than shortfalls: protobuf-net throws for them too, so there is
@@ -543,11 +573,7 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
   reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
   is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
-- `[ProtoContract(ImplicitFields = …)]` — members are gathered by `AllPublic` (any public member) or
-  `AllFields` (any field, public or not), sorted by **ordinal name**, then numbered from
-  `ImplicitFirstTag`; a member with an explicit `[ProtoMember]` keeps its pinned tag and does *not*
-  consume a sequential number. Note implicit mode also narrows the attribute family to ProtoBuf only,
-  so `[DataMember]`/`[XmlElement]` orders stop applying
+- interfaces as *members* rather than roots
 
 ### Golden-file tests
 

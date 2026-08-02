@@ -285,7 +285,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // a tuple reads into the locals it will pass to the constructor, not into the member
-                var target = contract.IsTuple ? $"arg{number}" : $"{instance}.{member.Name}";
+                var target = contract.IsTuple ? $"arg{number}" : MemberAccess(contract, member, instance);
                 Line(sb, indent + 2, $"case {number}:");
                 Line(sb, indent + 2, "{");
                 // a sub-type read holds the instance inside SubTypeState, and reading it is what
@@ -482,7 +482,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 // hoist to a local, as ref-emit does; the member could be a computed property
-                Line(sb, indent, $"var tmp{number} = {instance}.{member.Name};");
+                Line(sb, indent, $"var tmp{number} = {MemberAccess(contract, member, instance)};");
 
                 // WriteAny handles the null itself, so there is no guard - not even for a null int?
                 if (member.WrappedValue && member.Repeated.Factory is null && member.Map.Factory is null)
@@ -929,14 +929,27 @@ namespace ProtoBuf.BuildTools.Generators
                 : $"{AccessorName(contract, member)}({self}) = {expression};";
         }
 
+        /// <summary>
+        /// How the member is named in generated code - normally ${instance}.{name}, but a non-public
+        /// field can only be reached through its <c>[UnsafeAccessor]</c>, which serves both directions
+        /// since it hands back a <c>ref</c>.
+        /// </summary>
+        private static string MemberAccess(ProtoContractPlan contract, ProtoMemberPlan member, string instance)
+            => member.AccessorReads
+                ? $"{AccessorName(contract, member)}({(contract.IsValueType ? "ref " : "")}{instance})"
+                : $"{instance}.{member.Name}";
+
         /// <summary>The accessor that calls a contract's non-public parameterless constructor.</summary>
         private static string ConstructorAccessorName(ProtoContractPlan contract)
             => "Create_" + Sanitise(contract.TypeName);
 
         /// <summary>A name unique across the whole services type, since the accessors all live on it.</summary>
         private static string AccessorName(ProtoContractPlan contract, ProtoMemberPlan member)
+            // the member name needs sanitising as much as the type's: under
+            // ImplicitFields.AllFields the member can *be* a backing field, whose name renders as
+            // `<Ignored>k__BackingField`
             => (member.AccessorField is null ? "Set_" : "Field_")
-                + Sanitise(contract.TypeName) + "_" + member.Name;
+                + Sanitise(contract.TypeName) + "_" + Sanitise(member.Name);
 
         /// <summary>A type's full name, reduced to something legal in an identifier.</summary>
         private static string Sanitise(string typeName)
