@@ -159,6 +159,32 @@ Probed against the actual ref assemblies rather than recalled:
 Worth noting the win is allocation, not correctness: the wire bytes are identical either way, so this
 is measurable rather than observable, and the differential suite would pass unchanged.
 
+### A2. The 36 native-AOT warnings, grouped
+
+Measured from `AotSmoke` (`dotnet publish -c Release -r win-x64`), deduplicated. Recorded so the
+warnings pass can start from data rather than re-measuring, and because the shape of the list is the
+argument for *restructuring* over annotating:
+
+| count | id | where |
+| ---: | --- | --- |
+| 14 | IL3050 | `MakeGenericType`/`MakeArrayType`/`Enum.GetValues` on reflective paths |
+| 11 | IL2091 | `TypeHelper<T>` and the `RepeatedSerializer` chain |
+| 5 | IL2067 | `DynamicStub.TryCreateConcrete`, `TypeHelper.CreateNonTrivialDefault` |
+| 3 | IL2070 | `Helpers.GetConstructor`, `DynamicStub.ResolveProxies`, `ResolveUniqueEnumerableT` |
+| 3 | IL2057 / IL2087 / IL2055 | one each, same paths |
+
+Four distinct sources account for nearly all of it:
+
+- **`DynamicStub.SlowGet`** — `MakeGenericType` to build a concrete stub. The reflective fallback.
+- **`TypeHelper.ResolveUniqueEnumerableT`** — the old is-it-a-list heuristic, `[Obsolete]` but still
+  called by `TypeModel.CanSerialize` and the auxiliary flow.
+- **`BclHelpers.WriteGuid`/`ReadGuid`** — the level-200 `Guid` path; see item 4.
+- **`TypeHelper<T>`'s static constructor** — reaches the reflective factory.
+
+None of these is reachable from a *generated* model doing ordinary work; they are entangled inside
+the shared generic paths, which is exactly why `Requires*` annotations were tried and reverted. The
+fix is to make the generic path not reference the fallback at all.
+
 ### B. The coverage sweep undercounts generics
 
 `src/AotCoverage` reports "not seedable, generic: 19" — open generic definitions it cannot name with

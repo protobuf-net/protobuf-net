@@ -224,9 +224,7 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
   Emitting a message there would silently disagree on the wire, so the contract is dropped (and
   anything referencing it cascades). `[ProtoContract(IgnoreListHandling = true)]` is the documented
   opt-out and makes it an ordinary message — that is exactly what the runtime honours, in
-  `RuntimeTypeModel.TryGetRepeatedProvider`. There is no "has a public `Add`" or "has a
-  `GetEnumerator`" heuristic anywhere in modern protobuf-net; `ResolveUniqueEnumerableT` is
-  `[Obsolete]` and unused.
+  `RuntimeTypeModel.TryGetRepeatedProvider`. There is no "has a public `Add`" or "has a `GetEnumerator`" heuristic in the **repeated-resolution** path - that is all `TryGetRepeatedProvider`. `ResolveUniqueEnumerableT` is the old heuristic and is `[Obsolete]`, but it is **not** unused (this file previously said it was): `TypeModel.CanSerialize` and the auxiliary-type flow both still call it, which is why it appears in the native-AOT warning list. It does not affect how a *member* resolves, which is all the generator cares about.
 - **Maps are repeated too**, resolving to a `MapSerializer` — see below.
 - `Span<T>`, `Memory<T>`, `ArraySegment<T>` and friends resolve to a serializer that *throws* at
   runtime; refused up front. `byte[]`, `Memory<byte>`, `ReadOnlyMemory<byte>` and
