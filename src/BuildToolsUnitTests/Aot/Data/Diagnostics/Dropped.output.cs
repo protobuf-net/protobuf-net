@@ -11,10 +11,43 @@ partial class DroppedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>
+        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.Dropped.HasCallback global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
+        {
+            value ??= new global::AotFixtures.Dropped.HasCallback();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.Value = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            value.AfterRead(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.HasCallback value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 

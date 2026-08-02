@@ -500,6 +500,22 @@ So a seeded enum joins the proxy set rather than becoming a contract plan; `Prot
 just the type name and the underlying scalar kind. Reached as a *member* an enum was always an inline
 scalar, and still is — the two paths coexist, which the fixture pins.
 
+### Serialization callbacks
+
+Both families — protobuf-net's `[ProtoBeforeSerialization]`/`[ProtoAfterSerialization]`/
+`[ProtoBeforeDeserialization]`/`[ProtoAfterDeserialization]` and `System.Runtime.Serialization`'s
+`[OnSerializing]`/`[OnSerialized]`/`[OnDeserializing]`/`[OnDeserialized]` — map onto the same four
+points and are honoured identically by `MetaType`. They differ only in that the
+`System.Runtime.Serialization` spelling takes a `StreamingContext`, supplied as
+`SerializationContext.AsStreamingContext(state.Context)`.
+
+Placement is ref-emit's: the "before" hook fires **after construction but before the field loop**,
+and the "after" hook after it — so a deserialization callback sees a fully populated instance.
+
+We accept a narrower set of signatures than `MetaType` does: public, non-static, `void`, taking
+either nothing or a `StreamingContext`. `MetaType` reaches non-public ones by reflection and tolerates
+more shapes; anything outside our subset is refused rather than mis-called.
+
 ### Telling our gaps from protobuf-net's
 
 Several refusals are **matches** rather than shortfalls: protobuf-net throws for them too, so there is
@@ -527,7 +543,11 @@ Dropped with a diagnostic rather than mis-emitted; roughly in expected order of 
   `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
   reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
   is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
-- serialization callbacks (see also the four `[OnDeserialized]`-family entries in the sweep)
+- `[ProtoContract(ImplicitFields = …)]` — members are gathered by `AllPublic` (any public member) or
+  `AllFields` (any field, public or not), sorted by **ordinal name**, then numbered from
+  `ImplicitFirstTag`; a member with an explicit `[ProtoMember]` keeps its pinned tag and does *not*
+  consume a sequential number. Note implicit mode also narrows the attribute family to ProtoBuf only,
+  so `[DataMember]`/`[XmlElement]` orders stop applying
 
 ### Golden-file tests
 

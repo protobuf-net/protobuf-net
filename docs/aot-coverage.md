@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **122** of 1392 (92% emitted)
-of which dropped only by cascade: 31
+contracts dropped: **112** of 1392 (92% emitted)
+of which dropped only by cascade: 27
 
 | count | reason |
 | ---: | --- |
@@ -17,11 +17,9 @@ of which dropped only by cascade: 31
 | 6 | PBN2002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
 | 5 | PBN2002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
 | 5 | PBN2003 this form of [ProtoInclude] is not supported yet |
-| 4 | PBN2003 [ProtoAfterDeserialization] on methods is not supported yet |
 | 4 | PBN2003 [ProtoContract(ImplicitFields = ...)] is not supported yet |
 | 4 | PBN2002 abstract types are not supported |
 | 3 | PBN2003 this form of [DefaultValue] is not supported yet |
-| 3 | PBN2003 [OnDeserialized] on methods is not supported yet |
 | 2 | PBN2002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
 | 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
@@ -31,6 +29,7 @@ of which dropped only by cascade: 31
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
 | 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
 | 1 | PBN2001 member '…' is not public |
+| 1 | PBN2003 this form of [ProtoAfterDeserialization] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |
 | 1 | PBN2002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
 | 1 | PBN2002 an interface contract needs [ProtoInclude] for its implementations |

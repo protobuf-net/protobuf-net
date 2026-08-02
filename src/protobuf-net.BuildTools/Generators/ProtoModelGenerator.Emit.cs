@@ -196,6 +196,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, $"{instance} ??= {Construct(contract, bodyType)};");
             }
+            EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeDeserialize);
             EmitReadLoop(sb, indent + 1, contract, instance);
             if (contract.IsTuple)
             {
@@ -204,6 +205,7 @@ namespace ProtoBuf.BuildTools.Generators
                     ? $"{instance} = ({arguments});"
                     : $"{instance} = new {bodyType}({arguments});");
             }
+            EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.AfterDeserialize);
             if (surrogate is not null) Line(sb, indent + 1, $"value = {ToUnderlying(contract, instance)};");
             Line(sb, indent + 1, "return value;");
             Line(sb, indent, "}");
@@ -219,8 +221,34 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
+            EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeSerialize);
             EmitWriteMembers(sb, indent + 1, contract, instance);
+            EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
             Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// A serialization callback, if the contract declares one for this point.
+        /// </summary>
+        /// <remarks>
+        /// The placement is ref-emit's: the "before" hooks fire after construction but before the
+        /// field loop, and the "after" hooks after it, so a deserialization callback sees a fully
+        /// populated instance. The <c>System.Runtime.Serialization</c> spelling takes a
+        /// <c>StreamingContext</c>, which comes from the state.
+        /// </remarks>
+        private static void EmitCallback(StringBuilder sb, int indent, ProtoContractPlan contract,
+            string instance, ProtoCallbackKind kind)
+        {
+            var callbacks = contract.Callbacks;
+            if (callbacks.Count <= (int)kind) return;
+
+            var callback = callbacks[(int)kind];
+            if (callback.MethodName is not { } method) return;
+
+            var argument = callback.TakesContext
+                ? "global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context)"
+                : "";
+            Line(sb, indent, $"{instance}.{method}({argument});");
         }
 
         /// <summary>

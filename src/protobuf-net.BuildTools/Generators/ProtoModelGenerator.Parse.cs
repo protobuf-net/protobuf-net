@@ -502,6 +502,9 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
+            // indexed by ProtoCallbackKind; an unset entry has a null MethodName
+            var callbacks = new ProtoCallbackPlan[4];
+
             var members = new List<ProtoMemberPlan>();
             foreach (var symbol in memberSource.GetMembers())
             {
@@ -512,8 +515,17 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     if (method.GetAttributes().FirstOrDefault(IsSignificantAttribute) is { } onMethod)
                     {
-                        return Option(diagnostics, PlanLocation.From(method), name,
-                            $"[{AttributeName(onMethod)}] on methods");
+                        if (GetCallbackKind(onMethod) is not { } callbackKind)
+                        {
+                            return Option(diagnostics, PlanLocation.From(method), name,
+                                $"[{AttributeName(onMethod)}] on methods");
+                        }
+                        if (!IsUsableCallback(method, callbackKind, out var takesContext))
+                        {
+                            return Option(diagnostics, PlanLocation.From(method), name,
+                                $"this form of [{AttributeName(onMethod)}]");
+                        }
+                        callbacks[(int)callbackKind] = new ProtoCallbackPlan(method.Name, takesContext);
                     }
                     continue;
                 }
@@ -969,7 +981,8 @@ namespace ProtoBuf.BuildTools.Generators
                 surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                 toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying,
                 surrogateSerializer: surrogateSerializer,
-                usesConstructorAccessor: usesConstructorAccessor);
+                usesConstructorAccessor: usesConstructorAccessor,
+                callbacks: new(callbacks));
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
@@ -2128,6 +2141,54 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool SupportsDateOnly(Compilation compilation)
             => compilation.GetTypeByMetadataName("ProtoBuf.BclHelpers")
                 ?.GetMembers("ReadDateOnly").Length > 0;
+
+        /// <summary>
+        /// Which serialization callback an attribute denotes, if any.
+        /// </summary>
+        /// <remarks>
+        /// The two families are honoured identically by <c>MetaType</c>; they differ only in that the
+        /// <c>System.Runtime.Serialization</c> spelling takes a <c>StreamingContext</c>.
+        /// </remarks>
+        private static ProtoCallbackKind? GetCallbackKind(AttributeData attribute)
+            => attribute.AttributeClass?.ToDisplayString() switch
+            {
+                "ProtoBuf.ProtoBeforeSerializationAttribute"
+                    or "System.Runtime.Serialization.OnSerializingAttribute" => ProtoCallbackKind.BeforeSerialize,
+                "ProtoBuf.ProtoAfterSerializationAttribute"
+                    or "System.Runtime.Serialization.OnSerializedAttribute" => ProtoCallbackKind.AfterSerialize,
+                "ProtoBuf.ProtoBeforeDeserializationAttribute"
+                    or "System.Runtime.Serialization.OnDeserializingAttribute" => ProtoCallbackKind.BeforeDeserialize,
+                "ProtoBuf.ProtoAfterDeserializationAttribute"
+                    or "System.Runtime.Serialization.OnDeserializedAttribute" => ProtoCallbackKind.AfterDeserialize,
+                _ => null,
+            };
+
+        /// <summary>
+        /// Can generated code call this callback directly? It must be a public, non-static, void
+        /// method taking either nothing or a <c>StreamingContext</c>.
+        /// </summary>
+        /// <remarks>
+        /// <c>MetaType</c> accepts a wider set of signatures (and reaches non-public ones by
+        /// reflection); anything outside this subset is refused rather than mis-called.
+        /// </remarks>
+        private static bool IsUsableCallback(IMethodSymbol method, ProtoCallbackKind kind, out bool takesContext)
+        {
+            takesContext = false;
+            if (method.IsStatic || method.DeclaredAccessibility != Accessibility.Public) return false;
+            if (!method.ReturnsVoid || method.IsGenericMethod) return false;
+
+            switch (method.Parameters.Length)
+            {
+                case 0:
+                    return true;
+                case 1 when method.Parameters[0].Type.ToDisplayString()
+                    == "System.Runtime.Serialization.StreamingContext":
+                    takesContext = true;
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
         /// <summary>
         /// An enum seeded as a contract: all that is needed is its underlying scalar, which picks

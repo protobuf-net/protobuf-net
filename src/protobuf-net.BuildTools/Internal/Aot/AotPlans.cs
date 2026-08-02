@@ -501,6 +501,49 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// One contract type that the model can serialize.
     /// </summary>
     /// <summary>
+    /// The four serialization callback points, in the order they fire.
+    /// </summary>
+    /// <remarks>
+    /// protobuf-net's own <c>[ProtoBeforeSerialization]</c> family and the
+    /// <c>System.Runtime.Serialization</c> <c>[OnSerializing]</c> family map onto the same four
+    /// points; <c>MetaType</c> honours them identically.
+    /// </remarks>
+    internal enum ProtoCallbackKind
+    {
+        BeforeSerialize,
+        AfterSerialize,
+        BeforeDeserialize,
+        AfterDeserialize,
+    }
+
+    /// <summary>
+    /// A serialization callback: the method to call, and whether it takes a <c>StreamingContext</c>.
+    /// </summary>
+    internal readonly struct ProtoCallbackPlan : IEquatable<ProtoCallbackPlan>
+    {
+        public ProtoCallbackPlan(string methodName, bool takesContext)
+        {
+            MethodName = methodName;
+            TakesContext = takesContext;
+        }
+
+        public string? MethodName { get; }
+
+        /// <summary>
+        /// The <c>System.Runtime.Serialization</c> spelling takes one, supplied as
+        /// <c>SerializationContext.AsStreamingContext(state.Context)</c>.
+        /// </summary>
+        public bool TakesContext { get; }
+
+        public bool Equals(ProtoCallbackPlan other)
+            => MethodName == other.MethodName && TakesContext == other.TakesContext;
+
+        public override bool Equals(object? obj) => obj is ProtoCallbackPlan other && Equals(other);
+
+        public override int GetHashCode() => (MethodName?.GetHashCode() ?? 0) ^ (TakesContext ? 31 : 0);
+    }
+
+    /// <summary>
     /// An enum that is a contract in its own right: the type name plus the scalar kind of its
     /// underlying type, which is all <c>EnumSerializer.Create{X}</c> needs.
     /// </summary>
@@ -533,8 +576,9 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
             string? toSurrogate = null, string? toUnderlying = null,
             string? externalSerializerTypeName = null, string? surrogateSerializer = null,
-            bool usesConstructorAccessor = false)
+            bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default)
         {
+            Callbacks = callbacks;
             UsesConstructorAccessor = usesConstructorAccessor;
             ExternalSerializerTypeName = externalSerializerTypeName;
             SurrogateSerializer = surrogateSerializer;
@@ -585,6 +629,12 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// the same split as a non-public setter, and resolved the same way.
         /// </remarks>
         public bool UsesConstructorAccessor { get; }
+
+        /// <summary>
+        /// The serialization callbacks, indexed by <see cref="ProtoCallbackKind"/>; an entry with a
+        /// null <c>MethodName</c> means that point has no callback.
+        /// </summary>
+        public EquatableArray<ProtoCallbackPlan> Callbacks { get; }
 
         /// <summary>
         /// A struct contract: it needs no construction or null test on read, and cannot have
@@ -661,6 +711,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             => other is not null && TypeName == other.TypeName && Members.Equals(other.Members)
                 && IsValueType == other.IsValueType && SkipConstructor == other.SkipConstructor
                 && UsesConstructorAccessor == other.UsesConstructorAccessor
+                && Callbacks.Equals(other.Callbacks)
                 && IsTuple == other.IsTuple && IsTupleLiteral == other.IsTupleLiteral
                 && IsSealed == other.IsSealed && RootTypeName == other.RootTypeName
                 && SubTypes.Equals(other.SubTypes) && Extensible == other.Extensible
