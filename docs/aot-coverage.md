@@ -7,13 +7,12 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **157** of 1392 (89% emitted)
-of which dropped only by cascade: 35
+contracts dropped: **139** of 1392 (91% emitted)
+of which dropped only by cascade: 31
 
 | count | reason |
 | ---: | --- |
 | 30 | PBN2001 member '…' has unsupported type '…' |
-| 15 | PBN2002 it derives from a type that does not declare [ProtoInclude] for it |
 | 14 | PBN2002 only classes, structs and interfaces are supported |
 | 12 | PBN2002 there is no parameterless constructor, and SkipConstructor is not set |
 | 6 | PBN2003 [NullWrappedValue] on a non-scalar is not supported yet |
@@ -34,6 +33,7 @@ of which dropped only by cascade: 35
 | 1 | PBN2003 [NullWrappedValue] on a non-nullable value is not supported yet |
 | 1 | PBN2001 member '…' is not public |
 | 1 | PBN2001 member '…' has no public getter |
+| 1 | PBN2002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
 | 1 | PBN2002 an interface contract needs [ProtoInclude] for its implementations |
 | 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |
 | 1 | PBN2003 [ProtoContract(UseProtoMembersOnly = ...)] is not supported yet |

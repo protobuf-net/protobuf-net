@@ -1,0 +1,328 @@
+using System.Reflection;
+using AotFixtures.Unlinked;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___UnlinkedModel : ISerializer<Derived>, ISerializer<ContractBase>, ISerializer<Reuses>, ISerializer<FromPlain>, ISerializer<Unlinked>, ISerializer<ForkedBase>, ISubTypeSerializer<ForkedBase>, ISerializer<Sibling>, ISubTypeSerializer<Sibling>
+{
+	Derived ISerializer<Derived>.Read(ref ProtoReader.State state, Derived value)
+	{
+		if (value == null)
+		{
+			Derived derived = new Derived();
+			value = derived;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 2)
+			{
+				int fromDerived = state.ReadInt32();
+				value.FromDerived = fromDerived;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Derived>.Write(ref ProtoWriter.State state, Derived value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int fromDerived = value.FromDerived;
+		if (fromDerived != 0)
+		{
+			state.WriteInt32Varint(2, fromDerived);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Derived>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<ContractBase>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Reuses>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<FromPlain>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Unlinked>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<ForkedBase>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Sibling>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	ContractBase ISerializer<ContractBase>.Read(ref ProtoReader.State state, ContractBase value)
+	{
+		if (value == null)
+		{
+			ContractBase contractBase = new ContractBase();
+			value = contractBase;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int fromBase = state.ReadInt32();
+				value.FromBase = fromBase;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<ContractBase>.Write(ref ProtoWriter.State state, ContractBase value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int fromBase = value.FromBase;
+		if (fromBase != 0)
+		{
+			state.WriteInt32Varint(1, fromBase);
+		}
+	}
+
+	Reuses ISerializer<Reuses>.Read(ref ProtoReader.State state, Reuses value)
+	{
+		if (value == null)
+		{
+			Reuses reuses = new Reuses();
+			value = reuses;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int mine = state.ReadInt32();
+				value.Mine = mine;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Reuses>.Write(ref ProtoWriter.State state, Reuses value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int mine = value.Mine;
+		if (mine != 0)
+		{
+			state.WriteInt32Varint(1, mine);
+		}
+	}
+
+	FromPlain ISerializer<FromPlain>.Read(ref ProtoReader.State state, FromPlain value)
+	{
+		if (value == null)
+		{
+			FromPlain fromPlain = new FromPlain();
+			value = fromPlain;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Name = text;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<FromPlain>.Write(ref ProtoWriter.State state, FromPlain value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string name = value.Name;
+		state.WriteString(1, name);
+	}
+
+	Unlinked ISerializer<Unlinked>.Read(ref ProtoReader.State state, Unlinked value)
+	{
+		if (value == null)
+		{
+			Unlinked unlinked = new Unlinked();
+			value = unlinked;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 3)
+			{
+				int notLinked = state.ReadInt32();
+				value.NotLinked = notLinked;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Unlinked>.Write(ref ProtoWriter.State state, Unlinked value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int notLinked = value.NotLinked;
+		if (notLinked != 0)
+		{
+			state.WriteInt32Varint(3, notLinked);
+		}
+	}
+
+	ForkedBase ISerializer<ForkedBase>.Read(ref ProtoReader.State state, ForkedBase value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return ((ISubTypeSerializer<ForkedBase>)this).ReadSubType(ref state, SubTypeState<ForkedBase>.Create(state.Context, value));
+	}
+
+	void ISerializer<ForkedBase>.Write(ref ProtoWriter.State state, ForkedBase value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<ForkedBase>)this).WriteSubType(ref state, value);
+	}
+
+	void ISubTypeSerializer<ForkedBase>.WriteSubType(ref ProtoWriter.State state, ForkedBase value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is Sibling value2)
+			{
+				state.WriteSubType(10, value2, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+		int fromBase = value.FromBase;
+		if (fromBase != 0)
+		{
+			state.WriteInt32Varint(1, fromBase);
+		}
+	}
+
+	ForkedBase ISubTypeSerializer<ForkedBase>.ReadSubType(ref ProtoReader.State state, SubTypeState<ForkedBase> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				ForkedBase value2 = value.Value;
+				int fromBase = state.ReadInt32();
+				value2.FromBase = fromBase;
+				break;
+			}
+			case 10:
+				value.ReadSubType<Sibling>(ref state, this);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	Sibling ISerializer<Sibling>.Read(ref ProtoReader.State state, Sibling value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Sibling)((ISubTypeSerializer<ForkedBase>)this).ReadSubType(ref state, SubTypeState<ForkedBase>.Create(state.Context, value));
+	}
+
+	void ISerializer<Sibling>.Write(ref ProtoWriter.State state, Sibling value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<ForkedBase>)this).WriteSubType(ref state, (ForkedBase)value);
+	}
+
+	void ISubTypeSerializer<Sibling>.WriteSubType(ref ProtoWriter.State state, Sibling value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int linked = value.Linked;
+		if (linked != 0)
+		{
+			state.WriteInt32Varint(2, linked);
+		}
+	}
+
+	Sibling ISubTypeSerializer<Sibling>.ReadSubType(ref ProtoReader.State state, SubTypeState<Sibling> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 2)
+			{
+				Sibling value2 = value.Value;
+				int linked = state.ReadInt32();
+				value2.Linked = linked;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+}
+public sealed class UnlinkedModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___UnlinkedModel, T>();
+	}
+}

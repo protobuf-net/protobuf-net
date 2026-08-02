@@ -14,8 +14,8 @@ partial class ModelSurrogateModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.UriSurrogate>
-        , global::ProtoBuf.Serializers.ISerializer<global::System.Uri>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>
+        , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -30,9 +30,9 @@ partial class ModelSurrogateModel
                 {
                     case 1:
                     {
-                        var tmp1 = value.Link;
-                        tmp1 = state.ReadMessage<global::System.Uri>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Link = tmp1;
+                        var tmp1 = value.Release;
+                        tmp1 = state.ReadMessage<global::System.Version>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+                        if (tmp1 != null) value.Release = tmp1;
                         break;
                     }
                     case 2:
@@ -52,8 +52,8 @@ partial class ModelSurrogateModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Link;
-            state.WriteMessage<global::System.Uri>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            var tmp1 = value.Release;
+            state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
             var tmp2 = value.Elapsed;
             state.WriteMessage<global::AotFixtures.ModelSurrogate.Ticks>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
         }
@@ -131,12 +131,12 @@ partial class ModelSurrogateModel
             }
         }
 
-        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.UriSurrogate>.Features
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
-        global::AotFixtures.ModelSurrogate.UriSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.UriSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.UriSurrogate value)
+        global::AotFixtures.ModelSurrogate.VersionSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {
-            value ??= new global::AotFixtures.ModelSurrogate.UriSurrogate();
+            value ??= new global::AotFixtures.ModelSurrogate.VersionSurrogate();
             int field;
             while ((field = state.ReadFieldHeader()) > 0)
             {
@@ -156,20 +156,20 @@ partial class ModelSurrogateModel
             return value;
         }
 
-        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.UriSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.UriSurrogate value)
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             state.WriteString(1, tmp1);
         }
 
-        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Uri>.Features
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
-        global::System.Uri global::ProtoBuf.Serializers.ISerializer<global::System.Uri>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.Uri value)
+        global::System.Version global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.Version value)
         {
-            var surrogate = (global::AotFixtures.ModelSurrogate.UriSurrogate)value;
-            surrogate ??= new global::AotFixtures.ModelSurrogate.UriSurrogate();
+            var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
+            surrogate ??= new global::AotFixtures.ModelSurrogate.VersionSurrogate();
             int field;
             while ((field = state.ReadFieldHeader()) > 0)
             {
@@ -186,13 +186,13 @@ partial class ModelSurrogateModel
                         break;
                 }
             }
-            value = (global::System.Uri)surrogate;
+            value = (global::System.Version)surrogate;
             return value;
         }
 
-        void global::ProtoBuf.Serializers.ISerializer<global::System.Uri>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Uri value)
+        void global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Version value)
         {
-            var surrogate = (global::AotFixtures.ModelSurrogate.UriSurrogate)value;
+            var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Value;
             state.WriteString(1, tmp1);

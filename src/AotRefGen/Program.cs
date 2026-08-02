@@ -77,6 +77,64 @@ namespace ProtoBuf.AotRefGen
                orderby type.Name
                select type;
 
+        /// <summary>
+        /// Replay the model's <c>[ProtoSurrogate]</c> declarations onto the reference model, which is
+        /// what <c>RuntimeTypeModel.SetSurrogate</c> exists for.
+        /// </summary>
+        /// <remarks>
+        /// Without this the reference model has never heard of the surrogate and serializes the
+        /// underlying type directly (or refuses to), so the comparison would be against a
+        /// differently-configured model rather than against ref-emit.
+        /// <para>
+        /// Declarations are gathered least-to-most specific — the assembly first, then the model —
+        /// exactly as the generator gathers them, so the more specific one wins.
+        /// </para>
+        /// </remarks>
+        private static void ApplySurrogates(RuntimeTypeModel model, Type modelType)
+        {
+            var declarations = modelType.Assembly
+                .GetCustomAttributes(typeof(ProtoSurrogateAttribute), inherit: false)
+                .Cast<ProtoSurrogateAttribute>()
+                .Concat(modelType.GetCustomAttributes(typeof(ProtoSurrogateAttribute), inherit: false)
+                    .Cast<ProtoSurrogateAttribute>());
+
+            foreach (var declaration in declarations)
+            {
+                if (declaration.Converter is null)
+                {
+                    // the cast form: MetaType.SetSurrogate(Type) is the public equivalent
+                    model.Add(declaration.Type, applyDefaultBehaviour: false)
+                        .SetSurrogate(declaration.Surrogate);
+                    continue;
+                }
+
+                // the named-method form, which is how a type with no usable operators is hooked up.
+                // Only the generic SetSurrogate takes conversion delegates, so it is built here.
+                var toSurrogate = MakeConverter(declaration.Converter, declaration.ToSurrogate,
+                    declaration.Type, declaration.Surrogate);
+                var toUnderlying = MakeConverter(declaration.Converter, declaration.ToType,
+                    declaration.Surrogate, declaration.Type);
+
+                typeof(RuntimeTypeModel)
+                    .GetMethod(nameof(RuntimeTypeModel.SetSurrogate))
+                    .MakeGenericMethod(declaration.Type, declaration.Surrogate)
+                    .Invoke(model, new object[]
+                    {
+                        toSurrogate, toUnderlying, DataFormat.Default, CompatibilityLevel.NotSpecified,
+                    });
+            }
+        }
+
+        private static Delegate MakeConverter(Type converter, string methodName, Type from, Type to)
+        {
+            var method = converter.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static,
+                null, new[] { from }, null)
+                ?? throw new InvalidOperationException(
+                    $"{converter.Name}.{methodName}({from.Name}) not found");
+
+            return Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(from, to), method);
+        }
+
         private static void Emit(Type modelType, string fixtureDir)
         {
             var seeds = modelType
@@ -100,6 +158,8 @@ namespace ProtoBuf.AotRefGen
                 .GetCustomAttributes(typeof(ProtoModelAttribute), inherit: false)
                 .Cast<ProtoModelAttribute>()
                 .Any(static x => x.AllowParseableTypes);
+
+            ApplySurrogates(model, modelType);
 
             foreach (var seed in seeds) model.Add(seed, applyDefaultBehaviour: true);
 

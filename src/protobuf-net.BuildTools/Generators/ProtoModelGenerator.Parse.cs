@@ -295,16 +295,13 @@ namespace ProtoBuf.BuildTools.Generators
                 // note the constructor check is deferred: with a surrogate it is the *surrogate* that
                 // gets constructed, which is exactly what lets an immutable type be surrogated
 
-                // Extensible is the documented way to get the extension interfaces, and declares no
-                // serializable members of its own, so it is not the silent-loss case below
-                if (type.BaseType is { SpecialType: not SpecialType.System_Object } baseType
-                    && linkedBase is null && baseType.ToDisplayString() != ExtensibleTypeName)
-                {
-                    // protobuf-net would treat this as a standalone contract that silently ignores
-                    // its inherited members; refusing is the safer half of that surprise
-                    return Contract(diagnostics, at, name,
-                        "it derives from a type that does not declare [ProtoInclude] for it");
-                }
+                // note: deriving from a type that does not [ProtoInclude] us needs *no* handling
+                // here. protobuf-net binds only the type's own declared members and ignores the
+                // base entirely - uniformly, whether the base is a contract or not, and whether or
+                // not it includes some *other* type - so emitting the declared members is already
+                // exact parity. `GetMembers()` is declared-only, so that falls out for free.
+                // The silent loss is real, but it is the shipped analyzer's PBN0013 to report, and
+                // it already does; refusing here only cost the contract without telling anyone more.
             }
 
             var surrogateType = declaredSurrogate?.Surrogate;

@@ -1,6 +1,4 @@
-Generator produced 5 diagnostics:
-Warning PBN2002 Aot/Data/Diagnostics/InheritUnsupported.input.cs L15 C14
-Contract 'AotFixtures.InheritUnsupported.Unlinked' is omitted from the AOT model: it derives from a type that does not declare [ProtoInclude] for it.
+Generator produced 4 diagnostics:
 Warning PBN2002 Aot/Data/Diagnostics/InheritUnsupported.input.cs L22 C23
 Contract 'AotFixtures.InheritUnsupported.AbstractLeaf' is omitted from the AOT model: abstract types are not supported.
 Warning PBN2003 Aot/Data/Diagnostics/InheritUnsupported.input.cs L30 C14

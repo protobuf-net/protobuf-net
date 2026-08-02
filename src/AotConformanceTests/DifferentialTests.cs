@@ -23,6 +23,7 @@ namespace ProtoBuf.AotConformance
         // the trigger attributes are generated into this assembly, so match them by name
         private const string ProtoModelAttribute = "ProtoBuf.ProtoModelAttribute";
         private const string ProtoSerializableAttribute = "ProtoBuf.ProtoSerializableAttribute";
+        private const string ProtoSurrogateAttribute = "ProtoBuf.ProtoSurrogateAttribute";
 
         public static IEnumerable<object[]> GetCases()
             => from model in DiscoverModels()
@@ -203,8 +204,57 @@ namespace ProtoBuf.AotConformance
                 }
             }
 
+            ApplySurrogates(runtime, modelType);
             runtime.Add(contractType, applyDefaultBehaviour: true);
             return runtime;
+        }
+
+        /// <summary>
+        /// Replay the model's <c>[ProtoSurrogate]</c> declarations, which are the compile-time
+        /// equivalent of <see cref="RuntimeTypeModel.SetSurrogate{TUnderlying, TSurrogate}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Without this the reference model has never heard of the surrogate, so the comparison
+        /// would be against a differently-configured model rather than against ref-emit. The
+        /// attribute is generated into this assembly, so everything is matched by name.
+        /// </remarks>
+        private static void ApplySurrogates(RuntimeTypeModel runtime, Type modelType)
+        {
+            var declarations = modelType.Assembly.GetCustomAttributes()
+                .Concat(modelType.GetCustomAttributes())
+                .Where(static x => x.GetType().FullName == ProtoSurrogateAttribute);
+
+            foreach (var declaration in declarations)
+            {
+                var type = declaration.GetType();
+                var underlying = (Type)type.GetProperty("Type")!.GetValue(declaration)!;
+                var surrogate = (Type)type.GetProperty("Surrogate")!.GetValue(declaration)!;
+                var converter = (Type?)type.GetProperty("Converter")!.GetValue(declaration);
+
+                if (converter is null)
+                {
+                    runtime.Add(underlying, applyDefaultBehaviour: false).SetSurrogate(surrogate);
+                    continue;
+                }
+
+                var toSurrogate = MakeConverter(converter,
+                    (string)type.GetProperty("ToSurrogate")!.GetValue(declaration)!, underlying, surrogate);
+                var toUnderlying = MakeConverter(converter,
+                    (string)type.GetProperty("ToType")!.GetValue(declaration)!, surrogate, underlying);
+
+                typeof(RuntimeTypeModel).GetMethod(nameof(RuntimeTypeModel.SetSurrogate))!
+                    .MakeGenericMethod(underlying, surrogate)
+                    .Invoke(runtime, [toSurrogate, toUnderlying, DataFormat.Default, CompatibilityLevel.NotSpecified]);
+            }
+        }
+
+        private static Delegate MakeConverter(Type converter, string methodName, Type from, Type to)
+        {
+            var method = converter.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static,
+                null, [from], null)
+                ?? throw new InvalidOperationException($"{converter.Name}.{methodName}({from.Name}) not found");
+
+            return Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(from, to), method);
         }
 
         private static List<Type> DiscoverModels()
