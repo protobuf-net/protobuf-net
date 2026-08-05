@@ -899,7 +899,12 @@ namespace ProtoBuf.BuildTools.Generators
         private static string ElementWireType(ProtoMemberPlan member) => member.DataFormat switch
         {
             ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
-            ProtoDataFormat.FixedSize => Is64Bit(member.Kind) ? "WireTypeFixed64" : "WireTypeFixed32",
+            // a compatibility-level BCL element expresses its format through the *element serializer*
+            // (GetInbuiltSerializer takes it), not through the wire type - a FixedSize Guid at level
+            // 300 is GuidBytes, which is still length-prefixed. Applying the format here as well
+            // produced a Fixed32 header over a length-prefixed body
+            ProtoDataFormat.FixedSize when !IsBclKind(member.Kind)
+                => Is64Bit(member.Kind) ? "WireTypeFixed64" : "WireTypeFixed32",
             _ => KindWireType(member.Kind),
         };
 
@@ -969,7 +974,61 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>A message element needs a serializer passed along; a scalar does not.</summary>
         private static string RepeatedSubSerializer(ProtoMemberPlan member)
-            => member.Kind == ProtoMemberKind.Message ? $", {SubSerializer(member)}" : "";
+        {
+            if (member.Kind == ProtoMemberKind.Message) return $", {SubSerializer(member)}";
+            // a compatibility-level BCL element does not use the inbuilt default once the level or
+            // format selects another form, so ref-emit hands the collection an explicit serializer.
+            // CompatibilityLevel is already the *effective* one for the element
+            return InbuiltSerializer(member.Kind, member.ElementTypeName,
+                member.CompatibilityLevel, member.DataFormat) is { } inbuilt ? $", {inbuilt}" : "";
+        }
+
+        /// <summary>
+        /// <c>TypeModel.GetInbuiltSerializer&lt;T&gt;(level, format)</c> for an element whose
+        /// compatibility level selects something other than the level-200 form, or null when the
+        /// inbuilt default already serves — which is what ref-emit passes in that case.
+        /// </summary>
+        /// <remarks>
+        /// This is <c>CompilerContext.LoadSelfAsService</c>'s rule: it emits the call whenever
+        /// <c>GetInbuiltSerializer</c> would return something that is not <c>PrimaryTypeProvider</c>,
+        /// and a null reference otherwise. Only the four compatibility-level types have a second
+        /// form to select, so only they can produce one.
+        /// </remarks>
+        private static string? InbuiltSerializer(ProtoMemberKind kind, string? typeName,
+            int compatibilityLevel, ProtoDataFormat format)
+        {
+            if (typeName is null) return null;
+            if (kind is not (ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                or ProtoMemberKind.Guid or ProtoMemberKind.Decimal))
+            {
+                return null;
+            }
+            if (compatibilityLevel <= 200) return null;
+            return $"global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<{typeName}>("
+                + $"{CompatibilityLevelLiteral(compatibilityLevel)}, {DataFormatLiteral(format)})";
+        }
+
+        /// <summary>
+        /// <c>ValueMember.GetEffectiveCompatibilityLevel</c>: at or below 200, <c>WellKnown</c>
+        /// promotes to 240; above that it means nothing.
+        /// </summary>
+        private static int EffectiveCompatibilityLevel(int level, ProtoDataFormat format)
+            => level > 200 ? level : format == ProtoDataFormat.WellKnown ? 240 : 200;
+
+        private static string CompatibilityLevelLiteral(int level)
+            => $"global::ProtoBuf.CompatibilityLevel.Level{level.ToString(CultureInfo.InvariantCulture)}";
+
+        private static string DataFormatLiteral(ProtoDataFormat format)
+            => "global::ProtoBuf.DataFormat." + format switch
+            {
+                ProtoDataFormat.Group => "Group",
+                ProtoDataFormat.FixedSize => "FixedSize",
+                ProtoDataFormat.ZigZag => "ZigZag",
+                // TwosComplement is deliberately absent from ProtoDataFormat: it is byte-identical
+                // to Default for every type we handle, so it maps onto it
+                ProtoDataFormat.WellKnown => "WellKnown",
+                _ => "Default",
+            };
 
         /// <summary>
         /// The statement that stores a value into a member.
@@ -1165,10 +1224,21 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static string MapSubSerializers(ProtoMemberPlan member)
         {
-            var key = member.Map.KeyKind == ProtoMemberKind.Message;
-            var value = member.Map.ValueKind == ProtoMemberKind.Message;
-            if (value) return key ? ", this, this" : ", null, this";
-            return key ? ", this" : "";
+            // the two sides are positional, so a value serializer needs the key slot filled with
+            // null. Either side may want `this` (a message) or an inbuilt (a levelled BCL type);
+            // note the *declared* level is combined with that side's own [ProtoMap] format, since
+            // the member's own DataFormat selects the map's root wire type and nothing else
+            var key = member.Map.KeyKind == ProtoMemberKind.Message ? "this"
+                : InbuiltSerializer(member.Map.KeyKind, member.Map.KeyTypeName,
+                    EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapKeyFormat),
+                    member.MapKeyFormat);
+            var value = member.Map.ValueKind == ProtoMemberKind.Message ? "this"
+                : InbuiltSerializer(member.Map.ValueKind, member.Map.ValueTypeName,
+                    EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapValueFormat),
+                    member.MapValueFormat);
+
+            if (value is not null) return $", {key ?? "null"}, {value}";
+            return key is null ? "" : $", {key}";
         }
 
         /// <summary>

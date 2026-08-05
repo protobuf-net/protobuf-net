@@ -11,14 +11,14 @@ seeded: **1392**, of which 82 dropped with a diagnostic
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1270 |
-| **bytes differ** | 17 |
-| one model threw | 21 |
+| **bytes match ref-emit** | 1274 |
+| **bytes differ** | 14 |
+| one model threw | 20 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
 | the reference model refused the contract | 2 |
 
-of the 1287 actually compared, **98% match**.
+of the 1288 actually compared, **98% match**.
 
 ## What went wrong
 
@@ -26,7 +26,7 @@ of the 1287 actually compared, **98% match**.
   - e.g. ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+Level300, ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+HybridInvalidModel, ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+HybridValidModel
 - **3x** could not build an instance: no route
   - e.g. Examples.Issues.SO11641262+FooData, Examples.Issues.SO16797650+MessageBase, Examples.Issues.SO18695728+WebSyncedObject
-- **2x** bytes differ at byte 29 (generated 180b, reference 172b): generated 0C-08-05-12-08-08 vs reference 0A-08-05-12-06-08
+- **2x** bytes differ at byte 53 (generated 156b, reference 172b): generated 10-0A-06-08-88-C2 vs reference 14-0A-08-08-90-84
   - e.g. ProtoBuf.Test.CompatibilityLevelListsMaps+HazMaps, ProtoBuf.Test.SpanReadTests+HazMaps
 - **2x** the reference model refused the contract: ArgumentOutOfRangeException: … level '42' is not … (… '…')
   - e.g. ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForType, ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForMember
@@ -44,14 +44,6 @@ of the 1287 actually compared, **98% match**.
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedRangeFieldSubType+B, ProtoBuf.Test.Issues.Issue633+HasReservedRangeFieldSubType
 - **2x** reference threw, generated model did not: InvalidOperationException: Field 'B' is … and cannot be used for sub-type 33 (iz B).
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedNameFieldSubType+B, ProtoBuf.Test.Issues.Issue633+HasReservedNameFieldSubType
-- **1x** bytes differ at byte 1 (generated 28b, reference 24b): generated 04-08-AC-9D-02-0A vs reference 06-08-80-C2-AF-F0
-  - e.g. ProtoBuf.Test.CompatibilityLevelListsMaps+HazLists
-- **1x** bytes differ at byte 1 (generated 40b, reference 76b): generated 12-09-01-00-00-00 vs reference 24-30-30-30-30-30
-  - e.g. ProtoBuf.Test.CompatibilityLevelListsMaps+HazGuids300
-- **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type Fixed32 at … 1, depth 1
-  - e.g. ProtoBuf.Test.CompatibilityLevelListsMaps+HazGuids300Fixed
-- **1x** bytes differ at byte 1 (generated 12b, reference 10b): generated 04-08-0F-18-02-0A vs reference 03-31-2E-35-0A-03
-  - e.g. ProtoBuf.Test.CompatibilityLevelListsMaps+HazDecimals300
 - **1x** reference threw, generated model did not: NotSupportedException: … can only be used with …
   - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidDataFormat
 - **1x** reference threw, generated model did not: NotSupportedException: … cannot be used with packed values
@@ -72,3 +64,11 @@ of the 1287 actually compared, **98% match**.
   - e.g. Examples.ProtoWithFields
 - **1x** bytes differ at byte 0 (generated 16b, reference 16b): generated 0A-06-0A-02-73-30 vs reference 0B-0A-02-73-30-10
   - e.g. Examples.Dictionary.NestedDictionaryTests+PropsViaDictionaryGrouped
+- **1x** bytes differ at byte 1 (generated 10b, reference 12b): generated 0A-02-01-02-0A-02 vs reference 0B-0A-02-01-02-0A
+  - e.g. Examples.Issues.SO11317045+A
+- **1x** bytes differ at byte 1 (generated 6b, reference 2b): generated 04-10-00-18-00 vs reference 00
+  - e.g. Examples.Issues.SO16838287+Foo
+- **1x** bytes differ at byte 0 (generated 0b, reference 8b): generated <end> vs reference 1B-1C-08-01-12-02
+  - e.g. Examples.Issues.SO18277323+CustomSourceTableResponse
+- **1x** bytes differ at byte 0 (generated 20b, reference 20b): generated 0A-08-0A-02-73-30 vs reference 0B-0A-02-73-30-12
+  - e.g. Examples.Issues.SO1930209+A

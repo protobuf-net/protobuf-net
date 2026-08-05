@@ -225,6 +225,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool wrappedCollection = false, bool wrappedCollectionGroup = false,
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
+            int declaredCompatibilityLevel = 200,
             bool isReadOnly = false, string? subSerializer = null,
             string? writeCondition = null, string? specifiedMember = null,
             string? accessorField = null,
@@ -242,6 +243,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             SubSerializer = subSerializer;
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
+            DeclaredCompatibilityLevel = declaredCompatibilityLevel;
             UsesAccessor = usesAccessor;
             DataFormat = dataFormat;
             IsRequired = isRequired;
@@ -407,6 +409,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public int CompatibilityLevel { get; }
 
         /// <summary>
+        /// The level as declared, <em>before</em> <c>DataFormat.WellKnown</c> promotes it — unlike
+        /// <see cref="CompatibilityLevel"/>, which has that already applied.
+        /// </summary>
+        /// <remarks>
+        /// A map needs this: its key and value each take their format from <c>[ProtoMap]</c> rather
+        /// than from the member, so the promotion has to be applied per side and cannot be baked in.
+        /// </remarks>
+        public int DeclaredCompatibilityLevel { get; }
+
+        /// <summary>
         /// From <c>[ProtoMember(IsRequired = true)]</c>: the member is written unconditionally.
         /// Only observable for value-type scalars — reference types were already unguarded on write —
         /// and it does not affect the read at all.
@@ -458,6 +470,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && WrappedCollectionGroup == other.WrappedCollectionGroup
                 && DataFormat == other.DataFormat && IsRequired == other.IsRequired
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
+                && DeclaredCompatibilityLevel == other.DeclaredCompatibilityLevel
                 && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer
                 && AccessorField == other.AccessorField && AccessorReads == other.AccessorReads
                 && MapKeyFormat == other.MapKeyFormat && MapValueFormat == other.MapValueFormat

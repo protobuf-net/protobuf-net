@@ -1025,12 +1025,19 @@ namespace ProtoBuf.BuildTools.Generators
                 }
 
                 // the compatibility level chooses the encoding for the four BCL types, and nothing
-                // else; resolving it for every member would be wasted work
+                // else; resolving it for every member would be wasted work. A map counts: its key or
+                // value may be one, and its own Kind is Map rather than the element's
                 var compatibilityLevel = 200;
+                var declaredCompatibilityLevel = 200;
+                if (IsBclKind(kind) || IsBclKind(shape.Map.KeyKind) || IsBclKind(shape.Map.ValueKind))
+                {
+                    declaredCompatibilityLevel =
+                        GetDeclaredLevel(symbol) ?? GetCompatibilityLevel(compilation, memberSource);
+                    compatibilityLevel =
+                        GetEffectiveCompatibilityLevel(declaredCompatibilityLevel, dataFormat);
+                }
                 if (IsBclKind(kind))
                 {
-                    compatibilityLevel = GetEffectiveCompatibilityLevel(
-                        GetDeclaredLevel(symbol) ?? GetCompatibilityLevel(compilation, memberSource), dataFormat);
 
                     // ZigZag throws while building the model; everything else selects a field-header
                     // wire type (see BclWireType), which for several combinations means "no change"
@@ -1072,9 +1079,10 @@ namespace ProtoBuf.BuildTools.Generators
                     // a map can reach a contract through its key *and* its value
                     foreach (var reached in shape.MapMessages!) reachable.Add(reached);
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
-                        declaredTypeName: declaredTypeName, map: shape.Map,
+                        declaredTypeName: declaredTypeName,
+                        map: WithLevelledKey(shape.Map, declaredCompatibilityLevel, mapKeyFormat),
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else if (kind == ProtoMemberKind.Message)
                 {
@@ -1091,7 +1099,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
                         accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else
@@ -1104,7 +1112,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
-                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
             }
 
@@ -2388,10 +2396,31 @@ namespace ProtoBuf.BuildTools.Generators
         /// enum type, and the value must not itself be repeated. When it is not, protobuf-net adds
         /// <c>OptionFailOnDuplicateKey</c>.
         /// </summary>
+        /// <summary>
+        /// Re-decide <see cref="ProtoMapPlan.IsValidProtobufMap"/> now that the compatibility level
+        /// and the key's own format are known — neither is available where the shape is resolved.
+        /// </summary>
+        /// <remarks>
+        /// <c>IsValidKey</c> takes both: from level 300 a <c>Guid</c> key is valid, because it goes
+        /// on the wire as a string — but not under <c>DataFormat.FixedSize</c>, which selects the
+        /// 16-byte form. Getting this wrong adds <c>OptionFailOnDuplicateKey</c>, which changes
+        /// reading from <c>SetValues</c> to <c>AddRange</c>, so it is a real behavioural difference
+        /// rather than a cosmetic flag.
+        /// </remarks>
+        private static ProtoMapPlan WithLevelledKey(ProtoMapPlan map, int level, ProtoDataFormat keyFormat)
+        {
+            if (map.IsValidProtobufMap || map.KeyKind != ProtoMemberKind.Guid) return map;
+            if (level < 300 || keyFormat == ProtoDataFormat.FixedSize) return map;
+            return new ProtoMapPlan(map.Factory!, map.TakesCollectionType,
+                map.KeyKind, map.KeyTypeName!, map.ValueKind, map.ValueTypeName!,
+                isValidProtobufMap: true, map.ValueSerializerFactory);
+        }
+
         private static bool IsValidProtobufMap(MemberShape key, MemberShape value)
         {
-            // Guid keys are valid from compatibility level 300, which we do not support yet; note
-            // that bool, char and the floating-point types are *not* in the list
+            // a Guid key is *also* valid from level 300, but neither the level nor the key's format
+            // is known here - WithLevelledKey re-decides it once they are. Note that bool, char and
+            // the floating-point types are not in this list at any level
             var validKey = key.EnumType is not null || (!key.IsNullable && key.Kind switch
             {
                 ProtoMemberKind.String or ProtoMemberKind.SByte or ProtoMemberKind.Int16

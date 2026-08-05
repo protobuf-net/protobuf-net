@@ -1,0 +1,357 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.CompatElements;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level300Lists>, ISerializer<WellKnownLists>, ISerializer<CompatMaps>, ISerializer<Level300Map>
+{
+	Level300Lists ISerializer<Level300Lists>.Read(ref ProtoReader.State state, Level300Lists value)
+	{
+		if (value == null)
+		{
+			Level300Lists level300Lists = new Level300Lists();
+			value = level300Lists;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				List<Guid> values = value.Guids;
+				values = RepeatedSerializer.CreateList<Guid>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+				if (values != null)
+				{
+					value.Guids = values;
+				}
+				break;
+			}
+			case 2:
+			{
+				List<decimal> decimals = value.Decimals;
+				decimals = RepeatedSerializer.CreateList<decimal>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, decimals, TypeModel.GetInbuiltSerializer<decimal>(CompatibilityLevel.Level300, DataFormat.Default));
+				if (decimals != null)
+				{
+					value.Decimals = decimals;
+				}
+				break;
+			}
+			case 3:
+			{
+				List<DateTime> dates = value.Dates;
+				dates = RepeatedSerializer.CreateList<DateTime>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, dates, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level300, DataFormat.Default));
+				if (dates != null)
+				{
+					value.Dates = dates;
+				}
+				break;
+			}
+			case 4:
+			{
+				List<TimeSpan> spans = value.Spans;
+				spans = RepeatedSerializer.CreateList<TimeSpan>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, spans, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level300, DataFormat.Default));
+				if (spans != null)
+				{
+					value.Spans = spans;
+				}
+				break;
+			}
+			case 5:
+			{
+				List<Guid> values = value.Fixed;
+				values = RepeatedSerializer.CreateList<Guid>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.FixedSize));
+				if (values != null)
+				{
+					value.Fixed = values;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Level300Lists>.Write(ref ProtoWriter.State state, Level300Lists value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		List<Guid> guids = value.Guids;
+		if (guids != null)
+		{
+			List<Guid> values = guids;
+			RepeatedSerializer.CreateList<Guid>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+		}
+		List<decimal> decimals = value.Decimals;
+		if (decimals != null)
+		{
+			List<decimal> values2 = decimals;
+			RepeatedSerializer.CreateList<decimal>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, TypeModel.GetInbuiltSerializer<decimal>(CompatibilityLevel.Level300, DataFormat.Default));
+		}
+		List<DateTime> dates = value.Dates;
+		if (dates != null)
+		{
+			List<DateTime> values3 = dates;
+			RepeatedSerializer.CreateList<DateTime>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values3, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level300, DataFormat.Default));
+		}
+		List<TimeSpan> spans = value.Spans;
+		if (spans != null)
+		{
+			List<TimeSpan> values4 = spans;
+			RepeatedSerializer.CreateList<TimeSpan>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values4, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level300, DataFormat.Default));
+		}
+		List<Guid> list = value.Fixed;
+		if (list != null)
+		{
+			List<Guid> values = list;
+			RepeatedSerializer.CreateList<Guid>().WriteRepeated(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.FixedSize));
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Level300Lists>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<WellKnownLists>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<CompatMaps>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Level300Map>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	WellKnownLists ISerializer<WellKnownLists>.Read(ref ProtoReader.State state, WellKnownLists value)
+	{
+		if (value == null)
+		{
+			WellKnownLists wellKnownLists = new WellKnownLists();
+			value = wellKnownLists;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				List<DateTime> plain = value.Dates;
+				plain = RepeatedSerializer.CreateList<DateTime>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+				if (plain != null)
+				{
+					value.Dates = plain;
+				}
+				break;
+			}
+			case 2:
+			{
+				List<TimeSpan> spans = value.Spans;
+				spans = RepeatedSerializer.CreateList<TimeSpan>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, spans, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+				if (spans != null)
+				{
+					value.Spans = spans;
+				}
+				break;
+			}
+			case 3:
+			{
+				List<DateTime> plain = value.Plain;
+				plain = RepeatedSerializer.CreateList<DateTime>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain);
+				if (plain != null)
+				{
+					value.Plain = plain;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<WellKnownLists>.Write(ref ProtoWriter.State state, WellKnownLists value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		List<DateTime> dates = value.Dates;
+		if (dates != null)
+		{
+			List<DateTime> values = dates;
+			RepeatedSerializer.CreateList<DateTime>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+		}
+		List<TimeSpan> spans = value.Spans;
+		if (spans != null)
+		{
+			List<TimeSpan> values2 = spans;
+			RepeatedSerializer.CreateList<TimeSpan>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+		}
+		List<DateTime> plain = value.Plain;
+		if (plain != null)
+		{
+			List<DateTime> values = plain;
+			RepeatedSerializer.CreateList<DateTime>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values);
+		}
+	}
+
+	CompatMaps ISerializer<CompatMaps>.Read(ref ProtoReader.State state, CompatMaps value)
+	{
+		if (value == null)
+		{
+			CompatMaps compatMaps = new CompatMaps();
+			value = compatMaps;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dictionary<int, DateTime> plain = value.ViaMember;
+				plain = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+				if (plain != null)
+				{
+					value.ViaMember = plain;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dictionary<int, DateTime> plain = value.ViaMap;
+				plain = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+				if (plain != null)
+				{
+					value.ViaMap = plain;
+				}
+				break;
+			}
+			case 3:
+			{
+				Dictionary<int, DateTime> plain = value.Plain;
+				plain = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+				if (plain != null)
+				{
+					value.Plain = plain;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<CompatMaps>.Write(ref ProtoWriter.State state, CompatMaps value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Dictionary<int, DateTime> viaMember = value.ViaMember;
+		if (viaMember != null)
+		{
+			Dictionary<int, DateTime> values = viaMember;
+			MapSerializer.CreateDictionary<int, DateTime>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+		}
+		Dictionary<int, DateTime> viaMap = value.ViaMap;
+		if (viaMap != null)
+		{
+			Dictionary<int, DateTime> values = viaMap;
+			MapSerializer.CreateDictionary<int, DateTime>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+		}
+		Dictionary<int, DateTime> plain = value.Plain;
+		if (plain != null)
+		{
+			Dictionary<int, DateTime> values = plain;
+			MapSerializer.CreateDictionary<int, DateTime>().WriteMap(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+		}
+	}
+
+	Level300Map ISerializer<Level300Map>.Read(ref ProtoReader.State state, Level300Map value)
+	{
+		if (value == null)
+		{
+			Level300Map level300Map = new Level300Map();
+			value = level300Map;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dictionary<int, Guid> byIndex = value.ByIndex;
+				byIndex = MapSerializer.CreateDictionary<int, Guid>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byIndex, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+				if (byIndex != null)
+				{
+					value.ByIndex = byIndex;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dictionary<Guid, int> byGuid = value.ByGuid;
+				byGuid = MapSerializer.CreateDictionary<Guid, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byGuid, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+				if (byGuid != null)
+				{
+					value.ByGuid = byGuid;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Level300Map>.Write(ref ProtoWriter.State state, Level300Map value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Dictionary<int, Guid> byIndex = value.ByIndex;
+		if (byIndex != null)
+		{
+			Dictionary<int, Guid> values = byIndex;
+			MapSerializer.CreateDictionary<int, Guid>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+		}
+		Dictionary<Guid, int> byGuid = value.ByGuid;
+		if (byGuid != null)
+		{
+			Dictionary<Guid, int> values2 = byGuid;
+			MapSerializer.CreateDictionary<Guid, int>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
+		}
+	}
+}
+public sealed class CompatElementsModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___CompatElementsModel, T>();
+	}
+}
