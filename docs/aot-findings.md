@@ -91,7 +91,30 @@ adding an immutable surrogated type to a fixture and watching `AotConformanceTes
 compile. The fix is a new `DataContractContextFlags.HasSurrogate`, set from the attribute and
 checked alongside `SkipConstructor`.
 
-### 7. Assorted API surprises
+### 7. `[ProtoPartialMember(OverwriteList = ...)]` is silently ignored
+
+**Severity: low** — one option on one attribute, but silent, and it changes read-merge behaviour.
+
+`MetaType.NormalizeProtoMember`'s partial-member branch reads every option off `ppma` (the
+`[ProtoPartialMember]` being examined) *except* two, which it reads off `attrib`:
+
+```csharp
+GetFieldBoolean(ref isPacked, ppma, "IsPacked");
+GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");   // <-- attrib, not ppma
+GetDataFormat(ref dataFormat, ppma, "DataFormat");
+GetFieldBoolean(ref asReferenceHasValue, attrib, "AsReferenceHasValue", false);   // <-- and here
+```
+
+`attrib` is the member's own `[ProtoMember]`, and that branch only runs when the member has **no**
+`[ProtoMember]` that pinned a tag — so `attrib` is null every time it is read there and the option is
+discarded. `IsPacked` and `DataFormat` on the same attribute work fine, which is what makes it read
+as a copy-paste slip rather than a decision.
+
+Consequences are confined to reading: `OverwriteList` selects replace-over-append for a collection or
+a `byte[]`, so a caller who set it still gets append. The generator refuses the option there rather
+than honouring it, since honouring it would disagree with ref-emit.
+
+### 8. Assorted API surprises
 
 Not bugs exactly, but each cost time and each is a trap for callers:
 

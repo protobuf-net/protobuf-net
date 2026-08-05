@@ -1057,6 +1057,34 @@ There is also **no "it has no members" refusal**: an empty message is entirely l
 `.proto`-generated DTOs are full of them — it was the single largest cause of dropped contracts in
 the sweep. It emits a bare skip loop with no `switch`, matching ref-emit.
 
+### `[ProtoPartialMember]` and `[ProtoPartialIgnore]`
+
+Both apply a member-level decision **by name, from the type** — which is the point: the member may
+live in a generated half of a `partial class` that you cannot decorate. `[ProtoPartialMember(tag,
+"Name")]` is `[ProtoMember]`, `[ProtoPartialIgnore("Name")]` is `[ProtoIgnore]`.
+
+Precedence, taken from `Partial.reference.cs`:
+
+- `[ProtoPartialIgnore]` wins over **everything**, including a `[ProtoMember]` the member declares
+  itself — `ApplyDefaultBehaviour` tests it before any family or attribute inspection.
+- `[ProtoPartialMember]` slots between `[ProtoMember]` and `[DataMember(Order)]`:
+  `NormalizeProtoMember` only reaches the partial list when the member did not pin a tag itself, and
+  it runs inside the ProtoBuf-family block, so it beats the `[DataMember]`/`[XmlElement]` orders.
+- Two declarations naming the same member: the **first** to pin a tag wins (`break` on match).
+- `IsRequired`, `IsPacked`, `DataFormat` and `Name` carry over exactly as on `[ProtoMember]`.
+
+**`OverwriteList` is refused here on purpose.** `MetaType`'s partial branch reads it from `attrib` —
+the member's *own* `[ProtoMember]`, which is necessarily null whenever that branch runs — rather than
+from `ppma`, so protobuf-net silently ignores it. Accepting it would make our reads merge differently
+from ref-emit's; refusing at least says so. Recorded in `docs/aot-findings.md`.
+
+Note the shipped analyzer makes the two *contradictory* shapes build **errors** — `PBN0008` for a
+member described by both a `[ProtoMember]` and a `[ProtoPartialMember]`, `PBN0010` for one both
+described and `[ProtoPartialIgnore]`d. That is defensible (unlike `PBN0012` on interfaces, it flags a
+genuine mistake), so `Partial.input.cs` suppresses them with `#pragma` rather than the analyzer being
+changed — pinning a precedence rule requires a contradiction to resolve, so there is no version of
+that test the analyzer would allow.
+
 ### Three more `[ProtoContract]` options
 
 Each turned out to reuse machinery that was already here, which is why they went in together:

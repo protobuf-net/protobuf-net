@@ -16,6 +16,8 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoContractAttributeName = "ProtoBuf.ProtoContractAttribute";
         private const string ProtoIncludeAttributeName = "ProtoBuf.ProtoIncludeAttribute";
         private const string ProtoReservedAttributeName = "ProtoBuf.ProtoReservedAttribute";
+        private const string ProtoPartialIgnoreAttributeName = "ProtoBuf.ProtoPartialIgnoreAttribute";
+        private const string ProtoPartialMemberAttributeName = "ProtoBuf.ProtoPartialMemberAttribute";
         private const string ProtoSurrogateAttributeName = "ProtoBuf.ProtoSurrogateAttribute";
         private const string ProtoMapAttributeName = "ProtoBuf.ProtoMapAttribute";
         private const string NullWrappedValueAttributeName = "ProtoBuf.NullWrappedValueAttribute";
@@ -325,6 +327,8 @@ namespace ProtoBuf.BuildTools.Generators
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
             bool isGroup = false, ignoreUnknownSubTypes = false, useProtoMembersOnly = false;
+            HashSet<string>? partialIgnores = null;
+            Dictionary<string, PartialMember>? partialMembers = null;
             var ignoreListHandling = false;
             var dataMemberOffset = 0;
             var implicitMode = 0;
@@ -415,6 +419,32 @@ namespace ProtoBuf.BuildTools.Generators
                 else if (attributeName == ProtoIncludeAttributeName) { }
                 // reserved field ranges exist to shape the generated .proto; nothing on the wire
                 else if (attributeName == ProtoReservedAttributeName) { }
+                // excludes a member by name, from the type - MetaType skips it outright, before any
+                // family or attribute inspection, so it wins over everything
+                else if (attributeName == ProtoPartialIgnoreAttributeName)
+                {
+                    if (attribute.ConstructorArguments.Length != 1
+                        || attribute.ConstructorArguments[0].Value is not string ignoredName)
+                    {
+                        return Option(diagnostics, at, name, "this form of [ProtoPartialIgnore]");
+                    }
+                    (partialIgnores ??= new HashSet<string>(StringComparer.Ordinal)).Add(ignoredName);
+                }
+                // [ProtoMember] applied to a member by name, from the type
+                else if (attributeName == ProtoPartialMemberAttributeName)
+                {
+                    if (ParsePartialMember(diagnostics, at, name, attribute) is not { } partial)
+                    {
+                        return null;
+                    }
+                    // MetaType walks the list and takes the first entry naming this member that
+                    // pins a tag, so a duplicate name is the earlier declaration winning
+                    partialMembers ??= new Dictionary<string, PartialMember>(StringComparer.Ordinal);
+                    if (!partialMembers.ContainsKey(partial.MemberName))
+                    {
+                        partialMembers.Add(partial.MemberName, partial);
+                    }
+                }
                 // [DataContract] and [XmlType] are contract markers in their own right; their own
                 // arguments (Name, Namespace) affect schema naming only
                 else if (attributeName == DataContractAttributeName) isDataContract = true;
@@ -588,6 +618,10 @@ namespace ProtoBuf.BuildTools.Generators
                         continue;
                 }
 
+                // [ProtoPartialIgnore] excludes the member outright: MetaType tests it before any
+                // family or attribute inspection, so it beats even an explicit [ProtoMember]
+                if (partialIgnores is not null && partialIgnores.Contains(symbol.Name)) continue;
+
                 var atMember = PlanLocation.From(symbol);
                 int? fieldNumber = null, dataMemberOrder = null, xmlOrder = null;
                 bool ignored = false, isPacked = false, overwriteList = false, isRequired = false;
@@ -752,10 +786,21 @@ namespace ProtoBuf.BuildTools.Generators
                 // exception is OverwriteList on a "bytes" member, which is a scalar here yet still
                 // reaches BlobSerializer's overwriteList; that one is honoured in the emit.
 
-                // precedence, per MetaType.ApplyDefaultBehaviour: [ProtoMember] first, then
-                // [DataMember(Order)] - to which the offset applies - then [XmlElement]/[XmlArray],
-                // to which it does not. An order below 1 means "not declared" (DataMember.Order
-                // defaults to -1, and 0 is not a valid protobuf field number).
+                // precedence, per MetaType.ApplyDefaultBehaviour: [ProtoMember] first, then the
+                // type's [ProtoPartialMember] for this name, then [DataMember(Order)] - to which the
+                // offset applies - then [XmlElement]/[XmlArray], to which it does not. An order below
+                // 1 means "not declared" (DataMember.Order defaults to -1, and 0 is not a valid
+                // protobuf field number).
+                // NormalizeProtoMember only reaches the partial list when the member's own
+                // [ProtoMember] did not pin a tag, and only pins from it when the tag is > 0
+                if (fieldNumber is null && partialMembers is not null
+                    && partialMembers.TryGetValue(symbol.Name, out var partial) && partial.FieldNumber > 0)
+                {
+                    fieldNumber = partial.FieldNumber;
+                    isRequired = partial.IsRequired;
+                    isPacked = partial.IsPacked;
+                    dataFormat = partial.DataFormat;
+                }
                 fieldNumber ??= isDataContract && dataMemberOrder >= 1
                     ? dataMemberOrder + dataMemberOffset : null;
                 fieldNumber ??= isXmlType && xmlOrder >= 1 ? xmlOrder : null;
@@ -1043,6 +1088,79 @@ namespace ProtoBuf.BuildTools.Generators
                 callbacks: new(callbacks),
                 isAbstract: type.IsAbstract && subTypes.Count == 0,
                 isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes);
+        }
+
+        /// <summary>
+        /// A <c>[ProtoPartialMember(tag, "Name")]</c> declared on the type: a <c>[ProtoMember]</c>
+        /// applied to a member by name.
+        /// </summary>
+        private readonly struct PartialMember
+        {
+            public PartialMember(string memberName, int fieldNumber, bool isRequired, bool isPacked,
+                ProtoDataFormat dataFormat)
+            {
+                MemberName = memberName;
+                FieldNumber = fieldNumber;
+                IsRequired = isRequired;
+                IsPacked = isPacked;
+                DataFormat = dataFormat;
+            }
+
+            public string MemberName { get; }
+            public int FieldNumber { get; }
+            public bool IsRequired { get; }
+            public bool IsPacked { get; }
+            public ProtoDataFormat DataFormat { get; }
+        }
+
+        /// <summary>
+        /// Read a <c>[ProtoPartialMember]</c>, which takes the same named arguments as
+        /// <c>[ProtoMember]</c> — with one exception, noted below.
+        /// </summary>
+        private static PartialMember? ParsePartialMember(List<PlanDiagnostic> diagnostics,
+            PlanLocation at, string type, AttributeData attribute)
+        {
+            if (attribute.ConstructorArguments.Length != 2
+                || attribute.ConstructorArguments[0].Value is not int fieldNumber
+                || attribute.ConstructorArguments[1].Value is not string memberName)
+            {
+                Option(diagnostics, at, type, "this form of [ProtoPartialMember]");
+                return null;
+            }
+            bool isRequired = false, isPacked = false;
+            var dataFormat = ProtoDataFormat.Default;
+            foreach (var argument in attribute.NamedArguments)
+            {
+                switch (argument.Key)
+                {
+                    case "IsRequired" when argument.Value.Value is bool required:
+                        isRequired = required;
+                        continue;
+                    case "IsPacked" when argument.Value.Value is bool packed:
+                        isPacked = packed;
+                        continue;
+                    // the constant is the DataFormat enum's underlying int
+                    case "DataFormat" when argument.Value.Value is int format:
+                        if (GetDataFormat(format) is not { } parsed)
+                        {
+                            Option(diagnostics, at, type, "this DataFormat");
+                            return null;
+                        }
+                        dataFormat = parsed;
+                        continue;
+                    // schema naming only
+                    case "Name":
+                        continue;
+                    // OverwriteList is deliberately *not* accepted here. MetaType's partial-member
+                    // branch reads it from `attrib` - the member's own [ProtoMember], which is null
+                    // whenever this branch runs - instead of from `ppma`, so protobuf-net silently
+                    // ignores it. Honouring it would make our reads merge differently from ref-emit's;
+                    // see docs/aot-findings.md.
+                }
+                Option(diagnostics, at, type, $"[ProtoPartialMember({argument.Key} = ...)]");
+                return null;
+            }
+            return new PartialMember(memberName, fieldNumber, isRequired, isPacked, dataFormat);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
