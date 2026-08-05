@@ -13,6 +13,7 @@ partial class OrderingModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>
@@ -84,6 +85,60 @@ partial class OrderingModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.Ordering.Referencing global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
+        {
+            value ??= new global::AotFixtures.Ordering.Referencing();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        var tmp1 = value.FromDataContract;
+                        tmp1 = state.ReadMessage<global::AotFixtures.Ordering.ViaDataMember>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+                        if (tmp1 != null) value.FromDataContract = tmp1;
+                        break;
+                    }
+                    case 2:
+                    {
+                        var tmp2 = value.FromXmlType;
+                        tmp2 = state.ReadMessage<global::AotFixtures.Ordering.ViaXmlElement>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+                        if (tmp2 != null) value.FromXmlType = tmp2;
+                        break;
+                    }
+                    case 3:
+                    {
+                        var tmp3 = value.Several;
+                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Ordering.ViaDataMember>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, this);
+                        if (tmp3 != null) value.Several = tmp3;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Referencing value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.FromDataContract;
+            state.WriteMessage<global::AotFixtures.Ordering.ViaDataMember>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            var tmp2 = value.FromXmlType;
+            state.WriteMessage<global::AotFixtures.Ordering.ViaXmlElement>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            var tmp3 = value.Several;
+            if (tmp3 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Ordering.ViaDataMember>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, this);
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Features

@@ -299,9 +299,22 @@ the model* — so we emit `ISerializerProxy<List<int>>` returning the same
 wire type is the **element's** (`WireTypeVarint` for `List<int>`), and such a shape is never a valid
 protobuf map, so it also picks up `OptionFailOnDuplicateKey`.
 
-A nested **map** value and a nested **key** are still refused. The map case is a limit of the plan
-rather than of protobuf-net — a `ProtoMapPlan` inside a `ProtoMapPlan` is not expressible in a struct
-— and is one of the few remaining refusals that is genuinely ours rather than a match.
+A nested **key** is still refused. That one is a limit of the plan rather than of protobuf-net's
+reflection path — but note it *does* match the compiled path, which is the more interesting half:
+
+**A compiled model throws on any map whose key or value is a collection.** `Compile(name, path)`
+succeeds and emits the member, then the first use throws *"No serializer for type
+`Dictionary<string,String>` is available for model X"* — the emitted code passes
+`this as ISerializer<Dictionary<string,string>>` and the services type implements
+`ISerializer<KeyValuePair<string,string>>`, so the cast is null and resolution falls back to a model
+with no entry. The reflection path handles all three shapes. So our repeated and nested map **values**
+match reflection and *exceed* the compiled path, and our refused nested **key** matches the compiled
+path and falls short of reflection. Item 9 in `docs/aot-findings.md`.
+
+That distinction is only visible if you **run** the compiled model. `AotRefGen` compiles and
+decompiles but never executes, so `*.reference.cs` shows the member emitted and says nothing about
+whether it works — which is how this was first mis-recorded as protobuf-net dropping the member
+silently, and then mis-corrected as protobuf-net handling it. Emitted is not working.
 
 Collection options are pure features composition, and compose orthogonally:
 `IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*
@@ -592,17 +605,34 @@ no behaviour to reproduce and nothing outstanding. These were established by pro
 | `[NullWrappedCollection]` on a non-collection | throws *"can only be used with collection types"* |
 | `[ProtoInclude(tag, "TypeName")]` | resolves at runtime; throws *"Unable to resolve sub-type"* even for a live type |
 
-Two of those refusals now **name the route** in the diagnostic itself, because "has unsupported type
-X" reads as our backlog even where the fix is one attribute away. Both are determined rather than
-guessed: a parseable type by re-asking `GetMemberShape` with `AllowParseableTypes` on, `System.Type`
-by name. Nothing else gets a hint — plenty of types landing there are our own gaps (an enum-valued
-map, a nested map key), and pointing those at `[ProtoSurrogate]` would send the reader nowhere.
+Several of those refusals now **name the route** in the diagnostic itself, because "has unsupported
+type X" reads as our backlog even where the fix is one attribute away. Every branch is determined
+rather than guessed, and the ones that had to be *excluded* were as instructive as the ones added:
+
+- a **parseable** type — by re-asking `GetMemberShape` with `AllowParseableTypes` on;
+- **`System.Type`** — by name; ref-emit does serialize it, through `Type.GetType`, which AOT cannot;
+- **`DateOnly`/`TimeOnly`** — a recognised type whose `BclHelpers` methods are inside
+  `#if NET6_0_OR_GREATER`, so the refusal is about the *reference*, not the type. Saying
+  "protobuf-net has no serializer for it" here would be false;
+- **no contract family at all** — a match, and much the largest group: protobuf-net throws
+  *"No serializer defined for type"* for it too, on both ref-emit paths. Interfaces and delegates
+  land here. For a **collection** the question moves one level down to the element, which is how
+  `List<ISomething>` gets an answer;
+- **nothing for a map**, deliberately: its key and value are separate so there is no one element to
+  name, and an enum on either side is a gap of ours, not something protobuf-net refuses. An enum is
+  likewise excluded from the "not a contract" test — it needs no attribute and is a scalar by
+  another route.
 
 `System.Net.IPAddress` and `System.DateTimeOffset` are the two worth knowing, since both look like
 gaps in the sweep's member-type tail and neither is: `IPAddress` is parseable and works under
 `[ProtoModel(AllowParseableTypes = true)]` (`Parseable.input.cs` covers it against ref-emit), and
 `DateTimeOffset` has **no** protobuf-net serializer at all, so `[ProtoSurrogate]` is the fix for
 ref-emit as much as for us (`ModelSurrogate.input.cs`).
+
+**A member type carrying `[DataContract]` or `[XmlType]` is a contract**, exactly as when seeded.
+`GetMessageKind` used to recognise only `[ProtoContract]`, so the very same type was emittable as a
+seed and "unsupported" one level down — `Examples/NWind`'s `List<OrderCompat>` is the shape that
+turned it up. It now asks `HasContractFamily`, matching `MetaType.GetContractFamily`.
 
 **Audit before building.** Three separate features turned out to be already-working or
 already-refused when checked against the runtime model rather than assumed from the sweep table —

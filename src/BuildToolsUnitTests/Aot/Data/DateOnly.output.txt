@@ -1,3 +1,3 @@
 Generator produced 1 diagnostics:
 Warning PBN2001 Aot/Data/DateOnly.input.cs L20 C38
-Contract 'AotFixtures.DateOnlyFixture.Days' is omitted from the AOT model: member 'Date' has unsupported type 'System.DateOnly'.
+Contract 'AotFixtures.DateOnlyFixture.Days' is omitted from the AOT model: member 'Date' has unsupported type 'System.DateOnly'; protobuf-net serializes it through BclHelpers, but those methods are inside #if NET6_0_OR_GREATER - the referenced protobuf-net does not carry them.

@@ -892,6 +892,18 @@ namespace ProtoBuf.BuildTools.Generators
                     // there, so say which one it is - the sweep's member-type tail is mostly these
                     string WhyUnsupported()
                     {
+                        // DateOnly/TimeOnly are recognised types whose BclHelpers methods only exist
+                        // in the net6.0+ build, so the refusal is about the *reference*, not the
+                        // type. Saying "protobuf-net has no serializer for it" here would be false
+                        var bare = memberType is INamedTypeSymbol { IsGenericType: true } nullable
+                            && nullable.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T
+                            ? nullable.TypeArguments[0] : memberType;
+                        if (GetScalarKind(bare) is ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly)
+                        {
+                            return "; protobuf-net serializes it through BclHelpers, but those methods "
+                                + "are inside #if NET6_0_OR_GREATER - the referenced protobuf-net does "
+                                + "not carry them";
+                        }
                         // would it resolve with the model option turned on? asked rather than
                         // pattern-matched, so it stays true to ParseableSerializer.TryCreate
                         if (!allowParseableTypes
@@ -910,11 +922,41 @@ namespace ProtoBuf.BuildTools.Generators
                             return "; System.Type is deliberately not supported, because ref-emit "
                                 + "serializes it through Type.GetType, which native AOT cannot do";
                         }
-                        // and nothing otherwise, deliberately. [ProtoSurrogate] is the route for a
-                        // type protobuf-net cannot handle either, but plenty that land here are our
-                        // own gaps - an enum-valued map, a nested map key - where suggesting a
-                        // surrogate would send the reader somewhere pointless. A hint that is wrong
-                        // half the time is worse than no hint
+                        // a type with no contract family at all is a *match*, not a shortfall:
+                        // protobuf-net throws for it too, on both the reflection and persisted-dll
+                        // paths. Worth saying, because it is much the largest group here and reads
+                        // as our backlog otherwise. Interfaces and delegates land here as well.
+                        // A collection is not itself the problem - protobuf-net serializes those
+                        // perfectly well - so the question moves to its *element*, one level down.
+                        // That is how List<ISomeInterface> gets an answer; a map's element is a
+                        // KeyValuePair, which IsTupleCandidate excludes, so nesting stops there
+                        var candidate = bare;
+                        if (candidate is INamedTypeSymbol repeated
+                            // a map is excluded: its key and value are separate, so there is no one
+                            // "element" to name, and an enum on either side is our gap rather than
+                            // a match - claiming protobuf-net cannot do it would be false
+                            && ResolveRepeated(repeated) is { IsMap: false, Element: { } element })
+                        {
+                            candidate = element;
+                        }
+                        // an enum is a scalar by another route (GetScalarKind does not cover it), and
+                        // needs no contract attribute, so it must not be read as "not a contract"
+                        if (candidate is INamedTypeSymbol named && named.TypeKind != TypeKind.Enum
+                            && !HasContractFamily(named)
+                            && !IsTupleCandidate(named) && GetScalarKind(named) is null
+                            && ResolveRepeated(named) is null)
+                        {
+                            var what = ReferenceEquals(candidate, bare)
+                                ? "it" : $"its element '{named.ToDisplayString()}'";
+                            return $"; {what} is not marked [ProtoContract], [DataContract] or "
+                                + "[XmlType] and is not a tuple, so protobuf-net has no serializer "
+                                + "for it either: \"No serializer defined for type\" - "
+                                + "[ProtoSurrogate] on the model is the way to serialize a type you "
+                                + "do not own";
+                        }
+                        // and nothing otherwise, deliberately. Plenty that land here are our own
+                        // gaps - an enum-valued map, a nested map key - where a surrogate would send
+                        // the reader somewhere pointless. A hint that is wrong is worse than none
                         return "";
                     }
                 }
@@ -2364,10 +2406,13 @@ namespace ProtoBuf.BuildTools.Generators
             message = null;
             if (type is not INamedTypeSymbol named) return null;
 
-            // anything marked [ProtoContract] counts as reachable, supported or not; whether it can
-            // actually be handled is decided when the closure gets to it
-            if (named.GetAttributes().Any(static a
-                    => a.AttributeClass?.ToDisplayString() == ProtoContractAttributeName))
+            // anything carrying a contract attribute counts as reachable, supported or not; whether
+            // it can actually be handled is decided when the closure gets to it.
+            // Note this is the *family*, not just [ProtoContract]: MetaType.GetContractFamily treats
+            // [DataContract] and [XmlType] as contract markers in their own right, and the seeded
+            // path here already does too - so recognising only [ProtoContract] made the same type
+            // emittable as a seed and unsupported as a member. Probed on both ref-emit paths
+            if (HasContractFamily(named))
             {
                 message = named;
                 return ProtoMemberKind.Message;

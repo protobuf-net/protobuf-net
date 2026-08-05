@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using AotFixtures.Ordering;
 using ProtoBuf;
@@ -5,7 +6,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-internal sealed class ___PBN_Services___OrderingModel : ISerializer<ViaDataMember>, ISerializer<ViaDataMemberOffset>, ISerializer<ViaXmlElement>, ISerializer<OffsetIgnoredByXml>, ISerializer<Mixed>
+internal sealed class ___PBN_Services___OrderingModel : ISerializer<ViaDataMember>, ISerializer<ViaDataMemberOffset>, ISerializer<ViaXmlElement>, ISerializer<OffsetIgnoredByXml>, ISerializer<Mixed>, ISerializer<Referencing>
 {
 	ViaDataMember ISerializer<ViaDataMember>.Read(ref ProtoReader.State state, ViaDataMember value)
 	{
@@ -85,6 +86,12 @@ internal sealed class ___PBN_Services___OrderingModel : ISerializer<ViaDataMembe
 	}
 
 	SerializerFeatures ISerializer<Mixed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Referencing>.get_Features()
 	{
 		//ILSpy generated this explicit interface implementation from .override directive in Features_82
 		return this.Features_82();
@@ -261,6 +268,71 @@ internal sealed class ___PBN_Services___OrderingModel : ISerializer<ViaDataMembe
 		if (onlyDataMember != 0)
 		{
 			state.WriteInt32Varint(5, onlyDataMember);
+		}
+	}
+
+	Referencing ISerializer<Referencing>.Read(ref ProtoReader.State state, Referencing value)
+	{
+		if (value == null)
+		{
+			Referencing referencing = new Referencing();
+			value = referencing;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				ViaDataMember fromDataContract = value.FromDataContract;
+				fromDataContract = state.ReadMessage(SerializerFeatures.CategoryRepeated, fromDataContract, this);
+				if (fromDataContract != null)
+				{
+					value.FromDataContract = fromDataContract;
+				}
+				break;
+			}
+			case 2:
+			{
+				ViaXmlElement fromXmlType = value.FromXmlType;
+				fromXmlType = state.ReadMessage(SerializerFeatures.CategoryRepeated, fromXmlType, this);
+				if (fromXmlType != null)
+				{
+					value.FromXmlType = fromXmlType;
+				}
+				break;
+			}
+			case 3:
+			{
+				List<ViaDataMember> several = value.Several;
+				several = RepeatedSerializer.CreateList<ViaDataMember>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, several, this);
+				if (several != null)
+				{
+					value.Several = several;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Referencing>.Write(ref ProtoWriter.State state, Referencing value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		ViaDataMember fromDataContract = value.FromDataContract;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, fromDataContract, this);
+		ViaXmlElement fromXmlType = value.FromXmlType;
+		state.WriteMessage(2, SerializerFeatures.CategoryRepeated, fromXmlType, this);
+		List<ViaDataMember> several = value.Several;
+		if (several != null)
+		{
+			List<ViaDataMember> values = several;
+			RepeatedSerializer.CreateList<ViaDataMember>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, this);
 		}
 	}
 }

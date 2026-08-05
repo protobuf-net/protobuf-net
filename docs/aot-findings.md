@@ -133,28 +133,44 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   deserialize throws, because there is no concrete type to construct.
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.
 
-## Retracted
+### 9. A compiled model throws on a map whose key or value is a collection
 
-### The persisted-dll path does *not* drop a map-of-map member
+**Severity: medium** — the model compiles clean and fails on first use, so it is a deployment-time
+failure rather than a build-time one. Confirmed on both halves of `Compile(name, path)`.
 
-Recorded here as a silent-data-loss bug: a `Dictionary<string, Dictionary<string, string>>` member
-was said to round-trip through `RuntimeTypeModel` while the compiled model emitted no code at all
-for it. **It is not true**, and no issue should be raised for it.
+| shape | `RuntimeTypeModel` | persisted dll |
+| --- | --- | --- |
+| `Dictionary<string, Dictionary<string, string>>` | ok, 13 bytes | **compiles, then throws on use** |
+| `Dictionary<string, List<int>>` | ok, 9 bytes | **compiles, then throws on use** |
+| `Dictionary<List<int>, List<string>>` | ok, 12 bytes | **compiles, then throws on use** |
 
-Regenerating `MapNested.reference.cs` puts field 3 in both the read and the write, stably across
-repeated runs. The original observation came from a **stale reference file**, and the git history
-shows exactly how:
+```
+InvalidOperationException: No serializer for type
+  System.Collections.Generic.Dictionary`2[System.String,System.String] is available for model X
+```
 
-- `c4fe9fa3` committed a reference that already contained the `Maps` member while the *input* did
-  not — the file was generated from a working tree that was ahead of what got committed;
-- `895100f2` regenerated it, correctly dropping field 3, because at that point no such member existed;
-- `0ef7af2c` added `Maps` to the input and **did not re-run `AotRefGen`**, so the file still showed
-  no field 3 — which was then read as ref-emit refusing to emit it.
+The compiled serializer emits the member and passes `this as ISerializer<Dictionary<string,string>>`
+for the value serializer. The generated services type does not implement that interface — it
+implements `ISerializer<KeyValuePair<string, string>>` — so the cast yields null, resolution falls
+back to the model, and the model has no entry for it.
 
-The lesson is about the harness, not about protobuf-net: `*.reference.cs` is only evidence if it was
-generated from the input beside it. A reference that is *missing* something is the easy way to be
-fooled, because an un-run generator and a generator that emitted nothing look identical. Regenerate
-before concluding anything from an absence.
+**This entry supersedes two earlier wrong ones, and the way both went wrong is the point:**
+
+- `0ef7af2c` recorded it as *silent data loss* — "the compiled model emits no code at all for it".
+  That was read off a `MapNested.reference.cs` that had never been regenerated after the member was
+  added to the fixture, so the absence was the harness, not ref-emit.
+- The correction to that then claimed the persisted path **handles** the shape, on the strength of
+  regenerating the reference and seeing field 3 appear in the read and the write. Also wrong, and
+  wrong in a more instructive way: `AotRefGen` only *compiles and decompiles*, it never runs the
+  model. Emitted code is not working code, and here the difference is exactly the bug.
+
+So the rule that "a reference is only evidence if it was generated from the input beside it" is
+necessary but not sufficient. `*.reference.cs` answers *what ref-emit emits*; it cannot answer
+whether the result runs. For anything where the two could differ, run it.
+
+For the generator this means: our support for a repeated or nested map **value** matches the
+reflection path and exceeds the compiled one, and our refusal of a nested map **key** matches the
+compiled path while falling short of the reflection one.
 
 ## Future ideas
 

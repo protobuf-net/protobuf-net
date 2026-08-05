@@ -53,10 +53,28 @@ public class Mixed
     [DataMember(Order = 2)] public int OnlyDataMember { get; set; }
 }
 
+// A [DataContract] or [XmlType] type is a contract marker in its own right as a *member type* too,
+// not only when seeded - MetaType.GetContractFamily makes no distinction, and both ref-emit paths
+// serialize these. The generator used to recognise only [ProtoContract] here, so the very same type
+// was emittable as a seed and "unsupported" one level down; Examples/NWind's List<OrderCompat> is
+// the shape that turned it up.
+[ProtoContract]
+public class Referencing
+{
+    [ProtoMember(1)] public ViaDataMember FromDataContract { get; set; }
+    [ProtoMember(2)] public ViaXmlElement FromXmlType { get; set; }
+    [ProtoMember(3)] public System.Collections.Generic.List<ViaDataMember> Several { get; set; }
+}
+
 public static class OrderingSamples
 {
     public static object[] Values =>
     [
+        new Referencing(),
+        new Referencing { FromDataContract = new ViaDataMember { First = 1, Second = "a" } },
+        new Referencing { FromXmlType = new ViaXmlElement { First = 2 } },
+        new Referencing { Several = [new ViaDataMember { First = 3 }, new ViaDataMember { Second = "z" }] },
+
         new ViaDataMember(),
         new ViaDataMember { First = 1, Second = "a", NoOrder = 9, Undecorated = 8 },
         new ViaDataMemberOffset(),
@@ -76,6 +94,7 @@ public static class OrderingSamples
 [ProtoSerializable(typeof(ViaXmlElement))]
 [ProtoSerializable(typeof(OffsetIgnoredByXml))]
 [ProtoSerializable(typeof(Mixed))]
+[ProtoSerializable(typeof(Referencing))]
 public partial class OrderingModel : TypeModel
 {
 }
