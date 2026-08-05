@@ -84,7 +84,14 @@ internal static class Program
         var source = BuildModel(contracts);
         var compilation = CSharpCompilation.Create("coverage",
             [CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))],
-            references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                // PBN9001 is the [Experimental] id on the model attributes, so it is an *error* by
+                // default and our own seed source trips it once per contract. Every other consumer
+                // in the tree NoWarns it in the csproj; this is the programmatic equivalent.
+                .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
+                {
+                    ["PBN9001"] = ReportDiagnostic.Suppress,
+                }));
 
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             [new ProtoModelGenerator().AsSourceGenerator()],
@@ -108,6 +115,13 @@ internal static class Program
             .GroupBy(static x => x.Id)
             .OrderByDescending(static x => x.Count())
             .ToList();
+
+        // ...except for the one error this harness causes itself: it flattens every dll beside the
+        // targets into one reference set, so a type name declared by two of them is ambiguous here
+        // and would not be in a real consumer. Reported, but not as a generator fault.
+        var artefacts = errors.Where(static x => x.Key == "CS0433").ToList();
+        errors = errors.Except(artefacts).ToList();
+
         Console.WriteLine();
         Console.WriteLine(errors.Count == 0
             ? "the generated code compiles cleanly."
@@ -115,6 +129,12 @@ internal static class Program
         foreach (var group in errors.Take(10))
         {
             Console.WriteLine($"- {group.Key}: {group.Count()} — {group.First().GetMessage()}");
+        }
+        foreach (var group in artefacts)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"harness artefact, {group.Key}: {group.Count()} — two scanned assemblies "
+                + $"declare the same type name, e.g. {group.First().GetMessage()}");
         }
         return 0;
     }

@@ -56,6 +56,6 @@ Member types we could not handle:
 | 1 | `FloatData` |
 | 1 | `Item` |
 
-**the generated code does not compile** — these are generator bugs, not gaps:
-- PBN9001: 1393 — 'ProtoBuf.ProtoModelAttribute' is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-- CS0433: 3 — The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
+the generated code compiles cleanly.
+
+harness artefact, CS0433: 3 — two scanned assemblies declare the same type name, e.g. The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'

@@ -1059,7 +1059,12 @@ last snapshot. Build those three projects first — it seeds from **metadata**, 
 Two artefacts to know about: it can only seed types a `typeof(...)` in another assembly can name, so
 non-public and open-generic contracts are reported as "not seedable" rather than analysed; and
 because it flattens every dll beside the targets into one reference set, `CS0433` in its output means
-two scanned assemblies declare the same type name, not a generator fault.
+two scanned assemblies declare the same type name, not a generator fault. That one is now reported
+under its own "harness artefact" heading rather than counted as a generator bug, so the "does the
+emitted code compile" line means what it says.
+
+It writes to stdout and the snapshot carries a hand-added header line, so regenerating it is
+`{ header; dotnet run --project src/AotCoverage; } > docs/aot-coverage.md`, not a plain redirect.
 
 ### Reference output from ref-emit
 
