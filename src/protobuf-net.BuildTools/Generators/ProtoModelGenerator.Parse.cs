@@ -1050,6 +1050,20 @@ namespace ProtoBuf.BuildTools.Generators
                         return Option(diagnostics, atMember, name, "[DefaultValue] on a BCL type");
                     }
                 }
+                // Group frames a sub-message, so a collection of *scalars* has nothing for the markers
+                // to wrap; protobuf-net throws while building the model, on both ref-emit paths, with
+                // the notably unhelpful "Operation is not valid due to the current state of the
+                // object". A map is exempt: there the group wraps the key/value entry, which is a
+                // message whatever the element types are
+                if (dataFormat == ProtoDataFormat.Group && shape.Repeated.Factory is not null
+                    && kind != ProtoMemberKind.Message)
+                {
+                    return Contract(diagnostics, atMember, name,
+                        $"member '{symbol.Name}' has DataFormat.Group on a collection of scalars, which "
+                        + "protobuf-net refuses too: \"Operation is not valid due to the current state "
+                        + "of the object\"");
+                }
+
                 // on anything else WellKnown has nothing to promote, and ref-emit simply ignores it
                 // needed for the [UnsafeAccessor] signature, as the type argument to ReadAny/WriteAny,
                 // and to spell out the default() an overwriting "bytes" read passes to AppendBytes

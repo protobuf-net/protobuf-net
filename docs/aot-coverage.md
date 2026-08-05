@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **85** of 1392 (94% emitted)
-of which dropped only by cascade: 22
+contracts dropped: **87** of 1392 (94% emitted)
+of which dropped only by cascade: 23
 
 | count | reason |
 | ---: | --- |
@@ -29,6 +29,7 @@ of which dropped only by cascade: 22
 | 1 | PBN2001 member '…' has no public getter |
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN2001 member '…' has unsupported type '…'; its element '…' is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
+| 1 | PBN2002 member '…' has DataFormat.Group on a collection of scalars, which protobuf-net refuses too: "Operation is not valid due to the current state of the object" |
 | 1 | PBN2002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
 | 1 | PBN2002 an interface contract needs [ProtoInclude] for its implementations |
 | 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |

@@ -1,0 +1,263 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.GroupedElements;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___GroupedElementsModel : ISerializer<Grouped>, ISerializer<GroupedMaps>, ISerializer<Item>
+{
+	Grouped ISerializer<Grouped>.Read(ref ProtoReader.State state, Grouped value)
+	{
+		if (value == null)
+		{
+			Grouped grouped = new Grouped();
+			value = grouped;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				List<Item> plain = value.Items;
+				plain = RepeatedSerializer.CreateList<Item>().ReadRepeated(ref state, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, plain, this);
+				if (plain != null)
+				{
+					value.Items = plain;
+				}
+				break;
+			}
+			case 2:
+			{
+				Item[] array = value.Array;
+				array = RepeatedSerializer.CreateVector<Item>().ReadRepeated(ref state, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, array, this);
+				if (array != null)
+				{
+					value.Array = array;
+				}
+				break;
+			}
+			case 3:
+			{
+				List<Item> plain = value.Plain;
+				plain = RepeatedSerializer.CreateList<Item>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, this);
+				if (plain != null)
+				{
+					value.Plain = plain;
+				}
+				break;
+			}
+			case 5:
+			{
+				Item single = value.Single;
+				single = state.ReadMessage(SerializerFeatures.CategoryRepeated, single, this);
+				if (single != null)
+				{
+					value.Single = single;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Grouped>.Write(ref ProtoWriter.State state, Grouped value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		List<Item> items = value.Items;
+		if (items != null)
+		{
+			List<Item> values = items;
+			RepeatedSerializer.CreateList<Item>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+		Item[] array = value.Array;
+		if (array != null)
+		{
+			Item[] values2 = array;
+			RepeatedSerializer.CreateVector<Item>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, values2, this);
+		}
+		List<Item> plain = value.Plain;
+		if (plain != null)
+		{
+			List<Item> values = plain;
+			RepeatedSerializer.CreateList<Item>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+		Item single = value.Single;
+		state.WriteGroup(5, SerializerFeatures.CategoryRepeated, single, this);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Grouped>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<GroupedMaps>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Item>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	GroupedMaps ISerializer<GroupedMaps>.Read(ref ProtoReader.State state, GroupedMaps value)
+	{
+		if (value == null)
+		{
+			GroupedMaps groupedMaps = new GroupedMaps();
+			value = groupedMaps;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dictionary<int, Item> plain = value.ByIndex;
+				plain = MapSerializer.CreateDictionary<int, Item>().ReadMap(ref state, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+				if (plain != null)
+				{
+					value.ByIndex = plain;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dictionary<string, string> scalars = value.Scalars;
+				scalars = MapSerializer.CreateDictionary<string, string>().ReadMap(ref state, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, scalars, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+				if (scalars != null)
+				{
+					value.Scalars = scalars;
+				}
+				break;
+			}
+			case 3:
+			{
+				Dictionary<int, Item> plain = value.ViaMap;
+				plain = MapSerializer.CreateDictionary<int, Item>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeStartGroup, null, this);
+				if (plain != null)
+				{
+					value.ViaMap = plain;
+				}
+				break;
+			}
+			case 4:
+			{
+				Dictionary<int, Item> plain = value.Plain;
+				plain = MapSerializer.CreateDictionary<int, Item>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+				if (plain != null)
+				{
+					value.Plain = plain;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<GroupedMaps>.Write(ref ProtoWriter.State state, GroupedMaps value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Dictionary<int, Item> byIndex = value.ByIndex;
+		if (byIndex != null)
+		{
+			Dictionary<int, Item> values = byIndex;
+			MapSerializer.CreateDictionary<int, Item>().WriteMap(ref state, 1, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+		}
+		Dictionary<string, string> scalars = value.Scalars;
+		if (scalars != null)
+		{
+			Dictionary<string, string> values2 = scalars;
+			MapSerializer.CreateDictionary<string, string>().WriteMap(ref state, 2, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+		}
+		Dictionary<int, Item> viaMap = value.ViaMap;
+		if (viaMap != null)
+		{
+			Dictionary<int, Item> values = viaMap;
+			MapSerializer.CreateDictionary<int, Item>().WriteMap(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeStartGroup, null, this);
+		}
+		Dictionary<int, Item> plain = value.Plain;
+		if (plain != null)
+		{
+			Dictionary<int, Item> values = plain;
+			MapSerializer.CreateDictionary<int, Item>().WriteMap(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+		}
+	}
+
+	Item ISerializer<Item>.Read(ref ProtoReader.State state, Item value)
+	{
+		if (value == null)
+		{
+			Item item = new Item();
+			value = item;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Name = text;
+				}
+				break;
+			}
+			case 2:
+			{
+				int count = state.ReadInt32();
+				value.Count = count;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Item>.Write(ref ProtoWriter.State state, Item value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string name = value.Name;
+		state.WriteString(1, name);
+		int count = value.Count;
+		if (count != 0)
+		{
+			state.WriteInt32Varint(2, count);
+		}
+	}
+}
+public sealed class GroupedElementsModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___GroupedElementsModel, T>();
+	}
+}

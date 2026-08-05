@@ -347,8 +347,15 @@ is spelled out because the four `AppendBytes` overloads make a bare `default` am
   as `Fixed64`. The payload is ordinary, valid protobuf — `09-80-80-85-75-3A-0F-38-00` is a tag plus
   exactly eight bytes.
 - **`ZigZag` reads need `state.Hint(WireType.SignedVarint)` before the read**; no other format does.
-- **`Group`** differs on the **write only** (`WriteGroup` for `WriteMessage`); its read is an
-  ordinary `ReadMessage`.
+- **`Group`** differs on the **write only** (`WriteGroup` for `WriteMessage`) for a *scalar*
+  sub-message member; its read is an ordinary `ReadMessage`. On a **collection** it is not write-only
+  at all: it lands in the element features as `WireTypeStartGroup`, so the element carries group
+  markers in both directions. On a **map** the member's `Group` moves the *map's own* features to
+  `WireTypeStartGroup` (the group frames each key/value entry), while `[ProtoMap(ValueFormat = Group)]`
+  leaves the map length-prefixed and groups only the value. A collection of **scalars** cannot be
+  grouped at all — there is no sub-message for the markers to frame, and protobuf-net throws while
+  building the model on both paths, with the unhelpful *"Operation is not valid due to the current
+  state of the object"*.
 - **`TwosComplement` is byte-identical to `Default`** for every type we handle, so it maps onto it.
 - **`IsRequired`** drops the write guard so the member is always written. It is only observable for
   value-type scalars — reference types were already unguarded on write — and it does **not** affect

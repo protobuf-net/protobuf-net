@@ -899,6 +899,11 @@ namespace ProtoBuf.BuildTools.Generators
         private static string ElementWireType(ProtoMemberPlan member) => member.DataFormat switch
         {
             ProtoDataFormat.ZigZag => "WireTypeSignedVarint",
+            // on a *collection* Group is not the write-only change it is on a scalar member: it goes
+            // into the element features, so the element carries group markers in both directions.
+            // Only a message element can be grouped - protobuf-net refuses a grouped scalar
+            // collection outright, which GroupedScalarList pins
+            ProtoDataFormat.Group => "WireTypeStartGroup",
             // a compatibility-level BCL element expresses its format through the *element serializer*
             // (GetInbuiltSerializer takes it), not through the wire type - a FixedSize Guid at level
             // 300 is GuidBytes, which is still length-prefixed. Applying the format here as well

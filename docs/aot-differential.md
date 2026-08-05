@@ -5,20 +5,20 @@
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 82 dropped with a diagnostic
+seeded: **1392**, of which 84 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1274 |
-| **bytes differ** | 14 |
+| **bytes match ref-emit** | 1278 |
+| **bytes differ** | 8 |
 | one model threw | 20 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
 | the reference model refused the contract | 2 |
 
-of the 1288 actually compared, **98% match**.
+of the 1286 actually compared, **99% match**.
 
 ## What went wrong
 
@@ -36,8 +36,6 @@ of the 1288 actually compared, **98% match**.
   - e.g. ProtoBuf.Test.CustomScalarAllocator+HazMemoryBlobish, ProtoBuf.Test.CustomScalarAllocator+MemoryBlobish
 - **2x** reference threw, generated model did not: InvalidOperationException: No … defined for type: …
   - e.g. ProtoBuf.Test.NodaTimeTests+HazNodaTimeDuration, ProtoBuf.Test.NodaTimeTests+HazNodaTimeInstant
-- **2x** bytes differ at byte 16 (generated 24b, reference 24b): generated 22-02-08-07-22-02 vs reference 23-08-07-24-23-08
-  - e.g. ProtoBuf.Test.NullListSupport+BasicGroupedLists, ProtoBuf.Test.NullListSupport+BasicPackedGroupedLists
 - **2x** reference threw, generated model did not: InvalidOperationException: Field 31 is … and cannot be used for sub-type '…' (iz 31).
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedDistinctFieldSubType+B, ProtoBuf.Test.Issues.Issue633+HasReservedDistinctFieldSubType
 - **2x** reference threw, generated model did not: InvalidOperationException: Field 32 is … and cannot be used for sub-type '…' (iz 32).
@@ -62,13 +60,15 @@ of the 1288 actually compared, **98% match**.
   - e.g. Examples.TestAutoFields+ImplicitPublicPOCO
 - **1x** bytes differ at byte 0 (generated 0b, reference 6b): generated <end> vs reference 08-01-12-02-73-31
   - e.g. Examples.ProtoWithFields
-- **1x** bytes differ at byte 0 (generated 16b, reference 16b): generated 0A-06-0A-02-73-30 vs reference 0B-0A-02-73-30-10
-  - e.g. Examples.Dictionary.NestedDictionaryTests+PropsViaDictionaryGrouped
-- **1x** bytes differ at byte 1 (generated 10b, reference 12b): generated 0A-02-01-02-0A-02 vs reference 0B-0A-02-01-02-0A
-  - e.g. Examples.Issues.SO11317045+A
 - **1x** bytes differ at byte 1 (generated 6b, reference 2b): generated 04-10-00-18-00 vs reference 00
   - e.g. Examples.Issues.SO16838287+Foo
 - **1x** bytes differ at byte 0 (generated 0b, reference 8b): generated <end> vs reference 1B-1C-08-01-12-02
   - e.g. Examples.Issues.SO18277323+CustomSourceTableResponse
-- **1x** bytes differ at byte 0 (generated 20b, reference 20b): generated 0A-08-0A-02-73-30 vs reference 0B-0A-02-73-30-12
-  - e.g. Examples.Issues.SO1930209+A
+- **1x** bytes differ at byte 0 (generated 4b, reference 8b): generated 0A-02-08-01 vs reference 1A-06-0A-04-0A-02
+  - e.g. Examples.Issues.SO9408133+ShipResource
+- **1x** bytes differ at byte 0 (generated 6b, reference 10b): generated 0A-04-0A-02-73-30 vs reference 22-08-0A-06-0A-04
+  - e.g. Examples.Issues.SO9408133+SomeResource
+- **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type String at … 1, depth 0
+  - e.g. ProtoBuf.Issues.Issue1083+WithWrapping
+- **1x** reference threw, generated model did not: InvalidOperationException: Type '…' looks like a … type; it cannot be used … with …-net without manual …; it may be … to … a …-net type i…
+  - e.g. ProtoBuf.Issues.Issue722+HazGoogleTypes
