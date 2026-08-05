@@ -1057,6 +1057,28 @@ There is also **no "it has no members" refusal**: an empty message is entirely l
 `.proto`-generated DTOs are full of them — it was the single largest cause of dropped contracts in
 the sweep. It emits a bare skip loop with no `switch`, matching ref-emit.
 
+### Three more `[ProtoContract]` options
+
+Each turned out to reuse machinery that was already here, which is why they went in together:
+
+- **`IsGroup`** puts `WireTypeStartGroup` in place of `WireTypeString` in the **contract's own**
+  features (`MetaType.GetFeatures`). Note the scope: it is the contract's features, not the member's
+  — a member picks its wire type through `DataFormat`, and the two do not interact. It does **not**
+  suppress `ThrowUnexpectedSubtype`.
+- **`IgnoreUnknownSubTypes`** reaches `TypeSerializer.Init` as `assertKnownType: false`, and that
+  flag guards exactly one thing: the `ThrowUnexpectedSubtype` call. So it is the same omission
+  `sealed` already gets, asked for explicitly. It applies **per type**, not down a hierarchy — a
+  derived contract without the option keeps its own throw — and in a hierarchy it removes the `else`
+  arm of the sub-type `is` chain while leaving the chain itself.
+- **`UseProtoMembersOnly`** narrows the attribute family to ProtoBuf, so `[DataMember]` and
+  `[XmlElement]` orders stop supplying field numbers. `GetContractFamily` returns
+  `AttributeFamily.ProtoBuf` outright for it, without inspecting the rest — the identical narrowing
+  `ImplicitFields` performs, so it is the same one-line branch.
+
+`ContractOptions.input.cs` pins all three, and carries a `BothFamilies` contract *without* the option
+as the contrast — otherwise "only field 3 survives" is indistinguishable from the `[DataMember]`
+orders never having been read in the first place.
+
 ### Coverage sweep
 
 `src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built

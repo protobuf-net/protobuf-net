@@ -595,8 +595,10 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? toSurrogate = null, string? toUnderlying = null,
             string? externalSerializerTypeName = null, string? surrogateSerializer = null,
             bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default,
-            bool isAbstract = false)
+            bool isAbstract = false, bool isGroup = false, bool ignoreUnknownSubTypes = false)
         {
+            IsGroup = isGroup;
+            IgnoreUnknownSubTypes = ignoreUnknownSubTypes;
             IsAbstract = isAbstract;
             Callbacks = callbacks;
             UsesConstructorAccessor = usesConstructorAccessor;
@@ -616,6 +618,23 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             IsTuple = isTuple;
             IsTupleLiteral = isTupleLiteral;
         }
+
+        /// <summary>
+        /// From <c>[ProtoContract(IsGroup = true)]</c>: the contract's own features carry
+        /// <c>WireTypeStartGroup</c> instead of <c>WireTypeString</c>.
+        /// </summary>
+        public bool IsGroup { get; }
+
+        /// <summary>
+        /// From <c>[ProtoContract(IgnoreUnknownSubTypes = true)]</c>: omits
+        /// <c>ThrowUnexpectedSubtype</c>, exactly as <see cref="IsSealed"/> does.
+        /// </summary>
+        /// <remarks>
+        /// It reaches <c>TypeSerializer.Init</c> as <c>assertKnownType: false</c>, which is the only
+        /// thing that call guards — so an unrecognised runtime type is written as its declared layer
+        /// rather than throwing.
+        /// </remarks>
+        public bool IgnoreUnknownSubTypes { get; }
 
         /// <summary>
         /// A C# tuple type, whose name renders as <c>(int, string)</c> — so it has to be built with
@@ -745,7 +764,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && SurrogateTypeName == other.SurrogateTypeName
                 && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying
                 && ExternalSerializerTypeName == other.ExternalSerializerTypeName
-                && SurrogateSerializer == other.SurrogateSerializer;
+                && SurrogateSerializer == other.SurrogateSerializer
+                && IsGroup == other.IsGroup && IgnoreUnknownSubTypes == other.IgnoreUnknownSubTypes;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

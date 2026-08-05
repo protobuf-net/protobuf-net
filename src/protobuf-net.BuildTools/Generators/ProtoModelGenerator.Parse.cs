@@ -324,6 +324,7 @@ namespace ProtoBuf.BuildTools.Generators
             string? surrogateSerializer = null;
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
+            bool isGroup = false, ignoreUnknownSubTypes = false, useProtoMembersOnly = false;
             var ignoreListHandling = false;
             var dataMemberOffset = 0;
             var implicitMode = 0;
@@ -369,6 +370,21 @@ namespace ProtoBuf.BuildTools.Generators
                             // contract be serialized as an ordinary message
                             case "IgnoreListHandling" when argument.Value.Value is bool ignoreList:
                                 ignoreListHandling = ignoreList;
+                                continue;
+                            // the contract's own features carry WireTypeStartGroup rather than
+                            // WireTypeString (MetaType.GetFeatures)
+                            case "IsGroup" when argument.Value.Value is bool group:
+                                isGroup = group;
+                                continue;
+                            // reaches TypeSerializer as assertKnownType: false, whose only effect is
+                            // to omit ThrowUnexpectedSubtype - the same thing `sealed` does for us
+                            case "IgnoreUnknownSubTypes" when argument.Value.Value is bool ignoreUnknown:
+                                ignoreUnknownSubTypes = ignoreUnknown;
+                                continue;
+                            // narrows the attribute family to ProtoBuf only, exactly as ImplicitFields
+                            // does, so [DataMember]/[XmlElement] orders stop applying
+                            case "UseProtoMembersOnly" when argument.Value.Value is bool protoOnly:
+                                useProtoMembersOnly = protoOnly;
                                 continue;
                             // schema naming only: neither reaches the wire format
                             case "Name":
@@ -520,8 +536,10 @@ namespace ProtoBuf.BuildTools.Generators
             var implicitTags = GetImplicitTags(memberSource, implicitMode, implicitFirstTag);
 
             // ...and it also narrows the attribute family to ProtoBuf only, so [DataMember] and
-            // [XmlElement] orders stop applying (MetaType: `family &= AttributeFamily.ProtoBuf`)
-            if (implicitMode != 0) isDataContract = isXmlType = false;
+            // [XmlElement] orders stop applying (MetaType: `family &= AttributeFamily.ProtoBuf`).
+            // UseProtoMembersOnly is the same narrowing by another route - GetContractFamily returns
+            // AttributeFamily.ProtoBuf outright for it, without even looking at the rest
+            if (implicitMode != 0 || useProtoMembersOnly) isDataContract = isXmlType = false;
 
             // indexed by ProtoCallbackKind; an unset entry has a null MethodName
             var callbacks = new ProtoCallbackPlan[4];
@@ -1023,7 +1041,8 @@ namespace ProtoBuf.BuildTools.Generators
                 surrogateSerializer: surrogateSerializer,
                 usesConstructorAccessor: usesConstructorAccessor,
                 callbacks: new(callbacks),
-                isAbstract: type.IsAbstract && subTypes.Count == 0);
+                isAbstract: type.IsAbstract && subTypes.Count == 0,
+                isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes);
         }
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)

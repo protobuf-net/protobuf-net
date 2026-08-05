@@ -121,7 +121,8 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             Line(sb, indent, $"{Features} {self}.Features");
-            Line(sb, indent + 1, $"=> {Features}.CategoryMessage | {Features}.WireTypeString;");
+            Line(sb, indent + 1, $"=> {Features}.CategoryMessage | {Features}."
+                + (contract.IsGroup ? "WireTypeStartGroup" : "WireTypeString") + ";");
             sb.AppendLine();
 
             if (contract.SkipConstructor)
@@ -229,8 +230,10 @@ namespace ProtoBuf.BuildTools.Generators
             if (surrogate is not null) Line(sb, indent + 1, $"var {instance} = {ToSurrogate(contract, "value")};");
             // ThrowUnexpectedSubtype is constrained to reference types, and a struct, a sealed type
             // and a tuple all rule sub-types out at compile time - ref-emit omits it for each. Note
-            // it tests the *surrogate*, which is what carries any sub-types.
-            if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed)
+            // it tests the *surrogate*, which is what carries any sub-types. IgnoreUnknownSubTypes
+            // asks for the same omission outright: it is assertKnownType: false in TypeSerializer.
+            if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed
+                && !contract.IgnoreUnknownSubTypes)
             {
                 Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
@@ -738,13 +741,16 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, "}");
                     keyword = "else if";
                 }
-                Line(sb, indent + 2, "else");
-                Line(sb, indent + 2, "{");
-                Line(sb, indent + 3, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
-                Line(sb, indent + 2, "}");
+                if (!contract.IgnoreUnknownSubTypes)
+                {
+                    Line(sb, indent + 2, "else");
+                    Line(sb, indent + 2, "{");
+                    Line(sb, indent + 3, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                    Line(sb, indent + 2, "}");
+                }
                 Line(sb, indent + 1, "}");
             }
-            else if (!contract.IsSealed)
+            else if (!contract.IsSealed && !contract.IgnoreUnknownSubTypes)
             {
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
