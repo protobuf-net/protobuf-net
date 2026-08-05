@@ -34,6 +34,34 @@ public class Declared
     public int Plain { get; set; }
 }
 
+public enum Shade : ushort { None = 0, Red = 1, Green = 2, Blue = 4 }
+
+// ValueMember.ParseDefaultValue does not *convert* a string, it parses it by shape - so a string
+// default means something quite different depending on the member's type. These three forms all end
+// up as ordinary constants, but only after a lookup that Convert.ChangeType would have thrown on.
+[ProtoContract]
+public class Parsed
+{
+    // Enum.Parse(type, s, ignoreCase: true) - by member *name*, and case-insensitively
+    [ProtoMember(1), DefaultValue("green")]
+    public Shade ByName { get; set; } = Shade.Green;
+
+    // ...while a numeric default on the same enum is the underlying constant, as before
+    [ProtoMember(2), DefaultValue(4)]
+    public Shade ByValue { get; set; } = Shade.Blue;
+
+    // a char takes s[0], and demands exactly one character
+    [ProtoMember(3), DefaultValue("x")]
+    public char Letter { get; set; } = 'x';
+
+    [ProtoMember(4), DefaultValue('y')]
+    public char DirectChar { get; set; } = 'y';
+
+    // the (Type, string) form, which DefaultValueAttribute converts through a TypeConverter
+    [ProtoMember(5), DefaultValue(typeof(Shade), "Red")]
+    public Shade ByConverter { get; set; } = Shade.Red;
+}
+
 public static class DefaultsSamples
 {
     public static object[] Values =>
@@ -43,11 +71,18 @@ public static class DefaultsSamples
         new Declared { Number = 0, Text = "", Flag = false, Ratio = 0d, Big = 0L },      // all at CLR default
         new Declared { Number = 6, Text = "xyz", Flag = false, Ratio = 0.5d, Big = 8L },
         new Declared { Text = null, Plain = 3 },                     // null string with a declared default
+
+        new Parsed(),                                                // every member at its declared default
+        new Parsed { ByName = Shade.None, ByValue = Shade.None, Letter = '\0',
+            DirectChar = '\0', ByConverter = Shade.None },           // every member at the CLR default
+        new Parsed { ByName = Shade.Red, ByValue = Shade.Green, Letter = 'z',
+            DirectChar = 'w', ByConverter = Shade.Blue },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Declared))]
+[ProtoSerializable(typeof(Parsed))]
 public partial class DefaultsModel : TypeModel
 {
 }

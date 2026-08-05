@@ -153,6 +153,14 @@ Design constraints that are settled, and should not be quietly relaxed:
   means "no declared default". `[DefaultValue]` is write-only — the reader never applies it, so a
   declared default without a matching initialiser is lossy across a round-trip (protobuf-net
   behaviour generally; `PBN0020`/`PBN0021` exist to nag about it).
+- **A string `[DefaultValue]` is *parsed*, not converted** — `ValueMember.ParseDefaultValue` branches
+  on the member's type before any `Convert.ChangeType`, so `Convert` is the wrong model for it:
+  an **enum** goes through `Enum.Parse(type, s, ignoreCase: true)`, i.e. by member *name* and
+  case-insensitively (`[DefaultValue("green")]` on a `Shade` means `Shade.Green`); a **char** takes
+  `s[0]` and throws unless the string is exactly one character. Both are resolved at compile time —
+  the enum by looking the field up on the symbol — since `Convert.ToUInt16("green")` throws and the
+  member was previously dropped. `nint`/`nuint` need a cast rather than a suffix, having no literal
+  form of their own.
 - Every dropped contract must **say why**: `PBN2001` unsupported member, `PBN2002` unsupported
   declaration, `PBN2003` unsupported protobuf-net option, `PBN2004` dropped by cascade. All are
   **warnings**, not errors — an incomplete model still builds, and the runtime "no serializer" throw

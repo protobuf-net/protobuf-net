@@ -975,7 +975,7 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         return Option(diagnostics, atMember, name, "[DefaultValue] on a message member");
                     }
-                    defaultLiteral = GetDefaultLiteral(declaredDefault, kind, enumTypeName);
+                    defaultLiteral = GetDefaultLiteral(declaredDefault, kind, enumTypeName, shape.EnumType);
                     if (defaultLiteral is null)
                     {
                         return Option(diagnostics, atMember, name, "this form of [DefaultValue]");
@@ -1763,7 +1763,8 @@ namespace ProtoBuf.BuildTools.Generators
             => attribute.ConstructorArguments.Length == 1
                 && attribute.ConstructorArguments[0].Value is null;
 
-        private static string? GetDefaultLiteral(AttributeData attribute, ProtoMemberKind kind, string? enumTypeName)
+        private static string? GetDefaultLiteral(AttributeData attribute, ProtoMemberKind kind,
+            string? enumTypeName, INamedTypeSymbol? enumType)
         {
             // the (Type, string) form: DefaultValueAttribute's own constructor runs the string
             // through TypeDescriptor.GetConverter(type).ConvertFromInvariantString and stores the
@@ -1783,10 +1784,33 @@ namespace ProtoBuf.BuildTools.Generators
             // literal and cast it back; parentheses matter for negatives
             if (enumTypeName is not null)
             {
-                var underlying = GetDefaultLiteral(attribute, kind, enumTypeName: null);
+                // ...except that a *string* is parsed by name, not converted: ValueMember's
+                // ParseDefaultValue calls Enum.Parse(type, s, ignoreCase: true) before it reaches
+                // any numeric conversion. Resolve it to the member's constant and carry on
+                if (raw is string byName)
+                {
+                    if (enumType?.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(x
+                        => x.HasConstantValue
+                        && string.Equals(x.Name, byName, StringComparison.OrdinalIgnoreCase))
+                        is not { } named)
+                    {
+                        return null; // no such name - Enum.Parse would throw, so refuse
+                    }
+                    raw = named.ConstantValue;
+                    if (raw is null) return null;
+                }
+                var underlying = RenderLiteral(raw, kind);
                 return underlying is null ? null : $"({enumTypeName})({underlying})";
             }
+            return RenderLiteral(raw, kind);
+        }
 
+        /// <summary>
+        /// Render a <c>[DefaultValue]</c> constant as a C# literal of the member's own kind, or null
+        /// if it has no literal form.
+        /// </summary>
+        private static string? RenderLiteral(object raw, ProtoMemberKind kind)
+        {
             try
             {
                 var culture = CultureInfo.InvariantCulture;
@@ -1815,6 +1839,23 @@ namespace ProtoBuf.BuildTools.Generators
 
                     case ProtoMemberKind.String:
                         return raw is string text ? SymbolDisplay.FormatLiteral(text, quote: true) : null;
+
+                    // ParseDefaultValue takes s[0] from a string and demands exactly one character,
+                    // throwing a FormatException otherwise - so a longer string is a refusal here
+                    case ProtoMemberKind.Char:
+                        var c = raw switch
+                        {
+                            string { Length: 1 } oneChar => oneChar[0],
+                            string => (char?)null,
+                            _ => Convert.ToChar(raw, culture),
+                        };
+                        return c is null ? null : SymbolDisplay.FormatLiteral(c.Value, quote: true);
+
+                    // nint/nuint: the literal needs the cast, since there is no suffix for them
+                    case ProtoMemberKind.IntPtr:
+                        return $"(nint)({Convert.ToInt64(raw, culture).ToString(culture)}L)";
+                    case ProtoMemberKind.UIntPtr:
+                        return $"(nuint)({Convert.ToUInt64(raw, culture).ToString(culture)}UL)";
                 }
             }
             catch (Exception)

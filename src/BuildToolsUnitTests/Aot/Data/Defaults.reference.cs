@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-internal sealed class ___PBN_Services___DefaultsModel : ISerializer<Declared>
+internal sealed class ___PBN_Services___DefaultsModel : ISerializer<Declared>, ISerializer<Parsed>
 {
 	Declared ISerializer<Declared>.Read(ref ProtoReader.State state, Declared value)
 	{
@@ -118,6 +118,102 @@ internal sealed class ___PBN_Services___DefaultsModel : ISerializer<Declared>
 	{
 		//ILSpy generated this explicit interface implementation from .override directive in Features_82
 		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Parsed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Parsed ISerializer<Parsed>.Read(ref ProtoReader.State state, Parsed value)
+	{
+		if (value == null)
+		{
+			Parsed parsed = new Parsed();
+			value = parsed;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Shade byConverter = (Shade)state.ReadUInt16();
+				value.ByName = byConverter;
+				break;
+			}
+			case 2:
+			{
+				Shade byConverter = (Shade)state.ReadUInt16();
+				value.ByValue = byConverter;
+				break;
+			}
+			case 3:
+			{
+				char directChar = (char)state.ReadUInt16();
+				value.Letter = directChar;
+				break;
+			}
+			case 4:
+			{
+				char directChar = (char)state.ReadUInt16();
+				value.DirectChar = directChar;
+				break;
+			}
+			case 5:
+			{
+				Shade byConverter = (Shade)state.ReadUInt16();
+				value.ByConverter = byConverter;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Parsed>.Write(ref ProtoWriter.State state, Parsed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Shade byName = value.ByName;
+		if (byName != Shade.Green)
+		{
+			state.WriteFieldHeader(1, WireType.Variant);
+			ushort value2 = (ushort)byName;
+			state.WriteUInt16(value2);
+		}
+		byName = value.ByValue;
+		if (byName != Shade.Blue)
+		{
+			state.WriteFieldHeader(2, WireType.Variant);
+			ushort value2 = (ushort)byName;
+			state.WriteUInt16(value2);
+		}
+		char letter = value.Letter;
+		if (letter != 'x')
+		{
+			state.WriteFieldHeader(3, WireType.Variant);
+			ushort value2 = letter;
+			state.WriteUInt16(value2);
+		}
+		letter = value.DirectChar;
+		if (letter != 'y')
+		{
+			state.WriteFieldHeader(4, WireType.Variant);
+			ushort value2 = letter;
+			state.WriteUInt16(value2);
+		}
+		byName = value.ByConverter;
+		if (byName != Shade.Red)
+		{
+			state.WriteFieldHeader(5, WireType.Variant);
+			ushort value2 = (ushort)byName;
+			state.WriteUInt16(value2);
+		}
 	}
 }
 public sealed class DefaultsModel : TypeModel

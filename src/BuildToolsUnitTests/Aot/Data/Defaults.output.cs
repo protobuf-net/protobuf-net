@@ -12,6 +12,7 @@ partial class DefaultsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -93,6 +94,85 @@ partial class DefaultsModel
             }
             var tmp6 = value.Plain;
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.Defaults.Parsed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
+        {
+            value ??= new global::AotFixtures.Defaults.Parsed();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.ByName = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
+                        break;
+                    }
+                    case 2:
+                    {
+                        value.ByValue = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
+                        break;
+                    }
+                    case 3:
+                    {
+                        value.Letter = (char)state.ReadUInt16();
+                        break;
+                    }
+                    case 4:
+                    {
+                        value.DirectChar = (char)state.ReadUInt16();
+                        break;
+                    }
+                    case 5:
+                    {
+                        value.ByConverter = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.ByName;
+            if (tmp1 != (global::AotFixtures.Defaults.Shade)(2))
+            {
+                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
+                state.WriteUInt16((ushort)tmp1);
+            }
+            var tmp2 = value.ByValue;
+            if (tmp2 != (global::AotFixtures.Defaults.Shade)(4))
+            {
+                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
+                state.WriteUInt16((ushort)tmp2);
+            }
+            var tmp3 = value.Letter;
+            if (tmp3 != 'x')
+            {
+                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
+                state.WriteUInt16(tmp3);
+            }
+            var tmp4 = value.DirectChar;
+            if (tmp4 != 'y')
+            {
+                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
+                state.WriteUInt16(tmp4);
+            }
+            var tmp5 = value.ByConverter;
+            if (tmp5 != (global::AotFixtures.Defaults.Shade)(1))
+            {
+                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
+                state.WriteUInt16((ushort)tmp5);
+            }
         }
     }
 }
