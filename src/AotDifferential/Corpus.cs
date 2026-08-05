@@ -1,0 +1,299 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace ProtoBuf.AotDifferential;
+
+/// <summary>
+/// Discovers every <c>[ProtoContract]</c> in the target assemblies, runs the AOT generator over them,
+/// and compiles and loads the result so it can actually be executed.
+/// </summary>
+/// <remarks>
+/// The generator is loaded reflectively rather than referenced — see the note in the csproj. We only
+/// ever touch it through Roslyn's own interfaces, so BuildTools' copy of protobuf-net.Core and the
+/// real one never have to agree about anything.
+/// </remarks>
+internal sealed class Corpus
+{
+    private const string ProtoContractAttribute = "ProtoBuf.ProtoContractAttribute";
+    private const string GeneratorTypeName = "ProtoBuf.BuildTools.Generators.ProtoModelGenerator";
+    public const string ModelTypeName = "DifferentialModel";
+
+    public List<Type> Contracts { get; } = [];
+    public Type ModelType { get; private set; }
+    public Dictionary<string, int> Skipped { get; } = new(StringComparer.Ordinal);
+    public int Seeded { get; private set; }
+    public int Dropped { get; private set; }
+
+    /// <summary>Assemblies dropped because they collide with a scanned target.</summary>
+    public List<string> Ambiguous { get; private set; } = [];
+
+    /// <summary>Build the corpus, or return the reason it could not be built.</summary>
+    public string Build(string[] targets)
+    {
+        var present = targets.Where(File.Exists).ToArray();
+        if (present.Length == 0) return "nothing to scan; build the target projects first";
+
+        // every dll beside the targets, so that types the contracts reference still bind
+        var paths = present
+            .SelectMany(static x => Directory.GetFiles(Path.GetDirectoryName(x)!, "*.dll"))
+            .Concat(AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string tpa
+                ? tpa.Split(Path.PathSeparator) : [])
+            .GroupBy(Path.GetFileNameWithoutExtension, StringComparer.OrdinalIgnoreCase)
+            .Select(static x => x.First())
+            .Where(static x => !Path.GetFileName(x).StartsWith("protobuf-net.BuildTools",
+                StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        // Flattening every dll beside the targets into one reference set is what lets the contracts
+        // bind, and is also the harness's own worst artefact: two of them declare `Timestamp` and
+        // `Duration`, so those names are ambiguous *here* in a way no real consumer would see. The
+        // clash is resolved by dropping the assembly that is *not* a scanned target - which is
+        // decided from the CS0433 message rather than from a hard-coded list, so it cannot rot.
+        var targetNames = new HashSet<string>(
+            present.Select(Path.GetFileNameWithoutExtension), StringComparer.OrdinalIgnoreCase);
+        var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        List<INamedTypeSymbol> symbols = null;
+        HashSet<string> dropped = null;
+        var peStream = new MemoryStream();
+
+        for (var attempt = 0; ; attempt++)
+        {
+            peStream = new MemoryStream();
+            var references = paths
+                .Where(x => !excluded.Contains(Path.GetFileNameWithoutExtension(x)))
+                .Select(static x => (MetadataReference)MetadataReference.CreateFromFile(x))
+                .ToList();
+
+            var probe = CSharpCompilation.Create("probe", references: references,
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            symbols = [];
+            Skipped.Clear();
+            foreach (var path in present)
+            {
+                var name = Path.GetFileNameWithoutExtension(path);
+                var assembly = probe.References
+                    .Select(probe.GetAssemblyOrModuleSymbol)
+                    .OfType<IAssemblySymbol>()
+                    .FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+                if (assembly is null) continue;
+                Collect(probe, assembly.GlobalNamespace, symbols);
+            }
+            Seeded = symbols.Count;
+
+            var source = BuildModelSource(symbols);
+            var compilation = CSharpCompilation.Create("differential",
+                [CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))],
+                references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                    .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
+                    {
+                        ["PBN9001"] = ReportDiagnostic.Suppress,
+                    }));
+
+            GeneratorDriver driver = CSharpGeneratorDriver.Create(
+                [LoadGenerator()], parseOptions: new CSharpParseOptions(LanguageVersion.Latest));
+            driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diagnostics);
+
+            // a dropped contract has no serializer, so there is nothing to compare - and asking would
+            // just throw TypeModel's "no serializer" backstop, which is the intended behaviour
+            dropped = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var diagnostic in diagnostics)
+            {
+                var match = Regex.Match(diagnostic.GetMessage(), @"Contract '([^']+)'");
+                if (match.Success) dropped.Add(match.Groups[1].Value);
+            }
+            Dropped = dropped.Count;
+
+            var emit = output.Emit(peStream);
+            if (emit.Success) break;
+
+            var errors = emit.Diagnostics.Where(static x => x.Severity == DiagnosticSeverity.Error).ToList();
+            var newlyExcluded = errors.Where(static x => x.Id == "CS0433")
+                .SelectMany(x => Regex.Matches(x.GetMessage(), @"'([^',]+), Version=").Cast<Match>())
+                .Select(static x => x.Groups[1].Value)
+                .Where(x => !targetNames.Contains(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Where(x => excluded.Add(x))
+                .ToList();
+
+            if (newlyExcluded.Count == 0 || attempt >= 4)
+            {
+                return "the generated model does not compile, so nothing can be compared:"
+                    + string.Concat(errors.Take(5).Select(static x => Environment.NewLine + "  " + x));
+            }
+            Console.Error.WriteLine("ambiguous with a scanned target, excluding: "
+                + string.Join(", ", newlyExcluded));
+        }
+        Ambiguous = excluded.ToList();
+
+        // the targets have to be *loaded*, not just referenced: we construct instances of them
+        foreach (var path in present) Assembly.LoadFrom(path);
+        AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
+        {
+            var wanted = new AssemblyName(args.Name).Name + ".dll";
+            var found = paths.FirstOrDefault(x => string.Equals(Path.GetFileName(x), wanted,
+                StringComparison.OrdinalIgnoreCase));
+            return found is null ? null : Assembly.LoadFrom(found);
+        };
+
+        var modelAssembly = Assembly.Load(peStream.ToArray());
+        ModelType = modelAssembly.GetType(ModelTypeName)
+            ?? throw new InvalidOperationException("the generated model type is missing");
+
+        foreach (var symbol in symbols)
+        {
+            var name = symbol.ToDisplayString();
+            if (dropped.Contains(name)) continue;
+            if (Resolve(symbol) is { } type) Contracts.Add(type);
+            else Bump(Skipped, "could not be resolved at runtime");
+        }
+        return null;
+    }
+
+    /// <summary>Roslyn symbol to runtime <see cref="Type"/>, via the reflection name.</summary>
+    private static Type Resolve(INamedTypeSymbol symbol)
+    {
+        var name = new StringBuilder();
+        var nesting = new List<INamedTypeSymbol>();
+        for (var current = symbol; current is not null; current = current.ContainingType) nesting.Add(current);
+        nesting.Reverse();
+
+        var ns = nesting[0].ContainingNamespace;
+        if (ns is { IsGlobalNamespace: false }) name.Append(ns.ToDisplayString()).Append('.');
+        // nested types are separated by '+' in reflection names, not '.'
+        name.Append(string.Join("+", nesting.Select(static x => x.MetadataName)));
+
+        var full = name.ToString();
+        var assemblyName = symbol.ContainingAssembly?.Name;
+        foreach (var candidate in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (assemblyName is not null && candidate.GetName().Name != assemblyName) continue;
+            if (candidate.GetType(full, throwOnError: false) is { } found) return found;
+        }
+        return Type.GetType(full, throwOnError: false);
+    }
+
+    private static ISourceGenerator LoadGenerator()
+    {
+        var dir = RepoRoot() ?? throw new InvalidOperationException("could not locate the repo root");
+        foreach (var configuration in new[] { "Debug", "Release" })
+        {
+            var path = Path.Combine(dir, "src", "protobuf-net.BuildTools", "bin", configuration,
+                "netstandard2.0", "protobuf-net.BuildTools.dll");
+            if (!File.Exists(path)) continue;
+            var type = Assembly.LoadFrom(path).GetType(GeneratorTypeName);
+            if (type is null) continue;
+            return ((IIncrementalGenerator)Activator.CreateInstance(type)).AsSourceGenerator();
+        }
+        throw new InvalidOperationException("build protobuf-net.BuildTools first");
+    }
+
+    public static string RepoRoot()
+    {
+        var dir = AppContext.BaseDirectory;
+        while (dir is not null && !Directory.Exists(Path.Combine(dir, "src")))
+        {
+            dir = Path.GetDirectoryName(dir.TrimEnd(Path.DirectorySeparatorChar));
+        }
+        return dir;
+    }
+
+    public static IEnumerable<string> DefaultTargets()
+    {
+        if (RepoRoot() is not { } dir) yield break;
+        foreach (var project in new[] { "protobuf-net.Test", "Examples", "protobuf-net.Reflection.Test" })
+        {
+            yield return Path.Combine(dir, "src", project, "bin", "Debug", "net8.0", project + ".dll");
+        }
+    }
+
+    private void Collect(Compilation compilation, INamespaceOrTypeSymbol scope, List<INamedTypeSymbol> found)
+    {
+        foreach (var member in scope.GetMembers())
+        {
+            switch (member)
+            {
+                case INamespaceSymbol ns:
+                    Collect(compilation, ns, found);
+                    break;
+                case INamedTypeSymbol type:
+                    Collect(compilation, type, found);
+                    if (!type.GetAttributes().Any(static a
+                        => a.AttributeClass?.ToDisplayString() == ProtoContractAttribute))
+                    {
+                        break;
+                    }
+                    if (type.DeclaredAccessibility != Accessibility.Public || !IsPubliclyNested(type))
+                    {
+                        Bump(Skipped, "not public");
+                    }
+                    else if (type.IsGenericType)
+                    {
+                        Bump(Skipped, "generic");
+                    }
+                    // a name two scanned assemblies both declare is ambiguous *here* and would not be
+                    // in a real consumer - GetTypeByMetadataName returns null for exactly that. It is
+                    // the harness's own artefact (the sweep reports it as CS0433), so seeding it would
+                    // just fail the whole compile
+                    else if (compilation.GetTypeByMetadataName(MetadataName(type)) is null)
+                    {
+                        Bump(Skipped, "declared by two scanned assemblies");
+                    }
+                    else
+                    {
+                        found.Add(type);
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static string MetadataName(INamedTypeSymbol type)
+    {
+        var nesting = new List<INamedTypeSymbol>();
+        for (var current = type; current is not null; current = current.ContainingType) nesting.Add(current);
+        nesting.Reverse();
+        var ns = nesting[0].ContainingNamespace;
+        var prefix = ns is { IsGlobalNamespace: false } ? ns.ToDisplayString() + "." : "";
+        return prefix + string.Join("+", nesting.Select(static x => x.MetadataName));
+    }
+
+    private static bool IsPubliclyNested(INamedTypeSymbol type)
+    {
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            if (current.DeclaredAccessibility != Accessibility.Public) return false;
+        }
+        return true;
+    }
+
+    private static void Bump(Dictionary<string, int> counts, string key)
+        => counts[key] = counts.TryGetValue(key, out var n) ? n + 1 : 1;
+
+    private static string BuildModelSource(List<INamedTypeSymbol> contracts)
+    {
+        var sb = new StringBuilder()
+            .AppendLine("using ProtoBuf;")
+            .AppendLine("using ProtoBuf.Meta;")
+            .AppendLine()
+            .AppendLine("[ProtoModel]");
+        foreach (var contract in contracts)
+        {
+            sb.Append("[ProtoSerializable(typeof(")
+              .Append(contract.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+              .AppendLine("))]");
+        }
+        return sb.Append("public partial class ").Append(ModelTypeName).AppendLine(" : TypeModel")
+                 .AppendLine("{")
+                 .AppendLine("}")
+                 .ToString();
+    }
+}

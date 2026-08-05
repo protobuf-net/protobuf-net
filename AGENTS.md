@@ -1210,6 +1210,38 @@ emitted code compile" line means what it says.
 It writes to stdout and the snapshot carries a hand-added header line, so regenerating it is
 `{ header; dotnet run --project src/AotCoverage; } > docs/aot-coverage.md`, not a plain redirect.
 
+### Differential sweep (the corpus, on bytes)
+
+`src/AotDifferential` is the coverage sweep's other half. `AotCoverage` proves the generated code
+**compiles**; this one *runs* it, comparing bytes against `RuntimeTypeModel` for a populated instance
+of every contract. That is the property that actually matters — every serious bug this generator has
+had (the `DataFormat` cast that mis-mapped, the BCL element wire types, `OverwriteList` on a bytes
+member) compiled perfectly and wrote the wrong bytes. `docs/aot-differential.md` is the last snapshot.
+
+Three things about it are load-bearing:
+
+- **The generator is loaded reflectively, not referenced.** BuildTools compiles in protobuf-net.Core's
+  sources, so referencing its output alongside protobuf-net would make every type in Core ambiguous.
+  The project reference is `ReferenceOutputAssembly="false"` (to force the build order) and the dll is
+  `Assembly.LoadFrom`ed at runtime, talked to only through Roslyn's interfaces — so the two copies of
+  Core never meet.
+- **One reference model holds the whole corpus**, not a fresh one per contract. The generated model is
+  a closed world over everything at once; a reference that has heard only of the type under test is a
+  *differently configured* model, not ref-emit. An implementation whose hierarchy root is an interface
+  is a standalone contract until the root is also present — which showed up as 11 phantom mismatches
+  before it was fixed. Everything must be added **before** anything is serialized, since protobuf-net
+  refuses to change a model once a serializer has been generated from it.
+- **Values are deterministic and every scalar differs from the last.** Two members holding the same
+  value serialize identically under either numbering, so a swapped field number would be invisible.
+
+The `Filler` builds instances by reflection, and what it *cannot* build is reported rather than
+hidden: `Span<byte>`-shaped members can't be boxed at all, and a few types have no construction route.
+Coverage is the honest denominator — "of the N actually compared".
+
+`CS0433` is handled rather than tolerated here, since an ambiguous type name breaks the whole compile
+rather than one contract: the clashing assembly that is *not* a scanned target is dropped and the
+build retried, with the pair read out of the diagnostic rather than hard-coded.
+
 ### Reference output from ref-emit
 
 `src/AotRefGen` (net472, hence the section above) exists so the generator's expected output is
