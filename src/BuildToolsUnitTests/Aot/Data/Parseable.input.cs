@@ -10,8 +10,8 @@ namespace AotFixtures.Parseable;
 // The rules are ParseableSerializer.TryCreate's, and the details matter: Parse and *not* TryParse,
 // declared on the type itself, one string in, the type out. A value type additionally needs its own
 // ToString() - one inheriting object.ToString() would round-trip its type name.
-// System.Net.IPAddress is the canonical example - and the one the corpus actually uses - but it is
-// not in the golden tests' reference set, so the fixture supplies its own equivalent
+// System.Net.IPAddress is the canonical example, and the one the corpus actually uses; it is covered
+// below. Moniker is a hand-rolled equivalent, so the shape is pinned even if the reference set moves.
 public sealed class Moniker
 {
     public Moniker(string scheme, string value)
@@ -37,6 +37,11 @@ public class Endpoint
 {
     [ProtoMember(1)] public Moniker Address { get; set; }
     [ProtoMember(2)] public string Name { get; set; }
+
+    // the real thing: IPAddress has ToString() and a static Parse(string), and is a class - so the
+    // "a value type needs its own ToString" clause does not apply. It is a member type the coverage
+    // sweep reports as unhandled purely because the sweep does not enable AllowParseableTypes
+    [ProtoMember(3)] public System.Net.IPAddress Ip { get; set; }
 }
 
 // a value type that qualifies: custom ToString plus a static Parse
@@ -82,6 +87,9 @@ public static class ParseableSamples
         new Endpoint(),
         new Endpoint { Address = Moniker.Parse("tcp:10.0.0.1"), Name = "primary" },
         new Endpoint { Address = new Moniker("unix", "/var/run/x") },
+        new Endpoint { Ip = System.Net.IPAddress.Parse("10.0.0.1") },
+        new Endpoint { Ip = System.Net.IPAddress.Parse("::1") },      // v6 round-trips as a string too
+        new Endpoint { Ip = System.Net.IPAddress.Loopback, Name = "local" },
         new Holder(),
         new Holder { Ratio = new Fraction { Numerator = 3, Denominator = 4 } },
         new Holder { Child = new NotParseable { Value = 9 } },

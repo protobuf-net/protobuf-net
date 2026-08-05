@@ -886,7 +886,37 @@ namespace ProtoBuf.BuildTools.Generators
                 if (GetMemberShape(compilation, memberType, surrogates, allowParseableTypes) is not { } shape)
                 {
                     return Member(diagnostics, atMember, name, symbol.Name,
-                        $"has unsupported type '{memberType.ToDisplayString()}'");
+                        $"has unsupported type '{memberType.ToDisplayString()}'{WhyUnsupported()}");
+
+                    // a bare "unsupported type" reads as our backlog even where the route is right
+                    // there, so say which one it is - the sweep's member-type tail is mostly these
+                    string WhyUnsupported()
+                    {
+                        // would it resolve with the model option turned on? asked rather than
+                        // pattern-matched, so it stays true to ParseableSerializer.TryCreate
+                        if (!allowParseableTypes
+                            && GetMemberShape(compilation, memberType, surrogates, allowParseableTypes: true)
+                                is not null)
+                        {
+                            return "; it has a ToString() and a static Parse(string), so "
+                                + "[ProtoModel(AllowParseableTypes = true)] would include it - off by "
+                                + "default, matching RuntimeTypeModel";
+                        }
+                        // System.Type is not a shortfall: ref-emit serializes it, but by round-tripping
+                        // assembly-qualified names through Type.GetType, which is exactly the
+                        // reflection AOT cannot do. Emitting it would compile and then fail at runtime
+                        if (IsSystemType(memberType))
+                        {
+                            return "; System.Type is deliberately not supported, because ref-emit "
+                                + "serializes it through Type.GetType, which native AOT cannot do";
+                        }
+                        // and nothing otherwise, deliberately. [ProtoSurrogate] is the route for a
+                        // type protobuf-net cannot handle either, but plenty that land here are our
+                        // own gaps - an enum-valued map, a nested map key - where suggesting a
+                        // surrogate would send the reader somewhere pointless. A hint that is wrong
+                        // half the time is worse than no hint
+                        return "";
+                    }
                 }
                 var kind = shape.Kind;
                 var message = shape.Message;
@@ -1162,6 +1192,15 @@ namespace ProtoBuf.BuildTools.Generators
             }
             return new PartialMember(memberName, fieldNumber, isRequired, isPacked, dataFormat);
         }
+
+        /// <summary><c>System.Type</c>, or an array or collection of it.</summary>
+        private static bool IsSystemType(ITypeSymbol type)
+            => type switch
+            {
+                IArrayTypeSymbol array => IsSystemType(array.ElementType),
+                INamedTypeSymbol { TypeArguments.Length: 1 } generic => IsSystemType(generic.TypeArguments[0]),
+                _ => type.ToDisplayString() == "System.Type",
+            };
 
         private static ProtoContractPlan? Contract(List<PlanDiagnostic> diagnostics, PlanLocation at, string type, string reason)
         {

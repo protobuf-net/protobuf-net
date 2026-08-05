@@ -47,11 +47,28 @@ public static class TicksConverter
         => value is null ? default : new Ticks(value.Value);
 }
 
+// System.DateTimeOffset looks inbuilt and is not - protobuf-net has no serializer for it at all,
+// which is why Examples/Issues/Issue222.cs registers a surrogate by hand. So a bare DateTimeOffset
+// member is a refusal that *matches* ref-emit, and this is the whole fix for it.
+[ProtoContract]
+public class DateTimeOffsetSurrogate
+{
+    [ProtoMember(1)] public long Ticks { get; set; }
+    [ProtoMember(2)] public short OffsetMinutes { get; set; }
+
+    public static implicit operator DateTimeOffsetSurrogate(DateTimeOffset value)
+        => new() { Ticks = value.Ticks, OffsetMinutes = (short)value.Offset.TotalMinutes };
+    public static implicit operator DateTimeOffset(DateTimeOffsetSurrogate value)
+        => value is null ? default
+            : new DateTimeOffset(value.Ticks, TimeSpan.FromMinutes(value.OffsetMinutes));
+}
+
 [ProtoContract]
 public class Holder
 {
     [ProtoMember(1)] public Version Release { get; set; }
     [ProtoMember(2)] public Ticks Elapsed { get; set; }
+    [ProtoMember(3)] public DateTimeOffset When { get; set; }
 }
 
 public static class ModelSurrogateSamples
@@ -62,12 +79,15 @@ public static class ModelSurrogateSamples
         new Holder { Release = new Version(1, 2, 3) },
         new Holder { Elapsed = new Ticks(1234567) },
         new Holder { Release = new Version(4, 5), Elapsed = new Ticks(-1) },
+        new Holder { When = new DateTimeOffset(2026, 8, 5, 12, 30, 0, TimeSpan.FromHours(1)) },
+        new Holder { When = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero) },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Holder))]
 [ProtoSurrogate(typeof(Version), typeof(VersionSurrogate))]
+[ProtoSurrogate(typeof(DateTimeOffset), typeof(DateTimeOffsetSurrogate))]
 [ProtoSurrogate(typeof(Ticks), typeof(TicksSurrogate),
     Converter = typeof(TicksConverter),
     ToSurrogate = nameof(TicksConverter.ToSurrogate),

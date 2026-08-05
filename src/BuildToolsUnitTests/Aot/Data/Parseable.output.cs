@@ -37,6 +37,11 @@ partial class ParseableModel
                         if (tmp2 != null) value.Name = tmp2;
                         break;
                     }
+                    case 3:
+                    {
+                        value.Ip = global::System.Net.IPAddress.Parse(state.ReadString());
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -56,6 +61,12 @@ partial class ParseableModel
             }
             var tmp2 = value.Name;
             state.WriteString(2, tmp2);
+            var tmp3 = value.Ip;
+            if (tmp3 != null)
+            {
+                state.WriteFieldHeader(3, global::ProtoBuf.WireType.String);
+                state.WriteString(tmp3.ToString());
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>.Features

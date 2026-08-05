@@ -592,6 +592,18 @@ no behaviour to reproduce and nothing outstanding. These were established by pro
 | `[NullWrappedCollection]` on a non-collection | throws *"can only be used with collection types"* |
 | `[ProtoInclude(tag, "TypeName")]` | resolves at runtime; throws *"Unable to resolve sub-type"* even for a live type |
 
+Two of those refusals now **name the route** in the diagnostic itself, because "has unsupported type
+X" reads as our backlog even where the fix is one attribute away. Both are determined rather than
+guessed: a parseable type by re-asking `GetMemberShape` with `AllowParseableTypes` on, `System.Type`
+by name. Nothing else gets a hint — plenty of types landing there are our own gaps (an enum-valued
+map, a nested map key), and pointing those at `[ProtoSurrogate]` would send the reader nowhere.
+
+`System.Net.IPAddress` and `System.DateTimeOffset` are the two worth knowing, since both look like
+gaps in the sweep's member-type tail and neither is: `IPAddress` is parseable and works under
+`[ProtoModel(AllowParseableTypes = true)]` (`Parseable.input.cs` covers it against ref-emit), and
+`DateTimeOffset` has **no** protobuf-net serializer at all, so `[ProtoSurrogate]` is the fix for
+ref-emit as much as for us (`ModelSurrogate.input.cs`).
+
 **Audit before building.** Three separate features turned out to be already-working or
 already-refused when checked against the runtime model rather than assumed from the sweep table —
 `System.Uri` (inbuilt), null-wrapped collection elements (supported), enums as contracts (supported).
@@ -792,10 +804,16 @@ Keep that in mind before "tidying" the comparison into a symbol equality check. 
 into protobuf-net.Core would make it one shared type and remove the subtlety, at the cost of the
 deliberate rule that trigger attributes are generator-owned.
 
-**Status: first cut.** `Diagnostics/ModelSurrogate.input.cs` covers both forms as a golden only —
-there is no `*.reference.cs` and no differential coverage, because `AotRefGen` would have to replay
-the declarations against a `RuntimeTypeModel` before it could produce one. That is the next step if
-this direction is kept.
+`ModelSurrogate.input.cs` covers both forms, and **is** differentially covered: `AotRefGen` replays
+the declarations onto the reference model through `RuntimeTypeModel.SetSurrogate` — the cast form via
+the public `MetaType.SetSurrogate(Type)`, the named-method form via the generic overload taking
+conversion delegates. (This file previously said it was a golden-only first cut; that stopped being
+true at `83a1b6f9`.)
+
+`System.DateTimeOffset` is the fixture's third case and the one worth knowing about, because it looks
+inbuilt and is not: protobuf-net has **no** serializer for it, which is why `Examples/Issues/Issue222.cs`
+registers a surrogate by hand. A bare `DateTimeOffset` member is therefore a refusal that *matches*
+ref-emit, not a gap — and a `[ProtoSurrogate]` on the model is the whole fix.
 
 **NodaTime works end to end** — `src/AotNodaTimeSmoke` is a consumer that references only
 `protobuf-net.NodaTime`, declares no surrogates of its own, and round-trips `Instant` and `Duration`.

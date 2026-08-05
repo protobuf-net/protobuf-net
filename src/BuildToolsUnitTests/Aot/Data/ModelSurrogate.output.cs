@@ -11,12 +11,60 @@ partial class ModelSurrogateModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>
+        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>
+        , global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>
         , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+        {
+            value ??= new global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.Ticks = state.ReadInt64();
+                        break;
+                    }
+                    case 2:
+                    {
+                        value.OffsetMinutes = state.ReadInt16();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Ticks;
+            if (tmp1 != 0)
+            {
+                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
+                state.WriteInt64(tmp1);
+            }
+            var tmp2 = value.OffsetMinutes;
+            if (tmp2 != 0)
+            {
+                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
+                state.WriteInt16(tmp2);
+            }
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -41,6 +89,12 @@ partial class ModelSurrogateModel
                         value.Elapsed = state.ReadMessage<global::AotFixtures.ModelSurrogate.Ticks>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
                         break;
                     }
+                    case 3:
+                    {
+                        var tmp3 = value.When;
+                        value.When = state.ReadMessage<global::System.DateTimeOffset>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -56,6 +110,8 @@ partial class ModelSurrogateModel
             state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
             var tmp2 = value.Elapsed;
             state.WriteMessage<global::AotFixtures.ModelSurrogate.Ticks>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            var tmp3 = value.When;
+            state.WriteMessage<global::System.DateTimeOffset>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Features
@@ -161,6 +217,55 @@ partial class ModelSurrogateModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             state.WriteString(1, tmp1);
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::System.DateTimeOffset global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.DateTimeOffset value)
+        {
+            var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
+            surrogate ??= new global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        surrogate.Ticks = state.ReadInt64();
+                        break;
+                    }
+                    case 2:
+                    {
+                        surrogate.OffsetMinutes = state.ReadInt16();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            value = (global::System.DateTimeOffset)surrogate;
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.DateTimeOffset value)
+        {
+            var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
+            var tmp1 = surrogate.Ticks;
+            if (tmp1 != 0)
+            {
+                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
+                state.WriteInt64(tmp1);
+            }
+            var tmp2 = surrogate.OffsetMinutes;
+            if (tmp2 != 0)
+            {
+                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
+                state.WriteInt16(tmp2);
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Features

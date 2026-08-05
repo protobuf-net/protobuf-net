@@ -237,11 +237,15 @@ guaranteed, and a construction the sweep invents is not evidence that a *consume
 
 ### C. `System.Type` members are deliberately not supported
 
-Five contracts in the sweep have a `System.Type` member, which ref-emit serializes with
+Seven contracts in the sweep have a `System.Type` member, which ref-emit serializes with
 `SystemTypeSerializer`. Refused on purpose rather than not yet done: it round-trips assembly-qualified
 names through `Type.GetType`, which is exactly the reflection AOT cannot do, so emitting it would
 produce a serializer that compiles and then fails at runtime. The honest options are a diagnostic
 (what happens today) or a surrogate the consumer supplies.
+
+The diagnostic now **says so**, and so does the one for a parseable type, so the sweep's
+"unsupported type" row splits three ways rather than reading as one undifferentiated backlog:
+7 `System.Type`, 4 parseable-but-not-opted-in, 13 genuinely unclassified.
 
 Same reasoning applies to `System.IO.Stream` (1), which is not serializable in any case.
 

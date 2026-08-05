@@ -1,3 +1,4 @@
+using System.Net;
 using System.Reflection;
 using AotFixtures.Parseable;
 using ProtoBuf;
@@ -37,6 +38,15 @@ internal sealed class ___PBN_Services___ParseableModel : ISerializer<Endpoint>, 
 				}
 				break;
 			}
+			case 3:
+			{
+				IPAddress iPAddress = IPAddress.Parse(state.ReadString());
+				if (iPAddress != null)
+				{
+					value.Ip = iPAddress;
+				}
+				break;
+			}
 			default:
 				state.SkipField();
 				break;
@@ -57,6 +67,13 @@ internal sealed class ___PBN_Services___ParseableModel : ISerializer<Endpoint>, 
 		}
 		string name = value.Name;
 		state.WriteString(2, name);
+		IPAddress ip = value.Ip;
+		if (ip != null)
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			IPAddress iPAddress = ip;
+			state.WriteString(iPAddress.ToString());
+		}
 	}
 
 	private SerializerFeatures Features_82()

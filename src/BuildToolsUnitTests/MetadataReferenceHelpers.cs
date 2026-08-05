@@ -31,6 +31,9 @@ namespace BuildToolsUnitTests
             // System.Uri lives in its own assembly, and is the motivating example for a model-level
             // [ProtoSurrogate] - a type a consumer could never attribute themselves
             MetadataReference.CreateFromFile(typeof(System.Uri).Assembly.Location),
+            // System.Net.IPAddress is the canonical parseable type, and the one the corpus uses;
+            // it lives in System.Net.Primitives rather than the core facades
+            MetadataReference.CreateFromFile(typeof(System.Net.IPAddress).Assembly.Location),
             // fixtures declare contracts via [DataContract]/[DataMember] and [XmlType]/[XmlElement]
             MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataMemberAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(System.Xml.Serialization.XmlElementAttribute).Assembly.Location),
