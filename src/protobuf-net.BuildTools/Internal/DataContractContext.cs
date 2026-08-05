@@ -181,10 +181,19 @@ namespace ProtoBuf.BuildTools.Internal
 
                     // an interface is a legal include root - protobuf-net treats implementing one
                     // exactly as deriving from a base class - so the base-type test alone reports a
-                    // build *error* for a pattern that works perfectly well at runtime
-                    var linked = SymbolEqualityComparer.Default.Equals(include.Type.BaseType, type)
+                    // build *error* for a pattern that works perfectly well at runtime.
+                    // Compared by *original definition*, because a generic root carries the attribute
+                    // on the open type while the sub-type names a closed construction: the include on
+                    // IBox<T> is inherited by every IBox<int>, and ref-emit resolves it happily
+                    var linked = Linked(include.Type.BaseType)
                         || (type.TypeKind == TypeKind.Interface
-                            && include.Type.AllInterfaces.Contains(type, SymbolEqualityComparer.Default));
+                            && include.Type.AllInterfaces.Any(Linked));
+
+                    bool Linked(INamedTypeSymbol? candidate)
+                        => candidate is not null
+                            && (SymbolEqualityComparer.Default.Equals(candidate, type)
+                                || SymbolEqualityComparer.Default.Equals(
+                                    candidate.OriginalDefinition, type.OriginalDefinition));
 
                     if (!linked)
                     {

@@ -781,6 +781,59 @@ public class Bar
 }");
             Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived);
         }
+
+        [Fact]
+        public async Task DoesntReportIncludeNonDerivedForAGenericInterfaceRoot()
+        {
+            // the attribute lives on the *open* IFoo<T> while Bar implements the *closed* IFoo<int>,
+            // so a symbol comparison finds no link - but ref-emit resolves it on both its paths, so
+            // PBN0012 (an error) firing here would fail the build for a working pattern
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo<T> { }
+[ProtoContract]
+public class Bar : IFoo<int>
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNonDerivedForAGenericBaseClass()
+        {
+            // the same shape one level down: a generic base class rather than a generic interface
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public class Foo<T> { }
+[ProtoContract]
+public class Bar : Foo<int>
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived));
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeOfAnUnrelatedGenericType()
+        {
+            // ...and an unrelated generic is still caught, so the relaxation is not blanket
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(10, typeof(Bar))]
+public interface IFoo<T> { }
+[ProtoContract]
+public class Bar : System.Collections.Generic.List<int>
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived);
+        }
     }
 }
 

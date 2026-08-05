@@ -406,14 +406,35 @@ An interface contract is **exactly** an inheritance root and needs no new emit s
 | `[ProtoContract]` + `[ProtoInclude]`, unary member | works | emitted |
 | same, as `List<IAnimal>` | works | emitted |
 | same, serialized directly as root | works | emitted |
+| an interface deriving another, both contracts | works | emitted |
+| a **closed generic** interface (`IBox<int>`) | works | emitted |
+| an interface as a map **value** | works | emitted |
+| an interface as a map **key** | works | emitted |
 | `[ProtoContract]`, **no** `[ProtoInclude]` | **throws** `Unexpected sub-type` on write | refused |
 | interface with no attributes, as a member | **throws** `No serializer defined for type` | refused |
+| a **value-type** sub-type | **throws** `Unexpected sub-type` | refused |
+| one type named by **two** hierarchies | **throws** while building | refused |
 
-The last two are refusals that *match* ref-emit rather than fall short of it. An interface root is
-implicitly abstract, which "abstract is allowed only as a root" already covers; the changes were
-teaching `DerivesFrom` and `GetLinkedBase` that **implementing** counts as deriving. `GetLinkedBase`
-takes the interface that actually names us in a `[ProtoInclude]` — a type usually implements several,
-and the rest are nothing to do with the hierarchy.
+Every row was probed against *both* ref-emit paths, and the two paths agree on all of them. The four
+refusals *match* ref-emit rather than fall short of it. An interface root is implicitly abstract,
+which "abstract is allowed only as a root" already covers; the changes were teaching `DerivesFrom`
+and `GetLinkedBase` that **implementing** counts as deriving.
+
+Two of those refusals are newer and worth the detail:
+
+- **A value-type sub-type does not merely misbehave, it does not compile.** Every hierarchy API is
+  constrained to reference types — `ISubTypeSerializer<T>`, `WriteSubType`, `ReadSubType`,
+  `SubTypeState<T>` — so emitting one produced seven `CS0452`s in the consumer's build, which is the
+  worst failure mode available. It is only reachable through an interface, since a struct cannot
+  derive from a class.
+- **A type may be named by only one hierarchy.** Each works in isolation — the wire form follows the
+  *member's* declared type, so the same instance goes out under tag 10 as an `IFirst` and tag 20 as
+  an `ISecond` — but protobuf-net refuses the pair once both are in one model, and the generator's
+  model is always one model. Note the two paths refuse it differently, which is why the diagnostic
+  quotes the compiled one: `Compile` says *"can only participate in one inheritance hierarchy"*,
+  while the reflection path gets further and then fails with *"the type cannot be changed once a
+  serializer has been generated"*. This is why `GetLinkedBases` returns a list — the count is the
+  check, and `GetLinkedBase` is just its first element.
 
 **The trap, and the reason `PBN0023` exists:** the interface layer writes its *own* declared members
 in addition to the implementation's, so a property declared on both goes on the wire **twice**. That
@@ -641,12 +662,20 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 
 ### Not yet supported
 
-Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
+**This list is currently empty**, which is a statement about the sweep rather than about protobuf-net:
+every remaining refusal either matches ref-emit or is a deliberate AOT decision (`System.Type`), and
+each says which in its diagnostic. The two entries that used to be here both went the same way, and
+the way is worth remembering:
 
-- interfaces as *members* rather than roots
+- **null-wrapping** was real work, and is now the "Null-wrapping" section above;
+- **interfaces as members** was *already done* — the bullet outlived the work. Probing found the
+  bare-interface cases were refusals that match ref-emit, and the genuinely-untested shapes (a
+  derived interface, a closed generic interface, an interface on either side of a map) already
+  emitted correctly; they just had no fixture. What the probe *did* turn up was a value-type sub-type
+  emitting code that would not compile — a bug, not a gap.
 
-Null-wrapping used to head this list and no longer belongs on it — see the "Null-wrapping" section
-above, which is the record of what was actually built.
+So the honest next step is not "pick the next bullet" but "widen the corpus": `docs/aot-coverage.md`
+is the measurement, and the one genuine gap it still shows is a nested map **key** (1 contract).
 
 ### Golden-file tests
 

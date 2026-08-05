@@ -268,7 +268,20 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return Option(diagnostics, at, name, "this form of [ProtoInclude]");
             }
-            var linkedBase = GetLinkedBase(type);
+            var linkedBases = GetLinkedBases(type);
+            // legal C#, and each hierarchy works in isolation, but protobuf-net refuses the pair once
+            // both are in one model - and the generator's model is always one model. Both ref-emit
+            // paths refuse it, with different wording: the compiled path says "can only participate
+            // in one inheritance hierarchy", the reflection path fails later with "the type cannot be
+            // changed once a serializer has been generated"
+            if (linkedBases.Count > 1)
+            {
+                return Contract(diagnostics, at, name,
+                    $"it is declared as a [ProtoInclude] of both '{Simplify(linkedBases[0].ToDisplayString())}' "
+                    + $"and '{Simplify(linkedBases[1].ToDisplayString())}', and protobuf-net refuses that "
+                    + "too: \"can only participate in one inheritance hierarchy\"");
+            }
+            var linkedBase = linkedBases.Count == 1 ? linkedBases[0] : null;
 
             // ref-emit's rule, from TypeSerializer: the typed form is used whenever the type is in a
             // hierarchy, or when it is the only extension interface implemented. Extensible supplies
@@ -1139,6 +1152,19 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
 
+                // every hierarchy API is constrained to reference types - ISubTypeSerializer<T>,
+                // WriteSubType, ReadSubType, SubTypeState<T> - so a value-type sub-type does not
+                // merely misbehave, it does not compile. Only reachable through an interface, since
+                // a struct cannot derive from a class. protobuf-net refuses it too, at runtime:
+                // "Unexpected sub-type", on both the reflection and compiled paths
+                foreach (var subType in subTypes)
+                {
+                    if (!subType.Type.IsValueType) continue;
+                    return Contract(diagnostics, at, name,
+                        $"'{Simplify(subType.Type.ToDisplayString())}' is declared as a [ProtoInclude] "
+                        + "but is a value type, and protobuf-net refuses that too: \"Unexpected sub-type\"");
+                }
+
                 rootTypeName = GetHierarchyRoot(type).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                 if (linkedBase is not null) reachable.Add(linkedBase);
                 for (int i = 0; i < subTypes.Count; i++)
@@ -1726,18 +1752,31 @@ namespace ProtoBuf.BuildTools.Generators
         /// The base contract that declares this type as a sub-type, if any. Inheritance without that
         /// declaration is not a hierarchy â€” protobuf-net treats the derived type as its own contract.
         /// </summary>
+        // note: no list pattern here - netstandard2.0 has no System.Index, which one would require
         private static INamedTypeSymbol? GetLinkedBase(INamedTypeSymbol type)
         {
-            if (Links(type.BaseType)) return type.BaseType;
+            var bases = GetLinkedBases(type);
+            return bases.Count == 0 ? null : bases[0];
+        }
+
+        /// <summary>
+        /// Every base or interface that declares this type as a sub-type. More than one is legal C#
+        /// and legal to <em>write</em>, but protobuf-net refuses it — see <see cref="GetLinkedBase"/>'s
+        /// callers, which treat a count above one as a dropped contract.
+        /// </summary>
+        private static List<INamedTypeSymbol> GetLinkedBases(INamedTypeSymbol type)
+        {
+            var found = new List<INamedTypeSymbol>();
+            if (Links(type.BaseType)) found.Add(type.BaseType!);
 
             // an interface is an inheritance root exactly as a base class is, so *implementing* one
             // that declares [ProtoInclude] for us is the same link. Only the interface that names us
             // counts: a type commonly implements several, and the rest are nothing to do with this
             foreach (var candidate in type.Interfaces)
             {
-                if (Links(candidate)) return candidate;
+                if (Links(candidate)) found.Add(candidate);
             }
-            return null;
+            return found;
 
             bool Links(INamedTypeSymbol? baseType)
             {

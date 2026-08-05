@@ -284,6 +284,13 @@ probably not worth it: the services type is what makes the closed-world guarante
 
 ## Fixed on this branch
 
+- **`PBN0012` reported a build error for a *generic* hierarchy root** — the same descriptor as the
+  interface bug below, and found the same way. The attribute lives on the open `IFoo<T>` while the
+  sub-type implements the closed `IFoo<int>`, so `SymbolEqualityComparer` finds no link and the
+  check reports an **error** for a shape ref-emit resolves on both its paths. It now compares
+  `OriginalDefinition` as well, with tests for a generic interface root, a generic base class, and a
+  genuinely unrelated generic — so the relaxation is not blanket.
+
 - **`PBN0012` reported a build error for every interface hierarchy.** "The type '{0}' is declared as
   an include, but is not a direct sub-type" compared `include.Type.BaseType` against the contract, so
   an interface root — where the link is *implementing*, not deriving — could never satisfy it. The
