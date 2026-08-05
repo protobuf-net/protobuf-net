@@ -114,7 +114,36 @@ Consequences are confined to reading: `OverwriteList` selects replace-over-appen
 a `byte[]`, so a caller who set it still gets append. The generator refuses the option there rather
 than honouring it, since honouring it would disagree with ref-emit.
 
-### 8. Assorted API surprises
+### 8. A `[ProtoMember]` private field is lost when the contract is read from *metadata*
+
+**Severity: high** — silent data loss, and the generated code compiles.
+
+`Examples.ProtoWithFields` (a `[ProtoContract]` whose only members are two `[ProtoMember]`-attributed
+**private fields**, each wrapped by a public property) produces a serializer whose `Write` body is
+*empty*:
+
+```csharp
+void ISerializer<Examples.ProtoWithFields>.Write(ref ProtoWriter.State state, Examples.ProtoWithFields value)
+{
+    TypeModel.ThrowUnexpectedSubtype(value);
+}
+```
+
+`RuntimeTypeModel` writes `08-01-12-02-73-31` for the same instance. Nothing is reported — the
+members are *skipped*, not refused, which means they fall out at `if (fieldNumber is null) continue;`
+rather than at any of the accessibility checks below it.
+
+**It does not reproduce from source.** A fixture with byte-identical declarations emits both members
+correctly, so this is specific to reading the contract from a *metadata* reference, which is how
+`AotCoverage` and `AotDifferential` drive the generator and is **not** how a real consumer does. That
+makes it plausibly a harness artefact rather than a generator bug — but it is not yet established
+which, and the failure mode (an empty serializer, no diagnostic) is bad enough either way that it
+should not be assumed benign.
+
+Reproduce with `PBN_DUMP='ISerializer<global::Examples.ProtoWithFields>.Write' dotnet run --project
+src/AotDifferential`, which prints the generated source around any matching line.
+
+### 9. Assorted API surprises
 
 Not bugs exactly, but each cost time and each is a trap for callers:
 
@@ -133,7 +162,7 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   deserialize throws, because there is no concrete type to construct.
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.
 
-### 9. A compiled model throws on a map whose key or value is a collection
+### 10. A compiled model throws on a map whose key or value is a collection
 
 **Severity: medium** — the model compiles clean and fails on first use, so it is a deployment-time
 failure rather than a build-time one. Confirmed on both halves of `Compile(name, path)`.

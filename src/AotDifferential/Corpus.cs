@@ -112,6 +112,25 @@ internal sealed class Corpus
             }
             Dropped = dropped.Count;
 
+            // triage aid: PBN_DUMP=<substring> prints the generated source for matching contracts,
+            // which is the fastest way to tell a generator bug from a harness one
+            if (Environment.GetEnvironmentVariable("PBN_DUMP") is { Length: > 0 } wanted)
+            {
+                foreach (var tree in output.SyntaxTrees)
+                {
+                    var lines = tree.GetText().Lines;
+                    var remaining = 0;
+                    foreach (var line in lines)
+                    {
+                        var text = line.ToString();
+                        // a window, not just the matching line: the interesting part of a serializer
+                        // is the member writes below the signature, which never name the type
+                        if (text.Contains(wanted)) remaining = 14;
+                        if (remaining-- > 0) Console.Error.WriteLine(text.TrimEnd());
+                    }
+                }
+            }
+
             var emit = output.Emit(peStream);
             if (emit.Success) break;
 
