@@ -11,8 +11,93 @@ partial class ListOptionsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>
+        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.ListOptions.NotACollection global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
+        {
+            value ??= new global::AotFixtures.ListOptions.NotACollection();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.PackedScalar = state.ReadInt32();
+                        break;
+                    }
+                    case 2:
+                    {
+                        value.OverwriteScalar = state.ReadInt32();
+                        break;
+                    }
+                    case 3:
+                    {
+                        var tmp3 = state.ReadString();
+                        if (tmp3 != null) value.BothOnString = tmp3;
+                        break;
+                    }
+                    case 4:
+                    {
+                        var tmp4 = value.AppendedBytes;
+                        tmp4 = state.AppendBytes(tmp4);
+                        if (tmp4 != null) value.AppendedBytes = tmp4;
+                        break;
+                    }
+                    case 5:
+                    {
+                        var tmp5 = state.AppendBytes(default(byte[]));
+                        if (tmp5 != null) value.OverwrittenBytes = tmp5;
+                        break;
+                    }
+                    case 6:
+                    {
+                        var tmp6 = value.PackedBytes;
+                        tmp6 = state.AppendBytes(tmp6);
+                        if (tmp6 != null) value.PackedBytes = tmp6;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.PackedScalar;
+            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            var tmp2 = value.OverwriteScalar;
+            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            var tmp3 = value.BothOnString;
+            state.WriteString(3, tmp3);
+            var tmp4 = value.AppendedBytes;
+            if (tmp4 != null)
+            {
+                state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
+                state.WriteBytes(tmp4);
+            }
+            var tmp5 = value.OverwrittenBytes;
+            if (tmp5 != null)
+            {
+                state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
+                state.WriteBytes(tmp5);
+            }
+            var tmp6 = value.PackedBytes;
+            if (tmp6 != null)
+            {
+                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
+                state.WriteBytes(tmp6);
+            }
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 

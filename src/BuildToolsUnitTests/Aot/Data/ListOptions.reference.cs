@@ -6,7 +6,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-internal sealed class ___PBN_Services___ListOptionsModel : ISerializer<Options>
+internal sealed class ___PBN_Services___ListOptionsModel : ISerializer<Options>, ISerializer<NotACollection>
 {
 	Options ISerializer<Options>.Read(ref ProtoReader.State state, Options value)
 	{
@@ -139,6 +139,120 @@ internal sealed class ___PBN_Services___ListOptionsModel : ISerializer<Options>
 	{
 		//ILSpy generated this explicit interface implementation from .override directive in Features_82
 		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<NotACollection>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	NotACollection ISerializer<NotACollection>.Read(ref ProtoReader.State state, NotACollection value)
+	{
+		if (value == null)
+		{
+			NotACollection notACollection = new NotACollection();
+			value = notACollection;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int packedScalar = state.ReadInt32();
+				value.PackedScalar = packedScalar;
+				break;
+			}
+			case 2:
+			{
+				int packedScalar = state.ReadInt32();
+				value.OverwriteScalar = packedScalar;
+				break;
+			}
+			case 3:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.BothOnString = text;
+				}
+				break;
+			}
+			case 4:
+			{
+				byte[] packedBytes = value.AppendedBytes;
+				packedBytes = state.AppendBytes(packedBytes);
+				if (packedBytes != null)
+				{
+					value.AppendedBytes = packedBytes;
+				}
+				break;
+			}
+			case 5:
+			{
+				byte[] packedBytes = state.AppendBytes((byte[])null);
+				if (packedBytes != null)
+				{
+					value.OverwrittenBytes = packedBytes;
+				}
+				break;
+			}
+			case 6:
+			{
+				byte[] packedBytes = value.PackedBytes;
+				packedBytes = state.AppendBytes(packedBytes);
+				if (packedBytes != null)
+				{
+					value.PackedBytes = packedBytes;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<NotACollection>.Write(ref ProtoWriter.State state, NotACollection value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int packedScalar = value.PackedScalar;
+		if (packedScalar != 0)
+		{
+			state.WriteInt32Varint(1, packedScalar);
+		}
+		packedScalar = value.OverwriteScalar;
+		if (packedScalar != 0)
+		{
+			state.WriteInt32Varint(2, packedScalar);
+		}
+		string bothOnString = value.BothOnString;
+		state.WriteString(3, bothOnString);
+		byte[] appendedBytes = value.AppendedBytes;
+		if (appendedBytes != null)
+		{
+			state.WriteFieldHeader(4, WireType.String);
+			byte[] data = appendedBytes;
+			state.WriteBytes(data);
+		}
+		byte[] overwrittenBytes = value.OverwrittenBytes;
+		if (overwrittenBytes != null)
+		{
+			state.WriteFieldHeader(5, WireType.String);
+			byte[] data = overwrittenBytes;
+			state.WriteBytes(data);
+		}
+		byte[] packedBytes = value.PackedBytes;
+		if (packedBytes != null)
+		{
+			state.WriteFieldHeader(6, WireType.String);
+			byte[] data = packedBytes;
+			state.WriteBytes(data);
+		}
 	}
 }
 public sealed class ListOptionsModel : TypeModel

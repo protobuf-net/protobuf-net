@@ -405,6 +405,21 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 3, $"var tmp{number} = state.ReadString();");
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
                         break;
+                    case ProtoMemberKind.Bytes when member.OverwriteList:
+                        // "bytes" is a scalar here, but OverwriteList still reaches BlobSerializer,
+                        // where it selects AppendBytes(default) over AppendBytes(existing) - replace
+                        // rather than append. RequiresOldValue is false with it set, so ref-emit does
+                        // not read the current value at all; the explicit default() is because the
+                        // AppendBytes overloads (array, Memory, ReadOnlyMemory, ArraySegment) make a
+                        // bare `default` ambiguous.
+                        if (member.IsReadOnly)
+                        {
+                            Line(sb, indent + 3, $"state.AppendBytes(default({member.DeclaredTypeName}));");
+                            break;
+                        }
+                        Line(sb, indent + 3, $"var tmp{number} = state.AppendBytes(default({member.DeclaredTypeName}));");
+                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, target, $"tmp{number}")}");
+                        break;
                     case ProtoMemberKind.Bytes:
                         // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
                         // existing array rather than replacing it

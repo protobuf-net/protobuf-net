@@ -297,7 +297,16 @@ rather than of protobuf-net — a `ProtoMapPlan` inside a `ProtoMapPlan` is not 
 
 Collection options are pure features composition, and compose orthogonally:
 `IsPacked = true` *omits* `OptionPackedDisabled`; `OverwriteList = true` *adds*
-`OptionClearCollection`. Both are refused on a non-collection member, where they mean nothing.
+`OptionClearCollection`.
+
+On a **non-collection** member they are accepted and ignored, which is what protobuf-net does:
+`ComposeListFeatures` is only reached from the repeated and map paths, so neither option has anywhere
+to land. **The exception is `OverwriteList` on a "bytes" member** — `byte[]`, `Memory<byte>`,
+`ReadOnlyMemory<byte>`, `ArraySegment<byte>` — which is a scalar here but still reaches
+`BlobSerializer`'s `overwriteList`: it selects `AppendBytes(default)` over `AppendBytes(existing)`,
+i.e. **replace rather than append**, and does not read the current value at all (`RequiresOldValue`
+is false with it set). `IsPacked` on a bytes member is ignored like any other scalar. The `default()`
+is spelled out because the four `AppendBytes` overloads make a bare `default` ambiguous.
 
 `DataFormat` and `IsRequired` change the emitted *shape*, not just the features:
 

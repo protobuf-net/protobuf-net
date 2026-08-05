@@ -728,13 +728,11 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 if (ignored) continue;
 
-                if ((isPacked || overwriteList) && GetMemberShape(compilation, memberType, surrogates, allowParseableTypes)
-                    is not ({ Repeated.Factory: not null } or { Map.Factory: not null }))
-                {
-                    // both options only mean anything for a collection
-                    return Option(diagnostics, atMember, name,
-                        "[ProtoMember(IsPacked/OverwriteList)] on a non-collection member");
-                }
+                // Neither option is refused on a non-collection member: ComposeListFeatures is only
+                // reached from the repeated and map paths, so protobuf-net simply ignores them, and
+                // so do we - the plan carries them but only the collection emit consults them. The
+                // exception is OverwriteList on a "bytes" member, which is a scalar here yet still
+                // reaches BlobSerializer's overwriteList; that one is honoured in the emit.
 
                 // precedence, per MetaType.ApplyDefaultBehaviour: [ProtoMember] first, then
                 // [DataMember(Order)] - to which the offset applies - then [XmlElement]/[XmlArray],
@@ -898,8 +896,10 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
                 // on anything else WellKnown has nothing to promote, and ref-emit simply ignores it
-                // needed for the [UnsafeAccessor] signature, and as the type argument to ReadAny/WriteAny
+                // needed for the [UnsafeAccessor] signature, as the type argument to ReadAny/WriteAny,
+                // and to spell out the default() an overwriting "bytes" read passes to AppendBytes
                 var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor || wrappedValue
+                    || (overwriteList && kind == ProtoMemberKind.Bytes)
                     ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);
                 var isNullable = shape.IsNullable;
                 var enumTypeName = shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);

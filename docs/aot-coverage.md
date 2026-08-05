@@ -7,7 +7,7 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **102** of 1392 (93% emitted)
+contracts dropped: **100** of 1392 (93% emitted)
 of which dropped only by cascade: 26
 
 | count | reason |
@@ -19,7 +19,6 @@ of which dropped only by cascade: 26
 | 5 | PBN2003 this form of [ProtoInclude] is not supported yet |
 | 3 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 2 | PBN2002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
-| 2 | PBN2003 [ProtoMember(IsPacked/OverwriteList)] on a non-collection member is not supported yet |
 | 2 | PBN2003 [ProtoPartialMember] is not supported yet |
 | 2 | PBN2003 [ProtoPartialIgnore] is not supported yet |
 | 2 | PBN2003 [ProtoContract(IgnoreUnknownSubTypes = ...)] is not supported yet |
