@@ -99,12 +99,6 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   ignored entirely** — silently. `IgnoreListHandling = true` is the opt-out. Nothing warns.
 - **A derived `[ProtoContract]` whose base does not `[ProtoInclude]` it is an independent contract
   that silently ignores every inherited member.** Also nothing warns.
-- **The persisted-dll path silently drops a map-of-map member.** A
-  `Dictionary<string, Dictionary<string, string>>` member round-trips correctly through
-  `RuntimeTypeModel`, but the compiled model emits *no code at all* for it — it is absent from the
-  serializer, so the data is written nowhere and read nowhere. Silent data loss rather than a throw,
-  and the two paths disagreeing is the part that makes it a bug rather than a limitation. Found by
-  comparing `MapNested.reference.cs` against the differential suite, which passes.
 - **An interface root writes its own declared members *in addition to* the implementation's**, so a
   property declared on both goes on the wire twice. `[ProtoContract] interface IAnimal` declaring
   `[ProtoMember(1)] Name`, with `Dog` implementing it and declaring `[ProtoMember(1)] Name` itself,
@@ -115,6 +109,29 @@ Not bugs exactly, but each cost time and each is a trap for callers:
 - `IProducerConsumerCollection<T>` resolves to a provider that can be written but **not read** —
   deserialize throws, because there is no concrete type to construct.
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.
+
+## Retracted
+
+### The persisted-dll path does *not* drop a map-of-map member
+
+Recorded here as a silent-data-loss bug: a `Dictionary<string, Dictionary<string, string>>` member
+was said to round-trip through `RuntimeTypeModel` while the compiled model emitted no code at all
+for it. **It is not true**, and no issue should be raised for it.
+
+Regenerating `MapNested.reference.cs` puts field 3 in both the read and the write, stably across
+repeated runs. The original observation came from a **stale reference file**, and the git history
+shows exactly how:
+
+- `c4fe9fa3` committed a reference that already contained the `Maps` member while the *input* did
+  not — the file was generated from a working tree that was ahead of what got committed;
+- `895100f2` regenerated it, correctly dropping field 3, because at that point no such member existed;
+- `0ef7af2c` added `Maps` to the input and **did not re-run `AotRefGen`**, so the file still showed
+  no field 3 — which was then read as ref-emit refusing to emit it.
+
+The lesson is about the harness, not about protobuf-net: `*.reference.cs` is only evidence if it was
+generated from the input beside it. A reference that is *missing* something is the easy way to be
+fooled, because an un-run generator and a generator that emitted nothing look identical. Regenerate
+before concluding anything from an absence.
 
 ## Future ideas
 

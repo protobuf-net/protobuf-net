@@ -1077,6 +1077,14 @@ changing a fixture; the tests don't consume its output, it's a reviewing aid.
 `*.reference.cs` is **intentionally tracked in git** (not generated-and-ignored), so that changes in
 ref-emit behaviour show up in review.
 
+**A reference is only evidence if it was generated from the input beside it**, and the dangerous
+direction is an *absence*: a file that was never re-run and a ref-emit that genuinely emitted nothing
+look exactly alike. That has already produced one wrong conclusion — a recorded "the persisted path
+silently drops a map-of-map member" bug that turned out to be a fixture edited without re-running
+`AotRefGen`; see the "Retracted" section of `docs/aot-findings.md`. Regenerate before concluding
+anything from a member that is missing, and commit the regenerated file in the same commit as the
+fixture change so the two cannot drift.
+
 - Fixture convention: `<Name>.input.cs` declares model type `<Name>Model`, giving `<Name>.reference.cs`.
 - Contract types in fixtures must be `public` — full ref-emit compilation only reaches public members.
 - `src/AotRefGen/TriggerAttributes.cs` duplicates the generator's post-init attributes so the shared
