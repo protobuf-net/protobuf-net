@@ -115,7 +115,6 @@ Not bugs exactly, but each cost time and each is a trap for callers:
 - `IProducerConsumerCollection<T>` resolves to a provider that can be written but **not read** —
   deserialize throws, because there is no concrete type to construct.
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.
-- `AnalyzerReleases.Unshipped.md` has drifted: `PBN0020`–`PBN0022` are missing from it.
 
 ## Future ideas
 

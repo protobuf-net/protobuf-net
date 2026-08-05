@@ -163,11 +163,17 @@ Design constraints that are settled, and should not be quietly relaxed:
   versions multiplies every emitted construct for no benefit to anyone doing AOT. (netstandard2.0
   and net4x default to C# 7.3, so those consumers must set `<LangVersion>` — accepted deliberately.)
 
-AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0022` belong to
+AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0023` belong to
 `DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. New IDs should be
 added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not actually *enforced*
 here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so the table is
-documentation rather than a build gate, and it has drifted: `PBN0020`–`PBN0022` are missing from it.
+documentation rather than a build gate, and it *had* drifted; it is current as of this branch, which
+means nothing but review will keep it that way.
+
+Separately, `PBN9001` is not an analyzer diagnostic at all: it is the `[Experimental]` id on
+`ProtoModelAttribute`/`ProtoSurrogateAttribute`, so it is an **error** by default and a consumer
+opting into the generator must suppress it. Anything that compiles a model programmatically has to
+suppress it too — see `src/AotCoverage`.
 
 Note the shipped analyzer still compiles against the low Roslyn baseline (4.3.1), which predates
 `LanguageVersion.CSharp12` — hence the numeric constant in `ProtoModelGenerator`. `BuildToolsUnitTests`
@@ -578,11 +584,10 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 
 Dropped with a diagnostic rather than mis-emitted; roughly in expected order of difficulty:
 
-- **null-wrapping** (`SerializerFeatures.OptionWrappedValue` and friends) — the
-  `wrappers.proto`-style encoding that gives scalars and collections true field presence, and the
-  reason a nullable *element* is currently refused. `docs/nullwrappers.md` is the reference; note it
-  is a whole encoding, not a flag, and `WriteMap`/`WriteRepeated` branch to a separate path for it.
 - interfaces as *members* rather than roots
+
+Null-wrapping used to head this list and no longer belongs on it — see the "Null-wrapping" section
+above, which is the record of what was actually built.
 
 ### Golden-file tests
 
