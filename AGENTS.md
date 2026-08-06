@@ -1160,8 +1160,14 @@ read half of the interface pair is implemented by far fewer types than the write
 
 Several protobuf-net options exist purely to shape the generated `.proto` and never reach the wire.
 Refusing a contract over one of those loses a serializer for no reason, and the coverage sweep says
-they are common, so each is **accepted and ignored**: `[ProtoContract(Name = …, Origin = …)]`,
-`[ProtoReserved]`, and `[ProtoMember(Name = …)]`. `[ProtoIgnore]` excludes the member, like
+they are common, so each is **accepted and ignored**: `[ProtoContract(Name = …, Origin = …)]` and
+`[ProtoMember(Name = …)]`.
+
+**`[ProtoReserved]` was on that list and does not belong there.** It is not merely schema decoration:
+protobuf-net *enforces* it while building the model and throws *"Field 31 is reserved and cannot be
+used for data member 'B'"*. Ignoring it means emitting a contract that protobuf-net rejects outright,
+which the corpus differential caught on six `Issue633` contracts. Still true of the other two, which
+really are schema-only. `[ProtoIgnore]` excludes the member, like
 `[XmlIgnore]` and `[NonSerialized]`.
 
 There is also **no "it has no members" refusal**: an empty message is entirely legal protobuf, and

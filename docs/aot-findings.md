@@ -252,28 +252,94 @@ For the generator this means: our support for a repeated or nested map **value**
 reflection path and exceeds the compiled one, and our refusal of a nested map **key** matches the
 compiled path while falling short of the reflection one.
 
-### 12. The corpus differential's remaining disagreements
+### 12. A `CategoryScalar` hand-written serializer is emitted as a sub-message
+
+**Severity: high** — wrong framing on the wire, and the two known cases *throw* rather than
+silently disagreeing, which is the only reason they were noticed.
+
+`[ProtoContract(Serializer = typeof(X))]` says a type has a hand-written serializer. We assume every
+such contract is a **message** and frame a member of it with `WriteMessage`/`ReadMessage`. But the
+serializer declares its own category, and it may be a *scalar*:
+
+```csharp
+[ProtoContract(Serializer = typeof(Serializer))]
+public readonly struct CustomType
+{
+    public class Serializer : ISerializer<CustomType>
+    {
+        public SerializerFeatures Features
+            => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeVarint;
+        ...
+    }
+}
+```
+
+Ref-emit frames that as the serializer asks — taken from a derived reference, not guessed:
+
+```csharp
+// scalar category                          // message category, for contrast
+state.WriteFieldHeader(2, WireType.Variant);
+SerializerCache.Get<S, T>().Write(ref state, v);   state.WriteMessage(1, CategoryRepeated, v, SerializerCache.Get<S2, T2>());
+v = SerializerCache.Get<S, T>().Read(ref state, v); v = state.ReadMessage(CategoryRepeated, v, SerializerCache.Get<S2, T2>());
+```
+
+Two corpus contracts hit it — `ProtoBuf.Test.Issues.Issue598+Item` and
+`ProtoBuf.Issues.Issue1083+WithWrapping` — and both throw *"Invalid wire-type"* on serialize, so the
+damage is loud rather than silent. A scalar serializer whose wire type happened to be `String` would
+disagree quietly instead.
+
+**Why it is not fixed here.** The category lives in the serializer's `Features` property, which
+ref-emit obtains by *instantiating* the serializer at model-build time. A source generator cannot.
+The options are a design decision rather than a bug fix:
+
+- **Read it from source.** When the serializer is in the same compilation its `Features` body is
+  usually a constant expression (`CategoryScalar | WireTypeVarint`), and `GetConstantValue` folds it.
+  That covers both corpus cases and any consumer writing their own — but not a serializer arriving
+  through a metadata reference, which would still have to be refused.
+- **Refuse whenever the category cannot be established.** Safe and honest, but it withdraws support
+  from the message case that works today (`ExternalSerializer.input.cs`) whenever the serializer is
+  not in source.
+
+Either way the current behaviour — assume message, emit, and let it throw at runtime — is the one
+option that should not survive.
+
+### 13. The corpus differential's remaining disagreements
 
 **This entry exists because `docs/aot-differential.md` is generated and overwritten on every run.**
-It is a snapshot, not a backlog: anything recorded only there stops being a record the next time
-someone regenerates it. Read the snapshot for current numbers; the *causes* below are the open work.
+It is a snapshot, not a backlog. Read the snapshot for current numbers; the *causes* here are the
+open work.
 
-**There are no byte mismatches left.** As of `279c4fe7`+, all 1286 contracts compared serialize
-byte-for-byte identically to `RuntimeTypeModel`. What remains is coverage rather than correctness:
+**No byte mismatches remain** — all 1286 contracts compared serialize identically to
+`RuntimeTypeModel`, and CI now fails if that regresses. The rest, audited rather than assumed:
 
-- **9 contracts no instance could be built for.** The harness cannot box a `Span<byte>` or
-  `ReadOnlySpan<byte>` member at all, and a few types have no construction route the `Filler` knows.
-  These are *unmeasured*, not known-good, which is why the report says "of the N actually compared".
-- **19 where one model threw and the other did not.** Most are deliberately-invalid test fixtures
-  where `RuntimeTypeModel` refuses to build a serializer and we emit one anyway. That is a real
-  divergence — an AOT model silently accepting configuration protobuf-net rejects — but a
-  low-priority one, since those contracts do not work in protobuf-net either. Worth a pass to
-  confirm none of the 19 is a shape that *should* work.
+- **19 where one model threw.** Two are ours and are item 12 above — the only cases where *we* throw
+  and protobuf-net does not. The other 17 all go the same way, and all are contracts protobuf-net
+  refuses to build a serializer for while we emit one:
+  - **6 × `[ProtoReserved]`** (`Issue633`): protobuf-net *enforces* a reservation and throws
+    *"Field 31 is reserved and cannot be used for…"*. `AGENTS.md` lists `[ProtoReserved]` under
+    "schema-only options… accepted and ignored", which is **wrong** — ignoring it means emitting a
+    contract that protobuf-net rejects outright. The cheapest honest fix is to refuse the contract
+    with a diagnostic quoting that message.
+  - **3 × ambient compatibility level on an auto-tuple** (`CompatibilityLevelAmbientAutoTupleTests`):
+    *"the tuple-like type must use a single compatibility level"*.
+  - **3 × invalid `[NullWrappedValue]`** (`NullWrappedValueTests+HazInvalid*`): packed, required and
+    bad-`DataFormat` combinations that `ValueMember` throws on.
+  - **2 × NodaTime** (`NodaTimeTests+HazNodaTime*`): the reference model here has no
+    `AddNodaTime()`, so this one is at least partly the harness — but it is worth checking *why* we
+    emit, since `Instant`/`Duration` are structs that may be matching the auto-tuple predicate, which
+    would be a wire-format bug rather than a harness artefact.
+  - **3 × assorted** invalid shapes.
+
+  These are all "we accept configuration protobuf-net rejects". Individually low-priority, since the
+  contracts do not work in protobuf-net either — but the `[ProtoReserved]` group is a documented
+  claim that turns out to be false, so it should not just sit here.
+- **9 contracts no instance could be built for** — the `Filler` cannot box a `Span<byte>` or
+  `ReadOnlySpan<byte>` member, and a few types have no construction route. *Unmeasured*, not
+  known-good, which is why the report says "of the N actually compared".
 - **2 the reference model refused outright**, both `[CompatibilityLevel(42)]`-style invalid fixtures.
 
-`PBN_DUMP=<substring>` prints the generated source around a match and `PBN_MEMBERS=<type>` prints
-what the generator sees for a contract; between them they settle "is this ours or the harness's"
-faster than anything else tried.
+`PBN_DUMP=<substring>` prints the generated source around a match; `PBN_MEMBERS=<type>` prints what
+the generator sees for a contract. Between them they settle "ours or the harness's" fastest.
 
 ## Future ideas
 

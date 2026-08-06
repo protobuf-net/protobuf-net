@@ -3,7 +3,7 @@
 # AOT generator differential
 
 **This file is regenerated wholesale on every run.** It is a snapshot, not a
-backlog — the durable record of what is still outstanding is item 12 of
+backlog — the durable record of what is still outstanding is item 13 of
 `docs/aot-findings.md`.
 
 Every `[ProtoContract]` the generator emits, serialized from a populated

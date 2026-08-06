@@ -191,7 +191,7 @@ internal static class Program
         // said in the output rather than the file, or it is gone the next time this runs - which is
         // exactly the trap the file is warning about
         Console.WriteLine("**This file is regenerated wholesale on every run.** It is a snapshot, not a");
-        Console.WriteLine("backlog — the durable record of what is still outstanding is item 12 of");
+        Console.WriteLine("backlog — the durable record of what is still outstanding is item 13 of");
         Console.WriteLine("`docs/aot-findings.md`.");
         Console.WriteLine();
         Console.WriteLine("Every `[ProtoContract]` the generator emits, serialized from a populated");
