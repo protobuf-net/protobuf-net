@@ -476,15 +476,11 @@ So all 11 `IL2091` are reachable this way, not merely the 4 proved here.
   annotation, and a "serializer resolved" one that keeps both. Generated code calls the first;
   the runtime model calls the second, and the warnings stay where the reflection actually is.
 - **emit more direct code**, so a simple sub-message, collection or map does not route through the
-  generic utility layer at all. That removes the instantiations rather than fixing them, and is the
-  larger change of the two — but it also cuts a layer of indirection that generated code does not
-  need, so the benefit is not only warning-count.
+  generic utility layer at all — removing the instantiations rather than gating them, and cutting a
+  layer of indirection generated code does not need anyway.
 
-The feature switch is the cheaper of the two and composes with the second; direct emit is the larger
-change but removes the instantiations rather than gating them, and cuts a layer of indirection that
-generated code does not need anyway.
-
-Either way the 11 `IL2091` and some of the `IL2067` are reachable; the `Enum.GetValues` block is not,
+The two compose rather than compete: the switch is the cheaper, and can be applied site by site;
+direct emit is the larger change and its benefit is not only warning-count. Either way the 11 `IL2091` and some of the `IL2067` are reachable; the `Enum.GetValues` block is not,
 and the reflective block is correct as it stands. That puts a realistic floor around **25**,
 essentially all of it the runtime model honestly declaring what it does.
 

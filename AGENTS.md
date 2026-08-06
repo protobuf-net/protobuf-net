@@ -849,8 +849,19 @@ are entangled inside the AOT-safe paths rather than sitting behind a boundary, s
 nowhere clean to terminate. Fixing that properly means **restructuring** (the generic path must not
 reference the fallback at all), not annotating.
 
-The remaining 33 are genuinely dynamic: `MakeGenericType`/`Type.GetType`/`Array.CreateInstance` in
-the runtime-model and collection paths. Measure with a publish rather than reasoning about them.
+**...but a feature switch does terminate cleanly, which `Requires*` could not.** Gating a fallback on
+`RuntimeFeature.IsDynamicCodeSupported` lets ILC substitute a constant and eliminate the branch
+*before* trim analysis, so the warning is removed rather than moved. Measured: doing that to
+`RepeatedSerializer`'s `serializer ??= TypeModel.GetSerializer<TItem>(…)` and then dropping the
+now-unneeded annotation took 47 → 43, and — the decisive part — did *not* produce the two new
+warnings at `WriteRepeated`/`ReadRepeated` that plain annotation-removal does.
+
+The current count is **47**, and they are not all irreducible; `docs/aot-findings.md` A2 has the
+measured breakdown and the two caveats that stop this being a one-line change. In short: ~11 are that
+`??=` pattern and are reachable, 16 are an `Enum.GetValues(Type)` that protobuf-net never calls (it
+arrives through a dependency's static constructor), and the rest are the runtime model honestly
+declaring its reflection. **Measure with a publish rather than reasoning about them** — and clear
+`obj`/`bin` first, since the publish is incremental and a second run reports nothing at all.
 
 ### Surrogates
 
