@@ -66,6 +66,20 @@ internal static class Program
         }
 
         Report(corpus, outcomes, failures);
+
+        // A byte mismatch is a generator bug by construction: the same instance, serialized two ways,
+        // disagreeing on the wire. That must never regress, so it is the exit code - the whole point
+        // of this harness is that such a bug compiles cleanly and passes every other test.
+        //
+        // Deliberately *only* mismatches. The other buckets are known and non-zero (contracts the
+        // filler cannot instantiate, and deliberately-invalid fixtures one model refuses), so gating
+        // on them would bake today's numbers in as correct rather than as under review.
+        var mismatches = outcomes.TryGetValue(Outcome.Mismatch, out var bad) ? bad : 0;
+        if (mismatches != 0)
+        {
+            Console.Error.WriteLine($"FAIL: {mismatches} contract(s) disagree with ref-emit on the wire.");
+            return 1;
+        }
         return 0;
     }
 

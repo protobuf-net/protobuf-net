@@ -1264,6 +1264,14 @@ The `Filler` builds instances by reflection, and what it *cannot* build is repor
 hidden: `Span<byte>`-shaped members can't be boxed at all, and a few types have no construction route.
 Coverage is the honest denominator — "of the N actually compared".
 
+**It gates CI.** The run exits non-zero when any contract disagrees on the wire, and
+`.github/workflows/dotnet.yml` runs it after the traversal build (which already produces everything
+it scans, so there is no extra build cost). Only *mismatches* fail: the other buckets - contracts the
+`Filler` cannot instantiate, and deliberately-invalid fixtures one model refuses - are known and
+non-zero, and gating on them would bake today's numbers in as correct rather than as under review.
+The gate was verified to be able to fail, by shifting an emitted field number and watching it catch
+116 contracts, not merely by observing it pass.
+
 `CS0433` is handled rather than tolerated here, since an ambiguous type name breaks the whole compile
 rather than one contract: the clashing assembly that is *not* a scanned target is dropped and the
 build retried, with the pair read out of the diagnostic rather than hard-coded.
