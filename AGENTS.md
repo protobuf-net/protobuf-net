@@ -604,6 +604,11 @@ against ref-emit rather than inferred:
   `Mango`=2, `Zebra`=3;
 - a member with an explicit `[ProtoMember]` keeps its pinned tag and does **not** consume a
   sequential number, nor is that number avoided — `5` pinned alongside `1, 2` is normal;
+- the **type-level** attributes count too, and have to be applied where the numbering is worked out
+  rather than only in the read/write loop: `[ProtoPartialIgnore]` removes a name from the candidate
+  set, and `[ProtoPartialMember]` pins one exactly as `[ProtoMember]` does. Excluding a name only
+  from the loop leaves it *consuming a tag*, which shifts every unpinned member after it — a
+  one-member mistake that corrupts the whole message;
 - implicit mode narrows the attribute family to ProtoBuf only, so `[DataMember]`/`[XmlElement]`
   orders stop applying.
 

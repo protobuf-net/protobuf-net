@@ -576,7 +576,8 @@ namespace ProtoBuf.BuildTools.Generators
 
             // implicit mode numbers the members itself, which cannot be done member-by-member: the
             // tags come from sorting the whole set, so they are worked out up-front
-            var implicitTags = GetImplicitTags(memberSource, implicitMode, implicitFirstTag);
+            var implicitTags = GetImplicitTags(memberSource, implicitMode, implicitFirstTag,
+                partialIgnores, partialMembers);
 
             // ...and it also narrows the attribute family to ProtoBuf only, so [DataMember] and
             // [XmlElement] orders stop applying (MetaType: `family &= AttributeFamily.ProtoBuf`).
@@ -2582,8 +2583,14 @@ namespace ProtoBuf.BuildTools.Generators
         /// explicit <c>[ProtoMember]</c> keeps its pinned tag and does <b>not</b> consume a
         /// sequential number — nor is that number avoided, so 5 pinned alongside 1, 2 is normal.
         /// </remarks>
+        /// <remarks>
+        /// The type-level exclusions and pins have to be applied <em>here</em>, not only in the
+        /// member loop: tags come from sorting the whole candidate set, so a name wrongly left in it
+        /// does not merely serialize itself — it shifts every unpinned tag after it.
+        /// </remarks>
         private static Dictionary<string, int> GetImplicitTags(
-            INamedTypeSymbol type, int implicitMode, int implicitFirstTag)
+            INamedTypeSymbol type, int implicitMode, int implicitFirstTag,
+            HashSet<string>? partialIgnores, Dictionary<string, PartialMember>? partialMembers)
         {
             var result = new Dictionary<string, int>(StringComparer.Ordinal);
             if (implicitMode == 0) return result;
@@ -2601,6 +2608,10 @@ namespace ProtoBuf.BuildTools.Generators
                 // precedes letters. Surprising, but it is what RuntimeTypeModel does.
                 if (symbol.IsImplicitlyDeclared && !(implicitMode == 2 && symbol is IFieldSymbol)) continue;
 
+                // [ProtoPartialIgnore] excludes by name from the type, and excluding it only from the
+                // read/write loop leaves it consuming a tag here
+                if (partialIgnores is not null && partialIgnores.Contains(symbol.Name)) continue;
+
                 var pinned = 0;
                 var ignored = false;
                 foreach (var attribute in symbol.GetAttributes())
@@ -2617,6 +2628,14 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
                 if (ignored) continue;
+
+                // ...and [ProtoPartialMember] pins from the type exactly as [ProtoMember] pins from
+                // the member, so it too is kept out of the sequential run
+                if (pinned <= 0 && partialMembers is not null
+                    && partialMembers.TryGetValue(symbol.Name, out var partial) && partial.FieldNumber > 0)
+                {
+                    pinned = partial.FieldNumber;
+                }
 
                 var forced = symbol switch
                 {
