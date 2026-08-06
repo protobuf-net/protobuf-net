@@ -73,7 +73,7 @@ internal sealed class Corpus
                 .ToList();
 
             var probe = CSharpCompilation.Create("probe", references: references,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                options: MetadataOptions());
 
             symbols = [];
             Skipped.Clear();
@@ -89,10 +89,30 @@ internal sealed class Corpus
             }
             Seeded = symbols.Count;
 
+            // triage aid: PBN_MEMBERS=<type substring> prints what the generator actually *sees* for
+            // a contract read from metadata - members, accessibility, and the attributes on each.
+            // The question it exists to answer is whether a member is missing or merely unrecognised
+            if (Environment.GetEnvironmentVariable("PBN_MEMBERS") is { Length: > 0 } inspect)
+            {
+                foreach (var symbol in symbols)
+                {
+                    if (!symbol.ToDisplayString().Contains(inspect)) continue;
+                    Console.Error.WriteLine($"--- {symbol.ToDisplayString()}");
+                    foreach (var member in symbol.GetMembers())
+                    {
+                        if (member is not (IFieldSymbol or IPropertySymbol)) continue;
+                        var attributes = member.GetAttributes()
+                            .Select(static a => a.AttributeClass?.ToDisplayString() ?? "<unresolved>");
+                        Console.Error.WriteLine($"    {member.Kind} {member.DeclaredAccessibility} "
+                            + $"{member.Name}  [{string.Join(", ", attributes)}]");
+                    }
+                }
+            }
+
             var source = BuildModelSource(symbols);
             var compilation = CSharpCompilation.Create("differential",
                 [CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))],
-                references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+                references, MetadataOptions()
                     .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
                     {
                         ["PBN9001"] = ReportDiagnostic.Suppress,
@@ -214,6 +234,22 @@ internal sealed class Corpus
         }
         throw new InvalidOperationException("build protobuf-net.BuildTools first");
     }
+
+    /// <summary>
+    /// Compilation options that import <em>all</em> members of a metadata reference, not just the
+    /// public ones.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="MetadataImportOptions"/> defaults to <c>Public</c>, so a private field simply is
+    /// not in the symbol — <c>GetMembers()</c> never returns it and nothing reports its absence.
+    /// A contract whose members are non-public then emits a serializer with <em>no members</em>,
+    /// silently, and still counts as "emitted" in the sweep. It looks exactly like a generator bug
+    /// and is not one: a real consumer compiles from source, where every member is present.
+    /// This is a property of driving the generator from metadata, which only these two harnesses do.
+    /// </remarks>
+    private static CSharpCompilationOptions MetadataOptions()
+        => new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            .WithMetadataImportOptions(MetadataImportOptions.All);
 
     public static string RepoRoot()
     {

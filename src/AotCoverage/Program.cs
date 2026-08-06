@@ -52,7 +52,7 @@ internal static class Program
             .ToList();
 
         var probe = CSharpCompilation.Create("probe", references: references,
-            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+            options: MetadataOptions());
 
         var contracts = new List<INamedTypeSymbol>();
         var skipped = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -84,7 +84,7 @@ internal static class Program
         var source = BuildModel(contracts);
         var compilation = CSharpCompilation.Create("coverage",
             [CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest))],
-            references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            references, MetadataOptions()
                 // PBN9001 is the [Experimental] id on the model attributes, so it is an *error* by
                 // default and our own seed source trips it once per contract. Every other consumer
                 // in the tree NoWarns it in the csproj; this is the programmatic equivalent.
@@ -138,6 +138,22 @@ internal static class Program
         }
         return 0;
     }
+
+    /// <summary>
+    /// Compilation options that import <em>all</em> members of a metadata reference, not just the
+    /// public ones.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="MetadataImportOptions"/> defaults to <c>Public</c>, so a private field simply is
+    /// not in the symbol - <c>GetMembers()</c> never returns it and nothing reports its absence. A
+    /// contract whose members are non-public then emits a serializer with <em>no members</em>,
+    /// silently, and still counts here as "emitted". It looks exactly like a generator bug and is
+    /// not one: a real consumer compiles from source, where every member is present. This is a
+    /// property of driving the generator from metadata, which only this and AotDifferential do.
+    /// </remarks>
+    private static CSharpCompilationOptions MetadataOptions()
+        => new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
+            .WithMetadataImportOptions(MetadataImportOptions.All);
 
     private static IEnumerable<string> DefaultTargets()
     {

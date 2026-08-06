@@ -7,14 +7,15 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **87** of 1392 (94% emitted)
+contracts dropped: **93** of 1392 (94% emitted)
 of which dropped only by cascade: 23
 
 | count | reason |
 | ---: | --- |
-| 12 | PBN2002 there is no parameterless constructor and SkipConstructor is not set, which protobuf-net refuses too: "No parameterless constructor found" |
+| 11 | PBN2002 there is no parameterless constructor and SkipConstructor is not set, which protobuf-net refuses too: "No parameterless constructor found" |
 | 9 | PBN2001 member '…' has unsupported type '…'; it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
 | 7 | PBN2001 member '…' has unsupported type '…'; System.Type is deliberately not supported, because ref-emit serializes it through Type.GetType, which native AOT cannot do |
+| 7 | PBN2001 member '…' is not public |
 | 6 | PBN2002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
 | 5 | PBN2002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
 | 5 | PBN2003 this form of [ProtoInclude] is not supported yet |
@@ -24,8 +25,8 @@ of which dropped only by cascade: 23
 | 1 | PBN2001 member '…' has unsupported type '…' |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
 | 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
-| 1 | PBN2001 member '…' is not public |
 | 1 | PBN2003 this form of [ProtoAfterDeserialization] is not supported yet |
+| 1 | PBN2003 this form of [ProtoBeforeSerialization] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |
 | 1 | PBN2003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN2001 member '…' has unsupported type '…'; its element '…' is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |

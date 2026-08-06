@@ -116,6 +116,31 @@ than honouring it, since honouring it would disagree with ref-emit.
 
 ### 8. A `[ProtoMember]` private field is lost when the contract is read from *metadata*
 
+**Resolved: a harness bug, and it was masking a real generator bug.** Kept in full because the
+shape of the mistake is worth remembering, and because the resolution changed the sweep's numbers.
+
+`MetadataImportOptions` defaults to **`Public`**, so private members of a *metadata reference* are
+never imported: `GetMembers()` does not return them and nothing reports their absence. Both sweeps
+built their compilations with the default, so every contract whose members are non-public emitted a
+serializer with no members and still counted as "emitted". Both now set
+`MetadataImportOptions.All`.
+
+Two consequences, and the second is why this was worth chasing rather than caveating:
+
+- **The corpus numbers were overstated.** Dropped went 87 → 93 once the members were visible, mostly
+  as `member '…' is not public` — a legitimate refusal that had simply never been reached. Worse
+  numbers, truer ones.
+- **It was hiding a generator bug that does not compile.** With private members visible,
+  `Examples.Issues.Issue295.Asset` produced `CS1503`: `ReadSubType` hoists the instance into a
+  per-case local, because reading `value.Value` is what constructs it — but `Assign` hard-coded the
+  literal `value` for the `[UnsafeAccessor]` target, which *there* is the `SubTypeState<T>` wrapper
+  rather than the contract. Any non-public member inside a hierarchy broke the consumer's build.
+  Nothing covered that combination; `InheritAccessor.input.cs` does now.
+
+The original write-up follows, since the reasoning that led here is the useful part.
+
+---
+
 **Severity: high** — silent data loss, and the generated code compiles.
 
 `Examples.ProtoWithFields` (a `[ProtoContract]` whose only members are two `[ProtoMember]`-attributed
@@ -139,6 +164,10 @@ correctly, so this is specific to reading the contract from a *metadata* referen
 makes it plausibly a harness artefact rather than a generator bug — but it is not yet established
 which, and the failure mode (an empty serializer, no diagnostic) is bad enough either way that it
 should not be assumed benign.
+
+*(It was the harness — `MetadataImportOptions`. `PBN_MEMBERS=<type>` on `src/AotDifferential`, added
+to settle it, prints the members and attributes the generator actually sees for a contract; the
+answer was two properties and no fields at all.)*
 
 Reproduce with `PBN_DUMP='ISerializer<global::Examples.ProtoWithFields>.Write' dotnet run --project
 src/AotDifferential`, which prints the generated source around any matching line.

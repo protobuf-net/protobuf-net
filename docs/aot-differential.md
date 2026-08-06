@@ -9,20 +9,20 @@ backlog — the durable record of what is still outstanding is item 11 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 84 dropped with a diagnostic
+seeded: **1392**, of which 90 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1278 |
-| **bytes differ** | 8 |
-| one model threw | 20 |
+| **bytes match ref-emit** | 1275 |
+| **bytes differ** | 6 |
+| one model threw | 19 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
 | the reference model refused the contract | 2 |
 
-of the 1286 actually compared, **99% match**.
+of the 1281 actually compared, **99% match**.
 
 ## What went wrong
 
@@ -60,10 +60,6 @@ of the 1286 actually compared, **99% match**.
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedRangeField
 - **1x** reference threw, generated model did not: InvalidOperationException: Field 'B' is … and cannot be used for data member 33 (iz B).
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedNameField
-- **1x** bytes differ at byte 0 (generated 4b, reference 4b): generated 28-04-30-01 vs reference 20-04-28-01
-  - e.g. Examples.TestAutoFields+ImplicitPublicPOCO
-- **1x** bytes differ at byte 0 (generated 0b, reference 6b): generated <end> vs reference 08-01-12-02-73-31
-  - e.g. Examples.ProtoWithFields
 - **1x** bytes differ at byte 1 (generated 6b, reference 2b): generated 04-10-00-18-00 vs reference 00
   - e.g. Examples.Issues.SO16838287+Foo
 - **1x** bytes differ at byte 0 (generated 0b, reference 8b): generated <end> vs reference 1B-1C-08-01-12-02
@@ -74,5 +70,3 @@ of the 1286 actually compared, **99% match**.
   - e.g. Examples.Issues.SO9408133+SomeResource
 - **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type String at … 1, depth 0
   - e.g. ProtoBuf.Issues.Issue1083+WithWrapping
-- **1x** reference threw, generated model did not: InvalidOperationException: Type '…' looks like a … type; it cannot be used … with …-net without manual …; it may be … to … a …-net type i…
-  - e.g. ProtoBuf.Issues.Issue722+HazGoogleTypes
