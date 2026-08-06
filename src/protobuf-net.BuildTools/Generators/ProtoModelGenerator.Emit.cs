@@ -749,7 +749,18 @@ namespace ProtoBuf.BuildTools.Generators
                     var local = $"sub{subType.FieldNumber.ToString(CultureInfo.InvariantCulture)}";
                     Line(sb, indent + 2, $"{keyword} (value is {subType.TypeName} {local})");
                     Line(sb, indent + 2, "{");
-                    Line(sb, indent + 3, $"state.WriteSubType({subType.FieldNumber.ToString(CultureInfo.InvariantCulture)}, {local}, this);");
+                    var tag = subType.FieldNumber.ToString(CultureInfo.InvariantCulture);
+                    if (subType.IsGroup)
+                    {
+                        // WriteSubType(int, ...) hard-codes WireType.String, so a grouped sub-type
+                        // writes its own header and uses the overload that takes no field number
+                        Line(sb, indent + 3, $"state.WriteFieldHeader({tag}, global::ProtoBuf.WireType.StartGroup);");
+                        Line(sb, indent + 3, $"state.WriteSubType({local}, this);");
+                    }
+                    else
+                    {
+                        Line(sb, indent + 3, $"state.WriteSubType({tag}, {local}, this);");
+                    }
                     Line(sb, indent + 2, "}");
                     keyword = "else if";
                 }

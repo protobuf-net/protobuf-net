@@ -1208,7 +1208,8 @@ namespace ProtoBuf.BuildTools.Generators
                 for (int i = 0; i < subTypes.Count; i++)
                 {
                     subTypePlans[i] = new ProtoSubTypePlan(subTypes[i].Tag,
-                        subTypes[i].Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                        subTypes[i].Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        subTypes[i].IsGroup);
                     reachable.Add(subTypes[i].Type);
                 }
             }
@@ -1420,16 +1421,26 @@ namespace ProtoBuf.BuildTools.Generators
         /// False if any of them uses a form we cannot reproduce, in which case the caller must
         /// refuse the contract rather than emit a partial hierarchy.
         /// </returns>
-        private static bool TryGetSubTypes(INamedTypeSymbol type, out List<(int Tag, INamedTypeSymbol Type)> subTypes)
+        private static bool TryGetSubTypes(INamedTypeSymbol type,
+            out List<(int Tag, INamedTypeSymbol Type, bool IsGroup)> subTypes)
         {
-            subTypes = new List<(int, INamedTypeSymbol)>();
+            subTypes = new List<(int, INamedTypeSymbol, bool)>();
             foreach (var attribute in type.GetAttributes())
             {
                 if (attribute.AttributeClass?.ToDisplayString() != ProtoIncludeAttributeName) continue;
 
-                // the (int, string) form defers to runtime type resolution, and DataFormat.Group
-                // changes the sub-type framing
-                if (attribute.NamedArguments.Length != 0) return false;
+                // DataFormat is the one named argument that reaches the wire, and Group is the only
+                // value that changes anything - a sub-type is a sub-message, so FixedSize and ZigZag
+                // have nothing to select and ref-emit ignores them, as it does elsewhere
+                var isGroup = false;
+                foreach (var argument in attribute.NamedArguments)
+                {
+                    if (argument.Key != "DataFormat" || argument.Value.Value is not int format) return false;
+                    if (GetDataFormat(format) is not { } parsed) return false;
+                    isGroup = parsed == ProtoDataFormat.Group;
+                }
+
+                // the (int, string) form defers to runtime type resolution
                 if (attribute.ConstructorArguments.Length != 2) return false;
                 if (attribute.ConstructorArguments[0].Value is not int tag) return false;
                 if (attribute.ConstructorArguments[1].Value is not INamedTypeSymbol derived) return false;
@@ -1445,7 +1456,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // Filtering also still yields a compilable set: everything left really does derive.
                 if (!DerivesFrom(derived, type)) continue;
 
-                subTypes.Add((tag, derived));
+                subTypes.Add((tag, derived, isGroup));
             }
             return true;
         }

@@ -399,6 +399,11 @@ inherited ones belong to the layer that declares them.
   falls back to the plain unconditional throw.
 - `ReadSubType` hoists `value.Value` **per case** — reading it is what constructs the instance — and
   each sub-type field is `value.ReadSubType<TDerived>(ref state, this)`.
+- **`[ProtoInclude]` takes a `DataFormat`**, and `Group` is the only value that reaches the wire -
+  a sub-type is a sub-message, so `FixedSize`/`ZigZag` have nothing to select and are ignored. It
+  affects the **write only**: `WriteSubType(int, …)` hard-codes `WireType.String`, so the grouped
+  form writes `WriteFieldHeader(n, StartGroup)` itself and then calls the overload that takes no
+  field number. The read is identical either way, since the framing comes off the header.
 - **`sealed` omits `ThrowUnexpectedSubtype` entirely**, in a hierarchy or out of one. This was a
   pre-existing divergence: we emitted it everywhere a struct or tuple did not apply. It is benign
   (the call cannot throw for a sealed type) but it is not what ref-emit produces.

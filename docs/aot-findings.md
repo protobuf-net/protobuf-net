@@ -256,28 +256,24 @@ compiled path while falling short of the reflection one.
 
 **This entry exists because `docs/aot-differential.md` is generated and overwritten on every run.**
 It is a snapshot, not a backlog: anything recorded only there stops being a record the next time
-someone regenerates it. The counts below will drift — read the snapshot for current numbers — but
-the *causes* are the open work, and they belong somewhere durable.
+someone regenerates it. Read the snapshot for current numbers; the *causes* below are the open work.
 
-As of `dbfaf409`, of 1286 contracts compared, 1278 match ref-emit byte-for-byte. What does not:
+**There are no byte mismatches left.** As of `279c4fe7`+, all 1286 contracts compared serialize
+byte-for-byte identically to `RuntimeTypeModel`. What remains is coverage rather than correctness:
 
-- **8 byte mismatches**, in four causes: an `ImplicitFields` numbering difference
-  (`Examples.TestAutoFields+ImplicitPublicPOCO` writes fields 5 and 6 where ref-emit writes 4 and 5);
-  a residual `CompatibilityLevelListsMaps+HazMaps` disagreement, which moved rather than cleared when
-  the element-level fix landed and so is a second cause behind the first; and two shapes under
-  `Examples.Issues.SO9408133` where we write a different field number entirely. Each is a wrong-bytes
-  bug — the class that compiles and passes every test we had before this harness.
-- **9 contracts no instance could be built for**, which is *coverage*, not correctness: the harness
-  cannot box a `Span<byte>`/`ReadOnlySpan<byte>` member at all, and a few types have no construction
-  route the `Filler` knows. They are not known-good, they are unmeasured, and the "of the N actually
-  compared" denominator is written to keep that honest.
-- **20 where one model threw and the other did not.** Most are deliberately-invalid test fixtures
-  where `RuntimeTypeModel` refuses to build a serializer and we emit one anyway — that is a real
-  divergence (an AOT model silently accepting configuration protobuf-net rejects), but a low-priority
-  one, since the contracts do not work in protobuf-net either.
+- **9 contracts no instance could be built for.** The harness cannot box a `Span<byte>` or
+  `ReadOnlySpan<byte>` member at all, and a few types have no construction route the `Filler` knows.
+  These are *unmeasured*, not known-good, which is why the report says "of the N actually compared".
+- **19 where one model threw and the other did not.** Most are deliberately-invalid test fixtures
+  where `RuntimeTypeModel` refuses to build a serializer and we emit one anyway. That is a real
+  divergence — an AOT model silently accepting configuration protobuf-net rejects — but a
+  low-priority one, since those contracts do not work in protobuf-net either. Worth a pass to
+  confirm none of the 19 is a shape that *should* work.
+- **2 the reference model refused outright**, both `[CompatibilityLevel(42)]`-style invalid fixtures.
 
-`PBN_DUMP=<substring>` on `src/AotDifferential` prints the generated source around a match, which is
-the fastest way to tell which side of a mismatch is wrong.
+`PBN_DUMP=<substring>` prints the generated source around a match and `PBN_MEMBERS=<type>` prints
+what the generator sees for a contract; between them they settle "is this ours or the harness's"
+faster than anything else tried.
 
 ## Future ideas
 

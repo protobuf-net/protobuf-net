@@ -516,10 +516,11 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// </summary>
     internal readonly struct ProtoSubTypePlan : IEquatable<ProtoSubTypePlan>
     {
-        public ProtoSubTypePlan(int fieldNumber, string typeName)
+        public ProtoSubTypePlan(int fieldNumber, string typeName, bool isGroup = false)
         {
             FieldNumber = fieldNumber;
             TypeName = typeName;
+            IsGroup = isGroup;
         }
 
         public int FieldNumber { get; }
@@ -527,12 +528,24 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <summary>Fully-qualified, <c>global::</c>-prefixed.</summary>
         public string TypeName { get; }
 
+        /// <summary>
+        /// From <c>[ProtoInclude(…, DataFormat = DataFormat.Group)]</c>: the sub-type is framed as a
+        /// group rather than length-prefixed.
+        /// </summary>
+        /// <remarks>
+        /// Affects the write only. <c>WriteSubType(int, …)</c> hard-codes <c>WireType.String</c>, so
+        /// the grouped form writes the header itself and then uses the overload that takes no field
+        /// number. The read is identical either way — the framing comes off the header.
+        /// </remarks>
+        public bool IsGroup { get; }
+
         public bool Equals(ProtoSubTypePlan other)
-            => FieldNumber == other.FieldNumber && TypeName == other.TypeName;
+            => FieldNumber == other.FieldNumber && TypeName == other.TypeName && IsGroup == other.IsGroup;
 
         public override bool Equals(object? obj) => obj is ProtoSubTypePlan other && Equals(other);
 
-        public override int GetHashCode() => (FieldNumber * 397) ^ (TypeName?.GetHashCode() ?? 0);
+        public override int GetHashCode()
+            => (FieldNumber * 397) ^ (TypeName?.GetHashCode() ?? 0) ^ (IsGroup ? 8191 : 0);
     }
 
     /// <summary>
