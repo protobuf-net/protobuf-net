@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **86** of 1392 (94% emitted)
-of which dropped only by cascade: 21
+contracts dropped: **95** of 1392 (94% emitted)
+of which dropped only by cascade: 24
 
 | count | reason |
 | ---: | --- |
@@ -24,6 +24,12 @@ of which dropped only by cascade: 21
 | 1 | PBN2001 member '…' has unsupported type '…' |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
 | 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
+| 1 | PBN2002 Field 31 is reserved and cannot be used for data member '…' (iz 31), which protobuf-net refuses too |
+| 1 | PBN2002 Field 32 is reserved and cannot be used for data member '…' (iz 32), which protobuf-net refuses too |
+| 1 | PBN2002 Field '…' is reserved and cannot be used for data member 33 (iz B), which protobuf-net refuses too |
+| 1 | PBN2002 Field 31 is reserved and cannot be used for sub-type '…' (iz 31), which protobuf-net refuses too |
+| 1 | PBN2002 Field 32 is reserved and cannot be used for sub-type '…' (iz 32), which protobuf-net refuses too |
+| 1 | PBN2002 Field '…' is reserved and cannot be used for sub-type 33 (iz B), which protobuf-net refuses too |
 | 1 | PBN2003 this form of [ProtoAfterDeserialization] is not supported yet |
 | 1 | PBN2003 this form of [ProtoBeforeSerialization] is not supported yet |
 | 1 | PBN2001 member '…' has no public getter |

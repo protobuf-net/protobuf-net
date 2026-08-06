@@ -340,6 +340,7 @@ namespace ProtoBuf.BuildTools.Generators
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
             bool isGroup = false, ignoreUnknownSubTypes = false, useProtoMembersOnly = false;
+            List<Reservation>? reservations = null;
             HashSet<string>? partialIgnores = null;
             Dictionary<string, PartialMember>? partialMembers = null;
             var ignoreListHandling = false;
@@ -430,8 +431,17 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 // already read up-front, since it decides whether inheritance is legal here
                 else if (attributeName == ProtoIncludeAttributeName) { }
-                // reserved field ranges exist to shape the generated .proto; nothing on the wire
-                else if (attributeName == ProtoReservedAttributeName) { }
+                // [ProtoReserved] is *not* schema-only, despite looking it: MetaType.ValidateReservations
+                // throws while building the model if a member, sub-type or enum value lands on a
+                // reserved number or name. Ignoring it meant emitting contracts protobuf-net rejects
+                else if (attributeName == ProtoReservedAttributeName)
+                {
+                    if (ParseReservation(attribute) is not { } reservation)
+                    {
+                        return Option(diagnostics, at, name, "this form of [ProtoReserved]");
+                    }
+                    (reservations ??= []).Add(reservation);
+                }
                 // excludes a member by name, from the type - MetaType skips it outright, before any
                 // family or attribute inspection, so it wins over everything
                 else if (attributeName == ProtoPartialIgnoreAttributeName)
@@ -1174,6 +1184,51 @@ namespace ProtoBuf.BuildTools.Generators
             // the whole hierarchy has to be in the model, since every type in it routes through the
             // root; walking both ways gets there from whichever end was seeded
             string? rootTypeName = null;
+            // MetaType.ValidateReservations, which throws while building the model - so a contract
+            // that trips it does not work in protobuf-net at all, and emitting one is worse than
+            // dropping it. Checked here because it needs the members *and* the sub-types
+            if (reservations is not null)
+            {
+                foreach (var reservation in reservations)
+                {
+                    if (reservation.From != 0)
+                    {
+                        foreach (var member in members)
+                        {
+                            if (member.FieldNumber < reservation.From || member.FieldNumber > reservation.To) continue;
+                            return Contract(diagnostics, at, name,
+                                $"Field {member.FieldNumber} is reserved and cannot be used for data "
+                                + $"member '{member.Name}'{reservation.Suffix}, which protobuf-net refuses too");
+                        }
+                        foreach (var subType in subTypes)
+                        {
+                            if (subType.Tag < reservation.From || subType.Tag > reservation.To) continue;
+                            return Contract(diagnostics, at, name,
+                                $"Field {subType.Tag} is reserved and cannot be used for sub-type "
+                                + $"'{Simplify(subType.Type.ToDisplayString())}'{reservation.Suffix}, "
+                                + "which protobuf-net refuses too");
+                        }
+                    }
+                    else
+                    {
+                        foreach (var member in members)
+                        {
+                            if (member.Name != reservation.ReservedName) continue;
+                            return Contract(diagnostics, at, name,
+                                $"Field '{member.Name}' is reserved and cannot be used for data member "
+                                + $"{member.FieldNumber}{reservation.Suffix}, which protobuf-net refuses too");
+                        }
+                        foreach (var subType in subTypes)
+                        {
+                            if (subType.Type.Name != reservation.ReservedName) continue;
+                            return Contract(diagnostics, at, name,
+                                $"Field '{reservation.ReservedName}' is reserved and cannot be used for "
+                                + $"sub-type {subType.Tag}{reservation.Suffix}, which protobuf-net refuses too");
+                        }
+                    }
+                }
+            }
+
             var subTypePlans = new ProtoSubTypePlan[subTypes.Count];
             if (subTypes.Count != 0 || linkedBase is not null)
             {
@@ -1225,6 +1280,58 @@ namespace ProtoBuf.BuildTools.Generators
                 callbacks: new(callbacks),
                 isAbstract: type.IsAbstract && subTypes.Count == 0,
                 isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes);
+        }
+
+        /// <summary>
+        /// A <c>[ProtoReserved]</c> declaration: either a number range or a name, never both —
+        /// <c>MetaType.ValidateReservations</c> switches on <c>From != 0</c>.
+        /// </summary>
+        private readonly struct Reservation
+        {
+            public Reservation(int from, int to, string? reservedName, string? comment)
+            {
+                From = from;
+                To = to;
+                ReservedName = reservedName;
+                Comment = comment;
+            }
+
+            public int From { get; }
+            public int To { get; }
+            public string? ReservedName { get; }
+            public string? Comment { get; }
+
+            /// <summary>Rendered as protobuf-net renders it, so the diagnostic quotes it exactly.</summary>
+            public string Suffix => string.IsNullOrWhiteSpace(Comment) ? "" : $" ({Comment})";
+        }
+
+        /// <summary>
+        /// Read a <c>[ProtoReserved]</c>. The three constructors are <c>(int)</c>, <c>(int, int)</c>
+        /// and <c>(string)</c>, each with an optional trailing comment.
+        /// </summary>
+        private static Reservation? ParseReservation(AttributeData attribute)
+        {
+            var arguments = attribute.ConstructorArguments;
+            // named arguments would be setting From/To/Name directly, which the attribute does not allow
+            if (attribute.NamedArguments.Length != 0) return null;
+            switch (arguments.Length)
+            {
+                case 1 when arguments[0].Value is int single:
+                    return new Reservation(single, single, null, null);
+                case 1 when arguments[0].Value is string named:
+                    return new Reservation(0, 0, named, null);
+                case 2 when arguments[0].Value is int single2 && arguments[1].Value is string or null:
+                    return new Reservation(single2, single2, null, arguments[1].Value as string);
+                case 2 when arguments[0].Value is int from && arguments[1].Value is int to:
+                    return new Reservation(from, to, null, null);
+                case 2 when arguments[0].Value is string named2 && arguments[1].Value is string or null:
+                    return new Reservation(0, 0, named2, arguments[1].Value as string);
+                case 3 when arguments[0].Value is int from2 && arguments[1].Value is int to2
+                    && arguments[2].Value is string or null:
+                    return new Reservation(from2, to2, null, arguments[2].Value as string);
+                default:
+                    return null;
+            }
         }
 
         /// <summary>

@@ -312,14 +312,11 @@ open work.
 **No byte mismatches remain** — all 1286 contracts compared serialize identically to
 `RuntimeTypeModel`, and CI now fails if that regresses. The rest, audited rather than assumed:
 
-- **19 where one model threw.** Two are ours and are item 12 above — the only cases where *we* throw
-  and protobuf-net does not. The other 17 all go the same way, and all are contracts protobuf-net
+- **10 where one model threw** (was 19, before the `[ProtoReserved]` port). Two are ours and are item 12 above — the only cases where *we* throw
+  and protobuf-net does not. The other 8 all go the same way, and all are contracts protobuf-net
   refuses to build a serializer for while we emit one:
-  - **6 × `[ProtoReserved]`** (`Issue633`): protobuf-net *enforces* a reservation and throws
-    *"Field 31 is reserved and cannot be used for…"*. `AGENTS.md` lists `[ProtoReserved]` under
-    "schema-only options… accepted and ignored", which is **wrong** — ignoring it means emitting a
-    contract that protobuf-net rejects outright. The cheapest honest fix is to refuse the contract
-    with a diagnostic quoting that message.
+  - ~~**6 × `[ProtoReserved]`**~~ — **fixed**: `ValidateReservations` is now ported, so these are
+    refused with protobuf-net's own message rather than emitted.
   - **3 × ambient compatibility level on an auto-tuple** (`CompatibilityLevelAmbientAutoTupleTests`):
     *"the tuple-like type must use a single compatibility level"*.
   - **3 × invalid `[NullWrappedValue]`** (`NullWrappedValueTests+HazInvalid*`): packed, required and

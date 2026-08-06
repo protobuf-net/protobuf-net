@@ -9,7 +9,7 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 83 dropped with a diagnostic
+seeded: **1392**, of which 92 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
@@ -17,7 +17,7 @@ seeded: **1392**, of which 83 dropped with a diagnostic
 | --- | ---: |
 | **bytes match ref-emit** | 1286 |
 | **bytes differ** | 0 |
-| one model threw | 19 |
+| one model threw | 10 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
 | the reference model refused the contract | 2 |
@@ -38,12 +38,6 @@ of the 1286 actually compared, **100% match**.
   - e.g. ProtoBuf.Test.CustomScalarAllocator+HazMemoryBlobish, ProtoBuf.Test.CustomScalarAllocator+MemoryBlobish
 - **2x** reference threw, generated model did not: InvalidOperationException: No … defined for type: …
   - e.g. ProtoBuf.Test.NodaTimeTests+HazNodaTimeDuration, ProtoBuf.Test.NodaTimeTests+HazNodaTimeInstant
-- **2x** reference threw, generated model did not: InvalidOperationException: Field 31 is … and cannot be used for sub-type '…' (iz 31).
-  - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedDistinctFieldSubType+B, ProtoBuf.Test.Issues.Issue633+HasReservedDistinctFieldSubType
-- **2x** reference threw, generated model did not: InvalidOperationException: Field 32 is … and cannot be used for sub-type '…' (iz 32).
-  - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedRangeFieldSubType+B, ProtoBuf.Test.Issues.Issue633+HasReservedRangeFieldSubType
-- **2x** reference threw, generated model did not: InvalidOperationException: Field 'B' is … and cannot be used for sub-type 33 (iz B).
-  - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedNameFieldSubType+B, ProtoBuf.Test.Issues.Issue633+HasReservedNameFieldSubType
 - **1x** reference threw, generated model did not: NotSupportedException: … can only be used with …
   - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidDataFormat
 - **1x** reference threw, generated model did not: NotSupportedException: … cannot be used with packed values
@@ -52,11 +46,5 @@ of the 1286 actually compared, **100% match**.
   - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidReqired
 - **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type None at … 2, depth 1
   - e.g. ProtoBuf.Test.Issues.Issue598+Item
-- **1x** reference threw, generated model did not: InvalidOperationException: Field 31 is … and cannot be used for data member 'B' (iz 31).
-  - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedDistinctField
-- **1x** reference threw, generated model did not: InvalidOperationException: Field 32 is … and cannot be used for data member 'B' (iz 32).
-  - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedRangeField
-- **1x** reference threw, generated model did not: InvalidOperationException: Field 'B' is … and cannot be used for data member 33 (iz B).
-  - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedNameField
 - **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type String at … 1, depth 0
   - e.g. ProtoBuf.Issues.Issue1083+WithWrapping

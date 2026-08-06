@@ -1,0 +1,9 @@
+Generator produced 4 diagnostics:
+Warning PBN2002 Aot/Data/Diagnostics/Reserved.input.cs L13 C14
+Contract 'AotFixtures.Reserved.ReservedSingle' is omitted from the AOT model: Field 31 is reserved and cannot be used for data member 'B' (iz 31), which protobuf-net refuses too.
+Warning PBN2002 Aot/Data/Diagnostics/Reserved.input.cs L21 C14
+Contract 'AotFixtures.Reserved.ReservedRange' is omitted from the AOT model: Field 32 is reserved and cannot be used for data member 'B' (iz 32), which protobuf-net refuses too.
+Warning PBN2002 Aot/Data/Diagnostics/Reserved.input.cs L29 C14
+Contract 'AotFixtures.Reserved.ReservedName' is omitted from the AOT model: Field 'B' is reserved and cannot be used for data member 33 (iz B), which protobuf-net refuses too.
+Warning PBN2002 Aot/Data/Diagnostics/Reserved.input.cs L38 C14
+Contract 'AotFixtures.Reserved.ReservedSubType' is omitted from the AOT model: Field 31 is reserved and cannot be used for sub-type 'AotFixtures.Reserved.ReservedSubTypeLeaf' (iz 31), which protobuf-net refuses too.
