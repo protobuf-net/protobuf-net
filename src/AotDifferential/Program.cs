@@ -40,6 +40,7 @@ internal static class Program
         // serializer has been generated from it.
         var reference = RuntimeTypeModel.Create();
         reference.AutoCompile = false;
+        ApplySurrogates(reference, corpus);
         var refused = new Dictionary<Type, string>();
         foreach (var contract in corpus.Contracts)
         {
@@ -81,6 +82,85 @@ internal static class Program
             return 1;
         }
         return 0;
+    }
+
+    /// <summary>
+    /// Replay every <c>[ProtoSurrogate]</c> declaration the generator can see onto the reference
+    /// model, so the two are configured alike.
+    /// </summary>
+    /// <remarks>
+    /// The generator gathers these from *referenced assemblies* — which is how a package can ship
+    /// surrogates for types it does not own, and how `protobuf-net.NodaTime` makes `Instant` and
+    /// `Duration` serializable. `RuntimeTypeModel.Create()` knows nothing about them, so without
+    /// this the reference throws "No serializer defined for type" where we correctly emit a
+    /// surrogate — which reads as a generator fault and is the opposite.
+    ///
+    /// Matched by full name rather than by type identity, deliberately: the attribute is
+    /// generator-owned and `internal`, so each assembly compiles its own copy and they are different
+    /// types. That is the same reason the generator matches by name.
+    /// </remarks>
+    private static void ApplySurrogates(RuntimeTypeModel reference, Corpus corpus)
+    {
+        const string ProtoSurrogateAttribute = "ProtoBuf.ProtoSurrogateAttribute";
+
+        // the declaring assembly is usually not loaded: nothing in the corpus necessarily *uses* it
+        // eagerly, and a package shipping surrogates for someone else's types is exactly that shape
+        foreach (var path in corpus.Neighbours)
+        {
+            try { System.Reflection.Assembly.LoadFrom(path); }
+            catch { /* not a managed assembly, or already loaded under another identity */ }
+        }
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            object[] declarations;
+            try { declarations = assembly.GetCustomAttributes(inherit: false); }
+            catch { continue; } // a reflection-only or otherwise unloadable assembly
+
+            foreach (var declaration in declarations)
+            {
+                var type = declaration.GetType();
+                if (type.FullName != ProtoSurrogateAttribute) continue;
+                try { Apply(reference, declaration, type); }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"could not replay a surrogate from {assembly.GetName().Name}: "
+                        + Summarize(ex));
+                }
+            }
+        }
+
+        static void Apply(RuntimeTypeModel reference, object declaration, Type type)
+        {
+            var underlying = (Type)type.GetProperty("Type")!.GetValue(declaration)!;
+            var surrogate = (Type)type.GetProperty("Surrogate")!.GetValue(declaration)!;
+            var converter = (Type?)type.GetProperty("Converter")!.GetValue(declaration);
+
+            if (converter is null)
+            {
+                reference.Add(underlying, applyDefaultBehaviour: false).SetSurrogate(surrogate);
+                return;
+            }
+
+            var toSurrogate = MakeConverter(converter,
+                (string)type.GetProperty("ToSurrogate")!.GetValue(declaration)!, underlying, surrogate);
+            var toUnderlying = MakeConverter(converter,
+                (string)type.GetProperty("ToType")!.GetValue(declaration)!, surrogate, underlying);
+
+            typeof(RuntimeTypeModel).GetMethod(nameof(RuntimeTypeModel.SetSurrogate))!
+                .MakeGenericMethod(underlying, surrogate)
+                .Invoke(reference, [toSurrogate, toUnderlying, DataFormat.Default,
+                    CompatibilityLevel.NotSpecified]);
+        }
+
+        static Delegate MakeConverter(Type converter, string methodName, Type from, Type to)
+        {
+            var method = converter.GetMethod(methodName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static,
+                null, [from], null)
+                ?? throw new InvalidOperationException($"{converter.Name}.{methodName}({from.Name}) not found");
+            return Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(from, to), method);
+        }
     }
 
     private enum Outcome

@@ -34,6 +34,12 @@ internal sealed class Corpus
     /// <summary>Assemblies dropped because they collide with a scanned target.</summary>
     public List<string> Ambiguous { get; private set; } = [];
 
+    /// <summary>
+    /// Every dll beside the targets — the same set the generator sees as references, and therefore
+    /// where an assembly-level <c>[ProtoSurrogate]</c> can come from.
+    /// </summary>
+    public List<string> Neighbours { get; } = [];
+
     /// <summary>Build the corpus, or return the reason it could not be built.</summary>
     public string Build(string[] targets)
     {
@@ -41,6 +47,10 @@ internal sealed class Corpus
         if (present.Length == 0) return "nothing to scan; build the target projects first";
 
         // every dll beside the targets, so that types the contracts reference still bind
+        Neighbours.AddRange(present
+            .SelectMany(static x => Directory.GetFiles(Path.GetDirectoryName(x)!, "*.dll"))
+            .Distinct(StringComparer.OrdinalIgnoreCase));
+
         var paths = present
             .SelectMany(static x => Directory.GetFiles(Path.GetDirectoryName(x)!, "*.dll"))
             .Concat(AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string tpa

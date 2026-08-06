@@ -321,7 +321,8 @@ open work.
 **No byte mismatches remain** — all 1286 contracts compared serialize identically to
 `RuntimeTypeModel`, and CI now fails if that regresses. The rest, audited rather than assumed:
 
-- **10 where one model threw** (was 19, before the `[ProtoReserved]` port). Two are ours and are item 12 above — the only cases where *we* throw
+- **6 where one model threw** (was 19). None are ours any more — item 12 closed the two, the
+  `[ProtoReserved]` port six more, and the surrogate replay the NodaTime pair. What is left — the only cases where *we* throw
   and protobuf-net does not. The other 8 all go the same way, and all are contracts protobuf-net
   refuses to build a serializer for while we emit one:
   - ~~**6 × `[ProtoReserved]`**~~ — **fixed**: `ValidateReservations` is now ported, so these are
@@ -330,10 +331,12 @@ open work.
     *"the tuple-like type must use a single compatibility level"*.
   - **3 × invalid `[NullWrappedValue]`** (`NullWrappedValueTests+HazInvalid*`): packed, required and
     bad-`DataFormat` combinations that `ValueMember` throws on.
-  - **2 × NodaTime** (`NodaTimeTests+HazNodaTime*`): the reference model here has no
-    `AddNodaTime()`, so this one is at least partly the harness — but it is worth checking *why* we
-    emit, since `Instant`/`Duration` are structs that may be matching the auto-tuple predicate, which
-    would be a wire-format bug rather than a harness artefact.
+  - ~~**2 × NodaTime**~~ — **the harness, and the generator was right.** The suspicion was that
+    `Instant`/`Duration` were falling through to the auto-tuple predicate, as `ArraySegment<byte>`
+    had; they are not. We emit the correct surrogate delegation from `protobuf-net.NodaTime`'s
+    assembly-level `[ProtoSurrogate]` declarations, and it was the *reference* that had never heard
+    of them. `AotDifferential` now replays those declarations onto the reference model, and the pair
+    compares and matches.
   - **3 × assorted** invalid shapes.
 
   These are all "we accept configuration protobuf-net rejects". Individually low-priority, since the

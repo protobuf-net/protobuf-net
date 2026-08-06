@@ -15,14 +15,14 @@ seeded: **1392**, of which 102 dropped with a diagnostic
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1282 |
+| **bytes match ref-emit** | 1284 |
 | **bytes differ** | 0 |
-| one model threw | 8 |
+| one model threw | 6 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 5 |
 | the reference model refused the contract | 2 |
 
-of the 1282 actually compared, **100% match**.
+of the 1284 actually compared, **100% match**.
 
 ## What went wrong
 
@@ -32,8 +32,6 @@ of the 1282 actually compared, **100% match**.
   - e.g. Examples.Issues.SO11641262+FooData, Examples.Issues.SO16797650+MessageBase, Examples.Issues.SO18695728+WebSyncedObject
 - **2x** the reference model refused the contract: ArgumentOutOfRangeException: … level '42' is not … (… '…')
   - e.g. ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForType, ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForMember
-- **2x** reference threw, generated model did not: InvalidOperationException: No … defined for type: …
-  - e.g. ProtoBuf.Test.NodaTimeTests+HazNodaTimeDuration, ProtoBuf.Test.NodaTimeTests+HazNodaTimeInstant
 - **1x** reference threw, generated model did not: NotSupportedException: … can only be used with …
   - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidDataFormat
 - **1x** reference threw, generated model did not: NotSupportedException: … cannot be used with packed values
