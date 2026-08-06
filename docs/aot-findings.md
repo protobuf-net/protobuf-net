@@ -443,7 +443,34 @@ warnings at `WriteRepeated`/`ReadRepeated` where none had been, because that is 
 lives. It relocates rather than removes, exactly as the earlier `Requires*` attempt did, and it gives
 up a real trimming guarantee for the runtime path in exchange. Reverted.
 
-**So the route is to remove the fallback, not to annotate around it**, and there are two ways:
+**A feature switch does remove them, and this was measured.** Gating the fallback on
+`RuntimeFeature.IsDynamicCodeSupported` — which ILC substitutes with a constant `false`, eliminating
+the branch *before* trim analysis — and then dropping the annotation took **47 → 43**, with `IL2091`
+going 11 → 7. Crucially the two warnings that the naive annotation removal *created* at
+`WriteRepeated`/`ReadRepeated` do **not** appear: this suppresses rather than relocates, which is
+what distinguishes it from the earlier `Requires*` attempt.
+
+```csharp
+serializer ??= RuntimeFeature.IsDynamicCodeSupported
+    ? TypeModel.GetSerializer<TItem>(state.Model)   // annotated; eliminated under AOT
+    : /* non-reflective resolve */;
+```
+
+Two things to get right before this is a change rather than an experiment:
+
+- **The AOT branch must not throw.** `GetSerializer<T>` is
+  `inbuilt ?? model.GetSerializerCore<T>() ?? throw`, and that middle term is how a *generated* model
+  resolves a repeated enum — we pass no serializer and rely on `ISerializerProxy<TEnum>`. Throwing
+  would break exactly the shapes `AotSmoke` covers. What the branch needs is a **non-reflective
+  resolve**: inbuilt plus the model's own virtual, without the `DynamicAccess.ContractType`
+  requirement, since neither of those reflects.
+- **The remaining 7 are the same pattern one layer up** — `WriteWrapped`, `WriteMessage`,
+  `ReadMessage`, `ReadWrapped`, `WriteAny`, `CreateInstance`, `Deserialize` — each with its own
+  `??=`. The technique scales to all of them, but it is a change per site rather than one edit.
+
+So all 11 `IL2091` are reachable this way, not merely the 4 proved here.
+
+**The route is therefore to remove the fallback, not to annotate around it**, and there are two ways:
 
 - **split the library methods** into a "serializer supplied" overload with no fallback and no
   annotation, and a "serializer resolved" one that keeps both. Generated code calls the first;
@@ -453,8 +480,12 @@ up a real trimming guarantee for the runtime path in exchange. Reverted.
   larger change of the two — but it also cuts a layer of indirection that generated code does not
   need, so the benefit is not only warning-count.
 
-Either way the ~11 `IL2091` and some of the `IL2067` are reachable; the `Enum.GetValues` block is
-not, and the reflective block is correct as it stands. A realistic floor is somewhere near **25–30**,
+The feature switch is the cheaper of the two and composes with the second; direct emit is the larger
+change but removes the instantiations rather than gating them, and cuts a layer of indirection that
+generated code does not need anyway.
+
+Either way the 11 `IL2091` and some of the `IL2067` are reachable; the `Enum.GetValues` block is not,
+and the reflective block is correct as it stands. That puts a realistic floor around **25**,
 essentially all of it the runtime model honestly declaring what it does.
 
 ### B. The coverage sweep undercounts generics
