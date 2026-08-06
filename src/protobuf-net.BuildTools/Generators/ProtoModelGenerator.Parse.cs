@@ -511,6 +511,13 @@ namespace ProtoBuf.BuildTools.Generators
                     + "serializer for it either: \"No serializer defined for type\"");
             }
 
+            if (InvalidDeclaredLevel(type) is { } badLevel)
+            {
+                return Contract(diagnostics, at, name,
+                    $"it declares [CompatibilityLevel({badLevel})], which protobuf-net refuses too: "
+                    + $"\"Compatiblity level '{badLevel}' is not recognized\"");
+            }
+
             // protobuf-net serializes anything that *looks* like a list as a collection, even when it
             // carries [ProtoContract] and has members of its own - those members are simply ignored.
             // Reproducing that decision means replicating RepeatedSerializers.TryGetRepeatedProvider
@@ -1110,6 +1117,14 @@ namespace ProtoBuf.BuildTools.Generators
                         return Option(diagnostics, atMember, name, "[DefaultValue] on a BCL type");
                     }
                 }
+                if (InvalidDeclaredLevel(symbol) is { } badMemberLevel)
+                {
+                    return Contract(diagnostics, atMember, name,
+                        $"member '{symbol.Name}' declares [CompatibilityLevel({badMemberLevel})], which "
+                        + $"protobuf-net refuses too: \"Compatiblity level '{badMemberLevel}' is not "
+                        + "recognized\"");
+                }
+
                 // an auto-tuple's encoding follows the level it is *reached at*, so record that here;
                 // the model refuses the tuple outright if two members disagree
                 foreach (var reachedTuple in TupleMessages(shape))
@@ -1785,6 +1800,31 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>
         /// The level a symbol declares directly, if any; <c>NotSpecified</c> (zero) counts as absent.
         /// </summary>
+        /// <summary>
+        /// The value of a <c>[CompatibilityLevel]</c> that protobuf-net would reject, or null when
+        /// there is none or it is valid.
+        /// </summary>
+        /// <remarks>
+        /// <c>CompatibilityLevelAttribute.AssertValid</c> admits only <c>NotSpecified</c>, 200, 240
+        /// and 300; anything else throws <c>ArgumentOutOfRangeException</c> while building the model.
+        /// The attribute takes the enum, so a consumer has to cast to get here — but casting to an
+        /// enum is legal C# and the corpus does it, so it is worth checking rather than assuming.
+        /// </remarks>
+        private static int? InvalidDeclaredLevel(ISymbol symbol)
+        {
+            foreach (var attribute in symbol.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != CompatibilityLevelAttributeName) continue;
+                if (attribute.ConstructorArguments.Length != 1
+                    || attribute.ConstructorArguments[0].Value is not int level)
+                {
+                    continue;
+                }
+                if (level is not (0 or 200 or 240 or 300)) return level;
+            }
+            return null;
+        }
+
         private static int? GetDeclaredLevel(ISymbol symbol)
         {
             foreach (var attribute in symbol.GetAttributes())

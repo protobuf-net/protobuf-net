@@ -7,7 +7,7 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **115** of 1392 (92% emitted)
+contracts dropped: **117** of 1392 (92% emitted)
 of which dropped only by cascade: 32
 
 | count | reason |
@@ -25,6 +25,8 @@ of which dropped only by cascade: 32
 | 2 | PBN2002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
 | 1 | PBN2001 member '…' has unsupported type '…' |
+| 1 | PBN2002 it declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
+| 1 | PBN2002 member '…' declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with a DataFormat, which protobuf-net refuses: "NullWrappedValue can only be used with DataFormat.Default" |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with IsPacked, which protobuf-net refuses: "NullWrappedValue cannot be used with packed values" |

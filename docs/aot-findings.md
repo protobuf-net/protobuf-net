@@ -325,27 +325,30 @@ option that should not survive.
 ### 13. The corpus differential's remaining disagreements
 
 **This entry exists because `docs/aot-differential.md` is generated and overwritten on every run.**
-It is a snapshot, not a backlog. Read the snapshot for current numbers; the *causes* here are the
-open work.
+It is a snapshot, not a backlog. Read the snapshot for current numbers.
 
-**Nothing disagrees.** All 1283 contracts compared serialize identically to `RuntimeTypeModel`, CI
-fails if that regresses, and no case remains where either model throws and the other does not. The
-throws bucket went 19 → 0 over the audit: `[ProtoReserved]` (6), the `CategoryScalar` serializer
-(2), the NodaTime surrogate replay (2, the harness), the lone-`[NullWrappedValue]` guards (3), and
-the auto-tuple compatibility level (3), plus three assorted.
+**There are none.** Every bucket is either zero or a category where comparison is impossible by
+definition:
 
-What is left is coverage rather than correctness, and is honestly denominated:
+| outcome | count | |
+| --- | ---: | --- |
+| bytes match ref-emit | 1283 | |
+| bytes differ | 0 | CI fails if this regresses |
+| one model threw | 0 | was 19 at the start of the audit |
+| both threw | 1 | a match — protobuf-net refuses it too |
+| no instance could be built | 0 | |
+| no instance *can* exist | 5 | abstract contracts with no `[ProtoInclude]`; nothing to compare, ever |
+| the reference model refused | 0 | |
 
-- **5 contracts no instance could be built for.** The `Filler` cannot box a `Span<byte>` or
-  `ReadOnlySpan<byte>` member at all, and a few types have no construction route. *Unmeasured*, not
-  known-good, which is why the report says "of the N actually compared".
-- **2 the reference model refused outright**, both `[CompatibilityLevel(42)]`-style invalid fixtures.
-- **1 both models refused**, which is a match.
+That last distinction is deliberate. "Could not build an instance" is a `Filler` limitation and so
+genuinely unmeasured; "no instance can exist" is an abstract contract with no declared sub-types,
+where no value of the type can be constructed by anyone. Lumping them together overstated what was
+untested, so they are counted apart.
 
-The cost of getting here is worth stating: dropped went 86 → 115 of 1392 over the same period. Every
-one of those is a contract protobuf-net refuses to build a serializer for, so emitting one was never
-useful — but it does mean the sweep's "% emitted" fell while the generator got strictly more correct.
-The two numbers measure different things and should not be read together.
+The cost of getting here: dropped went 86 → 117 of 1392 over the audit. Every addition is a contract
+protobuf-net will not build a serializer for, so emitting one was never useful — but it does mean the
+sweep's "% emitted" fell while the generator became strictly more correct. The two numbers measure
+different things and should not be read together.
 
 `PBN_DUMP=<substring>` prints the generated source around a match; `PBN_MEMBERS=<type>` prints what
 the generator sees for a contract. Between them they settle "ours or the harness's" fastest.

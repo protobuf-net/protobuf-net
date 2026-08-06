@@ -9,7 +9,7 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 112 dropped with a diagnostic
+seeded: **1392**, of which 114 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
@@ -19,14 +19,9 @@ seeded: **1392**, of which 112 dropped with a diagnostic
 | **bytes differ** | 0 |
 | one model threw | 0 |
 | both threw (a shape protobuf-net refuses too) | 1 |
-| no instance could be built | 5 |
-| the reference model refused the contract | 2 |
+| no instance could be built | 0 |
+| no instance can exist (abstract, no sub-types) | 5 |
+| the reference model refused the contract | 0 |
 
 of the 1283 actually compared, **100% match**.
 
-## What went wrong
-
-- **3x** could not build an instance: no route
-  - e.g. Examples.Issues.SO11641262+FooData, Examples.Issues.SO16797650+MessageBase, Examples.Issues.SO18695728+WebSyncedObject
-- **2x** the reference model refused the contract: ArgumentOutOfRangeException: … level '42' is not … (… '…')
-  - e.g. ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForType, ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForMember

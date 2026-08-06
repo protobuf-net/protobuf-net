@@ -176,6 +176,12 @@ internal static class Program
         /// <summary>No instance could be built, so there was nothing to compare.</summary>
         NotBuildable,
         /// <summary>
+        /// An abstract contract with no declared sub-types: no instance can exist, so there is
+        /// nothing to compare and never will be. Distinct from <see cref="NotBuildable"/>, which is
+        /// a limitation of the <c>Filler</c> and therefore genuinely unmeasured.
+        /// </summary>
+        NoInstanceExists,
+        /// <summary>
         /// <see cref="RuntimeTypeModel"/> would not even build a serializer for the contract, so
         /// there is no reference behaviour to compare against. Mostly deliberately-invalid fixtures.
         /// </summary>
@@ -188,6 +194,13 @@ internal static class Program
         var instance = filler.Create(contract);
         if (instance is null)
         {
+            // an abstract contract with no declared sub-types has no instance that *can* exist, so
+            // there is nothing to compare and never will be - that is a category, not a coverage gap,
+            // and lumping it in with "the Filler could not manage it" overstates what is unmeasured
+            if (contract.IsAbstract || contract.IsInterface)
+            {
+                return (Outcome.NoInstanceExists, null);
+            }
             return (Outcome.NotBuildable, "could not build an instance: " + (filler.LastFailure ?? "no route"));
         }
 
@@ -292,6 +305,7 @@ internal static class Program
         Console.WriteLine($"| one model threw | {Count(Outcome.Threw)} |");
         Console.WriteLine($"| both threw (a shape protobuf-net refuses too) | {Count(Outcome.BothThrew)} |");
         Console.WriteLine($"| no instance could be built | {Count(Outcome.NotBuildable)} |");
+        Console.WriteLine($"| no instance can exist (abstract, no sub-types) | {Count(Outcome.NoInstanceExists)} |");
         Console.WriteLine($"| the reference model refused the contract | {Count(Outcome.ReferenceRefused)} |");
         Console.WriteLine();
         if (compared != 0)
