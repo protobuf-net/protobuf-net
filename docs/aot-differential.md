@@ -9,32 +9,24 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 102 dropped with a diagnostic
+seeded: **1392**, of which 112 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1284 |
+| **bytes match ref-emit** | 1283 |
 | **bytes differ** | 0 |
-| one model threw | 6 |
+| one model threw | 0 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 5 |
 | the reference model refused the contract | 2 |
 
-of the 1284 actually compared, **100% match**.
+of the 1283 actually compared, **100% match**.
 
 ## What went wrong
 
-- **3x** reference threw, generated model did not: InvalidOperationException: The tuple-like type … must use a single … level, but '…' and '…' are both …; this usually means it is being us…
-  - e.g. ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+Level300, ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+HybridInvalidModel, ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+HybridValidModel
 - **3x** could not build an instance: no route
   - e.g. Examples.Issues.SO11641262+FooData, Examples.Issues.SO16797650+MessageBase, Examples.Issues.SO18695728+WebSyncedObject
 - **2x** the reference model refused the contract: ArgumentOutOfRangeException: … level '42' is not … (… '…')
   - e.g. ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForType, ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForMember
-- **1x** reference threw, generated model did not: NotSupportedException: … can only be used with …
-  - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidDataFormat
-- **1x** reference threw, generated model did not: NotSupportedException: … cannot be used with packed values
-  - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidPacked
-- **1x** reference threw, generated model did not: NotSupportedException: … cannot be used with … values
-  - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidReqired

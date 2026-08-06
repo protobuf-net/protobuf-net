@@ -62,6 +62,13 @@ namespace ProtoBuf.BuildTools.Generators
             var enums = new Dictionary<string, ProtoEnumPlan>(StringComparer.Ordinal);
             var visited = new HashSet<string>(StringComparer.Ordinal);
             var pending = new Queue<INamedTypeSymbol>();
+            // An auto-tuple is keyed in the model by type alone, but its *encoding* depends on the
+            // compatibility level it is reached at - so the same tuple reached at two levels is not
+            // expressible, and protobuf-net says so: "must use a single compatibility level". One
+            // serializer per type is exactly our constraint too, so the conflict is recorded here and
+            // the tuple dropped, which cascades to everything referring to it.
+            var tupleLevels = new Dictionary<string, int>(StringComparer.Ordinal);
+            var tupleConflicts = new HashSet<string>(StringComparer.Ordinal);
 
             // locations are tracked here rather than on the plan: they move whenever anything above
             // them moves, and putting them in the plan would invalidate the cached emit step
@@ -115,9 +122,21 @@ namespace ProtoBuf.BuildTools.Generators
                 }
 
                 var contract = ParseContract(compilation, type, diagnostics, surrogates,
-                    allowParseableTypes, out var reachable, cancellationToken);
+                    allowParseableTypes, out var reachable, tupleLevels, tupleConflicts, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
                 foreach (var next in reachable) pending.Enqueue(next);
+            }
+
+            // a tuple reached at two levels is not expressible with one serializer, and protobuf-net
+            // refuses the model outright; dropping the tuple cascades to whatever referred to it
+            foreach (var conflicted in tupleConflicts)
+            {
+                if (!parsed.Remove(conflicted)) continue;
+                diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.UnsupportedContract,
+                    locations.TryGetValue(conflicted, out var at) ? at : default, conflicted,
+                    "it is reached at more than one compatibility level, and protobuf-net refuses that "
+                    + "too: \"must use a single compatibility level ... this usually means it is being "
+                    + "used in different contexts in the same model\""));
             }
 
             DropUnsatisfiable(parsed, locations, diagnostics);
@@ -214,6 +233,8 @@ namespace ProtoBuf.BuildTools.Generators
             Dictionary<string, SurrogateDeclaration> surrogates,
             bool allowParseableTypes,
             out List<INamedTypeSymbol> reachable,
+            Dictionary<string, int> tupleLevels,
+            HashSet<string> tupleConflicts,
             CancellationToken cancellationToken)
         {
             reachable = new List<INamedTypeSymbol>();
@@ -1025,6 +1046,28 @@ namespace ProtoBuf.BuildTools.Generators
                             $"member '{symbol.Name}' combines [NullWrappedValue] with [DefaultValue], which "
                             + "protobuf-net refuses");
                     }
+                    // ...and the last three from the same run of guards in ValueMember. A lone
+                    // wrapped value goes through WriteAny/ReadAny, which has nowhere to put a
+                    // required flag, a packed flag or a non-default format
+                    if (isRequired)
+                    {
+                        return Contract(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' combines [NullWrappedValue] with IsRequired, which "
+                            + "protobuf-net refuses: \"NullWrappedValue cannot be used with required values\"");
+                    }
+                    if (isPacked)
+                    {
+                        return Contract(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' combines [NullWrappedValue] with IsPacked, which "
+                            + "protobuf-net refuses: \"NullWrappedValue cannot be used with packed values\"");
+                    }
+                    if (dataFormat != ProtoDataFormat.Default)
+                    {
+                        return Contract(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' combines [NullWrappedValue] with a DataFormat, which "
+                            + "protobuf-net refuses: \"NullWrappedValue can only be used with "
+                            + "DataFormat.Default\"");
+                    }
                 }
                 // a map is repeated too, and wraps exactly as a collection does
                 if (wrappedCollection && !isCollection && !isMap)
@@ -1067,6 +1110,23 @@ namespace ProtoBuf.BuildTools.Generators
                         return Option(diagnostics, atMember, name, "[DefaultValue] on a BCL type");
                     }
                 }
+                // an auto-tuple's encoding follows the level it is *reached at*, so record that here;
+                // the model refuses the tuple outright if two members disagree
+                foreach (var reachedTuple in TupleMessages(shape))
+                {
+                    var reachedLevel = GetDeclaredLevel(symbol)
+                        ?? GetCompatibilityLevel(compilation, memberSource);
+                    var tupleKey = reachedTuple.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    if (tupleLevels.TryGetValue(tupleKey, out var seen))
+                    {
+                        if (seen != reachedLevel) tupleConflicts.Add(tupleKey);
+                    }
+                    else
+                    {
+                        tupleLevels[tupleKey] = reachedLevel;
+                    }
+                }
+
                 // Group frames a sub-message, so a collection of *scalars* has nothing for the markers
                 // to wrap; protobuf-net throws while building the model, on both ref-emit paths, with
                 // the notably unhelpful "Operation is not valid due to the current state of the
@@ -1324,6 +1384,20 @@ namespace ProtoBuf.BuildTools.Generators
                 callbacks: new(callbacks),
                 isAbstract: type.IsAbstract && subTypes.Count == 0,
                 isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes);
+        }
+
+        /// <summary>
+        /// The auto-tuple types a member shape reaches — directly, as a collection element, or as
+        /// either side of a map.
+        /// </summary>
+        private static IEnumerable<INamedTypeSymbol> TupleMessages(MemberShape shape)
+        {
+            if (shape.Message is { } message && IsTupleCandidate(message)) yield return message;
+            if (shape.MapMessages is null) yield break;
+            foreach (var reached in shape.MapMessages)
+            {
+                if (IsTupleCandidate(reached)) yield return reached;
+            }
         }
 
         /// <summary>

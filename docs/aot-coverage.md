@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **105** of 1392 (93% emitted)
-of which dropped only by cascade: 28
+contracts dropped: **115** of 1392 (92% emitted)
+of which dropped only by cascade: 32
 
 | count | reason |
 | ---: | --- |
@@ -19,12 +19,16 @@ of which dropped only by cascade: 28
 | 6 | PBN2002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
 | 5 | PBN2002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
 | 4 | PBN2001 member '…' has unsupported type '…'; it has a ToString() and a static Parse(string), so [ProtoModel(AllowParseableTypes = true)] would include it - off by default, matching RuntimeTypeModel |
+| 3 | PBN2002 it is reached at more than one compatibility level, and protobuf-net refuses that too: "must use a single compatibility level ... this usually means it is being used in different contexts in the same model" |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.CustomSerializers.CustomSerializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Test.CustomScalarAllocator.CustomSerializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
 | 2 | PBN2002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
 | 1 | PBN2001 member '…' has unsupported type '…' |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
+| 1 | PBN2002 member '…' combines [NullWrappedValue] with a DataFormat, which protobuf-net refuses: "NullWrappedValue can only be used with DataFormat.Default" |
+| 1 | PBN2002 member '…' combines [NullWrappedValue] with IsPacked, which protobuf-net refuses: "NullWrappedValue cannot be used with packed values" |
+| 1 | PBN2002 member '…' combines [NullWrappedValue] with IsRequired, which protobuf-net refuses: "NullWrappedValue cannot be used with required values" |
 | 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
 | 1 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Test.Issues.Issue598.CustomType.Serializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
 | 1 | PBN2002 Field 31 is reserved and cannot be used for data member '…' (iz 31), which protobuf-net refuses too |

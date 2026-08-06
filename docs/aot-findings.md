@@ -318,34 +318,24 @@ option that should not survive.
 It is a snapshot, not a backlog. Read the snapshot for current numbers; the *causes* here are the
 open work.
 
-**No byte mismatches remain** — all 1286 contracts compared serialize identically to
-`RuntimeTypeModel`, and CI now fails if that regresses. The rest, audited rather than assumed:
+**Nothing disagrees.** All 1283 contracts compared serialize identically to `RuntimeTypeModel`, CI
+fails if that regresses, and no case remains where either model throws and the other does not. The
+throws bucket went 19 → 0 over the audit: `[ProtoReserved]` (6), the `CategoryScalar` serializer
+(2), the NodaTime surrogate replay (2, the harness), the lone-`[NullWrappedValue]` guards (3), and
+the auto-tuple compatibility level (3), plus three assorted.
 
-- **6 where one model threw** (was 19). None are ours any more — item 12 closed the two, the
-  `[ProtoReserved]` port six more, and the surrogate replay the NodaTime pair. What is left — the only cases where *we* throw
-  and protobuf-net does not. The other 8 all go the same way, and all are contracts protobuf-net
-  refuses to build a serializer for while we emit one:
-  - ~~**6 × `[ProtoReserved]`**~~ — **fixed**: `ValidateReservations` is now ported, so these are
-    refused with protobuf-net's own message rather than emitted.
-  - **3 × ambient compatibility level on an auto-tuple** (`CompatibilityLevelAmbientAutoTupleTests`):
-    *"the tuple-like type must use a single compatibility level"*.
-  - **3 × invalid `[NullWrappedValue]`** (`NullWrappedValueTests+HazInvalid*`): packed, required and
-    bad-`DataFormat` combinations that `ValueMember` throws on.
-  - ~~**2 × NodaTime**~~ — **the harness, and the generator was right.** The suspicion was that
-    `Instant`/`Duration` were falling through to the auto-tuple predicate, as `ArraySegment<byte>`
-    had; they are not. We emit the correct surrogate delegation from `protobuf-net.NodaTime`'s
-    assembly-level `[ProtoSurrogate]` declarations, and it was the *reference* that had never heard
-    of them. `AotDifferential` now replays those declarations onto the reference model, and the pair
-    compares and matches.
-  - **3 × assorted** invalid shapes.
+What is left is coverage rather than correctness, and is honestly denominated:
 
-  These are all "we accept configuration protobuf-net rejects". Individually low-priority, since the
-  contracts do not work in protobuf-net either — but the `[ProtoReserved]` group is a documented
-  claim that turns out to be false, so it should not just sit here.
-- **9 contracts no instance could be built for** — the `Filler` cannot box a `Span<byte>` or
-  `ReadOnlySpan<byte>` member, and a few types have no construction route. *Unmeasured*, not
+- **5 contracts no instance could be built for.** The `Filler` cannot box a `Span<byte>` or
+  `ReadOnlySpan<byte>` member at all, and a few types have no construction route. *Unmeasured*, not
   known-good, which is why the report says "of the N actually compared".
 - **2 the reference model refused outright**, both `[CompatibilityLevel(42)]`-style invalid fixtures.
+- **1 both models refused**, which is a match.
+
+The cost of getting here is worth stating: dropped went 86 → 115 of 1392 over the same period. Every
+one of those is a contract protobuf-net refuses to build a serializer for, so emitting one was never
+useful — but it does mean the sweep's "% emitted" fell while the generator got strictly more correct.
+The two numbers measure different things and should not be read together.
 
 `PBN_DUMP=<substring>` prints the generated source around a match; `PBN_MEMBERS=<type>` prints what
 the generator sees for a contract. Between them they settle "ours or the harness's" fastest.
