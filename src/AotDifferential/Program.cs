@@ -174,6 +174,12 @@ internal static class Program
         Console.WriteLine();
         Console.WriteLine("# AOT generator differential");
         Console.WriteLine();
+        // said in the output rather than the file, or it is gone the next time this runs - which is
+        // exactly the trap the file is warning about
+        Console.WriteLine("**This file is regenerated wholesale on every run.** It is a snapshot, not a");
+        Console.WriteLine("backlog — the durable record of what is still outstanding is item 11 of");
+        Console.WriteLine("`docs/aot-findings.md`.");
+        Console.WriteLine();
         Console.WriteLine("Every `[ProtoContract]` the generator emits, serialized from a populated");
         Console.WriteLine("instance and compared byte-for-byte against `RuntimeTypeModel`.");
         Console.WriteLine();
