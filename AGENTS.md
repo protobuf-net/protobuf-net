@@ -281,6 +281,11 @@ formats come from `[ProtoMap]`, and land on the two wire-type arguments rather t
   already gets, since reading switches from `SetValues` to `AddRange`.
 - `KeyFormat`/`ValueFormat` are read **only when `DisableMap` is not set** — `MetaType` takes the
   `else` branch — so the two do not compose.
+- ...and they are then **applied only if the shape is a valid protobuf map**: `MetaType` assigns
+  `MapKeyFormat`/`MapValueFormat` inside `if (mapEnabled && IsValidProtobufMap(…))`, so a
+  `Dictionary<DateTime, DateTime>` discards both formats however they were spelled and falls back to
+  the level-200 form. Note the ordering — validity is decided *using* the declared key format, and
+  only then are the formats kept or dropped.
 - `[ProtoMap]` on a non-dictionary member is refused: protobuf-net reads it only for a member that
   resolved as repeated, so anywhere else it is silently inert.
 

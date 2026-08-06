@@ -48,6 +48,34 @@ partial class CompatElementsModel
                         if (tmp3 != null) value.Plain = tmp3;
                         break;
                     }
+                    case 4:
+                    {
+                        var tmp4 = value.BothSides;
+                        tmp4 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::System.DateTime, global::System.DateTime>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp4 != null) value.BothSides = tmp4;
+                        break;
+                    }
+                    case 5:
+                    {
+                        var tmp5 = value.SpansViaMember;
+                        tmp5 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.TimeSpan>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp5 != null) value.SpansViaMember = tmp5;
+                        break;
+                    }
+                    case 6:
+                    {
+                        var tmp6 = value.SpansViaMap;
+                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.TimeSpan>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.TimeSpan>(global::ProtoBuf.CompatibilityLevel.Level240, global::ProtoBuf.DataFormat.WellKnown));
+                        if (tmp6 != null) value.SpansViaMap = tmp6;
+                        break;
+                    }
+                    case 7:
+                    {
+                        var tmp7 = value.SpansBothSides;
+                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::System.TimeSpan, global::System.TimeSpan>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp7 != null) value.SpansBothSides = tmp7;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -73,6 +101,26 @@ partial class CompatElementsModel
             if (tmp3 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.DateTime>().WriteMap(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp4 = value.BothSides;
+            if (tmp4 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::System.DateTime, global::System.DateTime>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp5 = value.SpansViaMember;
+            if (tmp5 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.TimeSpan>().WriteMap(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
+            var tmp6 = value.SpansViaMap;
+            if (tmp6 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.TimeSpan>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.TimeSpan>(global::ProtoBuf.CompatibilityLevel.Level240, global::ProtoBuf.DataFormat.WellKnown));
+            }
+            var tmp7 = value.SpansBothSides;
+            if (tmp7 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::System.TimeSpan, global::System.TimeSpan>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
         }
 

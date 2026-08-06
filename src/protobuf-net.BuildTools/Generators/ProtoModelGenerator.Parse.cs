@@ -1093,9 +1093,21 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // a map can reach a contract through its key *and* its value
                     foreach (var reached in shape.MapMessages!) reachable.Add(reached);
+
+                    // note the order: validity is decided *with* the declared key format, and only
+                    // then are the formats kept. MetaType applies [ProtoMap]'s KeyFormat/ValueFormat
+                    // inside `if (mapEnabled && IsValidProtobufMap(...))`, so a shape that is not a
+                    // valid protobuf map - a DateTime key, say - silently discards both and falls
+                    // back to the level-200 form. Applying them anyway emitted element serializers
+                    // ref-emit does not, which is the residual HazMaps disagreement
+                    var mapPlan = WithLevelledKey(shape.Map, declaredCompatibilityLevel, mapKeyFormat);
+                    if (!mapPlan.IsValidProtobufMap || disableMap)
+                    {
+                        mapKeyFormat = mapValueFormat = ProtoDataFormat.Default;
+                    }
+
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
-                        declaredTypeName: declaredTypeName,
-                        map: WithLevelledKey(shape.Map, declaredCompatibilityLevel, mapKeyFormat),
+                        declaredTypeName: declaredTypeName, map: mapPlan,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember, accessorField: accessorField, accessorReads: accessorReads, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }

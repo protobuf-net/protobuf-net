@@ -51,6 +51,24 @@ public class CompatMaps
 
     [ProtoMember(3)]
     public Dictionary<int, DateTime> Plain { get; set; }
+
+    // a BCL type on the *key* side: not a valid protobuf map (the key must be integral, string or
+    // enum), so it also picks up OptionFailOnDuplicateKey - and both sides take the format
+    [ProtoMember(4, DataFormat = DataFormat.WellKnown)]
+    [ProtoMap(KeyFormat = DataFormat.WellKnown, ValueFormat = DataFormat.WellKnown)]
+    public Dictionary<DateTime, DateTime> BothSides { get; set; }
+
+    // a string key with a levelled value, the shape the corpus uses for TimeSpan
+    [ProtoMember(5, DataFormat = DataFormat.WellKnown)]
+    public Dictionary<string, TimeSpan> SpansViaMember { get; set; }
+
+    [ProtoMember(6)]
+    [ProtoMap(ValueFormat = DataFormat.WellKnown)]
+    public Dictionary<string, TimeSpan> SpansViaMap { get; set; }
+
+    [ProtoMember(7, DataFormat = DataFormat.WellKnown)]
+    [ProtoMap(KeyFormat = DataFormat.WellKnown, ValueFormat = DataFormat.WellKnown)]
+    public Dictionary<TimeSpan, TimeSpan> SpansBothSides { get; set; }
 }
 
 [ProtoContract]
@@ -85,6 +103,11 @@ public static class CompatElementsSamples
             ViaMember = new Dictionary<int, DateTime> { { 1, When } },
             ViaMap = new Dictionary<int, DateTime> { { 2, When } },
             Plain = new Dictionary<int, DateTime> { { 3, When } },
+            BothSides = new Dictionary<DateTime, DateTime> { { When, When.AddDays(1) } },
+            SpansViaMember = new Dictionary<string, TimeSpan> { { "a", TimeSpan.FromMinutes(1) } },
+            SpansViaMap = new Dictionary<string, TimeSpan> { { "b", TimeSpan.FromMinutes(2) } },
+            SpansBothSides = new Dictionary<TimeSpan, TimeSpan>
+                { { TimeSpan.FromMinutes(3), TimeSpan.FromMinutes(4) } },
         },
         new Level300Map(),
         new Level300Map

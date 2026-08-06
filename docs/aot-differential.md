@@ -15,8 +15,8 @@ seeded: **1392**, of which 84 dropped with a diagnostic
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1281 |
-| **bytes differ** | 4 |
+| **bytes match ref-emit** | 1283 |
+| **bytes differ** | 2 |
 | one model threw | 19 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
@@ -30,8 +30,6 @@ of the 1285 actually compared, **99% match**.
   - e.g. ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+Level300, ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+HybridInvalidModel, ProtoBuf.Test.CompatibilityLevelAmbientAutoTupleTests+HybridValidModel
 - **3x** could not build an instance: no route
   - e.g. Examples.Issues.SO11641262+FooData, Examples.Issues.SO16797650+MessageBase, Examples.Issues.SO18695728+WebSyncedObject
-- **2x** bytes differ at byte 53 (generated 156b, reference 172b): generated 10-0A-06-08-88-C2 vs reference 14-0A-08-08-90-84
-  - e.g. ProtoBuf.Test.CompatibilityLevelListsMaps+HazMaps, ProtoBuf.Test.SpanReadTests+HazMaps
 - **2x** the reference model refused the contract: ArgumentOutOfRangeException: … level '42' is not … (… '…')
   - e.g. ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForType, ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForMember
 - **2x** could not build an instance: NotSupportedException: Cannot dynamically create an instance of type 'System.ReadOnlySpan`1[System.Byte]'. Reason: Cannot create boxed ByRef-like values.

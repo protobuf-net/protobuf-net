@@ -1,4 +1,4 @@
-Output code has 4 diagnostics from 'Aot/Data/CompatElements.input.cs':
+Output code has 12 diagnostics from 'Aot/Data/CompatElements.input.cs':
 Warning CS0618 Aot/Data/CompatElements.input.cs L35 C34
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
 Warning CS0618 Aot/Data/CompatElements.input.cs L36 C34
@@ -7,16 +7,36 @@ Warning CS0618 Aot/Data/CompatElements.input.cs L45 C34
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
 Warning CS0618 Aot/Data/CompatElements.input.cs L49 C29
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Output code has 6 diagnostics from 'protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs':
+Warning CS0618 Aot/Data/CompatElements.input.cs L57 C34
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L58 C27
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L58 C63
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L62 C34
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L66 C29
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L69 C34
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L70 C27
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 Aot/Data/CompatElements.input.cs L70 C63
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Output code has 8 diagnostics from 'protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs':
 Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L39 C542
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L69 C531
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L67 C545
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L224 C407
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L97 C531
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L231 C407
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L117 C534
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L256 C396
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L272 C407
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L261 C396
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L279 C407
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L304 C396
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L309 C396
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'

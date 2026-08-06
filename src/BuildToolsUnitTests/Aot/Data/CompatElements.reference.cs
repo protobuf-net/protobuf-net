@@ -231,31 +231,71 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			{
 			case 1:
 			{
-				Dictionary<int, DateTime> plain = value.ViaMember;
-				plain = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
-				if (plain != null)
+				Dictionary<int, DateTime> viaMap = value.ViaMember;
+				viaMap = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, viaMap, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+				if (viaMap != null)
 				{
-					value.ViaMember = plain;
+					value.ViaMember = viaMap;
 				}
 				break;
 			}
 			case 2:
 			{
-				Dictionary<int, DateTime> plain = value.ViaMap;
-				plain = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level240, DataFormat.WellKnown));
-				if (plain != null)
+				Dictionary<int, DateTime> viaMap = value.ViaMap;
+				viaMap = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, viaMap, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+				if (viaMap != null)
 				{
-					value.ViaMap = plain;
+					value.ViaMap = viaMap;
 				}
 				break;
 			}
 			case 3:
 			{
-				Dictionary<int, DateTime> plain = value.Plain;
-				plain = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
-				if (plain != null)
+				Dictionary<int, DateTime> viaMap = value.Plain;
+				viaMap = MapSerializer.CreateDictionary<int, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, viaMap, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+				if (viaMap != null)
 				{
-					value.Plain = plain;
+					value.Plain = viaMap;
+				}
+				break;
+			}
+			case 4:
+			{
+				Dictionary<DateTime, DateTime> bothSides = value.BothSides;
+				bothSides = MapSerializer.CreateDictionary<DateTime, DateTime>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, bothSides, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+				if (bothSides != null)
+				{
+					value.BothSides = bothSides;
+				}
+				break;
+			}
+			case 5:
+			{
+				Dictionary<string, TimeSpan> spansViaMap = value.SpansViaMember;
+				spansViaMap = MapSerializer.CreateDictionary<string, TimeSpan>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, spansViaMap, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+				if (spansViaMap != null)
+				{
+					value.SpansViaMember = spansViaMap;
+				}
+				break;
+			}
+			case 6:
+			{
+				Dictionary<string, TimeSpan> spansViaMap = value.SpansViaMap;
+				spansViaMap = MapSerializer.CreateDictionary<string, TimeSpan>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, spansViaMap, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+				if (spansViaMap != null)
+				{
+					value.SpansViaMap = spansViaMap;
+				}
+				break;
+			}
+			case 7:
+			{
+				Dictionary<TimeSpan, TimeSpan> spansBothSides = value.SpansBothSides;
+				spansBothSides = MapSerializer.CreateDictionary<TimeSpan, TimeSpan>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, spansBothSides, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+				if (spansBothSides != null)
+				{
+					value.SpansBothSides = spansBothSides;
 				}
 				break;
 			}
@@ -287,6 +327,30 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 		{
 			Dictionary<int, DateTime> values = plain;
 			MapSerializer.CreateDictionary<int, DateTime>().WriteMap(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+		}
+		Dictionary<DateTime, DateTime> bothSides = value.BothSides;
+		if (bothSides != null)
+		{
+			Dictionary<DateTime, DateTime> values2 = bothSides;
+			MapSerializer.CreateDictionary<DateTime, DateTime>().WriteMap(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values2, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+		}
+		Dictionary<string, TimeSpan> spansViaMember = value.SpansViaMember;
+		if (spansViaMember != null)
+		{
+			Dictionary<string, TimeSpan> values3 = spansViaMember;
+			MapSerializer.CreateDictionary<string, TimeSpan>().WriteMap(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values3, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
+		}
+		Dictionary<string, TimeSpan> spansViaMap = value.SpansViaMap;
+		if (spansViaMap != null)
+		{
+			Dictionary<string, TimeSpan> values3 = spansViaMap;
+			MapSerializer.CreateDictionary<string, TimeSpan>().WriteMap(ref state, 6, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values3, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level240, DataFormat.WellKnown));
+		}
+		Dictionary<TimeSpan, TimeSpan> spansBothSides = value.SpansBothSides;
+		if (spansBothSides != null)
+		{
+			Dictionary<TimeSpan, TimeSpan> values4 = spansBothSides;
+			MapSerializer.CreateDictionary<TimeSpan, TimeSpan>().WriteMap(ref state, 7, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values4, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString);
 		}
 	}
 
