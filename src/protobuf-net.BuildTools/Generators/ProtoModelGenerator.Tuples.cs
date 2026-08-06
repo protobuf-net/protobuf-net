@@ -202,7 +202,7 @@ namespace ProtoBuf.BuildTools.Generators
                     shape.Message?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                     isNullable: shape.IsNullable,
                     enumTypeName: shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                    messageIsValueType: shape.Message?.IsValueType ?? false,
+                    memberIsValueType: shape.Message?.IsValueType ?? false,
                     declaredTypeName: memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
             }
 

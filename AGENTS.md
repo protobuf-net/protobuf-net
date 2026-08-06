@@ -242,7 +242,11 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
 - **Maps are repeated too**, resolving to a `MapSerializer` — see below.
 - `Span<T>`, `Memory<T>`, `ArraySegment<T>` and friends resolve to a serializer that *throws* at
   runtime; refused up front. `byte[]`, `Memory<byte>`, `ReadOnlyMemory<byte>` and
-  `ArraySegment<byte>` are "bytes", not collections.
+  `ArraySegment<byte>` are "bytes", not collections — and that test has to run **before** the
+  auto-tuple test, not after: `ArraySegment<byte>` satisfies the tuple predicate exactly, with a
+  `(T[], int, int)` constructor and matching read-only `Array`/`Offset`/`Count`, so it was going out
+  as a three-member message. Three of the four are **structs**, so neither side null-tests them;
+  for `Memory<byte>` that is not a nicety, since `!= null` does not compile against it.
 - `IProducerConsumerCollection<T>` resolves to a provider, but **reading** one needs a concrete type
   to construct, so ref-emit throws on deserialize. There is nothing to compare against, so it has no
   fixture.

@@ -421,7 +421,9 @@ namespace ProtoBuf.BuildTools.Generators
                             break;
                         }
                         Line(sb, indent + 3, $"var tmp{number} = state.AppendBytes(default({member.DeclaredTypeName}));");
-                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
+                        Line(sb, indent + 3, member.MemberIsValueType
+                            ? Assign(contract, member, instance, target, $"tmp{number}")
+                            : $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
                         break;
                     case ProtoMemberKind.Bytes:
                         // AppendBytes, not ReadBytes: repeated occurrences concatenate onto the
@@ -433,7 +435,10 @@ namespace ProtoBuf.BuildTools.Generators
                             break;
                         }
                         Line(sb, indent + 3, $"tmp{number} = state.AppendBytes(tmp{number});");
-                        Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
+                        // a struct shape can never come back null, and cannot be compared to null
+                        Line(sb, indent + 3, member.MemberIsValueType
+                            ? Assign(contract, member, instance, target, $"tmp{number}")
+                            : $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
                         break;
                     // in all three cases the *existing* value is passed in, so repeated occurrences
                     // merge rather than replace; and the category is Repeated, not Message
@@ -443,7 +448,7 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 3, $"var tmp{number} = {target}.GetValueOrDefault();");
                         Line(sb, indent + 3, Assign(contract, member, instance, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)})"));
                         break;
-                    case ProtoMemberKind.Message when member.MessageIsValueType:
+                    case ProtoMemberKind.Message when member.MemberIsValueType:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
                         Line(sb, indent + 3, Assign(contract, member, instance, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)})"));
                         break;
@@ -647,7 +652,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // no null test: WriteString(int, string) skips nulls itself
                         Line(sb, indent, $"state.WriteString({number}, tmp{number});");
                         break;
-                    case ProtoMemberKind.Parseable when !member.MessageIsValueType:
+                    case ProtoMemberKind.Parseable when !member.MemberIsValueType:
                         // a reference type has to be null-tested: ToString() would throw, and the
                         // bare WriteString(string) overload does not skip nulls the way the
                         // field-number one does
@@ -667,6 +672,13 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent, "{");
                         Line(sb, indent + 1, $"state.WriteString({number}, tmp{number}.OriginalString);");
                         Line(sb, indent, "}");
+                        break;
+                    // the struct shapes - ArraySegment<byte>, Memory<byte>, ReadOnlyMemory<byte> -
+                    // can never be null, so ref-emit writes them unguarded. Not merely tidier:
+                    // `!= null` does not compile against Memory<byte> at all
+                    case ProtoMemberKind.Bytes when member.MemberIsValueType:
+                        Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
+                        Line(sb, indent, $"state.WriteBytes(tmp{number});");
                         break;
                     case ProtoMemberKind.Bytes:
                         // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its

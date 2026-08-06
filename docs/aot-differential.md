@@ -15,8 +15,8 @@ seeded: **1392**, of which 84 dropped with a diagnostic
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1283 |
-| **bytes differ** | 2 |
+| **bytes match ref-emit** | 1284 |
+| **bytes differ** | 1 |
 | one model threw | 19 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
@@ -58,8 +58,6 @@ of the 1285 actually compared, **99% match**.
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedRangeField
 - **1x** reference threw, generated model did not: InvalidOperationException: Field 'B' is … and cannot be used for data member 33 (iz B).
   - e.g. ProtoBuf.Test.Issues.Issue633+HasReservedNameField
-- **1x** bytes differ at byte 1 (generated 6b, reference 2b): generated 04-10-00-18-00 vs reference 00
-  - e.g. Examples.Issues.SO16838287+Foo
 - **1x** bytes differ at byte 0 (generated 0b, reference 8b): generated <end> vs reference 1B-1C-08-01-12-02
   - e.g. Examples.Issues.SO18277323+CustomSourceTableResponse
 - **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type String at … 1, depth 0

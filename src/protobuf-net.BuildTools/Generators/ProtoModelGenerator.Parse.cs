@@ -1122,7 +1122,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                        isNullable: isNullable, messageIsValueType: message.IsValueType,
+                        isNullable: isNullable, memberIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
@@ -1133,8 +1133,11 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         defaultLiteral: defaultLiteral, isNullable: isNullable,
-                        // a parseable value type is never null, so the write skips the null test
-                        messageIsValueType: kind == ProtoMemberKind.Parseable && memberType.IsValueType,
+                        // a value type is never null, so neither side tests for it. For the struct
+                        // "bytes" shapes that is not merely tidier: `!= null` does not compile
+                        // against Memory<byte> or ReadOnlyMemory<byte> at all
+                        memberIsValueType: kind is ProtoMemberKind.Parseable or ProtoMemberKind.Bytes
+                            && memberType.IsValueType,
                         enumTypeName: enumTypeName,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
@@ -2118,6 +2121,17 @@ namespace ProtoBuf.BuildTools.Generators
                 return new MemberShape(messageKind, isNullable, message: message);
             }
 
+            // "bytes" is a built-in scalar, so it has to be settled *before* the tuple test rather
+            // than after it. ArraySegment<byte> is the one that shows why: it has a
+            // (T[], int, int) constructor and matching read-only Array/Offset/Count properties, so it
+            // satisfies the auto-tuple predicate exactly - and was being emitted as a three-member
+            // message, writing Offset and Count unconditionally as an auto-tuple does. Note the rank
+            // check inside IsBytesLike, since byte[,] is not bytes.
+            if (!isNullable && IsBytesLike(type))
+            {
+                return new MemberShape(ProtoMemberKind.Bytes);
+            }
+
             // a tuple-typed member is a sub-message too, even though it carries no contract attribute
             if (type is INamedTypeSymbol candidate && IsTupleCandidate(candidate))
             {
@@ -2126,12 +2140,6 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             if (isNullable) return null; // nothing else below here is a value type
-
-            // byte[] is a bytes field, not a repeated byte; note the rank check, since byte[,] is not
-            if (type is IArrayTypeSymbol { Rank: 1, ElementType.SpecialType: SpecialType.System_Byte })
-            {
-                return new MemberShape(ProtoMemberKind.Bytes);
-            }
 
             // collections: the element is analysed exactly as a standalone member would be, and the
             // resulting shape *describes the element* - Repeated says how it is stored

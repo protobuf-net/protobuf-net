@@ -218,7 +218,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     {
         public ProtoMemberPlan(int fieldNumber, string name, ProtoMemberKind kind,
             string? typeName = null, string? defaultLiteral = null, bool isNullable = false,
-            string? enumTypeName = null, bool messageIsValueType = false, string? declaredTypeName = null,
+            string? enumTypeName = null, bool memberIsValueType = false, string? declaredTypeName = null,
             ProtoRepeatedPlan repeated = default, string? elementTypeName = null,
             bool isPacked = false, bool overwriteList = false,
             bool wrappedValue = false, bool wrappedValueGroup = false,
@@ -264,14 +264,21 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             DefaultLiteral = defaultLiteral;
             IsNullable = isNullable;
             EnumTypeName = enumTypeName;
-            MessageIsValueType = messageIsValueType;
+            MemberIsValueType = memberIsValueType;
         }
 
         /// <summary>
-        /// For a <see cref="ProtoMemberKind.Message"/>, whether the nested contract is a struct -
-        /// in which case it can never be null and neither side tests for it.
+        /// Whether the member's own type is a value type — in which case it can never be null and
+        /// neither side tests for it.
         /// </summary>
-        public bool MessageIsValueType { get; }
+        /// <remarks>
+        /// Not message-only despite the original name: a <see cref="ProtoMemberKind.Parseable"/>
+        /// struct and the struct "bytes" shapes (<c>ArraySegment&lt;byte&gt;</c>,
+        /// <c>Memory&lt;byte&gt;</c>, <c>ReadOnlyMemory&lt;byte&gt;</c>) need exactly the same
+        /// treatment — and for the last two it is not cosmetic, since <c>!= null</c> does not
+        /// compile against them at all.
+        /// </remarks>
+        public bool MemberIsValueType { get; }
 
         /// <summary>
         /// The member's own type, fully qualified — needed when a tuple read has to declare a local
@@ -460,7 +467,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             => FieldNumber == other.FieldNumber && Kind == other.Kind
                 && Name == other.Name && TypeName == other.TypeName
                 && DefaultLiteral == other.DefaultLiteral && IsNullable == other.IsNullable
-                && EnumTypeName == other.EnumTypeName && MessageIsValueType == other.MessageIsValueType
+                && EnumTypeName == other.EnumTypeName && MemberIsValueType == other.MemberIsValueType
                 && DeclaredTypeName == other.DeclaredTypeName
                 && Repeated.Equals(other.Repeated) && Map.Equals(other.Map)
                 && ElementTypeName == other.ElementTypeName

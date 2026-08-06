@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using AotFixtures.Bytes;
 using ProtoBuf;
@@ -45,6 +46,27 @@ internal sealed class ___PBN_Services___BytesModel : ISerializer<Blob>
 				value.Single = single;
 				break;
 			}
+			case 4:
+			{
+				ArraySegment<byte> segment = value.Segment;
+				segment = state.AppendBytes(segment);
+				value.Segment = segment;
+				break;
+			}
+			case 5:
+			{
+				Memory<byte> memory = value.Memory;
+				memory = state.AppendBytes(memory);
+				value.Memory = memory;
+				break;
+			}
+			case 6:
+			{
+				ReadOnlyMemory<byte> readOnly = value.ReadOnly;
+				readOnly = state.AppendBytes(readOnly);
+				value.ReadOnly = readOnly;
+				break;
+			}
 			default:
 				state.SkipField();
 				break;
@@ -76,6 +98,18 @@ internal sealed class ___PBN_Services___BytesModel : ISerializer<Blob>
 			state.WriteFieldHeader(3, WireType.Variant);
 			state.WriteByte(single);
 		}
+		ArraySegment<byte> segment = value.Segment;
+		state.WriteFieldHeader(4, WireType.String);
+		ArraySegment<byte> data2 = segment;
+		state.WriteBytes(data2);
+		Memory<byte> memory = value.Memory;
+		state.WriteFieldHeader(5, WireType.String);
+		Memory<byte> data3 = memory;
+		state.WriteBytes(data3);
+		ReadOnlyMemory<byte> readOnly = value.ReadOnly;
+		state.WriteFieldHeader(6, WireType.String);
+		ReadOnlyMemory<byte> data4 = readOnly;
+		state.WriteBytes(data4);
 	}
 
 	private SerializerFeatures Features_82()

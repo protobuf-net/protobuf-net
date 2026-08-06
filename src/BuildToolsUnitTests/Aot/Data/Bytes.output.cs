@@ -43,6 +43,27 @@ partial class BytesModel
                         value.Single = state.ReadByte();
                         break;
                     }
+                    case 4:
+                    {
+                        var tmp4 = value.Segment;
+                        tmp4 = state.AppendBytes(tmp4);
+                        value.Segment = tmp4;
+                        break;
+                    }
+                    case 5:
+                    {
+                        var tmp5 = value.Memory;
+                        tmp5 = state.AppendBytes(tmp5);
+                        value.Memory = tmp5;
+                        break;
+                    }
+                    case 6:
+                    {
+                        var tmp6 = value.ReadOnly;
+                        tmp6 = state.AppendBytes(tmp6);
+                        value.ReadOnly = tmp6;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -72,6 +93,15 @@ partial class BytesModel
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
                 state.WriteByte(tmp3);
             }
+            var tmp4 = value.Segment;
+            state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
+            state.WriteBytes(tmp4);
+            var tmp5 = value.Memory;
+            state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
+            state.WriteBytes(tmp5);
+            var tmp6 = value.ReadOnly;
+            state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
+            state.WriteBytes(tmp6);
         }
     }
 }
