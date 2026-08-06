@@ -1419,10 +1419,16 @@ namespace ProtoBuf.BuildTools.Generators
                 if (attribute.ConstructorArguments[0].Value is not int tag) return false;
                 if (attribute.ConstructorArguments[1].Value is not INamedTypeSymbol derived) return false;
 
-                // protobuf-net tolerates a [ProtoInclude] naming an unrelated type (it simply never
-                // matches); we cannot, since `value is TDerived` and ReadSubType<TDerived> would not
-                // compile. Refusing keeps us from emitting code the consumer cannot build.
-                if (!DerivesFrom(derived, type)) return false;
+                // An include that does not actually derive from this type is *filtered*, not refused -
+                // which is what MetaType.ApplyDefaultBehaviour does (`if (IsValidSubType(knownType))`).
+                // Refusing looked equivalent and is not, because the same attribute list is shared by
+                // every closed construction of a generic base: `ResourceNode<T>` declaring includes
+                // for both `ShipResource : ResourceNode<Ship>` and `SomeResource : ResourceNode<SomeType>`
+                // is legal and unambiguous, since each construction sees exactly one of them. Refusing
+                // made both of them unlinked, and an unlinked contract is emitted standalone - so the
+                // whole enclosing hierarchy silently vanished from the wire rather than failing loudly.
+                // Filtering also still yields a compilable set: everything left really does derive.
+                if (!DerivesFrom(derived, type)) continue;
 
                 subTypes.Add((tag, derived));
             }

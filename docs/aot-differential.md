@@ -3,26 +3,26 @@
 # AOT generator differential
 
 **This file is regenerated wholesale on every run.** It is a snapshot, not a
-backlog — the durable record of what is still outstanding is item 11 of
+backlog — the durable record of what is still outstanding is item 12 of
 `docs/aot-findings.md`.
 
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 90 dropped with a diagnostic
+seeded: **1392**, of which 84 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1275 |
-| **bytes differ** | 6 |
+| **bytes match ref-emit** | 1281 |
+| **bytes differ** | 4 |
 | one model threw | 19 |
 | both threw (a shape protobuf-net refuses too) | 1 |
 | no instance could be built | 9 |
 | the reference model refused the contract | 2 |
 
-of the 1281 actually compared, **99% match**.
+of the 1285 actually compared, **99% match**.
 
 ## What went wrong
 
@@ -64,9 +64,5 @@ of the 1281 actually compared, **99% match**.
   - e.g. Examples.Issues.SO16838287+Foo
 - **1x** bytes differ at byte 0 (generated 0b, reference 8b): generated <end> vs reference 1B-1C-08-01-12-02
   - e.g. Examples.Issues.SO18277323+CustomSourceTableResponse
-- **1x** bytes differ at byte 0 (generated 4b, reference 8b): generated 0A-02-08-01 vs reference 1A-06-0A-04-0A-02
-  - e.g. Examples.Issues.SO9408133+ShipResource
-- **1x** bytes differ at byte 0 (generated 6b, reference 10b): generated 0A-04-0A-02-73-30 vs reference 22-08-0A-06-0A-04
-  - e.g. Examples.Issues.SO9408133+SomeResource
 - **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type String at … 1, depth 0
   - e.g. ProtoBuf.Issues.Issue1083+WithWrapping

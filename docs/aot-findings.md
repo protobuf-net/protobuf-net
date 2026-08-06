@@ -172,7 +172,29 @@ answer was two properties and no fields at all.)*
 Reproduce with `PBN_DUMP='ISerializer<global::Examples.ProtoWithFields>.Write' dotnet run --project
 src/AotDifferential`, which prints the generated source around any matching line.
 
-### 9. Assorted API surprises
+### 9. `PBN0003` is a false positive on a generic hierarchy root — and it is an **error**
+
+The fourth of this family, after `PBN0015` (surrogates) and `PBN0012` (interfaces, then generics).
+
+A generic base declares its `[ProtoInclude]` list once, and that list is shared by every closed
+construction — but each construction only ever matches the includes that actually derive from it. So
+
+```csharp
+[ProtoContract, ProtoInclude(1, typeof(ShipHolder)), ProtoInclude(1, typeof(CrateHolder))]
+public class Holder<T> : Node { }
+public class ShipHolder : Holder<Ship> { }
+public class CrateHolder : Holder<Crate> { }
+```
+
+is unambiguous — `Holder<Ship>` sees exactly one sub-type at tag 1 — and ref-emit serializes it.
+`PBN0003` counts tags across the whole list and reports a build **error**. `Examples/Issues/SO9408133.cs`
+is the shape from a real report, so this is not contrived.
+
+Not fixed here, deliberately: the numbering space is shared between members and includes, so
+suppressing the include-vs-include case without weakening the member-vs-include case means splitting
+that space per construction. `GenericHierarchy.input.cs` suppresses it with `#pragma` and says why.
+
+### 10. Assorted API surprises
 
 Not bugs exactly, but each cost time and each is a trap for callers:
 
@@ -191,7 +213,7 @@ Not bugs exactly, but each cost time and each is a trap for callers:
   deserialize throws, because there is no concrete type to construct.
 - `RepeatedSerializer.CreateReadOnySet` is missing an "l" — public API, so presumably stuck.
 
-### 10. A compiled model throws on a map whose key or value is a collection
+### 11. A compiled model throws on a map whose key or value is a collection
 
 **Severity: medium** — the model compiles clean and fails on first use, so it is a deployment-time
 failure rather than a build-time one. Confirmed on both halves of `Compile(name, path)`.
@@ -230,7 +252,7 @@ For the generator this means: our support for a repeated or nested map **value**
 reflection path and exceeds the compiled one, and our refusal of a nested map **key** matches the
 compiled path while falling short of the reflection one.
 
-### 11. The corpus differential's remaining disagreements
+### 12. The corpus differential's remaining disagreements
 
 **This entry exists because `docs/aot-differential.md` is generated and overwritten on every run.**
 It is a snapshot, not a backlog: anything recorded only there stops being a record the next time
