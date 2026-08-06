@@ -9,20 +9,20 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 92 dropped with a diagnostic
+seeded: **1392**, of which 102 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1286 |
+| **bytes match ref-emit** | 1282 |
 | **bytes differ** | 0 |
-| one model threw | 10 |
+| one model threw | 8 |
 | both threw (a shape protobuf-net refuses too) | 1 |
-| no instance could be built | 9 |
+| no instance could be built | 5 |
 | the reference model refused the contract | 2 |
 
-of the 1286 actually compared, **100% match**.
+of the 1282 actually compared, **100% match**.
 
 ## What went wrong
 
@@ -32,10 +32,6 @@ of the 1286 actually compared, **100% match**.
   - e.g. Examples.Issues.SO11641262+FooData, Examples.Issues.SO16797650+MessageBase, Examples.Issues.SO18695728+WebSyncedObject
 - **2x** the reference model refused the contract: ArgumentOutOfRangeException: … level '42' is not … (… '…')
   - e.g. ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForType, ProtoBuf.Test.CompatibilityLevelTests+InvalidCompatibilityLevelForMember
-- **2x** could not build an instance: NotSupportedException: Cannot dynamically create an instance of type 'System.ReadOnlySpan`1[System.Byte]'. Reason: Cannot create boxed ByRef-like values.
-  - e.g. ProtoBuf.Test.CustomScalarAllocator+HazBlobish, ProtoBuf.Test.CustomScalarAllocator+Blobish
-- **2x** could not build an instance: NotSupportedException: Cannot dynamically create an instance of type 'System.Span`1[System.Byte]'. Reason: Cannot create boxed ByRef-like values.
-  - e.g. ProtoBuf.Test.CustomScalarAllocator+HazMemoryBlobish, ProtoBuf.Test.CustomScalarAllocator+MemoryBlobish
 - **2x** reference threw, generated model did not: InvalidOperationException: No … defined for type: …
   - e.g. ProtoBuf.Test.NodaTimeTests+HazNodaTimeDuration, ProtoBuf.Test.NodaTimeTests+HazNodaTimeInstant
 - **1x** reference threw, generated model did not: NotSupportedException: … can only be used with …
@@ -44,7 +40,3 @@ of the 1286 actually compared, **100% match**.
   - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidPacked
 - **1x** reference threw, generated model did not: NotSupportedException: … cannot be used with … values
   - e.g. ProtoBuf.Test.NullWrappedValueTests+HazInvalidReqired
-- **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type None at … 2, depth 1
-  - e.g. ProtoBuf.Test.Issues.Issue598+Item
-- **1x** generated model threw, reference did not: ProtoException: Invalid … … with wire-type String at … 1, depth 0
-  - e.g. ProtoBuf.Issues.Issue1083+WithWrapping

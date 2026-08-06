@@ -12,7 +12,9 @@ partial class ExternalSerializerModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Stamp>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Thing>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Ticket>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -32,6 +34,20 @@ partial class ExternalSerializerModel
                         if (tmp1 != null) value.Thing = tmp1;
                         break;
                     }
+                    case 2:
+                    {
+                        var tmp2 = value.Ticket;
+                        tmp2 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>().Read(ref state, tmp2);
+                        value.Ticket = tmp2;
+                        break;
+                    }
+                    case 3:
+                    {
+                        var tmp3 = value.Stamp;
+                        tmp3 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>().Read(ref state, tmp3);
+                        value.Stamp = tmp3;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -45,9 +61,19 @@ partial class ExternalSerializerModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Thing;
             state.WriteMessage<global::AotFixtures.ExternalSerializer.Thing>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>());
+            var tmp2 = value.Ticket;
+            state.WriteAny<global::AotFixtures.ExternalSerializer.Ticket>(2, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>());
+            var tmp3 = value.Stamp;
+            state.WriteAny<global::AotFixtures.ExternalSerializer.Stamp>(3, tmp3, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>());
         }
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Stamp> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Stamp>.Serializer
+            => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>();
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Thing> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Thing>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Ticket> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Ticket>.Serializer
+            => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>();
     }
 }

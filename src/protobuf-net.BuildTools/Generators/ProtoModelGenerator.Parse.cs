@@ -336,6 +336,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             var surrogateType = declaredSurrogate?.Surrogate;
             INamedTypeSymbol? externalSerializer = null;
+            bool? declaredScalar = null;
             string? surrogateSerializer = null;
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
@@ -423,6 +424,11 @@ namespace ProtoBuf.BuildTools.Generators
                                         + "because that serializer is not accessible here");
                                 }
                                 externalSerializer = external;
+                                continue;
+                            // the escape hatch for a serializer we cannot read the Features of; see
+                            // ResolveExternalCategory
+                            case "IsScalar" when argument.Value.Value is bool scalar:
+                                declaredScalar = scalar;
                                 continue;
                         }
                         return Option(diagnostics, at, name, $"[ProtoContract({argument.Key} = ...)]");
@@ -1130,6 +1136,20 @@ namespace ProtoBuf.BuildTools.Generators
                     var subSerializer = GetSubSerializer(compilation, message!);
                     if (subSerializer != "null") reachable.Add(message!);
 
+                    // a hand-written serializer may present the type as a *scalar*, which frames the
+                    // member by its own wire type rather than as a sub-message. Undetermined is not a
+                    // problem here: the referenced contract refuses itself for the same reason, and
+                    // this member is dropped by cascade
+                    var subScalar = subSerializer is not null && subSerializer != "null"
+                        && ResolveExternalScalar(compilation, message!) == true;
+                    if (subScalar && (shape.Repeated.Factory is not null || shape.Map.Factory is not null))
+                    {
+                        return Option(diagnostics, atMember, name,
+                            $"member '{symbol.Name}' whose element type is served by a CategoryScalar "
+                            + "serializer; the unary form is emitted, but there is no derived "
+                            + "reference for the element form yet");
+                    }
+
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         isNullable: isNullable, memberIsValueType: message.IsValueType,
@@ -1137,7 +1157,7 @@ namespace ProtoBuf.BuildTools.Generators
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
-                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, subSerializerIsScalar: subScalar, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else
                 {
@@ -1174,11 +1194,35 @@ namespace ProtoBuf.BuildTools.Generators
             // and the services type hands that serializer out through ISerializerProxy<T> instead
             if (externalSerializer is not null)
             {
+                // ...but *how* a member of this type is framed depends on the serializer's category,
+                // and assuming "message" writes a length prefix where a scalar serializer writes a
+                // bare varint. The annotation wins where present, since it is the only route that
+                // survives into metadata; otherwise fold the declaration if it is in this compilation
+                var fromSource = ReadCategoryFromSource(compilation, externalSerializer);
+                if (declaredScalar is { } stated && fromSource is { } observed && stated != observed)
+                {
+                    return Option(diagnostics, at, name,
+                        $"[ProtoContract(IsScalar = {(stated ? "true" : "false")})], which contradicts "
+                        + $"the serializer: {Simplify(externalSerializer.ToDisplayString())}.Features "
+                        + $"declares Category{(observed ? "Scalar" : "Message")}");
+                }
+                var isScalar = declaredScalar ?? fromSource;
+                if (isScalar is null)
+                {
+                    return Option(diagnostics, at, name,
+                        $"[ProtoContract(Serializer = typeof({Simplify(externalSerializer.ToDisplayString())}))] "
+                        + "whose category cannot be determined here - its Features are a property this "
+                        + "generator would have to execute, and its declaration is not in this "
+                        + "compilation. Add [ProtoContract(IsScalar = true)] if that serializer "
+                        + "declares CategoryScalar, or IsScalar = false if it declares CategoryMessage");
+                }
+
                 return new ProtoContractPlan(
                     type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                     default, isValueType,
                     externalSerializerTypeName: externalSerializer.ToDisplayString(
-                        SymbolDisplayFormat.FullyQualifiedFormat));
+                        SymbolDisplayFormat.FullyQualifiedFormat),
+                    externalSerializerIsScalar: isScalar.Value);
             }
 
             // the whole hierarchy has to be in the model, since every type in it routes through the
@@ -1280,6 +1324,85 @@ namespace ProtoBuf.BuildTools.Generators
                 callbacks: new(callbacks),
                 isAbstract: type.IsAbstract && subTypes.Count == 0,
                 isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes);
+        }
+
+        /// <summary>
+        /// Is a hand-written serializer's category <c>CategoryScalar</c>? Null when it cannot be
+        /// established, in which case the contract is refused rather than guessed at.
+        /// </summary>
+        /// <remarks>
+        /// This is the one thing about an external serializer that changes the emitted <em>shape</em>
+        /// and that a generator cannot simply look up: the category lives in the serializer's
+        /// <c>Features</c> property, which ref-emit obtains by instantiating it. Two routes, in this
+        /// order:
+        /// <list type="number">
+        /// <item><c>[ProtoContract(IsScalar = …)]</c>, which is an attribute <em>argument</em> and so
+        /// survives into metadata — the only route that works for a serializer in a compiled
+        /// reference.</item>
+        /// <item>the <c>Features</c> declaration itself, when the serializer is in this compilation:
+        /// it is almost always a constant expression (<c>CategoryScalar | WireTypeVarint</c>), which
+        /// Roslyn will fold.</item>
+        /// </list>
+        /// Where both are available and disagree, the caller reports it: a stale annotation would
+        /// otherwise silently change the framing on the wire.
+        /// </remarks>
+        /// <summary>
+        /// Is the type's hand-written serializer a scalar one? The same two routes the contract's own
+        /// parse uses, for a type reached as a <em>member</em>.
+        /// </summary>
+        private static bool? ResolveExternalScalar(Compilation compilation, INamedTypeSymbol type)
+        {
+            foreach (var attribute in type.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != ProtoContractAttributeName) continue;
+                INamedTypeSymbol? serializer = null;
+                bool? stated = null;
+                foreach (var argument in attribute.NamedArguments)
+                {
+                    if (argument.Key == "Serializer" && argument.Value.Value is INamedTypeSymbol s) serializer = s;
+                    else if (argument.Key == "IsScalar" && argument.Value.Value is bool b) stated = b;
+                }
+                if (serializer is null) continue;
+                return stated ?? ReadCategoryFromSource(compilation, serializer);
+            }
+            return null;
+        }
+
+        private static bool? ReadCategoryFromSource(Compilation compilation, INamedTypeSymbol serializer)
+        {
+            // SerializerFeatures: CategoryScalar = 1 << 5, CategoryMessage = 1 << 6, and the category
+            // is those two bits (CategoryMask). Taken from the enum, not assumed - the first guess
+            // here was 1 and 2, which would have classified everything as a message.
+            const int CategoryScalar = 1 << 5, CategoryMessage = 1 << 6;
+            const int CategoryMask = CategoryScalar | CategoryMessage;
+
+            foreach (var member in serializer.GetMembers())
+            {
+                // an explicit interface implementation is named ProtoBuf.Serializers.ISerializer<T>.Features
+                if (member is not IPropertySymbol property) continue;
+                if (property.Name != "Features"
+                    && !property.Name.EndsWith(".Features", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                foreach (var reference in property.DeclaringSyntaxReferences)
+                {
+                    // only an expression body is foldable; a block body could be anything
+                    if (reference.GetSyntax() is not PropertyDeclarationSyntax
+                        { ExpressionBody.Expression: { } expression })
+                    {
+                        continue;
+                    }
+                    if (!compilation.ContainsSyntaxTree(reference.SyntaxTree)) continue;
+                    var semantic = compilation.GetSemanticModel(reference.SyntaxTree);
+                    if (semantic.GetConstantValue(expression) is not { HasValue: true, Value: int features })
+                    {
+                        continue;
+                    }
+                    return (features & CategoryMask) == CategoryScalar;
+                }
+            }
+            return null;
         }
 
         /// <summary>

@@ -226,7 +226,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             int declaredCompatibilityLevel = 200,
-            bool isReadOnly = false, string? subSerializer = null,
+            bool isReadOnly = false, string? subSerializer = null, bool subSerializerIsScalar = false,
             string? writeCondition = null, string? specifiedMember = null,
             string? accessorField = null,
             ProtoDataFormat mapKeyFormat = ProtoDataFormat.Default,
@@ -241,6 +241,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             WriteCondition = writeCondition;
             SpecifiedMember = specifiedMember;
             SubSerializer = subSerializer;
+            SubSerializerIsScalar = subSerializerIsScalar;
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
             DeclaredCompatibilityLevel = declaredCompatibilityLevel;
@@ -395,6 +396,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// contract with a hand-written serializer needs that one handed over instead.
         /// </summary>
         public string? SubSerializer { get; }
+
+        /// <summary>
+        /// Whether <see cref="SubSerializer"/> presents the type as a scalar, in which case the
+        /// member is framed by that serializer's own wire type rather than as a sub-message.
+        /// </summary>
+        /// <summary>
+        /// Whether <see cref="SubSerializer"/> presents the type as a scalar, in which case the
+        /// member is framed by that serializer's own wire type rather than as a sub-message.
+        /// </summary>
+        public bool SubSerializerIsScalar { get; }
 
         /// <summary>
         /// The <c>{Name}Specified</c> property or <c>ShouldSerialize{Name}()</c> call that decides
@@ -626,7 +637,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? rootTypeName = null, EquatableArray<ProtoSubTypePlan> subTypes = default,
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
             string? toSurrogate = null, string? toUnderlying = null,
-            string? externalSerializerTypeName = null, string? surrogateSerializer = null,
+            string? externalSerializerTypeName = null, bool externalSerializerIsScalar = false,
+            string? surrogateSerializer = null,
             bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default,
             bool isAbstract = false, bool isGroup = false, bool ignoreUnknownSubTypes = false)
         {
@@ -636,6 +648,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             Callbacks = callbacks;
             UsesConstructorAccessor = usesConstructorAccessor;
             ExternalSerializerTypeName = externalSerializerTypeName;
+            ExternalSerializerIsScalar = externalSerializerIsScalar;
             SurrogateSerializer = surrogateSerializer;
             SurrogateTypeName = surrogateTypeName;
             ToSurrogate = toSurrogate;
@@ -763,6 +776,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public string? ExternalSerializerTypeName { get; }
 
+        /// <summary>
+        /// Whether that serializer presents the type as a <em>scalar</em> rather than a message,
+        /// which decides how a member of it is framed on the wire.
+        /// </summary>
+        /// <remarks>
+        /// Not knowable by inspection alone — see <c>ReadCategoryFromSource</c> and
+        /// <c>[ProtoContract(IsScalar = …)]</c>. Assuming "message" writes a length prefix where the
+        /// serializer writes a bare varint, which is why the contract is refused rather than guessed
+        /// when neither route settles it.
+        /// </remarks>
+        public bool ExternalSerializerIsScalar { get; }
+
         public string? SurrogateTypeName { get; }
 
         /// <summary>
@@ -797,6 +822,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && SurrogateTypeName == other.SurrogateTypeName
                 && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying
                 && ExternalSerializerTypeName == other.ExternalSerializerTypeName
+                && ExternalSerializerIsScalar == other.ExternalSerializerIsScalar
                 && SurrogateSerializer == other.SurrogateSerializer
                 && IsGroup == other.IsGroup && IgnoreUnknownSubTypes == other.IgnoreUnknownSubTypes;
 

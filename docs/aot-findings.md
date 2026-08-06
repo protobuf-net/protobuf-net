@@ -254,6 +254,11 @@ compiled path while falling short of the reflection one.
 
 ### 12. A `CategoryScalar` hand-written serializer is emitted as a sub-message
 
+**Fixed.** `ProtoContractAttribute.IsScalar` was added as the metadata-readable escape hatch, the
+`Features` declaration is folded from source where it is available, and the contract is refused with
+advice where neither settles it. See "Hand-written serializers" in AGENTS.md; the original analysis
+follows because the *reason* it could not simply be looked up is the durable part.
+
 **Severity: high** — wrong framing on the wire, and the two known cases *throw* rather than
 silently disagreeing, which is the only reason they were noticed.
 

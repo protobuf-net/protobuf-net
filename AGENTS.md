@@ -846,6 +846,37 @@ inheritance, or a surrogate that is a collection, are both refused: protobuf-net
 emit **no body at all**: the services type implements `ISerializerProxy<T>` handing that serializer
 out, and members of that type pass `SerializerCache.Get<X, T>()` rather than `this`.
 
+**The serializer's *category* changes the emitted shape, and cannot be looked up.** A hand-written
+serializer declares `CategoryScalar` or `CategoryMessage` in its `Features`, and a scalar one means
+the member is not a sub-message at all: it is framed by the serializer's own wire type. Assuming
+"message" writes a length prefix over a bare varint, which throws at runtime — or, for a scalar
+serializer whose wire type happens to be `String`, disagrees silently. `Features` is a *property*,
+which ref-emit obtains by instantiating the serializer and a generator cannot. So, in order:
+
+1. **`[ProtoContract(Serializer = …, IsScalar = true)]`** — an attribute *argument*, so it survives
+   into metadata. The only route that works for a serializer in a compiled reference.
+2. **the `Features` declaration**, when the serializer is in this compilation: it is nearly always an
+   expression body over constants (`CategoryScalar | WireTypeVarint`), which Roslyn folds.
+3. otherwise the contract is **refused**, with a diagnostic naming `IsScalar` as the fix.
+
+Where both routes answer and disagree, that is reported too — a stale annotation would otherwise
+change the framing on the wire silently.
+
+The scalar write is `state.WriteAny<T>(n, value, serializer)`, **not** a hand-written field header:
+`WriteAny` takes the features off the serializer and frames accordingly, and it is public, whereas
+the `GetWireType` extension that would let us write the header ourselves lives on an `internal`
+class. Byte-identical to ref-emit's `WriteFieldHeader` + `Write`, which the differential confirms.
+The read is `serializer.Read(ref state, value)` with no framing either way.
+
+Note what step 3 costs, since it is a real trade rather than a free win: an external serializer
+reached only through metadata is now refused even when it *is* a message, which the corpus sweep
+feels acutely — everything there is metadata, so it lost ~6 contracts that had been emitting
+correctly. They were correct by luck rather than by check, and the fix is one attribute; but a
+consumer whose serializer lives in their own source is unaffected, which is the common case.
+
+A scalar serializer as a **collection element or map value** is refused: the unary shape is derived
+from ref-emit, that one is not.
+
 There is a wrinkle: protobuf-net's own well-known types name the **internal** `PrimaryTypeProvider`,
 which a consumer's generated code cannot reference. Those are inbuilt types that
 `TypeModel.GetSerializer<T>` resolves without a model, so an *inaccessible* serializer is treated as

@@ -440,6 +440,13 @@ namespace ProtoBuf.BuildTools.Generators
                             ? Assign(contract, member, instance, target, $"tmp{number}")
                             : $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
                         break;
+                    // a scalar-category hand-written serializer: the member is not a sub-message at
+                    // all, so it is read straight through the serializer with no ReadMessage framing
+                    case ProtoMemberKind.Message when member.SubSerializerIsScalar:
+                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        Line(sb, indent + 3, $"tmp{number} = {SubSerializer(member)}.Read(ref state, tmp{number});");
+                        Line(sb, indent + 3, Assign(contract, member, instance, target, $"tmp{number}"));
+                        break;
                     // in all three cases the *existing* value is passed in, so repeated occurrences
                     // merge rather than replace; and the category is Repeated, not Message
                     case ProtoMemberKind.Message when member.IsNullable:
@@ -688,6 +695,18 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 1, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
                         Line(sb, indent + 1, $"state.WriteBytes(tmp{number});");
                         Line(sb, indent, "}");
+                        break;
+                    // a scalar-category hand-written serializer frames the member by its own wire
+                    // type, not as a sub-message. The wire type comes off the serializer's Features
+                    // at runtime rather than being baked in: it is the serializer's to declare, and
+                    // GetWireType() is public precisely for this
+                    case ProtoMemberKind.Message when member.SubSerializerIsScalar:
+                        // WriteAny(int, T, ISerializer<T>) takes the features off the serializer and
+                        // frames accordingly, which is exactly what is wanted and is *public* - the
+                        // GetWireType extension that would let us write the header ourselves lives on
+                        // an internal class, so generated code cannot reach it
+                        Line(sb, indent, $"state.WriteAny<{member.TypeName}>({number}, tmp{number}, "
+                            + $"{SubSerializer(member)});");
                         break;
                     case ProtoMemberKind.Message:
                         // likewise WriteMessage/WriteGroup(int, ...) skip nulls themselves. Group
