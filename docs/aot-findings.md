@@ -8,6 +8,16 @@ native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading th
 
 ## Open
 
+Several entries below are resolved and kept for the reasoning rather than the status, so here is the
+index. **Still outstanding, and candidates to raise against protobuf-net:** 1 (sibling sub-type
+merge overflows the stack — the serious one), 2 (`Extensible.AppendValue` under AOT), 3 and 4 (trim
+warnings), 5 (pre-existing test failures on `main`), 7 (`[ProtoPartialMember(OverwriteList)]`
+ignored), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
+key/value). **Resolved in place:** 6 and 9 (analyzer false positives, fixed here), 8 (was the
+harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
+differential's status, currently clean).
+
+
 ### 1. Merging incompatible sibling sub-types overflows the stack
 
 **Severity: high** — it is an unrecoverable process kill, reachable from untrusted input.

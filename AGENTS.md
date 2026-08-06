@@ -96,6 +96,15 @@ Design constraints that are settled, and should not be quietly relaxed:
   name (case-insensitive) with exact type equality, and **exactly one** constructor may map.
   Closed constructed generics are supported, since `KeyValuePair<K,V>` is the common case.
 
+  **An auto-tuple may be reached at only one compatibility level.** It is keyed in the model by type
+  alone, but its *encoding* follows the level of the member that reaches it — so the same tuple at
+  two levels is not expressible with one serializer, and protobuf-net refuses the whole model
+  (`RuntimeTypeModel.FindWithAmbientCompatibility`: *"must use a single compatibility level"*). One
+  serializer per type is our constraint too, so the tuple is dropped and its referrers cascade. Note
+  a contract can be perfectly valid *alone* and still fall to this, because the conflict belongs to
+  the model: `CompatibilityLevelAmbientAutoTupleTests+Level300` is fine by itself and fails only
+  because a sibling contract reaches the same tuple at Level200.
+
   `ValueTuple` needs two Roslyn-specific allowances, both found the hard way: its `Item1`/`Item2`
   fields are reported as **`IsImplicitlyDeclared`**, so a filter for that (intended to skip
   auto-property backing fields — which the public-accessibility test already excludes) leaves it with
@@ -648,9 +657,18 @@ no behaviour to reproduce and nothing outstanding. These were established by pro
 | --- | --- |
 | no parameterless constructor, no `SkipConstructor` | throws *"No parameterless constructor found"* |
 | a member type that is not a contract | throws *"No serializer defined for type"* |
-| lone `[NullWrappedValue]` on a non-scalar / non-nullable / with `[DefaultValue]` | throws |
+| lone `[NullWrappedValue]` on a non-scalar / non-nullable, or with `[DefaultValue]` / `IsRequired` / `IsPacked` / a `DataFormat` | throws |
 | `[NullWrappedCollection]` on a non-collection | throws *"can only be used with collection types"* |
 | `[ProtoInclude(tag, "TypeName")]` | resolves at runtime; throws *"Unable to resolve sub-type"* even for a live type |
+| a member or sub-type on a `[ProtoReserved]` number or name | throws *"Field 31 is reserved and cannot be used for…"* |
+| a **value-type** `[ProtoInclude]` sub-type | throws *"Unexpected sub-type"* |
+| one type named by **two** `[ProtoInclude]` hierarchies | throws *"can only participate in one inheritance hierarchy"* |
+| `DataFormat.Group` on a collection of **scalars** | throws *"Operation is not valid due to the current state of the object"* |
+| an **auto-tuple** reached at two compatibility levels | throws *"must use a single compatibility level"* |
+
+That list has grown a good deal, and the direction is worth noting: every addition *lowers* the
+sweep's "% emitted" while raising correctness, because a contract protobuf-net will not build a
+serializer for was never usefully emitted. The two numbers measure different things.
 
 Several of those refusals now **name the route** in the diagnostic itself, because "has unsupported
 type X" reads as our backlog even where the fix is one attribute away. Every branch is determined
@@ -688,10 +706,19 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 
 ### Not yet supported
 
-**This list is currently empty**, which is a statement about the sweep rather than about protobuf-net:
-every remaining refusal either matches ref-emit or is a deliberate AOT decision (`System.Type`), and
-each says which in its diagnostic. The two entries that used to be here both went the same way, and
-the way is worth remembering:
+Three things are genuinely ours rather than matches:
+
+- a **nested map key** (`Dictionary<List<int>, List<string>>`) — though note this *matches* the
+  compiled ref-emit path, which throws on use; only the reflection path handles it;
+- a **`CategoryScalar` hand-written serializer** as a collection element or map value — the unary
+  form is emitted, that one has no derived reference yet;
+- an **external serializer whose category cannot be established** — refused with advice to state
+  `[ProtoContract(IsScalar = …)]`, which is a real capability gap for a serializer that arrives
+  through metadata even though the fix is one attribute.
+
+Everything else that is refused either matches ref-emit or is a deliberate AOT decision
+(`System.Type`), and each says which in its diagnostic. Two entries that used to be here went the
+same way, and the way is worth remembering:
 
 - **null-wrapping** was real work, and is now the "Null-wrapping" section above;
 - **interfaces as members** was *already done* — the bullet outlived the work. Probing found the
@@ -700,8 +727,11 @@ the way is worth remembering:
   emitted correctly; they just had no fixture. What the probe *did* turn up was a value-type sub-type
   emitting code that would not compile — a bug, not a gap.
 
-So the honest next step is not "pick the next bullet" but "widen the corpus": `docs/aot-coverage.md`
-is the measurement, and the one genuine gap it still shows is a nested map **key** (1 contract).
+The corpus differential (`src/AotDifferential`) is now the sharper measurement of the two, and it
+reads zero: nothing disagrees on the wire, and no case remains where either model throws and the
+other does not. So the honest next step is to *widen* the corpus rather than to pick another bullet —
+the `.proto`-generated DTO path is the obvious untested half, and `protobuf-net.Reflection` can
+produce it in-process.
 
 ### Golden-file tests
 
@@ -986,9 +1016,11 @@ cast on a sealed type where IL merely yields null — both end up at
 **The line is drawn by scope, not by type.** A *lone* `[NullWrappedValue]` is valid only on a nullable
 scalar; in a **collection**, `docs/nullwrappers.md` says "any scalar or message type will be accepted
 (but not nested collections)", and probing confirms it — message, nullable enum, nullable BCL, string
-and map-value elements all work. So the three lone refusals (non-scalar, non-nullable,
-with `[DefaultValue]`) *match* protobuf-net, which throws while building the model, and are worded to
-say so rather than "not supported yet"; every collection form is supported.
+and map-value elements all work. So the **six** lone refusals — non-scalar, non-nullable, and
+combined with `[DefaultValue]`, `IsRequired`, `IsPacked` or a non-default `DataFormat` — *match*
+protobuf-net, which throws while building the model, and are worded to say so rather than "not
+supported yet"; every collection form is supported. They are one contiguous run of guards in
+`ValueMember`, so if that run grows, this list should grow with it.
 
 A **nullable element without the attribute is an ordinary element** — `List<int?>` emits plain
 features and only faults at runtime if a null actually turns up. That holds for every element kind,
@@ -1306,6 +1338,14 @@ Three things about it are load-bearing:
   is a standalone contract until the root is also present — which showed up as 11 phantom mismatches
   before it was fixed. Everything must be added **before** anything is serialized, since protobuf-net
   refuses to change a model once a serializer has been generated from it.
+- **Assembly-level `[ProtoSurrogate]` declarations are replayed onto the reference model.** The
+  generator gathers those from referenced assemblies — that is how `protobuf-net.NodaTime` makes
+  `Instant` serializable — and a `RuntimeTypeModel.Create()` knows nothing about them, so without
+  the replay the reference throws where we correctly emit a surrogate, which reads as a generator
+  fault and is the opposite. The declaring assembly is usually not loaded (a package shipping
+  surrogates for types it does not own is exactly that shape), so the neighbours are loaded eagerly
+  first. Matched by full name, since the attribute is generator-owned and `internal` and every
+  assembly compiles its own copy.
 - **Values are deterministic and every scalar differs from the last.** Two members holding the same
   value serialize identically under either numbering, so a swapped field number would be invisible.
 
