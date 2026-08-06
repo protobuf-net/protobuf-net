@@ -174,6 +174,12 @@ src/AotDifferential`, which prints the generated source around any matching line
 
 ### 9. `PBN0003` is a false positive on a generic hierarchy root — and it is an **error**
 
+**Fixed.** The include numbering space is now split per closed construction, so two includes may
+share a tag when they belong to different constructions, while a member-versus-include clash and two
+includes on the *same* construction still report. Three tests pin those directions; note the includes
+are walked before the members, so the two spaces cannot be maintained by snapshotting one into the
+other — the first attempt did exactly that and broke the member case.
+
 The fourth of this family, after `PBN0015` (surrogates) and `PBN0012` (interfaces, then generics).
 
 A generic base declares its `[ProtoInclude]` list once, and that list is shared by every closed
@@ -190,9 +196,7 @@ is unambiguous — `Holder<Ship>` sees exactly one sub-type at tag 1 — and ref
 `PBN0003` counts tags across the whole list and reports a build **error**. `Examples/Issues/SO9408133.cs`
 is the shape from a real report, so this is not contrived.
 
-Not fixed here, deliberately: the numbering space is shared between members and includes, so
-suppressing the include-vs-include case without weakening the member-vs-include case means splitting
-that space per construction. `GenericHierarchy.input.cs` suppresses it with `#pragma` and says why.
+`GenericHierarchy.input.cs` no longer needs its `#pragma`.
 
 ### 10. Assorted API surprises
 

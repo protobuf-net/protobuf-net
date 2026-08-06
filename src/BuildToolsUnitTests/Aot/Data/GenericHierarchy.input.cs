@@ -30,12 +30,9 @@ public class PlainNode : Node { [ProtoMember(1)] public int N { get; set; } }
 
 // Both includes carry tag 1, which is fine: Holder<Ship> matches only ShipHolder and Holder<Crate>
 // only CrateHolder, so neither construction ever sees two sub-types at one tag - and ref-emit
-// serializes it happily. The shipped analyzer disagrees, reporting PBN0003 as a build *error*: it
-// counts tags across the whole include list without noticing that a generic declaring type shares
-// that list between its constructions. Same family as the PBN0012 false positives fixed earlier on
-// this branch, and suppressed rather than fixed here because unpicking it means separating the
-// member/include numbering space per construction - see docs/aot-findings.md.
-#pragma warning disable PBN0003 // duplicated field number
+// serializes it happily. PBN0003 used to report this as a build *error*, counting tags across the
+// whole include list without noticing that a generic declaring type shares that list between its
+// constructions; the numbering space is now split per construction, so this compiles clean.
 [ProtoContract]
 [ProtoInclude(1, typeof(ShipHolder))]
 [ProtoInclude(1, typeof(CrateHolder))]
@@ -46,7 +43,6 @@ public class ShipHolder : Holder<Ship> { [ProtoMember(1)] public Ship Value { ge
 
 [ProtoContract]
 public class CrateHolder : Holder<Crate> { [ProtoMember(1)] public Crate Value { get; set; } }
-#pragma warning restore PBN0003
 
 public static class GenericHierarchySamples
 {

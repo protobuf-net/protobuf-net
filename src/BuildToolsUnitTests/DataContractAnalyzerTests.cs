@@ -819,6 +819,62 @@ public class Bar : Foo<int>
         }
 
         [Fact]
+        public async Task DoesntReportDuplicateFieldNumberAcrossGenericConstructions()
+        {
+            // a generic base declares its include list once and shares it with every construction,
+            // but each one matches only the includes that derive from it - so Holder<int> sees Bar
+            // at 1 and Holder<string> sees Baz at 1, never two at once. PBN0003 is an *error*, so
+            // reporting it here fails the build for a pattern ref-emit serializes happily
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(Bar))]
+[ProtoInclude(1, typeof(Baz))]
+public class Holder<T> { }
+[ProtoContract]
+public class Bar : Holder<int> { }
+[ProtoContract]
+public class Baz : Holder<string> { }");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber));
+        }
+
+        [Fact]
+        public async Task DoesReportDuplicateFieldNumberWithinOneGenericConstruction()
+        {
+            // ...but two includes on the *same* construction still collide, so the relaxation is
+            // per-construction rather than a blanket exemption for generics
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(Bar))]
+[ProtoInclude(1, typeof(Baz))]
+public class Holder<T> { }
+[ProtoContract]
+public class Bar : Holder<int> { }
+[ProtoContract]
+public class Baz : Holder<int> { }");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeClashingWithAMemberOnAGenericType()
+        {
+            // and a member still cannot share a number with an include, whatever the construction:
+            // the member belongs to every one of them
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+[ProtoContract]
+[ProtoInclude(1, typeof(Bar))]
+public class Holder<T>
+{
+    [ProtoMember(1)] public int Value {get;set;}
+}
+[ProtoContract]
+public class Bar : Holder<int> { }");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DuplicateFieldNumber);
+        }
+
+        [Fact]
         public async Task DoesReportIncludeOfAnUnrelatedGenericType()
         {
             // ...and an unrelated generic is still caught, so the relaxation is not blanket
