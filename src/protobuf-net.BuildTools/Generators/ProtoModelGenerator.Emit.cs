@@ -90,6 +90,8 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent + 1, "{");
 
+            EmitExternalCategoryAsserts(sb, indent + 2, plan);
+
             var first = true;
             foreach (var contract in plan.Contracts)
             {
@@ -1017,6 +1019,45 @@ namespace ProtoBuf.BuildTools.Generators
         /// The serializer to hand a nested message: ourselves, unless the contract declares a
         /// hand-written one, in which case we never implement <c>ISerializer&lt;T&gt;</c> for it.
         /// </summary>
+        /// <summary>
+        /// Assert, at runtime, that each hand-written serializer's category is the one we generated
+        /// for. It is the single thing about an external serializer that changes the emitted shape
+        /// and that cannot be checked while generating — <c>[ProtoContract(IsScalar)]</c> may name a
+        /// serializer in another assembly, whose <c>Features</c> we can only take on trust.
+        /// </summary>
+        /// <remarks>
+        /// In the services type's constructor rather than in the proxy: members call
+        /// <c>SerializerCache.Get&lt;X, T&gt;()</c> directly, so the proxy is not on the path at all
+        /// and an assert there never runs — which is how the first attempt at this failed silently.
+        /// The constructor runs once per model, and <c>Debug.Assert</c> is
+        /// <c>[Conditional("DEBUG")]</c> resolved against the *consumer's* compilation, so a release
+        /// build pays nothing but an empty constructor.
+        /// </remarks>
+        private static void EmitExternalCategoryAsserts(StringBuilder sb, int indent, ProtoModelPlan plan)
+        {
+            var external = plan.Contracts
+                .Where(static x => x.ExternalSerializerTypeName is not null).ToList();
+            if (external.Count == 0) return;
+
+            Line(sb, indent, $"public {ServicesTypeName}()");
+            Line(sb, indent, "{");
+            foreach (var contract in external)
+            {
+                var expected = contract.ExternalSerializerIsScalar ? "CategoryScalar" : "CategoryMessage";
+                var fix = contract.ExternalSerializerIsScalar ? "false" : "true";
+                Line(sb, indent + 1, "global::System.Diagnostics.Debug.Assert(");
+                Line(sb, indent + 2, $"({Serializers}.SerializerCache.Get<{contract.ExternalSerializerTypeName}, "
+                    + $"{contract.TypeName}>().Features");
+                Line(sb, indent + 3, $"& ({Features}.CategoryScalar | {Features}.CategoryMessage))");
+                Line(sb, indent + 3, $"== {Features}.{expected},");
+                Line(sb, indent + 2, $"\"{Simplify(contract.TypeName)} is generated as {expected}, but its "
+                    + $"serializer disagrees; \"");
+                Line(sb, indent + 3, $"+ \"set [ProtoContract(IsScalar = {fix})] on it, or correct the serializer.\");");
+            }
+            Line(sb, indent, "}");
+            sb.AppendLine();
+        }
+
         private static string SubSerializer(ProtoMemberPlan member) => member.SubSerializer ?? "this";
 
         /// <summary>A message element needs a serializer passed along; a scalar does not.</summary>

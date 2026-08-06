@@ -874,6 +874,18 @@ feels acutely — everything there is metadata, so it lost ~6 contracts that had
 correctly. They were correct by luck rather than by check, and the fix is one attribute; but a
 consumer whose serializer lives in their own source is unaffected, which is the common case.
 
+The category is then **asserted at runtime**, since a stated `IsScalar` is unverifiable while
+generating by definition — it may name a serializer in another assembly. The services type's
+constructor carries a `Debug.Assert` per external serializer, comparing its real `Features` against
+what was generated for.
+
+Two details worth keeping. It is in the **constructor**, not the proxy: members call
+`SerializerCache.Get<X, T>()` directly, so the proxy is not on that path at all and an assert there
+never runs — the first attempt at this passed its own test by never executing. And `Debug.Assert` is
+`[Conditional("DEBUG")]` resolved against the **consumer's** compilation, so a release build pays
+nothing but an empty constructor. Proven to fire by stating the wrong category with the source route
+suppressed, not merely by observing it pass.
+
 A scalar serializer as a **collection element or map value** is refused: the unary shape is derived
 from ref-emit, that one is not.
 
