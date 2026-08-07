@@ -100,7 +100,14 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Base class for simple collection serializers
     /// </summary>
-    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
+    /// <remarks>
+    /// <typeparamref name="TItem"/> carries no <see cref="DynamicallyAccessedMembersAttribute"/>,
+    /// and deliberately: the only thing that ever wanted one was the <c>serializer ??=</c> fallback
+    /// in <see cref="WriteRepeated"/>/<see cref="ReadRepeated"/>, which is dead code for a generated
+    /// model. <see cref="TypeModel.ResolveSerializer"/> confines that demand to the arm ILC removes,
+    /// which is what lets this - and everything deriving from it - stay unannotated.
+    /// </remarks>
+    public abstract class RepeatedSerializer<TCollection, TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
         TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
 
@@ -144,7 +151,7 @@ namespace ProtoBuf.Serializers
                 return;
             }
 
-            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
+            serializer ??= TypeModel.ResolveSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);
@@ -346,7 +353,7 @@ namespace ProtoBuf.Serializers
                 return ReadNullWrapped(ref state, features, values, serializer);
             }
 
-            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
+            serializer ??= TypeModel.ResolveSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);

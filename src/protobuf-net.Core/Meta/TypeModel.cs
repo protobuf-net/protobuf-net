@@ -1439,6 +1439,61 @@ namespace ProtoBuf.Meta
             ?? NoSerializer<T>(model);
 
         /// <summary>
+        /// Resolve a serializer for <typeparamref name="T"/> from a generic path that is only
+        /// *sometimes* a fallback - i.e. one whose caller usually supplies the serializer outright.
+        /// </summary>
+        /// <remarks>
+        /// <para>The point of this is trimming, not behaviour: the two arms are the same resolution.
+        /// A generic utility that ends <c>serializer ??= GetSerializer&lt;T&gt;(model)</c> must
+        /// declare <see cref="DynamicAccess.ContractType"/> on its own <c>T</c>, and every
+        /// instantiation then inherits that demand - including generated models, which pass a
+        /// serializer and never reach the fallback at all.</para>
+        /// <para>Under native AOT ILC substitutes <c>IsDynamicCodeSupported</c> with a constant and
+        /// removes the dynamic arm <em>before</em> trim analysis runs, so the demand disappears
+        /// rather than moving to the caller - which is what distinguishes this from plain annotation
+        /// removal, and from the <c>Requires*</c> attempt before it. Callers may therefore leave
+        /// their own <c>T</c> unannotated.</para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ISerializer<T> ResolveSerializer<T>(TypeModel model, CompatibilityLevel ambient = default)
+        {
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            if (!RuntimeFeature.IsDynamicCodeSupported) return GetSerializerWithoutReflection<T>(model, ambient);
+#endif
+            return GetSerializerAllowingReflection<T>(model, ambient);
+        }
+
+        // the "annotation demanded" arm; a separate method purely so that the suppression on the
+        // other arm cannot accidentally cover this one
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091",
+            Justification = "The annotation is genuinely required here, and this arm only survives trim analysis when dynamic code does too - see ResolveSerializer.")]
+        private static ISerializer<T> GetSerializerAllowingReflection<T>(TypeModel model, CompatibilityLevel ambient)
+            => GetSerializer<T>(model, ambient);
+
+        /// <summary>
+        /// The resolution that remains available once dynamic code does not: the inbuilt serializers,
+        /// then whatever the model hands out directly.
+        /// </summary>
+        /// <remarks>
+        /// This is the same call chain as <see cref="GetSerializer{T}(TypeModel, CompatibilityLevel)"/>
+        /// - deliberately, since a generated model resolves a repeated enum through it (we pass no
+        /// serializer and rely on <c>ISerializerProxy&lt;TEnum&gt;</c>, so an arm that threw would
+        /// break exactly the shapes AotSmoke covers). What differs is the annotation: the only
+        /// override on this route that reflects over <typeparamref name="T"/> is
+        /// <c>RuntimeTypeModel</c>'s, and it cannot build a serializer at all without dynamic code.
+        /// Where both arms *are* live - ordinary trimming - the other one preserves
+        /// <typeparamref name="T"/> anyway, so the suppression closes no hole that was open.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091",
+            Justification = "Reached only where RuntimeTypeModel - the one override that reflects over T - cannot function; see the remarks.")]
+        private static ISerializer<T> GetSerializerWithoutReflection<T>(TypeModel model, CompatibilityLevel ambient)
+            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
+            ?? model?.GetSerializerCore<T>(ambient)
+            ?? NoSerializer<T>(model);
+
+        /// <summary>
         /// Gets the inbuilt serializer relevant to a specific <see cref="CompatibilityLevel"/> (and <see cref="DataFormat"/>).
         /// Returns null if there is no defined inbuilt serializer.
         /// </summary>

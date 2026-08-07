@@ -87,6 +87,15 @@ public class Order
     // a null collection, distinguishable from an empty one
     [ProtoMember(16), NullWrappedCollection] public List<int> MaybeNone { get; set; }
 
+    // These two are the only members that reach RepeatedSerializer's `serializer ??=` fallback,
+    // which TypeModel.ResolveSerializer routes past the reflective resolve under AOT. A repeated
+    // *enum* is the sharp case: nothing is passed, and resolution has to find ISerializerProxy<T>
+    // through the model. A repeated *message* passes `this` and so proves the other arm still
+    // arrives at the same place. Neither is covered by the JIT differential suite in any useful
+    // sense - a JIT run takes the dynamic arm, so it never executes this path at all.
+    [ProtoMember(24)] public List<Status> History { get; set; }
+    [ProtoMember(25)] public List<Customer> Contacts { get; set; }
+
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
 
@@ -239,6 +248,8 @@ internal static class Program
             OptionalStatus = Status.Unknown,
             Sparse = { 1, null, 0 },
             MaybeNone = [],
+            History = [Status.Open, Status.Closed, Status.Unknown],
+            Contacts = [new Customer { Id = 1, Name = "ann" }, new Customer { Id = 2, Name = "bob" }],
             Price = new Money(1999),
             Tag = new Wrapper<string> { Value = "boxed" },
             Shipper = new Courier { Company = "acme" },
@@ -296,6 +307,12 @@ internal static class Program
         Check(ref failures, "MaybeNone empty-not-null", "empty",
             clone.MaybeNone is null ? "null" : clone.MaybeNone.Count == 0 ? "empty" : "items");
         Check(ref failures, "Price via surrogate", original.Price.Units, clone.Price.Units);
+
+        // the repeated fallback: the enum resolves through the model's proxy, the message through `this`
+        Check(ref failures, "History", "Open,Closed,Unknown",
+            clone.History is null ? "null" : string.Join(",", clone.History));
+        Check(ref failures, "Contacts", "1:ann,2:bob", clone.Contacts is null ? "null"
+            : string.Join(",", clone.Contacts.Select(static x => $"{x.Id}:{x.Name}")));
 
         // closed generics, one per instantiation
         Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);

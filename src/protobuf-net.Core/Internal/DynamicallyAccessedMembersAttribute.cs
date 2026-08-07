@@ -71,6 +71,28 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     /// <summary>
+    /// Suppresses reporting of a specific rule violation, allowing multiple suppressions on a
+    /// single code artifact. This is the unconditional counterpart to
+    /// <see cref="SuppressMessageAttribute"/>, i.e. it survives into the assembly.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = true)]
+    internal sealed class UnconditionalSuppressMessageAttribute : Attribute
+    {
+        public UnconditionalSuppressMessageAttribute(string category, string checkId)
+        {
+            Category = category;
+            CheckId = checkId;
+        }
+
+        public string Category { get; }
+        public string CheckId { get; }
+        public string Scope { get; set; }
+        public string Target { get; set; }
+        public string MessageId { get; set; }
+        public string Justification { get; set; }
+    }
+
+    /// <summary>
     /// Specifies the types of members that are dynamically accessed.
     ///
     /// This enumeration has a <see cref="FlagsAttribute"/> attribute that allows a

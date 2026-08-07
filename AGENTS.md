@@ -849,19 +849,33 @@ are entangled inside the AOT-safe paths rather than sitting behind a boundary, s
 nowhere clean to terminate. Fixing that properly means **restructuring** (the generic path must not
 reference the fallback at all), not annotating.
 
-**...but a feature switch does terminate cleanly, which `Requires*` could not.** Gating a fallback on
-`RuntimeFeature.IsDynamicCodeSupported` lets ILC substitute a constant and eliminate the branch
-*before* trim analysis, so the warning is removed rather than moved. Measured: doing that to
-`RepeatedSerializer`'s `serializer ??= TypeModel.GetSerializer<TItem>(…)` and then dropping the
-now-unneeded annotation took 47 → 43, and — the decisive part — did *not* produce the two new
-warnings at `WriteRepeated`/`ReadRepeated` that plain annotation-removal does.
+**...but a feature switch does terminate cleanly, which `Requires*` could not**, and that is now
+`TypeModel.ResolveSerializer<T>`. Gating a fallback on `RuntimeFeature.IsDynamicCodeSupported` lets
+ILC substitute a constant and eliminate the arm *before* trim analysis, so the demand disappears
+rather than moving to the caller. A generic utility ending `serializer ??= GetSerializer<T>(model)`
+must otherwise declare `DynamicAccess.ContractType` on its own `T`, and every instantiation inherits
+that — including generated models, which pass a serializer and never reach the fallback.
 
-The current count is **47**, and they are not all irreducible; `docs/aot-findings.md` A2 has the
-measured breakdown and the two caveats that stop this being a one-line change. In short: ~11 are that
-`??=` pattern and are reachable, 16 are an `Enum.GetValues(Type)` that protobuf-net never calls (it
-arrives through a dependency's static constructor), and the rest are the runtime model honestly
-declaring its reflection. **Measure with a publish rather than reasoning about them** — and clear
-`obj`/`bin` first, since the publish is incremental and a second run reports nothing at all.
+Applied to `RepeatedSerializer<TCollection, TItem>`, whose `TItem` annotation is consequently gone:
+**49 → 45**, `IL2091` 11 → 7. Six warnings removed (five of them `ListSerializer<,>` inheriting the
+annotation, plus `WriteWrappedCollection`) and two surfaced one layer up at
+`RepeatedSerializer.Write` → `WriteWrapped`/`WriteMessage`, which are the same `??=` pattern
+untreated. Note the two arms are the *same resolution*, deliberately: a generated model resolves a
+repeated enum through it — we pass no serializer and rely on `ISerializerProxy<TEnum>` — so an arm
+that threw would break exactly the shapes `AotSmoke` covers.
+
+**Only a native publish exercises the AOT arm at all**; a JIT run takes the other one, so the
+differential suite says nothing about this. That is why `AotSmoke` carries `List<Status>` and
+`List<Customer>` — the repeated enum being the sharp case, since resolution has to find the proxy
+through the model with nothing passed in.
+
+The current count is **45**, and the remainder is not all irreducible; `docs/aot-findings.md` A2 has
+the measured breakdown. In short: 7 are that same `??=` pattern one layer up and 5 of those are
+reachable the same way, 16 are an `Enum.GetValues(Type)` that protobuf-net never calls (it arrives
+through a dependency's static constructor, so fixtures move this number), and the rest are the
+runtime model honestly declaring its reflection. **Measure with a publish rather than reasoning about
+them** — clear `obj`/`bin` first, since the publish is incremental and a second run reports nothing
+at all, and re-measure the *baseline* whenever a fixture changes, since the count tracks fixtures.
 
 ### Surrogates
 
