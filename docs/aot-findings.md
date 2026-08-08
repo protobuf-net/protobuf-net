@@ -133,6 +133,49 @@ gives `obj/…/native/AotSmoke.scan.dgml.xml`. Find the node for the offending m
 the root, and read the edge's **`Reason`** attribute — it names the generic parameter responsible.
 Here every one of the 1738 said `Reason="TInput"`, which is the whole answer in one string.
 
+### 4b. Collection members throw under native AOT — the constructor is trimmed
+
+**Severity: high for native AOT** — any `HashSet<T>`, `Queue<T>`, `Stack<T>`, `SortedSet<T>` or
+concurrent-collection member failed to *deserialize*. Found by widening `AotSmoke`; fixed here.
+
+```
+ProtoException: No parameterless constructor found for HashSet<string>
+ ---> MissingMethodException: No parameterless constructor defined
+   at TypeModel.ActivatorCreate[T]()
+   at RepeatedSerializer`2.ReadRepeated(...)
+```
+
+When a collection member arrives null, the repeated serializers construct one through
+`TypeModel.ActivatorCreate<TCollection>()`, i.e. `Activator.CreateInstance(type, nonPublic: true)`.
+Generated code never names those constructors — it calls `RepeatedSerializer.CreateSet<HashSet<string>, string>()`
+and the construction happens inside the library — so ILC trimmed them. Serialization was fine;
+the first *deserialize* into a null member threw.
+
+`TCollection` had never carried an annotation, on any of the factories or the concrete serializers,
+so this predates the trim work on this branch. It is the `IL2087` on `TypeModel.ActivatorCreate<T>`,
+which had been catalogued in A2 as "a correct warning about code that genuinely reflects" — correct,
+and it was describing a live bug rather than an accepted cost. **A warning classified as
+"expected" is still a warning about something.**
+
+The fix is an annotation, which is the opposite direction from the rest of this work and is right
+here for the reason the rest was wrong: something genuinely *does* reflect over `TCollection`. It is
+deliberately the narrow `DynamicAccess.Activated`
+(`PublicParameterlessConstructor | NonPublicConstructors`) rather than `ContractType` — the
+collection is constructed, never inspected — applied to `TypeModel.ActivatorCreate<T>`, the concrete
+serializers that call it (`Set`/`Queue`/`Stack`/`List`/`Enumerable`/`Dictionary`/`ProducerConsumer`
+and the three concurrent ones) and the public factories that name them.
+
+Two things worth keeping:
+
+- **`List<T>` worked by luck.** Its constructor survives because application code elsewhere calls
+  `new List<T>()`; nothing in protobuf-net kept it. So the pre-existing `List<T>` coverage in
+  `AotSmoke` proved nothing about this whole class of member.
+- **The annotation is self-locating once it flows.** Fixing `HashSet` surfaced a *new* `IL2091`
+  naming `ProducerConsumerSerializer.Initialize` exactly, which was the next failure
+  (`ConcurrentQueue<int>`) before it happened. Two rounds, no guessing.
+
+Also relevant to plain `PublishTrimmed` without AOT, where the same constructors can be trimmed.
+
 ### 5. `Issue1232` tests fail on `main`
 
 Four `StreamSerializer_NonRootStream` cases (`trySkipWritingWhenMeasuring: True`) fail. Pre-existing
@@ -415,18 +458,21 @@ survives, not as a commitment.
    gaps in it turned out to be hiding real work — the repeated enum/message fallback, then the entire
    map family, which was silently unmeasured.
 
-   Done so far: repeated enum and repeated message; the three map shapes; and the **hand-written
-   serializers** in all three categories, which were taken first because they are the one remaining
-   path where `Activator.CreateInstance` is genuinely load-bearing under AOT (via
-   `SerializerCache<TProvider>`), so a trim regression there is silent until first use. All passed
-   first time — no bug, but the paths are now pinned rather than assumed.
+   Done so far: repeated enum and repeated message; the three map shapes; the **hand-written
+   serializers** in all three categories; the **collection families** (array of scalar and of
+   message, `HashSet`, `Queue`, `SortedSet`, `ImmutableArray`, `ConcurrentQueue`); **`DataFormat`**
+   variation (`ZigZag`, `FixedSize`, `Group` on both a lone message and a collection); and
+   **`SkipConstructor`**.
 
-   Still unexercised natively, roughly in descending order of how much machinery they reach: arrays,
-   sets and the immutable/concurrent collection families (only `List<T>` is covered); `DataFormat`
-   variation (`Group`, `FixedSize`, `ZigZag` — the last needs `state.Hint` before the read);
-   `SkipConstructor` (`BclHelpers.GetUninitializedObject`, which is reflective-adjacent and worth
-   proving); serialization callbacks; `ShouldSerialize`/`Specified`; `ImplicitFields`;
-   `DateOnly`/`TimeOnly`/`nint`; parseable types; `[DefaultValue]`.
+   **That found item 4b — a real bug, and the second-largest thing on this branch.** Worth noting
+   what it says about the exercise: the hand-written serializers, chosen first precisely because
+   their reflective step looked most dangerous, passed immediately; the collections, added as
+   routine breadth, threw on the first run. Predicting where the bug is has a poor record here.
+
+   Still unexercised natively, in descending order of machinery reached: serialization callbacks;
+   `ShouldSerialize`/`Specified`; `ImplicitFields`; `DateOnly`/`TimeOnly`/`nint`; parseable types;
+   `[DefaultValue]`; the immutable *reference* families (`ImmutableList`/`ImmutableDictionary` —
+   `ImmutableArray` is covered and is a struct, so it takes a different path).
 2. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
    file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
    alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,

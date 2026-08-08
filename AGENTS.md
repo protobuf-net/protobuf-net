@@ -886,6 +886,19 @@ So the standing rule is: **before annotating a type parameter, ask what would re
 transport, a buffer, a destination — nothing does. `TInput` survived the `ISerializer<T>` cleanup
 purely because the name reads like a contract type.
 
+**The rule cuts both ways, and the other direction is a live bug rather than dead weight.**
+`TCollection` on the repeated/map serializers had *never* been annotated, yet
+`TypeModel.ActivatorCreate<TCollection>()` constructs the collection when a member arrives null —
+so ILC trimmed the constructors and every `HashSet<T>`/`Queue<T>`/`ConcurrentQueue<T>` member threw
+`MissingMethodException` on **deserialize** (item 4b). The answer to "what reflects over it" was
+"`Activator` does", and the fix is `DynamicAccess.Activated` —
+`PublicParameterlessConstructor | NonPublicConstructors`, and deliberately nothing else, since the
+collection is constructed but never inspected. Applied to `ActivatorCreate<T>`, the concrete
+serializers that call it, and the public factories that name them.
+
+Note `List<T>` worked throughout, purely because application code elsewhere calls `new List<T>()` —
+so the long-standing `List<T>` coverage in `AotSmoke` was evidence about nothing.
+
 `Requires*` attributes were tried on the dynamic helpers and **reverted** — they do not remove
 warnings, they relocate them to callers, and the callers here are
 `ProtoReader.State.DeserializeRootImpl<T>`, `TypeModel.CreateInstance<T>` and

@@ -2,7 +2,9 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 
@@ -112,6 +114,33 @@ public class Order
     [ProtoMember(29)] public Barcode Barcode { get; set; }
     [ProtoMember(30)] public Gauge Gauge { get; set; }
     [ProtoMember(31)] public Batch Batch { get; set; }
+
+    // Collections beyond List<T>. Which RepeatedSerializer factory serves which of these is a
+    // priority-ordered provider walk rather than a lookup, so each of these lands on a *different*
+    // factory - and every factory is a distinct generic instantiation ILC has to generate.
+    // ImmutableArray<T> is the odd one: a struct, so neither side null-tests it, and its default
+    // value throws on enumeration rather than behaving as empty.
+    [ProtoMember(32)] public int[] Codes { get; set; }
+    [ProtoMember(33)] public Customer[] Team { get; set; }
+    [ProtoMember(34)] public HashSet<string> Tags { get; set; }
+    [ProtoMember(35)] public Queue<int> Pending { get; set; }
+    [ProtoMember(36)] public SortedSet<int> Ranks { get; set; }
+    [ProtoMember(37)] public ImmutableArray<int> Frozen { get; set; }
+    [ProtoMember(38)] public ConcurrentQueue<int> Inbox { get; set; }
+
+    // DataFormat changes the emitted shape, not just a features constant. ZigZag is the one that
+    // needs state.Hint(SignedVarint) before the read; FixedSize picks its width from the member;
+    // Group swaps WriteMessage for WriteGroup on a lone message, and on a *collection* pushes
+    // WireTypeStartGroup into the element features so both directions carry group markers.
+    [ProtoMember(39, DataFormat = DataFormat.ZigZag)] public int Delta { get; set; }
+    [ProtoMember(40, DataFormat = DataFormat.FixedSize)] public long Ticks { get; set; }
+    [ProtoMember(41, DataFormat = DataFormat.Group)] public Customer Grouped { get; set; }
+    [ProtoMember(42, DataFormat = DataFormat.Group)] public List<Customer> GroupedTeam { get; set; }
+
+    // SkipConstructor routes construction through BclHelpers.GetUninitializedObject, which is the
+    // kind of thing ILC could plausibly not support. Its effect is only observable in a member that
+    // is *not* serialized - see Blank.Stamp.
+    [ProtoMember(43)] public Blank Blank { get; set; }
 
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
@@ -308,6 +337,21 @@ public readonly struct Batch
     public int Value { get; }
 }
 
+/// <summary>
+/// Constructed via <c>BclHelpers.GetUninitializedObject</c> rather than <c>new</c>, so the
+/// constructor never runs on deserialize. <see cref="Stamp"/> is not serialized and exists purely
+/// to make that observable: it comes back null, not "ctor".
+/// </summary>
+[ProtoContract(SkipConstructor = true)]
+public class Blank
+{
+    public Blank() => Stamp = "ctor";
+
+    [ProtoMember(1)] public int Value { get; set; }
+
+    public string Stamp { get; set; }
+}
+
 [ProtoModel]
 [ProtoSerializable(typeof(Order))]
 [ProtoSerializable(typeof(NoteV2))]
@@ -353,6 +397,19 @@ internal static class Program
             Barcode = new Barcode { Code = "X-9" },
             Gauge = new Gauge(4242),
             Batch = new Batch(77),
+            Codes = [11, 12, 13],
+            Team = [new Customer { Id = 4, Name = "cat" }],
+            Tags = ["red", "blue"],
+            Pending = new Queue<int>([21, 22]),
+            Ranks = [5, 3, 9],
+            Frozen = [31, 32],
+            Inbox = new ConcurrentQueue<int>([41, 42]),
+            // negative, so ZigZag actually differs from the default varint encoding
+            Delta = -5,
+            Ticks = 1234567890123L,
+            Grouped = new Customer { Id = 5, Name = "dan" },
+            GroupedTeam = [new Customer { Id = 6, Name = "eve" }],
+            Blank = new Blank { Value = 8 },
             Price = new Money(1999),
             Tag = new Wrapper<string> { Value = "boxed" },
             Shipper = new Courier { Company = "acme" },
@@ -432,6 +489,29 @@ internal static class Program
         Check(ref failures, "Gauge", original.Gauge.Value, clone.Gauge.Value);
         Check(ref failures, "Batch", original.Batch.Value, clone.Batch.Value);
 
+        // the collection families, one per RepeatedSerializer factory
+        Check(ref failures, "Codes", "11,12,13", Join(clone.Codes));
+        Check(ref failures, "Team", "4:cat", clone.Team is null ? "null"
+            : string.Join(",", clone.Team.Select(static x => $"{x.Id}:{x.Name}")));
+        Check(ref failures, "Tags", "blue,red", clone.Tags is null ? "null"
+            : string.Join(",", clone.Tags.OrderBy(static x => x, StringComparer.Ordinal)));
+        Check(ref failures, "Pending", "21,22", Join(clone.Pending));
+        Check(ref failures, "Ranks", "3,5,9", Join(clone.Ranks));
+        Check(ref failures, "Frozen", "31,32", clone.Frozen.IsDefault ? "default" : Join(clone.Frozen));
+        Check(ref failures, "Inbox", "41,42", Join(clone.Inbox));
+
+        // DataFormat: ZigZag needs a read hint, FixedSize picks its width, Group reframes
+        Check(ref failures, "Delta (zigzag)", original.Delta, clone.Delta);
+        Check(ref failures, "Ticks (fixed)", original.Ticks, clone.Ticks);
+        Check(ref failures, "Grouped", "5:dan", clone.Grouped is null ? "null"
+            : $"{clone.Grouped.Id}:{clone.Grouped.Name}");
+        Check(ref failures, "GroupedTeam", "6:eve", clone.GroupedTeam is null ? "null"
+            : string.Join(",", clone.GroupedTeam.Select(static x => $"{x.Id}:{x.Name}")));
+
+        // SkipConstructor: the value survives, and the constructor demonstrably did not run
+        Check(ref failures, "Blank.Value", original.Blank.Value, clone.Blank?.Value);
+        Check(ref failures, "Blank ctor skipped", null, clone.Blank?.Stamp);
+
         // closed generics, one per instantiation
         Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);
         Check(ref failures, "Shipper", "acme", (clone.Shipper as Courier)?.Company);
@@ -483,4 +563,7 @@ internal static class Program
         Console.Error.WriteLine($"  MISMATCH {what}: expected '{expected}', got '{actual}'");
         failures++;
     }
+
+    private static string Join<T>(IEnumerable<T> values)
+        => values is null ? "null" : string.Join(",", values);
 }

@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
             where TCollection : IDictionary<TKey, TValue>
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
 
@@ -222,7 +222,7 @@ namespace ProtoBuf.Serializers
             Write(ref state, fieldNumber, wireType, ref iter, pairSerializer);
         }
     }
-    class DictionarySerializer<TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
+    class DictionarySerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, TKey, TValue> : MapSerializer<TCollection, TKey, TValue>
         where TCollection : IDictionary<TKey, TValue>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
