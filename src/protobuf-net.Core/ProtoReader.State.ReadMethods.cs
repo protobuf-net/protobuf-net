@@ -999,22 +999,22 @@ namespace ProtoBuf
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
+            public T ReadMessage<T>(T value = default)
                 => ReadMessage<T>(default, value, null);
 
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public T ReadMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
-                => ReadMessage<ISerializer<T>, T>(features, value, serializer ?? TypeModel.GetSerializer<T>(Model));
+            public T ReadMessage<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+                => ReadMessage<ISerializer<T>, T>(features, value, serializer ?? TypeModel.ResolveSerializer<T>(Model));
 
 #pragma warning disable IDE0060 // unused (yet!) features arg
             /// <summary>
             /// Reads a sub-item from the input reader
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal T ReadMessage<TSerializer, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, in TSerializer serializer)
+            internal T ReadMessage<TSerializer, T>(SerializerFeatures features, T value, in TSerializer serializer)
                 where TSerializer : ISerializer<T>
 #pragma warning restore IDE0060
             {
@@ -1035,16 +1035,16 @@ namespace ProtoBuf
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
+            public T ReadAny<T>(T value = default)
                 => ReadAny<T>(default, value, null);
 
             /// <summary>
             /// Reads a value or sub-item from the input reader
             /// </summary>
             [MethodImpl(HotPath)]
-            public T ReadAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
+            public T ReadAny<T>(SerializerFeatures features, T value = default, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 var serializerFeatures = serializer.Features;
                 features.InheritFrom(serializerFeatures);
 
@@ -1072,9 +1072,9 @@ namespace ProtoBuf
             /// <summary>
             /// Read a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
             /// </summary>
-            public T ReadWrapped<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public T ReadWrapped<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
                 ProtoWriter.State.AssertWrappedAndGetWireType(ref features, out var fieldPresence);

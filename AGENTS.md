@@ -527,8 +527,10 @@ attribute applies to the whole assembly, and `AotRefGen`/`AotConformanceTests` l
 into one, so placing it beside them would silently re-level all of them. The golden tests compile
 each input in isolation, which is exactly what is needed.
 
-Note the level-200 `Guid` path costs four AOT warnings that the other forms do not — see
-`docs/aot-findings.md`.
+The level-200 `Guid` path used to cost four AOT warnings that the other forms did not; dropping the
+`WriteMessage<T>` annotation removed them. Item 4 of `docs/aot-findings.md` keeps the reasoning,
+because what it turned out to be about — an `IL3050` counting *attributions* rather than dynamic
+calls — is the generalisable part.
 
 ### Extensible contracts
 
@@ -856,26 +858,41 @@ rather than moving to the caller. A generic utility ending `serializer ??= GetSe
 must otherwise declare `DynamicAccess.ContractType` on its own `T`, and every instantiation inherits
 that — including generated models, which pass a serializer and never reach the fallback.
 
-Applied to `RepeatedSerializer<TCollection, TItem>`, whose `TItem` annotation is consequently gone:
-**49 → 45**, `IL2091` 11 → 7. Six warnings removed (five of them `ListSerializer<,>` inheriting the
-annotation, plus `WriteWrappedCollection`) and two surfaced one layer up at
-`RepeatedSerializer.Write` → `WriteWrapped`/`WriteMessage`, which are the same `??=` pattern
-untreated. Note the two arms are the *same resolution*, deliberately: a generated model resolves a
-repeated enum through it — we pass no serializer and rely on `ISerializerProxy<TEnum>` — so an arm
-that threw would break exactly the shapes `AotSmoke` covers.
+Applied in two passes, measured separately: `RepeatedSerializer<TCollection, TItem>` took **49 → 45**
+(`IL2091` 11 → 7), and the writer/reader cluster took **45 → 34** (`IL2091` 7 → 2). Every annotation
+named below is gone as a result.
+
+**The cluster is one unit and cannot be done piecemeal.** `WriteAny`, `WriteWrapped`, `WriteMessage`,
+`WriteGroup`, `WriteWrappedItem`, `ReadMessage`, `ReadAny`, `ReadWrapped` and `ReadRepeatedCore` all
+hand `T` to each other, so half a treatment relocates instead of removing — which is precisely what
+the `RepeatedSerializer` pass did, surfacing two fresh warnings at `RepeatedSerializer.Write`. What
+makes it safe is that the *callers* already supply the serializer, so the annotation was only ever
+serving a fallback they never take. Deliberately excluded: the root entry points
+(`DeserializeRoot`/`SerializeRoot`/`ReadAsRoot`/`WriteAsRoot`), the two `GetSerializer<T>()`
+accessors — an explicit resolution request is not a fallback — and `MapSerializer`, which produces no
+warning today. Change what the measurement rewards.
+
+Note the two arms are the *same resolution*, deliberately: a generated model resolves a repeated enum
+through it — we pass no serializer and rely on `ISerializerProxy<TEnum>` — so an arm that threw would
+break exactly the shapes `AotSmoke` covers.
 
 **Only a native publish exercises the AOT arm at all**; a JIT run takes the other one, so the
 differential suite says nothing about this. That is why `AotSmoke` carries `List<Status>` and
 `List<Customer>` — the repeated enum being the sharp case, since resolution has to find the proxy
 through the model with nothing passed in.
 
-The current count is **45**, and the remainder is not all irreducible; `docs/aot-findings.md` A2 has
-the measured breakdown. In short: 7 are that same `??=` pattern one layer up and 5 of those are
-reachable the same way, 16 are an `Enum.GetValues(Type)` that protobuf-net never calls (it arrives
-through a dependency's static constructor, so fixtures move this number), and the rest are the
-runtime model honestly declaring its reflection. **Measure with a publish rather than reasoning about
-them** — clear `obj`/`bin` first, since the publish is incremental and a second run reports nothing
-at all, and re-measure the *baseline* whenever a fixture changes, since the count tracks fixtures.
+The current count is **34**. The `IL2091` group is spent: the 2 left are `CreateInstance` (whose
+fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need the annotation on every
+consumer). Of the rest, 12 are an `Enum.GetValues(Type)` that protobuf-net never calls — it arrives
+through a dependency's static constructor — and 20 are the runtime model honestly declaring its
+reflection. **An `IL3050` count is a count of attributions, not of dynamic calls**: that group fell
+18 → 12 purely because dropping annotations pruned retained paths, which is a real drop in warnings
+and no change at all at runtime. `docs/aot-findings.md` A2 has the breakdown and puts the floor
+around 20.
+
+**Measure with a publish rather than reasoning about them** — clear `obj`/`bin` first, since the
+publish is incremental and a second run reports nothing at all, and re-measure the *baseline*
+whenever a fixture changes, since the count tracks fixtures.
 
 ### Surrogates
 

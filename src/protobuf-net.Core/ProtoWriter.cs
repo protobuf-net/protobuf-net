@@ -256,11 +256,11 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+        protected internal virtual void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = state.StartSubItem(TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetSerializer<T>(model)).Write(ref state, value);
+            (serializer ?? TypeModel.ResolveSerializer<T>(model)).Write(ref state, value);
             state.EndSubItem(tok, style);
 #pragma warning restore CS0618
         }

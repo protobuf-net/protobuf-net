@@ -332,14 +332,14 @@ namespace ProtoBuf
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteMessage<T>(SerializerFeatures features, T value, ISerializer<T> serializer = null)
                 => _writer.WriteMessage<T>(ref this, value, serializer, PrefixStyle.Base128, features.ApplyRecursionCheck());
 
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
-            public void WriteMessage<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteMessage<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 Debug.Assert(!features.HasAny(SerializerFeatures.OptionWrappedValue), "wrapped value handling has not been processed correctly");
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
@@ -352,7 +352,7 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a sub-item to the writer
             /// </summary>
-            public void WriteGroup<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteGroup<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
                 if (!(TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)))
                 {
@@ -364,9 +364,9 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, T value, ISerializer<T> serializer = null)
+            public void WriteAny<T>(int fieldNumber, T value, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 WriteAny<T>(fieldNumber, serializer.Features, value, serializer);
             }
 
@@ -397,9 +397,9 @@ namespace ProtoBuf
             /// <summary>
             /// Write a value or sub-item with an additional level of message wrapping, that can be used to express <c>null</c> values of arbitrary types (as field 1)
             /// </summary>
-            public void WriteWrapped<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteWrapped<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
                 var wrapperFormat = AssertWrappedAndGetWireType(ref features, out var fieldPresence);
@@ -428,9 +428,9 @@ namespace ProtoBuf
             /// <summary>
             /// Writes a value or sub-item to the writer
             /// </summary>
-            public void WriteAny<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
+            public void WriteAny<T>(int fieldNumber, SerializerFeatures features, T value, ISerializer<T> serializer = null)
             {
-                serializer ??= TypeModel.GetSerializer<T>(Model);
+                serializer ??= TypeModel.ResolveSerializer<T>(Model);
                 features.InheritFrom(serializer.Features);
 
                 if (features.HasAny(SerializerFeatures.OptionWrappedValue))

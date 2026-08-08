@@ -10,9 +10,12 @@ native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading th
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
 index. **Still outstanding, and candidates to raise against protobuf-net:** 1 (sibling sub-type
-merge overflows the stack — the serious one), 2 (`Extensible.AppendValue` under AOT), 3 and 4 (trim warnings; see Future Ideas A2 for the measured breakdown), 5 (pre-existing test failures on `main`), 7 (`[ProtoPartialMember(OverwriteList)]`
+merge overflows the stack — the serious one), 2 (`Extensible.AppendValue` under AOT), 3 (one trim
+warning that needs the annotation on every consumer; see Future Ideas A2 for the measured
+breakdown), 5 (pre-existing test failures on `main`), 7 (`[ProtoPartialMember(OverwriteList)]`
 ignored), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
-key/value). **Resolved in place:** 6 and 9 (analyzer false positives, fixed here), 8 (was the
+key/value). **Resolved in place:** 4 (the level-200 `Guid` trim warnings, gone with the
+`WriteMessage<T>` annotation), 6 and 9 (analyzer false positives, fixed here), 8 (was the
 harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
 differential's status, currently clean).
 
@@ -60,25 +63,31 @@ Fixing it means annotating the **class**'s `T`, which pushes the requirement ont
 `SubTypeState<T>` — including the generated path, which never reflects. Left alone deliberately;
 it needs the same restructuring as the other reflective fallbacks (see AGENTS.md).
 
-### 4. The level-200 `Guid` path costs four AOT warnings
+### 4. The level-200 `Guid` path cost four AOT warnings — **resolved, and instructively**
 
 `BclHelpers.WriteGuid`/`ReadGuid` (the `bcl.proto` form, i.e. compatibility level 200) go through
 `state.WriteMessage<Guid>(..., SerializerCache<PrimaryTypeProvider>.InstanceField)` and read
 `PrimaryTypeProvider.s_guidOptimized`, both of which force that type's static constructor. ILC then
-attributes its dependencies — including an `Enum.GetValues(Type)` — to `WriteGuid`/`ReadGuid`.
+attributed its dependencies — including an `Enum.GetValues(Type)` — to `WriteGuid`/`ReadGuid`.
 
-Warning-only: the round-trip is verified correct in `AotSmoke`. The level-240/300 forms
-(`GuidString`, `GuidBytes`, `Timestamp`, `DecimalString`) do **not** pay this, since they go through
+Always warning-only; the round-trip was verified correct in `AotSmoke` throughout. The level-240/300
+forms (`GuidString`, `GuidBytes`, `Timestamp`, `DecimalString`) never paid it, since they go through
 `GuidHelper` and direct writes instead.
 
-The same `Enum.GetValues` dependency also reaches **generated code** through the null-wrapped enum
-path (`ReadAny<TEnum?>`/`WriteAny<TEnum?>` inline into the generated `Read`/`Write`), so an
-`IL3050` is reported against the generator's own output. Again warning-only, and again correct at
-runtime.
+**Dropping the annotation from `WriteMessage<T>` removed all four**, and two more that reached
+generated code the same way through the null-wrapped enum path — the `Enum.GetValues` block went
+18 → 12. That was not predicted, and it falsifies what A2 used to say about this group ("no
+annotation or restructuring on our side removes these").
 
-Not an obvious fix — it is the same entanglement as the other reflective fallbacks, and `WriteGuid`
-genuinely needs the `PrimaryTypeProvider` serializer. Verified by experiment, not assumed: patching
-the `ThrowEnumException` enum formatting (the first suspect) changed nothing.
+The lesson generalises, so it is worth stating plainly: **an `IL3050` count is a count of
+*attributions*, not of dynamic calls.** The offending call sits in a dependency's static
+constructor; ILC reports it once per retained path that forces that cctor. Removing an annotation
+prunes paths, so the count falls without the underlying dynamic call going anywhere — the ten still
+attributed to `TypeModel` are the same call. So this is a genuine reduction in *warnings* and no
+change at all in runtime behaviour, and neither claim should be inflated into the other.
+
+Verified by experiment throughout, not assumed: patching the `ThrowEnumException` enum formatting
+(the first suspect, back when this looked unfixable) changed nothing.
 
 ### 5. `Issue1232` tests fail on `main`
 
@@ -399,35 +408,43 @@ is measurable rather than observable, and the differential suite would pass unch
 Measured from `AotSmoke` (`dotnet publish -c Release -r win-x64`, after clearing `obj`/`bin` — the
 publish is incremental and a second run reports nothing). **The count tracks the fixtures**, so the
 baseline has to be re-measured alongside any change to them; it was 36, then 47, and 49 once the two
-repeated members below were added. It is now **45**.
+repeated members below were added. It is now **34**.
 
-| count | id | what it is | |
-| ---: | --- | --- | --- |
-| 18 | IL3050 | `Enum.GetValues(Type)` | not ours |
-| 9 | IL3050 | `MakeGenericType` ×4, `Array.CreateInstance` ×4, `MakeArrayType` ×1 | reflective |
-| 7 | IL2091 | a generic path handing `T` to a reflective entry point | was 11 |
-| 5 | IL2067 | `type` argument not annotated for `Activator.CreateInstance` | reflective |
-| 3 | IL2070 | `GetInterfaces`/`GetConstructor` on an unannotated `Type` | reflective |
-| 3 | IL2087 / IL2057 / IL2055 | one each, same paths | reflective |
+| count | id | what it is | | |
+| ---: | --- | --- | --- | --- |
+| 12 | IL3050 | `Enum.GetValues(Type)` | not directly ours | was 18 |
+| 9 | IL3050 | `MakeGenericType` ×4, `Array.CreateInstance` ×4, `MakeArrayType` ×1 | reflective | |
+| 5 | IL2067 | `type` argument not annotated for `Activator.CreateInstance` | reflective | |
+| 3 | IL2070 | `GetInterfaces`/`GetConstructor` on an unannotated `Type` | reflective | |
+| 3 | IL2087 / IL2057 / IL2055 | one each, same paths | reflective | |
+| 2 | IL2091 | a generic path handing `T` to a reflective entry point | **both intractable** | was 11 |
 
-Three groups, and only one of them is ours to fix.
+Three groups, and the one that was ours is now done.
 
-**Not ours: the 18 `Enum.GetValues(Type)`.** protobuf-net does not call it anywhere — confirmed by
-grepping the whole tree, where the only hit is `AotDifferential`'s own `Filler`. It arrives through a
-dependency reached by a static constructor, which ILC then attributes to whatever forced that cctor:
-`TypeModel` (10), `BclHelpers.WriteGuid`/`ReadGuid` (4, the level-200 `Guid` path — item 4), and 4
-that land on *generated code* — every enum member that resolves its serializer through the model
-rather than inline, i.e. the null-wrapped and repeated forms. This is the group that moves with the
-fixtures: it was 2 before `List<Status>` was added. No annotation or restructuring on our side
-removes these; only not forcing that constructor would.
+**Not *directly* ours: the 12 `Enum.GetValues(Type)`.** protobuf-net does not call it anywhere —
+confirmed by grepping the whole tree, where the only hit is `AotDifferential`'s own `Filler`. It
+arrives through a dependency reached by a static constructor, which ILC then attributes to whatever
+forced that cctor: `TypeModel` (10) and 2 that land on *generated code*, through an enum member
+resolving its serializer via the model rather than inline.
+
+The wording used to be flatter than this — "no annotation or restructuring on our side removes
+these" — and that was **wrong**, which is worth keeping rather than quietly correcting. Dropping the
+`WriteMessage<T>` annotation took the group 18 → 12: the 4 on `BclHelpers.WriteGuid`/`ReadGuid`
+(item 4) and 2 of the 4 on generated code simply stopped being reported. **The count is of
+attributions, not of dynamic calls** — one call in a cctor, reported once per retained path that
+forces it — so pruning paths reduces it while changing nothing at runtime. Both halves of that
+matter: the reduction is real, and it is not a fix.
+
+This is also the group that moves with the fixtures, which is why the baseline must be re-measured
+whenever they change.
 
 **Genuinely reflective: the 9 remaining IL3050, the IL2067/IL2070/IL2057/IL2055.** These are the
 runtime model's dynamic paths — `DynamicStub.SlowGet`, `TypeModel.CreateListInstance`,
 `TypeHelper.ResolveUniqueEnumerableT`, `TypeModel.DeserializeType`. They are correct warnings about
 code that genuinely does reflect.
 
-**The tractable group is the 11 `IL2091`, and the fix is not an annotation.** Every one is a generic
-*library* path passing its `T` to a reflective entry point, and the reason is always the same shape:
+**The tractable group was the 11 `IL2091`, and the fix was not an annotation.** Nine of them were a
+generic *library* path passing its `T` to a reflective entry point, always the same shape:
 
 ```csharp
 serializer ??= TypeModel.GetSerializer<TItem>(state.Model);   // RepeatedSerializer, twice
@@ -446,12 +463,13 @@ warnings at `WriteRepeated`/`ReadRepeated` where none had been, because that is 
 lives. It relocates rather than removes, exactly as the earlier `Requires*` attempt did, and it gives
 up a real trimming guarantee for the runtime path in exchange. Reverted.
 
-**A feature switch does remove them, and this is now done for the first site.** Gating the fallback
-on `RuntimeFeature.IsDynamicCodeSupported` — which ILC substitutes with a constant `false`,
-eliminating the arm *before* trim analysis — and then dropping the annotation from
-`RepeatedSerializer<TCollection, TItem>` took **49 → 45**, with `IL2091` going 11 → 7. This
-suppresses rather than relocates, which is what distinguishes it from the earlier `Requires*`
-attempt. It lives in `TypeModel.ResolveSerializer<T>`, so each further site is a one-line change:
+**A feature switch does remove them, and this is now done.** Gating the fallback on
+`RuntimeFeature.IsDynamicCodeSupported` — which ILC substitutes with a constant `false`, eliminating
+the arm *before* trim analysis — and then dropping the annotation took **49 → 45** for
+`RepeatedSerializer<TCollection, TItem>` alone (`IL2091` 11 → 7), and **45 → 34** for the
+writer/reader cluster that followed (`IL2091` 7 → 2). This suppresses rather than relocates, which
+is what distinguishes it from the earlier `Requires*` attempt. It lives in
+`TypeModel.ResolveSerializer<T>`, so each site is a one-line change:
 
 ```csharp
 serializer ??= TypeModel.ResolveSerializer<TItem>(state.Model);
@@ -476,23 +494,34 @@ through the model with nothing passed in. (Adding them also moved the count, +2 
 `Enum.GetValues` block — hence 49 rather than 47 as the like-for-like baseline. Re-measure the
 baseline whenever a fixture changes.)
 
-**The remaining 7 `IL2091`, and what each needs:**
+**The writer/reader cluster had to be done in one go.** `WriteAny`, `WriteWrapped`, `WriteMessage`
+(both the `State` overloads and the `ProtoWriter` virtual), `WriteGroup`, `WriteWrappedItem`,
+`ReadMessage`, `ReadAny`, `ReadWrapped` and `ReadRepeatedCore` all hand `T` to each other, so
+treating half of them relocates rather than removes — which is exactly what the `RepeatedSerializer`
+step did, surfacing two at `RepeatedSerializer.Write`. Their annotations are gone, and the `??=` in
+each now goes through `ResolveSerializer`, along with the measuring writers (`NullWriter`,
+`BufferWriter`) that mirror them.
 
-| site | reaching | tractable? |
+The point that makes this safe is that the *callers* of these already supply the serializer —
+`ReadRepeatedCore` and `RepeatedSerializer.Write` pass theirs in — so the annotation was never
+serving them; it was serving a fallback they do not take. It is a broad public-signature change, but
+only in the relaxing direction, so no caller breaks.
+
+Deliberately **not** included: `DeserializeRoot`/`SerializeRoot`/`ReadAsRoot`/`WriteAsRoot` and the
+two `GetSerializer<T>()` accessors on the reader/writer state. The roots are entry points rather than
+generic plumbing, and the accessors are an *explicit* resolution request, not a fallback — the
+annotation is honest on both. `MapSerializer`'s two `??=` are likewise untouched: they produce no
+warning today, and the rule here is to change what the measurement rewards.
+
+**The 2 remaining `IL2091` are both intractable, for different reasons:**
+
+| site | reaching | why not |
 | --- | --- | --- |
-| `RepeatedSerializer.Write` | `WriteWrapped<T>`, `WriteMessage<T>` | yes — same `??=` |
-| `ReadRepeatedCore` | `ReadMessage<TSerializer,T>`, `ReadWrapped<T>` | yes — same `??=` |
-| `WriteWrappedItem<T>` | `WriteAny<T>` | yes — same `??=` |
-| `TypeHelper<T>.Factory` | `CreateInstance<T>` | **no** — `ActivatorCreate<T>` genuinely needs the constructors, and a generated contract only implements `IFactory<T>` under `SkipConstructor` |
-| `SubTypeState<T>.Cast` → `Merge` | `Deserialize<T>` | **no** — item 3; needs the annotation on the *class*'s `T`, i.e. on every consumer |
+| `TypeHelper<T>.Factory` | `CreateInstance<T>` | `ActivatorCreate<T>` genuinely reflects, and a generated contract only implements `IFactory<T>` under `SkipConstructor` — so the fallback is live, not dead |
+| `SubTypeState<T>.Cast` → `Merge` | `Deserialize<T>` | item 3; needs the annotation on the *class*'s `T`, i.e. on every consumer including the generated path |
 
-The first three are one connected cluster and have to be done together: `WriteAny`, `WriteWrapped`,
-`WriteMessage`, `WriteWrappedItem`, `ReadMessage`, `ReadWrapped` and `ReadRepeatedCore` all hand `T`
-to each other, so treating half of them relocates rather than removes. That is a broad
-public-signature change (relaxing a requirement, so not breaking for callers) and wants its own
-measurement pass.
-
-**The alternative route is to remove the fallback rather than gate it**, and it still stands:
+**The alternative route is to remove the fallback rather than gate it**, and it still stands for
+anything further:
 
 - **split the library methods** into a "serializer supplied" overload with no fallback and no
   annotation, and a "serializer resolved" one that keeps both. Generated code calls the first;
@@ -501,11 +530,12 @@ measurement pass.
   generic utility layer at all — removing the instantiations rather than gating them, and cutting a
   layer of indirection generated code does not need anyway.
 
-These compose with the switch rather than competing: the switch is the cheaper and can be applied
-site by site; direct emit is the larger change and its benefit is not only warning-count. Either way
-5 of the remaining `IL2091` and some of the `IL2067` are reachable; the `Enum.GetValues` block is
-not, and the reflective block is correct as it stands. That puts a realistic floor around **25**,
-essentially all of it the runtime model honestly declaring what it does.
+Neither is worth doing for warning-count now: at 34 the `IL2091` group is spent, and what is left is
+12 `Enum.GetValues` attributions (not a call of ours) plus 20 the runtime model honestly declares.
+The earlier estimate of a floor "around 25" was pessimistic about `Enum.GetValues` and is superseded;
+**the floor is about 20**, and reaching it means not forcing that static constructor rather than
+annotating anything. Direct emit remains interesting for its own sake — one less layer of
+indirection on the generated path — rather than for this.
 
 ### B. The coverage sweep undercounts generics
 
