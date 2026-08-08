@@ -1,5 +1,6 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -104,6 +105,13 @@ public class Order
     [ProtoMember(26)] public Dictionary<int, string> Labels { get; set; }
     [ProtoMember(27)] public Dictionary<string, Customer> Directory { get; set; }
     [ProtoMember(28)] public Dictionary<int, List<int>> Buckets { get; set; }
+
+    // hand-written serializers, one per category - see the note by their declarations. These are
+    // the only members that reach SerializerCache.Get<TProvider, T>(), i.e. the last genuinely
+    // reflective step on the generated path.
+    [ProtoMember(29)] public Barcode Barcode { get; set; }
+    [ProtoMember(30)] public Gauge Gauge { get; set; }
+    [ProtoMember(31)] public Batch Batch { get; set; }
 
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
@@ -220,6 +228,86 @@ public sealed class CardPayment : Payment
 
 public enum Status { Unknown = 0, Open = 1, Closed = 2 }
 
+// Hand-written serializers. The generated model emits no body for these at all: the services type
+// implements ISerializerProxy<T>, and members reach the serializer through
+// SerializerCache.Get<TProvider, T>() - which activates TProvider with
+// Activator.CreateInstance(typeof(TProvider), nonPublic: true). That is the one genuinely
+// reflective step left on the generated path, held open only by DynamicAccess.Serializer, and it
+// has broken before: the annotation was once missing at that public boundary, ILC trimmed the
+// constructor, and the first serialize threw MissingMethodException. Nothing but a native publish
+// catches that, which is why all three shapes are here.
+//
+// All three, because the serializer's *category* changes the framing rather than just the body: a
+// message is written as a sub-message, a scalar is framed by the serializer's own wire type via
+// WriteAny, and IsScalar is the only route that survives into metadata.
+
+public sealed class BarcodeSerializer : ISerializer<Barcode>
+{
+    SerializerFeatures ISerializer<Barcode>.Features
+        => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+
+    Barcode ISerializer<Barcode>.Read(ref ProtoReader.State state, Barcode value)
+    {
+        value ??= new Barcode();
+        int field;
+        while ((field = state.ReadFieldHeader()) > 0)
+        {
+            if (field == 1) value.Code = state.ReadString();
+            else state.SkipField();
+        }
+        return value;
+    }
+
+    void ISerializer<Barcode>.Write(ref ProtoWriter.State state, Barcode value)
+        => state.WriteString(1, value.Code);
+}
+
+[ProtoContract(Serializer = typeof(BarcodeSerializer))]
+public class Barcode
+{
+    public string Code { get; set; }
+}
+
+public sealed class GaugeSerializer : ISerializer<Gauge>
+{
+    SerializerFeatures ISerializer<Gauge>.Features
+        => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeVarint;
+
+    Gauge ISerializer<Gauge>.Read(ref ProtoReader.State state, Gauge value)
+        => new Gauge(state.ReadInt64());
+
+    void ISerializer<Gauge>.Write(ref ProtoWriter.State state, Gauge value)
+        => state.WriteInt64(value.Value);
+}
+
+[ProtoContract(Serializer = typeof(GaugeSerializer))]
+public readonly struct Gauge
+{
+    public Gauge(long value) => Value = value;
+    public long Value { get; }
+}
+
+// category stated outright rather than read from the Features declaration - the only route
+// available when the serializer arrives through a compiled reference
+public sealed class BatchSerializer : ISerializer<Batch>
+{
+    SerializerFeatures ISerializer<Batch>.Features
+        => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeFixed32;
+
+    Batch ISerializer<Batch>.Read(ref ProtoReader.State state, Batch value)
+        => new Batch(state.ReadInt32());
+
+    void ISerializer<Batch>.Write(ref ProtoWriter.State state, Batch value)
+        => state.WriteInt32(value.Value);
+}
+
+[ProtoContract(Serializer = typeof(BatchSerializer), IsScalar = true)]
+public readonly struct Batch
+{
+    public Batch(int value) => Value = value;
+    public int Value { get; }
+}
+
 [ProtoModel]
 [ProtoSerializable(typeof(Order))]
 [ProtoSerializable(typeof(NoteV2))]
@@ -262,6 +350,9 @@ internal static class Program
             Labels = new() { [1] = "one", [2] = "two" },
             Directory = new() { ["ann"] = new Customer { Id = 3, Name = "ann" } },
             Buckets = new() { [7] = [70, 71], [8] = [80] },
+            Barcode = new Barcode { Code = "X-9" },
+            Gauge = new Gauge(4242),
+            Batch = new Batch(77),
             Price = new Money(1999),
             Tag = new Wrapper<string> { Value = "boxed" },
             Shipper = new Courier { Company = "acme" },
@@ -335,6 +426,11 @@ internal static class Program
         Check(ref failures, "Buckets", "7=[70,71],8=[80]", clone.Buckets is null ? "null"
             : string.Join(",", clone.Buckets.OrderBy(static x => x.Key)
                 .Select(static x => $"{x.Key}=[{string.Join(",", x.Value)}]")));
+
+        // hand-written serializers, reached via SerializerCache.Get<TProvider, T>()
+        Check(ref failures, "Barcode", "X-9", clone.Barcode?.Code);
+        Check(ref failures, "Gauge", original.Gauge.Value, clone.Gauge.Value);
+        Check(ref failures, "Batch", original.Batch.Value, clone.Batch.Value);
 
         // closed generics, one per instantiation
         Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);

@@ -819,6 +819,25 @@ cost twice. Maps had *no* native coverage at all until recently, which silently 
 on the spot. Before concluding that some area is clean, check there is a member here that reaches
 it. Adding one moves the baseline, so re-measure both sides when you do.
 
+Two members earn their place for reasons that are not obvious from reading them:
+
+- the **hand-written serializers** (`Barcode`/`Gauge`/`Batch`) are the only members that reach
+  `SerializerCache.Get<TProvider, T>()`, and so the only ones exercising
+  `Activator.CreateInstance(typeof(TProvider), nonPublic: true)` — the last genuinely reflective step
+  on the generated path, held open by `DynamicAccess.Serializer` alone. That annotation has gone
+  missing once already, and the symptom was a `MissingMethodException` on first serialize that
+  nothing but a native publish could catch. All three categories are present because the category
+  changes the *framing*, and the payload is worth checking by eye: field 30 is a bare varint and
+  field 31 a bare fixed32, where a wrongly-assumed message category would have written a length
+  prefix over them.
+- `Dictionary<int, List<int>>` and `List<Status>` are the two shapes that pass **no** serializer and
+  resolve one from the model through `ISerializerProxy`, i.e. the arm `ResolveSerializer` gates.
+
+Note `Debug.Assert` in the generated services constructor — the one checking a stated `IsScalar`
+against the serializer's real `Features` — is `[Conditional("DEBUG")]` against the *consumer's*
+compilation, so a Release publish never runs it. `dotnet run --project src/AotSmoke -c Debug` does,
+and is worth doing after touching anything in that area.
+
 ```
 dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64
 ```

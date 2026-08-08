@@ -410,17 +410,23 @@ the generator sees for a contract. Between them they settle "ours or the harness
 The candidate list as it stands, roughly in the order worth taking them. Recorded so the ordering
 survives, not as a commitment.
 
-1. **Widen `AotSmoke`'s coverage, systematically.** Cheapest work here with the best demonstrated
-   return: it is the only thing that proves the actual goal, and in a single session two gaps in it
-   turned out to be hiding real work — the repeated enum/message fallback, then the entire map
-   family, which was silently unmeasured. Still unexercised natively: arrays, sets and the
-   immutable/concurrent collections (only `List<T>` is covered); `DataFormat` variation (`Group`,
-   `FixedSize`, `ZigZag` — the last needs `state.Hint`); serialization callbacks;
-   `ShouldSerialize`/`Specified`; `ImplicitFields`; `SkipConstructor`; `DateOnly`/`TimeOnly`/`nint`;
-   parseable types; `[DefaultValue]`. **Take the hand-written serializers first**
-   (`[ProtoContract(Serializer = …)]`, both categories): they are the one remaining path where
-   `Activator.CreateInstance` is genuinely load-bearing under AOT, via
-   `SerializerCache<TProvider>`, so a trim regression there is silent until first use.
+1. **Widen `AotSmoke`'s coverage, systematically.** *In progress.* Cheapest work here with the best
+   demonstrated return: it is the only thing that proves the actual goal, and in a single session two
+   gaps in it turned out to be hiding real work — the repeated enum/message fallback, then the entire
+   map family, which was silently unmeasured.
+
+   Done so far: repeated enum and repeated message; the three map shapes; and the **hand-written
+   serializers** in all three categories, which were taken first because they are the one remaining
+   path where `Activator.CreateInstance` is genuinely load-bearing under AOT (via
+   `SerializerCache<TProvider>`), so a trim regression there is silent until first use. All passed
+   first time — no bug, but the paths are now pinned rather than assumed.
+
+   Still unexercised natively, roughly in descending order of how much machinery they reach: arrays,
+   sets and the immutable/concurrent collection families (only `List<T>` is covered); `DataFormat`
+   variation (`Group`, `FixedSize`, `ZigZag` — the last needs `state.Hint` before the read);
+   `SkipConstructor` (`BclHelpers.GetUninitializedObject`, which is reflective-adjacent and worth
+   proving); serialization callbacks; `ShouldSerialize`/`Specified`; `ImplicitFields`;
+   `DateOnly`/`TimeOnly`/`nint`; parseable types; `[DefaultValue]`.
 2. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
    file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
    alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,
