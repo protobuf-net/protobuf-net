@@ -732,9 +732,12 @@ same way, and the way is worth remembering:
 
 The corpus differential (`src/AotDifferential`) is now the sharper measurement of the two, and it
 reads zero: nothing disagrees on the wire, and no case remains where either model throws and the
-other does not. So the honest next step is to *widen* the corpus rather than to pick another bullet —
-the `.proto`-generated DTO path is the obvious untested half, and `protobuf-net.Reflection` can
-produce it in-process.
+other does not. So widening coverage beats picking another bullet — the `.proto`-generated DTO path
+is the obvious untested half, and `protobuf-net.Reflection` can produce it in-process.
+
+**The ranked candidate list lives in the "Next steps" section of `docs/aot-findings.md`**, with the
+reasoning for the ordering. Keep it there rather than scattering next-step opinions through this
+file, as had started to happen.
 
 ### Golden-file tests
 

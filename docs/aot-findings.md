@@ -405,6 +405,48 @@ different things and should not be read together.
 `PBN_DUMP=<substring>` prints the generated source around a match; `PBN_MEMBERS=<type>` prints what
 the generator sees for a contract. Between them they settle "ours or the harness's" fastest.
 
+## Next steps
+
+The candidate list as it stands, roughly in the order worth taking them. Recorded so the ordering
+survives, not as a commitment.
+
+1. **Widen `AotSmoke`'s coverage, systematically.** Cheapest work here with the best demonstrated
+   return: it is the only thing that proves the actual goal, and in a single session two gaps in it
+   turned out to be hiding real work — the repeated enum/message fallback, then the entire map
+   family, which was silently unmeasured. Still unexercised natively: arrays, sets and the
+   immutable/concurrent collections (only `List<T>` is covered); `DataFormat` variation (`Group`,
+   `FixedSize`, `ZigZag` — the last needs `state.Hint`); serialization callbacks;
+   `ShouldSerialize`/`Specified`; `ImplicitFields`; `SkipConstructor`; `DateOnly`/`TimeOnly`/`nint`;
+   parseable types; `[DefaultValue]`. **Take the hand-written serializers first**
+   (`[ProtoContract(Serializer = …)]`, both categories): they are the one remaining path where
+   `Activator.CreateInstance` is genuinely load-bearing under AOT, via
+   `SerializerCache<TProvider>`, so a trim regression there is silent until first use.
+2. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
+   file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
+   alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,
+   this is it.
+3. **Establish whether CI is actually red on `main`.** CI runs `dotnet test Build.csproj`, and the
+   four `Issue1232` failures (item 5) are pre-existing, so it presumably exits non-zero. A red
+   baseline devalues the corpus-differential gate next to it, which is the opposite of why that gate
+   was added.
+4. **Widen the corpus differential to the `.proto`-generated DTO path.** The corpus reads zero, so
+   more corpus beats another feature; `protobuf-net.Reflection` can generate the DTOs in-process, and
+   schema-generated contracts have never been differentially tested.
+5. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
+   AOT route at all. Note the warning count is now a *poor* motivation for it: those 18 are correct
+   warnings about code that does reflect. The real arguments are one less layer of indirection on the
+   generated path, and possibly size — get a size estimate first.
+6. **The three genuine generator gaps**, each bounded and each with a known reference behaviour: a
+   nested map key, a `CategoryScalar` hand-written serializer as a collection element or map value,
+   and an external serializer whose category cannot be established.
+
+One loose end, unresolved rather than closed: an intermittent single failure in `Examples` on
+**net472 only**, seen twice in full-traversal runs and never reproducible standalone. Never
+captured by name, but everything points at `PEVerify.AssertValid` — it shells out to `PEVerify.exe`
+with a **20-second timeout** (`src/Examples/PEVerify.cs`), it is inside `#if !COREFX` so it is net472
+only, and a subprocess timeout is exactly what contention in a full run would trip. Tied to
+`Compile(name, path)`, so no AOT path can reach it.
+
 ## Future ideas
 
 Not defects — things worth doing that were scoped out, with the measurements that were taken at the
