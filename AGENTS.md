@@ -810,6 +810,12 @@ to compile the input (CS0518). Being a real down-level project is the only hones
 a non-zero exit code on mismatch. It is the only thing here that proves the actual goal; everything
 else runs on a JIT runtime where ref-emit still exists.
 
+**Whatever it does not cover is not "fine", it is unmeasured** — and that distinction has already
+cost twice. Maps had *no* native coverage at all until recently, which silently made every
+`MapSerializer` annotation look harmless; adding three map members moved the warning count 20 → 29
+on the spot. Before concluding that some area is clean, check there is a member here that reaches
+it. Adding one moves the baseline, so re-measure both sides when you do.
+
 ```
 dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64
 ```
@@ -882,24 +888,41 @@ named below is gone as a result.
 hand `T` to each other, so half a treatment relocates instead of removing — which is precisely what
 the `RepeatedSerializer` pass did, surfacing two fresh warnings at `RepeatedSerializer.Write`. What
 makes it safe is that the *callers* already supply the serializer, so the annotation was only ever
-serving a fallback they never take. Deliberately excluded: the root entry points
-(`DeserializeRoot`/`SerializeRoot`/`ReadAsRoot`/`WriteAsRoot`), the two `GetSerializer<T>()`
-accessors — an explicit resolution request is not a fallback — and `MapSerializer`, which produces no
-warning today. Change what the measurement rewards.
+serving a fallback they never take. `MapSerializer<TCollection, TKey, TValue>` and the two
+`External*Serializer` bases followed, on the same reasoning.
+
+Deliberately excluded: the root entry points (`DeserializeRoot`/`SerializeRoot`/`ReadAsRoot`/
+`WriteAsRoot`) and the two `GetSerializer<T>()` accessors — an explicit resolution request is not a
+fallback, so the annotation is honest there.
+
+**`MapSerializer` was excluded once on the grounds that it "produces no warning today", and that
+reasoning was wrong** — `AotSmoke` simply had no map member, so the whole family was *unmeasured*
+rather than harmless. Adding three map members moved the baseline 20 → 29 and `IL2091` 2 → 11, all
+of it previously invisible. "No warning" is only evidence if the code is on the measured path.
 
 Note the two arms are the *same resolution*, deliberately: a generated model resolves a repeated enum
 through it — we pass no serializer and rely on `ISerializerProxy<TEnum>` — so an arm that threw would
 break exactly the shapes `AotSmoke` covers.
 
 **Only a native publish exercises the AOT arm at all**; a JIT run takes the other one, so the
-differential suite says nothing about this. That is why `AotSmoke` carries `List<Status>` and
-`List<Customer>` — the repeated enum being the sharp case, since resolution has to find the proxy
-through the model with nothing passed in.
+differential suite says nothing about this. That is why `AotSmoke` carries `List<Status>`,
+`List<Customer>`, and the three map members — the repeated enum and the repeated *map value* being
+the sharp cases, since resolution has to find the proxy through the model with nothing passed in.
 
-The current count is **20**. The `IL2091` group is spent: the 2 left are `CreateInstance` (whose
-fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need the annotation on every
-consumer). The other 18 are the runtime model, `DynamicStub` and the auxiliary/list paths correctly
-declaring that they reflect.
+The current count is **21**. The `IL2091` group is spent: the 3 left are `CreateInstance` ×2 (whose
+fallback is genuinely live — `ActivatorCreate<T>` reflects, and a generated contract only implements
+`IFactory<T>` under `SkipConstructor`) and `SubTypeState<T>.Cast` (which would need the annotation on
+every consumer). The other 18 are the runtime model, `DynamicStub` and the auxiliary/list paths
+correctly declaring that they reflect.
+
+**Watch bytes as well as warnings — they do not move together.** Two changes of identical shape:
+removing the transport annotation was −14 warnings and **−808 KB**; removing the `MapSerializer`
+family's was −8 warnings and **exactly zero bytes**, because a map's `TKey`/`TValue` are contract
+types the generated model's `GetSerializer<T>` override annotates regardless. A sweep of every
+remaining `[DynamicallyAccessedMembers]` in Core found one further redundancy —
+`SerializerCache<TProvider, T>`'s `T`, which nothing in that class reflects over — and removing it
+was measured as **byte-for-byte identical**, so it was left in place. `TProvider` there is the
+load-bearing one.
 
 **Split them by source location, not by id.** A warning with a `file:line` is a reflective call in
 our source; one attributed to a bare type name with no location is a member kept *reflectable* by a

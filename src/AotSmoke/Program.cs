@@ -96,6 +96,15 @@ public class Order
     [ProtoMember(24)] public List<Status> History { get; set; }
     [ProtoMember(25)] public List<Customer> Contacts { get; set; }
 
+    // Maps had *no* native coverage at all before these, which made every annotation on the
+    // MapSerializer family unmeasured rather than known-harmless. Three shapes, because they reach
+    // the value serializer three different ways: a scalar value inlines it, a message value is
+    // passed `this`, and a repeated value is resolved from the model through ISerializerProxy -
+    // the same sharp case as the repeated enum above, and the one an AOT-only bug would hide in.
+    [ProtoMember(26)] public Dictionary<int, string> Labels { get; set; }
+    [ProtoMember(27)] public Dictionary<string, Customer> Directory { get; set; }
+    [ProtoMember(28)] public Dictionary<int, List<int>> Buckets { get; set; }
+
     // a surrogate: the serializer is the surrogate's body with a conversion at each end
     [ProtoMember(17)] public Money Price { get; set; }
 
@@ -250,6 +259,9 @@ internal static class Program
             MaybeNone = [],
             History = [Status.Open, Status.Closed, Status.Unknown],
             Contacts = [new Customer { Id = 1, Name = "ann" }, new Customer { Id = 2, Name = "bob" }],
+            Labels = new() { [1] = "one", [2] = "two" },
+            Directory = new() { ["ann"] = new Customer { Id = 3, Name = "ann" } },
+            Buckets = new() { [7] = [70, 71], [8] = [80] },
             Price = new Money(1999),
             Tag = new Wrapper<string> { Value = "boxed" },
             Shipper = new Courier { Company = "acme" },
@@ -313,6 +325,16 @@ internal static class Program
             clone.History is null ? "null" : string.Join(",", clone.History));
         Check(ref failures, "Contacts", "1:ann,2:bob", clone.Contacts is null ? "null"
             : string.Join(",", clone.Contacts.Select(static x => $"{x.Id}:{x.Name}")));
+
+        // maps: scalar value, message value, and a repeated value resolved through a proxy
+        Check(ref failures, "Labels", "1=one,2=two", clone.Labels is null ? "null"
+            : string.Join(",", clone.Labels.OrderBy(static x => x.Key).Select(static x => $"{x.Key}={x.Value}")));
+        Check(ref failures, "Directory", "ann=3:ann", clone.Directory is null ? "null"
+            : string.Join(",", clone.Directory.OrderBy(static x => x.Key, StringComparer.Ordinal)
+                .Select(static x => $"{x.Key}={x.Value.Id}:{x.Value.Name}")));
+        Check(ref failures, "Buckets", "7=[70,71],8=[80]", clone.Buckets is null ? "null"
+            : string.Join(",", clone.Buckets.OrderBy(static x => x.Key)
+                .Select(static x => $"{x.Key}=[{string.Join(",", x.Value)}]")));
 
         // closed generics, one per instantiation
         Check(ref failures, "Tag", original.Tag.Value, clone.Tag?.Value);

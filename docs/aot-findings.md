@@ -451,8 +451,8 @@ is measurable rather than observable, and the differential suite would pass unch
 
 Measured from `AotSmoke` (`dotnet publish -c Release -r win-x64`, after clearing `obj`/`bin` — the
 publish is incremental and a second run reports nothing). **The count tracks the fixtures**, so the
-baseline has to be re-measured alongside any change to them; it was 36, then 47, and 49 once the two
-repeated members below were added. It is now **20**, and the binary is 808 KB smaller.
+baseline has to be re-measured alongside any change to them: 36, then 47, 49 with the repeated
+members, and 29 once maps were added. It is now **21**.
 
 | count | id | what it is | | |
 | ---: | --- | --- | --- | --- |
@@ -460,8 +460,8 @@ repeated members below were added. It is now **20**, and the binary is 808 KB sm
 | 5 | IL2067 | `type` argument not annotated for `Activator.CreateInstance` | reflective | |
 | 3 | IL2070 | `GetInterfaces`/`GetConstructor` on an unannotated `Type` | reflective | |
 | 3 | IL2087 / IL2057 / IL2055 | one each, same paths | reflective | |
-| 2 | IL2091 | a generic path handing `T` to a reflective entry point | **both intractable** | was 11 |
-| 2 | IL3050 | `Enum.GetValues(Type)`, in *generated* code | not ours | was 18 with the 16 below |
+| 3 | IL2091 | a generic path handing `T` to a reflective entry point | **all intractable** | was 11 |
+| 2 | IL3050 | `Enum.GetValues(Type)`, in *generated* code | not ours | was 18 |
 
 **The useful split is by source location, not by id.** A warning carrying a `file:line` is a
 reflective call in protobuf-net's own source; one attributed to a bare type name with no location is
@@ -469,8 +469,22 @@ a member kept *reflectable* by a `DynamicallyAccessedMembers` demand and never c
 were 14 of the latter, all of them one misplaced annotation — see item 4, which is where the 808 KB
 went. There are now none.
 
-So: 18 of the remaining 20 are the runtime model, `DynamicStub` and the auxiliary/list paths
-correctly declaring that they reflect, and 2 are the `IL2091` below.
+So: 18 of the remaining 21 are the runtime model, `DynamicStub` and the auxiliary/list paths
+correctly declaring that they reflect, and 3 are the `IL2091` below.
+
+**Warnings and binary size do not move together, and both need watching.** Two changes of the same
+*shape* — remove a `DynamicallyAccessedMembers` from a serializer type parameter — landed completely
+differently:
+
+| | warnings | bytes |
+| --- | ---: | ---: |
+| the transport annotation (item 4) | −14 | **−827,392** |
+| the `MapSerializer` family | **−8** | 0 |
+
+The transport was the only thing keeping `Stream`/`Task`/`Array`/`Enum` alive; a map's `TKey`/`TValue`
+are contract types that the generated model's own `GetSerializer<T>` override annotates anyway, so
+removing the demand silences the complaint and frees nothing. Neither number is the real one — report
+both.
 
 **Not ours: the 2 remaining `Enum.GetValues(Type)`.** protobuf-net does not call it anywhere —
 confirmed by grepping the whole tree, where the only hit is `AotDifferential`'s own `Filler`. Both
