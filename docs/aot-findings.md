@@ -14,8 +14,8 @@ merge overflows the stack — the serious one), 2 (`Extensible.AppendValue` unde
 warning that needs the annotation on every consumer; see Future Ideas A2 for the measured
 breakdown), 5 (pre-existing test failures on `main`), 7 (`[ProtoPartialMember(OverwriteList)]`
 ignored), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
-key/value). **Resolved in place:** 4 (the level-200 `Guid` trim warnings, gone with the
-`WriteMessage<T>` annotation), 6 and 9 (analyzer false positives, fixed here), 8 (was the
+key/value). **Resolved in place:** 4 (a misplaced annotation on the transport type parameter — 808 KB
+of the native binary, the largest single win here), 6 and 9 (analyzer false positives, fixed here), 8 (was the
 harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
 differential's status, currently clean).
 
@@ -63,31 +63,75 @@ Fixing it means annotating the **class**'s `T`, which pushes the requirement ont
 `SubTypeState<T>` — including the generated path, which never reflects. Left alone deliberately;
 it needs the same restructuring as the other reflective fallbacks (see AGENTS.md).
 
-### 4. The level-200 `Guid` path cost four AOT warnings — **resolved, and instructively**
+### 4. `IProtoInput<TInput>`/`IProtoOutput<TOutput>` annotated the **transport** — 808 KB
 
-`BclHelpers.WriteGuid`/`ReadGuid` (the `bcl.proto` form, i.e. compatibility level 200) go through
-`state.WriteMessage<Guid>(..., SerializerCache<PrimaryTypeProvider>.InstanceField)` and read
-`PrimaryTypeProvider.s_guidOptimized`, both of which force that type's static constructor. ILC then
-attributed its dependencies — including an `Enum.GetValues(Type)` — to `WriteGuid`/`ReadGuid`.
+**Severity: high for anyone publishing native AOT** — it was 22% of the binary. Fixed here.
 
-Always warning-only; the round-trip was verified correct in `AotSmoke` throughout. The level-240/300
-forms (`GuidString`, `GuidBytes`, `Timestamp`, `DecimalString`) never paid it, since they go through
-`GuidHelper` and direct writes instead.
+```csharp
+public interface IProtoInput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TInput>
+public interface IProtoOutput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TOutput>
+public interface IMeasuredProtoOutput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TOutput>
+```
 
-**Dropping the annotation from `WriteMessage<T>` removed all four**, and two more that reached
-generated code the same way through the null-wrapped enum path — the `Enum.GetValues` block went
-18 → 12. That was not predicted, and it falsifies what A2 used to say about this group ("no
-annotation or restructuring on our side removes these").
+`TInput`/`TOutput` is the **transport** — `Stream`, `byte[]`, `ArraySegment<byte>`,
+`ReadOnlyMemory<byte>`, `ReadOnlySequence<byte>`, `IBufferWriter<byte>` — and `TypeModel` implements
+nine instantiations of them (`TypeModel.InputOutput.cs`). Nothing reflects over a stream. The
+contract type is `T` on `Deserialize<T>`/`Serialize<T>`, and *that* one was never annotated: the
+attribute was simply on the wrong parameter, on a name that reads like a contract type and is not
+one.
 
-The lesson generalises, so it is worth stating plainly: **an `IL3050` count is a count of
-*attributions*, not of dynamic calls.** The offending call sits in a dependency's static
-constructor; ILC reports it once per retained path that forces that cctor. Removing an annotation
-prunes paths, so the count falls without the underlying dynamic call going anywhere — the ten still
-attributed to `TypeModel` are the same call. So this is a genuine reduction in *warnings* and no
-change at all in runtime behaviour, and neither claim should be inflated into the other.
+`DynamicAccess.ContractType` demands constructors, methods, fields, properties **and nested types**,
+so ILC had to keep all of them, on every transport type, transitively. Measured from the ILC
+dependency graph: **1738 reflectable framework members** — 1411 methods, 262 fields, 65 nested types
+— and **not one protobuf-net member among them**. `Stream`'s async internals drag in `Task` and its
+whole promise family, which is why `Task` alone accounts for 269:
 
-Verified by experiment throughout, not assumed: patching the `ThrowEnumException` enum formatting
-(the first suspect, back when this looked unfixable) changed nothing.
+| | members kept |
+| --- | ---: |
+| `System.Threading.Tasks.Task` (+ namespace) | 520 |
+| `System.Array` | 160 |
+| `System.Enum` | 99 |
+| `System.IO.Stream` | 72 |
+| `System.Buffers.ReadOnlySequence<T>` | 50 |
+| `ArraySegment<T>`, `Queue<T>`, `ManualResetEventSlim`, … | the rest |
+
+Removing the three annotations: `AotSmoke` **34 → 20** warnings and **3,685,888 → 2,858,496 bytes**,
+i.e. **808 KB / 22.4%** of the native binary. Round-trip unchanged, corpus differential unchanged.
+
+The 14 warnings this had been producing were `Enum.GetValues(Type)` (×12) and four
+`Array.CreateInstance` overloads — *public statics of `System.Enum` and `System.Array`*, kept
+**reflectable** rather than called, which is why they carried no source location and why they moved
+whenever an unrelated annotation was removed. Three of the four `Array.CreateInstance` overloads
+protobuf-net never calls at all.
+
+**This is the same bug as the `ISerializer<T>` one** in "Fixed on this branch" — an annotation on a
+type parameter that describes *how a serializer is obtained* rather than *what is reflected over* —
+and it survived that cleanup precisely because `TInput` does not look like a contract type
+parameter. Worth a standing rule: before annotating a type parameter, ask what would reflect over
+it. For a transport, nothing does.
+
+Two earlier explanations of these warnings were **wrong**, and are recorded because the second one
+looked convincing:
+
+- *"They arrive through a dependency reached by a static constructor."* No cctor is involved. The
+  origin was a single graph root, `Dataflow analysis for type definition ProtoBuf.Meta.TypeModel`,
+  and a `.cctor` origin would have printed as `TypeModel..cctor()`.
+- *"It is `TypeModel`'s `Type`-based public API"* — the ~28 `[DAM(ContractType)] Type type`
+  parameters on `Deserialize`/`SerializeWithLengthPrefix`/`GetSchema`/etc. Plausible, and false:
+  stripping all 28 moved the total 34 → 33 and left `IL3050` at 21 and the dataflow node at exactly
+  1738 edges. Worth knowing before anyone re-proposes routing that API through a generated switch to
+  fix this — it would not have.
+
+**How to trace this** rather than guess, which is what finally settled it:
+
+```
+dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64 /p:IlcGenerateDgmlFile=true
+```
+
+gives `obj/…/native/AotSmoke.scan.dgml.xml`. Find the node for the offending member
+(`<Node Id="…" Label="Reflectable method: …Enum.GetValues(Type)"`), walk *incoming* `<Link>` edges to
+the root, and read the edge's **`Reason`** attribute — it names the generic parameter responsible.
+Here every one of the 1738 said `Reason="TInput"`, which is the whole answer in one string.
 
 ### 5. `Issue1232` tests fail on `main`
 
@@ -408,35 +452,37 @@ is measurable rather than observable, and the differential suite would pass unch
 Measured from `AotSmoke` (`dotnet publish -c Release -r win-x64`, after clearing `obj`/`bin` — the
 publish is incremental and a second run reports nothing). **The count tracks the fixtures**, so the
 baseline has to be re-measured alongside any change to them; it was 36, then 47, and 49 once the two
-repeated members below were added. It is now **34**.
+repeated members below were added. It is now **20**, and the binary is 808 KB smaller.
 
 | count | id | what it is | | |
 | ---: | --- | --- | --- | --- |
-| 12 | IL3050 | `Enum.GetValues(Type)` | not directly ours | was 18 |
-| 9 | IL3050 | `MakeGenericType` ×4, `Array.CreateInstance` ×4, `MakeArrayType` ×1 | reflective | |
+| 5 | IL3050 | `MakeGenericType` ×4, `MakeArrayType` ×1 | reflective | |
 | 5 | IL2067 | `type` argument not annotated for `Activator.CreateInstance` | reflective | |
 | 3 | IL2070 | `GetInterfaces`/`GetConstructor` on an unannotated `Type` | reflective | |
 | 3 | IL2087 / IL2057 / IL2055 | one each, same paths | reflective | |
 | 2 | IL2091 | a generic path handing `T` to a reflective entry point | **both intractable** | was 11 |
+| 2 | IL3050 | `Enum.GetValues(Type)`, in *generated* code | not ours | was 18 with the 16 below |
 
-Three groups, and the one that was ours is now done.
+**The useful split is by source location, not by id.** A warning carrying a `file:line` is a
+reflective call in protobuf-net's own source; one attributed to a bare type name with no location is
+a member kept *reflectable* by a `DynamicallyAccessedMembers` demand and never called at all. There
+were 14 of the latter, all of them one misplaced annotation — see item 4, which is where the 808 KB
+went. There are now none.
 
-**Not *directly* ours: the 12 `Enum.GetValues(Type)`.** protobuf-net does not call it anywhere —
-confirmed by grepping the whole tree, where the only hit is `AotDifferential`'s own `Filler`. It
-arrives through a dependency reached by a static constructor, which ILC then attributes to whatever
-forced that cctor: `TypeModel` (10) and 2 that land on *generated code*, through an enum member
-resolving its serializer via the model rather than inline.
+So: 18 of the remaining 20 are the runtime model, `DynamicStub` and the auxiliary/list paths
+correctly declaring that they reflect, and 2 are the `IL2091` below.
 
-The wording used to be flatter than this — "no annotation or restructuring on our side removes
-these" — and that was **wrong**, which is worth keeping rather than quietly correcting. Dropping the
-`WriteMessage<T>` annotation took the group 18 → 12: the 4 on `BclHelpers.WriteGuid`/`ReadGuid`
-(item 4) and 2 of the 4 on generated code simply stopped being reported. **The count is of
-attributions, not of dynamic calls** — one call in a cctor, reported once per retained path that
-forces it — so pruning paths reduces it while changing nothing at runtime. Both halves of that
-matter: the reduction is real, and it is not a fix.
+**Not ours: the 2 remaining `Enum.GetValues(Type)`.** protobuf-net does not call it anywhere —
+confirmed by grepping the whole tree, where the only hit is `AotDifferential`'s own `Filler`. Both
+land on *generated code*, through an enum member resolving its serializer via the model rather than
+inline, and both are kept reflectable rather than called.
 
-This is also the group that moves with the fixtures, which is why the baseline must be re-measured
-whenever they change.
+This group was 18 and is the one that moves with the fixtures, so the baseline must be re-measured
+whenever those change. **Two successive explanations of it were wrong** before the ILC dependency
+graph settled it; item 4 records both, the tracing recipe, and the 808 KB that turned out to be
+sitting underneath. The one durable lesson: this class of warning counts *attributions of kept
+metadata*, not dynamic calls, so it responds to annotations rather than to code — which cuts both
+ways, since a falling count can mean either a real fix or merely a pruned path.
 
 **Genuinely reflective: the 9 remaining IL3050, the IL2067/IL2070/IL2057/IL2055.** These are the
 runtime model's dynamic paths — `DynamicStub.SlowGet`, `TypeModel.CreateListInstance`,
@@ -530,12 +576,16 @@ anything further:
   generic utility layer at all — removing the instantiations rather than gating them, and cutting a
   layer of indirection generated code does not need anyway.
 
-Neither is worth doing for warning-count now: at 34 the `IL2091` group is spent, and what is left is
-12 `Enum.GetValues` attributions (not a call of ours) plus 20 the runtime model honestly declares.
-The earlier estimate of a floor "around 25" was pessimistic about `Enum.GetValues` and is superseded;
-**the floor is about 20**, and reaching it means not forcing that static constructor rather than
-annotating anything. Direct emit remains interesting for its own sake — one less layer of
-indirection on the generated path — rather than for this.
+Neither is worth doing for warning-count now. At **20** the `IL2091` group is spent, the misplaced
+annotation is gone, and 18 of what remains is the runtime model, `DynamicStub` and the auxiliary/list
+paths correctly declaring that they reflect. Getting under that means those paths not existing on the
+AOT route at all — the "emit more direct code" idea — rather than any annotation change.
+
+Successive floor estimates here have all been guesses that the next measurement beat: "around 25",
+then "about 20" (reached immediately, by an unrelated fix). So: **no floor is quoted**. The pattern
+worth carrying instead is that every real win so far came from finding an annotation that described
+the wrong thing, and none came from reasoning about the count. Direct emit remains interesting for
+its own sake — one less layer of indirection on the generated path — rather than for this.
 
 ### B. The coverage sweep undercounts generics
 

@@ -527,10 +527,11 @@ attribute applies to the whole assembly, and `AotRefGen`/`AotConformanceTests` l
 into one, so placing it beside them would silently re-level all of them. The golden tests compile
 each input in isolation, which is exactly what is needed.
 
-The level-200 `Guid` path used to cost four AOT warnings that the other forms did not; dropping the
-`WriteMessage<T>` annotation removed them. Item 4 of `docs/aot-findings.md` keeps the reasoning,
-because what it turned out to be about — an `IL3050` counting *attributions* rather than dynamic
-calls — is the generalisable part.
+The level-200 `Guid` path used to be recorded here as costing four AOT warnings the other forms did
+not. It never did: those warnings were kept-reflectable members of `System.Enum`, and ILC merely
+attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They are gone, along
+with the rest of that group — see item 4 of `docs/aot-findings.md`, and treat per-feature warning
+attributions with suspicion generally.
 
 ### Extensible contracts
 
@@ -843,6 +844,20 @@ saturated with `RequiresDynamicCode` members, that single instantiation produced
 Removing it from the serializer interfaces took the `AotSmoke` publish from **200 warnings to 33**.
 Do not reintroduce it there; annotate the reflection entry points instead.
 
+**The same mistake was hiding one interface family over, and cost 808 KB.** `IProtoInput<TInput>`,
+`IProtoOutput<TOutput>` and `IMeasuredProtoOutput<TOutput>` carried `DynamicAccess.ContractType` on
+the **transport** type — `Stream`, `byte[]`, `ReadOnlySequence<byte>`, `IBufferWriter<byte>` — of
+which `TypeModel` implements nine instantiations. Nothing reflects over a stream; the contract is
+`T` on `Deserialize<T>`, and that one was never annotated. Because the mask includes nested types,
+ILC kept **1738 framework members** reflectable (`Task` 520, `Array` 160, `Enum` 99, `Stream` 72, …)
+and *no* protobuf-net members. Removing the three annotations: **34 → 20** warnings and
+**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `docs/aot-findings.md` has the
+measurement and the tracing recipe.
+
+So the standing rule is: **before annotating a type parameter, ask what would reflect over it.** A
+transport, a buffer, a destination — nothing does. `TInput` survived the `ISerializer<T>` cleanup
+purely because the name reads like a contract type.
+
 `Requires*` attributes were tried on the dynamic helpers and **reverted** — they do not remove
 warnings, they relocate them to callers, and the callers here are
 `ProtoReader.State.DeserializeRootImpl<T>`, `TypeModel.CreateInstance<T>` and
@@ -881,18 +896,27 @@ differential suite says nothing about this. That is why `AotSmoke` carries `List
 `List<Customer>` — the repeated enum being the sharp case, since resolution has to find the proxy
 through the model with nothing passed in.
 
-The current count is **34**. The `IL2091` group is spent: the 2 left are `CreateInstance` (whose
+The current count is **20**. The `IL2091` group is spent: the 2 left are `CreateInstance` (whose
 fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need the annotation on every
-consumer). Of the rest, 12 are an `Enum.GetValues(Type)` that protobuf-net never calls — it arrives
-through a dependency's static constructor — and 20 are the runtime model honestly declaring its
-reflection. **An `IL3050` count is a count of attributions, not of dynamic calls**: that group fell
-18 → 12 purely because dropping annotations pruned retained paths, which is a real drop in warnings
-and no change at all at runtime. `docs/aot-findings.md` A2 has the breakdown and puts the floor
-around 20.
+consumer). The other 18 are the runtime model, `DynamicStub` and the auxiliary/list paths correctly
+declaring that they reflect.
+
+**Split them by source location, not by id.** A warning with a `file:line` is a reflective call in
+our source; one attributed to a bare type name with no location is a member kept *reflectable* by a
+`DynamicallyAccessedMembers` demand and never called — which is a metadata-size problem wearing a
+warning's clothes, and is where the 808 KB above was found. There are currently none of the latter.
 
 **Measure with a publish rather than reasoning about them** — clear `obj`/`bin` first, since the
 publish is incremental and a second run reports nothing at all, and re-measure the *baseline*
-whenever a fixture changes, since the count tracks fixtures.
+whenever a fixture changes, since the count tracks fixtures. **Watch the binary size too**, not just
+the count: the two do not move together, and the largest win so far was invisible in the count.
+`docs/aot-findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
+measurement.
+
+When a warning needs attributing, get the graph rather than guessing —
+`/p:IlcGenerateDgmlFile=true`, then walk *incoming* edges from the offending member and read each
+edge's `Reason` attribute, which names the responsible generic parameter. Two confident hypotheses
+were wrong before that was tried; item 4 records both.
 
 ### Surrogates
 

@@ -6,7 +6,12 @@ namespace ProtoBuf
     /// <summary>
     /// Represents the ability to serialize values to an output of type <typeparamref name="TOutput"/>
     /// </summary>
-    public interface IProtoOutput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TOutput>
+    /// <remarks>
+    /// <typeparamref name="TOutput"/> is the <em>transport</em> - see the note on
+    /// <see cref="IProtoInput{TInput}"/> for why it carries no
+    /// <see cref="DynamicallyAccessedMembersAttribute"/>.
+    /// </remarks>
+    public interface IProtoOutput<TOutput>
     {
         /// <summary>
         /// Serialize the provided value
@@ -18,7 +23,7 @@ namespace ProtoBuf
     /// Represents the ability to serialize values to an output of type <typeparamref name="TOutput"/>
     /// with pre-computation of the length
     /// </summary>
-    public interface IMeasuredProtoOutput<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TOutput> : IProtoOutput<TOutput>
+    public interface IMeasuredProtoOutput<TOutput> : IProtoOutput<TOutput>
     {
         /// <summary>
         /// Measure the length of a value in advance of serialization
