@@ -9,7 +9,7 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **3117**, of which 134 dropped with a diagnostic
+seeded: **3117**, of which 125 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
@@ -55,20 +55,26 @@ seeded: **3117**, of which 134 dropped with a diagnostic
   - e.g. google/protobuf/unittest_lite_imports_nonlite.cs
 - generated DTO does not compile: The type or namespace name 'ProtocolBuffers' does not exist in the namespace 'Google' (are you missi… (1)
   - e.g. google/protobuf/unittest_mset.cs
-- generated DTO does not compile: The type or namespace name 'TestRequired' does not exist in the namespace 'ProtobufUnittest' (are yo… (1)
+- generated DTO does not compile: The type or namespace name 'TestAllTypes' does not exist in the namespace 'ProtobufUnittest' (are yo… (1)
   - e.g. google/protobuf/unittest_no_field_presence.cs
 - generated DTO does not compile: The type or namespace name 'TestOptimizedForSize' could not be found (are you missing a using direct… (1)
   - e.g. google/protobuf/unittest_embed_optimize_for.cs
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 2988 |
+| **bytes match ref-emit** | 2993 |
 | **bytes differ** | 0 |
 | one model threw | 0 |
 | both threw (a shape protobuf-net refuses too) | 1 |
-| no instance could be built | 0 |
+| no instance could be built | 4 |
 | no instance can exist (abstract, no sub-types) | 5 |
 | the reference model refused the contract | 0 |
 
-of the 2988 actually compared, **100% match**.
+of the 2993 actually compared, **100% match**.
 
+## What went wrong
+
+- **2x** could not build an instance: NotSupportedException: Cannot dynamically create an instance of type 'System.ReadOnlySpan`1[System.Byte]'. Reason: Cannot create boxed ByRef-like values.
+  - e.g. ProtoBuf.Test.CustomScalarAllocator+HazBlobish, ProtoBuf.Test.CustomScalarAllocator+Blobish
+- **2x** could not build an instance: NotSupportedException: Cannot dynamically create an instance of type 'System.Span`1[System.Byte]'. Reason: Cannot create boxed ByRef-like values.
+  - e.g. ProtoBuf.Test.CustomScalarAllocator+HazMemoryBlobish, ProtoBuf.Test.CustomScalarAllocator+MemoryBlobish

@@ -7,8 +7,8 @@ seedable `[ProtoContract]` types: **1392**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **117** of 1392 (92% emitted)
-of which dropped only by cascade: 32
+contracts dropped: **108** of 1392 (93% emitted)
+of which dropped only by cascade: 27
 
 | count | reason |
 | ---: | --- |
@@ -21,9 +21,8 @@ of which dropped only by cascade: 32
 | 3 | PBN2002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
 | 3 | PBN2002 it is reached at more than one compatibility level, and protobuf-net refuses that too: "must use a single compatibility level ... this usually means it is being used in different contexts in the same model" |
 | 2 | PBN2002 the type could not be resolved. If it is produced by another source generator in this same project - a .proto compiled by protobuf-net.BuildTools, say - then it is not visible here: generators do not see each other's output. Move the generated types to a referenced project |
-| 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.CustomSerializers.CustomSerializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
-| 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Test.CustomScalarAllocator.CustomSerializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
 | 2 | PBN2002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
+| 2 | PBN2003 member '…' whose element type is served by a hand-written serializer whose category cannot be determined here; the unary form is emitted, but the element form needs the category baked into the collection's features and so cannot defer it is not supported yet |
 | 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
 | 1 | PBN2001 member '…' has unsupported type '…' |
 | 1 | PBN2002 it declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
@@ -33,7 +32,6 @@ of which dropped only by cascade: 32
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with IsPacked, which protobuf-net refuses: "NullWrappedValue cannot be used with packed values" |
 | 1 | PBN2002 member '…' combines [NullWrappedValue] with IsRequired, which protobuf-net refuses: "NullWrappedValue cannot be used with required values" |
 | 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
-| 1 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Test.Issues.Issue598.CustomType.Serializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
 | 1 | PBN2002 Field 31 is reserved and cannot be used for data member '…' (iz 31), which protobuf-net refuses too |
 | 1 | PBN2002 Field 32 is reserved and cannot be used for data member '…' (iz 32), which protobuf-net refuses too |
 | 1 | PBN2002 Field '…' is reserved and cannot be used for data member 33 (iz B), which protobuf-net refuses too |
@@ -49,7 +47,6 @@ of which dropped only by cascade: 32
 | 1 | PBN2002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
 | 1 | PBN2002 an interface contract needs [ProtoInclude] for its implementations |
 | 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |
-| 1 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Issues.Issue1083.WrappingStruct.WrappingStructSerializer))] whose category cannot be determined here - its Features are a property this generator would have to execute, and its declaration is not in this compilation. Add [ProtoContract(IsScalar = true)] if that serializer declares CategoryScalar, or IsScalar = false if it declares CategoryMessage is not supported yet |
 
 Member types we could not handle:
 
