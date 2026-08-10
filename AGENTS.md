@@ -1023,11 +1023,32 @@ differential suite says nothing about this. That is why `AotSmoke` carries `List
 `List<Customer>`, and the three map members — the repeated enum and the repeated *map value* being
 the sharp cases, since resolution has to find the proxy through the model with nothing passed in.
 
-The current count is **21**. The `IL2091` group is spent: the 3 left are `CreateInstance` ×2 (whose
-fallback is genuinely live — `ActivatorCreate<T>` reflects, and a generated contract only implements
-`IFactory<T>` under `SkipConstructor`) and `SubTypeState<T>.Cast` (which would need the annotation on
-every consumer). The other 18 are the runtime model, `DynamicStub` and the auxiliary/list paths
-correctly declaring that they reflect.
+**The element type is not a contract type either**, and this was the last big one. The public
+repeated and map factories annotated their *element* — `T`, `TKey`, `TValue` — with
+`DynamicAccess.ContractType`, so every collection or map member demanded a fully-reflectable element.
+Nothing inside those serializers reflects over it: the element's serializer is passed in by the
+caller or resolved through the `IsDynamicCodeSupported`-gated arm, which ILC substitutes away. The
+*class-level* annotations were removed when that gate went in; the **public factories that name them
+were missed**, and those are exactly what generated code calls. Removing them: **39 → 25 warnings and
+−385 KB (−8.9%)**, with nothing relocated.
+
+`TCollection` keeps its `DynamicAccess.Activated` on the same methods, and that is the rule working
+rather than an exception to it — `ActivatorCreate<T>()` genuinely constructs the collection. Two
+parameters of one method, opposite answers, because the question is always "what would reflect over
+*this* one".
+
+**The enum connection is worth knowing, because it disguises the cause.** Reflection returns
+*inherited statics*, so `typeof(SomeEnum).GetMethods()` includes `Enum.GetValues` and `Enum.Parse` —
+both `RequiresDynamicCode`. So any `PublicMethods` demand that lands on an enum type parameter emits
+`IL3050` naming `Enum.GetValues`, which reads as an enum-serialization problem and is really an
+annotation-scope problem. It was the element annotation on `List<Status>`, not the enum member.
+
+The current count is **25**, measured with the `.proto` DTO tree in the fixture (it was 21 before
+that was added — the two are not comparable, since the count tracks fixtures). Of those, 6 are
+`Enum.GetValues` from the annotations that remain on the resolution entry points, 5 are
+`MakeGenericType`/`MakeArrayType` on the runtime-model and `DynamicStub` paths, and the `IL2091`
+group is still the spent trio: `CreateInstance` ×2 (whose fallback is genuinely live) and
+`SubTypeState<T>.Cast` (which would need the annotation on every consumer).
 
 **Watch bytes as well as warnings — they do not move together.** Two changes of identical shape:
 removing the transport annotation was −14 warnings and **−808 KB**; removing the `MapSerializer`
