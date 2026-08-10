@@ -1244,14 +1244,28 @@ namespace ProtoBuf.BuildTools.Generators
                     // member by its own wire type rather than as a sub-message. Undetermined is not a
                     // problem here: the referenced contract refuses itself for the same reason, and
                     // this member is dropped by cascade
-                    var subScalar = subSerializer is not null && subSerializer != "null"
-                        && ResolveExternalScalar(compilation, message!) == true;
-                    if (subScalar && (shape.Repeated.Factory is not null || shape.Map.Factory is not null))
+                    var hasExternal = subSerializer is not null && subSerializer != "null";
+                    var subCategory = hasExternal ? ResolveExternalScalar(compilation, message!) : null;
+                    var subScalar = hasExternal && subCategory == true;
+                    // the category could not be established - Features is a property, and this
+                    // serializer's declaration is not in this compilation. Rather than refuse, defer
+                    // the framing to WriteAny/ReadAny, which switch on it at run time
+                    var subDynamic = hasExternal && subCategory is null && HasExternalSerializer(message!);
+                    if ((subScalar || subDynamic)
+                        && (shape.Repeated.Factory is not null || shape.Map.Factory is not null))
                     {
+                        // The unary form defers framing to WriteAny/ReadAny, which pick it from the
+                        // serializer at run time. An *element* cannot: the element's wire type goes
+                        // into the collection's features, which are baked into the call, so a
+                        // category that is scalar - or simply unknown - has nowhere to go. Emitting
+                        // the message form regardless is what produced "Invalid wire-type String"
+                        // on Issue1083's List<WrappingStruct>.
                         return Option(diagnostics, atMember, name,
-                            $"member '{symbol.Name}' whose element type is served by a CategoryScalar "
-                            + "serializer; the unary form is emitted, but there is no derived "
-                            + "reference for the element form yet");
+                            $"member '{symbol.Name}' whose element type is served by a "
+                            + (subScalar ? "CategoryScalar serializer" : "hand-written serializer "
+                                + "whose category cannot be determined here")
+                            + "; the unary form is emitted, but the element form needs the category "
+                            + "baked into the collection's features and so cannot defer it");
                     }
 
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
@@ -1261,7 +1275,7 @@ namespace ProtoBuf.BuildTools.Generators
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
-                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, subSerializerIsScalar: subScalar, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, subSerializerIsScalar: subScalar, subSerializerDynamic: subDynamic, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else
                 {
@@ -1311,21 +1325,17 @@ namespace ProtoBuf.BuildTools.Generators
                         + $"declares Category{(observed ? "Scalar" : "Message")}");
                 }
                 var isScalar = declaredScalar ?? fromSource;
-                if (isScalar is null)
-                {
-                    return Option(diagnostics, at, name,
-                        $"[ProtoContract(Serializer = typeof({Simplify(externalSerializer.ToDisplayString())}))] "
-                        + "whose category cannot be determined here - its Features are a property this "
-                        + "generator would have to execute, and its declaration is not in this "
-                        + "compilation. Add [ProtoContract(IsScalar = true)] if that serializer "
-                        + "declares CategoryScalar, or IsScalar = false if it declares CategoryMessage");
-                }
-
+                // An undetermined category used to drop the contract. It no longer needs to: this
+                // type emits no serializer body of its own - the services type just hands the
+                // hand-written one out - and the only thing the category decided was how a *member*
+                // of this type is framed, which WriteAny/ReadAny now decide at run time from the
+                // serializer's real Features. Members set SubSerializerDynamic for that.
                 return new ProtoContractPlan(
                     Qualified(compilation, type),
                     default, isValueType,
                     externalSerializerTypeName: Qualified(compilation, externalSerializer),
-                    externalSerializerIsScalar: isScalar.Value);
+                    externalSerializerIsScalar: isScalar == true,
+                    externalSerializerCategoryKnown: isScalar is not null);
             }
 
             // the whole hierarchy has to be in the model, since every type in it routes through the
@@ -1483,6 +1493,25 @@ namespace ProtoBuf.BuildTools.Generators
                 return stated ?? ReadCategoryFromSource(compilation, serializer);
             }
             return null;
+        }
+
+        /// <summary>Whether the type declares a hand-written serializer at all.</summary>
+        /// <remarks>
+        /// <see cref="ResolveExternalScalar"/> returns null both for "no such serializer" and for
+        /// "there is one, but its category cannot be determined here", and those need opposite
+        /// treatment - the first is not our business, the second is what dynamic framing exists for.
+        /// </remarks>
+        private static bool HasExternalSerializer(INamedTypeSymbol type)
+        {
+            foreach (var attribute in type.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != ProtoContractAttributeName) continue;
+                foreach (var argument in attribute.NamedArguments)
+                {
+                    if (argument.Key == "Serializer" && argument.Value.Value is INamedTypeSymbol) return true;
+                }
+            }
+            return false;
         }
 
         private static bool? ReadCategoryFromSource(Compilation compilation, INamedTypeSymbol serializer)

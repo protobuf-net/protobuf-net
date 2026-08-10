@@ -226,7 +226,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoDataFormat dataFormat = ProtoDataFormat.Default, bool isRequired = false,
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             int declaredCompatibilityLevel = 200,
-            bool isReadOnly = false, string? subSerializer = null, bool subSerializerIsScalar = false,
+            bool isReadOnly = false, string? subSerializer = null, bool subSerializerIsScalar = false, bool subSerializerDynamic = false,
             string? writeCondition = null, string? specifiedMember = null,
             string? accessorField = null,
             ProtoDataFormat mapKeyFormat = ProtoDataFormat.Default,
@@ -242,6 +242,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             SpecifiedMember = specifiedMember;
             SubSerializer = subSerializer;
             SubSerializerIsScalar = subSerializerIsScalar;
+            SubSerializerDynamic = subSerializerDynamic;
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
             DeclaredCompatibilityLevel = declaredCompatibilityLevel;
@@ -406,6 +407,19 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// member is framed by that serializer's own wire type rather than as a sub-message.
         /// </summary>
         public bool SubSerializerIsScalar { get; }
+
+        /// <summary>
+        /// The member's type has a hand-written serializer whose <em>category</em> could not be
+        /// established at compile time, so the framing is deferred to the serializer itself.
+        /// </summary>
+        /// <remarks>
+        /// <c>Features</c> is a property, so a generator cannot execute it; where the serializer
+        /// arrives through metadata and carries no <c>IsScalar</c> annotation there is no way to
+        /// know whether the member is a sub-message or a bare scalar. <c>WriteAny</c>/<c>ReadAny</c>
+        /// switch on the serializer's real category at run time, which is exactly that decision made
+        /// a little later — so it need not be refused at all.
+        /// </remarks>
+        public bool SubSerializerDynamic { get; }
 
         /// <summary>
         /// The <c>{Name}Specified</c> property or <c>ShouldSerialize{Name}()</c> call that decides
@@ -638,6 +652,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoExtensibleKind extensible = ProtoExtensibleKind.None, string? surrogateTypeName = null,
             string? toSurrogate = null, string? toUnderlying = null,
             string? externalSerializerTypeName = null, bool externalSerializerIsScalar = false,
+            bool externalSerializerCategoryKnown = true,
             string? surrogateSerializer = null,
             bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default,
             bool isAbstract = false, bool isGroup = false, bool ignoreUnknownSubTypes = false)
@@ -649,6 +664,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             UsesConstructorAccessor = usesConstructorAccessor;
             ExternalSerializerTypeName = externalSerializerTypeName;
             ExternalSerializerIsScalar = externalSerializerIsScalar;
+            ExternalSerializerCategoryKnown = externalSerializerCategoryKnown;
             SurrogateSerializer = surrogateSerializer;
             SurrogateTypeName = surrogateTypeName;
             ToSurrogate = toSurrogate;
@@ -788,6 +804,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </remarks>
         public bool ExternalSerializerIsScalar { get; }
 
+        /// <summary>
+        /// Whether the hand-written serializer's category was established at compile time.
+        /// </summary>
+        /// <remarks>
+        /// When it was not, members frame through <c>WriteAny</c>/<c>ReadAny</c> instead, and there
+        /// is nothing to assert at run time — the <c>Debug.Assert</c> exists to catch a *stated*
+        /// <c>IsScalar</c> that contradicts the serializer, and here nothing was stated.
+        /// </remarks>
+        public bool ExternalSerializerCategoryKnown { get; }
+
         public string? SurrogateTypeName { get; }
 
         /// <summary>
@@ -823,6 +849,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && ToSurrogate == other.ToSurrogate && ToUnderlying == other.ToUnderlying
                 && ExternalSerializerTypeName == other.ExternalSerializerTypeName
                 && ExternalSerializerIsScalar == other.ExternalSerializerIsScalar
+                && ExternalSerializerCategoryKnown == other.ExternalSerializerCategoryKnown
                 && SurrogateSerializer == other.SurrogateSerializer
                 && IsGroup == other.IsGroup && IgnoreUnknownSubTypes == other.IgnoreUnknownSubTypes;
 

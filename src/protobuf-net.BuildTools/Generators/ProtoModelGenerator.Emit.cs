@@ -455,6 +455,16 @@ namespace ProtoBuf.BuildTools.Generators
                         break;
                     // a scalar-category hand-written serializer: the member is not a sub-message at
                     // all, so it is read straight through the serializer with no ReadMessage framing
+                    // ...and where the category could not be established at compile time, ReadAny
+                    // makes the same choice at run time from the serializer's own Features - it
+                    // switches to ReadMessage for a message and serializer.Read for a scalar, which
+                    // is exactly the branch we would otherwise have had to bake in
+                    case ProtoMemberKind.Message when member.SubSerializerDynamic:
+                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        Line(sb, indent + 3, $"tmp{number} = state.ReadAny<{member.TypeName}>(default, tmp{number}, "
+                            + $"{SubSerializer(member)});");
+                        Line(sb, indent + 3, Assign(contract, member, instance, target, $"tmp{number}"));
+                        break;
                     case ProtoMemberKind.Message when member.SubSerializerIsScalar:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
                         Line(sb, indent + 3, $"tmp{number} = {SubSerializer(member)}.Read(ref state, tmp{number});");
@@ -713,7 +723,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // type, not as a sub-message. The wire type comes off the serializer's Features
                     // at runtime rather than being baked in: it is the serializer's to declare, and
                     // GetWireType() is public precisely for this
-                    case ProtoMemberKind.Message when member.SubSerializerIsScalar:
+                    case ProtoMemberKind.Message when member.SubSerializerIsScalar || member.SubSerializerDynamic:
                         // WriteAny(int, T, ISerializer<T>) takes the features off the serializer and
                         // frames accordingly, which is exactly what is wanted and is *public* - the
                         // GetWireType extension that would let us write the header ourselves lives on
@@ -1047,7 +1057,12 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitExternalCategoryAsserts(StringBuilder sb, int indent, ProtoModelPlan plan)
         {
             var external = plan.Contracts
-                .Where(static x => x.ExternalSerializerTypeName is not null).ToList();
+                // only where the category was actually established: the assert exists to catch a
+                // *stated* IsScalar that contradicts the serializer, and where nothing was stated
+                // there is nothing to contradict - the framing is decided from these same Features
+                // at run time instead
+                .Where(static x => x.ExternalSerializerTypeName is not null
+                    && x.ExternalSerializerCategoryKnown).ToList();
             if (external.Count == 0) return;
 
             Line(sb, indent, $"public {ServicesTypeName}()");

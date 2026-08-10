@@ -761,9 +761,12 @@ Three things are genuinely ours rather than matches:
   compiled ref-emit path, which throws on use; only the reflection path handles it;
 - a **`CategoryScalar` hand-written serializer** as a collection element or map value — the unary
   form is emitted, that one has no derived reference yet;
-- an **external serializer whose category cannot be established** — refused with advice to state
-  `[ProtoContract(IsScalar = …)]`, which is a real capability gap for a serializer that arrives
-  through metadata even though the fix is one attribute.
+- a **hand-written serializer as a collection element or map value** whose category is scalar *or*
+  simply unknown. The unary form defers framing to the serializer (below); an element cannot, because
+  the element's wire type is baked into the collection's features at the call site. Emitting the
+  message form regardless is what produced `Invalid wire-type String` on `Issue1083`'s
+  `List<WrappingStruct>` — so this one is refused, and the diagnostic says which of the two reasons
+  applies.
 
 Everything else that is refused either matches ref-emit or is a deliberate AOT decision
 (`System.Type`), and each says which in its diagnostic. Two entries that used to be here went the
@@ -1128,7 +1131,18 @@ which ref-emit obtains by instantiating the serializer and a generator cannot. S
    into metadata. The only route that works for a serializer in a compiled reference.
 2. **the `Features` declaration**, when the serializer is in this compilation: it is nearly always an
    expression body over constants (`CategoryScalar | WireTypeVarint`), which Roslyn folds.
-3. otherwise the contract is **refused**, with a diagnostic naming `IsScalar` as the fix.
+3. otherwise the framing is **deferred to run time**: the member emits
+   `state.WriteAny<T>(n, value, serializer)` and `state.ReadAny<T>(default, value, serializer)`, both
+   of which switch on the serializer's real `Features` — `WriteMessage`/`ReadMessage` for a message,
+   `serializer.Write`/`serializer.Read` for a scalar. That is the identical decision, made a little
+   later, so there is nothing to refuse.
+
+   This is worth remembering as a *pattern*, not just a fix: where the library already has a public
+   API that makes a decision at run time, a compile-time generator does not have to make it at all.
+   The write shape was already `WriteAny` for the known-scalar case; only the read needed a new form.
+   Verified byte-identical to ref-emit for **both** categories by the corpus differential, which is
+   the only reason to believe it — `DynamicCategory.input.cs` pins both in a fixture, using a
+   `Features` expression Roslyn cannot fold so that the undetermined path is genuinely taken.
 
 Where both routes answer and disagree, that is reported too — a stale annotation would otherwise
 change the framing on the wire silently.
