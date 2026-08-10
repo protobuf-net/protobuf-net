@@ -878,6 +878,17 @@ Two members earn their place for reasons that are not obvious from reading them:
   prefix over them.
 - `Dictionary<int, List<int>>` and `List<Status>` are the two shapes that pass **no** serializer and
   resolve one from the model through `ISerializerProxy`, i.e. the arm `ResolveSerializer` gates.
+- the **`.proto`-generated DTO tree** (`FileDescriptorSet`, from `src/AotSchemaDtos`) is the only
+  member here that is not hand-written, and it reaches shapes the rest do not: getter-only
+  collections restored through backing-field accessors, `ShouldSerialize*` on nearly every member,
+  `IExtensible` throughout, and a type that nests inside itself. Everything else in the repo tested
+  that path on a **JIT** runtime only.
+
+  **It has to be a separate project**, and that is a constraint worth knowing before trying to
+  simplify it: source generators all run against the same input compilation and never see each
+  other's output, so a `[ProtoModel]` in the same project as the `.proto` gets an *error symbol* for
+  the seed — one with a name but no attributes, which used to be reported as "not marked
+  `[ProtoContract]`". `PBN2002` now recognises `TypeKind.Error` and names the fix.
 
 The feature sweep is **complete** as of this branch: every generator feature that was listed as
 natively unexercised now has a member here — the immutable *reference* families, both callback

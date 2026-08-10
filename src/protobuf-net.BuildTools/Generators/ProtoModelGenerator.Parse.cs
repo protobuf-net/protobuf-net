@@ -111,6 +111,23 @@ namespace ProtoBuf.BuildTools.Generators
 
                 locations[key] = PlanLocation.From(type);
 
+                // An unresolved type - and the overwhelmingly likely cause is worth saying outright,
+                // because the default explanation is actively misleading. Source generators all run
+                // against the *same* input compilation and never see each other's output, so a DTO
+                // produced by ProtoFileGenerator from a .proto in this same project is invisible
+                // here: the seed arrives as an error symbol with a name but no attributes, and the
+                // ordinary path then reports "it is not marked [ProtoContract]" about a type whose
+                // generated source says exactly that. Probed, not guessed.
+                if (type.TypeKind == TypeKind.Error)
+                {
+                    Contract(diagnostics, locations[key], key,
+                        "the type could not be resolved. If it is produced by another source generator "
+                        + "in this same project - a .proto compiled by protobuf-net.BuildTools, say - "
+                        + "then it is not visible here: generators do not see each other's output. "
+                        + "Move the generated types to a referenced project");
+                    continue;
+                }
+
                 // an enum is a contract in its own right - [ProtoContract] allows it, and ref-emit
                 // serves it with the same ISerializerProxy<TEnum> a repeated enum member uses,
                 // rather than an ISerializer<TEnum> body of its own

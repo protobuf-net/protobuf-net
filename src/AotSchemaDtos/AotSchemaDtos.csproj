@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- DTOs generated from a .proto by protobuf-net.BuildTools' ProtoFileGenerator, in their own
+       assembly so that AotSmoke's [ProtoModel] can actually see them.
+
+       That separation is a requirement, not tidiness: source generators all run against the same
+       input compilation and never observe each other's output, so a model seeded with a type
+       generated from a .proto in the *same* project finds nothing. The generator says so now
+       (PBN2002), but the fix is this project layout. -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- the generated DTOs are not ours to tidy -->
+    <NoWarn>$(NoWarn);CS1591;CS0612;CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="descriptor.proto" />
+    <AdditionalFiles Include="descriptor.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

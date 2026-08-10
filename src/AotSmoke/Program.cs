@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
+using Google.Protobuf.Reflection;
 
 namespace ProtoBuf.AotSmoke;
 
@@ -480,6 +481,12 @@ public class Blank
 [ProtoModel(AllowParseableTypes = true)]
 [ProtoSerializable(typeof(Order))]
 [ProtoSerializable(typeof(NoteV2))]
+// A .proto-generated DTO tree, from descriptor.proto - the schema every other schema
+// imports, and about as unlike a hand-written contract as protobuf-net produces: getter-only
+// collections reached through their backing fields, ShouldSerialize* on nearly every member,
+// IExtensible throughout, recursive nesting, and enums. Nothing else here proves that a
+// schema-generated model survives ILC rather than merely matching ref-emit on a JIT runtime.
+[ProtoSerializable(typeof(global::Google.Protobuf.Reflection.FileDescriptorSet))]
 public partial class SmokeModel : TypeModel
 {
 }
@@ -720,6 +727,11 @@ internal static class Program
         Check(ref failures, "unknown field preserved", BitConverter.ToString(v2Bytes),
             BitConverter.ToString(again.ToArray()));
 
+        // The .proto-generated half: a descriptor tree built by hand, round-tripped, and compared by
+        // re-serializing. Worth doing by shape rather than by field-by-field assertion, because the
+        // point is the *closure* - FileDescriptorSet reaches some thirty generated contracts.
+        failures += CheckDescriptors(model);
+
         // and the bytes must be stable across a second pass
         using var second = new MemoryStream();
         model.Serialize(second, clone);
@@ -727,6 +739,88 @@ internal static class Program
             BitConverter.ToString(second.ToArray()));
 
         Console.WriteLine(failures == 0 ? "AOT smoke test PASSED" : $"AOT smoke test FAILED ({failures})");
+        return failures;
+    }
+
+    /// <summary>
+    /// Round-trip a <c>descriptor.proto</c> tree through the generated model.
+    /// </summary>
+    /// <remarks>
+    /// These DTOs exercise shapes the hand-written contracts here do not: every collection is
+    /// getter-only (so the read goes through an <c>[UnsafeAccessor]</c> on the backing field), every
+    /// optional scalar carries <c>ShouldSerialize{Name}()</c>, every message implements
+    /// <c>IExtensible</c>, and <c>DescriptorProto</c> nests inside itself.
+    /// </remarks>
+    private static int CheckDescriptors(SmokeModel model)
+    {
+        var failures = 0;
+
+        var set = new FileDescriptorSet();
+        var file = new FileDescriptorProto
+        {
+            Name = "smoke.proto",
+            Package = "smoke",
+            Syntax = "proto3",
+        };
+        file.Dependencies.Add("google/protobuf/any.proto");
+
+        var message = new DescriptorProto { Name = "Order" };
+        message.Fields.Add(new FieldDescriptorProto
+        {
+            Name = "id",
+            Number = 1,
+            type = FieldDescriptorProto.Type.TypeInt32,
+            label = FieldDescriptorProto.Label.LabelOptional,
+            JsonName = "id",
+        });
+        // an explicit zero, which only survives because ShouldSerializeNumber() says it was set
+        message.Fields.Add(new FieldDescriptorProto
+        {
+            Name = "zero",
+            Number = 0,
+            type = FieldDescriptorProto.Type.TypeString,
+        });
+        // ...and the recursive case
+        message.NestedTypes.Add(new DescriptorProto { Name = "Line" });
+
+        var @enum = new EnumDescriptorProto { Name = "Status" };
+        @enum.Values.Add(new EnumValueDescriptorProto { Name = "UNKNOWN", Number = 0 });
+        @enum.Values.Add(new EnumValueDescriptorProto { Name = "OPEN", Number = 1 });
+
+        file.MessageTypes.Add(message);
+        file.EnumTypes.Add(@enum);
+        set.Files.Add(file);
+
+        using var ms = new MemoryStream();
+        model.Serialize(ms, set);
+        var bytes = ms.ToArray();
+        Console.WriteLine($"descriptor set: {bytes.Length} bytes");
+
+        ms.Position = 0;
+        var clone = model.Deserialize<FileDescriptorSet>(ms);
+
+        Check(ref failures, "descriptor file count", 1, clone.Files.Count);
+        var cloned = clone.Files.Count == 1 ? clone.Files[0] : null;
+        Check(ref failures, "descriptor file name", "smoke.proto", cloned?.Name);
+        Check(ref failures, "descriptor package", "smoke", cloned?.Package);
+        Check(ref failures, "descriptor dependency", "google/protobuf/any.proto",
+            cloned?.Dependencies.Count == 1 ? cloned.Dependencies[0] : null);
+        Check(ref failures, "descriptor message", "Order",
+            cloned?.MessageTypes.Count == 1 ? cloned.MessageTypes[0].Name : null);
+        Check(ref failures, "descriptor field type", FieldDescriptorProto.Type.TypeInt32,
+            cloned?.MessageTypes[0].Fields.Count == 2 ? cloned.MessageTypes[0].Fields[0].type : default);
+        Check(ref failures, "descriptor nested type", "Line",
+            cloned?.MessageTypes[0].NestedTypes.Count == 1
+                ? cloned.MessageTypes[0].NestedTypes[0].Name : null);
+        Check(ref failures, "descriptor enum value", "OPEN",
+            cloned?.EnumTypes.Count == 1 && cloned.EnumTypes[0].Values.Count == 2
+                ? cloned.EnumTypes[0].Values[1].Name : null);
+
+        using var again = new MemoryStream();
+        model.Serialize(again, clone);
+        Check(ref failures, "descriptor round-trip bytes", BitConverter.ToString(bytes),
+            BitConverter.ToString(again.ToArray()));
+
         return failures;
     }
 

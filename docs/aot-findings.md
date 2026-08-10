@@ -492,6 +492,40 @@ for them — `google/cloud/language/v1`'s `PartOfSpeech.case` is the field that 
 `Keywords.input.cs` now pins it, including the negative case (`value`, contextual, must not be
 escaped) and the auto-tuple path.
 
+### 15. A `.proto`-generated DTO tree works natively — and costs 18 warnings that are not calls
+
+`src/AotSchemaDtos` compiles `descriptor.proto` to DTOs; `AotSmoke` references it and round-trips a
+populated `FileDescriptorSet`. It **passes under native AOT**, which is the headline: schema-generated
+contracts were previously only known to match ref-emit on a JIT runtime.
+
+Two things came out of it.
+
+**Generators cannot see each other's output**, so the DTOs need their own assembly. All source
+generators run against the same input compilation, so a `[ProtoModel]` seeded with a type that
+`ProtoFileGenerator` produces from a `.proto` in the *same* project finds nothing. Worse, the seed
+arrives as an **error symbol with a name but no attributes**, so the old diagnostic said "it is not
+marked `[ProtoContract]`" about a type whose generated source says exactly that. `PBN2002` now
+recognises `TypeKind.Error` and says what is really wrong, naming the project-layout fix. Probed by
+building it that way, not assumed.
+
+**The warning count went 21 → 39, all `IL3050`, and none of them is a call.** The graph
+(`/p:IlcGenerateDgmlFile=true`) shows `System.Enum.GetValues(Type)` and friends as *Reflectable
+method* nodes reached from "Dataflow analysis for `…ISerializer<Order>.Read` — **reason: `T`**". That
+is the same category as the 808 KB transport finding: members kept **reflectable** by a
+`DynamicallyAccessedMembers` demand and never invoked, i.e. a metadata-size problem wearing a
+warning's clothes. It is consistent with the round-trip passing.
+
+The mechanism is worth stating because it is not obvious: reflection returns **inherited statics**, so
+`typeof(SomeEnum).GetMethods()` includes `Enum.GetValues`, `Enum.Parse` and the rest — and those carry
+`RequiresDynamicCode`. So *any* `PublicMethods` demand that lands on an enum type parameter keeps
+them, and reports one `IL3050` per site. descriptor.proto did not introduce this; it has many
+contracts, and the count scales with contracts.
+
+Not yet done: identifying **which** annotation the demand comes from, and whether it can be narrowed
+(the generated `GetSerializer<T>` override restates `DynamicAccess.ContractType`, which includes
+`PublicMethods`, and is the first thing to check). Worth a size measurement before and after, since
+the count and the bytes have never moved together.
+
 ## Next steps
 
 The candidate list as it stands, roughly in the order worth taking them. Recorded so the ordering

@@ -22,6 +22,9 @@
 
   <ItemGroup>
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <!-- DTOs generated from descriptor.proto, in their own assembly because a generator cannot see
+         another generator's output in the same compilation -->
+    <ProjectReference Include="../AotSchemaDtos/AotSchemaDtos.csproj" />
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
