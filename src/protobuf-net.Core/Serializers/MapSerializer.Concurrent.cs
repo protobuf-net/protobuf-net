@@ -12,7 +12,7 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a map serializer that operates on concurrent dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<TCollection, TKey, TValue> CreateConcurrentDictionary<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<TCollection, TKey, TValue> CreateConcurrentDictionary<TCollection, TKey, TValue>()
             where TCollection : ConcurrentDictionary<TKey, TValue>
             => SerializerCache<ConcurrentDictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
     }

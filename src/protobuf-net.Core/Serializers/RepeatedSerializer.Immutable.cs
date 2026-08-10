@@ -13,52 +13,52 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a serializer that operates on immutable arrays</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableArray<T>, T> CreateImmutableArray<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableArray<T>, T> CreateImmutableArray<T>()
             => SerializerCache<ImmutableArraySerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableList<T>, T> CreateImmutableList<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableList<T>, T> CreateImmutableList<T>()
             => SerializerCache<ImmutableListSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableList<T>, T> CreateImmutableIList<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableList<T>, T> CreateImmutableIList<T>()
             => SerializerCache<ImmutableIListSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable queues</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableQueue<T>, T> CreateImmutableQueue<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableQueue<T>, T> CreateImmutableQueue<T>()
             => SerializerCache<ImmutableQueueSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable queues</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableQueue<T>, T> CreateImmutableIQueue<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableQueue<T>, T> CreateImmutableIQueue<T>()
             => SerializerCache<ImmutableIQueueSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable stacks</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableStack<T>, T> CreateImmutableStack<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableStack<T>, T> CreateImmutableStack<T>()
             => SerializerCache<ImmutableStackSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable stacks</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableStack<T>, T> CreateImmutableIStack<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableStack<T>, T> CreateImmutableIStack<T>()
             => SerializerCache<ImmutableIStackSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableHashSet<T>, T> CreateImmutableHashSet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableHashSet<T>, T> CreateImmutableHashSet<T>()
             => SerializerCache<ImmutableHashSetSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<ImmutableSortedSet<T>, T> CreateImmutableSortedSet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<ImmutableSortedSet<T>, T> CreateImmutableSortedSet<T>()
             => SerializerCache<ImmutableSortedSetSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IImmutableSet<T>, T> CreateImmutableISet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IImmutableSet<T>, T> CreateImmutableISet<T>()
             => SerializerCache<ImmutableISetSerializer<T>>.InstanceField;
 
 

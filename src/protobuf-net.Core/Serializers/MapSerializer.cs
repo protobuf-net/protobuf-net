@@ -15,18 +15,18 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<Dictionary<TKey, TValue>, TKey, TValue> CreateDictionary<TKey, TValue>()
             => SerializerCache<DictionarySerializer<TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<TCollection, TKey, TValue> CreateDictionary<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, TKey, TValue>()
             where TCollection : IDictionary<TKey, TValue>
             => SerializerCache<DictionarySerializer<TCollection, TKey, TValue>>.InstanceField;
 
         /// <summary>Create a map serializer that operates on dictionaries</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TKey, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TValue>()
+        public static MapSerializer<IReadOnlyDictionary<TKey, TValue>, TKey, TValue> CreateIReadOnlyDictionary<TKey, TValue>()
             => SerializerCache<DictionaryOfIReadOnlyDictionarySerializer<TKey, TValue>>.InstanceField;
     }
 
