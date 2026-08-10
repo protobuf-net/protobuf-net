@@ -106,7 +106,7 @@ namespace ProtoBuf.BuildTools.Generators
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var type = pending.Dequeue();
-                var key = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var key = Qualified(compilation, type);
                 if (!visited.Add(key)) continue;
 
                 locations[key] = PlanLocation.From(type);
@@ -116,7 +116,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // rather than an ISerializer<TEnum> body of its own
                 if (type.TypeKind == TypeKind.Enum)
                 {
-                    if (GetEnumPlan(type) is { } enumPlan) enums[key] = enumPlan;
+                    if (GetEnumPlan(compilation, type) is { } enumPlan) enums[key] = enumPlan;
                     else Contract(diagnostics, locations[key], key, "its underlying type is not supported");
                     continue;
                 }
@@ -149,7 +149,8 @@ namespace ProtoBuf.BuildTools.Generators
                 var nameSpace = model.ContainingNamespace is { IsGlobalNamespace: false } ns
                     ? ns.ToDisplayString() : null;
                 plan = new ProtoModelPlan(nameSpace, model.Name, new(contracts),
-                    annotateTrimming: SupportsTrimAnnotations(compilation), enums: new(enumPlans));
+                    annotateTrimming: SupportsTrimAnnotations(compilation), enums: new(enumPlans),
+                    aliases: new(DeclaredAliases(compilation).ToArray()));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
@@ -242,10 +243,21 @@ namespace ProtoBuf.BuildTools.Generators
             var at = PlanLocation.From(type);
             var name = type.ToDisplayString();
 
+            // Before anything else: can C# name this type at all? If two referenced assemblies
+            // declare it and neither is aliased, there is no syntax that selects one - so emitting
+            // *anything* produces CS0433 in a file the consumer did not write, which is the worst
+            // error to hand someone. Refusing and naming the fix is strictly better. Every message
+            // type in the model arrives here as a contract, so this one check covers them all.
+            if (CannotBeNamed(compilation, type, out var ambiguity))
+            {
+                reachable = new List<INamedTypeSymbol>();
+                return Contract(diagnostics, at, name, ambiguity);
+            }
+
             // a model-level [ProtoSurrogate] stands in for the contract attribute entirely: the type
             // being surrogated need not - and for a BCL type, cannot - carry one, so this has to be
             // resolved before any of the "is this even a contract" checks
-            surrogates.TryGetValue(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+            surrogates.TryGetValue(Qualified(compilation, type),
                 out var declaredSurrogate);
 
             // auto-tuple detection applies only when the type carries no contract family at all
@@ -572,7 +584,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // both arguments spelled out: the defaulted overload is ambiguous with the
                     // explicit one from a call site that supplies neither
                     surrogateSerializer = "global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<"
-                        + surrogateType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                        + Qualified(compilation, surrogateType)
                         + ">(default, default)";
                 }
                 else if (surrogateSerializer is null)
@@ -1131,7 +1143,7 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     var reachedLevel = GetDeclaredLevel(symbol)
                         ?? GetCompatibilityLevel(compilation, memberSource);
-                    var tupleKey = reachedTuple.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    var tupleKey = Qualified(compilation, reachedTuple);
                     if (tupleLevels.TryGetValue(tupleKey, out var seen))
                     {
                         if (seen != reachedLevel) tupleConflicts.Add(tupleKey);
@@ -1161,9 +1173,9 @@ namespace ProtoBuf.BuildTools.Generators
                 // and to spell out the default() an overwriting "bytes" read passes to AppendBytes
                 var declaredTypeName = shape.DeclaredTypeName ?? (usesAccessor || wrappedValue
                     || (overwriteList && kind == ProtoMemberKind.Bytes)
-                    ? memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) : null);
+                    ? Qualified(compilation, memberType) : null);
                 var isNullable = shape.IsNullable;
-                var enumTypeName = shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var enumTypeName = (shape.EnumType is null ? null : Qualified(compilation, shape.EnumType));
 
                 string? defaultLiteral = null;
                 // a null declared default means "no declared default", exactly as ref-emit treats it
@@ -1226,7 +1238,7 @@ namespace ProtoBuf.BuildTools.Generators
                     }
 
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
-                        message!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        Qualified(compilation, message!),
                         isNullable: isNullable, memberIsValueType: message.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
@@ -1293,10 +1305,9 @@ namespace ProtoBuf.BuildTools.Generators
                 }
 
                 return new ProtoContractPlan(
-                    type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    Qualified(compilation, type),
                     default, isValueType,
-                    externalSerializerTypeName: externalSerializer.ToDisplayString(
-                        SymbolDisplayFormat.FullyQualifiedFormat),
+                    externalSerializerTypeName: Qualified(compilation, externalSerializer),
                     externalSerializerIsScalar: isScalar.Value);
             }
 
@@ -1382,17 +1393,17 @@ namespace ProtoBuf.BuildTools.Generators
                 for (int i = 0; i < subTypes.Count; i++)
                 {
                     subTypePlans[i] = new ProtoSubTypePlan(subTypes[i].Tag,
-                        subTypes[i].Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        Qualified(compilation, subTypes[i].Type),
                         subTypes[i].IsGroup);
                     reachable.Add(subTypes[i].Type);
                 }
             }
 
             return new ProtoContractPlan(
-                type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                Qualified(compilation, type),
                 new(members.ToArray()), isValueType, skipConstructor, isSealed: memberSource.IsSealed,
                 rootTypeName: rootTypeName, subTypes: new(subTypePlans), extensible: extensible,
-                surrogateTypeName: surrogateType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                surrogateTypeName: (surrogateType is null ? null : Qualified(compilation, surrogateType)),
                 toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying,
                 surrogateSerializer: surrogateSerializer,
                 usesConstructorAccessor: usesConstructorAccessor,
@@ -1931,7 +1942,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
 
                 var at = PlanLocation.From(model);
-                var name = Simplify(underlying.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                var name = Simplify(Qualified(compilation, underlying));
                 if ((converter is null) != (toSurrogate is null && toUnderlying is null))
                 {
                     Contract(diagnostics, at, name,
@@ -1943,8 +1954,8 @@ namespace ProtoBuf.BuildTools.Generators
                 string? toName = null, fromName = null;
                 if (converter is not null)
                 {
-                    toName = FindConverter(converter, toSurrogate, underlying, surrogate);
-                    fromName = FindConverter(converter, toUnderlying, surrogate, underlying);
+                    toName = FindConverter(compilation, converter, toSurrogate, underlying, surrogate);
+                    fromName = FindConverter(compilation, converter, toUnderlying, surrogate, underlying);
                     if (toName is null || fromName is null)
                     {
                         Contract(diagnostics, at, name,
@@ -1954,14 +1965,14 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                 }
 
-                result[underlying.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)]
+                result[Qualified(compilation, underlying)]
                     = new SurrogateDeclaration(surrogate, toName, fromName);
             }
             }
         }
 
         /// <summary>The fully-qualified call, if a matching public static one-argument method exists.</summary>
-        private static string? FindConverter(INamedTypeSymbol converter, string? methodName,
+        private static string? FindConverter(Compilation compilation, INamedTypeSymbol converter, string? methodName,
             ITypeSymbol from, ITypeSymbol to)
         {
             if (methodName is null) return null;
@@ -1979,7 +1990,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, from)) continue;
                 if (!SymbolEqualityComparer.Default.Equals(method.ReturnType, to)) continue;
 
-                return converter.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + "." + methodName;
+                return Qualified(compilation, converter) + "." + methodName;
             }
             return null;
         }
@@ -2006,8 +2017,8 @@ namespace ProtoBuf.BuildTools.Generators
                             return "null";
                         }
                         return $"global::ProtoBuf.Serializers.SerializerCache.Get<"
-                            + external.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ", "
-                            + type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) + ">()";
+                            + Qualified(compilation, external) + ", "
+                            + Qualified(compilation, type) + ">()";
                     }
                 }
             }
@@ -2462,7 +2473,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (allowParseableTypes && IsParseable(type))
             {
                 return new MemberShape(ProtoMemberKind.Parseable, isNullable,
-                    declaredTypeName: type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                    declaredTypeName: Qualified(compilation, type));
             }
 
             // erase tuple element names before anything looks at the type: they are decoration, and
@@ -2470,7 +2481,7 @@ namespace ProtoBuf.BuildTools.Generators
             type = EraseTupleNames(compilation, type);
 
             // a struct contract can be Nullable<T>; a reference-type one cannot
-            if (GetMessageKind(type, surrogates, out var message) is { } messageKind)
+            if (GetMessageKind(compilation, type, surrogates, out var message) is { } messageKind)
             {
                 if (isNullable && message is not { IsValueType: true }) return null;
                 return new MemberShape(messageKind, isNullable, message: message);
@@ -2759,7 +2770,7 @@ namespace ProtoBuf.BuildTools.Generators
             // from the model, so all the plan needs is the factory that produces one. Both
             // RepeatedSerializer and MapSerializer implement IRepeatedSerializer<TCollection>,
             // which is an ISerializer<TCollection>, so the two cases differ only in the rendering
-            var valueTypeName = value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var valueTypeName = Qualified(compilation, value);
             string? valueFactory = null;
             if (valueShape.Repeated.Factory is not null)
             {
@@ -2778,12 +2789,12 @@ namespace ProtoBuf.BuildTools.Generators
             if (valueShape.Message is { } valueMessage) messages.Add(valueMessage);
 
             var map = new ProtoMapPlan(match.Factory!, match.TakesCollectionType,
-                keyShape.Kind, key.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                valueShape.Kind, value.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                keyShape.Kind, Qualified(compilation, key),
+                valueShape.Kind, Qualified(compilation, value),
                 IsValidProtobufMap(keyShape, valueShape), valueFactory);
 
             return new MemberShape(ProtoMemberKind.Map, map: map, mapMessages: messages,
-                declaredTypeName: declared.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                declaredTypeName: Qualified(compilation, declared));
         }
 
         /// <summary>
@@ -2860,11 +2871,11 @@ namespace ProtoBuf.BuildTools.Generators
             // ISerializerProxy<TEnum> (see EmitEnumProxies)
             return new MemberShape(shape.Kind, message: shape.Message, enumType: shape.EnumType,
                 repeated: repeated,
-                elementTypeName: element.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                declaredTypeName: declared.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                elementTypeName: Qualified(compilation, element),
+                declaredTypeName: Qualified(compilation, declared));
         }
 
-        private static ProtoMemberKind? GetMessageKind(ITypeSymbol type,
+        private static ProtoMemberKind? GetMessageKind(Compilation compilation, ITypeSymbol type,
             Dictionary<string, SurrogateDeclaration>? surrogates, out INamedTypeSymbol? message)
         {
             message = null;
@@ -2885,7 +2896,7 @@ namespace ProtoBuf.BuildTools.Generators
             // ... and so does a type the *model* surrogates, which is how something like System.Uri
             // becomes serializable despite never being able to carry the attribute itself
             if (surrogates is not null
-                && surrogates.ContainsKey(named.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+                && surrogates.ContainsKey(Qualified(compilation, named)))
             {
                 message = named;
                 return ProtoMemberKind.Message;
@@ -3096,7 +3107,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// An enum seeded as a contract: all that is needed is its underlying scalar, which picks
         /// the <c>EnumSerializer.Create{X}</c> overload.
         /// </summary>
-        private static ProtoEnumPlan? GetEnumPlan(INamedTypeSymbol type)
+        private static ProtoEnumPlan? GetEnumPlan(Compilation compilation, INamedTypeSymbol type)
         {
             if (type.EnumUnderlyingType is not { } underlying) return null;
             if (GetScalarKind(underlying) is not { } kind) return null;
@@ -3105,7 +3116,7 @@ namespace ProtoBuf.BuildTools.Generators
             // to test that shape from C#, so it is refused here as it is for a member
             if (kind == ProtoMemberKind.Char) return null;
 
-            return new ProtoEnumPlan(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), kind);
+            return new ProtoEnumPlan(Qualified(compilation, type), kind);
         }
 
         private static ProtoMemberKind? GetScalarKind(ITypeSymbol type)

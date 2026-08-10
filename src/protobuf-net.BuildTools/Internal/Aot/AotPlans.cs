@@ -838,14 +838,34 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     internal sealed class ProtoModelPlan : IEquatable<ProtoModelPlan>
     {
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
-            bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default)
+            bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
+            EquatableArray<string> aliases = default)
         {
             Namespace = nameSpace;
             TypeName = typeName;
             Contracts = contracts;
             AnnotateTrimming = annotateTrimming;
             Enums = enums;
+            Aliases = aliases;
         }
+
+        /// <summary>
+        /// Every <c>extern alias</c> declared on a reference in the consumer's compilation.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Emitted unconditionally rather than only where used: an <em>unused</em> <c>extern alias</c>
+        /// is legal C#, while one naming a reference that does not carry it is CS0430 — so declaring
+        /// the compilation's whole set is both safe and free, and saves the emitter having to work
+        /// out which type names ended up aliased.
+        /// </para>
+        /// <para>
+        /// It belongs on the plan rather than being read from the compilation at emit time, because
+        /// the emit step deliberately holds no Roslyn reference. It participates in equality for the
+        /// same reason everything else does: adding an alias to a reference changes the output.
+        /// </para>
+        /// </remarks>
+        public EquatableArray<string> Aliases { get; }
 
         /// <summary>
         /// Enums seeded directly by <c>[ProtoSerializable]</c>, which are served by the same
@@ -880,13 +900,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public string HintName
             => (Namespace is null ? TypeName : Namespace + "." + TypeName) + ".ProtoModel.g.cs";
 
+        // Enums and Aliases are compared here as well as the rest. Enums was previously *missing*,
+        // which is a caching bug rather than an oversight to tidy: a change to only the seeded enum
+        // set compared equal, so the driver reused the cached output and the edit did not take.
         public bool Equals(ProtoModelPlan? other)
             => other is not null && Namespace == other.Namespace && TypeName == other.TypeName
-                && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming;
+                && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
+                && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases);
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 
         public override int GetHashCode()
-            => ((Namespace?.GetHashCode() ?? 0) * 397) ^ (TypeName.GetHashCode() * 31) ^ Contracts.GetHashCode();
+            => ((Namespace?.GetHashCode() ?? 0) * 397) ^ (TypeName.GetHashCode() * 31)
+                ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7);
     }
 }

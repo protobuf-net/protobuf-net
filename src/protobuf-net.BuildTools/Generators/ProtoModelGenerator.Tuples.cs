@@ -199,16 +199,16 @@ namespace ProtoBuf.BuildTools.Generators
                 if (shape.Message is not null) reachable.Add(shape.Message);
 
                 members.Add(new ProtoMemberPlan(i + 1, member.Name, shape.Kind,
-                    shape.Message?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    (shape.Message is null ? null : Qualified(compilation, shape.Message)),
                     isNullable: shape.IsNullable,
-                    enumTypeName: shape.EnumType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    enumTypeName: (shape.EnumType is null ? null : Qualified(compilation, shape.EnumType)),
                     memberIsValueType: shape.Message?.IsValueType ?? false,
-                    declaredTypeName: memberType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)));
+                    declaredTypeName: Qualified(compilation, memberType)));
             }
 
             _ = at;
             return new ProtoContractPlan(
-                type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                Qualified(compilation, type),
                 new(members.ToArray()), type.IsValueType, skipConstructor: false, isTuple: true,
                 isTupleLiteral: type.IsTupleType);
         }

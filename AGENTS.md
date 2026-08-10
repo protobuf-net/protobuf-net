@@ -398,8 +398,36 @@ form; anything matched against **metadata** takes the raw one — notably the
 `[UnsafeAccessor(Name = "set_case")]` argument, and `Sanitise`, which is building an identifier out
 of a type name and replaces every non-alphanumeric anyway.
 
-Type names need no help: Roslyn's `FullyQualifiedFormat` already escapes them, which is why a proto
-package called `namespace` renders as `global::@namespace.Foo` without our doing anything.
+Type names need no help *with escaping*: Roslyn's `FullyQualifiedFormat` already handles it, which is
+why a proto package called `namespace` renders as `global::@namespace.Foo` without our doing anything.
+
+They do need help with **`extern alias`**, which is the one case `global::` cannot express. Two
+referenced assemblies may declare the same full type name; C# tells them apart only by an alias, set
+as `<Aliases>` metadata on the reference in the *consumer's* project, and `global::` then means "the
+un-aliased one". So `Qualified` (`ProtoModelGenerator.Aliases.cs`) replaces `global::` with the alias
+for any type whose declaring assembly carries one, per **constituent** type rather than on the leading
+prefix — `List<Thing>` renders as `global::…List<global::Ns.Thing>` and it is the inner one that may
+need it.
+
+The division of labour is the part worth remembering, and every clause was probed (`ExternAliasTests`):
+
+- a generator **can** emit `extern alias X;` in its own file, and **can** discover which references
+  carry aliases (`compilation.GetMetadataReference(assembly).Properties.Aliases`);
+- it **cannot create** one — that is the consumer's project file, and nothing else can set it;
+- an **unused** `extern alias` is legal, while one naming a reference that does not carry it is
+  CS0430 — which is why the emitter declares the compilation's whole set unconditionally and never
+  works out which it needs;
+- aliasing **one** of a colliding pair is enough, since `global::` then names the other.
+
+When neither is aliased the type cannot be named by *any* C# syntax, so the contract is refused with
+`PBN2002` naming both assemblies and the `<Aliases>` fix. That is a limitation of C#, not of the
+generator — and refusing beats the alternative, which is CS0433 in a file the consumer never wrote.
+
+**The corpus cannot catch any of this**, which is why it needs its own test: `AotDifferential`
+resolves ambiguity by dropping an assembly wholesale, so the generator is never run against an
+aliased reference there. Note the realistic shape is an ambiguous **member** type, not a seed — a
+consumer cannot seed a type they cannot name, so it arrives via a contract in a third assembly where
+the member type was unambiguous.
 
 This is one of the few places where the hand-written corpus was structurally blind — nobody writes
 `public int @case` — and the `.proto` half found it immediately.
