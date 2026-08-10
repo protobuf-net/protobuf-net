@@ -1256,7 +1256,7 @@ namespace ProtoBuf.BuildTools.Generators
 
                     members.Add(new ProtoMemberPlan(fieldNumber.Value, symbol.Name, kind,
                         Qualified(compilation, message!),
-                        isNullable: isNullable, memberIsValueType: message.IsValueType,
+                        isNullable: isNullable, memberIsValueType: message!.IsValueType,
                         repeated: shape.Repeated, elementTypeName: shape.ElementTypeName,
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
