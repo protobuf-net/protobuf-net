@@ -386,6 +386,24 @@ member to 240. Anywhere else it has nothing to promote and ref-emit simply ignor
 Note `ListSet` and `RepeatedAsList` are **protogen schema-codegen** options that shape generated DTOs
 from `.proto`; they are not `[ProtoMember]` options and have nothing to do with this generator.
 
+### Identifiers: emitting a name is not the same as knowing it
+
+`ISymbol.Name` is the **metadata** name, so a member the consumer declared as `@case` comes back as
+`case` and has to be re-escaped before it can appear in generated C# — `Escape` does this, keyed on
+`SyntaxFacts.GetKeywordKind`, so *contextual* keywords (`value`, `record`, …) are correctly left
+alone since they are already legal identifiers.
+
+The distinction to keep is between the two audiences for a name. Emitted **syntax** takes the escaped
+form; anything matched against **metadata** takes the raw one — notably the
+`[UnsafeAccessor(Name = "set_case")]` argument, and `Sanitise`, which is building an identifier out
+of a type name and replaces every non-alphanumeric anyway.
+
+Type names need no help: Roslyn's `FullyQualifiedFormat` already escapes them, which is why a proto
+package called `namespace` renders as `global::@namespace.Foo` without our doing anything.
+
+This is one of the few places where the hand-written corpus was structurally blind — nobody writes
+`public int @case` — and the `.proto` half found it immediately.
+
 ### Fields
 
 Fields are members exactly as properties are — ref-emit emits the identical guards and read shapes,
@@ -1494,6 +1512,25 @@ Three things about it are load-bearing:
   assembly compiles its own copy.
 - **Values are deterministic and every scalar differs from the last.** Two members holding the same
   value serialize identically under either numbering, so a swapped field number would be invisible.
+- **Half the corpus is `.proto`-generated** (`Schemas.cs`): the schema tree under
+  `protobuf-net.Reflection.Test/Schemas` is parsed, run through `CSharpCodeGenerator` and compiled
+  in-process into a `SchemaCorpus` assembly, which is then seeded exactly like the other three
+  targets. It is generated at run time rather than checked in, so it cannot drift from the codegen
+  that produced it; `PBN_NO_SCHEMAS=1` skips it, since it is the slowest part of the run (~25s total).
+
+  This is not "more corpus", it is a **different distribution**, and that is the point: people do not
+  write `public int @case`, and machine-generated contracts do. It found a bug that broke the
+  consumer's *build* on its first run — item 14 of `docs/aot-findings.md`.
+
+  Two things about it are load-bearing. The DTO assembly must be compiled against **the same
+  reference set the corpus loads**, or every contract gets a second, incompatible
+  `ProtoContractAttribute`; that is why it is built inside `Corpus.Build` rather than by the caller.
+  And collisions with the hand-written corpus are resolved by **dropping the schema copy** — the
+  hand-written one is already being compared, so the duplicate adds nothing, and the type still
+  resolves for schemas that reference it because the declaring assembly is in the reference set.
+  Note the collision probe must ask **each assembly** rather than the compilation:
+  `Compilation.GetTypeByMetadataName` returns null for an *ambiguous* name, and these names are
+  ambiguous by definition, so the compilation-level lookup silently misses exactly what it is for.
 
 The `Filler` builds instances by reflection, and what it *cannot* build is reported rather than
 hidden: `Span<byte>`-shaped members can't be boxed at all, and a few types have no construction route.
@@ -1534,6 +1571,11 @@ fixture change so the two cannot drift.
 - Contract types in fixtures must be `public` — full ref-emit compilation only reaches public members.
 - `src/AotRefGen/TriggerAttributes.cs` duplicates the generator's post-init attributes so the shared
   fixtures compile; keep the two in step.
+- **It is net472, so it does not run on Linux at all** — `Keywords.input.cs` was added from there and
+  has no `.reference.cs` yet for exactly that reason. That is a *missing* reference rather than a
+  meaningful one: per the paragraph above, an absence proves nothing, so run `AotRefGen` on Windows
+  and commit the result. The fixture is not unmeasured in the meantime — the differential suite is
+  net8.0 and compares it against `RuntimeTypeModel` on every run.
 
 Two artefacts of decompilation are cosmetic, not semantic: `Features` appears as a uniquely-named
 method plus an ILSpy `.override` note (it's really an explicit-interface property), and

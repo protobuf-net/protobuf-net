@@ -297,6 +297,23 @@ internal static class Program
         }
         Console.WriteLine();
 
+        if (corpus.Schemas is { Found: > 0 } schemas)
+        {
+            Console.WriteLine($"`.proto` DTOs: **{schemas.Accepted}** of {schemas.Found} schemas parsed, "
+                + $"generating {schemas.Generated} C# files, compiled into `{Schemas.AssemblyName}` "
+                + "and seeded alongside the hand-written contracts.");
+            Console.WriteLine();
+            foreach (var pair in schemas.Rejected.OrderByDescending(static x => x.Value))
+            {
+                Console.WriteLine($"- {pair.Key} ({pair.Value})");
+                if (schemas.Examples.TryGetValue(pair.Key, out var examples) && examples.Count != 0)
+                {
+                    Console.WriteLine($"  - e.g. {string.Join(", ", examples)}");
+                }
+            }
+            Console.WriteLine();
+        }
+
         var compared = Count(Outcome.Match) + Count(Outcome.Mismatch);
         Console.WriteLine("| outcome | count |");
         Console.WriteLine("| --- | ---: |");

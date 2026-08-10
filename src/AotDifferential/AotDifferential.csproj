@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <!-- the .proto half of the corpus: DTOs are generated in-process from the schema tree, so the
+         generated code cannot drift from the generator that produced it -->
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
     <!-- ReferenceOutputAssembly="false" is load-bearing, not tidiness: BuildTools *compiles in*
          protobuf-net.Core's sources, so referencing its output alongside protobuf-net would make
          every type in Core ambiguous. We need it built, and we load it reflectively at runtime,

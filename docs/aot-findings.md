@@ -448,7 +448,7 @@ definition:
 
 | outcome | count | |
 | --- | ---: | --- |
-| bytes match ref-emit | 1283 | |
+| bytes match ref-emit | 2988 | 1283 of them hand-written, the rest `.proto`-generated |
 | bytes differ | 0 | CI fails if this regresses |
 | one model threw | 0 | was 19 at the start of the audit |
 | both threw | 1 | a match — protobuf-net refuses it too |
@@ -468,6 +468,29 @@ different things and should not be read together.
 
 `PBN_DUMP=<substring>` prints the generated source around a match; `PBN_MEMBERS=<type>` prints what
 the generator sees for a contract. Between them they settle "ours or the harness's" fastest.
+`PBN_NO_SCHEMAS=1` leaves the `.proto` half out, which is the slowest part of the run.
+
+### 14. A member named after a C# keyword emitted code that does not compile — **fixed**
+
+The first thing the `.proto` half of the corpus found, and the worst *kind* of bug this generator can
+have: not wrong bytes, but a **consumer build that does not compile at all**.
+
+`ISymbol.Name` is the metadata name, so a property the consumer declared as `@case` comes back as
+`case`, and the emitter wrote `value.case = state.ReadInt32();`. The fix is to re-escape reserved
+keywords at the point of emission (`Escape`, using `SyntaxFacts.GetKeywordKind` so contextual
+keywords such as `value` are correctly left alone). Three sites needed it: the member access itself,
+and the two auto-tuple constructor-argument reads.
+
+Note where it must *not* be applied: the `[UnsafeAccessor(Name = "set_case")]` argument is matched
+against metadata, so it takes the unescaped name. Escaping is a property of emitting C# *syntax*,
+not of naming the member.
+
+Why it survived this long is the interesting half. Nobody writing a contract by hand types
+`public int @case`, so no fixture had one and no hand-written corpus contract did either. It arrives
+through `.proto` DTOs, where a schema field may be named after any C# keyword and protogen escapes it
+for them — `google/cloud/language/v1`'s `PartOfSpeech.case` is the field that found it.
+`Keywords.input.cs` now pins it, including the negative case (`value`, contextual, must not be
+escaped) and the auto-tuple path.
 
 ## Next steps
 
@@ -513,9 +536,21 @@ survives, not as a commitment.
    `gh api repos/protobuf-net/protobuf-net/actions/jobs/<jobId>/logs`, which is how "green" was
    turned into "these specific cases passed". `gh run view --log` returns nothing for a run this old;
    the API route still works.
-4. **Widen the corpus differential to the `.proto`-generated DTO path.** The corpus reads zero, so
-   more corpus beats another feature; `protobuf-net.Reflection` can generate the DTOs in-process, and
-   schema-generated contracts have never been differentially tested.
+4. ~~**Widen the corpus differential to the `.proto`-generated DTO path.**~~ **Done**, and it paid
+   for itself on the first run: **1283 → 2988** contracts compared, still 100% matching, and one
+   real generator bug that broke the *consumer's build* — see item 14.
+
+   The lesson generalises past this one bug. Every contract in the corpus until now was written by a
+   person, and people do not write `public int @case`, do not name a type `SearchRequest` in a
+   namespace someone else uses, and do not produce forty-deep nested message trees. Machine-generated
+   contracts are a different distribution, not merely more of the same one, and only one of the two
+   was being measured.
+
+   Still unmeasured on that path, in case it is wanted later: schemas with `message_set_wire_format`
+   (protogen emits `#error` for it), and the ~10 schemas whose generated C# does not compile — a
+   couple of which look like **protogen** bugs rather than corpus artefacts, `stringEscaping.proto`
+   emitting `Unexpected character '\'` being the clearest. Those are protobuf-net.Reflection's to
+   answer for, not the AOT generator's, but nobody had run the whole tree through a compiler before.
 5. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
    AOT route at all. Note the warning count is now a *poor* motivation for it: those 18 are correct
    warnings about code that does reflect. The real arguments are one less layer of indirection on the

@@ -9,13 +9,60 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **1392**, of which 114 dropped with a diagnostic
+seeded: **3117**, of which 134 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
+`.proto` DTOs: **267** of 268 schemas parsed, generating 267 C# files, compiled into `SchemaCorpus` and seeded alongside the hand-written contracts.
+
+- generated DTO does not compile: #error: 'message_set_wire_format is not currently implemented' (3)
+  - e.g. google/protobuf/test_messages_proto2.cs, google/protobuf/unittest_custom_options.cs, google/protobuf/unittest_mset_wire_format.cs
+- name already declared by the hand-written corpus: Google.Protobuf.Reflection.FileDescriptorSet (2)
+  - e.g. descriptor.cs, google/protobuf/descriptor.cs
+- generated DTO does not compile: Unexpected character '\' (2)
+  - e.g. google/protobuf/unittest.cs, stringEscaping.cs
+- generated DTO does not compile: The type or namespace name 'ForeignMessage' could not be found (are you missing a using directive or… (2)
+  - e.g. google/protobuf/map_unittest.cs, google/protobuf/unittest_optimize_for.cs
+- schema does not parse: unable to find: 'sdk/logical/identity.proto' (1)
+  - e.g. vault/backend.proto
+- name already declared by the hand-written corpus: Google.Protobuf.WellKnownTypes.Duration (1)
+  - e.g. google/protobuf/duration.cs
+- name already declared by the hand-written corpus: Google.Protobuf.WellKnownTypes.Timestamp (1)
+  - e.g. google/protobuf/timestamp.cs
+- name already declared by the hand-written corpus: ProtoBuf.Issues.Issue647Types.Bar.BarClass (1)
+  - e.g. issues/Issue647.cs
+- name already declared by the hand-written corpus: ProtoBuf.Reflection.ProtogenFileOptions (1)
+  - e.g. protobuf-net/protogen.cs
+- name already declared by the hand-written corpus: SearchRequest (1)
+  - e.g. simple.cs
+- generated DTO does not compile: The namespace '<global namespace>' already contains a definition for 'Foo' (1)
+  - e.g. enums.cs
+- generated DTO does not compile: 'ProtoMemberAttribute.AsReference' is obsolete: 'Reference-tracking and dynamic-type are not current… (1)
+  - e.g. everything.cs
+- generated DTO does not compile: Syntax error, ',' expected (1)
+  - e.g. google/protobuf/unittest_lite.cs
+- generated DTO does not compile: The name 'world' does not exist in the current context (1)
+  - e.g. google/protobuf/unittest_no_arena.cs
+- generated DTO does not compile: The type or namespace name 'Empty' does not exist in the namespace 'ProtoBuf' (are you missing an as… (1)
+  - e.g. google/protobuf/unittest_well_known_types.cs
+- generated DTO does not compile: The namespace '<global namespace>' already contains a definition for 'Bar' (1)
+  - e.g. protogenUsage.cs
+- generated DTO does not compile: Duplicate 'global::ProtoBuf.ProtoContract' attribute (1)
+  - e.g. using_bcl.cs
+- generated DTO does not compile: The type or namespace name 'ForeignMessageLite' could not be found (are you missing a using directiv… (1)
+  - e.g. google/protobuf/map_lite_unittest.cs
+- generated DTO does not compile: The type or namespace name 'TestAllTypes' could not be found (are you missing a using directive or a… (1)
+  - e.g. google/protobuf/unittest_lite_imports_nonlite.cs
+- generated DTO does not compile: The type or namespace name 'ProtocolBuffers' does not exist in the namespace 'Google' (are you missi… (1)
+  - e.g. google/protobuf/unittest_mset.cs
+- generated DTO does not compile: The type or namespace name 'TestRequired' does not exist in the namespace 'ProtobufUnittest' (are yo… (1)
+  - e.g. google/protobuf/unittest_no_field_presence.cs
+- generated DTO does not compile: The type or namespace name 'TestOptimizedForSize' could not be found (are you missing a using direct… (1)
+  - e.g. google/protobuf/unittest_embed_optimize_for.cs
+
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 1283 |
+| **bytes match ref-emit** | 2988 |
 | **bytes differ** | 0 |
 | one model threw | 0 |
 | both threw (a shape protobuf-net refuses too) | 1 |
@@ -23,5 +70,5 @@ seeded: **1392**, of which 114 dropped with a diagnostic
 | no instance can exist (abstract, no sub-types) | 5 |
 | the reference model refused the contract | 0 |
 
-of the 1283 actually compared, **100% match**.
+of the 2988 actually compared, **100% match**.
 

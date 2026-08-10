@@ -34,6 +34,9 @@ internal sealed class Corpus
     /// <summary>Assemblies dropped because they collide with a scanned target.</summary>
     public List<string> Ambiguous { get; private set; } = [];
 
+    /// <summary>The <c>.proto</c> half of the corpus, or <c>null</c> if it was skipped.</summary>
+    public Schemas Schemas { get; private set; }
+
     /// <summary>
     /// Every dll beside the targets — the same set the generator sees as references, and therefore
     /// where an assembly-level <c>[ProtoSurrogate]</c> can come from.
@@ -60,6 +63,24 @@ internal sealed class Corpus
             .Where(static x => !Path.GetFileName(x).StartsWith("protobuf-net.BuildTools",
                 StringComparison.OrdinalIgnoreCase))
             .ToList();
+
+        // The .proto half: generate DTOs from the schema tree, compile them, and treat the result as
+        // one more target. It is built here rather than by the caller because it needs exactly this
+        // reference set - a DTO assembly compiled against a *different* protobuf-net than the one the
+        // corpus loads would give every contract a second, incompatible ProtoContractAttribute.
+        //
+        // Skippable, since it is the slowest part of the run and a generator change rarely needs it:
+        // PBN_NO_SCHEMAS=1 leaves the corpus as it was.
+        if (Environment.GetEnvironmentVariable("PBN_NO_SCHEMAS") is not { Length: > 0 })
+        {
+            Schemas = new Schemas();
+            if (Schemas.Build(paths, AotDifferential.Schemas.OutputPath()) is { } schemaAssembly)
+            {
+                present = [.. present, schemaAssembly];
+                paths.Add(schemaAssembly);
+                Neighbours.Add(schemaAssembly);
+            }
+        }
 
         // Flattening every dll beside the targets into one reference set is what lets the contracts
         // bind, and is also the harness's own worst artefact: two of them declare `Timestamp` and
@@ -175,8 +196,12 @@ internal sealed class Corpus
 
             if (newlyExcluded.Count == 0 || attempt >= 4)
             {
+                // the generated model is six figures of lines here, so an error naming line 105357
+                // is useless on its own; write it out and say where it went
+                var dump = Dump(output);
                 return "the generated model does not compile, so nothing can be compared:"
-                    + string.Concat(errors.Take(5).Select(static x => Environment.NewLine + "  " + x));
+                    + string.Concat(errors.Take(5).Select(static x => Environment.NewLine + "  " + x))
+                    + (dump is null ? "" : Environment.NewLine + "  generated source written to " + dump);
             }
             Console.Error.WriteLine("ambiguous with a scanned target, excluding: "
                 + string.Join(", ", newlyExcluded));
@@ -205,6 +230,30 @@ internal sealed class Corpus
             else Bump(Skipped, "could not be resolved at runtime");
         }
         return null;
+    }
+
+    /// <summary>
+    /// Write the generator's own output beside the harness, so a compile error in it can be read.
+    /// </summary>
+    private static string Dump(Compilation output)
+    {
+        try
+        {
+            var dir = Path.Combine(RepoRoot() ?? ".", "src", "AotDifferential", "obj", "generated");
+            Directory.CreateDirectory(dir);
+            string last = null;
+            foreach (var tree in output.SyntaxTrees)
+            {
+                if (string.IsNullOrEmpty(tree.FilePath)) continue;
+                last = Path.Combine(dir, Path.GetFileName(tree.FilePath));
+                File.WriteAllText(last, tree.ToString());
+            }
+            return last;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>Roslyn symbol to runtime <see cref="Type"/>, via the reflection name.</summary>

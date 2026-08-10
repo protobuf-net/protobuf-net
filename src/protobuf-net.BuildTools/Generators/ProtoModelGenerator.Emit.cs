@@ -1,4 +1,5 @@
 #nullable enable
+using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
 using System.Collections.Generic;
@@ -187,7 +188,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, "{");
                     foreach (var member in contract.Members)
                     {
-                        Line(sb, indent + 2, $"arg{member.FieldNumber} = value.{member.Name};");
+                        Line(sb, indent + 2, $"arg{member.FieldNumber} = value.{Escape(member.Name)};");
                     }
                     Line(sb, indent + 1, "}");
                 }
@@ -195,7 +196,7 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     foreach (var member in contract.Members)
                     {
-                        Line(sb, indent + 1, $"arg{member.FieldNumber} = value.{member.Name};");
+                        Line(sb, indent + 1, $"arg{member.FieldNumber} = value.{Escape(member.Name)};");
                     }
                 }
             }
@@ -1154,7 +1155,24 @@ namespace ProtoBuf.BuildTools.Generators
         private static string MemberAccess(ProtoContractPlan contract, ProtoMemberPlan member, string instance)
             => member.AccessorReads
                 ? $"{AccessorName(contract, member)}({(contract.IsValueType ? "ref " : "")}{instance})"
-                : $"{instance}.{member.Name}";
+                : $"{instance}.{Escape(member.Name)}";
+
+        /// <summary>
+        /// A member name as it has to appear in generated C#.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Microsoft.CodeAnalysis.ISymbol.Name"/> is the *metadata* name, so a member the
+        /// consumer declared as <c>@case</c> comes back as <c>case</c> and has to be re-escaped
+        /// before it can be emitted. Code-first contracts almost never hit this — nobody writes
+        /// <c>public int @case</c> by choice — but <c>.proto</c>-generated DTOs hit it routinely,
+        /// since a schema field may be named after any C# keyword and protogen escapes it for them.
+        /// Only *reserved* keywords need this; a contextual keyword such as <c>value</c> is already
+        /// a legal identifier, which is what <see cref="SyntaxFacts.GetKeywordKind"/> distinguishes.
+        /// Note the <c>[UnsafeAccessor]</c> <c>Name</c> argument is the opposite case — it is matched
+        /// against metadata, so it takes the *unescaped* name.
+        /// </remarks>
+        private static string Escape(string name)
+            => SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None ? name : "@" + name;
 
         /// <summary>The accessor that calls a contract's non-public parameterless constructor.</summary>
         private static string ConstructorAccessorName(ProtoContractPlan contract)
