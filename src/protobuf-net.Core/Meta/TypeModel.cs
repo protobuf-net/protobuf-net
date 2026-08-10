@@ -1679,8 +1679,15 @@ namespace ProtoBuf.Meta
         /// Indicates that while an inheritance tree exists, the exact type encountered was not
         /// specified in that hierarchy and cannot be processed.
         /// </summary>
+        // T is deliberately *not* annotated: nothing here inspects its members. IsSubType<T> is
+        // `typeof(T) != value.GetType()`, and the pair then goes to the Type-based overload, whose
+        // parameters carry no demand of their own. A ContractType demand here was expensive rather
+        // than idle - the mask includes PublicNestedTypes, and a .proto DTO nests its enums inside
+        // the message, so it kept those enums' members reflectable, inherited statics included; that
+        // is where the IL3050s naming Enum.GetValues came from. This call is emitted for every
+        // non-sealed reference-type contract, so the demand applied to the whole model.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ThrowUnexpectedSubtype<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value) where T : class
+        public static void ThrowUnexpectedSubtype<T>(T value) where T : class
         {
             if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T), value.GetType());
         }

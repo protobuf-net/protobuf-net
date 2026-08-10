@@ -1043,12 +1043,29 @@ both `RequiresDynamicCode`. So any `PublicMethods` demand that lands on an enum 
 `IL3050` naming `Enum.GetValues`, which reads as an enum-serialization problem and is really an
 annotation-scope problem. It was the element annotation on `List<Status>`, not the enum member.
 
-The current count is **25**, measured with the `.proto` DTO tree in the fixture (it was 21 before
-that was added — the two are not comparable, since the count tracks fixtures). Of those, 6 are
-`Enum.GetValues` from the annotations that remain on the resolution entry points, 5 are
-`MakeGenericType`/`MakeArrayType` on the runtime-model and `DynamicStub` paths, and the `IL2091`
-group is still the spent trio: `CreateInstance` ×2 (whose fallback is genuinely live) and
-`SubTypeState<T>.Cast` (which would need the annotation on every consumer).
+**`ThrowUnexpectedSubtype<T>` was the last one, and it was the widest**, because the generated code
+emits that call for *every* non-sealed reference-type contract — so its `ContractType` demand applied
+to the whole model. Nothing in it inspects `T`: `IsSubType<T>` is `typeof(T) != value.GetType()`, and
+the pair then goes to the `Type`-based overload, whose parameters carry no demand. Removing it:
+**25 → 19 warnings and a further −277 KB (−7.0%)**.
+
+That is also where the `Enum.GetValues` reports came from, and the route is worth following once
+because no part of it is guessable: `ContractType` includes `PublicNestedTypes`; a `.proto` DTO nests
+its enums *inside* the message (`FieldDescriptorProto.Label`, `FieldOptions.CType`, …); so the demand
+kept those enums reflectable, and an enum's reflectable members include the statics it inherits from
+`System.Enum`, which are `RequiresDynamicCode`. Four contracts, six warnings, one annotation.
+
+**Do not try to fix an `Enum.GetValues` report by switching to `Enum.GetValues<T>()`.** The advice in
+that warning's text is boilerplate from the attribute and is aimed at callers; there is no call here
+at all — protobuf-net contains no `Enum.GetValues` call in any shipped assembly. The lever is always
+the annotation that demanded the metadata.
+
+The count is now **19**, measured with the `.proto` DTO tree in the fixture (it was 21 before that was
+added, and the two are not comparable — the count tracks fixtures). What is left looks structural: 6
+`IL2067` and 3 `IL2070` on the runtime-model, `DynamicStub` and auxiliary paths, 5 `IL3050`
+(`MakeGenericType`/`MakeArrayType`, same paths), 1 `IL2057`, 1 `IL2055`, and the spent `IL2091` trio —
+`CreateInstance` ×2 (whose fallback is genuinely live) and `SubTypeState<T>.Cast` (which would need
+the annotation on every consumer).
 
 **Watch bytes as well as warnings — they do not move together.** Two changes of identical shape:
 removing the transport annotation was −14 warnings and **−808 KB**; removing the `MapSerializer`
