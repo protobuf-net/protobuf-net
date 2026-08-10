@@ -176,31 +176,36 @@ Two things worth keeping:
 
 Also relevant to plain `PublishTrimmed` without AOT, where the same constructors can be trimmed.
 
-### 5. `Issue1232` tests fail on `main` — **on Linux only**
+### 5. `Issue1232` fails **intermittently** — and every sharper claim about it has been wrong
 
-Four cases fail, `trySkipWritingWhenMeasuring: True` in every one. Pre-existing and unrelated to this
-work — they fail with the AOT branch stashed.
+Four `StreamSerializer_RootStream` cases, `trySkipWritingWhenMeasuring: True` in every one, failing
+with `InvalidOperationException: Invalid length; expected 988, actual: 1029` (size 1023) / `1033`
+(size 1025).
 
-**But CI is green, and that is not CI being lenient.** Read from the actual job log of the last run
-on `main` (`85e8e39f`, run `30191810999`): nine "Test Run Successful", zero failures, and these very
-cases listed as `Passed` on **both** TFMs. So the split is by *platform*, not by target framework:
+**Read the history of this entry before theorising about it again**, because it has now been wrong
+twice in two different directions:
 
-| | windows-latest (CI) | linux-x64 (measured here) |
-| --- | :-: | :-: |
-| `StreamSerializer_RootStream`, `trySkip: True`, all sizes | pass | **fail** |
-| everything else in `Issue1232` | pass | pass |
+- it once said `NonRootStream`, which is the wrong test — they are `RootStream`;
+- it then said "pre-existing, so CI must be red", and CI is **green**: the job log for the last run
+  on `main` (`85e8e39f`, run `30191810999`) has nine "Test Run Successful", zero failures, and these
+  very cases listed as `Passed` on both TFMs;
+- it then said "**Linux-only**", on the strength of two consecutive failing runs here against a
+  green Windows CI. That does not survive either. The same four cases now pass on `main` on the same
+  Linux machine — 6 warm runs, 2 cold runs with `obj`/`bin` deleted, and a full-project run — and
+  pass on the `codegen` branch too.
 
-Two corrections to what this entry used to say. They are **`RootStream`**, not `NonRootStream` — the
-non-root cases pass here. And "pre-existing" was right while "so CI must be red" was not; that
-inference is what item 3 of the next steps existed to check, and it was wrong.
+So the honest status is **intermittent**, observed twice and not reproduced since, which puts it
+beside the other intermittent already recorded here (the net472 `Examples` failure). Two runs is not
+a platform.
 
-The failure is `InvalidOperationException: Invalid length; expected 988, actual: 1029` (size 1023) /
-`1033` (size 1025). Note the *expected* figure is **988 in both** — it does not vary with the input
-size, where the test's `Measure` is plain arithmetic over `value.Length` and would give 1030 for
-1025. So the measured length is not coming from the value being written, which makes an environment
-quirk unlikely and a genuine state or ordering bug that Windows happens not to hit the better guess.
-Not diagnosed further; it is a library/test question with no AOT content, and nothing here reaches
-`Measure` at all.
+The one datum worth keeping is the number: the *expected* length is **988 for both input sizes**. It
+does not vary with the input, where the test's own `Measure` is plain arithmetic over `value.Length`
+and would give 1030 for size 1025. So the measured length is not derived from the value being
+written — which is consistent with leaked or cached state, and state that is sometimes stale is
+exactly the shape of thing that fails intermittently. `MeasureState`'s length cache is the obvious
+place to look; recent commits on `main` touch it.
+
+Not diagnosed further: no AOT content, and nothing on this branch reaches `Measure`.
 
 ### 6. `PBN0015` is a false positive on a surrogated type — and it is an **error**
 
@@ -562,9 +567,10 @@ survives, not as a commitment.
    alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,
    this is it.
 3. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
-   differential therefore sits next to a clean baseline, which is what that gate needed. The four
-   `Issue1232` failures are **Linux-only** and CI runs on windows-latest, so the "it presumably
-   exits non-zero" that motivated this item was simply wrong — see item 5, which is corrected.
+   differential therefore sits next to a clean baseline, which is what that gate needed. The
+   `Issue1232` failures turn out to be **intermittent** rather than a standing failure, so the "it
+   presumably exits non-zero" that motivated this item was wrong twice over — see item 5, which
+   records both wrong answers, because the pattern of getting this one wrong is itself the warning.
 
    Worth keeping the method rather than the answer: the job log is readable long after the run with
    `gh api repos/protobuf-net/protobuf-net/actions/jobs/<jobId>/logs`, which is how "green" was
