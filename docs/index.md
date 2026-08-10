@@ -15,6 +15,7 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 - [Handling `null` values/collections](https://protobuf-net.github.io/protobuf-net/nullwrappers)
 - [`CompatibilityLevel`](http://protobuf-net.github.io/protobuf-net/compatibilitylevel)
 - [Build Tools for protobuf-net and protobuf-net.Grpc](https://protobuf-net.github.io/protobuf-net/build_tools)
+- [Compile-time serializers, for native AOT and trimming](https://protobuf-net.github.io/protobuf-net/aot)
 - [Generating code from .proto files at build-time](http://protobuf-net.github.io/protobuf-net/contract_first)
 - [Schema analysis tools](http://protobuf-net.github.io/protobuf-net/schemas)
 - [Using protobuf-net with Noda Time](http://protobuf-net.github.io/protobuf-net/nodatime)
