@@ -453,26 +453,32 @@ the generator sees for a contract. Between them they settle "ours or the harness
 The candidate list as it stands, roughly in the order worth taking them. Recorded so the ordering
 survives, not as a commitment.
 
-1. **Widen `AotSmoke`'s coverage, systematically.** *In progress.* Cheapest work here with the best
-   demonstrated return: it is the only thing that proves the actual goal, and in a single session two
-   gaps in it turned out to be hiding real work — the repeated enum/message fallback, then the entire
-   map family, which was silently unmeasured.
+1. ~~**Widen `AotSmoke`'s coverage, systematically.**~~ **Done** — the list of natively-unexercised
+   features is now empty, and the last round found nothing.
 
-   Done so far: repeated enum and repeated message; the three map shapes; the **hand-written
+   Covered: repeated enum and repeated message; the three map shapes; the **hand-written
    serializers** in all three categories; the **collection families** (array of scalar and of
-   message, `HashSet`, `Queue`, `SortedSet`, `ImmutableArray`, `ConcurrentQueue`); **`DataFormat`**
-   variation (`ZigZag`, `FixedSize`, `Group` on both a lone message and a collection); and
-   **`SkipConstructor`**.
+   message, `HashSet`, `Queue`, `SortedSet`, `ImmutableArray`, `ConcurrentQueue`, and the immutable
+   *reference* families `ImmutableList`/`ImmutableDictionary`); **`DataFormat`** variation
+   (`ZigZag`, `FixedSize`, `Group` on both a lone message and a collection); **`SkipConstructor`**;
+   both **callback** families; **`Specified`/`ShouldSerialize`**; both **`ImplicitFields`** modes;
+   **`DateOnly`/`TimeOnly`/`nint`**; a **parseable** type; and **`[DefaultValue]`**.
 
-   **That found item 4b — a real bug, and the second-largest thing on this branch.** Worth noting
-   what it says about the exercise: the hand-written serializers, chosen first precisely because
-   their reflective step looked most dangerous, passed immediately; the collections, added as
+   **The middle round found item 4b — a real bug, and the second-largest thing on this branch.**
+   Worth noting what it says about the exercise: the hand-written serializers, chosen first precisely
+   because their reflective step looked most dangerous, passed immediately; the collections, added as
    routine breadth, threw on the first run. Predicting where the bug is has a poor record here.
 
-   Still unexercised natively, in descending order of machinery reached: serialization callbacks;
-   `ShouldSerialize`/`Specified`; `ImplicitFields`; `DateOnly`/`TimeOnly`/`nint`; parseable types;
-   `[DefaultValue]`; the immutable *reference* families (`ImmutableList`/`ImmutableDictionary` —
-   `ImmutableArray` is covered and is a struct, so it takes a different path).
+   The final round — the seven features above from the callbacks down — passed first time, natively
+   and on a Debug JIT run, with the **warning count unchanged at 21** and no contract dropped. That
+   is a weaker result than the round before it, and it is the expected one: those seven are shapes
+   the *generator* emits directly (a method call, a comparison against a constant, an
+   `[UnsafeAccessor]`), where the middle round reached construction *inside the library*, which is
+   where the reflective steps are. If a further round is ever wanted, that is the axis to pick on —
+   not feature breadth, which is now spent.
+
+   The binary grew 3,727,688 → 4,032,072 bytes (linux-x64) across both rounds, which is the cost of
+   the new generic instantiations rather than a regression; the immutable pair alone was 225 KB of it.
 2. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
    file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
    alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,

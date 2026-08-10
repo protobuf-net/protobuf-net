@@ -5,8 +5,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf.AotSmoke;
 
@@ -127,6 +130,42 @@ public class Order
     [ProtoMember(36)] public SortedSet<int> Ranks { get; set; }
     [ProtoMember(37)] public ImmutableArray<int> Frozen { get; set; }
     [ProtoMember(38)] public ConcurrentQueue<int> Inbox { get; set; }
+
+    // The immutable *reference* families, which ImmutableArray says nothing about: it is a struct,
+    // and more to the point these do not construct through Activator at all - CreateImmutableList
+    // and friends go through the type's own Empty/builder - so the DynamicAccess.Activated fix that
+    // rescued HashSet and Queue is no evidence about them either.
+    [ProtoMember(44)] public ImmutableList<int> Archive { get; set; }
+    [ProtoMember(45)] public ImmutableDictionary<string, int> Quotas { get; set; }
+
+    // Four types with their own entries in ValueMember.TryGetCoreSerializer's switch. DateOnly and
+    // TimeOnly go through BclHelpers under a *varint* header rather than a length prefix; nint is an
+    // ordinary varint whose width ref-emit fixes at 64 regardless of the platform.
+    [ProtoMember(46)] public DateOnly Day { get; set; }
+    [ProtoMember(47)] public TimeOnly Time { get; set; }
+    [ProtoMember(48)] public nint Offset { get; set; }
+
+    // a parseable type - ToString() out, Parse(string) back - which needs the model to opt in. Both
+    // halves run on the generated path, so this proves ILC keeps IPAddress.Parse reachable.
+    [ProtoMember(49)] public IPAddress Host { get; set; }
+
+    // [DefaultValue] changes the write guard from `!= 0` to `!= 5`. Set to zero deliberately: a
+    // plain int would skip it, this one writes it, and it must come back as 0 rather than as the
+    // initialiser's 5 - which is what proves the declared default reached the emitted comparison.
+    [ProtoMember(50), DefaultValue(5)] public int Retries { get; set; } = 5;
+
+    // the callback families, both spellings - the System.Runtime.Serialization one takes a
+    // StreamingContext, built from SerializationContext.AsStreamingContext(state.Context)
+    [ProtoMember(51)] public Audited Audited { get; set; }
+    [ProtoMember(52)] public Tracked Tracked { get; set; }
+
+    // {Name}Specified and ShouldSerialize{Name}(), matched by name rather than by attribute
+    [ProtoMember(53)] public Conditional Conditional { get; set; }
+
+    // ImplicitFields, both modes; the AllFields one reaches its private fields in *both* directions
+    // through [UnsafeAccessor], which is the shape ILC has to resolve at publish time
+    [ProtoMember(54)] public Sorted Sorted { get; set; }
+    [ProtoMember(55)] public Ledger Ledger { get; set; }
 
     // DataFormat changes the emitted shape, not just a features constant. ZigZag is the one that
     // needs state.Hint(SignedVarint) before the read; FixedSize picks its width from the member;
@@ -257,6 +296,90 @@ public sealed class CardPayment : Payment
 
 public enum Status { Unknown = 0, Open = 1, Closed = 2 }
 
+/// <summary>
+/// protobuf-net's own callback family. <see cref="Trace"/> is not serialized, so it is the only
+/// evidence the hooks ran at all — and the "before" hook must be seen to fire after construction
+/// but before the field loop.
+/// </summary>
+[ProtoContract]
+public class Audited
+{
+    [ProtoMember(1)] public string Value { get; set; }
+
+    public string Trace { get; set; } = "";
+
+    [ProtoBeforeSerialization] public void BeforeSer() => Trace += "bs;";
+    [ProtoAfterSerialization] public void AfterSer() => Trace += "as;";
+    [ProtoBeforeDeserialization] public void BeforeDes() => Trace += "bd;";
+    [ProtoAfterDeserialization] public void AfterDes() => Trace += "ad;";
+}
+
+/// <summary>
+/// The <c>System.Runtime.Serialization</c> spelling of the same four points, which differs only in
+/// taking a <see cref="StreamingContext"/>.
+/// </summary>
+[ProtoContract]
+public class Tracked
+{
+    [ProtoMember(1)] public string Value { get; set; }
+
+    public string Trace { get; set; } = "";
+
+    [OnSerializing] public void OnSer(StreamingContext context) => Trace += "os;";
+    [OnSerialized] public void OnSerd(StreamingContext context) => Trace += "od;";
+    [OnDeserializing] public void OnDes(StreamingContext context) => Trace += "ds;";
+    [OnDeserialized] public void OnDesd(StreamingContext context) => Trace += "dd;";
+}
+
+/// <summary>
+/// The two by-name conventions. <see cref="Explicit"/> is zero and still written, because
+/// <see cref="ExplicitSpecified"/> replaces the trivial-value guard rather than adding to it — and
+/// it is assigned again on the way back in. <see cref="Hidden"/> is non-zero and never written.
+/// </summary>
+[ProtoContract]
+public class Conditional
+{
+    [ProtoMember(1)] public int Explicit { get; set; }
+    public bool ExplicitSpecified { get; set; }
+
+    [ProtoMember(2)] public int Hidden { get; set; }
+    public bool ShouldSerializeHidden() => false;
+}
+
+/// <summary>
+/// <see cref="ImplicitFields.AllPublic"/>: members are numbered by sorting on *name*, so these take
+/// tags 1, 2, 3 in the order Apple, Mango, Zebra rather than as declared.
+/// </summary>
+[ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+public class Sorted
+{
+    public string Zebra { get; set; }
+    public string Apple { get; set; }
+    public string Mango { get; set; }
+}
+
+/// <summary>
+/// <see cref="ImplicitFields.AllFields"/> over private fields, which need an
+/// <c>[UnsafeAccessor]</c> for <em>both</em> directions — unlike a property reached by its backing
+/// field, neither the read nor the write can touch these directly.
+/// </summary>
+[ProtoContract(ImplicitFields = ImplicitFields.AllFields)]
+public class Ledger
+{
+    private int _balance;
+    private string _owner;
+
+    public Ledger() { }
+    public Ledger(int balance, string owner)
+    {
+        _balance = balance;
+        _owner = owner;
+    }
+
+    public int Balance => _balance;
+    public string Owner => _owner;
+}
+
 // Hand-written serializers. The generated model emits no body for these at all: the services type
 // implements ISerializerProxy<T>, and members reach the serializer through
 // SerializerCache.Get<TProvider, T>() - which activates TProvider with
@@ -352,7 +475,9 @@ public class Blank
     public string Stamp { get; set; }
 }
 
-[ProtoModel]
+// AllowParseableTypes is off by default in RuntimeTypeModel, so the compile-time mirror of it has
+// to be asked for; without it the IPAddress member is not a scalar and the contract is refused.
+[ProtoModel(AllowParseableTypes = true)]
 [ProtoSerializable(typeof(Order))]
 [ProtoSerializable(typeof(NoteV2))]
 public partial class SmokeModel : TypeModel
@@ -404,6 +529,20 @@ internal static class Program
             Ranks = [5, 3, 9],
             Frozen = [31, 32],
             Inbox = new ConcurrentQueue<int>([41, 42]),
+            Archive = [51, 52],
+            Quotas = ImmutableDictionary.CreateRange(
+                [KeyValuePair.Create("a", 61), KeyValuePair.Create("b", 62)]),
+            Day = new DateOnly(2021, 6, 7),
+            Time = new TimeOnly(13, 14, 15),
+            Offset = 4096,
+            Host = IPAddress.Parse("10.0.0.7"),
+            // zero, so it differs from the declared default of 5 and is therefore written
+            Retries = 0,
+            Audited = new Audited { Value = "a" },
+            Tracked = new Tracked { Value = "t" },
+            Conditional = new Conditional { Explicit = 0, ExplicitSpecified = true, Hidden = 9 },
+            Sorted = new Sorted { Zebra = "z", Apple = "a", Mango = "m" },
+            Ledger = new Ledger(1234, "ann"),
             // negative, so ZigZag actually differs from the default varint encoding
             Delta = -5,
             Ticks = 1234567890123L,
@@ -499,6 +638,40 @@ internal static class Program
         Check(ref failures, "Ranks", "3,5,9", Join(clone.Ranks));
         Check(ref failures, "Frozen", "31,32", clone.Frozen.IsDefault ? "default" : Join(clone.Frozen));
         Check(ref failures, "Inbox", "41,42", Join(clone.Inbox));
+        Check(ref failures, "Archive", "51,52", Join(clone.Archive));
+        Check(ref failures, "Quotas", "a=61,b=62", clone.Quotas is null ? "null"
+            : string.Join(",", clone.Quotas.OrderBy(static x => x.Key, StringComparer.Ordinal)
+                .Select(static x => $"{x.Key}={x.Value}")));
+
+        // the four types with their own core-serializer entries
+        Check(ref failures, "Day", original.Day, clone.Day);
+        Check(ref failures, "Time", original.Time, clone.Time);
+        Check(ref failures, "Offset", original.Offset, clone.Offset);
+        Check(ref failures, "Host (parseable)", "10.0.0.7", clone.Host?.ToString());
+
+        // written because it differs from the declared default, and so must not come back as the
+        // initialiser's 5
+        Check(ref failures, "Retries ([DefaultValue])", 0, clone.Retries);
+
+        // callbacks: both families, and both ends of each
+        Check(ref failures, "Audited write hooks", "bs;as;", original.Audited.Trace);
+        Check(ref failures, "Audited read hooks", "bd;ad;", clone.Audited?.Trace);
+        Check(ref failures, "Audited.Value", "a", clone.Audited?.Value);
+        Check(ref failures, "Tracked write hooks", "os;od;", original.Tracked.Trace);
+        Check(ref failures, "Tracked read hooks", "ds;dd;", clone.Tracked?.Trace);
+        Check(ref failures, "Tracked.Value", "t", clone.Tracked?.Value);
+
+        // Specified replaces the trivial-value guard, so an explicit zero is written and the flag is
+        // set again on read; ShouldSerialize suppresses a non-zero value entirely
+        Check(ref failures, "Explicit zero written", 0, clone.Conditional?.Explicit);
+        Check(ref failures, "ExplicitSpecified set on read", true, clone.Conditional?.ExplicitSpecified);
+        Check(ref failures, "Hidden suppressed", 0, clone.Conditional?.Hidden);
+
+        // implicit numbering, by name; and private fields reached in both directions
+        Check(ref failures, "Sorted", "a/m/z",
+            $"{clone.Sorted?.Apple}/{clone.Sorted?.Mango}/{clone.Sorted?.Zebra}");
+        Check(ref failures, "Ledger.Balance", 1234, clone.Ledger?.Balance);
+        Check(ref failures, "Ledger.Owner", "ann", clone.Ledger?.Owner);
 
         // DataFormat: ZigZag needs a read hint, FixedSize picks its width, Group reframes
         Check(ref failures, "Delta (zigzag)", original.Delta, clone.Delta);

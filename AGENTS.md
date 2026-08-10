@@ -833,6 +833,23 @@ Two members earn their place for reasons that are not obvious from reading them:
 - `Dictionary<int, List<int>>` and `List<Status>` are the two shapes that pass **no** serializer and
   resolve one from the model through `ISerializerProxy`, i.e. the arm `ResolveSerializer` gates.
 
+The feature sweep is **complete** as of this branch: every generator feature that was listed as
+natively unexercised now has a member here — the immutable *reference* families, both callback
+families, `Specified`/`ShouldSerialize`, both `ImplicitFields` modes, `DateOnly`/`TimeOnly`/`nint`,
+a parseable type and `[DefaultValue]`. Three of those need their sample chosen so the check can
+actually fail, which is easy to lose in an edit:
+
+- `Retries` is `[DefaultValue(5)]` **set to 0**, so it is written and must come back as 0 rather than
+  as the initialiser's 5. Set to anything else, the guard's operand is untested;
+- `Conditional.Explicit` is **zero with `ExplicitSpecified = true`**, which is the only combination
+  that distinguishes a `Specified` guard from the trivial-value one it replaces;
+- `Sorted`'s members are declared `Zebra, Apple, Mango` and asserted as `a/m/z`, since implicit
+  numbering sorts by name rather than by declaration order.
+
+`AllowParseableTypes = true` on the model is required by the `IPAddress` member and applies to the
+whole model — harmless here only because nothing else in it has a `static Parse(string)`. A type that
+grew one would silently move from message to string.
+
 Note `Debug.Assert` in the generated services constructor — the one checking a stated `IsScalar`
 against the serializer's real `Features` — is `[Conditional("DEBUG")]` against the *consumer's*
 compilation, so a Release publish never runs it. `dotnet run --project src/AotSmoke -c Debug` does,
@@ -844,6 +861,11 @@ dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64
 
 `vswhere.exe` must be on `PATH` (`%ProgramFiles(x86)%\Microsoft Visual Studio\Installer`) or ILC's
 link step fails with a mangled command line — the error names `link.exe`, which is misleading.
+
+`-r linux-x64` also works, with the platform toolchain and no `vswhere`. The **warning count is the
+same on both** (21 at the time of writing), so either RID is a valid measuring stick for it; the
+**byte sizes are not comparable across RIDs**, so measure a delta against a baseline taken on the
+same machine rather than against a figure recorded here.
 
 Because `PublishAot` enables trim/AOT analysis at **build** time too, an ordinary `dotnet build` of
 this project catches annotation regressions without paying for a native publish. That is how IL2095
