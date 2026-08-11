@@ -88,6 +88,14 @@ hopes. The real `State` supports streams and `ReadOnlySequence<byte>`; the rewri
 buffer model *first* (contiguous fast path with an explicit refill boundary is the obvious shape —
 the same trick the current reader plays, but with the fast path actually fast).
 
+One buffer-model decision is already made: on modern TFMs the reader holds the array root as a
+**`ref byte` field** (C# 11 ref fields, .NET 7+) and the position is a byte offset applied with
+`Unsafe.Add` — no `MemoryMarshal.GetArrayDataReference` per read, no bounds checks, no pinning
+(ref fields are GC-tracked). netfx/netstandard2.0 falls back to `arr[index]` — bounds-checked and
+slower, hidden behind a per-TFM accessor pair marked `AggressiveInlining`; the down-level path pays,
+and .NET 10 is the optimization target. The micro-benchmark harnesses hoist the root ref once per
+batch to approximate the ref-field shape, so the tables measure the modern layout.
+
 Also unbuilt: slab strings (`ReadOnlyMemory<char>`) were sketched only, and the whole POC predates
 `SearchValues`/net8 intrinsics — some of the 2022 measurements deserve re-running.
 
