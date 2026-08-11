@@ -50,6 +50,25 @@ Length 1–5 = uniform streams of that encoded length; 0 = shuffled mix of 1–5
 6. `Pext` vs `Swar` vs `Switch` are within ~0.4 ns of each other; pext is the flattest but carries
    the Zen1/Zen2 microcode hazard (catastrophic there; must stay guarded).
 
+## Provisional verdict
+
+**`ByteUnrolled` is the default, hard to argue with.** It wins every uniform row; even a tie would
+go to it on simplicity (zero intrinsics — one implementation for net10/netfx/arm64, no Zen1/2
+hazard, no guards); and the benchmark's own flaw argues *for* it in the case that matters most:
+**tag varints are predictable by construction** — within a message type, tags arrive in schema
+order, so the tag-length sequence for a stream of same-shaped messages is genuinely periodic, and
+the predictor-flattering behaviour the mixed row was flagged for is close to representative there.
+`EarlyExit2Then8`'s length-2 edge is within noise, and unrolled *is* that hedge extended all the
+way down without the cliff past its exits.
+
+What would have to be true to unseat it: value varints of genuinely volatile magnitude (the one
+place branches really mispredict) favouring flat-1.93ns pext by ~1.5× once the mixed row is
+corrected. Even then the answer is not a swap but a **second entry point**: the new-surface API
+lets the generator choose per call site — unrolled for tags and length prefixes, branchless kept in
+the back pocket for **packed repeated decode** of hostile-magnitude data, where a tight value loop
+has no schema-order predictability and batching pays anyway. The corpus-distribution row below is
+confirmation for the default, decision only for that second entry point.
+
 ## Next steps for this table
 
 - defeat pattern memorization on the mixed row (bigger streams / per-iteration data), then re-run;
