@@ -8,6 +8,20 @@ contracts and emits IL for them on the fly. That is fast and flexible, and it is
 incompatible with **native AOT**, where there is no IL emitter, and awkward under **trimming**, where
 the members it wants to reflect over may already have been removed.
 
+It also costs you on **every cold start**, which is why this is worth a look even if you never publish
+native. That reflection and IL emission happens on first use of each contract. Measured over
+`descriptor.proto`'s contracts — time to *first* serialize, median of 30 process launches:
+
+| | time to first serialize |
+| --- | ---: |
+| runtime model (what you have today) | 50.6 ms |
+| a generated model, same ordinary build | 16.9 ms |
+| a generated model, published native AOT | 0.43 ms |
+
+Ratios travel better than the milliseconds — one machine, one payload — but the shape holds: roughly
+**3× on an ordinary build**, and ~100× once native. A generated model still pays JIT for its own code
+on an ordinary build, which is why it is not nearer zero there.
+
 The AOT generator builds those serializers at **compile time** instead. Your model becomes ordinary
 C# in your own project — code you can read, step through, and that ILC can compile like anything
 else.

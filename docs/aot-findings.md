@@ -687,6 +687,45 @@ could silently do nothing: a project with `PublishAot=true`, a contract and no m
 Still open: pairing `PBN2012` with a fix that writes the `[ProtoModel]` stub. That is what would turn
 it from a notification into an action, and it is the obvious next piece.
 
+### Cold start, measured: 51 ms → 17 ms → 0.4 ms
+
+`PBN2013` tells a non-AOT consumer that compile-time serializers help cold start. That claim was
+being made on reasoning alone, so `src/AotColdStart` measures it — a three-horse race over the
+`descriptor.proto` contract closure, median of 30 **process launches**:
+
+| | wall | in-process |
+| --- | ---: | ---: |
+| baseline, no serialization | 15.9 ms | 0.001 ms |
+| **A** vanilla, runtime model | 67.5 ms | **50.6 ms** |
+| **B** generated model, same build | 32.2 ms | **16.9 ms** |
+| **C** generated model, native AOT | 3.5 ms | **0.43 ms** |
+| native baseline | 3.0 ms | — |
+
+Both arms emit **byte-identical payloads** (12,648 bytes), which is the check that they are doing
+equivalent work rather than one of them cheating.
+
+Read net of the baseline: first serialize costs **51.6 ms** vanilla, **16.3 ms** generated on the same
+runtime, **0.5 ms** native. So the claim holds — **~3× on an ordinary JIT build, ~100× native** — and
+B is the number that matters for `PBN2013`, since that consumer is not publishing native at all.
+
+Why B is not near-zero: it still pays **JIT for the generated serializer code**. What it no longer
+pays is metadata inspection and ref-emit. C removes the remaining JIT as well, which is why it is
+another 39× below B.
+
+**The methodology is the hard part, and is the reason for the shape of the harness.** What is being
+measured happens exactly once per process, so an in-process loop would measure iterations 2..N — all
+warm — and report the opposite of the answer. The program therefore does *one* serialize and exits,
+and `run-coldstart.sh` supplies the repetition by launching it 30 times. Two clocks, because they
+answer different questions: the in-process one starts at the top of `Main` and isolates the
+serialization work, while the wall clock includes host startup and is what a user feels. They diverge
+most for the native build, so quoting either alone would flatter one arm.
+
+Caveats worth stating before anyone quotes these: one machine, one payload, Linux; the **ratios** are
+the transferable part, not the milliseconds. And the cost scales with the number of *distinct
+contracts first used* — this closure is a modest ~15 types, so a large model should be proportionally
+worse, which is the shape of the "timeout inspecting metadata" failures that motivated the question.
+That last sentence is inference from the mechanism, not something measured here.
+
 ### A. A UTF-8 fast path for string-shaped members (`IUtf8SpanFormattable`)
 
 Every string-shaped member goes through a `string`: parseable types do `ToString()` on the way out
