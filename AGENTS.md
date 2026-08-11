@@ -755,12 +755,38 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 
 ### Not yet supported
 
-Three things are genuinely ours rather than matches:
+Two things are genuinely ours rather than matches:
 
 - a **nested map key** (`Dictionary<List<int>, List<string>>`) — though note this *matches* the
-  compiled ref-emit path, which throws on use; only the reflection path handles it;
-- a **`CategoryScalar` hand-written serializer** as a collection element or map value — the unary
-  form is emitted, that one has no derived reference yet;
+  compiled ref-emit path, which throws on use; only the reflection path handles it.
+
+  **The scenario is real, which is why this is an omission rather than a refusal on principle.** A
+  composite value used as an identity key is ordinary in generator-shaped code — this very codebase
+  keys its incremental cache on an `EquatableArray<T>`, for exactly that reason. So "a collection as
+  a dictionary key" is not automatically a mistake in a contract.
+
+  What makes it *hard to use* is orthogonal to us, and worth knowing before anyone builds it: the key
+  needs **intrinsic structural equality**, and the BCL immutable collections do not have it. Probed,
+  because the details are surprising:
+
+  | | `a.Equals(b)` for equal contents |
+  | --- | :-: |
+  | `ImmutableArray<T>` | **false** — compares the *underlying array by reference* |
+  | `ImmutableList<T>` | false — does not override at all |
+  | `ImmutableHashSet<T>` | false — likewise |
+
+  `ImmutableArray<T>` is the ironic one: it is the only one that implements `IEquatable<>`, and it is
+  reference-based, so it *looks* like a structural value type and is not. That is the same trap
+  recorded above for the plan types, which is why `EquatableArray<T>` is hand-written here.
+
+  A `Dictionary<ImmutableArray<int>, string>` therefore misses an equal-but-distinct key today,
+  before serialization enters into it. And supplying an `IEqualityComparer` does not rescue a
+  round-trip either, because protobuf-net **constructs the collection itself** (`ActivatorCreate`), so
+  the comparer is not carried across. The only shape that really works is a key type whose own
+  equality is structural — a consumer's `EquatableArray<Foo>`, not a BCL type.
+
+  So: a fair omission for a first release, and if it is ever built, the reference behaviour to copy is
+  the *reflection* path, since the compiled one throws;
 - a **hand-written serializer as a collection element or map value** whose category is scalar *or*
   simply unknown. The unary form defers framing to the serializer (below); an element cannot, because
   the element's wire type is baked into the collection's features at the call site. Emitting the
