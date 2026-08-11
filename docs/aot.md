@@ -85,6 +85,8 @@ fail, escalate them:
 | `PBN2002` | a contract was dropped because of how it is declared |
 | `PBN2003` | a contract was dropped because of a protobuf-net option not yet supported |
 | `PBN2004` | a contract was dropped because something it references was dropped |
+| `PBN2010` | a call site still goes through the runtime model — see below |
+| `PBN2011` | a call site takes its contract type as a value, so nothing can check it |
 
 `PBN2004` matters more than it looks: dropping cascades. A contract whose member type was dropped
 cannot be emitted either, so one unsupported type can take a subtree with it. Fix the ones that are
@@ -99,6 +101,31 @@ nothing being lost.
 
 The diagnostics say which is which, and quote what the runtime model says, so you can tell "this
 never worked" from "this is not supported here yet".
+
+## Turning it on does not move your existing code
+
+This is the part that surprises people, so the generator's analyzer says it out loud.
+
+`Serializer.Serialize(...)` — and `Deserialize`, `DeepClone`, `Measure`, and the rest of that static
+facade — go through `RuntimeTypeModel.Default`, which builds serializers **by reflection**. Adding a
+`[ProtoModel]` does not change that. And those call sites keep working on an ordinary JIT runtime, so
+nothing goes wrong until you publish for native AOT, a long way from the change.
+
+Once your project declares a `[ProtoModel]`, `PBN2010` flags each such call and names your model:
+
+``` c#
+Serializer.Serialize(stream, order);   // PBN2010
+model.Serialize(stream, order);        // what it is asking for
+```
+
+Nothing is reported if you have no `[ProtoModel]` — the runtime model is a perfectly good way to use
+protobuf-net, and this has nothing to say to anyone using it. Calls on a model *you* named, including
+a `RuntimeTypeModel.Create()` you configured deliberately, are left alone.
+
+`PBN2011` is the other half, and it has no mechanical fix: the non-generic APIs take the thing to
+serialize as an `object` or a `Type`, so neither the analyzer nor the generator can tell what will be
+serialized. Under AOT that call will take the reflection path. If it needs to work when published,
+move it to a generic overload.
 
 ## Things that catch people out
 

@@ -180,8 +180,37 @@ Design constraints that are settled, and should not be quietly relaxed:
   versions multiplies every emitted construct for no benefit to anyone doing AOT. (netstandard2.0
   and net4x default to C# 7.3, so those consumers must set `<LangVersion>` — accepted deliberately.)
 
+### The migration analyzer
+
+`AotMigrationAnalyzer` (`PBN2010`/`PBN2011`) exists because turning the generator on **moves no
+existing code onto it**: `Serializer.Serialize(...)` and friends go through `RuntimeTypeModel.Default`,
+which reflects. Worse, those call sites keep working under JIT, so the failure lands at publish time.
+
+Three decisions worth keeping:
+
+- **It is silent without a `[ProtoModel]` in the compilation.** The runtime model is a perfectly good
+  way to use protobuf-net and this has nothing to say to those users; a analyzer that nags everyone
+  would be turned off by everyone.
+- **Two diagnostics, split on whether the contract type is knowable.** `PBN2010` is the generic case,
+  where the fix is mechanical (name the model). `PBN2011` is the `object`/`Type` API, where nothing —
+  analyzer or generator — can tell what will be serialized. That one is deliberately *reported rather
+  than passed over*: a call site nobody can resolve statically is exactly the kind that fails only
+  once ILC has trimmed.
+- **A call on any other `TypeModel` is left alone**, including `RuntimeTypeModel.Create()`. That is
+  the shape we are asking people to write, and flagging it would be worse than saying nothing.
+
+**An analyzer does see the generator's post-init sources** — that is what makes the `[ProtoModel]`
+trigger work, and it was verified in a real build (`AotSmoke`) rather than assumed, because the whole
+design rests on it. The unit tests stub `ProtoModelAttribute`, `Serializer` and `RuntimeTypeModel`
+instead: the analyzer matches on full names, and the test harness references Core (through BuildTools),
+which has `TypeModel` but not the other two.
+
+No code fixer yet. It would need `Microsoft.CodeAnalysis.CSharp.Workspaces` and a separate shipping
+assembly, which is a packaging question rather than a code one.
+
 AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0023` belong to
-`DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. New IDs should be
+`DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. `PBN2010`/`PBN2011` are
+the migration analyzer's, and are the only ones in the 2000 block that are *not* the generator's. New IDs should be
 added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not actually *enforced*
 here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so the table is
 documentation rather than a build gate, and it *had* drifted; it is current as of this branch, which
