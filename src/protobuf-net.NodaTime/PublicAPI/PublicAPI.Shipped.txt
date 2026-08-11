@@ -1,0 +1,8 @@
+ProtoBuf.Meta.NodaTimeExtensions
+ProtoBuf.Meta.NodaTimeSerializers
+ProtoBuf.Meta.NodaTimeSerializers.NodaTimeSerializers() -> void
+static ProtoBuf.Meta.NodaTimeExtensions.AddNodaTime(this ProtoBuf.Meta.RuntimeTypeModel model) -> ProtoBuf.Meta.RuntimeTypeModel
+static ProtoBuf.Meta.NodaTimeExtensions.ToNodaTimeDuration(ProtoBuf.WellKnownTypes.Duration value) -> NodaTime.Duration
+static ProtoBuf.Meta.NodaTimeExtensions.ToNodaTimeInstant(ProtoBuf.WellKnownTypes.Timestamp value) -> NodaTime.Instant
+static ProtoBuf.Meta.NodaTimeExtensions.ToProtoBufDuration(NodaTime.Duration value) -> ProtoBuf.WellKnownTypes.Duration
+static ProtoBuf.Meta.NodaTimeExtensions.ToProtoBufTimestamp(NodaTime.Instant value) -> ProtoBuf.WellKnownTypes.Timestamp

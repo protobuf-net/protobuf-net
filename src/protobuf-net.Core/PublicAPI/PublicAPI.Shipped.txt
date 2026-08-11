@@ -1,0 +1,862 @@
+abstract ProtoBuf.Serializers.EnumSerializer<TEnum>.Read(ref ProtoBuf.ProtoReader.State state, TEnum value) -> TEnum
+abstract ProtoBuf.Serializers.EnumSerializer<TEnum>.Write(ref ProtoBuf.ProtoWriter.State state, TEnum value) -> void
+abstract ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.AddRange(TCollection values, ref System.ArraySegment<System.Collections.Generic.KeyValuePair<TKey, TValue>> newValues, ProtoBuf.ISerializationContext context) -> TCollection
+abstract ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.Clear(TCollection values, ProtoBuf.ISerializationContext context) -> TCollection
+abstract ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.SetValues(TCollection values, ref System.ArraySegment<System.Collections.Generic.KeyValuePair<TKey, TValue>> newValues, ProtoBuf.ISerializationContext context) -> TCollection
+abstract ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.AddRange(TCollection values, ref System.ArraySegment<TItem> newValues, ProtoBuf.ISerializationContext context) -> TCollection
+abstract ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.Clear(TCollection values, ProtoBuf.ISerializationContext context) -> TCollection
+abstract ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.TryGetCount(TCollection values) -> int
+const ProtoBuf.Meta.TypeModel.ListItemTag = 1 -> int
+override ProtoBuf.SubItemToken.Equals(object obj) -> bool
+override ProtoBuf.SubItemToken.GetHashCode() -> int
+override ProtoBuf.SubItemToken.ToString() -> string
+ProtoBuf.BclHelpers
+ProtoBuf.BufferExtension
+ProtoBuf.BufferExtension.BufferExtension() -> void
+ProtoBuf.CompatibilityLevel
+ProtoBuf.CompatibilityLevel.Level200 = 200 -> ProtoBuf.CompatibilityLevel
+ProtoBuf.CompatibilityLevel.Level240 = 240 -> ProtoBuf.CompatibilityLevel
+ProtoBuf.CompatibilityLevel.Level300 = 300 -> ProtoBuf.CompatibilityLevel
+ProtoBuf.CompatibilityLevel.NotSpecified = 0 -> ProtoBuf.CompatibilityLevel
+ProtoBuf.CompatibilityLevelAttribute
+ProtoBuf.CompatibilityLevelAttribute.CompatibilityLevelAttribute(ProtoBuf.CompatibilityLevel level) -> void
+ProtoBuf.CompatibilityLevelAttribute.Level.get -> ProtoBuf.CompatibilityLevel
+ProtoBuf.DataFormat
+ProtoBuf.DataFormat.Default = 0 -> ProtoBuf.DataFormat
+ProtoBuf.DataFormat.FixedSize = 3 -> ProtoBuf.DataFormat
+ProtoBuf.DataFormat.Group = 4 -> ProtoBuf.DataFormat
+ProtoBuf.DataFormat.TwosComplement = 2 -> ProtoBuf.DataFormat
+ProtoBuf.DataFormat.WellKnown = 5 -> ProtoBuf.DataFormat
+ProtoBuf.DataFormat.ZigZag = 1 -> ProtoBuf.DataFormat
+ProtoBuf.DiscriminatedUnion128
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128() -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, bool value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, double value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, float value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, int value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, long value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, System.DateTime? value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, System.Guid? value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, System.TimeSpan? value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, uint value) -> void
+ProtoBuf.DiscriminatedUnion128.DiscriminatedUnion128(int discriminator, ulong value) -> void
+ProtoBuf.DiscriminatedUnion128.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnion128.Is(int discriminator) -> bool
+ProtoBuf.DiscriminatedUnion128Object
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object() -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, bool value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, double value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, float value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, int value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, long value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, object value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, System.DateTime? value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, System.Guid? value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, System.TimeSpan? value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, uint value) -> void
+ProtoBuf.DiscriminatedUnion128Object.DiscriminatedUnion128Object(int discriminator, ulong value) -> void
+ProtoBuf.DiscriminatedUnion128Object.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnion128Object.Is(int discriminator) -> bool
+ProtoBuf.DiscriminatedUnion32
+ProtoBuf.DiscriminatedUnion32.DiscriminatedUnion32() -> void
+ProtoBuf.DiscriminatedUnion32.DiscriminatedUnion32(int discriminator, bool value) -> void
+ProtoBuf.DiscriminatedUnion32.DiscriminatedUnion32(int discriminator, float value) -> void
+ProtoBuf.DiscriminatedUnion32.DiscriminatedUnion32(int discriminator, int value) -> void
+ProtoBuf.DiscriminatedUnion32.DiscriminatedUnion32(int discriminator, uint value) -> void
+ProtoBuf.DiscriminatedUnion32.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnion32.Is(int discriminator) -> bool
+ProtoBuf.DiscriminatedUnion32Object
+ProtoBuf.DiscriminatedUnion32Object.DiscriminatedUnion32Object() -> void
+ProtoBuf.DiscriminatedUnion32Object.DiscriminatedUnion32Object(int discriminator, bool value) -> void
+ProtoBuf.DiscriminatedUnion32Object.DiscriminatedUnion32Object(int discriminator, float value) -> void
+ProtoBuf.DiscriminatedUnion32Object.DiscriminatedUnion32Object(int discriminator, int value) -> void
+ProtoBuf.DiscriminatedUnion32Object.DiscriminatedUnion32Object(int discriminator, object value) -> void
+ProtoBuf.DiscriminatedUnion32Object.DiscriminatedUnion32Object(int discriminator, uint value) -> void
+ProtoBuf.DiscriminatedUnion32Object.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnion32Object.Is(int discriminator) -> bool
+ProtoBuf.DiscriminatedUnion64
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64() -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, bool value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, double value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, float value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, int value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, long value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, System.DateTime? value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, System.TimeSpan? value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, uint value) -> void
+ProtoBuf.DiscriminatedUnion64.DiscriminatedUnion64(int discriminator, ulong value) -> void
+ProtoBuf.DiscriminatedUnion64.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnion64.Is(int discriminator) -> bool
+ProtoBuf.DiscriminatedUnion64Object
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object() -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, bool value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, double value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, float value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, int value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, long value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, object value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, System.DateTime? value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, System.TimeSpan? value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, uint value) -> void
+ProtoBuf.DiscriminatedUnion64Object.DiscriminatedUnion64Object(int discriminator, ulong value) -> void
+ProtoBuf.DiscriminatedUnion64Object.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnion64Object.Is(int discriminator) -> bool
+ProtoBuf.DiscriminatedUnionObject
+ProtoBuf.DiscriminatedUnionObject.DiscriminatedUnionObject() -> void
+ProtoBuf.DiscriminatedUnionObject.DiscriminatedUnionObject(int discriminator, object value) -> void
+ProtoBuf.DiscriminatedUnionObject.Discriminator.get -> int
+ProtoBuf.DiscriminatedUnionObject.Is(int discriminator) -> bool
+ProtoBuf.Extensible
+ProtoBuf.Extensible.Extensible() -> void
+ProtoBuf.IExtensible
+ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing) -> ProtoBuf.IExtension
+ProtoBuf.IExtension
+ProtoBuf.IExtension.BeginAppend() -> System.IO.Stream
+ProtoBuf.IExtension.BeginQuery() -> System.IO.Stream
+ProtoBuf.IExtension.EndAppend(System.IO.Stream stream, bool commit) -> void
+ProtoBuf.IExtension.EndQuery(System.IO.Stream stream) -> void
+ProtoBuf.IExtension.GetLength() -> int
+ProtoBuf.IExtensionResettable
+ProtoBuf.IExtensionResettable.Reset() -> void
+ProtoBuf.IMeasuredProtoOutput<TOutput>
+ProtoBuf.IMeasuredProtoOutput<TOutput>.Measure<T>(T value, object userState = null) -> ProtoBuf.MeasureState<T>
+ProtoBuf.IMeasuredProtoOutput<TOutput>.Serialize<T>(ProtoBuf.MeasureState<T> measured, TOutput destination) -> void
+ProtoBuf.ImplicitFields
+ProtoBuf.ImplicitFields.AllFields = 2 -> ProtoBuf.ImplicitFields
+ProtoBuf.ImplicitFields.AllPublic = 1 -> ProtoBuf.ImplicitFields
+ProtoBuf.ImplicitFields.None = 0 -> ProtoBuf.ImplicitFields
+ProtoBuf.IProtoInput<TInput>
+ProtoBuf.IProtoInput<TInput>.Deserialize<T>(TInput source, T value = default(T), object userState = null) -> T
+ProtoBuf.IProtoOutput<TOutput>
+ProtoBuf.IProtoOutput<TOutput>.Serialize<T>(TOutput destination, T value, object userState = null) -> void
+ProtoBuf.ISerializationContext
+ProtoBuf.ISerializationContext.Model.get -> ProtoBuf.Meta.TypeModel
+ProtoBuf.ISerializationContext.UserState.get -> object
+ProtoBuf.ITypedExtensible
+ProtoBuf.ITypedExtensible.GetExtensionObject(System.Type type, bool createIfMissing) -> ProtoBuf.IExtension
+ProtoBuf.MeasureState<T>
+ProtoBuf.MeasureState<T>.Dispose() -> void
+ProtoBuf.MeasureState<T>.Length.get -> long
+ProtoBuf.MeasureState<T>.LengthOnly() -> long
+ProtoBuf.MeasureState<T>.MeasureState() -> void
+ProtoBuf.MeasureState<T>.Serialize(System.Buffers.IBufferWriter<byte> writer) -> void
+ProtoBuf.MeasureState<T>.Serialize(System.IO.Stream stream) -> void
+ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.AsReference = 4 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.AsReferenceHasValue = 32 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.DynamicType = 8 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.None = 0 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.OverwriteList = 16 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.Packed = 1 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.MemberSerializationOptions.Required = 2 -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Default = -1 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Proto2 = 0 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Proto3 = 1 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.SchemaGenerationFlags
+ProtoBuf.Meta.SchemaGenerationFlags.IncludeEnumNamePrefix = 4 -> ProtoBuf.Meta.SchemaGenerationFlags
+ProtoBuf.Meta.SchemaGenerationFlags.MultipleNamespaceSupport = 1 -> ProtoBuf.Meta.SchemaGenerationFlags
+ProtoBuf.Meta.SchemaGenerationFlags.None = 0 -> ProtoBuf.Meta.SchemaGenerationFlags
+ProtoBuf.Meta.SchemaGenerationFlags.PreserveSubType = 2 -> ProtoBuf.Meta.SchemaGenerationFlags
+ProtoBuf.Meta.SchemaGenerationOptions
+ProtoBuf.Meta.SchemaGenerationOptions.Flags.get -> ProtoBuf.Meta.SchemaGenerationFlags
+ProtoBuf.Meta.SchemaGenerationOptions.Flags.set -> void
+ProtoBuf.Meta.SchemaGenerationOptions.Origin.get -> string
+ProtoBuf.Meta.SchemaGenerationOptions.Origin.set -> void
+ProtoBuf.Meta.SchemaGenerationOptions.Package.get -> string
+ProtoBuf.Meta.SchemaGenerationOptions.Package.set -> void
+ProtoBuf.Meta.SchemaGenerationOptions.SchemaGenerationOptions() -> void
+ProtoBuf.Meta.SchemaGenerationOptions.Services.get -> System.Collections.Generic.List<ProtoBuf.Meta.Service>
+ProtoBuf.Meta.SchemaGenerationOptions.Syntax.get -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.SchemaGenerationOptions.Syntax.set -> void
+ProtoBuf.Meta.SchemaGenerationOptions.Types.get -> System.Collections.Generic.List<System.Type>
+ProtoBuf.Meta.Service
+ProtoBuf.Meta.Service.Description.get -> string
+ProtoBuf.Meta.Service.Description.set -> void
+ProtoBuf.Meta.Service.Methods.get -> System.Collections.Generic.List<ProtoBuf.Meta.ServiceMethod>
+ProtoBuf.Meta.Service.Name.get -> string
+ProtoBuf.Meta.Service.Name.set -> void
+ProtoBuf.Meta.Service.Service() -> void
+ProtoBuf.Meta.ServiceMethod
+ProtoBuf.Meta.ServiceMethod.ClientStreaming.get -> bool
+ProtoBuf.Meta.ServiceMethod.ClientStreaming.set -> void
+ProtoBuf.Meta.ServiceMethod.Description.get -> string
+ProtoBuf.Meta.ServiceMethod.Description.set -> void
+ProtoBuf.Meta.ServiceMethod.InputType.get -> System.Type
+ProtoBuf.Meta.ServiceMethod.InputType.set -> void
+ProtoBuf.Meta.ServiceMethod.Name.get -> string
+ProtoBuf.Meta.ServiceMethod.Name.set -> void
+ProtoBuf.Meta.ServiceMethod.OutputType.get -> System.Type
+ProtoBuf.Meta.ServiceMethod.OutputType.set -> void
+ProtoBuf.Meta.ServiceMethod.ServerStreaming.get -> bool
+ProtoBuf.Meta.ServiceMethod.ServerStreaming.set -> void
+ProtoBuf.Meta.ServiceMethod.ServiceMethod() -> void
+ProtoBuf.Meta.TypeFormatEventArgs
+ProtoBuf.Meta.TypeFormatEventArgs.FormattedName.get -> string
+ProtoBuf.Meta.TypeFormatEventArgs.FormattedName.set -> void
+ProtoBuf.Meta.TypeFormatEventArgs.Type.get -> System.Type
+ProtoBuf.Meta.TypeFormatEventArgs.Type.set -> void
+ProtoBuf.Meta.TypeFormatEventHandler
+ProtoBuf.Meta.TypeModel
+ProtoBuf.Meta.TypeModel.BufferSize.get -> int
+ProtoBuf.Meta.TypeModel.BufferSize.set -> void
+ProtoBuf.Meta.TypeModel.CallbackType
+ProtoBuf.Meta.TypeModel.CallbackType.AfterDeserialize = 3 -> ProtoBuf.Meta.TypeModel.CallbackType
+ProtoBuf.Meta.TypeModel.CallbackType.AfterSerialize = 1 -> ProtoBuf.Meta.TypeModel.CallbackType
+ProtoBuf.Meta.TypeModel.CallbackType.BeforeDeserialize = 2 -> ProtoBuf.Meta.TypeModel.CallbackType
+ProtoBuf.Meta.TypeModel.CallbackType.BeforeSerialize = 0 -> ProtoBuf.Meta.TypeModel.CallbackType
+ProtoBuf.Meta.TypeModel.CanSerialize(System.Type type) -> bool
+ProtoBuf.Meta.TypeModel.CanSerializeBasicType(System.Type type) -> bool
+ProtoBuf.Meta.TypeModel.CanSerializeContractType(System.Type type) -> bool
+ProtoBuf.Meta.TypeModel.CreateFormatter(System.Type type) -> System.Runtime.Serialization.IFormatter
+ProtoBuf.Meta.TypeModel.DeepClone(object value) -> object
+ProtoBuf.Meta.TypeModel.DeepClone<T>(T value, object userState = null) -> T
+ProtoBuf.Meta.TypeModel.Deserialize(ProtoBuf.ProtoReader source, object value, System.Type type) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.Buffers.ReadOnlySequence<byte> source, System.Type type, object value = null, object userState = null) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.IO.Stream source, object value, System.Type type, int length, ProtoBuf.SerializationContext context) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.IO.Stream source, object value, System.Type type, int length) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.IO.Stream source, object value, System.Type type, long length, ProtoBuf.SerializationContext context) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.IO.Stream source, object value, System.Type type, long length) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.IO.Stream source, object value, System.Type type, ProtoBuf.SerializationContext context) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.IO.Stream source, object value, System.Type type) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.ReadOnlyMemory<byte> source, System.Type type, object value = null, object userState = null) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.Type type, System.Buffers.ReadOnlySequence<byte> source, object value = null, object userState = null) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.Type type, System.IO.Stream source, object value = null, object userState = null, long length = -1) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.Type type, System.ReadOnlyMemory<byte> source, object value = null, object userState = null) -> object
+ProtoBuf.Meta.TypeModel.Deserialize(System.Type type, System.ReadOnlySpan<byte> source, object value = null, object userState = null) -> object
+ProtoBuf.Meta.TypeModel.Deserialize<T>(System.Buffers.ReadOnlySequence<byte> source, T value = default(T), object userState = null) -> T
+ProtoBuf.Meta.TypeModel.Deserialize<T>(System.IO.Stream source, T value = default(T), object userState = null) -> T
+ProtoBuf.Meta.TypeModel.Deserialize<T>(System.ReadOnlyMemory<byte> source, T value = default(T), object userState = null) -> T
+ProtoBuf.Meta.TypeModel.Deserialize<T>(System.ReadOnlySpan<byte> source, T value = default(T), object userState = null) -> T
+ProtoBuf.Meta.TypeModel.DeserializeItems(System.IO.Stream source, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver, ProtoBuf.SerializationContext context) -> System.Collections.IEnumerable
+ProtoBuf.Meta.TypeModel.DeserializeItems(System.IO.Stream source, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver) -> System.Collections.IEnumerable
+ProtoBuf.Meta.TypeModel.DeserializeItems<T>(System.IO.Stream source, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.SerializationContext context) -> System.Collections.Generic.IEnumerable<T>
+ProtoBuf.Meta.TypeModel.DeserializeItems<T>(System.IO.Stream source, ProtoBuf.PrefixStyle style, int expectedField) -> System.Collections.Generic.IEnumerable<T>
+ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver, out int bytesRead) -> object
+ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver, out long bytesRead) -> object
+ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver) -> object
+ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int fieldNumber) -> object
+ProtoBuf.Meta.TypeModel.DynamicTypeFormatting -> ProtoBuf.Meta.TypeFormatEventHandler
+ProtoBuf.Meta.TypeModel.ForwardsOnly.get -> bool
+ProtoBuf.Meta.TypeModel.ForwardsOnly.set -> void
+ProtoBuf.Meta.TypeModel.GetSchema(System.Type type, ProtoBuf.Meta.ProtoSyntax syntax) -> string
+ProtoBuf.Meta.TypeModel.GetSchema(System.Type type) -> string
+ProtoBuf.Meta.TypeModel.IsDefined(System.Type type) -> bool
+ProtoBuf.Meta.TypeModel.MapType(System.Type type, bool demand) -> System.Type
+ProtoBuf.Meta.TypeModel.MapType(System.Type type) -> System.Type
+ProtoBuf.Meta.TypeModel.MaxDepth.get -> int
+ProtoBuf.Meta.TypeModel.MaxDepth.set -> void
+ProtoBuf.Meta.TypeModel.Measure<T>(T value, object userState = null, long abortAfter = -1) -> ProtoBuf.MeasureState<T>
+ProtoBuf.Meta.TypeModel.Serialize(ProtoBuf.ProtoWriter dest, object value) -> void
+ProtoBuf.Meta.TypeModel.Serialize(System.Buffers.IBufferWriter<byte> dest, object value, object userState = null) -> void
+ProtoBuf.Meta.TypeModel.Serialize(System.IO.Stream dest, object value, ProtoBuf.SerializationContext context) -> void
+ProtoBuf.Meta.TypeModel.Serialize(System.IO.Stream dest, object value) -> void
+ProtoBuf.Meta.TypeModel.Serialize<T>(System.Buffers.IBufferWriter<byte> dest, T value, object userState = null) -> long
+ProtoBuf.Meta.TypeModel.Serialize<T>(System.IO.Stream dest, T value, object userState = null) -> long
+ProtoBuf.Meta.TypeModel.SerializeWithLengthPrefix(System.IO.Stream dest, object value, System.Type type, ProtoBuf.PrefixStyle style, int fieldNumber, ProtoBuf.SerializationContext context) -> void
+ProtoBuf.Meta.TypeModel.SerializeWithLengthPrefix(System.IO.Stream dest, object value, System.Type type, ProtoBuf.PrefixStyle style, int fieldNumber) -> void
+ProtoBuf.Meta.TypeModel.TypeModel() -> void
+ProtoBuf.Meta.TypeModel.TypeModelOptions
+ProtoBuf.Meta.TypeModel.TypeModelOptions.AllowPackedEncodingAtRoot = 8 -> ProtoBuf.Meta.TypeModel.TypeModelOptions
+ProtoBuf.Meta.TypeModel.TypeModelOptions.IncludeDateTimeKind = 2 -> ProtoBuf.Meta.TypeModel.TypeModelOptions
+ProtoBuf.Meta.TypeModel.TypeModelOptions.InternStrings = 1 -> ProtoBuf.Meta.TypeModel.TypeModelOptions
+ProtoBuf.Meta.TypeModel.TypeModelOptions.None = 0 -> ProtoBuf.Meta.TypeModel.TypeModelOptions
+ProtoBuf.Meta.TypeModel.TypeModelOptions.SkipZeroLengthPackedArrays = 4 -> ProtoBuf.Meta.TypeModel.TypeModelOptions
+ProtoBuf.NullWrappedCollectionAttribute
+ProtoBuf.NullWrappedCollectionAttribute.AsGroup.get -> bool
+ProtoBuf.NullWrappedCollectionAttribute.AsGroup.set -> void
+ProtoBuf.NullWrappedCollectionAttribute.NullWrappedCollectionAttribute() -> void
+ProtoBuf.NullWrappedValueAttribute
+ProtoBuf.NullWrappedValueAttribute.AsGroup.get -> bool
+ProtoBuf.NullWrappedValueAttribute.AsGroup.set -> void
+ProtoBuf.NullWrappedValueAttribute.NullWrappedValueAttribute() -> void
+ProtoBuf.PrefixStyle
+ProtoBuf.PrefixStyle.Base128 = 1 -> ProtoBuf.PrefixStyle
+ProtoBuf.PrefixStyle.Fixed32 = 2 -> ProtoBuf.PrefixStyle
+ProtoBuf.PrefixStyle.Fixed32BigEndian = 3 -> ProtoBuf.PrefixStyle
+ProtoBuf.PrefixStyle.None = 0 -> ProtoBuf.PrefixStyle
+ProtoBuf.ProtoAfterDeserializationAttribute
+ProtoBuf.ProtoAfterDeserializationAttribute.ProtoAfterDeserializationAttribute() -> void
+ProtoBuf.ProtoAfterSerializationAttribute
+ProtoBuf.ProtoAfterSerializationAttribute.ProtoAfterSerializationAttribute() -> void
+ProtoBuf.ProtoBeforeDeserializationAttribute
+ProtoBuf.ProtoBeforeDeserializationAttribute.ProtoBeforeDeserializationAttribute() -> void
+ProtoBuf.ProtoBeforeSerializationAttribute
+ProtoBuf.ProtoBeforeSerializationAttribute.ProtoBeforeSerializationAttribute() -> void
+ProtoBuf.ProtoContractAttribute
+ProtoBuf.ProtoContractAttribute.AsReferenceDefault.get -> bool
+ProtoBuf.ProtoContractAttribute.AsReferenceDefault.set -> void
+ProtoBuf.ProtoContractAttribute.DataMemberOffset.get -> int
+ProtoBuf.ProtoContractAttribute.DataMemberOffset.set -> void
+ProtoBuf.ProtoContractAttribute.EnumPassthru.get -> bool
+ProtoBuf.ProtoContractAttribute.EnumPassthru.set -> void
+ProtoBuf.ProtoContractAttribute.IgnoreListHandling.get -> bool
+ProtoBuf.ProtoContractAttribute.IgnoreListHandling.set -> void
+ProtoBuf.ProtoContractAttribute.IgnoreUnknownSubTypes.get -> bool
+ProtoBuf.ProtoContractAttribute.IgnoreUnknownSubTypes.set -> void
+ProtoBuf.ProtoContractAttribute.ImplicitFields.get -> ProtoBuf.ImplicitFields
+ProtoBuf.ProtoContractAttribute.ImplicitFields.set -> void
+ProtoBuf.ProtoContractAttribute.ImplicitFirstTag.get -> int
+ProtoBuf.ProtoContractAttribute.ImplicitFirstTag.set -> void
+ProtoBuf.ProtoContractAttribute.InferTagFromName.get -> bool
+ProtoBuf.ProtoContractAttribute.InferTagFromName.set -> void
+ProtoBuf.ProtoContractAttribute.IsGroup.get -> bool
+ProtoBuf.ProtoContractAttribute.IsGroup.set -> void
+ProtoBuf.ProtoContractAttribute.Name.get -> string
+ProtoBuf.ProtoContractAttribute.Name.set -> void
+ProtoBuf.ProtoContractAttribute.Origin.get -> string
+ProtoBuf.ProtoContractAttribute.Origin.set -> void
+ProtoBuf.ProtoContractAttribute.ProtoContractAttribute() -> void
+ProtoBuf.ProtoContractAttribute.Serializer.get -> System.Type
+ProtoBuf.ProtoContractAttribute.Serializer.set -> void
+ProtoBuf.ProtoContractAttribute.SkipConstructor.get -> bool
+ProtoBuf.ProtoContractAttribute.SkipConstructor.set -> void
+ProtoBuf.ProtoContractAttribute.Surrogate.get -> System.Type
+ProtoBuf.ProtoContractAttribute.Surrogate.set -> void
+ProtoBuf.ProtoContractAttribute.UseProtoMembersOnly.get -> bool
+ProtoBuf.ProtoContractAttribute.UseProtoMembersOnly.set -> void
+ProtoBuf.ProtoConverterAttribute
+ProtoBuf.ProtoConverterAttribute.ProtoConverterAttribute() -> void
+ProtoBuf.ProtoEnumAttribute
+ProtoBuf.ProtoEnumAttribute.HasValue() -> bool
+ProtoBuf.ProtoEnumAttribute.Name.get -> string
+ProtoBuf.ProtoEnumAttribute.Name.set -> void
+ProtoBuf.ProtoEnumAttribute.ProtoEnumAttribute() -> void
+ProtoBuf.ProtoEnumAttribute.Value.get -> int
+ProtoBuf.ProtoEnumAttribute.Value.set -> void
+ProtoBuf.ProtoException
+ProtoBuf.ProtoException.ProtoException() -> void
+ProtoBuf.ProtoException.ProtoException(string message, System.Exception innerException) -> void
+ProtoBuf.ProtoException.ProtoException(string message) -> void
+ProtoBuf.ProtoException.ProtoException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+ProtoBuf.ProtoIgnoreAttribute
+ProtoBuf.ProtoIgnoreAttribute.ProtoIgnoreAttribute() -> void
+ProtoBuf.ProtoIncludeAttribute
+ProtoBuf.ProtoIncludeAttribute.DataFormat.get -> ProtoBuf.DataFormat
+ProtoBuf.ProtoIncludeAttribute.DataFormat.set -> void
+ProtoBuf.ProtoIncludeAttribute.KnownType.get -> System.Type
+ProtoBuf.ProtoIncludeAttribute.KnownTypeName.get -> string
+ProtoBuf.ProtoIncludeAttribute.ProtoIncludeAttribute(int tag, string knownTypeName) -> void
+ProtoBuf.ProtoIncludeAttribute.ProtoIncludeAttribute(int tag, System.Type knownType) -> void
+ProtoBuf.ProtoIncludeAttribute.Tag.get -> int
+ProtoBuf.ProtoMapAttribute
+ProtoBuf.ProtoMapAttribute.DisableMap.get -> bool
+ProtoBuf.ProtoMapAttribute.DisableMap.set -> void
+ProtoBuf.ProtoMapAttribute.KeyFormat.get -> ProtoBuf.DataFormat
+ProtoBuf.ProtoMapAttribute.KeyFormat.set -> void
+ProtoBuf.ProtoMapAttribute.ProtoMapAttribute() -> void
+ProtoBuf.ProtoMapAttribute.ValueFormat.get -> ProtoBuf.DataFormat
+ProtoBuf.ProtoMapAttribute.ValueFormat.set -> void
+ProtoBuf.ProtoMemberAttribute
+ProtoBuf.ProtoMemberAttribute.AsReference.get -> bool
+ProtoBuf.ProtoMemberAttribute.AsReference.set -> void
+ProtoBuf.ProtoMemberAttribute.CompareTo(object other) -> int
+ProtoBuf.ProtoMemberAttribute.CompareTo(ProtoBuf.ProtoMemberAttribute other) -> int
+ProtoBuf.ProtoMemberAttribute.DataFormat.get -> ProtoBuf.DataFormat
+ProtoBuf.ProtoMemberAttribute.DataFormat.set -> void
+ProtoBuf.ProtoMemberAttribute.DynamicType.get -> bool
+ProtoBuf.ProtoMemberAttribute.DynamicType.set -> void
+ProtoBuf.ProtoMemberAttribute.IsPacked.get -> bool
+ProtoBuf.ProtoMemberAttribute.IsPacked.set -> void
+ProtoBuf.ProtoMemberAttribute.IsRequired.get -> bool
+ProtoBuf.ProtoMemberAttribute.IsRequired.set -> void
+ProtoBuf.ProtoMemberAttribute.Name.get -> string
+ProtoBuf.ProtoMemberAttribute.Name.set -> void
+ProtoBuf.ProtoMemberAttribute.Options.get -> ProtoBuf.MemberSerializationOptions
+ProtoBuf.ProtoMemberAttribute.Options.set -> void
+ProtoBuf.ProtoMemberAttribute.OverwriteList.get -> bool
+ProtoBuf.ProtoMemberAttribute.OverwriteList.set -> void
+ProtoBuf.ProtoMemberAttribute.ProtoMemberAttribute(int tag) -> void
+ProtoBuf.ProtoMemberAttribute.Tag.get -> int
+ProtoBuf.ProtoPartialIgnoreAttribute
+ProtoBuf.ProtoPartialIgnoreAttribute.MemberName.get -> string
+ProtoBuf.ProtoPartialIgnoreAttribute.ProtoPartialIgnoreAttribute(string memberName) -> void
+ProtoBuf.ProtoPartialMemberAttribute
+ProtoBuf.ProtoPartialMemberAttribute.MemberName.get -> string
+ProtoBuf.ProtoPartialMemberAttribute.ProtoPartialMemberAttribute(int tag, string memberName) -> void
+ProtoBuf.ProtoReader
+ProtoBuf.ProtoReader.AppendExtensionData(ProtoBuf.IExtensible instance) -> void
+ProtoBuf.ProtoReader.Assert(ProtoBuf.WireType wireType) -> void
+ProtoBuf.ProtoReader.Context.get -> ProtoBuf.SerializationContext
+ProtoBuf.ProtoReader.FieldNumber.get -> int
+ProtoBuf.ProtoReader.Hint(ProtoBuf.WireType wireType) -> void
+ProtoBuf.ProtoReader.InternStrings.get -> bool
+ProtoBuf.ProtoReader.InternStrings.set -> void
+ProtoBuf.ProtoReader.LongPosition.get -> long
+ProtoBuf.ProtoReader.Model.get -> ProtoBuf.Meta.TypeModel
+ProtoBuf.ProtoReader.Position.get -> int
+ProtoBuf.ProtoReader.ReadBoolean() -> bool
+ProtoBuf.ProtoReader.ReadByte() -> byte
+ProtoBuf.ProtoReader.ReadDouble() -> double
+ProtoBuf.ProtoReader.ReadFieldHeader() -> int
+ProtoBuf.ProtoReader.ReadInt16() -> short
+ProtoBuf.ProtoReader.ReadInt32() -> int
+ProtoBuf.ProtoReader.ReadInt64() -> long
+ProtoBuf.ProtoReader.ReadSByte() -> sbyte
+ProtoBuf.ProtoReader.ReadSingle() -> float
+ProtoBuf.ProtoReader.ReadString() -> string
+ProtoBuf.ProtoReader.ReadType() -> System.Type
+ProtoBuf.ProtoReader.ReadUInt16() -> ushort
+ProtoBuf.ProtoReader.ReadUInt32() -> uint
+ProtoBuf.ProtoReader.ReadUInt64() -> ulong
+ProtoBuf.ProtoReader.SkipField() -> void
+ProtoBuf.ProtoReader.State
+ProtoBuf.ProtoReader.State.AppendBytes(byte[] value) -> byte[]
+ProtoBuf.ProtoReader.State.AppendBytes(System.ArraySegment<byte> value) -> System.ArraySegment<byte>
+ProtoBuf.ProtoReader.State.AppendBytes(System.Memory<byte> value) -> System.Memory<byte>
+ProtoBuf.ProtoReader.State.AppendBytes(System.ReadOnlyMemory<byte> value) -> System.ReadOnlyMemory<byte>
+ProtoBuf.ProtoReader.State.AppendBytes<TStorage>(TStorage value, ProtoBuf.Serializers.IMemoryConverter<TStorage, byte> converter = null) -> TStorage
+ProtoBuf.ProtoReader.State.AppendExtensionData(ProtoBuf.IExtensible instance) -> void
+ProtoBuf.ProtoReader.State.AppendExtensionData(ProtoBuf.ITypedExtensible instance, System.Type type) -> void
+ProtoBuf.ProtoReader.State.Assert(ProtoBuf.WireType wireType) -> void
+ProtoBuf.ProtoReader.State.Context.get -> ProtoBuf.ISerializationContext
+ProtoBuf.ProtoReader.State.CreateInstance<T>(ProtoBuf.Serializers.ISerializer<T> serializer = null) -> T
+ProtoBuf.ProtoReader.State.DeserializeRoot<T>(T value = default(T), ProtoBuf.Serializers.ISerializer<T> serializer = null) -> T
+ProtoBuf.ProtoReader.State.Dispose() -> void
+ProtoBuf.ProtoReader.State.EndSubItem(ProtoBuf.SubItemToken token) -> void
+ProtoBuf.ProtoReader.State.FieldNumber.get -> int
+ProtoBuf.ProtoReader.State.GetPosition() -> long
+ProtoBuf.ProtoReader.State.GetSerializer<T>() -> ProtoBuf.Serializers.ISerializer<T>
+ProtoBuf.ProtoReader.State.HasSubValue(ProtoBuf.WireType wireType) -> bool
+ProtoBuf.ProtoReader.State.Hint(ProtoBuf.WireType wireType) -> void
+ProtoBuf.ProtoReader.State.InternStrings.get -> bool
+ProtoBuf.ProtoReader.State.InternStrings.set -> void
+ProtoBuf.ProtoReader.State.ReadAny<T>(ProtoBuf.Serializers.SerializerFeatures features, T value = default(T), ProtoBuf.Serializers.ISerializer<T> serializer = null) -> T
+ProtoBuf.ProtoReader.State.ReadAny<T>(T value = default(T)) -> T
+ProtoBuf.ProtoReader.State.ReadBaseType<TBaseType, T>(T value = null, ProtoBuf.Serializers.ISubTypeSerializer<TBaseType> serializer = null) -> T
+ProtoBuf.ProtoReader.State.ReadBoolean() -> bool
+ProtoBuf.ProtoReader.State.ReadByte() -> byte
+ProtoBuf.ProtoReader.State.ReadBytes(System.Span<byte> destination, out int length) -> void
+ProtoBuf.ProtoReader.State.ReadBytes(System.Span<byte> destination) -> System.Span<byte>
+ProtoBuf.ProtoReader.State.ReadDouble() -> double
+ProtoBuf.ProtoReader.State.ReadFieldHeader() -> int
+ProtoBuf.ProtoReader.State.ReadInt16() -> short
+ProtoBuf.ProtoReader.State.ReadInt32() -> int
+ProtoBuf.ProtoReader.State.ReadInt64() -> long
+ProtoBuf.ProtoReader.State.ReadMessage<T>(ProtoBuf.Serializers.SerializerFeatures features, T value = default(T), ProtoBuf.Serializers.ISerializer<T> serializer = null) -> T
+ProtoBuf.ProtoReader.State.ReadMessage<T>(T value = default(T)) -> T
+ProtoBuf.ProtoReader.State.ReadSByte() -> sbyte
+ProtoBuf.ProtoReader.State.ReadSingle() -> float
+ProtoBuf.ProtoReader.State.ReadString(ProtoBuf.StringMap map = null) -> string
+ProtoBuf.ProtoReader.State.ReadType() -> System.Type
+ProtoBuf.ProtoReader.State.ReadUInt16() -> ushort
+ProtoBuf.ProtoReader.State.ReadUInt32() -> uint
+ProtoBuf.ProtoReader.State.ReadUInt64() -> ulong
+ProtoBuf.ProtoReader.State.ReadWrapped<T>(ProtoBuf.Serializers.SerializerFeatures features, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> T
+ProtoBuf.ProtoReader.State.SkipField() -> void
+ProtoBuf.ProtoReader.State.StartSubItem() -> ProtoBuf.SubItemToken
+ProtoBuf.ProtoReader.State.State() -> void
+ProtoBuf.ProtoReader.State.ThrowEnumException(System.Type type, int value) -> void
+ProtoBuf.ProtoReader.State.TryReadFieldHeader(int field) -> bool
+ProtoBuf.ProtoReader.State.WireType.get -> ProtoBuf.WireType
+ProtoBuf.ProtoReader.ThrowEnumException(System.Type type, int value) -> void
+ProtoBuf.ProtoReader.TryReadFieldHeader(int field) -> bool
+ProtoBuf.ProtoReader.UserState.get -> object
+ProtoBuf.ProtoReader.WireType.get -> ProtoBuf.WireType
+ProtoBuf.ProtoReservedAttribute
+ProtoBuf.ProtoReservedAttribute.Comment.get -> string
+ProtoBuf.ProtoReservedAttribute.From.get -> int
+ProtoBuf.ProtoReservedAttribute.Name.get -> string
+ProtoBuf.ProtoReservedAttribute.ProtoReservedAttribute(int field, string comment = null) -> void
+ProtoBuf.ProtoReservedAttribute.ProtoReservedAttribute(int from, int to, string comment = null) -> void
+ProtoBuf.ProtoReservedAttribute.ProtoReservedAttribute(string field, string comment = null) -> void
+ProtoBuf.ProtoReservedAttribute.To.get -> int
+ProtoBuf.ProtoWriter
+ProtoBuf.ProtoWriter.Abandon() -> void
+ProtoBuf.ProtoWriter.Close() -> void
+ProtoBuf.ProtoWriter.Context.get -> ProtoBuf.SerializationContext
+ProtoBuf.ProtoWriter.Model.get -> ProtoBuf.Meta.TypeModel
+ProtoBuf.ProtoWriter.State
+ProtoBuf.ProtoWriter.State.Abandon() -> void
+ProtoBuf.ProtoWriter.State.AppendExtensionData(ProtoBuf.IExtensible instance) -> void
+ProtoBuf.ProtoWriter.State.AppendExtensionData(ProtoBuf.ITypedExtensible instance, System.Type type) -> void
+ProtoBuf.ProtoWriter.State.ClearPackedField(int fieldNumber) -> void
+ProtoBuf.ProtoWriter.State.Close() -> void
+ProtoBuf.ProtoWriter.State.Context.get -> ProtoBuf.ISerializationContext
+ProtoBuf.ProtoWriter.State.Dispose() -> void
+ProtoBuf.ProtoWriter.State.EndSubItem(ProtoBuf.SubItemToken token) -> void
+ProtoBuf.ProtoWriter.State.Flush() -> void
+ProtoBuf.ProtoWriter.State.GetSerializer<T>() -> ProtoBuf.Serializers.ISerializer<T>
+ProtoBuf.ProtoWriter.State.SerializeRoot<T>(T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> long
+ProtoBuf.ProtoWriter.State.SetPackedField(int fieldNumber) -> void
+ProtoBuf.ProtoWriter.State.StartSubItem(object instance) -> ProtoBuf.SubItemToken
+ProtoBuf.ProtoWriter.State.State() -> void
+ProtoBuf.ProtoWriter.State.ThrowEnumException(object enumValue) -> void
+ProtoBuf.ProtoWriter.State.WriteAny<T>(int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteAny<T>(int fieldNumber, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteBaseType<T>(T value, ProtoBuf.Serializers.ISubTypeSerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteBoolean(bool value) -> void
+ProtoBuf.ProtoWriter.State.WriteByte(byte value) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes(byte[] data) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes(System.ArraySegment<byte> data) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes(System.Buffers.ReadOnlySequence<byte> data) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes(System.Memory<byte> data) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes(System.ReadOnlyMemory<byte> data) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes(System.ReadOnlySpan<byte> data) -> void
+ProtoBuf.ProtoWriter.State.WriteBytes<TStorage>(TStorage value, ProtoBuf.Serializers.IMemoryConverter<TStorage, byte> converter = null) -> void
+ProtoBuf.ProtoWriter.State.WriteDouble(double value) -> void
+ProtoBuf.ProtoWriter.State.WriteFieldHeader(int fieldNumber, ProtoBuf.WireType wireType) -> void
+ProtoBuf.ProtoWriter.State.WriteGroup<T>(int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteInt16(short value) -> void
+ProtoBuf.ProtoWriter.State.WriteInt32(int value) -> void
+ProtoBuf.ProtoWriter.State.WriteInt32Varint(int fieldNumber, int value) -> void
+ProtoBuf.ProtoWriter.State.WriteInt64(long value) -> void
+ProtoBuf.ProtoWriter.State.WriteMessage<T>(int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteMessage<T>(ProtoBuf.Serializers.SerializerFeatures features, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteSByte(sbyte value) -> void
+ProtoBuf.ProtoWriter.State.WriteSingle(float value) -> void
+ProtoBuf.ProtoWriter.State.WriteString(int fieldNumber, string value, ProtoBuf.StringMap map = null) -> void
+ProtoBuf.ProtoWriter.State.WriteString(string value, ProtoBuf.StringMap map = null) -> void
+ProtoBuf.ProtoWriter.State.WriteSubType<T>(int fieldNumber, T value, ProtoBuf.Serializers.ISubTypeSerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteSubType<T>(T value, ProtoBuf.Serializers.ISubTypeSerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.State.WriteType(System.Type value) -> void
+ProtoBuf.ProtoWriter.State.WriteUInt16(ushort value) -> void
+ProtoBuf.ProtoWriter.State.WriteUInt32(uint value) -> void
+ProtoBuf.ProtoWriter.State.WriteUInt64(ulong value) -> void
+ProtoBuf.ProtoWriter.State.WriteWrapped<T>(int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, T value, ProtoBuf.Serializers.ISerializer<T> serializer = null) -> void
+ProtoBuf.ProtoWriter.UserState.get -> object
+ProtoBuf.SerializationContext
+ProtoBuf.SerializationContext.Context.get -> object
+ProtoBuf.SerializationContext.Context.set -> void
+ProtoBuf.SerializationContext.SerializationContext() -> void
+ProtoBuf.SerializationContext.State.get -> System.Runtime.Serialization.StreamingContextStates
+ProtoBuf.SerializationContext.State.set -> void
+ProtoBuf.Serializers.DefaultMemoryConverter<T>
+ProtoBuf.Serializers.EnumSerializer
+ProtoBuf.Serializers.EnumSerializer<TEnum>
+ProtoBuf.Serializers.ExternalMapSerializer<TCollection, TKey, TValue>
+ProtoBuf.Serializers.ExternalMapSerializer<TCollection, TKey, TValue>.ExternalMapSerializer() -> void
+ProtoBuf.Serializers.ExternalSerializer<TCollection, T>
+ProtoBuf.Serializers.ExternalSerializer<TCollection, T>.ExternalSerializer() -> void
+ProtoBuf.Serializers.IFactory<T>
+ProtoBuf.Serializers.IFactory<T>.Create(ProtoBuf.ISerializationContext context) -> T
+ProtoBuf.Serializers.IMeasuringSerializer<T>
+ProtoBuf.Serializers.IMeasuringSerializer<T>.Measure(ProtoBuf.ISerializationContext context, ProtoBuf.WireType wireType, T value) -> int
+ProtoBuf.Serializers.IMemoryConverter<TStorage, TElement>
+ProtoBuf.Serializers.IMemoryConverter<TStorage, TElement>.Expand(ProtoBuf.ISerializationContext context, ref TStorage value, int additionalCapacity) -> System.Memory<TElement>
+ProtoBuf.Serializers.IMemoryConverter<TStorage, TElement>.GetLength(in TStorage value) -> int
+ProtoBuf.Serializers.IMemoryConverter<TStorage, TElement>.GetMemory(in TStorage value) -> System.Memory<TElement>
+ProtoBuf.Serializers.IMemoryConverter<TStorage, TElement>.NonNull(in TStorage value) -> TStorage
+ProtoBuf.Serializers.IObjectSerializer<T>
+ProtoBuf.Serializers.IObjectSerializer<T>.BaseType.get -> System.Type
+ProtoBuf.Serializers.IRepeatedSerializer<T>
+ProtoBuf.Serializers.IRepeatedSerializer<T>.ReadRepeated(ref ProtoBuf.ProtoReader.State state, ProtoBuf.Serializers.SerializerFeatures features, T values) -> T
+ProtoBuf.Serializers.IRepeatedSerializer<T>.WriteRepeated(ref ProtoBuf.ProtoWriter.State state, int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, T values) -> void
+ProtoBuf.Serializers.ISerializer<T>
+ProtoBuf.Serializers.ISerializer<T>.Features.get -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.ISerializer<T>.Read(ref ProtoBuf.ProtoReader.State state, T value) -> T
+ProtoBuf.Serializers.ISerializer<T>.Write(ref ProtoBuf.ProtoWriter.State state, T value) -> void
+ProtoBuf.Serializers.ISerializerProxy<T>
+ProtoBuf.Serializers.ISerializerProxy<T>.Serializer.get -> ProtoBuf.Serializers.ISerializer<T>
+ProtoBuf.Serializers.ISubTypeSerializer<T>
+ProtoBuf.Serializers.ISubTypeSerializer<T>.ReadSubType(ref ProtoBuf.ProtoReader.State state, ProtoBuf.Serializers.SubTypeState<T> value) -> T
+ProtoBuf.Serializers.ISubTypeSerializer<T>.WriteSubType(ref ProtoBuf.ProtoWriter.State state, T value) -> void
+ProtoBuf.Serializers.MapSerializer
+ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>
+ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.MapSerializer() -> void
+ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.ReadMap(ref ProtoBuf.ProtoReader.State state, ProtoBuf.Serializers.SerializerFeatures features, TCollection values, ProtoBuf.Serializers.SerializerFeatures keyFeatures, ProtoBuf.Serializers.SerializerFeatures valueFeatures, ProtoBuf.Serializers.ISerializer<TKey> keySerializer = null, ProtoBuf.Serializers.ISerializer<TValue> valueSerializer = null) -> TCollection
+ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.WriteMap(ref ProtoBuf.ProtoWriter.State state, int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, TCollection values, ProtoBuf.Serializers.SerializerFeatures keyFeatures, ProtoBuf.Serializers.SerializerFeatures valueFeatures, ProtoBuf.Serializers.ISerializer<TKey> keySerializer = null, ProtoBuf.Serializers.ISerializer<TValue> valueSerializer = null) -> void
+ProtoBuf.Serializers.RepeatedSerializer
+ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>
+ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.ReadRepeated(ref ProtoBuf.ProtoReader.State state, ProtoBuf.Serializers.SerializerFeatures features, TCollection values, ProtoBuf.Serializers.ISerializer<TItem> serializer = null) -> TCollection
+ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.RepeatedSerializer() -> void
+ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.TryGetCountDefault(TCollection values) -> int
+ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.WriteRepeated(ref ProtoBuf.ProtoWriter.State state, int fieldNumber, ProtoBuf.Serializers.SerializerFeatures features, TCollection values, ProtoBuf.Serializers.ISerializer<TItem> serializer = null) -> void
+ProtoBuf.Serializers.SerializerCache
+ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.CategoryMessage = 64 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.CategoryMessageWrappedAtRoot = ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | ProtoBuf.Serializers.SerializerFeatures.CategoryMessage -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated = 0 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.CategoryScalar = 32 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection = 256 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey = 512 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled = 128 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionSkipRecursionCheck = 1024 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring = 65536 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection = 16384 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup = 32768 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue = 2048 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence = 8192 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup = 4096 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32 = 21 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64 = 17 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint = 24 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeSpecified = 16 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup = 19 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeString = 18 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint = 16 -> ProtoBuf.Serializers.SerializerFeatures
+ProtoBuf.Serializers.SubTypeState<T>
+ProtoBuf.Serializers.SubTypeState<T>.CreateIfNeeded() -> void
+ProtoBuf.Serializers.SubTypeState<T>.HasValue.get -> bool
+ProtoBuf.Serializers.SubTypeState<T>.OnBeforeDeserialize(System.Action<T, ProtoBuf.ISerializationContext> callback) -> void
+ProtoBuf.Serializers.SubTypeState<T>.ReadSubType<TSubType>(ref ProtoBuf.ProtoReader.State state, ProtoBuf.Serializers.ISubTypeSerializer<TSubType> serializer = null) -> void
+ProtoBuf.Serializers.SubTypeState<T>.SubTypeState() -> void
+ProtoBuf.Serializers.SubTypeState<T>.Value.get -> T
+ProtoBuf.Serializers.SubTypeState<T>.Value.set -> void
+ProtoBuf.StringMap
+ProtoBuf.StringMap.StringMap() -> void
+ProtoBuf.SubItemToken
+ProtoBuf.SubItemToken.SubItemToken() -> void
+ProtoBuf.TypedExtensible
+ProtoBuf.TypeResolver
+ProtoBuf.WellKnownTypes.Duration
+ProtoBuf.WellKnownTypes.Duration.AsTimeSpan() -> System.TimeSpan
+ProtoBuf.WellKnownTypes.Duration.Duration() -> void
+ProtoBuf.WellKnownTypes.Duration.Duration(long seconds, int nanoseconds) -> void
+ProtoBuf.WellKnownTypes.Duration.Duration(System.TimeSpan value) -> void
+ProtoBuf.WellKnownTypes.Duration.Nanoseconds.get -> int
+ProtoBuf.WellKnownTypes.Duration.Normalize() -> ProtoBuf.WellKnownTypes.Duration
+ProtoBuf.WellKnownTypes.Duration.Seconds.get -> long
+ProtoBuf.WellKnownTypes.Empty
+ProtoBuf.WellKnownTypes.Empty.Empty() -> void
+ProtoBuf.WellKnownTypes.Timestamp
+ProtoBuf.WellKnownTypes.Timestamp.AsDateTime() -> System.DateTime
+ProtoBuf.WellKnownTypes.Timestamp.CompareTo(ProtoBuf.WellKnownTypes.Timestamp other) -> int
+ProtoBuf.WellKnownTypes.Timestamp.Equals(ProtoBuf.WellKnownTypes.Timestamp other) -> bool
+ProtoBuf.WellKnownTypes.Timestamp.Nanoseconds.get -> int
+ProtoBuf.WellKnownTypes.Timestamp.Normalize() -> ProtoBuf.WellKnownTypes.Timestamp
+ProtoBuf.WellKnownTypes.Timestamp.Seconds.get -> long
+ProtoBuf.WellKnownTypes.Timestamp.Timestamp() -> void
+ProtoBuf.WellKnownTypes.Timestamp.Timestamp(long seconds, int nanoseconds) -> void
+ProtoBuf.WellKnownTypes.Timestamp.Timestamp(System.DateTime value) -> void
+ProtoBuf.WireType
+ProtoBuf.WireType.EndGroup = 4 -> ProtoBuf.WireType
+ProtoBuf.WireType.Fixed32 = 5 -> ProtoBuf.WireType
+ProtoBuf.WireType.Fixed64 = 1 -> ProtoBuf.WireType
+ProtoBuf.WireType.None = -1 -> ProtoBuf.WireType
+ProtoBuf.WireType.SignedVariant = 8 -> ProtoBuf.WireType
+ProtoBuf.WireType.SignedVarint = 8 -> ProtoBuf.WireType
+ProtoBuf.WireType.StartGroup = 3 -> ProtoBuf.WireType
+ProtoBuf.WireType.String = 2 -> ProtoBuf.WireType
+ProtoBuf.WireType.Variant = 0 -> ProtoBuf.WireType
+ProtoBuf.WireType.Varint = 0 -> ProtoBuf.WireType
+readonly ProtoBuf.DiscriminatedUnion128.Boolean -> bool
+readonly ProtoBuf.DiscriminatedUnion128.DateTime -> System.DateTime
+readonly ProtoBuf.DiscriminatedUnion128.Double -> double
+readonly ProtoBuf.DiscriminatedUnion128.Guid -> System.Guid
+readonly ProtoBuf.DiscriminatedUnion128.Int32 -> int
+readonly ProtoBuf.DiscriminatedUnion128.Int64 -> long
+readonly ProtoBuf.DiscriminatedUnion128.Single -> float
+readonly ProtoBuf.DiscriminatedUnion128.TimeSpan -> System.TimeSpan
+readonly ProtoBuf.DiscriminatedUnion128.UInt32 -> uint
+readonly ProtoBuf.DiscriminatedUnion128.UInt64 -> ulong
+readonly ProtoBuf.DiscriminatedUnion128Object.Boolean -> bool
+readonly ProtoBuf.DiscriminatedUnion128Object.DateTime -> System.DateTime
+readonly ProtoBuf.DiscriminatedUnion128Object.Double -> double
+readonly ProtoBuf.DiscriminatedUnion128Object.Guid -> System.Guid
+readonly ProtoBuf.DiscriminatedUnion128Object.Int32 -> int
+readonly ProtoBuf.DiscriminatedUnion128Object.Int64 -> long
+readonly ProtoBuf.DiscriminatedUnion128Object.Object -> object
+readonly ProtoBuf.DiscriminatedUnion128Object.Single -> float
+readonly ProtoBuf.DiscriminatedUnion128Object.TimeSpan -> System.TimeSpan
+readonly ProtoBuf.DiscriminatedUnion128Object.UInt32 -> uint
+readonly ProtoBuf.DiscriminatedUnion128Object.UInt64 -> ulong
+readonly ProtoBuf.DiscriminatedUnion32.Boolean -> bool
+readonly ProtoBuf.DiscriminatedUnion32.Int32 -> int
+readonly ProtoBuf.DiscriminatedUnion32.Single -> float
+readonly ProtoBuf.DiscriminatedUnion32.UInt32 -> uint
+readonly ProtoBuf.DiscriminatedUnion32Object.Boolean -> bool
+readonly ProtoBuf.DiscriminatedUnion32Object.Int32 -> int
+readonly ProtoBuf.DiscriminatedUnion32Object.Object -> object
+readonly ProtoBuf.DiscriminatedUnion32Object.Single -> float
+readonly ProtoBuf.DiscriminatedUnion32Object.UInt32 -> uint
+readonly ProtoBuf.DiscriminatedUnion64.Boolean -> bool
+readonly ProtoBuf.DiscriminatedUnion64.DateTime -> System.DateTime
+readonly ProtoBuf.DiscriminatedUnion64.Double -> double
+readonly ProtoBuf.DiscriminatedUnion64.Int32 -> int
+readonly ProtoBuf.DiscriminatedUnion64.Int64 -> long
+readonly ProtoBuf.DiscriminatedUnion64.Single -> float
+readonly ProtoBuf.DiscriminatedUnion64.TimeSpan -> System.TimeSpan
+readonly ProtoBuf.DiscriminatedUnion64.UInt32 -> uint
+readonly ProtoBuf.DiscriminatedUnion64.UInt64 -> ulong
+readonly ProtoBuf.DiscriminatedUnion64Object.Boolean -> bool
+readonly ProtoBuf.DiscriminatedUnion64Object.DateTime -> System.DateTime
+readonly ProtoBuf.DiscriminatedUnion64Object.Double -> double
+readonly ProtoBuf.DiscriminatedUnion64Object.Int32 -> int
+readonly ProtoBuf.DiscriminatedUnion64Object.Int64 -> long
+readonly ProtoBuf.DiscriminatedUnion64Object.Object -> object
+readonly ProtoBuf.DiscriminatedUnion64Object.Single -> float
+readonly ProtoBuf.DiscriminatedUnion64Object.TimeSpan -> System.TimeSpan
+readonly ProtoBuf.DiscriminatedUnion64Object.UInt32 -> uint
+readonly ProtoBuf.DiscriminatedUnion64Object.UInt64 -> ulong
+readonly ProtoBuf.DiscriminatedUnionObject.Object -> object
+static ProtoBuf.BclHelpers.GetUninitializedObject(System.Type type) -> object
+static ProtoBuf.BclHelpers.ReadDateTime(ProtoBuf.ProtoReader source) -> System.DateTime
+static ProtoBuf.BclHelpers.ReadDateTime(ref ProtoBuf.ProtoReader.State state) -> System.DateTime
+static ProtoBuf.BclHelpers.ReadDecimal(ProtoBuf.ProtoReader reader) -> decimal
+static ProtoBuf.BclHelpers.ReadDecimal(ref ProtoBuf.ProtoReader.State state) -> decimal
+static ProtoBuf.BclHelpers.ReadDecimalString(ref ProtoBuf.ProtoReader.State state) -> decimal
+static ProtoBuf.BclHelpers.ReadDuration(ProtoBuf.ProtoReader source) -> System.TimeSpan
+static ProtoBuf.BclHelpers.ReadDuration(ref ProtoBuf.ProtoReader.State state) -> System.TimeSpan
+static ProtoBuf.BclHelpers.ReadGuid(ProtoBuf.ProtoReader source) -> System.Guid
+static ProtoBuf.BclHelpers.ReadGuid(ref ProtoBuf.ProtoReader.State state) -> System.Guid
+static ProtoBuf.BclHelpers.ReadGuidBytes(ref ProtoBuf.ProtoReader.State state) -> System.Guid
+static ProtoBuf.BclHelpers.ReadGuidString(ref ProtoBuf.ProtoReader.State state) -> System.Guid
+static ProtoBuf.BclHelpers.ReadTimeSpan(ProtoBuf.ProtoReader source) -> System.TimeSpan
+static ProtoBuf.BclHelpers.ReadTimeSpan(ref ProtoBuf.ProtoReader.State state) -> System.TimeSpan
+static ProtoBuf.BclHelpers.ReadTimestamp(ProtoBuf.ProtoReader source) -> System.DateTime
+static ProtoBuf.BclHelpers.ReadTimestamp(ref ProtoBuf.ProtoReader.State state) -> System.DateTime
+static ProtoBuf.BclHelpers.WriteDateTime(ref ProtoBuf.ProtoWriter.State state, System.DateTime value) -> void
+static ProtoBuf.BclHelpers.WriteDateTime(System.DateTime value, ProtoBuf.ProtoWriter dest) -> void
+static ProtoBuf.BclHelpers.WriteDateTimeWithKind(ref ProtoBuf.ProtoWriter.State state, System.DateTime value) -> void
+static ProtoBuf.BclHelpers.WriteDateTimeWithKind(System.DateTime value, ProtoBuf.ProtoWriter dest) -> void
+static ProtoBuf.BclHelpers.WriteDecimal(decimal value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.BclHelpers.WriteDecimal(ref ProtoBuf.ProtoWriter.State state, decimal value) -> void
+static ProtoBuf.BclHelpers.WriteDecimalString(ref ProtoBuf.ProtoWriter.State state, decimal value) -> void
+static ProtoBuf.BclHelpers.WriteDuration(ref ProtoBuf.ProtoWriter.State state, System.TimeSpan value) -> void
+static ProtoBuf.BclHelpers.WriteDuration(System.TimeSpan value, ProtoBuf.ProtoWriter dest) -> void
+static ProtoBuf.BclHelpers.WriteGuid(ref ProtoBuf.ProtoWriter.State state, System.Guid value) -> void
+static ProtoBuf.BclHelpers.WriteGuid(System.Guid value, ProtoBuf.ProtoWriter dest) -> void
+static ProtoBuf.BclHelpers.WriteGuidBytes(ref ProtoBuf.ProtoWriter.State state, System.Guid value) -> void
+static ProtoBuf.BclHelpers.WriteGuidString(ref ProtoBuf.ProtoWriter.State state, System.Guid value) -> void
+static ProtoBuf.BclHelpers.WriteTimeSpan(ref ProtoBuf.ProtoWriter.State state, System.TimeSpan value) -> void
+static ProtoBuf.BclHelpers.WriteTimeSpan(System.TimeSpan timeSpan, ProtoBuf.ProtoWriter dest) -> void
+static ProtoBuf.BclHelpers.WriteTimestamp(ref ProtoBuf.ProtoWriter.State state, System.DateTime value) -> void
+static ProtoBuf.BclHelpers.WriteTimestamp(System.DateTime value, ProtoBuf.ProtoWriter dest) -> void
+static ProtoBuf.DiscriminatedUnion128.Reset(ref ProtoBuf.DiscriminatedUnion128 value, int discriminator) -> void
+static ProtoBuf.DiscriminatedUnion128Object.Reset(ref ProtoBuf.DiscriminatedUnion128Object value, int discriminator) -> void
+static ProtoBuf.DiscriminatedUnion32.Reset(ref ProtoBuf.DiscriminatedUnion32 value, int discriminator) -> void
+static ProtoBuf.DiscriminatedUnion32Object.Reset(ref ProtoBuf.DiscriminatedUnion32Object value, int discriminator) -> void
+static ProtoBuf.DiscriminatedUnion64.Reset(ref ProtoBuf.DiscriminatedUnion64 value, int discriminator) -> void
+static ProtoBuf.DiscriminatedUnion64Object.Reset(ref ProtoBuf.DiscriminatedUnion64Object value, int discriminator) -> void
+static ProtoBuf.DiscriminatedUnionObject.Reset(ref ProtoBuf.DiscriminatedUnionObject value, int discriminator) -> void
+static ProtoBuf.Extensible.AppendValue(ProtoBuf.Meta.TypeModel model, ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format, object value) -> void
+static ProtoBuf.Extensible.AppendValue<TValue>(ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format, TValue value) -> void
+static ProtoBuf.Extensible.AppendValue<TValue>(ProtoBuf.IExtensible instance, int tag, TValue value) -> void
+static ProtoBuf.Extensible.AppendValue<TValue>(ProtoBuf.Meta.TypeModel model, ProtoBuf.IExtensible instance, int tag, TValue value, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default) -> void
+static ProtoBuf.Extensible.GetExtensionObject(ref ProtoBuf.IExtension extensionObject, bool createIfMissing) -> ProtoBuf.IExtension
+static ProtoBuf.Extensible.GetExtensionObject(ref ProtoBuf.IExtension extensionObject, System.Type type, bool createIfMissing) -> ProtoBuf.IExtension
+static ProtoBuf.Extensible.GetValue<TValue>(ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format) -> TValue
+static ProtoBuf.Extensible.GetValue<TValue>(ProtoBuf.IExtensible instance, int tag) -> TValue
+static ProtoBuf.Extensible.GetValue<TValue>(ProtoBuf.Meta.TypeModel model, ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default) -> TValue
+static ProtoBuf.Extensible.GetValues(ProtoBuf.Meta.TypeModel model, System.Type type, ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default) -> System.Collections.IEnumerable
+static ProtoBuf.Extensible.GetValues<TValue>(ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format) -> System.Collections.Generic.IEnumerable<TValue>
+static ProtoBuf.Extensible.GetValues<TValue>(ProtoBuf.IExtensible instance, int tag) -> System.Collections.Generic.IEnumerable<TValue>
+static ProtoBuf.Extensible.GetValues<TValue>(ProtoBuf.Meta.TypeModel model, ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default) -> System.Collections.Generic.IEnumerable<TValue>
+static ProtoBuf.Extensible.TryGetValue(ProtoBuf.Meta.TypeModel model, System.Type type, ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format, bool allowDefinedTag, out object value) -> bool
+static ProtoBuf.Extensible.TryGetValue<TValue>(ProtoBuf.IExtensible instance, int tag, out TValue value) -> bool
+static ProtoBuf.Extensible.TryGetValue<TValue>(ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format, bool allowDefinedTag, out TValue value) -> bool
+static ProtoBuf.Extensible.TryGetValue<TValue>(ProtoBuf.IExtensible instance, int tag, ProtoBuf.DataFormat format, out TValue value) -> bool
+static ProtoBuf.Extensible.TryGetValue<TValue>(ProtoBuf.Meta.TypeModel model, ProtoBuf.IExtensible instance, int tag, out TValue value, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default, bool allowDefinedTag = false) -> bool
+static ProtoBuf.Meta.TypeModel.Create() -> ProtoBuf.Meta.TypeModel
+static ProtoBuf.Meta.TypeModel.CreateForAssembly(System.Reflection.Assembly assembly) -> ProtoBuf.Meta.TypeModel
+static ProtoBuf.Meta.TypeModel.CreateForAssembly(System.Type type) -> ProtoBuf.Meta.TypeModel
+static ProtoBuf.Meta.TypeModel.CreateForAssembly<T>() -> ProtoBuf.Meta.TypeModel
+static ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<T>(ProtoBuf.CompatibilityLevel compatibilityLevel, ProtoBuf.DataFormat dataFormat) -> ProtoBuf.Serializers.ISerializer<T>
+static ProtoBuf.Meta.TypeModel.GetSerializer<TProvider, T>() -> ProtoBuf.Serializers.ISerializer<T>
+static ProtoBuf.Meta.TypeModel.IsSubType<T>(T value) -> bool
+static ProtoBuf.Meta.TypeModel.ThrowCannotCreateInstance(System.Type type, System.Exception inner = null) -> void
+static ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(System.Type expected, System.Type actual) -> void
+static ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype<T, TConstruct>(T value) -> void
+static ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype<T>(T value) -> void
+static ProtoBuf.Meta.TypeModel.ThrowUnexpectedType(System.Type type, ProtoBuf.Meta.TypeModel model) -> void
+static ProtoBuf.ProtoReader.AppendBytes(byte[] value, ProtoBuf.ProtoReader reader) -> byte[]
+static ProtoBuf.ProtoReader.Create(System.IO.Stream source, ProtoBuf.Meta.TypeModel model, ProtoBuf.SerializationContext context = null, long length = -1) -> ProtoBuf.ProtoReader
+static ProtoBuf.ProtoReader.DirectReadBigEndianInt32(System.IO.Stream source) -> int
+static ProtoBuf.ProtoReader.DirectReadBytes(System.IO.Stream source, byte[] buffer, int offset, int count) -> void
+static ProtoBuf.ProtoReader.DirectReadBytes(System.IO.Stream source, int count) -> byte[]
+static ProtoBuf.ProtoReader.DirectReadLittleEndianInt32(System.IO.Stream source) -> int
+static ProtoBuf.ProtoReader.DirectReadString(System.IO.Stream source, int length) -> string
+static ProtoBuf.ProtoReader.DirectReadVarintInt32(System.IO.Stream source) -> int
+static ProtoBuf.ProtoReader.EndSubItem(ProtoBuf.SubItemToken token, ProtoBuf.ProtoReader reader) -> void
+static ProtoBuf.ProtoReader.HasSubValue(ProtoBuf.WireType wireType, ProtoBuf.ProtoReader source) -> bool
+static ProtoBuf.ProtoReader.Merge(ProtoBuf.ProtoReader parent, object from, object to) -> object
+static ProtoBuf.ProtoReader.ReadLengthPrefix(System.IO.Stream source, bool expectHeader, ProtoBuf.PrefixStyle style, out int fieldNumber, out int bytesRead) -> int
+static ProtoBuf.ProtoReader.ReadLengthPrefix(System.IO.Stream source, bool expectHeader, ProtoBuf.PrefixStyle style, out int fieldNumber) -> int
+static ProtoBuf.ProtoReader.ReadLongLengthPrefix(System.IO.Stream source, bool expectHeader, ProtoBuf.PrefixStyle style, out int fieldNumber, out int bytesRead) -> long
+static ProtoBuf.ProtoReader.ReadObject(object value, System.Type type, ProtoBuf.ProtoReader reader) -> object
+static ProtoBuf.ProtoReader.StartSubItem(ProtoBuf.ProtoReader reader) -> ProtoBuf.SubItemToken
+static ProtoBuf.ProtoReader.State.Create(System.Buffers.ReadOnlySequence<byte> source, ProtoBuf.Meta.TypeModel model, object userState = null) -> ProtoBuf.ProtoReader.State
+static ProtoBuf.ProtoReader.State.Create(System.IO.Stream source, ProtoBuf.Meta.TypeModel model, object userState = null, long length = -1) -> ProtoBuf.ProtoReader.State
+static ProtoBuf.ProtoReader.State.Create(System.ReadOnlyMemory<byte> source, ProtoBuf.Meta.TypeModel model, object userState = null) -> ProtoBuf.ProtoReader.State
+static ProtoBuf.ProtoWriter.AppendExtensionData(ProtoBuf.IExtensible instance, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.BufferSize.get -> int
+static ProtoBuf.ProtoWriter.BufferSize.set -> void
+static ProtoBuf.ProtoWriter.ClearPackedField(int fieldNumber, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.Create(System.IO.Stream dest, ProtoBuf.Meta.TypeModel model, ProtoBuf.SerializationContext context = null) -> ProtoBuf.ProtoWriter
+static ProtoBuf.ProtoWriter.EndSubItem(ProtoBuf.SubItemToken token, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.SetPackedField(int fieldNumber, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.StartSubItem(object instance, ProtoBuf.ProtoWriter writer) -> ProtoBuf.SubItemToken
+static ProtoBuf.ProtoWriter.State.Create(System.Buffers.IBufferWriter<byte> writer, ProtoBuf.Meta.TypeModel model, object userState = null) -> ProtoBuf.ProtoWriter.State
+static ProtoBuf.ProtoWriter.State.Create(System.IO.Stream dest, ProtoBuf.Meta.TypeModel model, object userState = null) -> ProtoBuf.ProtoWriter.State
+static ProtoBuf.ProtoWriter.ThrowEnumException(ProtoBuf.ProtoWriter writer, object enumValue) -> void
+static ProtoBuf.ProtoWriter.WriteBoolean(bool value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteByte(byte value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteBytes(byte[] data, int offset, int length, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteBytes(byte[] data, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteDouble(double value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteFieldHeader(int fieldNumber, ProtoBuf.WireType wireType, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteInt16(short value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteInt32(int value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteInt64(long value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WritePackedPrefix(int elementCount, ProtoBuf.WireType wireType, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteSByte(sbyte value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteSingle(float value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteString(string value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteType(System.Type value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteUInt16(ushort value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteUInt32(uint value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.ProtoWriter.WriteUInt64(ulong value, ProtoBuf.ProtoWriter writer) -> void
+static ProtoBuf.SerializationContext.AsSerializationContext(ProtoBuf.ISerializationContext context) -> ProtoBuf.SerializationContext
+static ProtoBuf.SerializationContext.AsStreamingContext(ProtoBuf.ISerializationContext context) -> System.Runtime.Serialization.StreamingContext
+static ProtoBuf.SerializationContext.implicit operator ProtoBuf.SerializationContext(System.Runtime.Serialization.StreamingContext ctx) -> ProtoBuf.SerializationContext
+static ProtoBuf.SerializationContext.implicit operator System.Runtime.Serialization.StreamingContext(ProtoBuf.SerializationContext ctx) -> System.Runtime.Serialization.StreamingContext
+static ProtoBuf.Serializers.DefaultMemoryConverter<T>.Instance.get -> ProtoBuf.Serializers.DefaultMemoryConverter<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateByte<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateInt16<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateInt32<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateInt64<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateSByte<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateUInt16<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateUInt32<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.EnumSerializer.CreateUInt64<T>() -> ProtoBuf.Serializers.EnumSerializer<T>
+static ProtoBuf.Serializers.MapSerializer.CreateConcurrentDictionary<TCollection, TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>
+static ProtoBuf.Serializers.MapSerializer.CreateDictionary<TCollection, TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>
+static ProtoBuf.Serializers.MapSerializer.CreateDictionary<TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<System.Collections.Generic.Dictionary<TKey, TValue>, TKey, TValue>
+static ProtoBuf.Serializers.MapSerializer.CreateIImmutableDictionary<TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<System.Collections.Immutable.IImmutableDictionary<TKey, TValue>, TKey, TValue>
+static ProtoBuf.Serializers.MapSerializer.CreateImmutableDictionary<TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<System.Collections.Immutable.ImmutableDictionary<TKey, TValue>, TKey, TValue>
+static ProtoBuf.Serializers.MapSerializer.CreateImmutableSortedDictionary<TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<System.Collections.Immutable.ImmutableSortedDictionary<TKey, TValue>, TKey, TValue>
+static ProtoBuf.Serializers.MapSerializer.CreateIReadOnlyDictionary<TKey, TValue>() -> ProtoBuf.Serializers.MapSerializer<System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>, TKey, TValue>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentBag<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentQueue<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentStack<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<TCollection, TCreate, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableArray<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.ImmutableArray<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableHashSet<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.ImmutableHashSet<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIList<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.IImmutableList<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIQueue<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.IImmutableQueue<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.IImmutableSet<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIStack<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.IImmutableStack<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableList<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.ImmutableList<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableQueue<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.ImmutableQueue<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableSortedSet<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.ImmutableSortedSet<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableStack<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Immutable.ImmutableStack<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateIProducerConsumerCollection<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateList<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Generic.List<T>, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateList<TList, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TList, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateNestedDataNotSupported<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateNotSupported<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateSet<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateStack<TCollection, T>() -> ProtoBuf.Serializers.RepeatedSerializer<TCollection, T>
+static ProtoBuf.Serializers.RepeatedSerializer.CreateVector<T>() -> ProtoBuf.Serializers.RepeatedSerializer<T[], T>
+static ProtoBuf.Serializers.SerializerCache.Get<TProvider, T>() -> ProtoBuf.Serializers.ISerializer<T>
+static ProtoBuf.Serializers.SubTypeState<T>.Create<TValue>(ProtoBuf.ISerializationContext context, TValue value) -> ProtoBuf.Serializers.SubTypeState<T>
+static ProtoBuf.TypedExtensible.AppendValue<TValue>(this ProtoBuf.ITypedExtensible instance, int tag, TValue value, System.Type type = null, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default, ProtoBuf.Meta.TypeModel model = null) -> void
+static ProtoBuf.TypedExtensible.GetValue<TValue>(this ProtoBuf.ITypedExtensible instance, int tag, System.Type type = null, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default, ProtoBuf.Meta.TypeModel model = null) -> TValue
+static ProtoBuf.TypedExtensible.GetValues<TValue>(this ProtoBuf.ITypedExtensible instance, int tag, System.Type type = null, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default, ProtoBuf.Meta.TypeModel model = null) -> System.Collections.Generic.IEnumerable<TValue>
+static ProtoBuf.TypedExtensible.TryGetValue<TValue>(this ProtoBuf.ITypedExtensible instance, int tag, out TValue value, System.Type type = null, ProtoBuf.DataFormat format = ProtoBuf.DataFormat.Default, ProtoBuf.Meta.TypeModel model = null) -> bool
+static ProtoBuf.WellKnownTypes.Duration.implicit operator ProtoBuf.WellKnownTypes.Duration(System.TimeSpan value) -> ProtoBuf.WellKnownTypes.Duration
+static ProtoBuf.WellKnownTypes.Duration.implicit operator System.TimeSpan(ProtoBuf.WellKnownTypes.Duration value) -> System.TimeSpan
+static ProtoBuf.WellKnownTypes.Timestamp.implicit operator ProtoBuf.WellKnownTypes.Timestamp(System.DateTime value) -> ProtoBuf.WellKnownTypes.Timestamp
+static ProtoBuf.WellKnownTypes.Timestamp.implicit operator System.DateTime(ProtoBuf.WellKnownTypes.Timestamp value) -> System.DateTime
+virtual ProtoBuf.Extensible.GetExtensionObject(bool createIfMissing) -> ProtoBuf.IExtension
+virtual ProtoBuf.Meta.TypeFormatEventHandler.Invoke(object sender, ProtoBuf.Meta.TypeFormatEventArgs args) -> void
+virtual ProtoBuf.Meta.TypeModel.GetSchema(ProtoBuf.Meta.SchemaGenerationOptions options) -> string
+virtual ProtoBuf.Meta.TypeModel.GetSerializer<T>() -> ProtoBuf.Serializers.ISerializer<T>
+virtual ProtoBuf.Meta.TypeModel.Options.get -> ProtoBuf.Meta.TypeModel.TypeModelOptions
+virtual ProtoBuf.ProtoReader.Dispose() -> void
+virtual ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.Initialize(TCollection values, ProtoBuf.ISerializationContext context) -> TCollection
+virtual ProtoBuf.Serializers.RepeatedSerializer<TCollection, TItem>.Initialize(TCollection values, ProtoBuf.ISerializationContext context) -> TCollection
+virtual ProtoBuf.TypeResolver.Invoke(int fieldNumber) -> System.Type

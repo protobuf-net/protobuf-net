@@ -1,0 +1,34 @@
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.AsServer(System.Func<TRead, TWrite> server, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.ReceiveResult
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.ReceiveResult.IsSuccess(out TRead value) -> bool
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.ReceiveResult.ReceiveResult() -> void
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.ReceiveResult.Success.get -> bool
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.ReceiveResult.Value.get -> TRead
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.TryReceiveAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.ReceiveResult>
+ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>.UnaryAsync(TWrite value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<TRead>
+ProtoBuf.MessagePipes.MessagePipe
+ProtoBuf.MessagePipes.MessagePipeFlags
+ProtoBuf.MessagePipes.MessagePipeFlags.LeaveOpen = 1 -> ProtoBuf.MessagePipes.MessagePipeFlags
+ProtoBuf.MessagePipes.MessagePipeFlags.None = 0 -> ProtoBuf.MessagePipes.MessagePipeFlags
+ProtoBuf.MessagePipes.MessagePipeOptions
+ProtoBuf.MessagePipes.MessagePipeOptions.CancellationToken.get -> System.Threading.CancellationToken
+ProtoBuf.MessagePipes.MessagePipeOptions.Flags.get -> ProtoBuf.MessagePipes.MessagePipeFlags
+ProtoBuf.MessagePipes.MessagePipeOptions.Log.get -> System.Action<string>
+ProtoBuf.MessagePipes.MessagePipeOptions.MaxMessageSize.get -> long
+ProtoBuf.MessagePipes.MessagePipeOptions.MessagePipeOptions() -> void
+ProtoBuf.MessagePipes.MessagePipeOptions.MessagePipeOptions(ProtoBuf.Meta.TypeModel typeModel = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), ProtoBuf.MessagePipes.MessagePipeFlags flags = ProtoBuf.MessagePipes.MessagePipeFlags.None, System.IO.Pipelines.PipeOptions pipeOptions = null, object userState = null, long maxMessageSize = 0, System.Action<string> log = null) -> void
+ProtoBuf.MessagePipes.MessagePipeOptions.PipeOptions.get -> System.IO.Pipelines.PipeOptions
+ProtoBuf.MessagePipes.MessagePipeOptions.TypeModel.get -> ProtoBuf.Meta.TypeModel
+ProtoBuf.MessagePipes.MessagePipeOptions.UserState.get -> object
+static ProtoBuf.MessagePipes.MessagePipe.DuplexAsync<TWrite, TRead>(System.IO.Pipelines.IDuplexPipe transport, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions), object sendChannelOptions = null, object receiveChannelOptions = null) -> ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>
+static ProtoBuf.MessagePipes.MessagePipe.DuplexAsync<TWrite, TRead>(System.IO.Stream transport, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions), object sendChannelOptions = null, object receiveChannelOptions = null) -> ProtoBuf.MessagePipes.DuplexChannel<TWrite, TRead>
+static ProtoBuf.MessagePipes.MessagePipe.ReceiveAsync<T>(System.IO.Pipelines.PipeReader source, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Collections.Generic.IAsyncEnumerable<T>
+static ProtoBuf.MessagePipes.MessagePipe.ReceiveAsync<T>(System.IO.Pipelines.PipeReader source, System.Threading.Channels.ChannelWriter<T> destination, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Threading.Tasks.ValueTask
+static ProtoBuf.MessagePipes.MessagePipe.ReceiveAsync<T>(System.IO.Stream source, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Collections.Generic.IAsyncEnumerable<T>
+static ProtoBuf.MessagePipes.MessagePipe.ReceiveAsync<T>(System.IO.Stream source, System.Threading.Channels.ChannelWriter<T> destination, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Threading.Tasks.ValueTask
+static ProtoBuf.MessagePipes.MessagePipe.SendAsync<T>(System.IO.Pipelines.PipeWriter destination, System.Collections.Generic.IAsyncEnumerable<T> source, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Threading.Tasks.ValueTask
+static ProtoBuf.MessagePipes.MessagePipe.SendAsync<T>(System.IO.Pipelines.PipeWriter destination, System.Threading.Channels.ChannelReader<T> source, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Threading.Tasks.ValueTask
+static ProtoBuf.MessagePipes.MessagePipe.SendAsync<T>(System.IO.Stream destination, System.Collections.Generic.IAsyncEnumerable<T> source, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Threading.Tasks.ValueTask
+static ProtoBuf.MessagePipes.MessagePipe.SendAsync<T>(System.IO.Stream destination, System.Threading.Channels.ChannelReader<T> source, ProtoBuf.MessagePipes.MessagePipeOptions options = default(ProtoBuf.MessagePipes.MessagePipeOptions)) -> System.Threading.Tasks.ValueTask
