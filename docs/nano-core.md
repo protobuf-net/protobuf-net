@@ -132,6 +132,34 @@ that are pure statics, wire-type-carrying write methods that skip the features i
 members live in hand-written `*.Nano.cs` partials beside the generated shape files, so the split
 between "compatibility floor" and "new surface" stays visible in the file layout.
 
+**The "Raw" convention: a dual API, split on who knows the encoding.** Legacy consumers (ref-emit,
+existing compiled code) keep the stateful API: `ReadFieldHeader()` sets `FieldNumber`/`WireType`,
+typed reads consult the wire type at runtime, and zigzag needs the `Hint` dance — all of which
+exists because that API loses the schema knowledge between the header read and the typed read.
+AOT-generated code uses the `Raw` family, whose contract is: **no header state, no hints, the
+caller states the encoding, and the tag flows through parameters.**
+
+- `ReadRawTag() → uint` (strict-5); typed reads with the encoding in the name —
+  `ReadRawVarint32()` (tolerant of 10-byte sign-extended values), `ReadRawZigZag32()`,
+  `ReadRawFixed32()`, and friends — selected by the generator at compile time from `DataFormat`,
+  turning the legacy per-read wire-type branch into a compile-time decision. v4's `Reader` already
+  validated encoding-in-the-name.
+- **Nothing is stored, not even "just for errors"**: a tag store is a memory write per field in the
+  hottest loop in the library, and the generated code already holds the tag in a local everywhere
+  it could be needed — so `SkipTag(tag)`, `AppendExtensionData(tag, …)` and the throw helpers take
+  it as a parameter (v4's shape exactly).
+- The legacy API becomes a veneer: `ReadFieldHeader()` is `ReadRawTag()` plus the shift/mask and
+  state writes — one implementation core, two surfaces, the stateful one paying for its own state.
+- **Wire-type tolerance is preserved by case labels, not by state.** The legacy reader accepts an
+  int32 arriving as Fixed32/Fixed64 (and protobuf-net itself writes those under
+  `DataFormat.FixedSize`), so a naive single-label raw-tag switch would silently demote known
+  fields to unknown-field handling when a writer's format evolves. The generator instead emits
+  multiple case labels per field — `case (5 << 3) | Varint:` *and* `case (5 << 3) | Fixed32:` —
+  each dispatching to the correctly-named raw read: the jump table absorbs the labels for free, and
+  strictness stays expressible per contract. Note the differential suite is currently blind to this
+  divergence (fixtures read and write the same format), so a deliberate cross-format test lands
+  with the change.
+
 **Generated code calls generated code directly — `this`-as-`ISerializer<T>` becomes the exception.**
 Today the generated model passes itself as the serializer into
 `state.WriteMessage<T>(field, value, this)`: interface dispatch on a generic method for a callee the
