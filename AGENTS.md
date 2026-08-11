@@ -44,9 +44,9 @@ If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
 ## AOT source generator (work in progress)
 
 > **Picking this up on a new machine?** `docs/aot-findings.md` opens with a **Handover** section
-> listing the checks that could not be run on Linux — the `AotRefGen` run that owes two fixtures a
-> `.reference.cs`, a full-TFM `pack`, a win-x64 native publish, and the net472 test legs. Start there,
-> and start with CI.
+> recording the Windows-only validations and their results — all run and green as of 2026-08-11,
+> including the full-TFM `pack` (note the `dotnet pack`/NU5026 wrinkle recorded there), the win-x64
+> native publish (19 warnings, matching linux-x64), and the net472 test legs.
 
 
 `ProtoModelGenerator` (`src/protobuf-net.BuildTools/Generators/ProtoModelGenerator.cs`) is an
@@ -1826,19 +1826,14 @@ fixture change so the two cannot drift.
   `.reference.cs` until someone runs it on Windows.
 
 **Every fixture without a `.reference.cs` now says why, in its own header**, because an absence and a
-genuinely-empty ref-emit output look identical and that has already caused one wrong conclusion. The
-list splits in two, and only the first half is work:
+genuinely-empty ref-emit output look identical and that has already caused one wrong conclusion.
+None of the absences is work — each is a shape ref-emit cannot produce output for:
 
 | fixture | why |
 | --- | --- |
-| `Keywords`, `DynamicCategory` | **owed a reference** — added on Linux; nothing about them is refused by ref-emit. Run `AotRefGen` on Windows and commit the result. |
 | `NonPublicSetter`, `NonPublicCtor`, `InheritAccessor`, `ImplicitPrivate` | ref-emit's *compiled* path refuses the shape outright ("Non-public member cannot be used with full dll compilation"), so there is no output to compare |
 | `TrivialGetter` | no reference behaviour exists — we are strictly more capable there |
 | `DateOnly` | `<Compile Remove>`d from `AotRefGen`, which is net472 and has no `DateOnly` |
-
-Neither of the first two is unmeasured in the meantime: `AotConformanceTests` is net8.0 and compares
-both against `RuntimeTypeModel` in each direction on every run. What is missing is the decompiled
-ref-emit output, which is a reviewing aid rather than a test.
 
 Two artefacts of decompilation are cosmetic, not semantic: `Features` appears as a uniquely-named
 method plus an ILSpy `.override` note (it's really an explicit-interface property), and

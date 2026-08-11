@@ -6,73 +6,65 @@ about the generator. Kept here so they can become issues rather than being lost 
 Each was found by deriving the generator's expected output from ref-emit (`src/AotRefGen`) or by the
 native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading the code and guessing.
 
-## Handover: what to validate on Windows
+## Handover: what to validate on Windows — **all run, 2026-08-11**
 
-Everything below was developed on Linux. These are the checks that **could not be run here**, in the
-order I would run them, with what "good" looks like. Nothing here is expected to fail — but each is a
-place where "it works" is currently my inference rather than an observation.
+Everything below was developed on Linux and validated on Windows on 2026-08-11. The original
+instructions are replaced by what was actually observed, because two of the six did not go quite as
+predicted and both divergences were informative.
 
-**1. CI on the branch, first.** It has been red twice today and both times it was my mistake, so treat
-a green tick as the precondition for the rest rather than a formality. The most recent changes touch
-`Extensible` and `MetaType`, which the **net472** leg exercises through different facades than net8.0.
+**1. CI on the branch — green.** The run for `649eab32` completed successfully while the local
+checks ran; the four runs before it were green too.
 
-**2. `dotnet run --project src/AotRefGen`** — the one piece of owed work.
+**2. `dotnet run --project src/AotRefGen` — done, and the diff was clean.** Both owed files appeared
+(`Keywords.reference.cs` with the escaped `@case`/`@event`/`@params` members, `DynamicCategory.reference.cs`
+with the `SerializerCache.Get<MeasureSerializer, Measure>()` proxy shape), and the four
+non-public-member fixtures declined with exactly their documented messages. Two existing references
+changed, and both diffs are fixture changes made on Linux rather than ref-emit drift:
+`Map.reference.cs` gained the three enum-key/value map members (fields 16–18, `this as
+ISerializer<Shade>` passed positionally) and `Partial.reference.cs` gained the
+`OverwriteList` partial member (field 6, `OptionClearCollection`). Committed alongside this note.
 
-It writes `*.reference.cs` beside every fixture, so:
+**3. The full-TFM pack — verified, with one SDK wrinkle worth keeping.** On SDK 10.0.302,
+`dotnet pack` on this project **skips the build entirely** (even from a clean tree) and fails with
+`NU5026: The file ...\net462\protobuf-net.dll ... was not found on disk` — apparently an interaction
+with `GeneratePackageOnBuild=True`. `dotnet build -c Release` builds all four TFMs and packs as a
+side effect; that is the command to use. The nupkg contains both required entries
+(`analyzers/dotnet/cs/protobuf-net.BuildTools.dll`, `build/protobuf-net.props`) and all four `lib/`
+TFMs. Consumed for real from a scratch net8.0 project against a local feed (which needs
+`protobuf-net.Core` re-packed at the matching version — clean its `bin`/`obj` first or the stale
+nupkg version wins): the generated model round-trips, `Model.Instance` exists, and building the same
+project with `-p:ProtoBufDisableBuildTools=true` kills the generator cleanly (CS0117 on `Instance`;
+the trigger attribute still resolves), which proves the props auto-import end to end.
 
-- **two new files should appear**: `Keywords.reference.cs` and `DynamicCategory.reference.cs`. Both
-  fixtures were added here and neither involves anything ref-emit refuses, so an *empty* or absent
-  result for either is a finding, not a formality — see the table in `AGENTS.md` for which fixtures
-  legitimately have none.
-- **`git diff` over the others is itself the check.** It regenerates all of them, so any change to an
-  existing reference means ref-emit's behaviour moved under something done here. Read it before
-  committing; that diff is the whole reason these files are tracked.
+**4. `AotSmoke` win-x64 native publish — passed, exit code 0, exactly 19 warnings**, the same count
+and the same id breakdown as linux-x64 (6 `IL2067`, 5 `IL3050`, 3 `IL2070`, 3 `IL2091`, 1 `IL2055`,
+1 `IL2057`). Binary is **3.53 MB**, recorded here as the win-x64 baseline (linux-x64 sizes are not
+comparable). `vswhere.exe` was *not* on `PATH` on this machine — it lives at
+`%ProgramFiles(x86)%\Microsoft Visual Studio\Installer` and must be added per session.
 
-**3. `dotnet pack src/protobuf-net/protobuf-net.csproj -c Release`** — a full-TFM pack, which cannot
-run on Linux because `net462` will not build here. I verified the packaging with
-`-p:TargetFrameworks=net8.0` only. Confirm the nupkg contains:
+**5. `-p:ReportAnalyzer=true` — not pursued**; the wall-clock bound from Linux stands.
 
-```
-analyzers/dotnet/cs/protobuf-net.BuildTools.dll
-build/protobuf-net.props
-```
+**6. The full suite — all green after one fix.** Every project and both net472 legs passed
+(`Examples` 705, `protobuf-net.Test` 1017, `protobuf-net.Reflection.Test` 556 on net472; the same
+plus `AotConformanceTests` 655 and `BuildToolsUnitTests` 320 on net8.0). The three behaviour changes
+flagged above (non-public model constructor, `OverwriteList` on partial members,
+`Extensible.AppendValue`/`GetValue` keeping `TValue`) all held on both TFMs.
 
-The props **must** be named after the package or it is not auto-imported, and the auto-import is what
-makes `ProtoBufDisableBuildTools` work. Worth actually consuming the package once from a scratch
-project rather than reading the zip, which is how it was checked here.
-
-**4. `dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64`** (`vswhere.exe` on `PATH`).
-Expect the smoke test to pass and **19 warnings**, the same count as linux-x64. The *binary size* will
-differ and is not comparable across RIDs; compare against a win-x64 baseline if you want a number.
-
-**5. Optionally, `-p:ReportAnalyzer=true` on a large build.** The analyzer's build cost was measured
-here as *below the noise floor* (see next-steps item 3) — but by wall clock, which bounds it rather
-than isolating it. That switch produced no output in this SDK; if it works on Windows it would turn a
-bound into a number, and the IDE's analyzer performance view is another route.
-
-**6. The full suite, including the net472 legs** — `dotnet test Build.csproj`. Three behaviour changes
-here are worth a specific eye, because each changes what existing code does:
-
-- the model's constructor is now non-public, so `new MyModel()`, `Activator.CreateInstance(type)` and
-  DI construction all break. Every in-repo consumer was migrated; a consumer outside is not;
-- `[ProtoPartialMember(OverwriteList = true)]` is now honoured, so such a member *replaces* rather
-  than appends. Anyone who set it and never noticed it doing nothing gets a behaviour change;
-- `Extensible.AppendValue`/`GetValue` keep `TValue` rather than boxing. The net472 leg is the one I
-  could not exercise.
-
-If the intermittent `Issue1232` failures reappear (item 5), note the conditions — they have not been
-reproduced in a dozen attempts since, and a sighting with context would be worth more than the
-sighting itself.
+The one failure was the **`Issue1232` intermittent reappearing — and this time it reproduced
+deterministically, which is what let it be diagnosed and closed.** It was a stale static flag in the
+test class, surfaced or hidden by xUnit's method ordering; see item 5 for the full account. Fixed in
+`Issue1232.cs` (reset the statics in the constructor); the suite is clean with the fix in.
 
 ## Open
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
 index. **Still outstanding, and candidates to raise against protobuf-net:** 3 (one trim
 warning that needs the annotation on every consumer; see Future Ideas A2 for the measured
-breakdown), 5 (intermittent test failures, not reproduced since), 10 (assorted API surprises), 11 (a
+breakdown), 10 (assorted API surprises), 11 (a
 compiled model throws on a collection-typed map key/value). **Resolved in place:** 1 (the sibling
 sub-type stack overflow, now a catchable exception), 2 (`AppendValue`, which now *works* under AOT
-rather than merely failing loudly), 7 (`OverwriteList` on a partial
+rather than merely failing loudly), 5 (the intermittent `Issue1232` failures — a stale static flag
+in the test itself, diagnosed and fixed on Windows), 7 (`OverwriteList` on a partial
 member, a one-token bug in `MetaType`), 4 (a misplaced annotation on the transport type parameter — 808 KB
 of the native binary, the largest single win here), 6 and 9 (analyzer false positives, fixed here), 8 (was the
 harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
@@ -250,7 +242,7 @@ Two things worth keeping:
 
 Also relevant to plain `PublishTrimmed` without AOT, where the same constructors can be trimmed.
 
-### 5. `Issue1232` fails **intermittently** — and every sharper claim about it has been wrong
+### 5. `Issue1232` fails **intermittently** — resolved: a stale static flag in the test, surfaced by xUnit ordering
 
 Four `StreamSerializer_RootStream` cases, `trySkipWritingWhenMeasuring: True` in every one, failing
 with `InvalidOperationException: Invalid length; expected 988, actual: 1029` (size 1023) / `1033`
@@ -279,7 +271,22 @@ written — which is consistent with leaked or cached state, and state that is s
 exactly the shape of thing that fails intermittently. `MeasureState`'s length cache is the obvious
 place to look; recent commits on `main` touch it.
 
-Not diagnosed further: no AOT content, and nothing on this branch reaches `Measure`.
+**Diagnosed and fixed (Windows, 2026-08-11): it was a test bug — stale static state, ordered into
+visibility by xUnit.** The full suite reproduced it *deterministically* on Windows/net8.0 (four
+`NonRootStream` cases this time — so the entry's first "wrong" claim was a real sighting after all),
+and isolation nailed it: the four cases pass alone, and fail exactly when
+`StreamSerializer_Throws_WhenMeasuredLengthDoesNotMatchActualLength` runs first. That test sets the
+**static** `StreamSerializer.intentionallyMiscalculateLength = true`, and the constructor reset the
+two call counters but not that flag — so every later `trySkipWritingWhenMeasuring: true` case
+measured a hard-coded 985.
+
+The numbers confirm it to the byte, including the datum kept above: `RootStream`'s "expected 988
+for both input sizes" is 985 + 3 bytes of root wrapping; `NonRootStream`'s "expected 1982" is
+985 × 2 streams + 12 bytes of the other members; and the buffer-writer arm reports "calculated
+'985'" verbatim. The cross-machine intermittency was just xUnit's per-assembly method ordering
+deciding whether the Throws test ran first — deterministic on any one build, different across them.
+`MeasureState`'s length cache was innocent. Fixed by resetting both static flags in the test
+constructor; not a product bug, and nothing to raise against protobuf-net.
 
 ### 6. `PBN0015` is a false positive on a surrogated type — and it is an **error**
 
