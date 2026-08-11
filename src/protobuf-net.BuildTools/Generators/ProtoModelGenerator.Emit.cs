@@ -62,6 +62,21 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent, $"partial class {plan.TypeName}");
             Line(sb, indent, "{");
 
+            // A shared instance, because a TypeModel is a cache: it is meant to be built once and
+            // reused, and without somewhere obvious to put it people write `new MyModel()` per call.
+            // It also gives PBN2010's fixer something to name when nothing is in scope, which is the
+            // common case for a codebase part-way through migrating.
+            //
+            // Suppressed if the consumer's half of the partial already declares `Instance` (CS0102),
+            // or has no accessible parameterless constructor to call.
+            if (plan.EmitInstance)
+            {
+                Line(sb, indent + 1, "/// <summary>A shared instance of this model; a <c>TypeModel</c> is"
+                    + " thread-safe and is intended to be reused.</summary>");
+                Line(sb, indent + 1, $"public static {plan.TypeName} Instance {{ get; }} = new {plan.TypeName}();");
+                sb.AppendLine();
+            }
+
             // the base declares [DynamicallyAccessedMembers(DynamicAccess.ContractType)] on T, and an
             // override must restate it exactly or trim analysis reports IL2095. DynamicAccess is
             // internal to protobuf-net, so the flags are spelled out; keep them in step with

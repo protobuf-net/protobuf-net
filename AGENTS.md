@@ -205,12 +205,24 @@ design rests on it. The unit tests stub `ProtoModelAttribute`, `Serializer` and 
 instead: the analyzer matches on full names, and the test harness references Core (through BuildTools),
 which has `TypeModel` but not the other two.
 
-`UseAotModelCodeFixProvider` fixes `PBN2010` by swapping the receiver, and is offered **only when an
-instance of the model is already in scope** (field, property, local, parameter). That restriction is
-the design rather than a shortcut: the alternative is writing `new MyModel()` at the call site, and a
-`TypeModel` is a cache meant to be built once and reused — a fixer that scattered constructions
-through a codebase would be doing harm tidily. `PBN2011` is not fixable and never will be; the whole
-difficulty there is that nobody can tell what it serializes.
+`UseAotModelCodeFixProvider` fixes `PBN2010` by swapping the receiver. It offers anything of the
+model's type already in scope (field, property, local, parameter), and then the generated
+**`Model.Instance`** — which is why that accessor exists: a codebase part-way through migrating has
+no model in scope *anywhere*, so without it the fixer would be useless in exactly the situation it
+is for. The alternative, writing `new MyModel()` per call site, would be doing harm tidily: a
+`TypeModel` is a cache meant to be built once and reused.
+
+`Instance` is emitted onto every model **except** where the consumer already declares a member of
+that name (CS0102 in their build) or the model has no accessible parameterless constructor. Both are
+their code, so the answer is to emit nothing rather than to complain.
+
+The shared-instance form arrives fully qualified, because the analyzer cannot know what is in scope
+at the call site; `Simplifier.Annotation` is what reduces it to `MyModel.Instance` on application, and
+leaves `global::` only where it is genuinely needed. That annotation lives in Workspaces — available
+here, see below.
+
+`PBN2011` is not fixable and never will be; the whole difficulty there is that nobody can tell what
+it serializes.
 
 **A note recorded because I got it wrong first:** there is no packaging obstacle to a fixer here.
 BuildTools *already* references `Microsoft.CodeAnalysis.CSharp.Workspaces` (`Pack="false"

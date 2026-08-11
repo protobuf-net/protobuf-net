@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Simplification;
 using ProtoBuf.BuildTools.Analyzers;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -57,8 +58,11 @@ namespace ProtoBuf.CodeFixes
                     continue;
                 }
 
-                foreach (var candidate in InScopeModels(model, invocation, context.CancellationToken))
+                var offered = new HashSet<string>(System.StringComparer.Ordinal);
+                foreach (var candidate in InScopeModels(model, invocation, context.CancellationToken)
+                    .Concat(SharedInstances(diagnostic)))
                 {
+                    if (!offered.Add(candidate)) continue;
                     var title = $"Use '{candidate}' instead of the runtime model";
                     context.RegisterCodeFix(
                         CodeAction.Create(title,
@@ -73,9 +77,16 @@ namespace ProtoBuf.CodeFixes
             MemberAccessExpressionSyntax access, string instance)
         {
             // only the receiver changes: `Serializer.Serialize(...)` -> `instance.Serialize(...)`,
-            // so the arguments, trivia and the rest of the statement are left exactly as they were
+            // so the arguments, trivia and the rest of the statement are left exactly as they were.
+            //
+            // The shared-instance form arrives fully qualified, because the analyzer cannot know what
+            // is in scope here; Simplifier.Annotation is how that is resolved - Roslyn reduces it to
+            // the shortest unambiguous spelling when the fix is applied, so a consumer sees
+            // `MyModel.Instance` and only gets `global::` where it is genuinely needed.
             var replacement = access.WithExpression(
-                SyntaxFactory.IdentifierName(instance).WithTriviaFrom(access.Expression));
+                SyntaxFactory.ParseExpression(instance)
+                    .WithAdditionalAnnotations(Simplifier.Annotation)
+                    .WithTriviaFrom(access.Expression));
             return document.WithSyntaxRoot(root.ReplaceNode(access, replacement));
         }
 
@@ -99,6 +110,29 @@ namespace ProtoBuf.CodeFixes
                 };
                 if (type is null || !IsProtoModel(type)) continue;
                 if (seen.Add(symbol.Name)) yield return symbol.Name;
+            }
+        }
+
+        /// <summary>
+        /// The generated <c>Model.Instance</c> accessors, which is what makes this fixable when
+        /// nothing is in scope — the common case for a codebase part-way through migrating.
+        /// </summary>
+        /// <remarks>
+        /// The model names come from the diagnostic's properties rather than being re-derived here;
+        /// the analyzer has already done that scan. `Instance` is generated onto every model unless
+        /// the consumer declared their own member of that name, so this is offered after anything
+        /// genuinely in scope rather than instead of it.
+        /// </remarks>
+        private static IEnumerable<string> SharedInstances(Diagnostic diagnostic)
+        {
+            if (!diagnostic.Properties.TryGetValue(AotMigrationAnalyzer.ModelsProperty, out var models)
+                || string.IsNullOrEmpty(models))
+            {
+                yield break;
+            }
+            foreach (var model in models!.Split(';'))
+            {
+                if (model.Length != 0) yield return model + ".Instance";
             }
         }
 

@@ -28,9 +28,9 @@ public partial class MyModel : TypeModel { }
 The generator fills in the other half of the class. Use it like any other `TypeModel`:
 
 ``` c#
-var model = new MyModel();
-model.Serialize(stream, order);
-var clone = model.Deserialize<Order>(stream);
+// `Instance` is generated for you; a TypeModel is a cache, so build it once and reuse it
+MyModel.Instance.Serialize(stream, order);
+var clone = MyModel.Instance.Deserialize<Order>(stream);
 ```
 
 You only need to name your **roots**. Everything reachable from a seed — member types, collection
@@ -122,10 +122,18 @@ Nothing is reported if you have no `[ProtoModel]` — the runtime model is a per
 protobuf-net, and this has nothing to say to anyone using it. Calls on a model *you* named, including
 a `RuntimeTypeModel.Create()` you configured deliberately, are left alone.
 
-`PBN2010` comes with a code fix, offered when an instance of your model is already in scope — a
-field, property, local or parameter. Where there is none, the diagnostic stands but no fix is offered:
-a `TypeModel` is a cache meant to be built once and reused, so where it should live is your decision,
-not something to scatter `new MyModel()` through the codebase for.
+`PBN2010` comes with a code fix. It offers anything of your model's type already in scope, and
+otherwise the generated shared instance:
+
+``` c#
+Serializer.Serialize(stream, order);        // PBN2010
+MyModel.Instance.Serialize(stream, order);  // what the fix writes
+```
+
+Every generated model gets a `public static MyModel Instance { get; }` for this — a `TypeModel` is a
+cache, meant to be built once and reused, so there is one obvious place to reach for rather than a
+`new MyModel()` at each call site. If you declare your own `Instance`, or your model has no
+parameterless constructor, it is not generated and your own arrangements stand.
 
 `PBN2011` is the other half, and it has no mechanical fix: the non-generic APIs take the thing to
 serialize as an `object` or a `Type`, so neither the analyzer nor the generator can tell what will be

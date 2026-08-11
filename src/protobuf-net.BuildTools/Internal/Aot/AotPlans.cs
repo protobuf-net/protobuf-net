@@ -886,7 +886,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     {
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
-            EquatableArray<string> aliases = default)
+            EquatableArray<string> aliases = default, bool emitInstance = true)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -894,6 +894,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             AnnotateTrimming = annotateTrimming;
             Enums = enums;
             Aliases = aliases;
+            EmitInstance = emitInstance;
         }
 
         /// <summary>
@@ -913,6 +914,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </para>
         /// </remarks>
         public EquatableArray<string> Aliases { get; }
+
+        /// <summary>
+        /// Whether to emit the shared <c>Instance</c> accessor.
+        /// </summary>
+        /// <remarks>
+        /// False when the consumer's own half of the partial already declares a member called
+        /// <c>Instance</c> (which would be CS0102), or when the model has no accessible
+        /// parameterless constructor to call.
+        /// </remarks>
+        public bool EmitInstance { get; }
 
         /// <summary>
         /// Enums seeded directly by <c>[ProtoSerializable]</c>, which are served by the same
@@ -953,7 +964,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool Equals(ProtoModelPlan? other)
             => other is not null && Namespace == other.Namespace && TypeName == other.TypeName
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
-                && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases);
+                && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
+                && EmitInstance == other.EmitInstance;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 

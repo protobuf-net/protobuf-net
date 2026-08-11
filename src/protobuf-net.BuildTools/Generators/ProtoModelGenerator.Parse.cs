@@ -167,7 +167,8 @@ namespace ProtoBuf.BuildTools.Generators
                     ? ns.ToDisplayString() : null;
                 plan = new ProtoModelPlan(nameSpace, model.Name, new(contracts),
                     annotateTrimming: SupportsTrimAnnotations(compilation), enums: new(enumPlans),
-                    aliases: new(DeclaredAliases(compilation).ToArray()));
+                    aliases: new(DeclaredAliases(compilation).ToArray()),
+                    emitInstance: CanEmitInstance(model));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
@@ -1496,6 +1497,23 @@ namespace ProtoBuf.BuildTools.Generators
                 return stated ?? ReadCategoryFromSource(compilation, serializer);
             }
             return null;
+        }
+
+        /// <summary>
+        /// Whether the shared <c>Instance</c> accessor can be emitted onto the consumer's model.
+        /// </summary>
+        /// <remarks>
+        /// Two ways it cannot: they already declare a member of that name, which would be CS0102 in
+        /// their own build; or the type has constructors but no accessible parameterless one, so
+        /// there is nothing for the initialiser to call. Both are the consumer's code, so the answer
+        /// is to emit nothing rather than to complain — the model works perfectly well without it.
+        /// </remarks>
+        private static bool CanEmitInstance(INamedTypeSymbol model)
+        {
+            if (model.GetMembers("Instance").Any()) return false;
+            var constructors = model.InstanceConstructors
+                .Where(static x => x.DeclaredAccessibility != Accessibility.Private).ToList();
+            return constructors.Count == 0 || constructors.Any(static x => x.Parameters.Length == 0);
         }
 
         /// <summary>Whether the type declares a hand-written serializer at all.</summary>

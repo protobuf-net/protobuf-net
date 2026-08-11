@@ -585,11 +585,31 @@ survives, not as a commitment.
    Note this is orthogonal to everything else in this file — it is a *migration* problem, not a
    correctness one, and it is probably the biggest single thing standing between "the generator works"
    and "a consumer can adopt it".
-3. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
+3. **Ship `protobuf-net.BuildTools` by default rather than as an opt-in package.** The generator is
+   only discoverable if the tooling is present, and a feature nobody can find is a feature nobody
+   uses.
+
+   **The blocker is severity, not packaging.** `DataContractAnalyzer` currently declares **11
+   `DiagnosticSeverity.Error`** rules (`PBN0001`, `0002`, `0003`, `0008`, `0009`, `0010`, `0011`,
+   `0012`, `0015`, `0018`, …). Shipping it by default turns all of those on for every protobuf-net
+   consumer, so anyone whose contracts trip one gets a **build break from a version bump alone** —
+   having changed nothing. That is the worst possible first impression, and it is not hypothetical:
+   two of those eleven turned out to be false positives *on this branch* (`PBN0012` on interface
+   hierarchies, `PBN0015` on surrogated types), both fixed here, and neither was found by anything
+   other than trying the shapes.
+
+   So the order is: audit those eleven first — keep `Error` only where the shape genuinely cannot
+   work at run time, demote the rest to `Warning` — and only then flip the default. Worth checking
+   the build-time cost on a large project at the same time, since it would then be paid by everyone.
+
+4. **An "announce" diagnostic for discoverability.** Notes are in the "Future ideas" section rather
+   than here, since the design question is more interesting than the work.
+
+5. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
    file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
    alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,
    this is it.
-4. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
+6. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
    differential therefore sits next to a clean baseline, which is what that gate needed. The
    `Issue1232` failures turn out to be **intermittent** rather than a standing failure, so the "it
    presumably exits non-zero" that motivated this item was wrong twice over — see item 5, which
@@ -599,7 +619,7 @@ survives, not as a commitment.
    `gh api repos/protobuf-net/protobuf-net/actions/jobs/<jobId>/logs`, which is how "green" was
    turned into "these specific cases passed". `gh run view --log` returns nothing for a run this old;
    the API route still works.
-5. ~~**Widen the corpus differential to the `.proto`-generated DTO path.**~~ **Done**, and it paid
+7. ~~**Widen the corpus differential to the `.proto`-generated DTO path.**~~ **Done**, and it paid
    for itself on the first run: **1283 → 2988** contracts compared, still 100% matching, and one
    real generator bug that broke the *consumer's build* — see item 14.
 
@@ -614,11 +634,11 @@ survives, not as a commitment.
    couple of which look like **protogen** bugs rather than corpus artefacts, `stringEscaping.proto`
    emitting `Unexpected character '\'` being the clearest. Those are protobuf-net.Reflection's to
    answer for, not the AOT generator's, but nobody had run the whole tree through a compiler before.
-6. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
+8. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
    AOT route at all. Note the warning count is now a *poor* motivation for it: those 18 are correct
    warnings about code that does reflect. The real arguments are one less layer of indirection on the
    generated path, and possibly size — get a size estimate first.
-7. **The remaining generator gaps**, each bounded and each with a known reference behaviour: a
+9. **The remaining generator gaps**, each bounded and each with a known reference behaviour: a
    nested map key, a `CategoryScalar` hand-written serializer as a collection element or map value,
    and an external serializer whose category cannot be established.
 
@@ -630,6 +650,39 @@ only, and a subprocess timeout is exactly what contention in a full run would tr
 `Compile(name, path)`, so no AOT path can reach it.
 
 ## Future ideas
+
+### An "announce" diagnostic, and how not to make it advertising
+
+The generator is invisible: nothing tells a consumer it exists. An info-level diagnostic pointing at
+the docs is cheap, but the failure mode is obvious — an analyzer that markets a feature is one people
+learn to switch off, and it poisons the other diagnostics with it.
+
+The design that avoids that is **to gate it on what the project has already asked for**:
+
+- report only when the project has opted into AOT or trimming (`PublishAot`, `PublishTrimmed`,
+  `IsAotCompatible`), which reaches the analyzer through `CompilerVisibleProperty` in
+  `protobuf-net.BuildTools.props` — that file already surfaces per-item metadata, so the mechanism is
+  in place and this is a few lines;
+- ...and only when the compilation has `[ProtoContract]` types but **no** `[ProtoModel]`.
+
+At that point it is not an advertisement, it is a defect report: they have asked for AOT, and their
+serializer is going to reflect. Anyone who has not asked for AOT never sees it.
+
+Then, in order of how much they earn their noise:
+
+- **`DiagnosticSeverity.Info`**, once per compilation, not per contract. Info does not appear in
+  normal build output at all — it shows in the IDE's Messages and in `-v normal` logs — so it is
+  quiet by construction, and `dotnet_diagnostic.PBNxxxx.severity = none` in `.editorconfig` dismisses
+  it permanently in the standard way.
+- **Pair it with a code fix that writes the `[ProtoModel]` stub.** This is the part that turns an
+  announcement into an action, and it is the difference between helpful and nagging: a lightbulb on a
+  contract offering "generate an AOT model for this project" is discoverable *and* useful, where a
+  message saying "did you know…" is only the former.
+- Do **not** consider a warning. The moment this is a warning it is in everyone's build log, and the
+  argument about whether protobuf-net should be telling people how to build their app is one we would
+  lose.
+
+Not built. The gating and the severity are the decisions; the code is small.
 
 Not defects — things worth doing that were scoped out, with the measurements that were taken at the
 time so the next person does not have to retake them.

@@ -57,6 +57,9 @@ namespace ProtoBuf.BuildTools.Analyzers
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
             = ImmutableArray.Create(UsesRuntimeModel, UnresolvableContractType);
 
+        /// <summary>Diagnostic property carrying the model type names, for the fixer.</summary>
+        internal const string ModelsProperty = "Models";
+
         private const string ProtoModelAttribute = "ProtoBuf.ProtoModelAttribute";
         private const string SerializerType = "ProtoBuf.Serializer";
         private const string RuntimeTypeModelType = "ProtoBuf.Meta.RuntimeTypeModel";
@@ -150,9 +153,16 @@ namespace ProtoBuf.BuildTools.Analyzers
             var which = models.Length == 1
                 ? "the AOT model '" + models[0].Name + "'"
                 : "AOT models (" + string.Join(", ", models.Select(static m => "'" + m.Name + "'")) + ")";
+
+            // the fixer needs the model by name, and re-deriving it there would mean repeating the
+            // whole scan; a diagnostic property is the supported way to carry it across
+            var properties = ImmutableDictionary<string, string?>.Empty
+                .Add(ModelsProperty, string.Join(";", models.Select(static m
+                    => m.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))));
+
             context.ReportDiagnostic(Diagnostic.Create(
-                UsesRuntimeModel, operation.Syntax.GetLocation(), name, which,
-                models[0].Name.Length == 0 ? "model" : ToCamel(models[0].Name), method.Name));
+                UsesRuntimeModel, operation.Syntax.GetLocation(), properties, name, which,
+                ToCamel(models[0].Name), method.Name));
         }
 
         /// <summary>

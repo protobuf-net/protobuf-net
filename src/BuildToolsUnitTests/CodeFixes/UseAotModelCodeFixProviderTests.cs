@@ -35,7 +35,11 @@ namespace BuildToolsUnitTests.CodeFixes
             public class Order { [ProtoMember(1)] public int Id { get; set; } }
 
             [ProtoModel]
-            public partial class MyModel : ProtoBuf.Meta.TypeModel { }
+            public partial class MyModel : ProtoBuf.Meta.TypeModel
+            {
+                // the generator emits this; the fixer's fallback names it
+                public static MyModel Instance { get; } = new MyModel();
+            }
 
 
             """;
@@ -63,21 +67,26 @@ namespace BuildToolsUnitTests.CodeFixes
         }
 
         /// <summary>
-        /// With nothing in scope there is no fix — deliberately. The alternative is writing
-        /// <c>new MyModel()</c> at the call site, and a <c>TypeModel</c> is a cache meant to be built
-        /// once and reused, so the author should decide where it lives.
+        /// With nothing in scope, the generated <c>Instance</c> is what the fix reaches for — which
+        /// is the case that matters, since a codebase part-way through migrating has no model in
+        /// scope anywhere yet.
         /// </summary>
         [Fact]
-        public async Task OffersNothingWhenNoModelIsInScope()
+        public async Task FallsBackToTheGeneratedSharedInstance()
         {
-            const string source = Preamble + """
+            await RunCodeFixTestAsync<AotMigrationAnalyzer>(
+                Preamble + """
                 public class Uses
                 {
                     public void M(Stream s) => {|#0:Serializer.Serialize(s, new Order())|};
                 }
-                """;
-
-            await RunCodeFixTestAsync<AotMigrationAnalyzer>(source, source,
+                """,
+                Preamble + """
+                public class Uses
+                {
+                    public void M(Stream s) => MyModel.Instance.Serialize(s, new Order());
+                }
+                """,
                 new DiagnosticResult(AotMigrationAnalyzer.UsesRuntimeModel).WithLocation(0)
                     .WithArguments("Serializer.Serialize", "the AOT model 'MyModel'", "myModel", "Serialize"));
         }
