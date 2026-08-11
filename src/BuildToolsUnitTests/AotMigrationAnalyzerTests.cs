@@ -14,15 +14,15 @@ namespace BuildToolsUnitTests
         public AotMigrationAnalyzerTests(ITestOutputHelper log) : base(log) { }
 
         /// <summary>
-        /// The trigger attribute is generator-owned, and `Serializer`/`RuntimeTypeModel` live in
-        /// protobuf-net rather than protobuf-net.Core — which is what this harness references, since
-        /// BuildTools compiles Core's sources in. Both are therefore stubbed here.
+        /// The trigger attribute is real Core API but gated by <c>[Experimental]</c>, and
+        /// `Serializer`/`RuntimeTypeModel` live in protobuf-net rather than protobuf-net.Core —
+        /// which is what this harness references, since BuildTools compiles Core's sources in.
+        /// All three are therefore stubbed here.
         /// </summary>
         /// <remarks>
         /// Faithful for the purpose: the analyzer matches on the *full name* of the containing type,
-        /// so a stub of the same name exercises exactly the same path. The real-build behaviour —
-        /// including that an analyzer can see the generator's post-init attribute — is pinned
-        /// separately by `AotSmoke`, where both actually run.
+        /// so a stub of the same name exercises exactly the same path. The real-build behaviour is
+        /// pinned separately by `AotSmoke`, where analyzer and generator actually run together.
         /// </remarks>
         private const string Preamble = """
             using ProtoBuf;

@@ -117,8 +117,8 @@ namespace ProtoBuf.BuildTools.Generators
             });
         }
 
-        // note ProtoSurrogateAttribute is *not* here: unlike the two above it has to cross assembly
-        // boundaries, so that a library can offer surrogates to its consumers. It is a real API in
-        // protobuf-net.Core, which every consumer of this generator already references.
+        // note all three trigger attributes are real API in protobuf-net.Core, which every consumer
+        // of this generator already references; [ProtoSurrogate] is the one that demanded it, since
+        // it has to cross assembly boundaries so a library can offer surrogates to its consumers
     }
 }

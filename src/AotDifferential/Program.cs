@@ -95,9 +95,10 @@ internal static class Program
     /// this the reference throws "No serializer defined for type" where we correctly emit a
     /// surrogate — which reads as a generator fault and is the opposite.
     ///
-    /// Matched by full name rather than by type identity, deliberately: the attribute is
-    /// generator-owned and `internal`, so each assembly compiles its own copy and they are different
-    /// types. That is the same reason the generator matches by name.
+    /// Matched by full name rather than by type identity, deliberately: the generator is loaded
+    /// reflectively here and reads the corpus through Roslyn, so no symbol on that side can be
+    /// identity-equal to a type this harness holds. The generator matches by name for the same
+    /// reason.
     /// </remarks>
     private static void ApplySurrogates(RuntimeTypeModel reference, Corpus corpus)
     {

@@ -14,8 +14,8 @@ namespace BuildToolsUnitTests.CodeFixes
     {
         /// <summary>
         /// Stubs, for the same reason the analyzer tests stub: `Serializer` lives in protobuf-net
-        /// rather than protobuf-net.Core, and the trigger attribute is generator-owned. The fixer
-        /// matches on full names, so these exercise the real path.
+        /// rather than protobuf-net.Core, and the real trigger attribute is behind an
+        /// `[Experimental]` gate. The fixer matches on full names, so these exercise the real path.
         /// </summary>
         private const string Preamble = """
             using ProtoBuf;

@@ -57,8 +57,14 @@ Design constraints that are settled, and should not be quietly relaxed:
 
 - The consumer opts in with `[ProtoModel] partial class MyModel : TypeModel`, seeded by
   `[ProtoSerializable(typeof(Foo))]`; everything reachable from a seed is pulled in automatically.
-- The trigger attributes are **generator-owned**, emitted via `RegisterPostInitializationOutput`,
-  not declared in protobuf-net.Core.
+- The trigger attributes (`[ProtoModel]`, `[ProtoSerializable]`, `[ProtoSurrogate]`) are **real API
+  in protobuf-net.Core**, marked `[Experimental("PBN9001")]`. They were generator-owned — emitted via
+  `RegisterPostInitializationOutput`, one `internal` copy per consuming assembly — while the shape was
+  still moving; what forced the move is that `[ProtoSurrogate]` must cross assembly boundaries so a
+  library can ship surrogates to its consumers, and a shared type needs a shared home. The generator
+  still matches them by **full name** rather than by symbol — the unit-test harnesses declare their
+  own stubs (avoiding the `[Experimental]` gate), and the reflection-loaded generator in
+  `AotDifferential` can never share symbol identity with the corpus — so keep it that way.
 - The model is **closed over what is visible at compile time**. It never consults the runtime model.
   A contract the generator can't handle gets a diagnostic and is omitted — it must *not* fall back
   to ref-emit, since that would silently defeat AOT. `TypeModel`'s inherited "no serializer for
@@ -233,10 +239,11 @@ Three decisions worth keeping:
 - **A call on any other `TypeModel` is left alone**, including `RuntimeTypeModel.Create()`. That is
   the shape we are asking people to write, and flagging it would be worse than saying nothing.
 
-**An analyzer does see the generator's post-init sources** — that is what makes the `[ProtoModel]`
-trigger work, and it was verified in a real build (`AotSmoke`) rather than assumed, because the whole
-design rests on it. The unit tests stub `ProtoModelAttribute`, `Serializer` and `RuntimeTypeModel`
-instead: the analyzer matches on full names, and the test harness references Core (through BuildTools),
+`[ProtoModel]` is ordinary Core API now, so the analyzer sees it like any referenced type. (While the
+attributes were generator-owned this needed post-init sources to be visible to analyzers, which was
+verified in a real build; that dependency is gone with the move.) The unit tests still stub
+`ProtoModelAttribute`, `Serializer` and `RuntimeTypeModel`: the analyzer matches on full names, the
+stub dodges the `[Experimental]` gate, and the test harness references Core (through BuildTools),
 which has `TypeModel` but not the other two.
 
 `UseAotModelCodeFixProvider` fixes `PBN2010` by swapping the receiver. It offers anything of the
@@ -1340,8 +1347,9 @@ into the model at all.
 You cannot put an attribute on `System.Uri`, so the contract-level form cannot reach a type you do
 not own — which is most of the coverage sweep's member-type tail. `[ProtoSurrogate(typeof(Uri),
 typeof(UriSurrogate))]` on the **model** is the compile-time equivalent of
-`RuntimeTypeModel.SetSurrogate`, and it is a generator-owned trigger attribute like `[ProtoModel]`
-itself, emitted from `RegisterPostInitializationOutput`.
+`RuntimeTypeModel.SetSurrogate`, and like `[ProtoModel]` itself it is real `[Experimental]` API in
+protobuf-net.Core — it is the attribute that forced that move, since it has to cross assembly
+boundaries (see the design constraints at the top).
 
 A surrogated type needs no contract attribute at all — the declaration stands in for it, which is
 why it is resolved *before* the "is this even a contract" checks and threaded down into
@@ -1364,13 +1372,13 @@ one package, the protobuf-net helper that knows how to serialize them is a secon
 is a third that references the helper and says nothing about surrogates. `ProtoSurrogateReferenceTests`
 pins it, and cannot be a golden fixture because it needs genuinely separate compilations.
 
-The subtle part is that the helper's `ProtoSurrogateAttribute` is a **different type** from the
-consumer's — both are generator-owned and `internal`, so each assembly compiles its own copy. What
-makes the hand-off work is matching by **full name** rather than by symbol, plus the fact that
-`IAssemblySymbol.GetAttributes()` surfaces internal assembly attributes from referenced metadata.
-Keep that in mind before "tidying" the comparison into a symbol equality check. Moving the attribute
-into protobuf-net.Core would make it one shared type and remove the subtlety, at the cost of the
-deliberate rule that trigger attributes are generator-owned.
+Historical note: this hand-off is *why* the trigger attributes are Core API now. While they were
+generator-owned, the helper's `ProtoSurrogateAttribute` was a **different type** from the consumer's
+(each assembly compiled its own `internal` copy), and the hand-off only worked because the comparison
+was by **full name** rather than by symbol. The attribute is one shared Core type today, but the
+full-name matching deliberately remains — the test harnesses and the reflection-loaded generator in
+`AotDifferential` still cannot rely on symbol identity — so still don't "tidy" it into a symbol
+equality check.
 
 `ModelSurrogate.input.cs` covers both forms, and **is** differentially covered: `AotRefGen` replays
 the declarations onto the reference model through `RuntimeTypeModel.SetSurrogate` — the cast form via
@@ -1759,8 +1767,8 @@ Three things about it are load-bearing:
   the replay the reference throws where we correctly emit a surrogate, which reads as a generator
   fault and is the opposite. The declaring assembly is usually not loaded (a package shipping
   surrogates for types it does not own is exactly that shape), so the neighbours are loaded eagerly
-  first. Matched by full name, since the attribute is generator-owned and `internal` and every
-  assembly compiles its own copy.
+  first. Matched by full name — the generator is loaded reflectively here, so the Roslyn-side
+  attribute symbol can never be identity-equal to anything this harness holds.
 - **Values are deterministic and every scalar differs from the last.** Two members holding the same
   value serialize identically under either numbering, so a swapped field number would be invisible.
 - **Half the corpus is `.proto`-generated** (`Schemas.cs`): the schema tree under
@@ -1820,8 +1828,8 @@ fixture change so the two cannot drift.
 
 - Fixture convention: `<Name>.input.cs` declares model type `<Name>Model`, giving `<Name>.reference.cs`.
 - Contract types in fixtures must be `public` — full ref-emit compilation only reaches public members.
-- `src/AotRefGen/TriggerAttributes.cs` duplicates the generator's post-init attributes so the shared
-  fixtures compile; keep the two in step.
+- the trigger attributes come from protobuf-net.Core like any other consumer (`TriggerAttributes.cs`,
+  which duplicated them while they were generator-owned, is gone).
 - **It is net472, so it does not run on Linux at all.** Anything added from there has no
   `.reference.cs` until someone runs it on Windows.
 

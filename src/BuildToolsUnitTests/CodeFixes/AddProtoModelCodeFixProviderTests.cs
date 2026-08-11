@@ -13,7 +13,7 @@ namespace BuildToolsUnitTests.CodeFixes
     public class AddProtoModelCodeFixProviderTests : CodeFixProviderTestsBase<AddProtoModelCodeFixProvider>
     {
         /// <summary>
-        /// The stub is generator-owned, so the test declares it; the analyzer matches by full name.
+        /// Stubbed to dodge the real attributes' <c>[Experimental]</c> gate; the analyzer matches by full name.
         /// </summary>
         private const string Preamble = @"
 using ProtoBuf;

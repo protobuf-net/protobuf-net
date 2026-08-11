@@ -195,10 +195,10 @@ namespace ProtoBuf.BuildTools.Analyzers
 
         /// <summary>Every <c>[ProtoModel]</c> type in the compilation, by display name.</summary>
         /// <remarks>
-        /// The attribute is generator-owned — emitted from <c>RegisterPostInitializationOutput</c> —
-        /// so it is matched by full name rather than by symbol, exactly as the surrogate hand-off is;
-        /// each assembly compiles its own copy. Post-init sources are part of the compilation the
-        /// analyzer sees, so this works without the generator having to run first.
+        /// The attribute is real API in protobuf-net.Core, but it is still matched by full name
+        /// rather than by symbol: the unit-test harness references Core through the BuildTools
+        /// assembly and stubs the attribute to dodge its <c>[Experimental]</c> gate, so symbol
+        /// identity cannot be relied on there.
         /// </remarks>
         private static ImmutableArray<INamedTypeSymbol> FindModels(Compilation compilation,
             out INamedTypeSymbol? hasContracts)
