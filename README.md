@@ -1,6 +1,6 @@
 # protobuf-net
 
-<img src="https://protogen.marcgravell.com/images/protobuf-net.svg" alt="protobuf-net logo" width="45" height="45"> protobuf-net is a contract based serializer for .NET code, that happens to write data in the "protocol buffers" serialization format engineered by Google. The API, however, is very different to Google's, and follows typical .NET patterns (it is broadly comparable, in usage, to `XmlSerializer`, `DataContractSerializer`, etc). It should work for most .NET languages that write standard types and can use attributes.
+<img src="https://raw.githubusercontent.com/protobuf-net/protobuf-net/main/protobuf-net.png" alt="protobuf-net logo" width="45" height="45"> protobuf-net is a contract based serializer for .NET code, that happens to write data in the "protocol buffers" serialization format engineered by Google. The API, however, is very different to Google's, and follows typical .NET patterns (it is broadly comparable, in usage, to `XmlSerializer`, `DataContractSerializer`, etc). It should work for most .NET languages that write standard types and can use attributes.
 
 [![.NET](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml/badge.svg)](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml)
 
@@ -17,9 +17,11 @@
 - .NET Standard 2.0, 2.1
 - .NET Framework 4.6.2+
 
-## Build tools
+## Native AOT and trimming
 
-Build tools to help you use protobuf-net correctly are [available via `protobuf-net.BuildTools`](https://protobuf-net.github.io/protobuf-net/build_tools)
+From 3.3, protobuf-net can generate serializers **at build time** from code-first contracts, making native AOT and trimming work — and improving cold start even on ordinary JIT builds. See [the AOT documentation](https://protobuf-net.github.io/protobuf-net/aot).
+
+The [build tools](https://protobuf-net.github.io/protobuf-net/build_tools) (analyzers that validate contracts, and this generator) are included in the protobuf-net package by default; opt out with `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
 
 ## Runtime Installation
 

@@ -8,12 +8,22 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 2.4.*: critical maintenance only (no feature work planned)
 - 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
 - 3.1: adds model depth validation, which may impact some models; see `TypeModel.MaxDepth`
+- 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://protobuf-net.github.io/protobuf-net/aot); build tools included by default
 - future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - future: protogen support for emitting pre-coded custom serializers
-- future: build-time tooling from code-first (aka "generators")
 
-## unreleased
+## 3.3.0
 
+- **compile-time serializers, for native AOT and trimming** ([docs](https://protobuf-net.github.io/protobuf-net/aot)):
+  opt in with `[ProtoModel] partial class MyModel : TypeModel`, seeded by `[ProtoSerializable(typeof(...))]`;
+  the generator builds the serializers at compile time, so publishing native AOT works and cold start
+  improves even on an ordinary JIT build. The trigger attributes are `[Experimental]` (`PBN9001`)
+  while the shape settles. `[ProtoSurrogate]` on the model or assembly is the compile-time
+  `SetSurrogate`, and `[ProtoContract(IsScalar = true)]` lets a hand-written serializer state its
+  category where the generator cannot see its `Features`
+- **the build tools now ship inside the protobuf-net package** (analyzers and generators; previously
+  the separate `protobuf-net.BuildTools` package): installed by default, declined entirely with
+  `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`
 - support of deserializing `ISet<T>` and `IReadOnlySet<T>` (ladeak)
 - **fix**: `[ProtoPartialMember(..., OverwriteList = true)]` was silently ignored; the option was read
   from the member's own `[ProtoMember]`, which is necessarily absent when the partial-member path
