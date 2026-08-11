@@ -64,10 +64,23 @@ namespace ProtoBuf.CodeFixes
             _ = cancellationToken;
             var name = contract.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-            // the project's own namespace, falling back to the anchor contract's: the model must not
-            // land in the global root just because a fixer wrote it. DefaultNamespace is null outside
-            // IDE-shaped hosts, which is what the fallback is for.
-            var ns = project.DefaultNamespace;
+            // Namespace resolution, most-authoritative first. The first tier is what rescues the
+            // common console shape: with top-level statements the anchor contract sits in the global
+            // namespace and DefaultNamespace has proven unreliable in practice, but RootNamespace is
+            // compiler-visible by default in the SDK and MSBuild defaults it to the project name.
+            // 1. build_property.RootNamespace;
+            // 2. the workspace's DefaultNamespace, where the host supplies one;
+            // 3. the anchor contract's own namespace;
+            // 4. none - and since the file is added at the project *root*, the csproj convention
+            //    (folders, not project or assembly name) genuinely says global namespace there.
+            string? ns = null;
+            if (project.AnalyzerOptions.AnalyzerConfigOptionsProvider.GlobalOptions
+                    .TryGetValue("build_property.RootNamespace", out var rootNamespace)
+                && !string.IsNullOrWhiteSpace(rootNamespace))
+            {
+                ns = rootNamespace;
+            }
+            if (string.IsNullOrEmpty(ns)) ns = project.DefaultNamespace;
             if (string.IsNullOrEmpty(ns) && contract.ContainingNamespace is { IsGlobalNamespace: false } containing)
             {
                 ns = containing.ToDisplayString();
@@ -109,8 +122,10 @@ using ProtoBuf.Meta;
                 ? $"ProtoModel.{contract.Name}.cs"
                 : FileName;
 
+            // at the project root, deliberately: the folder half of the namespace convention is then
+            // empty by construction, so the namespace above is the whole answer
             return Task.FromResult(project
-                .AddDocument(fileName, SourceText.From(source), project.Documents.FirstOrDefault()?.Folders)
+                .AddDocument(fileName, SourceText.From(source))
                 .Project.Solution);
         }
     }

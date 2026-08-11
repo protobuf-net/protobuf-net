@@ -65,6 +65,55 @@ internal partial class ProtoModel : TypeModel
         }
 
         /// <summary>
+        /// The console-app shape: top-level statements put the contracts in the global namespace,
+        /// so the contract's namespace says nothing - but RootNamespace (which MSBuild defaults to
+        /// the project name, and the SDK makes compiler-visible) still names the right home. A
+        /// project ConsoleApp11 gets its model in namespace ConsoleApp11.
+        /// </summary>
+        [Fact]
+        public async Task GeneratedModelUsesRootNamespaceWhenContractIsGlobal()
+        {
+            var test = new Microsoft.CodeAnalysis.CSharp.Testing.CSharpCodeFixTest<
+                AotMigrationAnalyzer, AddProtoModelCodeFixProvider, DefaultVerifier>
+            {
+                TestState =
+                {
+                    Sources = { Preamble + @"
+[ProtoContract] public class {|#0:Order|} { [ProtoMember(1)] public int Id { get; set; } }" },
+                    AnalyzerConfigFiles = { ("/.globalconfig", @"is_global = true
+build_property.RootNamespace = ConsoleApp11") },
+                },
+            };
+            test.TestState.ExpectedDiagnostics.Add(
+                new DiagnosticResult(AotMigrationAnalyzer.NoModel).WithLocation(0));
+
+            test.FixedState.Sources.Add(Preamble + @"
+[ProtoContract] public class Order { [ProtoMember(1)] public int Id { get; set; } }");
+            test.FixedState.AnalyzerConfigFiles.Add(("/.globalconfig", @"is_global = true
+build_property.RootNamespace = ConsoleApp11"));
+            test.FixedState.Sources.Add(("ProtoModel.cs", @"using ProtoBuf;
+using ProtoBuf.Meta;
+
+// Compile-time serializers for this project. Name the types you serialize *directly*; everything
+// reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
+// sub-types - is included automatically.
+//
+// See https://protobuf-net.github.io/protobuf-net/aot
+namespace ConsoleApp11
+{
+    [ProtoModel]
+    [ProtoSerializable(typeof(global::Order))]
+    internal partial class ProtoModel : TypeModel
+    {
+    }
+}
+"));
+
+            test.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
+            await test.RunAsync();
+        }
+
+        /// <summary>
         /// The model must not land in the global root: with no project default namespace to hand
         /// (this harness supplies none), the anchor contract's namespace is used.
         /// </summary>
