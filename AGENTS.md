@@ -205,8 +205,21 @@ design rests on it. The unit tests stub `ProtoModelAttribute`, `Serializer` and 
 instead: the analyzer matches on full names, and the test harness references Core (through BuildTools),
 which has `TypeModel` but not the other two.
 
-No code fixer yet. It would need `Microsoft.CodeAnalysis.CSharp.Workspaces` and a separate shipping
-assembly, which is a packaging question rather than a code one.
+`UseAotModelCodeFixProvider` fixes `PBN2010` by swapping the receiver, and is offered **only when an
+instance of the model is already in scope** (field, property, local, parameter). That restriction is
+the design rather than a shortcut: the alternative is writing `new MyModel()` at the call site, and a
+`TypeModel` is a cache meant to be built once and reused — a fixer that scattered constructions
+through a codebase would be doing harm tidily. `PBN2011` is not fixable and never will be; the whole
+difficulty there is that nobody can tell what it serializes.
+
+**A note recorded because I got it wrong first:** there is no packaging obstacle to a fixer here.
+BuildTools *already* references `Microsoft.CodeAnalysis.CSharp.Workspaces` (`Pack="false"
+PrivateAssets="all"`) and already ships three fixers in the same assembly. The compiler ships only
+`Microsoft.CodeAnalysis`, `.CSharp` and `.VisualBasic` — no Workspaces — but that does not matter:
+csc discovers analyzers from *metadata* and never instantiates a `CodeFixProvider`, so the reference
+is inert at compile time. Verified by building an analyzer and a fixer in one assembly against csc:
+the analyzer ran and there was no `CS8032`/`CS8034`. Do not pack the Workspaces dll; the IDE supplies
+it.
 
 AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0023` belong to
 `DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. `PBN2010`/`PBN2011` are
