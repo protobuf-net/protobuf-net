@@ -249,6 +249,24 @@ Two things worth doing before you trust it:
 2. **Read the trim/AOT warnings.** `<PublishAot>true</PublishAot>` enables that analysis at ordinary
    *build* time too, so you do not have to pay for a native publish to see them.
 
+## Known issues
+
+- **Trim/AOT warnings from protobuf-net itself.** A native publish reports around 19 `IL2xxx`/`IL3050`
+  warnings originating in protobuf-net. They come from the *reflection-based* model — the runtime
+  model, `DynamicStub`, and the auxiliary/list paths — which is code your generated model never
+  executes, but which ILC still analyses because it is present in the assembly. Your model works; the
+  warnings are noise from the road not taken. Removing them entirely needs the reflective paths not
+  to exist on the AOT route at all, which is a larger piece of work and is tracked.
+- **`Extensible.AppendValue` does not work under native AOT.** It resolves serializers by reflection.
+  It now throws rather than silently discarding the value, but if you use it to poke values into an
+  extensible contract by hand, that will not survive a native publish. Reading and writing *unknown
+  fields* is unaffected — that path only copies bytes.
+- **A hand-written serializer as a map key or value** is refused when its category is `CategoryScalar`
+  or cannot be determined, as is a **collection as a map key**. Both are reported with a diagnostic
+  naming the reason rather than silently mis-emitted.
+- **`AppendValue` aside, anything the generator cannot handle is refused, not guessed.** If a contract
+  is missing from your model there is a `PBN2001`–`PBN2004` warning saying which and why.
+
 ## What is supported
 
 Broadly, the code-first surface: contracts and members (properties *and* fields), inheritance via
