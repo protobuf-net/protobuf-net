@@ -720,6 +720,11 @@ answer different questions: the in-process one starts at the top of `Main` and i
 serialization work, while the wall clock includes host startup and is what a user feels. They diverge
 most for the native build, so quoting either alone would flatter one arm.
 
+One internal check worth noting, since these are the sort of numbers that turn out to be artefacts:
+the two clocks agree independently. For the native arm the wall-clock delta over its own baseline is
+3.5 − 3.0 = **0.5 ms**, and the in-process figure is **0.43 ms** — measured by different means, and
+consistent. The same holds for A (67.5 − 15.9 = 51.6 against 50.6).
+
 Caveats worth stating before anyone quotes these: one machine, one payload, Linux; the **ratios** are
 the transferable part, not the milliseconds. And the cost scales with the number of *distinct
 contracts first used* — this closure is a modest ~15 types, so a large model should be proportionally

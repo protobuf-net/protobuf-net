@@ -67,10 +67,13 @@ namespace ProtoBuf.BuildTools.Analyzers
         internal static readonly DiagnosticDescriptor NoModel = new(
             id: "PBN2013",
             title: "Compile-time serializers are available",
+            // qualitative deliberately: the measured figure is ~3x on an ordinary build (see
+            // docs/aot-findings.md), but a hard number in a diagnostic ages badly and varies by
+            // workload, so the message says "several times" and the docs carry the table
             messageFormat: "This project has protobuf-net contracts and no [ProtoModel]. Compile-time "
-                + "serializers are not only for AOT: they remove the metadata inspection the runtime "
-                + "model does on first use, which is a real cold-start cost. See "
-                + "https://protobuf-net.github.io/protobuf-net/aot",
+                + "serializers are not only for AOT: they skip the metadata inspection and IL emission "
+                + "the runtime model does on first use of each contract, which is typically several "
+                + "times faster to first serialize. See https://protobuf-net.github.io/protobuf-net/aot",
             category: "ProtoBuf",
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
