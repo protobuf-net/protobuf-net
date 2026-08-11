@@ -6,14 +6,68 @@ about the generator. Kept here so they can become issues rather than being lost 
 Each was found by deriving the generator's expected output from ref-emit (`src/AotRefGen`) or by the
 native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading the code and guessing.
 
+## Handover: what to validate on Windows
+
+Everything below was developed on Linux. These are the checks that **could not be run here**, in the
+order I would run them, with what "good" looks like. Nothing here is expected to fail — but each is a
+place where "it works" is currently my inference rather than an observation.
+
+**1. CI on the branch, first.** It has been red twice today and both times it was my mistake, so treat
+a green tick as the precondition for the rest rather than a formality. The most recent changes touch
+`Extensible` and `MetaType`, which the **net472** leg exercises through different facades than net8.0.
+
+**2. `dotnet run --project src/AotRefGen`** — the one piece of owed work.
+
+It writes `*.reference.cs` beside every fixture, so:
+
+- **two new files should appear**: `Keywords.reference.cs` and `DynamicCategory.reference.cs`. Both
+  fixtures were added here and neither involves anything ref-emit refuses, so an *empty* or absent
+  result for either is a finding, not a formality — see the table in `AGENTS.md` for which fixtures
+  legitimately have none.
+- **`git diff` over the others is itself the check.** It regenerates all of them, so any change to an
+  existing reference means ref-emit's behaviour moved under something done here. Read it before
+  committing; that diff is the whole reason these files are tracked.
+
+**3. `dotnet pack src/protobuf-net/protobuf-net.csproj -c Release`** — a full-TFM pack, which cannot
+run on Linux because `net462` will not build here. I verified the packaging with
+`-p:TargetFrameworks=net8.0` only. Confirm the nupkg contains:
+
+```
+analyzers/dotnet/cs/protobuf-net.BuildTools.dll
+build/protobuf-net.props
+```
+
+The props **must** be named after the package or it is not auto-imported, and the auto-import is what
+makes `ProtoBufDisableBuildTools` work. Worth actually consuming the package once from a scratch
+project rather than reading the zip, which is how it was checked here.
+
+**4. `dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r win-x64`** (`vswhere.exe` on `PATH`).
+Expect the smoke test to pass and **19 warnings**, the same count as linux-x64. The *binary size* will
+differ and is not comparable across RIDs; compare against a win-x64 baseline if you want a number.
+
+**5. The full suite, including the net472 legs** — `dotnet test Build.csproj`. Three behaviour changes
+here are worth a specific eye, because each changes what existing code does:
+
+- the model's constructor is now non-public, so `new MyModel()`, `Activator.CreateInstance(type)` and
+  DI construction all break. Every in-repo consumer was migrated; a consumer outside is not;
+- `[ProtoPartialMember(OverwriteList = true)]` is now honoured, so such a member *replaces* rather
+  than appends. Anyone who set it and never noticed it doing nothing gets a behaviour change;
+- `Extensible.AppendValue`/`GetValue` keep `TValue` rather than boxing. The net472 leg is the one I
+  could not exercise.
+
+If the intermittent `Issue1232` failures reappear (item 5), note the conditions — they have not been
+reproduced in a dozen attempts since, and a sighting with context would be worth more than the
+sighting itself.
+
 ## Open
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
 index. **Still outstanding, and candidates to raise against protobuf-net:** 3 (one trim
 warning that needs the annotation on every consumer; see Future Ideas A2 for the measured
-breakdown), 5 (pre-existing test failures on `main`), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
-key/value). **Resolved in place:** 1 (the sibling sub-type stack overflow, now a
-catchable exception), 2 (`AppendValue`, now loud rather than silent), 7 (`OverwriteList` on a partial
+breakdown), 5 (intermittent test failures, not reproduced since), 10 (assorted API surprises), 11 (a
+compiled model throws on a collection-typed map key/value). **Resolved in place:** 1 (the sibling
+sub-type stack overflow, now a catchable exception), 2 (`AppendValue`, which now *works* under AOT
+rather than merely failing loudly), 7 (`OverwriteList` on a partial
 member, a one-token bug in `MetaType`), 4 (a misplaced annotation on the transport type parameter — 808 KB
 of the native binary, the largest single win here), 6 and 9 (analyzer false positives, fixed here), 8 (was the
 harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
@@ -577,81 +631,20 @@ survives, not as a commitment.
 
    The binary grew 3,727,688 → 4,032,072 bytes (linux-x64) across both rounds, which is the cost of
    the new generic instantiations rather than a regression; the immutable pair alone was 225 KB of it.
-2. **Turning the generator on does not make existing code use it — decide how to say so.**
-   Every `Serializer.Serialize(...)`/`Serializer.Deserialize<T>(...)` call goes through
-   `RuntimeTypeModel.Default`, i.e. the reflection path, so a consumer who adds a `[ProtoModel]` and
-   publishes for native AOT still has all their existing call sites on the arm that cannot work.
-   Worse, it *keeps working* on a JIT runtime, so the failure arrives at publish time or later.
-
-   Two directions, and the preference is recorded because the reasoning is not obvious:
-
-   - **Diagnose the call sites** — an analyzer that flags `Serializer.*` (and any other use of the
-     default model) once a `[ProtoModel]` exists in the compilation, ideally with a code fixer that
-     rewrites the call to `model.Serialize(...)`. Preferred.
-   - **Make them work automatically** — auto-registration, or interceptors on the call sites. Both
-     founder on the same question: *is the default model still "as default"?* Answering it means
-     tracking every mutation of `RuntimeTypeModel.Default`, which is a lot of state to keep, and
-     getting it wrong silently changes behaviour for people who deliberately configured that model.
-
-   The asymmetry is what decides it: changing code to say explicitly "I am using this model" is
-   simple, obvious and local, whereas making it implicit is neither. Being told beats being guessed
-   for.
-
-   Note this is orthogonal to everything else in this file — it is a *migration* problem, not a
-   correctness one, and it is probably the biggest single thing standing between "the generator works"
-   and "a consumer can adopt it".
-3. **Ship `protobuf-net.BuildTools` by default rather than as an opt-in package.** The generator is
-   only discoverable if the tooling is present, and a feature nobody can find is a feature nobody
-   uses.
-
-   **The blocker is severity, not packaging.** `DataContractAnalyzer` currently declares **11
-   `DiagnosticSeverity.Error`** rules (`PBN0001`, `0002`, `0003`, `0008`, `0009`, `0010`, `0011`,
-   `0012`, `0015`, `0018`, …). Shipping it by default turns all of those on for every protobuf-net
-   consumer, so anyone whose contracts trip one gets a **build break from a version bump alone** —
-   having changed nothing. That is the worst possible first impression, and it is not hypothetical:
-   two of those eleven turned out to be false positives *on this branch* (`PBN0012` on interface
-   hierarchies, `PBN0015` on surrogated types), both fixed here, and neither was found by anything
-   other than trying the shapes.
-
-   **The audit is done**, against the bar "for an error, be *confident* it is actively wrong;
-   otherwise narrow it or downgrade it". It found a third false positive and two over-reaches, and
-   eight of the eleven survive:
-
-   - **`PBN0009` was wrong, and demonstrably so.** It fired on any type carrying ProtoBuf annotations
-     without `[ProtoContract]` — but `[DataContract]` and `[XmlType]` are contract markers in their
-     own right and the families **mix**, which `MetaType` supports deliberately. A `[DataContract]`
-     type pinning one member with `[ProtoMember]` is valid, working code, and it was a **build
-     error** saying "additional annotations will be ignored". Probed rather than argued: with the
-     rule suppressed, that shape serializes as `08-05-18-07` — field 1 from the `[DataMember]`, field
-     3 from the `[ProtoMember]` — so the message was simply false. Now narrowed to fire only when
-     there is no contract marker *at all*, which is a case where the annotations really are ignored,
-     silently, and an error is right.
-   - **`PBN0008` and `PBN0010` downgraded to `Warning`.** Both describe *contradictions* whose
-     resolution `MetaType` defines — the first declaration to pin a tag wins; `[ProtoPartialIgnore]`
-     beats everything. The code builds and behaves deterministically, so they are "you probably did
-     not mean this", not "this is broken". The clinching evidence is our own `Partial.input.cs`,
-     which `#pragma`-suppresses both *in order to pin that precedence*: a rule you have to switch off
-     to document the behaviour it describes is not an error.
-   - The other eight stand: invalid or duplicate field numbers, an unresolvable member name, a
-     duplicate or non-deriving `[ProtoInclude]`, a missing constructor, an unsupported enum value.
-     Each is a shape protobuf-net refuses at run time. `PBN0015` was already correctly narrowed
-     (abstract, `SkipConstructor` and surrogate are all exempt), which is worth noting as the pattern
-     to follow rather than a lucky escape.
-
-   Three false positives found among eleven error-severity rules, all of the same shape — a rule that
-   knows about one way of writing something and treats the others as mistakes. Worth remembering
-   before shipping this by default, and worth checking the build-time cost on a large project at the
-   same time, since it would then be paid by everyone.
-
+2. ~~**Turning the generator on does not make existing code use it.**~~ **Done** — `PBN2010`/`PBN2011`
+   flag the call sites, `UseAotModelCodeFixProvider` rewrites the fixable ones onto `Model.Instance`,
+   and `PBN2012`/`PBN2013` announce the feature to a project that has contracts and no model, with
+   `AddProtoModelCodeFixProvider` offering to write the stub. The reasoning behind the severity split
+   is under "Future ideas".
+3. ~~**Ship `protobuf-net.BuildTools` by default.**~~ **Done** — packed into `protobuf-net` as
+   `analyzers/dotnet/cs` plus `build/protobuf-net.props`. The severity audit that gated it is done
+   (three false positives found and fixed), and `ProtoBufDisableBuildTools` makes declining it one
+   property. **Still unmeasured: the analyzer's build-time cost on a large project**, which everyone
+   now pays; that is the one thing I would want a number for before a wide release.
 4. ~~**An "announce" diagnostic for discoverability.**~~ **Done** — `PBN2012` (warning, for a project
-   that has asked for AOT) and `PBN2013` (info, on cold-start grounds, for everyone else). The
-   reasoning is under "Future ideas", since the severity split is the interesting part. What remains
-   is a fix that writes the `[ProtoModel]` stub.
-
-5. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
-   file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
-   alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,
-   this is it.
+   that has asked for AOT) and `PBN2013` (info, on cold-start grounds, for everyone else).
+5. ~~**The sibling sub-type stack overflow.**~~ **Fixed** — it was a four-line guard once the
+   ping-pong was understood; see item 1.
 6. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
    differential therefore sits next to a clean baseline, which is what that gate needed. The
    `Issue1232` failures turn out to be **intermittent** rather than a standing failure, so the "it
@@ -681,7 +674,9 @@ survives, not as a commitment.
    AOT route at all. Note the warning count is now a *poor* motivation for it: those 18 are correct
    warnings about code that does reflect. The real arguments are one less layer of indirection on the
    generated path, and possibly size — get a size estimate first.
-9. **The remaining generator gaps**, each bounded and each with a known reference behaviour: a
+9. **The remaining generator gaps** — a hand-written serializer as a map key or value, and a
+   collection as a map key. Both refused with a diagnostic naming the reason; both deliberately
+   deferred, each bounded and each with a known reference behaviour: a
    nested map key, a `CategoryScalar` hand-written serializer as a collection element or map value,
    and an external serializer whose category cannot be established.
 

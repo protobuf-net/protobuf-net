@@ -43,6 +43,12 @@ If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
 
 ## AOT source generator (work in progress)
 
+> **Picking this up on a new machine?** `docs/aot-findings.md` opens with a **Handover** section
+> listing the checks that could not be run on Linux — the `AotRefGen` run that owes two fixtures a
+> `.reference.cs`, a full-TFM `pack`, a win-x64 native publish, and the net472 test legs. Start there,
+> and start with CI.
+
+
 `ProtoModelGenerator` (`src/protobuf-net.BuildTools/Generators/ProtoModelGenerator.cs`) is an
 `IIncrementalGenerator` building compile-time serializers for code-first contracts. It is
 deliberately separate from `ProtoFileGenerator` (the `.proto` → DTO path, still `ISourceGenerator`).
