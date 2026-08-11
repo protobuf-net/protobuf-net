@@ -80,6 +80,24 @@ the hot scalar/message/repeated paths never pay for it. The AOT generator is wha
 now in a way it was not in 2022: the generated serializers are the "direct simple code" consumer,
 and the generator knows *at compile time* which contracts stay on the boring path.
 
+**The existing surface is the floor, not the ceiling — the new surface is the point.** It is
+absolutely expected and planned that the key optimisations arrive as *new* members, with the
+existing API reimplemented over them for compatibility. The archetype is the field header:
+
+- today, `ReadFieldHeader()` decodes the tag varint into a field *number* (returned) and a
+  `WireType` (written to state) — shift, mask, two results, and every consumer that wants to
+  dispatch reassembles what the wire had already joined;
+- the new primitive returns **the raw units**: `ReadTag() → uint`, the tag varint as-is. Generated
+  code switches on compile-time constants — `case (2 << 3) | (int)WireType.String:` — one read, no
+  decomposition, no state writes, and the switch is a jump table over exactly what came off the
+  wire. `TryReadTag(expectedTag)` is its companion for the fields-in-order fast path, and the old
+  `ReadFieldHeader()`/`WireType` pair becomes a shift-and-mask veneer over it.
+
+The same pattern recurs across the surface: raw-run append for repeated fields, measure primitives
+that are pure statics, wire-type-carrying write methods that skip the features indirection. New
+members live in hand-written `*.Nano.cs` partials beside the generated shape files, so the split
+between "compatibility floor" and "new surface" stays visible in the file layout.
+
 ## Step plan
 
 1. **(done)** Shape clone in `src/NanoState/` — the surface, as compiling stubs.
@@ -87,7 +105,10 @@ and the generator knows *at compile time* which contracts stay on the boring pat
    sequence/stream input feeds the refill. Write it down before writing code.
 3. **Scalar hot paths** — varint read/write/measure with the intrinsic variants from the v4 tables,
    re-measured on net8/net10; fixed32/64; string materialization (see `StringMaterialization.cs`).
-4. **The tag loop and repeated-run consumption** — `ReadTag`/`TryReadTag`, same-tag run appends.
+4. **The new-surface API set** — the raw-tag loop (`ReadTag`/`TryReadTag`), same-tag run appends,
+   static measure primitives; the generator emits against these, and each existing member that they
+   subsume becomes a veneer. This list is additive API, so it also lands in `PublicAPI.Unshipped`
+   when it reaches Core — the API tracking makes the new surface reviewable as such.
 5. **The niche fence** — enumerate which `State` members are hot-path and which sit on the boring
    implementation; this list is the real design review.
 6. **Swap-in** — the new implementation becomes the internals of the real `State` types. The
