@@ -48,11 +48,21 @@ internal sealed class ___PBN_Services___PartialModel : ISerializer<Described>, I
 			}
 			case 5:
 			{
-				int[] values = value.Values;
-				values = RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, values);
-				if (values != null)
+				int[] replaced = value.Values;
+				replaced = RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, replaced);
+				if (replaced != null)
 				{
-					value.Values = values;
+					value.Values = replaced;
+				}
+				break;
+			}
+			case 6:
+			{
+				int[] replaced = value.Replaced;
+				replaced = RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionClearCollection, replaced);
+				if (replaced != null)
+				{
+					value.Replaced = replaced;
 				}
 				break;
 			}
@@ -87,6 +97,12 @@ internal sealed class ___PBN_Services___PartialModel : ISerializer<Described>, I
 		{
 			int[] values2 = values;
 			RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 5, SerializerFeatures.WireTypeVarint, values2);
+		}
+		int[] replaced = value.Replaced;
+		if (replaced != null)
+		{
+			int[] values2 = replaced;
+			RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 6, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionClearCollection, values2);
 		}
 	}
 

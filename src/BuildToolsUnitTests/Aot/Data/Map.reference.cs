@@ -172,6 +172,36 @@ internal sealed class ___PBN_Services___MapModel : ISerializer<Maps>, ISerialize
 				}
 				break;
 			}
+			case 16:
+			{
+				Dictionary<Shade, int> enumKey = value.EnumKey;
+				enumKey = MapSerializer.CreateDictionary<Shade, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, enumKey, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, this as ISerializer<Shade>);
+				if (enumKey != null)
+				{
+					value.EnumKey = enumKey;
+				}
+				break;
+			}
+			case 17:
+			{
+				Dictionary<int, Shade> enumValue = value.EnumValue;
+				enumValue = MapSerializer.CreateDictionary<int, Shade>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, enumValue, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, null, this as ISerializer<Shade>);
+				if (enumValue != null)
+				{
+					value.EnumValue = enumValue;
+				}
+				break;
+			}
+			case 18:
+			{
+				Dictionary<Shade, Shade> enumBoth = value.EnumBoth;
+				enumBoth = MapSerializer.CreateDictionary<Shade, Shade>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, enumBoth, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, this as ISerializer<Shade>, this as ISerializer<Shade>);
+				if (enumBoth != null)
+				{
+					value.EnumBoth = enumBoth;
+				}
+				break;
+			}
 			default:
 				state.SkipField();
 				break;
@@ -272,6 +302,24 @@ internal sealed class ___PBN_Services___MapModel : ISerializer<Maps>, ISerialize
 		{
 			Dictionary<int, int> values10 = dictionary2;
 			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 15, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values10, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<Shade, int> enumKey = value.EnumKey;
+		if (enumKey != null)
+		{
+			Dictionary<Shade, int> values13 = enumKey;
+			MapSerializer.CreateDictionary<Shade, int>().WriteMap(ref state, 16, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values13, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, this as ISerializer<Shade>);
+		}
+		Dictionary<int, Shade> enumValue = value.EnumValue;
+		if (enumValue != null)
+		{
+			Dictionary<int, Shade> values14 = enumValue;
+			MapSerializer.CreateDictionary<int, Shade>().WriteMap(ref state, 17, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values14, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, null, this as ISerializer<Shade>);
+		}
+		Dictionary<Shade, Shade> enumBoth = value.EnumBoth;
+		if (enumBoth != null)
+		{
+			Dictionary<Shade, Shade> values15 = enumBoth;
+			MapSerializer.CreateDictionary<Shade, Shade>().WriteMap(ref state, 18, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values15, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, this as ISerializer<Shade>, this as ISerializer<Shade>);
 		}
 	}
 
