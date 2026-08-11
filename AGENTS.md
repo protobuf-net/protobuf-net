@@ -212,6 +212,13 @@ Three decisions worth keeping:
 - **It is silent without a `[ProtoModel]` in the compilation.** The runtime model is a perfectly good
   way to use protobuf-net and this has nothing to say to those users; a analyzer that nags everyone
   would be turned off by everyone.
+- **The announcements are reported from a *symbol* action, and that is load-bearing.** A diagnostic
+  reported from `RegisterCompilationEndAction` is "non-local", and Roslyn will not offer a code fix
+  for one however good its location is — which defeats the point, since `PBN2012`'s value is the
+  lightbulb that writes the model. They are anchored on the ordinal-first `[ProtoContract]` in the
+  compilation (deterministic, so the squiggle does not wander) and fire exactly once because the
+  action tests for that one symbol. The first cut used `Location.None` and an end action, and both
+  had to go.
 - **Two diagnostics, split on whether the contract type is knowable.** `PBN2010` is the generic case,
   where the fix is mechanical (name the model). `PBN2011` is the `object`/`Type` API, where nothing —
   analyzer or generator — can tell what will be serialized. That one is deliberately *reported rather

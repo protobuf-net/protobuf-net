@@ -114,12 +114,28 @@ namespace ProtoBuf.BuildTools.Analyzers
                 // the tooling installed but not wanted
                 if (compilationStart.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
 
-                var models = FindModels(compilationStart.Compilation, out var hasContracts);
+                var models = FindModels(compilationStart.Compilation, out var firstContract);
                 if (models.IsEmpty)
                 {
                     // nothing to migrate *to*. Say so once, and only where there is something to
                     // migrate: contracts but no model.
-                    if (hasContracts) compilationStart.RegisterCompilationEndAction(Announce);
+                    // Reported from a *symbol* action rather than a compilation-end one, and that is
+                    // load-bearing: a compilation-end diagnostic is "non-local", and Roslyn will not
+                    // offer a code fix for one however good its location is. Since the whole point of
+                    // anchoring this on a type was to make AddProtoModelCodeFixProvider reachable,
+                    // end-action reporting defeated the exercise.
+                    //
+                    // Still exactly once: the anchor was chosen deterministically above, and this
+                    // fires only for that symbol.
+                    if (firstContract is { } anchor)
+                    {
+                        compilationStart.RegisterSymbolAction(
+                            ctx =>
+                            {
+                                if (SymbolEqualityComparer.Default.Equals(ctx.Symbol, anchor)) Announce(ctx, anchor);
+                            },
+                            SymbolKind.NamedType);
+                    }
                     return;
                 }
 
@@ -152,7 +168,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// a squiggle on an arbitrarily-chosen contract would be worse than none.
         /// </para>
         /// </remarks>
-        private static void Announce(CompilationAnalysisContext context)
+        private static void Announce(SymbolAnalysisContext context, INamedTypeSymbol anchor)
         {
             var options = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
             string? asked = null;
@@ -166,9 +182,15 @@ namespace ProtoBuf.BuildTools.Analyzers
                 }
             }
 
+            // Anchored on a contract rather than at Location.None, which is where this started: a
+            // code fix has to attach to a document, and an actionable lightbulb offering to write the
+            // model is worth more than a message in the error list that nobody can act on. The type
+            // is the ordinal-first contract, so it does not wander between builds - and the message
+            // says "this project", because the anchor is where the fix is offered, not the culprit.
+            var at = anchor.Locations.FirstOrDefault(static x => x.IsInSource) ?? Location.None;
             context.ReportDiagnostic(asked is null
-                ? Diagnostic.Create(NoModel, Location.None)
-                : Diagnostic.Create(NoModelUnderAot, Location.None, asked));
+                ? Diagnostic.Create(NoModel, at)
+                : Diagnostic.Create(NoModelUnderAot, at, asked));
         }
 
         /// <summary>Every <c>[ProtoModel]</c> type in the compilation, by display name.</summary>
@@ -179,32 +201,39 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// analyzer sees, so this works without the generator having to run first.
         /// </remarks>
         private static ImmutableArray<INamedTypeSymbol> FindModels(Compilation compilation,
-            out bool hasContracts)
+            out INamedTypeSymbol? hasContracts)
         {
             var found = ImmutableArray.CreateBuilder<INamedTypeSymbol>();
-            var contracts = false;
-            Walk(compilation.Assembly.GlobalNamespace, found, ref contracts);
-            hasContracts = contracts;
+            INamedTypeSymbol? firstContract = null;
+            Walk(compilation.Assembly.GlobalNamespace, found, ref firstContract);
+            // deterministic, so the squiggle does not wander between builds
+            hasContracts = firstContract;
             return found.ToImmutable();
 
             static void Walk(INamespaceOrTypeSymbol scope,
-                ImmutableArray<INamedTypeSymbol>.Builder found, ref bool contracts)
+                ImmutableArray<INamedTypeSymbol>.Builder found, ref INamedTypeSymbol? firstContract)
             {
                 foreach (var member in scope.GetMembers())
                 {
                     switch (member)
                     {
                         case INamespaceSymbol ns:
-                            Walk(ns, found, ref contracts);
+                            Walk(ns, found, ref firstContract);
                             break;
                         case INamedTypeSymbol type:
                             foreach (var attribute in type.GetAttributes())
                             {
                                 var name = attribute.AttributeClass?.ToDisplayString();
                                 if (name == ProtoModelAttribute) found.Add(type);
-                                else if (name == ProtoContractAttribute) contracts = true;
+                                else if (name == ProtoContractAttribute
+                                    && (firstContract is null
+                                        || string.CompareOrdinal(type.ToDisplayString(),
+                                            firstContract.ToDisplayString()) < 0))
+                                {
+                                    firstContract = type;
+                                }
                             }
-                            Walk(type, found, ref contracts);
+                            Walk(type, found, ref firstContract);
                             break;
                     }
                 }
