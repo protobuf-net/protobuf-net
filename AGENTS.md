@@ -2,6 +2,11 @@
 
 Only non-obvious things live here; the code is the reference for everything else.
 
+## Usage policy
+
+This project does not exclude LLM etc tool usage under human guidance. All responsibility for
+code-quality rests with the human submitter/reviewer; "slop" will be culled without mercy.
+
 ## Layout and build
 
 - The solution is **`protobuf-net.slnx`**. `protobuf-net.sln.old` is a stale leftover — don't use it.
