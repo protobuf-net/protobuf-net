@@ -461,6 +461,8 @@ ProtoBuf.ProtoContractAttribute.InferTagFromName.get -> bool (forwarded, contain
 ProtoBuf.ProtoContractAttribute.InferTagFromName.set -> void (forwarded, contained in protobuf-net.Core)
 ProtoBuf.ProtoContractAttribute.IsGroup.get -> bool (forwarded, contained in protobuf-net.Core)
 ProtoBuf.ProtoContractAttribute.IsGroup.set -> void (forwarded, contained in protobuf-net.Core)
+ProtoBuf.ProtoContractAttribute.IsScalar.get -> bool (forwarded, contained in protobuf-net.Core)
+ProtoBuf.ProtoContractAttribute.IsScalar.set -> void (forwarded, contained in protobuf-net.Core)
 ProtoBuf.ProtoContractAttribute.Name.get -> string (forwarded, contained in protobuf-net.Core)
 ProtoBuf.ProtoContractAttribute.Name.set -> void (forwarded, contained in protobuf-net.Core)
 ProtoBuf.ProtoContractAttribute.Origin.get -> string (forwarded, contained in protobuf-net.Core)

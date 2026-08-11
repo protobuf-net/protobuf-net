@@ -1,3 +1,21 @@
+[PBN9001]const ProtoBuf.ProtoModelAttribute.DiagnosticId = "PBN9001" -> string
+[PBN9001]ProtoBuf.ProtoModelAttribute
+[PBN9001]ProtoBuf.ProtoModelAttribute.AllowParseableTypes.get -> bool
+[PBN9001]ProtoBuf.ProtoModelAttribute.AllowParseableTypes.set -> void
+[PBN9001]ProtoBuf.ProtoModelAttribute.ProtoModelAttribute() -> void
+[PBN9001]ProtoBuf.ProtoSerializableAttribute
+[PBN9001]ProtoBuf.ProtoSerializableAttribute.ProtoSerializableAttribute(System.Type type) -> void
+[PBN9001]ProtoBuf.ProtoSerializableAttribute.Type.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.Converter.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.Converter.set -> void
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.ProtoSurrogateAttribute(System.Type type, System.Type surrogate) -> void
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.Surrogate.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.ToSurrogate.get -> string
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.ToSurrogate.set -> void
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.ToType.get -> string
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.ToType.set -> void
+[PBN9001]ProtoBuf.ProtoSurrogateAttribute.Type.get -> System.Type
 abstract ProtoBuf.Serializers.EnumSerializer<TEnum>.Read(ref ProtoBuf.ProtoReader.State state, TEnum value) -> TEnum
 abstract ProtoBuf.Serializers.EnumSerializer<TEnum>.Write(ref ProtoBuf.ProtoWriter.State state, TEnum value) -> void
 abstract ProtoBuf.Serializers.MapSerializer<TCollection, TKey, TValue>.AddRange(TCollection values, ref System.ArraySegment<System.Collections.Generic.KeyValuePair<TKey, TValue>> newValues, ProtoBuf.ISerializationContext context) -> TCollection
@@ -302,6 +320,8 @@ ProtoBuf.ProtoContractAttribute.InferTagFromName.get -> bool
 ProtoBuf.ProtoContractAttribute.InferTagFromName.set -> void
 ProtoBuf.ProtoContractAttribute.IsGroup.get -> bool
 ProtoBuf.ProtoContractAttribute.IsGroup.set -> void
+ProtoBuf.ProtoContractAttribute.IsScalar.get -> bool
+ProtoBuf.ProtoContractAttribute.IsScalar.set -> void
 ProtoBuf.ProtoContractAttribute.Name.get -> string
 ProtoBuf.ProtoContractAttribute.Name.set -> void
 ProtoBuf.ProtoContractAttribute.Origin.get -> string
