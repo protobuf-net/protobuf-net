@@ -8,8 +8,12 @@
   },
   "publicReleaseRefSpec": [
     "^refs/heads/main$",
+    "^refs/tags/\\d+\\.\\d+",
     "^refs/tags/v\\d+\\.\\d+"
   ],
+  "release": {
+    "tagName": "{version}"
+  },
   "cloudBuild": {
     "buildNumber": {
       "enabled": true,
