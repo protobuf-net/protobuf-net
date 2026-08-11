@@ -250,6 +250,15 @@ Note the shipped analyzer still compiles against the low Roslyn baseline (4.3.1)
 `LanguageVersion.CSharp12` — hence the numeric constant in `ProtoModelGenerator`. `BuildToolsUnitTests`
 carries a `VersionOverride` to 4.8.0 purely so its in-memory compilations can parse C# 12.
 
+**`protobuf-net.BuildTools.Legacy` compiles a hand-picked subset of these sources, and the two
+inclusion styles differ** — analyzers are listed **by name**, code fixes by **glob**. So a new
+analyzer is invisible to Legacy while a new *fixer* is pulled in automatically, and a fixer that
+references an analyzer Legacy does not have is a build break in a project you were not thinking
+about. That is exactly how `UseAotModelCodeFixProvider` broke CI; it is now explicitly `Compile
+Remove`d, which is the right answer anyway — Legacy serves very old SDKs, which never get
+`ProtoModelGenerator`, so no `[ProtoModel]` can exist and the whole AOT migration story is inert
+there. Build `protobuf-net.BuildTools.Legacy` after touching `CodeFixes/`.
+
 **Don't rev the central Roslyn version speculatively.** Only bump it if we genuinely need a modern
 Roslyn API we cannot work around — e.g. detecting a language feature we actually use. The old
 baseline is what lets `protobuf-net.BuildTools.Legacy` serve very old SDKs; those users are not doing

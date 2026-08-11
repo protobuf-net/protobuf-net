@@ -30,6 +30,12 @@
     <Compile Include="../protobuf-net.BuildTools/Analyzers/DataContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/Analyzers/ServiceContractAnalyzer.cs" />
     <Compile Include="../protobuf-net.BuildTools/CodeFixes/**/*.cs" />
+    <!-- the AOT migration analyzer and its fixer are deliberately *not* here: this package exists to
+         serve very old SDKs, which do not get ProtoModelGenerator, so no [ProtoModel] can exist and
+         both would be inert. Note the asymmetry that made this a build break rather than a no-op -
+         the analyzers above are listed by name, the code fixes by glob, so a new fixer arrives here
+         on its own unless it is removed. -->
+    <Compile Remove="../protobuf-net.BuildTools/CodeFixes/UseAotModelCodeFixProvider.cs" />
     <Compile Include="../protobuf-net.BuildTools/Generators/ProtoFileGenerator.cs" Link="ProtoFileGenerator.cs" />
   </ItemGroup>
 
