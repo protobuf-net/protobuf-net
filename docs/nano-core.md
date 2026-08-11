@@ -124,6 +124,18 @@ that are pure statics, wire-type-carrying write methods that skip the features i
 members live in hand-written `*.Nano.cs` partials beside the generated shape files, so the split
 between "compatibility floor" and "new surface" stays visible in the file layout.
 
+**Generated code calls generated code directly — `this`-as-`ISerializer<T>` becomes the exception.**
+Today the generated model passes itself as the serializer into
+`state.WriteMessage<T>(field, value, this)`: interface dispatch on a generic method for a callee the
+generator knew *at compile time*, which defeats inlining, drags the `GetSerializer` fallback
+machinery into the call graph, and (under AOT) keeps interface implementations alive that a direct
+call would not. The v4 hand-written shape is the target: sub-messages as direct static calls —
+`writer.WriteVarint(Item.Measure(in item)); Item.WriteSingle(in item, ref writer);` — with the
+framing done inline by the caller, `in`/`ref` parameter discipline throughout, and function pointers
+where a callback shape is genuinely needed (repeated runs). The interface implementations remain,
+but they retreat to the boundaries: model-level resolution, proxies, surrogate hand-offs, and the
+niche fence — the places where the callee genuinely is not known until runtime.
+
 ## Step plan
 
 1. **(done)** Shape clone in `src/NanoState/` — the surface, as compiling stubs.
