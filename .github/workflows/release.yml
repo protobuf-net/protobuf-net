@@ -1,0 +1,79 @@
+# Publishes to nuget.org when a GitHub Release is published.
+#
+# Auth is NuGet Trusted Publishing (OIDC): no long-lived API key is stored anywhere.
+# The one-time setup on nuget.org is: username menu -> Trusted Publishing -> add policy with
+#   Repository Owner: protobuf-net / Repository: protobuf-net / Workflow File: release.yml
+#   Environment: release
+# plus a NUGET_USER repository secret holding the nuget.org profile name to publish as.
+#
+# Versioning note: Nerdbank.GitVersioning computes the version from src/version.json plus commit
+# height - the tag name does not set it. Create release tags with `nbgv tag` (or tag the commit
+# whose computed version matches); the guard step below fails the run on any mismatch rather than
+# publishing a package that disagrees with its release.
+
+name: Release
+
+on:
+  release:
+    types: [published]
+  # dry run: everything except the tag check and the push, so the pipeline can be
+  # proven (and the packages inspected, via the run artifact) without cutting a release
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    environment: release
+    permissions:
+      id-token: write # for the OIDC exchange with nuget.org
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch the full history (for versioning)
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - name: Verify tag matches computed version
+      if: github.event_name == 'release'
+      shell: pwsh
+      run: |
+        dotnet tool install --global nbgv
+        $computed = nbgv get-version --project src --variable NuGetPackageVersion
+        $tag = "${{ github.event.release.tag_name }}" -replace '^v', ''
+        if ($computed -ne $tag) {
+          Write-Error "Tag '$tag' does not match the computed version '$computed'; tag with 'nbgv tag' so the two agree."
+          exit 1
+        }
+        Write-Output "Publishing $computed"
+    - name: Restore dependencies
+      run: dotnet restore Build.csproj
+    - name: Build
+      run: dotnet build Build.csproj --no-restore -c Release /p:CI=true
+    - name: Test
+      run: dotnet test Build.csproj --no-build -c Release /p:CI=true --verbosity normal
+    # Same byte-for-byte gate as CI: a generator bug that compiles cleanly must not ship.
+    - name: AOT differential
+      run: dotnet run --project src/AotDifferential/AotDifferential.csproj --no-build -c Release
+    # Packing=true restricts the traversal to the shippable projects (see Build.csproj)
+    - name: Pack
+      run: dotnet pack Build.csproj --no-build -c Release /p:Packing=true /p:CI=true /p:PackageOutputPath=${{ github.workspace }}\.nupkgs
+    # The packages survive as a run artifact even if the push fails
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: packages
+        path: .nupkgs/*.nupkg
+    - name: NuGet login (OIDC to temp API key)
+      if: github.event_name == 'release'
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+    - name: Push to nuget.org
+      if: github.event_name == 'release'
+      run: dotnet nuget push .nupkgs\*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicates
