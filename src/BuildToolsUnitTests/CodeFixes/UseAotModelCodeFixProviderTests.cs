@@ -63,7 +63,7 @@ namespace BuildToolsUnitTests.CodeFixes
                 }
                 """,
                 new DiagnosticResult(AotMigrationAnalyzer.UsesRuntimeModel).WithLocation(0)
-                    .WithArguments("Serializer.Serialize", "the AOT model 'MyModel'", "myModel", "Serialize"));
+                    .WithArguments("Serializer.Serialize", "the AOT model 'MyModel'", "MyModel", "Serialize"));
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace BuildToolsUnitTests.CodeFixes
                 }
                 """,
                 new DiagnosticResult(AotMigrationAnalyzer.UsesRuntimeModel).WithLocation(0)
-                    .WithArguments("Serializer.Serialize", "the AOT model 'MyModel'", "myModel", "Serialize"));
+                    .WithArguments("Serializer.Serialize", "the AOT model 'MyModel'", "MyModel", "Serialize"));
         }
     }
 }

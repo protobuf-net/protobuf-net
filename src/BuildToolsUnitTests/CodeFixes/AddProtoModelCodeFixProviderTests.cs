@@ -53,12 +53,55 @@ using ProtoBuf.Meta;
 // See https://protobuf-net.github.io/protobuf-net/aot
 [ProtoModel]
 [ProtoSerializable(typeof(global::Order))]
-public partial class ProtoModel : TypeModel
+internal partial class ProtoModel : TypeModel
 {
 }
 "));
             // deliberately no expected diagnostic here: the fix adds the model, which is exactly what
             // the announcement was asking for, so it stops firing
+
+            test.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
+            await test.RunAsync();
+        }
+
+        /// <summary>
+        /// The model must not land in the global root: with no project default namespace to hand
+        /// (this harness supplies none), the anchor contract's namespace is used.
+        /// </summary>
+        [Fact]
+        public async Task GeneratedModelRespectsTheContractNamespace()
+        {
+            var test = new Microsoft.CodeAnalysis.CSharp.Testing.CSharpCodeFixTest<
+                AotMigrationAnalyzer, AddProtoModelCodeFixProvider, DefaultVerifier>
+            {
+                TestState =
+                {
+                    Sources = { Preamble + @"
+namespace Shop.Data { [ProtoContract] public class {|#0:Order|} { [ProtoMember(1)] public int Id { get; set; } } }" },
+                },
+            };
+            test.TestState.ExpectedDiagnostics.Add(
+                new DiagnosticResult(AotMigrationAnalyzer.NoModel).WithLocation(0));
+
+            test.FixedState.Sources.Add(Preamble + @"
+namespace Shop.Data { [ProtoContract] public class Order { [ProtoMember(1)] public int Id { get; set; } } }");
+            test.FixedState.Sources.Add(("ProtoModel.cs", @"using ProtoBuf;
+using ProtoBuf.Meta;
+
+// Compile-time serializers for this project. Name the types you serialize *directly*; everything
+// reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
+// sub-types - is included automatically.
+//
+// See https://protobuf-net.github.io/protobuf-net/aot
+namespace Shop.Data
+{
+    [ProtoModel]
+    [ProtoSerializable(typeof(global::Shop.Data.Order))]
+    internal partial class ProtoModel : TypeModel
+    {
+    }
+}
+"));
 
             test.ReferenceAssemblies = ReferenceAssemblies.Net.Net80;
             await test.RunAsync();

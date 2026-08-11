@@ -79,6 +79,9 @@ namespace BuildToolsUnitTests
 
             var hit = Assert.Single(diagnostics.Where(static x => x.Id == "PBN2010"));
             Assert.Contains("MyModel", hit.GetMessage());
+            // the example must name something that exists: the generated static accessor, not a
+            // camel-cased local that was never declared
+            Assert.Contains("'MyModel.Instance.Serialize'", hit.GetMessage());
         }
 
         [Fact]
