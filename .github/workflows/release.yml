@@ -76,4 +76,4 @@ jobs:
         user: ${{ secrets.NUGET_USER }}
     - name: Push to nuget.org
       if: github.event_name == 'release'
-      run: dotnet nuget push .nupkgs\*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicates
+      run: dotnet nuget push .nupkgs\*.nupkg --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
