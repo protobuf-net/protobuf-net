@@ -1,9 +1,3 @@
-Generator produced 4 diagnostics:
-Warning PBN2001 Aot/Data/Diagnostics/MapUnsupported.input.cs L15 C52
-Contract 'AotFixtures.MapUnsupported.EnumValue' is omitted from the AOT model: member 'Value' has unsupported type 'System.Collections.Generic.Dictionary<int, AotFixtures.MapUnsupported.Shade>'.
-Warning PBN2001 Aot/Data/Diagnostics/MapUnsupported.input.cs L21 C52
-Contract 'AotFixtures.MapUnsupported.EnumKey' is omitted from the AOT model: member 'Value' has unsupported type 'System.Collections.Generic.Dictionary<AotFixtures.MapUnsupported.Shade, int>'.
-Warning PBN2001 Aot/Data/Diagnostics/MapUnsupported.input.cs L36 C35
-Contract 'AotFixtures.MapUnsupported.MappedEnum' is omitted from the AOT model: member 'Value' has unsupported type 'System.Collections.Generic.Dictionary<AotFixtures.MapUnsupported.Shade, int>'.
+Generator produced 1 diagnostics:
 Warning PBN2003 Aot/Data/Diagnostics/MapUnsupported.input.cs L44 C22
 Contract 'AotFixtures.MapUnsupported.NotADictionary' is omitted from the AOT model: [ProtoMap] on a non-dictionary member is not supported yet.

@@ -9,7 +9,7 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **3117**, of which 124 dropped with a diagnostic
+seeded: **3117**, of which 108 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
@@ -62,7 +62,7 @@ seeded: **3117**, of which 124 dropped with a diagnostic
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 2994 |
+| **bytes match ref-emit** | 3010 |
 | **bytes differ** | 0 |
 | one model threw | 0 |
 | both threw (a shape protobuf-net refuses too) | 1 |
@@ -70,7 +70,7 @@ seeded: **3117**, of which 124 dropped with a diagnostic
 | no instance can exist (abstract, no sub-types) | 5 |
 | the reference model refused the contract | 0 |
 
-of the 2994 actually compared, **100% match**.
+of the 3010 actually compared, **100% match**.
 
 ## What went wrong
 

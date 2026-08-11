@@ -155,8 +155,11 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoMapPlan(string factory, bool takesCollectionType,
             ProtoMemberKind keyKind, string keyTypeName,
             ProtoMemberKind valueKind, string valueTypeName, bool isValidProtobufMap,
-            string? valueSerializerFactory = null)
+            string? valueSerializerFactory = null,
+            string? keyEnumTypeName = null, string? valueEnumTypeName = null)
         {
+            KeyEnumTypeName = keyEnumTypeName;
+            ValueEnumTypeName = valueEnumTypeName;
             ValueSerializerFactory = valueSerializerFactory;
             Factory = factory;
             TakesCollectionType = takesCollectionType;
@@ -166,6 +169,21 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ValueTypeName = valueTypeName;
             IsValidProtobufMap = isValidProtobufMap;
         }
+
+        /// <summary>
+        /// The enum type on each side, where there is one — the map's own <see cref="KeyKind"/> and
+        /// <see cref="ValueKind"/> are the *underlying* scalar, which is what goes on the wire.
+        /// </summary>
+        /// <remarks>
+        /// Needed only so the services type can expose an <c>ISerializerProxy&lt;TEnum&gt;</c>: like
+        /// a repeated enum, a map resolves the element serializer <em>from the model</em> rather
+        /// than taking it inline, so without the proxy the failure is a runtime "no serializer for
+        /// type" rather than a build error.
+        /// </remarks>
+        public string? KeyEnumTypeName { get; }
+
+        /// <inheritdoc cref="KeyEnumTypeName"/>
+        public string? ValueEnumTypeName { get; }
 
         /// <summary>e.g. <c>CreateDictionary</c>, <c>CreateImmutableSortedDictionary</c>.</summary>
         public string? Factory { get; }
@@ -200,6 +218,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && KeyKind == other.KeyKind && KeyTypeName == other.KeyTypeName
                 && ValueKind == other.ValueKind && ValueTypeName == other.ValueTypeName
                 && IsValidProtobufMap == other.IsValidProtobufMap
+                && KeyEnumTypeName == other.KeyEnumTypeName
+                && ValueEnumTypeName == other.ValueEnumTypeName
                 && ValueSerializerFactory == other.ValueSerializerFactory;
 
         public override bool Equals(object? obj) => obj is ProtoMapPlan other && Equals(other);

@@ -856,6 +856,12 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // a repeated enum resolves its serializer from the model, and so does a lone
                     // [NullWrappedValue] one - ReadAny/WriteAny take an ISerializer<TEnum?>
+                    // ...and so does each side of a map, for the same reason
+                    if (member.Map.Factory is not null)
+                    {
+                        if (member.Map.KeyEnumTypeName is { } key) result[key] = member.Map.KeyKind;
+                        if (member.Map.ValueEnumTypeName is { } value) result[value] = member.Map.ValueKind;
+                    }
                     if (member.Repeated.Factory is null && !member.WrappedValue) continue;
                     if (member.EnumTypeName is { } name) result[name] = member.Kind;
                 }

@@ -9,6 +9,8 @@ namespace AotFixtures.Map;
 // dictionaries resolve through the same provider walk as any other collection, but land on a
 // MapSerializer factory and carry two element types. Everything here is a *valid* protobuf map:
 // an integral or string key, and a value that is not itself repeated.
+public enum Shade { None = 0, Red = 1, Green = 2 }
+
 [ProtoContract]
 public class Payload
 {
@@ -47,6 +49,14 @@ public class Maps
 
     // ... FixedSize on a map is simply ignored; the per-key format comes from [ProtoMap]
     [ProtoMember(15, DataFormat = DataFormat.FixedSize)] public Dictionary<int, int> Fixed { get; set; }
+
+    // An enum on either side. Like a repeated enum, a map resolves the element serializer from the
+    // *model* rather than taking it inline, so each of these needs an ISerializerProxy<TEnum> on the
+    // services type; without one the failure is a runtime "no serializer for type", not a build
+    // error. The wire type is the underlying scalar's.
+    [ProtoMember(16)] public Dictionary<Shade, int> EnumKey { get; set; }
+    [ProtoMember(17)] public Dictionary<int, Shade> EnumValue { get; set; }
+    [ProtoMember(18)] public Dictionary<Shade, Shade> EnumBoth { get; set; }
 }
 
 public static class MapSamples
@@ -64,6 +74,9 @@ public static class MapSamples
         new Maps { ImmutableInterface = ImmutableDictionary.Create<int, int>().Add(15, 16) },
         new Maps { Sorted = new SortedDictionary<int, int> { [17] = 18, [19] = 20 } },
         new Maps { Overwrite = new() { [21] = 22 } },
+        new Maps { EnumKey = new() { [Shade.Red] = 1, [Shade.None] = 0 } },
+        new Maps { EnumValue = new() { [1] = Shade.Green, [2] = Shade.None } },
+        new Maps { EnumBoth = new() { [Shade.Green] = Shade.Red } },
         new Maps { Packed = new() { [23] = 24 } },
         new Maps { NullableValue = new() { [25] = 26 } },
         new Maps { NullableValue = new() { [27] = null } },

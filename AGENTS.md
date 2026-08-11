@@ -238,8 +238,12 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
   resolves an `ISerializer<TEnum>` *from the model* — ref-emit emits `values, this as
   ISerializer<TEnum>` — so the services type implements `ISerializerProxy<TEnum>` (and `<TEnum?>`)
   returning `EnumSerializer.CreateXxx<TEnum>()`, per `EmitEnumProxies`. Without it the failure is a
-  runtime "no serializer for type", not a build error. **A map with an enum key or value is still
-  refused**, though it needs nothing more than pointing the same proxy scan at the map plan.
+  runtime "no serializer for type", not a build error. **A map with an enum key or value works the
+  same way**, and needed exactly what that sentence predicted: the proxy scan pointed at the map plan,
+  with the enum's name carried on `ProtoMapPlan` because `KeyKind`/`ValueKind` hold the *underlying*
+  scalar. The serializer argument stays absent on that side — passing nothing lands on
+  `serializer ??= TypeModel.GetSerializer<T>(Model)`, which finds the proxy. It was blocking 16
+  contracts in the corpus, so it was worth considerably more than it looked.
 - protobuf-net **rejects null elements** inside a collection (`ThrowNullRepeatedContents`), so
   fixtures must not contain them.
 - **A list-like `[ProtoContract]` is refused.** The same resolution decides whether a *contract* is
@@ -788,8 +792,12 @@ Two things are genuinely ours rather than matches:
   So: a fair omission for a first release, and if it is ever built, the reference behaviour to copy is
   the *reflection* path, since the compiled one throws;
 - a **hand-written serializer as a map key or value** whose category is scalar *or* simply unknown.
-  The unary and *collection* forms both defer the decision to the serializer (below); a map does not
-  yet, because its key and value features are separate arguments composed differently.
+  The unary and *collection* forms both defer the decision to the serializer (below), and a map
+  plausibly could too — `MapSerializer` calls `InheritFrom` on each side exactly as the repeated one
+  does. It is unbuilt rather than impossible: the map plan carries no per-side serializer expression,
+  so it emits `this` for a message side, and adding one is real plumbing for a shape with **zero**
+  occurrences in a 1392-contract corpus. Deferred deliberately, with the mechanism recorded so it is
+  a morning's work if a consumer ever asks.
 
   **The collection form was refused on a wrong premise, and it is worth knowing why.** The claim was
   that an element cannot defer because its wire type is baked into the collection's features at the

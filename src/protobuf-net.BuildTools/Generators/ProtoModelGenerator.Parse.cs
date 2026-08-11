@@ -2805,9 +2805,12 @@ namespace ProtoBuf.BuildTools.Generators
             if (GetMemberShape(compilation, key, surrogates, allowParseableTypes) is not { } keyShape) return null;
             if (GetMemberShape(compilation, value, surrogates, allowParseableTypes) is not { } valueShape) return null;
 
-            // an enum on either side resolves an ISerializer<TEnum> from the model, which the
-            // services type does not expose - the same reason a repeated enum is refused
-            if (keyShape.EnumType is not null || valueShape.EnumType is not null) return null;
+            // An enum on either side resolves an ISerializer<TEnum> *from the model* rather than
+            // taking one inline, exactly as a repeated enum does - so it needs the same
+            // ISerializerProxy<TEnum> on the services type, and the plan carries the enum's name to
+            // ask for one. The wire type is the underlying scalar's, which KeyKind/ValueKind already
+            // hold, and the serializer argument stays absent: passing nothing lands on
+            // `serializer ??= TypeModel.GetSerializer<T>(Model)`, which finds the proxy.
 
             // a nested collection is legal on a dictionary specifically (ref-emit's
             // TestIfNestedNotSupported exempts maps), and is served by an ISerializer<TCollection>
@@ -2840,7 +2843,9 @@ namespace ProtoBuf.BuildTools.Generators
             var map = new ProtoMapPlan(match.Factory!, match.TakesCollectionType,
                 keyShape.Kind, Qualified(compilation, key),
                 valueShape.Kind, Qualified(compilation, value),
-                IsValidProtobufMap(keyShape, valueShape), valueFactory);
+                IsValidProtobufMap(keyShape, valueShape), valueFactory,
+                keyEnumTypeName: keyShape.EnumType is null ? null : Qualified(compilation, keyShape.EnumType),
+                valueEnumTypeName: valueShape.EnumType is null ? null : Qualified(compilation, valueShape.EnumType));
 
             return new MemberShape(ProtoMemberKind.Map, map: map, mapMessages: messages,
                 declaredTypeName: Qualified(compilation, declared));
@@ -2869,7 +2874,10 @@ namespace ProtoBuf.BuildTools.Generators
             if (level < 300 || keyFormat == ProtoDataFormat.FixedSize) return map;
             return new ProtoMapPlan(map.Factory!, map.TakesCollectionType,
                 map.KeyKind, map.KeyTypeName!, map.ValueKind, map.ValueTypeName!,
-                isValidProtobufMap: true, map.ValueSerializerFactory);
+                isValidProtobufMap: true, map.ValueSerializerFactory,
+                // carried through: this rebuild only fires for a Guid key, but the *value* may still
+                // be an enum, and dropping its name here would silently lose the proxy
+                map.KeyEnumTypeName, map.ValueEnumTypeName);
         }
 
         private static bool IsValidProtobufMap(MemberShape key, MemberShape value)

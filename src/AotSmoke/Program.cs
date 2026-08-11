@@ -112,6 +112,12 @@ public class Order
     [ProtoMember(27)] public Dictionary<string, Customer> Directory { get; set; }
     [ProtoMember(28)] public Dictionary<int, List<int>> Buckets { get; set; }
 
+    // an enum on each side of a map: like a repeated enum, the serializer is resolved from the
+    // *model* through ISerializerProxy<TEnum> rather than passed in, which is the arm that only a
+    // native publish exercises
+    [ProtoMember(56)] public Dictionary<Status, int> ByStatus { get; set; }
+    [ProtoMember(57)] public Dictionary<int, Status> ToStatus { get; set; }
+
     // hand-written serializers, one per category - see the note by their declarations. These are
     // the only members that reach SerializerCache.Get<TProvider, T>(), i.e. the last genuinely
     // reflective step on the generated path.
@@ -526,6 +532,8 @@ internal static class Program
             Labels = new() { [1] = "one", [2] = "two" },
             Directory = new() { ["ann"] = new Customer { Id = 3, Name = "ann" } },
             Buckets = new() { [7] = [70, 71], [8] = [80] },
+            ByStatus = new() { [Status.Open] = 1, [Status.Unknown] = 0 },
+            ToStatus = new() { [1] = Status.Closed, [2] = Status.Unknown },
             Barcode = new Barcode { Code = "X-9" },
             Gauge = new Gauge(4242),
             Batch = new Batch(77),
@@ -629,6 +637,13 @@ internal static class Program
         Check(ref failures, "Buckets", "7=[70,71],8=[80]", clone.Buckets is null ? "null"
             : string.Join(",", clone.Buckets.OrderBy(static x => x.Key)
                 .Select(static x => $"{x.Key}=[{string.Join(",", x.Value)}]")));
+
+        Check(ref failures, "ByStatus", "Unknown=0,Open=1", clone.ByStatus is null ? "null"
+            : string.Join(",", clone.ByStatus.OrderBy(static x => x.Key)
+                .Select(static x => $"{x.Key}={x.Value}")));
+        Check(ref failures, "ToStatus", "1=Closed,2=Unknown", clone.ToStatus is null ? "null"
+            : string.Join(",", clone.ToStatus.OrderBy(static x => x.Key)
+                .Select(static x => $"{x.Key}={x.Value}")));
 
         // hand-written serializers, reached via SerializerCache.Get<TProvider, T>()
         Check(ref failures, "Barcode", "X-9", clone.Barcode?.Code);

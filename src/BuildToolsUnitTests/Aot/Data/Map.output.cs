@@ -13,6 +13,8 @@ partial class MapModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Maps>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Payload>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade?>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Maps>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -130,6 +132,27 @@ partial class MapModel
                         if (tmp15 != null) value.Fixed = tmp15;
                         break;
                     }
+                    case 16:
+                    {
+                        var tmp16 = value.EnumKey;
+                        tmp16 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.Map.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp16 != null) value.EnumKey = tmp16;
+                        break;
+                    }
+                    case 17:
+                    {
+                        var tmp17 = value.EnumValue;
+                        tmp17 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Map.Shade>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp17 != null) value.EnumValue = tmp17;
+                        break;
+                    }
+                    case 18:
+                    {
+                        var tmp18 = value.EnumBoth;
+                        tmp18 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.Map.Shade, global::AotFixtures.Map.Shade>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp18, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp18 != null) value.EnumBoth = tmp18;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -216,6 +239,21 @@ partial class MapModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 15, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            var tmp16 = value.EnumKey;
+            if (tmp16 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.Map.Shade, int>().WriteMap(ref state, 16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
+            var tmp17 = value.EnumValue;
+            if (tmp17 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Map.Shade>().WriteMap(ref state, 17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
+            var tmp18 = value.EnumBoth;
+            if (tmp18 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.Map.Shade, global::AotFixtures.Map.Shade>().WriteMap(ref state, 18, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp18, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Payload>.Features
@@ -248,5 +286,11 @@ partial class MapModel
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Map.Shade>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Shade?> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade?>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Map.Shade>();
     }
 }
