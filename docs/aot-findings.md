@@ -45,7 +45,12 @@ project rather than reading the zip, which is how it was checked here.
 Expect the smoke test to pass and **19 warnings**, the same count as linux-x64. The *binary size* will
 differ and is not comparable across RIDs; compare against a win-x64 baseline if you want a number.
 
-**5. The full suite, including the net472 legs** — `dotnet test Build.csproj`. Three behaviour changes
+**5. Optionally, `-p:ReportAnalyzer=true` on a large build.** The analyzer's build cost was measured
+here as *below the noise floor* (see next-steps item 3) — but by wall clock, which bounds it rather
+than isolating it. That switch produced no output in this SDK; if it works on Windows it would turn a
+bound into a number, and the IDE's analyzer performance view is another route.
+
+**6. The full suite, including the net472 legs** — `dotnet test Build.csproj`. Three behaviour changes
 here are worth a specific eye, because each changes what existing code does:
 
 - the model's constructor is now non-public, so `new MyModel()`, `Activator.CreateInstance(type)` and
@@ -639,8 +644,32 @@ survives, not as a commitment.
 3. ~~**Ship `protobuf-net.BuildTools` by default.**~~ **Done** — packed into `protobuf-net` as
    `analyzers/dotnet/cs` plus `build/protobuf-net.props`. The severity audit that gated it is done
    (three false positives found and fixed), and `ProtoBufDisableBuildTools` makes declining it one
-   property. **Still unmeasured: the analyzer's build-time cost on a large project**, which everyone
-   now pays; that is the one thing I would want a number for before a wide release.
+   property.
+
+   **The build-time cost is measured, and it is below the noise floor.** `Examples` is the largest
+   project here — 34k lines, and the corpus sweep counts ~1400 contracts across the three test
+   projects — so it is a fair worst case. Clean builds (`--no-incremental`), median of three:
+
+   | | |
+   | --- | ---: |
+   | no analyzer at all | 4652 ms |
+   | analyzer on (the shipped default) | 4475 ms |
+   | analyzer on, `ProtoBufDisableBuildTools=true` | 4605 ms |
+
+   All within 4%, and the *analyzer-on* configuration came out fastest — which is noise, not a
+   speed-up, and that is the point: the cost does not rise above run-to-run variance on the biggest
+   thing available to measure.
+
+   Two things that measurement does and does not say. It **does** include `AotMigrationAnalyzer`'s
+   full symbol walk, which runs precisely in the shipped-by-default case (contracts present, no
+   `[ProtoModel]`) and was the part most likely to be expensive. It does **not** isolate analyzer time
+   from MSBuild overhead — it bounds it rather than measuring it. `-p:ReportAnalyzer=true` is the tool
+   that would isolate it, and produced no output in this SDK invocation; worth another go on Windows,
+   where the IDE's analyzer performance view is also available.
+
+   Note the generator itself is not exercised by this: those projects have no `[ProtoModel]`, so
+   `ForAttributeWithMetadataName` never fires. That is the right thing to have measured, since a
+   consumer who has not opted in is exactly who pays by default.
 4. ~~**An "announce" diagnostic for discoverability.**~~ **Done** — `PBN2012` (warning, for a project
    that has asked for AOT) and `PBN2013` (info, on cold-start grounds, for everyone else).
 5. ~~**The sibling sub-type stack overflow.**~~ **Fixed** — it was a four-line guard once the
