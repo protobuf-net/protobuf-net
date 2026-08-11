@@ -14,6 +14,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+- **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
+  the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
+  `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected
 - the build-time tooling now ships inside **protobuf-net.Core** rather than protobuf-net, so
   compile-time serialization works with only a Core reference; it still reaches consumers who
   reference only protobuf-net (the dependency edge forwards it), and the legacy

@@ -4,7 +4,10 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf</RootNamespace> <!-- need this to be ProtoBuf for Embedded Resource naming reasons -->
     <AssemblyName>protobuf-net.BuildTools</AssemblyName>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <!-- retired as a package at 3.3.8 (deprecated on nuget.org): the same assembly ships inside
+         protobuf-net.Core, reaching every consumer by default. The project still builds - Core
+         packs its dll - it just no longer publishes anything of its own. -->
+    <IsPackable>false</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
     <Description>Analyzer and Generator support for protobuf-net</Description>
