@@ -55,5 +55,7 @@ Length 1–5 = uniform streams of that encoded length; 0 = shuffled mix of 1–5
 - defeat pattern memorization on the mixed row (bigger streams / per-iteration data), then re-run;
 - add a **realistic distribution** row: tag/length frequencies sampled from an actual corpus (the
   differential suite can dump one) rather than uniform-over-lengths;
-- offset/alignment axis; the tolerant 6–10-byte value spill; arm64; call-shape for the winner;
+- offset/alignment axis; the tolerant 6–10-byte value spill; arm64;
+- call-shape (ref-struct field vs local, crossing an inlining boundary) only as a **tiebreaker** —
+  it matters iff the corrected mixed row leaves finalists within noise of each other;
 - full (non-Short) job before any number is quoted outside this file.
