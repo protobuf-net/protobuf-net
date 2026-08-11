@@ -32,3 +32,5 @@ PBN2003  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupporte
 PBN2004  | ProtoBuf | Warning  | Contract omitted from the AOT model: references an omitted contract
 PBN2010  | ProtoBuf | Warning  | Call uses the runtime model, not the AOT model
 PBN2011  | ProtoBuf | Warning  | Call resolves its contract type at run time
+PBN2012  | ProtoBuf | Warning  | Project publishes AOT or trimmed, but has no AOT model
+PBN2013  | ProtoBuf | Info     | Compile-time serializers are available

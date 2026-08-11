@@ -54,13 +54,35 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor NoModelUnderAot = new(
+            id: "PBN2012",
+            title: "This project publishes AOT or trimmed, but has no AOT model",
+            messageFormat: "This project has protobuf-net contracts and asks for {0}, but declares no "
+                + "[ProtoModel]; serializers will be built by reflection, which is exactly what will "
+                + "not survive. See https://protobuf-net.github.io/protobuf-net/aot",
+            category: "ProtoBuf",
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor NoModel = new(
+            id: "PBN2013",
+            title: "Compile-time serializers are available",
+            messageFormat: "This project has protobuf-net contracts and no [ProtoModel]. Compile-time "
+                + "serializers are not only for AOT: they remove the metadata inspection the runtime "
+                + "model does on first use, which is a real cold-start cost. See "
+                + "https://protobuf-net.github.io/protobuf-net/aot",
+            category: "ProtoBuf",
+            defaultSeverity: DiagnosticSeverity.Info,
+            isEnabledByDefault: true);
+
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-            = ImmutableArray.Create(UsesRuntimeModel, UnresolvableContractType);
+            = ImmutableArray.Create(UsesRuntimeModel, UnresolvableContractType, NoModelUnderAot, NoModel);
 
         /// <summary>Diagnostic property carrying the model type names, for the fixer.</summary>
         internal const string ModelsProperty = "Models";
 
         private const string ProtoModelAttribute = "ProtoBuf.ProtoModelAttribute";
+        private const string ProtoContractAttribute = "ProtoBuf.ProtoContractAttribute";
         private const string SerializerType = "ProtoBuf.Serializer";
         private const string RuntimeTypeModelType = "ProtoBuf.Meta.RuntimeTypeModel";
 
@@ -84,12 +106,61 @@ namespace ProtoBuf.BuildTools.Analyzers
 
             ctx.RegisterCompilationStartAction(static compilationStart =>
             {
-                var models = FindModels(compilationStart.Compilation);
-                if (models.IsEmpty) return; // not an AOT project; nothing to say
+                var models = FindModels(compilationStart.Compilation, out var hasContracts);
+                if (models.IsEmpty)
+                {
+                    // nothing to migrate *to*. Say so once, and only where there is something to
+                    // migrate: contracts but no model.
+                    if (hasContracts) compilationStart.RegisterCompilationEndAction(Announce);
+                    return;
+                }
 
                 compilationStart.RegisterOperationAction(
                     context => Inspect(context, models), OperationKind.Invocation);
             });
+        }
+
+        /// <summary>
+        /// Reported once per compilation, for a project with contracts and no model.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Two severities, because they are two different statements. A project that has asked for
+        /// **AOT or trimming** and has no `[ProtoModel]` has a defect: it is going to build
+        /// serializers by reflection, which is the thing that will not survive the publish. That is
+        /// a warning at least — a consumer who wants it to stop the build can escalate it, and the
+        /// default stays a warning so that turning `PublishAot` on does not break someone's build on
+        /// the spot.
+        /// </para>
+        /// <para>
+        /// Everyone else gets `Info`, which does not appear in normal build output at all. The
+        /// argument there is **cold start**, not AOT: the runtime model inspects metadata and emits
+        /// IL on first use of each contract, and that cost is real enough to time builds out. It is
+        /// a genuine offer rather than an advertisement, which is why it is worth making at all —
+        /// and `dotnet_diagnostic.PBN2013.severity = none` dismisses it permanently.
+        /// </para>
+        /// <para>
+        /// Location.None deliberately: this is about the project, not about any one line of it, and
+        /// a squiggle on an arbitrarily-chosen contract would be worse than none.
+        /// </para>
+        /// </remarks>
+        private static void Announce(CompilationAnalysisContext context)
+        {
+            var options = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
+            string? asked = null;
+            foreach (var property in new[] { "PublishAot", "PublishTrimmed", "IsAotCompatible", "IsTrimmable" })
+            {
+                if (options.TryGetValue("build_property." + property, out var value)
+                    && string.Equals(value, "true", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    asked = property;
+                    break;
+                }
+            }
+
+            context.ReportDiagnostic(asked is null
+                ? Diagnostic.Create(NoModel, Location.None)
+                : Diagnostic.Create(NoModelUnderAot, Location.None, asked));
         }
 
         /// <summary>Every <c>[ProtoModel]</c> type in the compilation, by display name.</summary>
@@ -99,28 +170,33 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// each assembly compiles its own copy. Post-init sources are part of the compilation the
         /// analyzer sees, so this works without the generator having to run first.
         /// </remarks>
-        private static ImmutableArray<INamedTypeSymbol> FindModels(Compilation compilation)
+        private static ImmutableArray<INamedTypeSymbol> FindModels(Compilation compilation,
+            out bool hasContracts)
         {
             var found = ImmutableArray.CreateBuilder<INamedTypeSymbol>();
-            Walk(compilation.Assembly.GlobalNamespace, found);
+            var contracts = false;
+            Walk(compilation.Assembly.GlobalNamespace, found, ref contracts);
+            hasContracts = contracts;
             return found.ToImmutable();
 
-            static void Walk(INamespaceOrTypeSymbol scope, ImmutableArray<INamedTypeSymbol>.Builder found)
+            static void Walk(INamespaceOrTypeSymbol scope,
+                ImmutableArray<INamedTypeSymbol>.Builder found, ref bool contracts)
             {
                 foreach (var member in scope.GetMembers())
                 {
                     switch (member)
                     {
                         case INamespaceSymbol ns:
-                            Walk(ns, found);
+                            Walk(ns, found, ref contracts);
                             break;
                         case INamedTypeSymbol type:
-                            if (type.GetAttributes().Any(static a
-                                => a.AttributeClass?.ToDisplayString() == ProtoModelAttribute))
+                            foreach (var attribute in type.GetAttributes())
                             {
-                                found.Add(type);
+                                var name = attribute.AttributeClass?.ToDisplayString();
+                                if (name == ProtoModelAttribute) found.Add(type);
+                                else if (name == ProtoContractAttribute) contracts = true;
                             }
-                            Walk(type, found);
+                            Walk(type, found, ref contracts);
                             break;
                     }
                 }

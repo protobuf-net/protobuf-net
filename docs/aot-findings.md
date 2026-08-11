@@ -602,8 +602,10 @@ survives, not as a commitment.
    work at run time, demote the rest to `Warning` — and only then flip the default. Worth checking
    the build-time cost on a large project at the same time, since it would then be paid by everyone.
 
-4. **An "announce" diagnostic for discoverability.** Notes are in the "Future ideas" section rather
-   than here, since the design question is more interesting than the work.
+4. ~~**An "announce" diagnostic for discoverability.**~~ **Done** — `PBN2012` (warning, for a project
+   that has asked for AOT) and `PBN2013` (info, on cold-start grounds, for everyone else). The
+   reasoning is under "Future ideas", since the severity split is the interesting part. What remains
+   is a fix that writes the `[ProtoModel]` stub.
 
 5. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
    file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
@@ -651,41 +653,39 @@ only, and a subprocess timeout is exactly what contention in a full run would tr
 
 ## Future ideas
 
-### An "announce" diagnostic, and how not to make it advertising
+### ~~An "announce" diagnostic~~ — built, as `PBN2012`/`PBN2013`
 
-The generator is invisible: nothing tells a consumer it exists. An info-level diagnostic pointing at
-the docs is cheap, but the failure mode is obvious — an analyzer that markets a feature is one people
-learn to switch off, and it poisons the other diagnostics with it.
+Kept for the reasoning, since the severity split is the whole design and it is not the one I first
+proposed.
 
-The design that avoids that is **to gate it on what the project has already asked for**:
+The generator is invisible: nothing tells a consumer it exists. The obvious answer — an info-level
+"did you know" — is also the one people learn to switch off, taking the other diagnostics with it.
+What makes this defensible is that **there are two different statements to make, and only one of them
+is an offer**:
 
-- report only when the project has opted into AOT or trimming (`PublishAot`, `PublishTrimmed`,
-  `IsAotCompatible`), which reaches the analyzer through `CompilerVisibleProperty` in
-  `protobuf-net.BuildTools.props` — that file already surfaces per-item metadata, so the mechanism is
-  in place and this is a few lines;
-- ...and only when the compilation has `[ProtoContract]` types but **no** `[ProtoModel]`.
+- **`PBN2012`, a warning.** The project has contracts, asks for AOT or trimming (`PublishAot`,
+  `PublishTrimmed`, `IsAotCompatible`, `IsTrimmable`, read through `CompilerVisibleProperty` in
+  `protobuf-net.BuildTools.props`), and declares no `[ProtoModel]`. That is not an advertisement, it
+  is a **defect report**: they have asked for AOT and their serializers are going to be built by
+  reflection. Info would be under-calling it; an error is arguable, and a consumer who wants that can
+  escalate. The default stays a warning so that switching `PublishAot` on does not break a build on
+  the spot.
+- **`PBN2013`, info.** Everyone else. And the argument here is *not* AOT, which is what makes it
+  worth making at all: the runtime model inspects metadata and emits IL on **first use** of each
+  contract, and that cold-start cost is real enough to time CI out. So there is something in it for a
+  consumer who will never publish native, and the offer is honest.
 
-At that point it is not an advertisement, it is a defect report: they have asked for AOT, and their
-serializer is going to reflect. Anyone who has not asked for AOT never sees it.
+Both are reported **once per compilation** at `Location.None` — this is a property of the project, not
+of any one line, and a squiggle on an arbitrarily-chosen contract would be worse than none. Neither
+fires once a `[ProtoModel]` exists. `dotnet_diagnostic.PBN2013.severity = none` dismisses the quiet
+one permanently, in the standard way.
 
-Then, in order of how much they earn their noise:
+Verified in a real build rather than only in tests, because the property plumbing is the part that
+could silently do nothing: a project with `PublishAot=true`, a contract and no model reports
+`PBN2012` naming `PublishAot`; with it false, nothing appears in normal build output.
 
-- **`DiagnosticSeverity.Info`**, once per compilation, not per contract. Info does not appear in
-  normal build output at all — it shows in the IDE's Messages and in `-v normal` logs — so it is
-  quiet by construction, and `dotnet_diagnostic.PBNxxxx.severity = none` in `.editorconfig` dismisses
-  it permanently in the standard way.
-- **Pair it with a code fix that writes the `[ProtoModel]` stub.** This is the part that turns an
-  announcement into an action, and it is the difference between helpful and nagging: a lightbulb on a
-  contract offering "generate an AOT model for this project" is discoverable *and* useful, where a
-  message saying "did you know…" is only the former.
-- Do **not** consider a warning. The moment this is a warning it is in everyone's build log, and the
-  argument about whether protobuf-net should be telling people how to build their app is one we would
-  lose.
-
-Not built. The gating and the severity are the decisions; the code is small.
-
-Not defects — things worth doing that were scoped out, with the measurements that were taken at the
-time so the next person does not have to retake them.
+Still open: pairing `PBN2012` with a fix that writes the `[ProtoModel]` stub. That is what would turn
+it from a notification into an action, and it is the obvious next piece.
 
 ### A. A UTF-8 fast path for string-shaped members (`IUtf8SpanFormattable`)
 

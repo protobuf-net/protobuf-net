@@ -155,6 +155,28 @@ namespace BuildToolsUnitTests
         /// <summary>
         /// DeepClone and Measure are on the serialization path too, and are easy to forget.
         /// </summary>
+        /// <summary>
+        /// With contracts and no model, the project is told once — at Info, because for a non-AOT
+        /// consumer the argument is cold start rather than correctness.
+        /// </summary>
+        [Fact]
+        public async Task AnnouncesOnceWhenThereAreContractsButNoModel()
+        {
+            var diagnostics = await AnalyzeAsync(Preamble);
+
+            var hit = Assert.Single(diagnostics.Where(static x => x.Id == "PBN2013"));
+            Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Info, hit.Severity);
+            Assert.Empty(diagnostics.Where(static x => x.Id == "PBN2012"));
+        }
+
+        /// <summary>...and nothing at all once a model exists, which is the point of announcing.</summary>
+        [Fact]
+        public async Task SaysNothingOnceAModelExists()
+        {
+            var diagnostics = await AnalyzeAsync(WithModel);
+            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN2012" or "PBN2013"));
+        }
+
         [Fact]
         public async Task TheOtherEntryPointsAreCoveredToo()
         {
