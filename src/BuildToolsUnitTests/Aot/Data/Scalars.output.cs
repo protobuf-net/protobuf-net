@@ -7,6 +7,9 @@ namespace AotFixtures.Scalars;
 
 partial class ScalarsModel
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    protected ScalarsModel() { }
+
     /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
     public static ScalarsModel Instance { get; } = new ScalarsModel();
 

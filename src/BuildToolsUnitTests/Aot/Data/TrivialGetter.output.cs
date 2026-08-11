@@ -7,6 +7,9 @@ namespace AotFixtures.TrivialGetter;
 
 partial class TrivialGetterModel
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    protected TrivialGetterModel() { }
+
     /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
     public static TrivialGetterModel Instance { get; } = new TrivialGetterModel();
 

@@ -7,6 +7,9 @@ namespace AotFixtures.Dropped;
 
 partial class DroppedModel
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    protected DroppedModel() { }
+
     /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
     public static DroppedModel Instance { get; } = new DroppedModel();
 

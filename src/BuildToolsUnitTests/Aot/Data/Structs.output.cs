@@ -7,6 +7,9 @@ namespace AotFixtures.Structs;
 
 partial class StructsModel
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    protected StructsModel() { }
+
     /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
     public static StructsModel Instance { get; } = new StructsModel();
 

@@ -150,6 +150,17 @@ cache, meant to be built once and reused, so there is one obvious place to reach
 `new MyModel()` at each call site. If you declare your own `Instance`, or your model has no
 parameterless constructor, it is not generated and your own arrangements stand.
 
+**`new MyModel()` will not compile**, for the same reason: if you declare no constructor, the
+generator emits a non-public one (`private` if your model is sealed, `protected` otherwise), which
+replaces the implicit public one and points you at `Instance`. Two consequences worth knowing:
+
+- **reflective creation stops working** — `Activator.CreateInstance(typeof(MyModel))`, or a DI
+  container asked to construct the type. Use `Activator.CreateInstance(type, nonPublic: true)`, or
+  register the instance: `services.AddSingleton<TypeModel>(_ => MyModel.Instance);`
+- **declaring any constructor opts out entirely.** `public MyModel() { }` in your half of the partial
+  and everything behaves as before — the generator only does this when you have expressed no
+  intention about construction.
+
 `PBN2011` is the other half, and it has no mechanical fix: the non-generic APIs take the thing to
 serialize as an `object` or a `Type`, so neither the analyzer nor the generator can tell what will be
 serialized. Under AOT that call will take the reflection path. If it needs to work when published,

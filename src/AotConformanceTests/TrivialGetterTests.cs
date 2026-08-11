@@ -19,7 +19,7 @@ namespace ProtoBuf.AotConformance
     /// </remarks>
     public class TrivialGetterTests
     {
-        private static readonly TypeModel Model = new TrivialGetterModel();
+        private static readonly TypeModel Model = TrivialGetterModel.Instance;
 
         [Fact]
         public void ExpressionBodiedAndBlockGettersRoundTrip()

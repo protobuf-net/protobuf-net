@@ -65,7 +65,7 @@ internal static class Program
     private static int Main()
     {
         var failures = 0;
-        var model = new DownLevelModel();
+        var model = DownLevelModel.Instance;
 
         var original = new Fine { Value = 42, Name = "hello", Child = new Nested { Id = 7 } };
 

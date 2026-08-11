@@ -69,6 +69,18 @@ namespace ProtoBuf.BuildTools.Generators
             //
             // Suppressed if the consumer's half of the partial already declares `Instance` (CS0102),
             // or has no accessible parameterless constructor to call.
+            if (plan.EmitConstructor)
+            {
+                // removes the implicit public constructor, so `new MyModel()` no longer compiles and
+                // Instance is the obvious route. protected rather than private where the type is not
+                // sealed, or nothing could derive from it. Declaring any constructor opts out.
+                var accessibility = plan.IsSealed ? "private" : "protected";
+                Line(sb, indent + 1, $"/// <summary>Use <see cref=\"Instance\"/>; a <c>TypeModel</c>"
+                    + " is a cache, and is intended to be shared rather than constructed per use.</summary>");
+                Line(sb, indent + 1, $"{accessibility} {plan.TypeName}() {{ }}");
+                sb.AppendLine();
+            }
+
             if (plan.EmitInstance)
             {
                 Line(sb, indent + 1, "/// <summary>A shared instance of this model; a <c>TypeModel</c> is"

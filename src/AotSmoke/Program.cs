@@ -510,7 +510,7 @@ internal static class Program
     {
         var failures = 0;
 
-        var model = new SmokeModel();
+        var model = SmokeModel.Instance;
         var original = new Order(sequence: 5, token: "tok")
         {
             Number = 42,

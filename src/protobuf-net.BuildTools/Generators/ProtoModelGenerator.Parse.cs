@@ -168,7 +168,12 @@ namespace ProtoBuf.BuildTools.Generators
                 plan = new ProtoModelPlan(nameSpace, model.Name, new(contracts),
                     annotateTrimming: SupportsTrimAnnotations(compilation), enums: new(enumPlans),
                     aliases: new(DeclaredAliases(compilation).ToArray()),
-                    emitInstance: CanEmitInstance(model));
+                    emitInstance: CanEmitInstance(model),
+                    // hiding the constructor only makes sense alongside something to use instead,
+                    // and only when they have not written one themselves - a declared constructor is
+                    // both the opt-out and the way to keep `new` working
+                    emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
+                    isSealed: model.IsSealed);
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
@@ -1515,6 +1520,14 @@ namespace ProtoBuf.BuildTools.Generators
                 .Where(static x => x.DeclaredAccessibility != Accessibility.Private).ToList();
             return constructors.Count == 0 || constructors.Any(static x => x.Parameters.Length == 0);
         }
+
+        /// <summary>Whether the consumer wrote no constructor of their own.</summary>
+        /// <remarks>
+        /// A class with none has exactly one, implicitly declared; anything else means they have
+        /// expressed an intent about construction and we should not override it.
+        /// </remarks>
+        private static bool DeclaresNoConstructor(INamedTypeSymbol model)
+            => model.InstanceConstructors.All(static x => x.IsImplicitlyDeclared);
 
         /// <summary>Whether the type declares a hand-written serializer at all.</summary>
         /// <remarks>

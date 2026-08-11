@@ -221,6 +221,17 @@ is for. The alternative, writing `new MyModel()` per call site, would be doing h
 that name (CS0102 in their build) or the model has no accessible parameterless constructor. Both are
 their code, so the answer is to emit nothing rather than to complain.
 
+Alongside it, where the consumer declared **no constructor at all**, the generator emits a non-public
+parameterless one — `private` if their model is sealed, `protected` otherwise, since `private` would
+stop anything deriving. That removes the *implicit public* constructor, so `new MyModel()` no longer
+compiles and `Instance` is the obvious route.
+
+**This has teeth, and the blast radius is the point rather than a surprise:** it also breaks
+`Activator.CreateInstance(type)` and any DI container asked to construct the model. Our own harnesses
+were built on exactly that and had to move to `nonPublic: true` — `AotConformanceTests` in three
+places and `AotDifferential` in one — which is a fair preview of what a consumer hits. Declaring any
+constructor opts out completely, which is the escape hatch to point people at.
+
 The shared-instance form arrives fully qualified, because the analyzer cannot know what is in scope
 at the call site; `Simplifier.Annotation` is what reduces it to `MyModel.Instance` on application, and
 leaves `global::` only where it is genuinely needed. That annotation lives in Workspaces — available

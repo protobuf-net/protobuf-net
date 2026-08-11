@@ -886,7 +886,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     {
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
-            EquatableArray<string> aliases = default, bool emitInstance = true)
+            EquatableArray<string> aliases = default, bool emitInstance = true,
+            bool emitConstructor = false, bool isSealed = false)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -895,6 +896,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             Enums = enums;
             Aliases = aliases;
             EmitInstance = emitInstance;
+            EmitConstructor = emitConstructor;
+            IsSealed = isSealed;
         }
 
         /// <summary>
@@ -924,6 +927,23 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// parameterless constructor to call.
         /// </remarks>
         public bool EmitInstance { get; }
+
+        /// <summary>
+        /// Whether to emit a non-public parameterless constructor, so that <c>Instance</c> is the
+        /// obvious way to get one.
+        /// </summary>
+        /// <remarks>
+        /// Only when the consumer declared no constructor of their own — declaring one is both the
+        /// opt-out and the way to keep <c>new</c> working. Note this <em>removes</em> the implicit
+        /// public constructor, so reflective creation (`Activator.CreateInstance(type)`, a DI
+        /// container resolving the type) stops working unless it asks for non-public constructors.
+        /// That is the intended steer — a <c>TypeModel</c> is a cache, and several of them is waste
+        /// rather than isolation — but it is a real consequence, not a cosmetic one.
+        /// </remarks>
+        public bool EmitConstructor { get; }
+
+        /// <summary>Whether the consumer's model is sealed, which decides the constructor's accessibility.</summary>
+        public bool IsSealed { get; }
 
         /// <summary>
         /// Enums seeded directly by <c>[ProtoSerializable]</c>, which are served by the same
@@ -965,7 +985,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             => other is not null && Namespace == other.Namespace && TypeName == other.TypeName
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
-                && EmitInstance == other.EmitInstance;
+                && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
+                && IsSealed == other.IsSealed;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 

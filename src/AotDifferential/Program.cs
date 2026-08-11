@@ -29,7 +29,7 @@ internal static class Program
             return 1;
         }
 
-        var generated = (TypeModel)Activator.CreateInstance(corpus.ModelType);
+        var generated = (TypeModel)Activator.CreateInstance(corpus.ModelType, nonPublic: true);
 
         // One reference model holding the *whole* corpus, not a fresh one per contract. The generated
         // model is a closed world over every contract at once, so a reference that has only heard of

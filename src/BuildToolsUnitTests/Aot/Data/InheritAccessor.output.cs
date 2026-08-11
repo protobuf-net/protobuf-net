@@ -7,6 +7,9 @@ namespace AotFixtures.InheritAccessor;
 
 partial class InheritAccessorModel
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    protected InheritAccessorModel() { }
+
     /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
     public static InheritAccessorModel Instance { get; } = new InheritAccessorModel();
 

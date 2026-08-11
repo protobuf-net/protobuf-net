@@ -7,6 +7,9 @@ namespace AotFixtures.TupleMembers;
 
 partial class TupleMembersModel
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    protected TupleMembersModel() { }
+
     /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
     public static TupleMembersModel Instance { get; } = new TupleMembersModel();
 

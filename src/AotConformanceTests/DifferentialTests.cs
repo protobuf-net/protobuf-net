@@ -37,7 +37,7 @@ namespace ProtoBuf.AotConformance
             var modelType = Fixtures.GetType(modelTypeName);
             Assert.NotNull(modelType);
 
-            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType));
+            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType, nonPublic: true));
             var value = GetSamples(modelType)[index];
             var contractType = value.GetType();
 
@@ -102,7 +102,7 @@ namespace ProtoBuf.AotConformance
             var modelType = Fixtures.GetType(modelTypeName);
             Assert.NotNull(modelType);
 
-            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType));
+            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType, nonPublic: true));
             var compared = 0;
 
             foreach (var group in GetSamples(modelType).GroupBy(static x => x.GetType()))
@@ -147,7 +147,7 @@ namespace ProtoBuf.AotConformance
         {
             var contractType = Fixtures.GetType("AotFixtures.Getter.Getters")!;
             var generated = (TypeModel)Activator.CreateInstance(
-                Fixtures.GetType("AotFixtures.Getter.GetterModel")!)!;
+                Fixtures.GetType("AotFixtures.Getter.GetterModel")!, nonPublic: true)!;
 
             // field 4 (the getter-only `Value`), varint, 7 — a value no constructor here produces
             byte[] payload = [0x20, 0x07];
