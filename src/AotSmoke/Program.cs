@@ -846,30 +846,20 @@ internal static class Program
     }
 
     /// <summary>
-    /// <c>Extensible.AppendValue</c> resolves its serializer reflectively, so whether it can work
-    /// depends on the runtime — but "quietly did nothing" must never be one of the outcomes.
+    /// <c>Extensible.AppendValue</c> and <c>GetValue</c>, which now keep <c>TValue</c> all the way
+    /// down instead of degrading to the reflective auxiliary path.
     /// </summary>
     /// <remarks>
-    /// Deliberately not branched on <c>RuntimeFeature.IsDynamicCodeSupported</c>: <c>PublishAot</c>
-    /// sets that switch to false even for an ordinary <c>dotnet run</c> of this project, while the
-    /// JIT underneath happily supports dynamic code — so it says nothing about whether this call can
-    /// succeed. The property asserted here holds on every runtime instead: either it works and the
-    /// value comes back, or it throws. It used to do neither, which is the bug.
+    /// The assertion is deliberately strict — the value must come back — because "either it works or
+    /// it throws" was the *previous* fix, and would pass whether or not the typed path is being
+    /// taken. Under a native publish this is the only thing here that proves it.
     /// </remarks>
     private static int CheckAppendValue()
     {
         var failures = 0;
         var note = new Note { Text = "hi" };
-        try
-        {
-            Extensible.AppendValue(note, 42, 123);
-        }
-        catch (InvalidOperationException)
-        {
-            return failures; // reported that it could not; that is the fix working
-        }
-        Check(ref failures, "AppendValue round-trips when it claims to have worked",
-            123, Extensible.GetValue<int>(note, 42));
+        Extensible.AppendValue(note, 42, 123);
+        Check(ref failures, "AppendValue round-trips", 123, Extensible.GetValue<int>(note, 42));
         return failures;
     }
 

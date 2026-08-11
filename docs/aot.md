@@ -270,10 +270,11 @@ Two things worth doing before you trust it:
   executes, but which ILC still analyses because it is present in the assembly. Your model works; the
   warnings are noise from the road not taken. Removing them entirely needs the reflective paths not
   to exist on the AOT route at all, which is a larger piece of work and is tracked.
-- **`Extensible.AppendValue` does not work under native AOT.** It resolves serializers by reflection.
-  It now throws rather than silently discarding the value, but if you use it to poke values into an
-  extensible contract by hand, that will not survive a native publish. Reading and writing *unknown
-  fields* is unaffected — that path only copies bytes.
+- **`Extensible.AppendValue`/`GetValue` work under native AOT for the generic overloads at the
+  default `DataFormat`** — which is the common case. A non-default `DataFormat`, or the legacy
+  `object`-based overload, still resolves by reflection; those now throw rather than silently
+  discarding the value. Reading and writing *unknown fields* is unaffected either way — that path only
+  copies bytes.
 - **A hand-written serializer as a map key or value** is refused when its category is `CategoryScalar`
   or cannot be determined, as is a **collection as a map key**. Both are reported with a diagnostic
   naming the reason rather than silently mis-emitted.

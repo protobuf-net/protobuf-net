@@ -25,8 +25,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   `StackOverflowException`, which cannot be caught and was reachable from untrusted input; it now
   throws a catchable `InvalidOperationException` naming both types
 - **fix**: `Extensible.AppendValue` discarded the result of the underlying write and reported success
-  regardless, so a failure was silent data loss; it now throws. Note this API resolves serializers by
-  reflection and so still cannot work under native AOT — it now says so rather than losing the value
+  regardless, so a failure was silent data loss; it now throws if it cannot write
+- `Extensible.AppendValue<T>`/`GetValue<T>`/`TryGetValue<T>` now keep `T` rather than boxing to
+  `object` and re-resolving by reflection, so they **work under native AOT** at the default
+  `DataFormat`; other formats and the legacy `object`-based overload are unchanged
 
 ## 3.2.30
 

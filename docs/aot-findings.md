@@ -42,34 +42,34 @@ Only incompatible siblings do it; same-branch merges are fine in either directio
 deserializing untrusted protobuf into a type with `[ProtoInclude]` is exposed. `Inherit.input.cs`
 keeps its `Holder` samples on one branch because of this.
 
-### 2. `Extensible.AppendValue` silently does nothing under AOT — **fixed**
+### 2. `Extensible.AppendValue` under AOT — **fixed twice, and the second time properly**
 
-**Severity: medium** — silent data loss, on an API whose whole purpose is round-trip fidelity.
+**First pass:** the result of `TrySerializeAuxiliaryType` was discarded and `commit = true` set
+regardless, so a write that never happened was committed as success — silent data loss on an API whose
+whole purpose is round-trip fidelity, and the *normal* outcome under native AOT, since that path
+resolves the serializer reflectively. Checked now, so a failure throws.
 
-`ExtensibleUtil.AppendExtendValue` serializes via `model.TrySerializeAuxiliaryType(..., type: null,
-...)` — the reflective auxiliary path — and **discards the `bool` result**. Once trimmed, the value
-is never stored and nothing is reported; a later `GetValue` returns the default.
+**Second pass — it now works, rather than merely failing loudly.** The type was never actually
+unknown: every public entry point is generic (`AppendValue<TValue>`, `GetValue<TValue>`,
+`TryGetValue<TValue>`), and `TValue` was being *thrown away* by boxing to `object` and asking
+`TrySerializeAuxiliaryType(type: null)` to work it out again by reflection. Keeping `TValue` all the
+way down — `ResolveSerializer<TValue>` plus `WriteAny`/`ReadAny` — resolves through the model, which
+is exactly what a generated model answers.
 
-Note the serializer's own extension path (`state.AppendExtensionData`) is fine: it only copies raw
-bytes. It is just this "poke a value in by hand" convenience that is reflective.
+Both halves had to move: an API you can append to but cannot read back from would be worse than one
+that refuses, so the read path is typed too. Restricted to `DataFormat.Default`, since any other
+format selects a wire type that the serializer's own features would otherwise supply; those keep the
+reflective path, and now report rather than losing the value. The genuinely untyped legacy overload
+(`AppendValue(model, instance, tag, format, object)`) likewise.
 
-Fixed by doing exactly that: the result is checked, and a failure throws naming the type and saying
-that this API resolves serializers by reflection. The append transaction is abandoned by the existing
-`catch`, so nothing is written either way — the difference is that the caller finds out.
+`AotSmoke` asserts the **round-trip**, unconditionally, and that strictness is what caught the first
+attempt: the typed call had been added inside the *non-generic* overload, so `TValue` was `object`,
+`ResolveSerializer<object>` failed, and it fell through to the reflective path — invisible under JIT,
+where the fallback works. The earlier "either it works or it throws" assertion would have passed.
 
-It does **not** make the API work under AOT; that would need an auxiliary serialization path that
-does not resolve by reflection, which is a much larger piece. It converts silent data loss into a
-loud failure, which is the part that matters for trusting the feature.
-
-`AotSmoke` now pins the property on both runtimes, and the assertion is deliberately *not* branched on
-`RuntimeFeature.IsDynamicCodeSupported`: `PublishAot` sets that switch to false even for an ordinary
-`dotnet run` of the project, while the JIT underneath supports dynamic code perfectly well — so it
-says nothing about whether the call can succeed. Worth knowing before using that flag as a proxy for
-anything. The property asserted instead holds everywhere: **either it works and the value comes back,
-or it throws**. It used to do neither.
-
-`AotSmoke` still manufactures its unknown field with a wider contract rather than with this API,
-since that keeps the extension test on the generated path.
+The other thing the suite caught: going straight to the extension object skipped the argument
+validation the untyped overload performs, so `Examples.Extensibility`'s invalid-tag tests got an empty
+result where they expected `ArgumentOutOfRangeException`. Repeated in the typed path.
 
 ### 3. `SubTypeState<T>.Cast` → `Merge` keeps one trim warning alive
 
