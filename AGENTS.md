@@ -248,6 +248,13 @@ were built on exactly that and had to move to `nonPublic: true` — `AotConforma
 places and `AotDifferential` in one — which is a fair preview of what a consumer hits. Declaring any
 constructor opts out completely, which is the escape hatch to point people at.
 
+**The consumers of a `[ProtoModel]` are scattered, and a directory-scoped grep will miss one** — this
+broke CI on `AotNodaTimeSmoke`, which was not in the list of projects I checked. The reliable sweep is
+`grep -rn "ProtoModel\]" src --include=*.cs -l`, which finds every real consumer:
+`AotSmoke`, `DownLevelSmoke`, `AotNodaTimeSmoke`, `AotColdStart`, `AotConformanceTests`,
+`AotDifferential` (reflectively) and `AotRefGen` (which links the fixtures but never constructs a
+model, so it is unaffected).
+
 The shared-instance form arrives fully qualified, because the analyzer cannot know what is in scope
 at the call site; `Simplifier.Annotation` is what reduces it to `MyModel.Instance` on application, and
 leaves `global::` only where it is genuinely needed. That annotation lives in Workspaces — available

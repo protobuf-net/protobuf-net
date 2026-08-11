@@ -29,7 +29,7 @@ internal static class Program
     private static int Main()
     {
         var failures = 0;
-        var model = new ScheduleModel();
+        var model = ScheduleModel.Instance;
         var original = new Appointment
         {
             Title = "standup",
