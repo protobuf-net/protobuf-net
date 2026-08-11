@@ -20,6 +20,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   `protobuf-net.BuildTools` package alongside remains harmless
 - **fix**: `protobuf-net.NodaTime` did not produce a package from a plain build (missing
   `GeneratePackageOnBuild`), and packed with a placeholder description
+- **fix**: `PBN0022` ("should declare `IsRequired`") no longer fires for collection members —
+  `List<T> Lines { get; } = [];` is the standard pattern, an empty collection has no wire presence
+  to force, and `IsRequired` is only observable for value-type scalars anyway
 
 ## 3.3.0
 
