@@ -320,12 +320,22 @@ internal sealed class Corpus
         return dir;
     }
 
+    // the configuration this assembly was built as, which by construction is the configuration the
+    // traversal build produced the targets in - CI runs everything Debug, the release workflow
+    // everything Release. A probe-both fallback was considered and rejected: silently scanning a
+    // stale build from the *other* configuration is worse than failing loudly.
+#if DEBUG
+    private const string Configuration = "Debug";
+#else
+    private const string Configuration = "Release";
+#endif
+
     public static IEnumerable<string> DefaultTargets()
     {
         if (RepoRoot() is not { } dir) yield break;
         foreach (var project in new[] { "protobuf-net.Test", "Examples", "protobuf-net.Reflection.Test" })
         {
-            yield return Path.Combine(dir, "src", project, "bin", "Debug", "net8.0", project + ".dll");
+            yield return Path.Combine(dir, "src", project, "bin", Configuration, "net8.0", project + ".dll");
         }
     }
 
