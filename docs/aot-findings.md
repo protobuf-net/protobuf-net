@@ -562,11 +562,34 @@ survives, not as a commitment.
 
    The binary grew 3,727,688 → 4,032,072 bytes (linux-x64) across both rounds, which is the cost of
    the new generic instantiations rather than a regression; the immutable pair alone was 225 KB of it.
-2. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
+2. **Turning the generator on does not make existing code use it — decide how to say so.**
+   Every `Serializer.Serialize(...)`/`Serializer.Deserialize<T>(...)` call goes through
+   `RuntimeTypeModel.Default`, i.e. the reflection path, so a consumer who adds a `[ProtoModel]` and
+   publishes for native AOT still has all their existing call sites on the arm that cannot work.
+   Worse, it *keeps working* on a JIT runtime, so the failure arrives at publish time or later.
+
+   Two directions, and the preference is recorded because the reasoning is not obvious:
+
+   - **Diagnose the call sites** — an analyzer that flags `Serializer.*` (and any other use of the
+     default model) once a `[ProtoModel]` exists in the compilation, ideally with a code fixer that
+     rewrites the call to `model.Serialize(...)`. Preferred.
+   - **Make them work automatically** — auto-registration, or interceptors on the call sites. Both
+     founder on the same question: *is the default model still "as default"?* Answering it means
+     tracking every mutation of `RuntimeTypeModel.Default`, which is a lot of state to keep, and
+     getting it wrong silently changes behaviour for people who deliberately configured that model.
+
+   The asymmetry is what decides it: changing code to say explicitly "I am using this model" is
+   simple, obvious and local, whereas making it implicit is neither. Being told beats being guessed
+   for.
+
+   Note this is orthogonal to everything else in this file — it is a *migration* problem, not a
+   correctness one, and it is probably the biggest single thing standing between "the generator works"
+   and "a consumer can adopt it".
+3. **Item 1, the sibling sub-type stack overflow.** Not AOT work, and the most serious thing in this
    file: unrecoverable, reachable from untrusted input, and reproducing with `RuntimeTypeModel`
    alone — so it is every consumer's problem, not the generator's. If one item is raised upstream,
    this is it.
-3. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
+4. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
    differential therefore sits next to a clean baseline, which is what that gate needed. The
    `Issue1232` failures turn out to be **intermittent** rather than a standing failure, so the "it
    presumably exits non-zero" that motivated this item was wrong twice over — see item 5, which
@@ -576,7 +599,7 @@ survives, not as a commitment.
    `gh api repos/protobuf-net/protobuf-net/actions/jobs/<jobId>/logs`, which is how "green" was
    turned into "these specific cases passed". `gh run view --log` returns nothing for a run this old;
    the API route still works.
-4. ~~**Widen the corpus differential to the `.proto`-generated DTO path.**~~ **Done**, and it paid
+5. ~~**Widen the corpus differential to the `.proto`-generated DTO path.**~~ **Done**, and it paid
    for itself on the first run: **1283 → 2988** contracts compared, still 100% matching, and one
    real generator bug that broke the *consumer's build* — see item 14.
 
@@ -591,11 +614,11 @@ survives, not as a commitment.
    couple of which look like **protogen** bugs rather than corpus artefacts, `stringEscaping.proto`
    emitting `Unexpected character '\'` being the clearest. Those are protobuf-net.Reflection's to
    answer for, not the AOT generator's, but nobody had run the whole tree through a compiler before.
-5. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
+6. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
    AOT route at all. Note the warning count is now a *poor* motivation for it: those 18 are correct
    warnings about code that does reflect. The real arguments are one less layer of indirection on the
    generated path, and possibly size — get a size estimate first.
-6. **The three genuine generator gaps**, each bounded and each with a known reference behaviour: a
+7. **The remaining generator gaps**, each bounded and each with a known reference behaviour: a
    nested map key, a `CategoryScalar` hand-written serializer as a collection element or map value,
    and an external serializer whose category cannot be established.
 
