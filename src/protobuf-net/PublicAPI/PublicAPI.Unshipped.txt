@@ -1,0 +1,2 @@
+ProtoBuf.ProtoContractAttribute.IsScalar.get -> bool (forwarded, contained in protobuf-net.Core)
+ProtoBuf.ProtoContractAttribute.IsScalar.set -> void (forwarded, contained in protobuf-net.Core)
