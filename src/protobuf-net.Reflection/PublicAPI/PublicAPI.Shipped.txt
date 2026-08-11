@@ -1,0 +1,805 @@
+abstract ProtoBuf.Reflection.CodeGenerator.Generate(Google.Protobuf.Reflection.FileDescriptorSet set, ProtoBuf.Reflection.NameNormalizer normalizer = null, System.Collections.Generic.Dictionary<string, string> options = null) -> System.Collections.Generic.IEnumerable<ProtoBuf.Reflection.CodeFile>
+abstract ProtoBuf.Reflection.CodeGenerator.Name.get -> string
+abstract ProtoBuf.Reflection.CommonCodeGenerator.DefaultFileExtension.get -> string
+abstract ProtoBuf.Reflection.CommonCodeGenerator.Escape(string identifier) -> string
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteEnumFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto enum, ref object state) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteEnumHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto enum, ref object state) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteEnumValue(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumValueDescriptorProto enum, ref object state) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteField(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub[] oneOfs) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteMessageFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteMessageHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteNamespaceFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string namespace) -> void
+abstract ProtoBuf.Reflection.CommonCodeGenerator.WriteNamespaceHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string namespace) -> void
+abstract ProtoBuf.Reflection.NameNormalizer.GetName(string identifier) -> string
+abstract ProtoBuf.Reflection.NameNormalizer.Pluralize(string identifier) -> string
+const ProtoBuf.Reflection.CommonCodeGenerator.OneOfEnumSuffixDiscriminator = "Case" -> string
+const ProtoBuf.Reflection.CommonCodeGenerator.OneOfEnumSuffixEnum = "OneofCase" -> string
+Google.Protobuf.Reflection.DescriptorProto
+Google.Protobuf.Reflection.DescriptorProto.DescriptorProto() -> void
+Google.Protobuf.Reflection.DescriptorProto.EnumTypes.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.EnumDescriptorProto>
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.End.get -> int
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.End.set -> void
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.ExtensionRange() -> void
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.Options.get -> Google.Protobuf.Reflection.ExtensionRangeOptions
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.Options.set -> void
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.ResetEnd() -> void
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.ResetStart() -> void
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.ShouldSerializeEnd() -> bool
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.ShouldSerializeStart() -> bool
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.Start.get -> int
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRange.Start.set -> void
+Google.Protobuf.Reflection.DescriptorProto.ExtensionRanges.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>
+Google.Protobuf.Reflection.DescriptorProto.Extensions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FieldDescriptorProto>
+Google.Protobuf.Reflection.DescriptorProto.Fields.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FieldDescriptorProto>
+Google.Protobuf.Reflection.DescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.DescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.DescriptorProto.NestedTypes.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.DescriptorProto>
+Google.Protobuf.Reflection.DescriptorProto.OneofDecls.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.OneofDescriptorProto>
+Google.Protobuf.Reflection.DescriptorProto.Options.get -> Google.Protobuf.Reflection.MessageOptions
+Google.Protobuf.Reflection.DescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.DescriptorProto.ReservedNames.get -> System.Collections.Generic.List<string>
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.End.get -> int
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.End.set -> void
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.ReservedRange() -> void
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.ResetEnd() -> void
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.ResetStart() -> void
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.ShouldSerializeEnd() -> bool
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.ShouldSerializeStart() -> bool
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.Start.get -> int
+Google.Protobuf.Reflection.DescriptorProto.ReservedRange.Start.set -> void
+Google.Protobuf.Reflection.DescriptorProto.ReservedRanges.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.DescriptorProto.ReservedRange>
+Google.Protobuf.Reflection.DescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.DescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.EnumDescriptorProto
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumDescriptorProto() -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.End.get -> int
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.End.set -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.EnumReservedRange() -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.ResetEnd() -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.ResetStart() -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.ShouldSerializeEnd() -> bool
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.ShouldSerializeStart() -> bool
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.Start.get -> int
+Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange.Start.set -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.EnumDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.Options.get -> Google.Protobuf.Reflection.EnumOptions
+Google.Protobuf.Reflection.EnumDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.ReservedNames.get -> System.Collections.Generic.List<string>
+Google.Protobuf.Reflection.EnumDescriptorProto.ReservedRanges.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>
+Google.Protobuf.Reflection.EnumDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.EnumDescriptorProto.Values.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.EnumValueDescriptorProto>
+Google.Protobuf.Reflection.EnumOptions
+Google.Protobuf.Reflection.EnumOptions.AllowAlias.get -> bool
+Google.Protobuf.Reflection.EnumOptions.AllowAlias.set -> void
+Google.Protobuf.Reflection.EnumOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.EnumOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.EnumOptions.EnumOptions() -> void
+Google.Protobuf.Reflection.EnumOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.EnumOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.EnumOptions.ResetAllowAlias() -> void
+Google.Protobuf.Reflection.EnumOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.EnumOptions.ShouldSerializeAllowAlias() -> bool
+Google.Protobuf.Reflection.EnumOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.EnumOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.EnumValueDescriptorProto
+Google.Protobuf.Reflection.EnumValueDescriptorProto.EnumValueDescriptorProto() -> void
+Google.Protobuf.Reflection.EnumValueDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.EnumValueDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.EnumValueDescriptorProto.Number.get -> int
+Google.Protobuf.Reflection.EnumValueDescriptorProto.Number.set -> void
+Google.Protobuf.Reflection.EnumValueDescriptorProto.Options.get -> Google.Protobuf.Reflection.EnumValueOptions
+Google.Protobuf.Reflection.EnumValueDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.EnumValueDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.EnumValueDescriptorProto.ResetNumber() -> void
+Google.Protobuf.Reflection.EnumValueDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.EnumValueDescriptorProto.ShouldSerializeNumber() -> bool
+Google.Protobuf.Reflection.EnumValueOptions
+Google.Protobuf.Reflection.EnumValueOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.EnumValueOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.EnumValueOptions.EnumValueOptions() -> void
+Google.Protobuf.Reflection.EnumValueOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.EnumValueOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.EnumValueOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.EnumValueOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.EnumValueOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.ExtensionRangeOptions
+Google.Protobuf.Reflection.ExtensionRangeOptions.ExtensionRangeOptions() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.FieldDescriptorProto
+Google.Protobuf.Reflection.FieldDescriptorProto.DefaultValue.get -> string
+Google.Protobuf.Reflection.FieldDescriptorProto.DefaultValue.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Extendee.get -> string
+Google.Protobuf.Reflection.FieldDescriptorProto.Extendee.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.FieldDescriptorProto() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.IsPacked(string syntax) -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.JsonName.get -> string
+Google.Protobuf.Reflection.FieldDescriptorProto.JsonName.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Label
+Google.Protobuf.Reflection.FieldDescriptorProto.label.get -> Google.Protobuf.Reflection.FieldDescriptorProto.Label
+Google.Protobuf.Reflection.FieldDescriptorProto.Label.LabelOptional = 1 -> Google.Protobuf.Reflection.FieldDescriptorProto.Label
+Google.Protobuf.Reflection.FieldDescriptorProto.Label.LabelRepeated = 3 -> Google.Protobuf.Reflection.FieldDescriptorProto.Label
+Google.Protobuf.Reflection.FieldDescriptorProto.Label.LabelRequired = 2 -> Google.Protobuf.Reflection.FieldDescriptorProto.Label
+Google.Protobuf.Reflection.FieldDescriptorProto.label.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.FieldDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Number.get -> int
+Google.Protobuf.Reflection.FieldDescriptorProto.Number.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.OneofIndex.get -> int
+Google.Protobuf.Reflection.FieldDescriptorProto.OneofIndex.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Options.get -> Google.Protobuf.Reflection.FieldOptions
+Google.Protobuf.Reflection.FieldDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Proto3Optional.get -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.Proto3Optional.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetDefaultValue() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetExtendee() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetJsonName() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Resetlabel() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetNumber() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetOneofIndex() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetProto3Optional() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Resettype() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ResetTypeName() -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeDefaultValue() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeExtendee() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeJsonName() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializelabel() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeNumber() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeOneofIndex() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeProto3Optional() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializetype() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.ShouldSerializeTypeName() -> bool
+Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.type.get -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.type.set -> void
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeBool = 8 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeBytes = 12 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeDouble = 1 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeEnum = 14 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeFixed32 = 7 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeFixed64 = 6 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeFloat = 2 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeGroup = 10 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeInt32 = 5 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeInt64 = 3 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeMessage = 11 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeSfixed32 = 15 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeSfixed64 = 16 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeSint32 = 17 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeSint64 = 18 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeString = 9 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeUint32 = 13 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.Type.TypeUint64 = 4 -> Google.Protobuf.Reflection.FieldDescriptorProto.Type
+Google.Protobuf.Reflection.FieldDescriptorProto.TypeName.get -> string
+Google.Protobuf.Reflection.FieldDescriptorProto.TypeName.set -> void
+Google.Protobuf.Reflection.FieldOptions
+Google.Protobuf.Reflection.FieldOptions.CType
+Google.Protobuf.Reflection.FieldOptions.CType.Cord = 1 -> Google.Protobuf.Reflection.FieldOptions.CType
+Google.Protobuf.Reflection.FieldOptions.Ctype.get -> Google.Protobuf.Reflection.FieldOptions.CType
+Google.Protobuf.Reflection.FieldOptions.Ctype.set -> void
+Google.Protobuf.Reflection.FieldOptions.CType.String = 0 -> Google.Protobuf.Reflection.FieldOptions.CType
+Google.Protobuf.Reflection.FieldOptions.CType.StringPiece = 2 -> Google.Protobuf.Reflection.FieldOptions.CType
+Google.Protobuf.Reflection.FieldOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.FieldOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.FieldOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.FieldOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.FieldOptions.FieldOptions() -> void
+Google.Protobuf.Reflection.FieldOptions.JSType
+Google.Protobuf.Reflection.FieldOptions.Jstype.get -> Google.Protobuf.Reflection.FieldOptions.JSType
+Google.Protobuf.Reflection.FieldOptions.JSType.JsNormal = 0 -> Google.Protobuf.Reflection.FieldOptions.JSType
+Google.Protobuf.Reflection.FieldOptions.JSType.JsNumber = 2 -> Google.Protobuf.Reflection.FieldOptions.JSType
+Google.Protobuf.Reflection.FieldOptions.JSType.JsString = 1 -> Google.Protobuf.Reflection.FieldOptions.JSType
+Google.Protobuf.Reflection.FieldOptions.Jstype.set -> void
+Google.Protobuf.Reflection.FieldOptions.Lazy.get -> bool
+Google.Protobuf.Reflection.FieldOptions.Lazy.set -> void
+Google.Protobuf.Reflection.FieldOptions.Packed.get -> bool
+Google.Protobuf.Reflection.FieldOptions.Packed.set -> void
+Google.Protobuf.Reflection.FieldOptions.ResetCtype() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetJstype() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetLazy() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetPacked() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetWeak() -> void
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeCtype() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeJstype() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeLazy() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializePacked() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeWeak() -> bool
+Google.Protobuf.Reflection.FieldOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.FieldOptions.Weak.get -> bool
+Google.Protobuf.Reflection.FieldOptions.Weak.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto
+Google.Protobuf.Reflection.FileDescriptorProto.Dependencies.get -> System.Collections.Generic.List<string>
+Google.Protobuf.Reflection.FileDescriptorProto.EnumTypes.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.EnumDescriptorProto>
+Google.Protobuf.Reflection.FileDescriptorProto.Extensions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FieldDescriptorProto>
+Google.Protobuf.Reflection.FileDescriptorProto.FileDescriptorProto() -> void
+Google.Protobuf.Reflection.FileDescriptorProto.HasImports() -> bool
+Google.Protobuf.Reflection.FileDescriptorProto.IncludeInOutput.get -> bool
+Google.Protobuf.Reflection.FileDescriptorProto.IncludeInOutput.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.MessageTypes.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.DescriptorProto>
+Google.Protobuf.Reflection.FileDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.FileDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.Options.get -> Google.Protobuf.Reflection.FileOptions
+Google.Protobuf.Reflection.FileDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.Package.get -> string
+Google.Protobuf.Reflection.FileDescriptorProto.Package.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.Parse(System.IO.TextReader schema, System.Collections.Generic.List<ProtoBuf.Reflection.Error> errors, string file) -> void
+Google.Protobuf.Reflection.FileDescriptorProto.PublicDependencies.get -> int[]
+Google.Protobuf.Reflection.FileDescriptorProto.PublicDependencies.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.FileDescriptorProto.ResetPackage() -> void
+Google.Protobuf.Reflection.FileDescriptorProto.ResetSyntax() -> void
+Google.Protobuf.Reflection.FileDescriptorProto.Services.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.ServiceDescriptorProto>
+Google.Protobuf.Reflection.FileDescriptorProto.ShouldSerializeIncludeInOutput() -> bool
+Google.Protobuf.Reflection.FileDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.FileDescriptorProto.ShouldSerializePackage() -> bool
+Google.Protobuf.Reflection.FileDescriptorProto.ShouldSerializeSyntax() -> bool
+Google.Protobuf.Reflection.FileDescriptorProto.SourceCodeInfo.get -> Google.Protobuf.Reflection.SourceCodeInfo
+Google.Protobuf.Reflection.FileDescriptorProto.SourceCodeInfo.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.Syntax.get -> string
+Google.Protobuf.Reflection.FileDescriptorProto.Syntax.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.WeakDependencies.get -> int[]
+Google.Protobuf.Reflection.FileDescriptorProto.WeakDependencies.set -> void
+Google.Protobuf.Reflection.FileDescriptorSet
+Google.Protobuf.Reflection.FileDescriptorSet.Add(string name, bool includeInOutput = true, System.IO.TextReader source = null) -> bool
+Google.Protobuf.Reflection.FileDescriptorSet.AddImportPath(string path) -> void
+Google.Protobuf.Reflection.FileDescriptorSet.AllowNameOnlyImport.get -> bool
+Google.Protobuf.Reflection.FileDescriptorSet.AllowNameOnlyImport.set -> void
+Google.Protobuf.Reflection.FileDescriptorSet.ApplyFileDependencyOrder() -> void
+Google.Protobuf.Reflection.FileDescriptorSet.DefaultPackage.get -> string
+Google.Protobuf.Reflection.FileDescriptorSet.DefaultPackage.set -> void
+Google.Protobuf.Reflection.FileDescriptorSet.FileDescriptorSet() -> void
+Google.Protobuf.Reflection.FileDescriptorSet.Files.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FileDescriptorProto>
+Google.Protobuf.Reflection.FileDescriptorSet.FileSystem.get -> Google.Protobuf.Reflection.IFileSystem
+Google.Protobuf.Reflection.FileDescriptorSet.FileSystem.set -> void
+Google.Protobuf.Reflection.FileDescriptorSet.GetErrors() -> ProtoBuf.Reflection.Error[]
+Google.Protobuf.Reflection.FileDescriptorSet.ImportValidator.get -> System.Func<string, bool>
+Google.Protobuf.Reflection.FileDescriptorSet.ImportValidator.set -> void
+Google.Protobuf.Reflection.FileDescriptorSet.Process() -> void
+Google.Protobuf.Reflection.FileDescriptorSet.Serialize(ProtoBuf.Meta.TypeModel model, System.IO.Stream destination, bool includeImports) -> void
+Google.Protobuf.Reflection.FileDescriptorSet.Serialize<T>(System.Func<Google.Protobuf.Reflection.FileDescriptorSet, object, T> customSerializer, bool includeImports, object state = null) -> T
+Google.Protobuf.Reflection.FileOptions
+Google.Protobuf.Reflection.FileOptions.CcEnableArenas.get -> bool
+Google.Protobuf.Reflection.FileOptions.CcEnableArenas.set -> void
+Google.Protobuf.Reflection.FileOptions.CcGenericServices.get -> bool
+Google.Protobuf.Reflection.FileOptions.CcGenericServices.set -> void
+Google.Protobuf.Reflection.FileOptions.CsharpNamespace.get -> string
+Google.Protobuf.Reflection.FileOptions.CsharpNamespace.set -> void
+Google.Protobuf.Reflection.FileOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.FileOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.FileOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.FileOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.FileOptions.FileOptions() -> void
+Google.Protobuf.Reflection.FileOptions.GoPackage.get -> string
+Google.Protobuf.Reflection.FileOptions.GoPackage.set -> void
+Google.Protobuf.Reflection.FileOptions.JavaGenerateEqualsAndHash.get -> bool
+Google.Protobuf.Reflection.FileOptions.JavaGenerateEqualsAndHash.set -> void
+Google.Protobuf.Reflection.FileOptions.JavaGenericServices.get -> bool
+Google.Protobuf.Reflection.FileOptions.JavaGenericServices.set -> void
+Google.Protobuf.Reflection.FileOptions.JavaMultipleFiles.get -> bool
+Google.Protobuf.Reflection.FileOptions.JavaMultipleFiles.set -> void
+Google.Protobuf.Reflection.FileOptions.JavaOuterClassname.get -> string
+Google.Protobuf.Reflection.FileOptions.JavaOuterClassname.set -> void
+Google.Protobuf.Reflection.FileOptions.JavaPackage.get -> string
+Google.Protobuf.Reflection.FileOptions.JavaPackage.set -> void
+Google.Protobuf.Reflection.FileOptions.JavaStringCheckUtf8.get -> bool
+Google.Protobuf.Reflection.FileOptions.JavaStringCheckUtf8.set -> void
+Google.Protobuf.Reflection.FileOptions.ObjcClassPrefix.get -> string
+Google.Protobuf.Reflection.FileOptions.ObjcClassPrefix.set -> void
+Google.Protobuf.Reflection.FileOptions.OptimizeFor.get -> Google.Protobuf.Reflection.FileOptions.OptimizeMode
+Google.Protobuf.Reflection.FileOptions.OptimizeFor.set -> void
+Google.Protobuf.Reflection.FileOptions.OptimizeMode
+Google.Protobuf.Reflection.FileOptions.OptimizeMode.CodeSize = 2 -> Google.Protobuf.Reflection.FileOptions.OptimizeMode
+Google.Protobuf.Reflection.FileOptions.OptimizeMode.LiteRuntime = 3 -> Google.Protobuf.Reflection.FileOptions.OptimizeMode
+Google.Protobuf.Reflection.FileOptions.OptimizeMode.Speed = 1 -> Google.Protobuf.Reflection.FileOptions.OptimizeMode
+Google.Protobuf.Reflection.FileOptions.PhpClassPrefix.get -> string
+Google.Protobuf.Reflection.FileOptions.PhpClassPrefix.set -> void
+Google.Protobuf.Reflection.FileOptions.PhpGenericServices.get -> bool
+Google.Protobuf.Reflection.FileOptions.PhpGenericServices.set -> void
+Google.Protobuf.Reflection.FileOptions.PhpMetadataNamespace.get -> string
+Google.Protobuf.Reflection.FileOptions.PhpMetadataNamespace.set -> void
+Google.Protobuf.Reflection.FileOptions.PhpNamespace.get -> string
+Google.Protobuf.Reflection.FileOptions.PhpNamespace.set -> void
+Google.Protobuf.Reflection.FileOptions.PyGenericServices.get -> bool
+Google.Protobuf.Reflection.FileOptions.PyGenericServices.set -> void
+Google.Protobuf.Reflection.FileOptions.ResetCcEnableArenas() -> void
+Google.Protobuf.Reflection.FileOptions.ResetCcGenericServices() -> void
+Google.Protobuf.Reflection.FileOptions.ResetCsharpNamespace() -> void
+Google.Protobuf.Reflection.FileOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.FileOptions.ResetGoPackage() -> void
+Google.Protobuf.Reflection.FileOptions.ResetJavaGenerateEqualsAndHash() -> void
+Google.Protobuf.Reflection.FileOptions.ResetJavaGenericServices() -> void
+Google.Protobuf.Reflection.FileOptions.ResetJavaMultipleFiles() -> void
+Google.Protobuf.Reflection.FileOptions.ResetJavaOuterClassname() -> void
+Google.Protobuf.Reflection.FileOptions.ResetJavaPackage() -> void
+Google.Protobuf.Reflection.FileOptions.ResetJavaStringCheckUtf8() -> void
+Google.Protobuf.Reflection.FileOptions.ResetObjcClassPrefix() -> void
+Google.Protobuf.Reflection.FileOptions.ResetOptimizeFor() -> void
+Google.Protobuf.Reflection.FileOptions.ResetPhpClassPrefix() -> void
+Google.Protobuf.Reflection.FileOptions.ResetPhpGenericServices() -> void
+Google.Protobuf.Reflection.FileOptions.ResetPhpMetadataNamespace() -> void
+Google.Protobuf.Reflection.FileOptions.ResetPhpNamespace() -> void
+Google.Protobuf.Reflection.FileOptions.ResetPyGenericServices() -> void
+Google.Protobuf.Reflection.FileOptions.ResetRubyPackage() -> void
+Google.Protobuf.Reflection.FileOptions.ResetSwiftPrefix() -> void
+Google.Protobuf.Reflection.FileOptions.RubyPackage.get -> string
+Google.Protobuf.Reflection.FileOptions.RubyPackage.set -> void
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeCcEnableArenas() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeCcGenericServices() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeCsharpNamespace() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeGoPackage() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeJavaGenerateEqualsAndHash() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeJavaGenericServices() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeJavaMultipleFiles() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeJavaOuterClassname() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeJavaPackage() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeJavaStringCheckUtf8() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeObjcClassPrefix() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeOptimizeFor() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializePhpClassPrefix() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializePhpGenericServices() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializePhpMetadataNamespace() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializePhpNamespace() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializePyGenericServices() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeRubyPackage() -> bool
+Google.Protobuf.Reflection.FileOptions.ShouldSerializeSwiftPrefix() -> bool
+Google.Protobuf.Reflection.FileOptions.SwiftPrefix.get -> string
+Google.Protobuf.Reflection.FileOptions.SwiftPrefix.set -> void
+Google.Protobuf.Reflection.FileOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.GeneratedCodeInfo
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Annotation() -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Begin.get -> int
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Begin.set -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.End.get -> int
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.End.set -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Paths.get -> int[]
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Paths.set -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ResetBegin() -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ResetEnd() -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ResetSourceFile() -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ShouldSerializeBegin() -> bool
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ShouldSerializeEnd() -> bool
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ShouldSerializeSourceFile() -> bool
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.SourceFile.get -> string
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.SourceFile.set -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotations.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation>
+Google.Protobuf.Reflection.GeneratedCodeInfo.GeneratedCodeInfo() -> void
+Google.Protobuf.Reflection.IFileSystem
+Google.Protobuf.Reflection.IFileSystem.Exists(string path) -> bool
+Google.Protobuf.Reflection.IFileSystem.OpenText(string path) -> System.IO.TextReader
+Google.Protobuf.Reflection.MessageOptions
+Google.Protobuf.Reflection.MessageOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.MessageOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.MessageOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.MessageOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.MessageOptions.MapEntry.get -> bool
+Google.Protobuf.Reflection.MessageOptions.MapEntry.set -> void
+Google.Protobuf.Reflection.MessageOptions.MessageOptions() -> void
+Google.Protobuf.Reflection.MessageOptions.MessageSetWireFormat.get -> bool
+Google.Protobuf.Reflection.MessageOptions.MessageSetWireFormat.set -> void
+Google.Protobuf.Reflection.MessageOptions.NoStandardDescriptorAccessor.get -> bool
+Google.Protobuf.Reflection.MessageOptions.NoStandardDescriptorAccessor.set -> void
+Google.Protobuf.Reflection.MessageOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.MessageOptions.ResetMapEntry() -> void
+Google.Protobuf.Reflection.MessageOptions.ResetMessageSetWireFormat() -> void
+Google.Protobuf.Reflection.MessageOptions.ResetNoStandardDescriptorAccessor() -> void
+Google.Protobuf.Reflection.MessageOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.MessageOptions.ShouldSerializeMapEntry() -> bool
+Google.Protobuf.Reflection.MessageOptions.ShouldSerializeMessageSetWireFormat() -> bool
+Google.Protobuf.Reflection.MessageOptions.ShouldSerializeNoStandardDescriptorAccessor() -> bool
+Google.Protobuf.Reflection.MessageOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.MethodDescriptorProto
+Google.Protobuf.Reflection.MethodDescriptorProto.ClientStreaming.get -> bool
+Google.Protobuf.Reflection.MethodDescriptorProto.ClientStreaming.set -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.InputType.get -> string
+Google.Protobuf.Reflection.MethodDescriptorProto.InputType.set -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.MethodDescriptorProto() -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.MethodDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.Options.get -> Google.Protobuf.Reflection.MethodOptions
+Google.Protobuf.Reflection.MethodDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.OutputType.get -> string
+Google.Protobuf.Reflection.MethodDescriptorProto.OutputType.set -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ResetClientStreaming() -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ResetInputType() -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ResetOutputType() -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ResetServerStreaming() -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ServerStreaming.get -> bool
+Google.Protobuf.Reflection.MethodDescriptorProto.ServerStreaming.set -> void
+Google.Protobuf.Reflection.MethodDescriptorProto.ShouldSerializeClientStreaming() -> bool
+Google.Protobuf.Reflection.MethodDescriptorProto.ShouldSerializeInputType() -> bool
+Google.Protobuf.Reflection.MethodDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.MethodDescriptorProto.ShouldSerializeOutputType() -> bool
+Google.Protobuf.Reflection.MethodDescriptorProto.ShouldSerializeServerStreaming() -> bool
+Google.Protobuf.Reflection.MethodOptions
+Google.Protobuf.Reflection.MethodOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.MethodOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.MethodOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.MethodOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.MethodOptions.idempotency_level.get -> Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel
+Google.Protobuf.Reflection.MethodOptions.idempotency_level.set -> void
+Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel
+Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel.IdempotencyUnknown = 0 -> Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel
+Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel.Idempotent = 2 -> Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel
+Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel.NoSideEffects = 1 -> Google.Protobuf.Reflection.MethodOptions.IdempotencyLevel
+Google.Protobuf.Reflection.MethodOptions.MethodOptions() -> void
+Google.Protobuf.Reflection.MethodOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.MethodOptions.Resetidempotency_level() -> void
+Google.Protobuf.Reflection.MethodOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.MethodOptions.ShouldSerializeidempotency_level() -> bool
+Google.Protobuf.Reflection.MethodOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.OneofDescriptorProto
+Google.Protobuf.Reflection.OneofDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.OneofDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.OneofDescriptorProto.OneofDescriptorProto() -> void
+Google.Protobuf.Reflection.OneofDescriptorProto.Options.get -> Google.Protobuf.Reflection.OneofOptions
+Google.Protobuf.Reflection.OneofDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.OneofDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.OneofDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.OneofOptions
+Google.Protobuf.Reflection.OneofOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.OneofOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.OneofOptions.OneofOptions() -> void
+Google.Protobuf.Reflection.OneofOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.ServiceDescriptorProto
+Google.Protobuf.Reflection.ServiceDescriptorProto.Methods.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.MethodDescriptorProto>
+Google.Protobuf.Reflection.ServiceDescriptorProto.Name.get -> string
+Google.Protobuf.Reflection.ServiceDescriptorProto.Name.set -> void
+Google.Protobuf.Reflection.ServiceDescriptorProto.Options.get -> Google.Protobuf.Reflection.ServiceOptions
+Google.Protobuf.Reflection.ServiceDescriptorProto.Options.set -> void
+Google.Protobuf.Reflection.ServiceDescriptorProto.ResetName() -> void
+Google.Protobuf.Reflection.ServiceDescriptorProto.ServiceDescriptorProto() -> void
+Google.Protobuf.Reflection.ServiceDescriptorProto.ShouldSerializeName() -> bool
+Google.Protobuf.Reflection.ServiceOptions
+Google.Protobuf.Reflection.ServiceOptions.Deprecated.get -> bool
+Google.Protobuf.Reflection.ServiceOptions.Deprecated.set -> void
+Google.Protobuf.Reflection.ServiceOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.ServiceOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.ServiceOptions.ResetDeprecated() -> void
+Google.Protobuf.Reflection.ServiceOptions.ServiceOptions() -> void
+Google.Protobuf.Reflection.ServiceOptions.ShouldSerializeDeprecated() -> bool
+Google.Protobuf.Reflection.ServiceOptions.UninterpretedOptions.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption>
+Google.Protobuf.Reflection.SourceCodeInfo
+Google.Protobuf.Reflection.SourceCodeInfo.Location
+Google.Protobuf.Reflection.SourceCodeInfo.Location.LeadingComments.get -> string
+Google.Protobuf.Reflection.SourceCodeInfo.Location.LeadingComments.set -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Location.LeadingDetachedComments.get -> System.Collections.Generic.List<string>
+Google.Protobuf.Reflection.SourceCodeInfo.Location.Location() -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Location.Paths.get -> int[]
+Google.Protobuf.Reflection.SourceCodeInfo.Location.Paths.set -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Location.ResetLeadingComments() -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Location.ResetTrailingComments() -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Location.ShouldSerializeLeadingComments() -> bool
+Google.Protobuf.Reflection.SourceCodeInfo.Location.ShouldSerializeTrailingComments() -> bool
+Google.Protobuf.Reflection.SourceCodeInfo.Location.Spans.get -> int[]
+Google.Protobuf.Reflection.SourceCodeInfo.Location.Spans.set -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Location.TrailingComments.get -> string
+Google.Protobuf.Reflection.SourceCodeInfo.Location.TrailingComments.set -> void
+Google.Protobuf.Reflection.SourceCodeInfo.Locations.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.SourceCodeInfo.Location>
+Google.Protobuf.Reflection.SourceCodeInfo.SourceCodeInfo() -> void
+Google.Protobuf.Reflection.UninterpretedOption
+Google.Protobuf.Reflection.UninterpretedOption.AggregateValue.get -> string
+Google.Protobuf.Reflection.UninterpretedOption.AggregateValue.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.DoubleValue.get -> double
+Google.Protobuf.Reflection.UninterpretedOption.DoubleValue.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.IdentifierValue.get -> string
+Google.Protobuf.Reflection.UninterpretedOption.IdentifierValue.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.NamePart
+Google.Protobuf.Reflection.UninterpretedOption.NamePart.IsExtension.get -> bool
+Google.Protobuf.Reflection.UninterpretedOption.NamePart.IsExtension.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.NamePart.name_part.get -> string
+Google.Protobuf.Reflection.UninterpretedOption.NamePart.name_part.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.NamePart.NamePart() -> void
+Google.Protobuf.Reflection.UninterpretedOption.Names.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.UninterpretedOption.NamePart>
+Google.Protobuf.Reflection.UninterpretedOption.NegativeIntValue.get -> long
+Google.Protobuf.Reflection.UninterpretedOption.NegativeIntValue.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.PositiveIntValue.get -> ulong
+Google.Protobuf.Reflection.UninterpretedOption.PositiveIntValue.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.ResetAggregateValue() -> void
+Google.Protobuf.Reflection.UninterpretedOption.ResetDoubleValue() -> void
+Google.Protobuf.Reflection.UninterpretedOption.ResetIdentifierValue() -> void
+Google.Protobuf.Reflection.UninterpretedOption.ResetNegativeIntValue() -> void
+Google.Protobuf.Reflection.UninterpretedOption.ResetPositiveIntValue() -> void
+Google.Protobuf.Reflection.UninterpretedOption.ResetStringValue() -> void
+Google.Protobuf.Reflection.UninterpretedOption.ShouldSerializeAggregateValue() -> bool
+Google.Protobuf.Reflection.UninterpretedOption.ShouldSerializeDoubleValue() -> bool
+Google.Protobuf.Reflection.UninterpretedOption.ShouldSerializeIdentifierValue() -> bool
+Google.Protobuf.Reflection.UninterpretedOption.ShouldSerializeNegativeIntValue() -> bool
+Google.Protobuf.Reflection.UninterpretedOption.ShouldSerializePositiveIntValue() -> bool
+Google.Protobuf.Reflection.UninterpretedOption.ShouldSerializeStringValue() -> bool
+Google.Protobuf.Reflection.UninterpretedOption.StringValue.get -> byte[]
+Google.Protobuf.Reflection.UninterpretedOption.StringValue.set -> void
+Google.Protobuf.Reflection.UninterpretedOption.UninterpretedOption() -> void
+override Google.Protobuf.Reflection.DescriptorProto.ToString() -> string
+override Google.Protobuf.Reflection.EnumDescriptorProto.ToString() -> string
+override Google.Protobuf.Reflection.FieldDescriptorProto.ToString() -> string
+override Google.Protobuf.Reflection.FileDescriptorProto.ToString() -> string
+override Google.Protobuf.Reflection.MethodDescriptorProto.ToString() -> string
+override Google.Protobuf.Reflection.ServiceDescriptorProto.ToString() -> string
+override Google.Protobuf.Reflection.UninterpretedOption.NamePart.ToString() -> string
+override ProtoBuf.Reflection.CodeFile.ToString() -> string
+override ProtoBuf.Reflection.CodeGenerator.ToString() -> string
+override ProtoBuf.Reflection.CommonCodeGenerator.Generate(Google.Protobuf.Reflection.FileDescriptorSet set, ProtoBuf.Reflection.NameNormalizer normalizer = null, System.Collections.Generic.Dictionary<string, string> options = null) -> System.Collections.Generic.IEnumerable<ProtoBuf.Reflection.CodeFile>
+override ProtoBuf.Reflection.CSharpCodeGenerator.DefaultFileExtension.get -> string
+override ProtoBuf.Reflection.CSharpCodeGenerator.Escape(string identifier) -> string
+override ProtoBuf.Reflection.CSharpCodeGenerator.GetAccess(ProtoBuf.Reflection.Access access) -> string
+override ProtoBuf.Reflection.CSharpCodeGenerator.GetLanguageVersion(Google.Protobuf.Reflection.FileDescriptorProto obj) -> string
+override ProtoBuf.Reflection.CSharpCodeGenerator.Name.get -> string
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteConstructorFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteContructorHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> bool
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteEnumFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto enum, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteEnumHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto enum, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteEnumValue(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumValueDescriptorProto enum, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteExtension(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteExtensionsFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteExtensionsFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteExtensionsHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteExtensionsHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteField(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub[] oneOfs) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteFileFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteFileHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteInitField(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub[] oneOfs) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteMessageFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteMessageHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteNamespaceFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string namespace) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteNamespaceHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string namespace) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteOneOfDiscriminator(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteOneOfEnumFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteOneOfEnumHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteOneOfEnumValue(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteServiceFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.ServiceDescriptorProto service, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteServiceHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.ServiceDescriptorProto service, ref object state) -> void
+override ProtoBuf.Reflection.CSharpCodeGenerator.WriteServiceMethod(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.MethodDescriptorProto method, ref object state) -> void
+override ProtoBuf.Reflection.Error.ToString() -> string
+override ProtoBuf.Reflection.VBCodeGenerator.DefaultFileExtension.get -> string
+override ProtoBuf.Reflection.VBCodeGenerator.Escape(string identifier) -> string
+override ProtoBuf.Reflection.VBCodeGenerator.GetAccess(ProtoBuf.Reflection.Access access) -> string
+override ProtoBuf.Reflection.VBCodeGenerator.GetLanguageVersion(Google.Protobuf.Reflection.FileDescriptorProto obj) -> string
+override ProtoBuf.Reflection.VBCodeGenerator.IsCaseSensitive.get -> bool
+override ProtoBuf.Reflection.VBCodeGenerator.Name.get -> string
+override ProtoBuf.Reflection.VBCodeGenerator.WriteEnumFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto enum, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteEnumHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto enum, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteEnumValue(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumValueDescriptorProto enum, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteExtension(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteExtensionsFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteExtensionsFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteExtensionsHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteExtensionsHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteField(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub[] oneOfs) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteFileFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteFileHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteMessageFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteMessageHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteNamespaceFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string namespace) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteNamespaceHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string namespace) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteOneOfDiscriminator(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteOneOfEnumFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteOneOfEnumHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+override ProtoBuf.Reflection.VBCodeGenerator.WriteOneOfEnumValue(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state) -> void
+ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.Access.Inherit = 0 -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.Access.Internal = 3 -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.Access.Private = 2 -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.Access.Public = 1 -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.CodeFile
+ProtoBuf.Reflection.CodeFile.CodeFile(string name, string text) -> void
+ProtoBuf.Reflection.CodeFile.Name.get -> string
+ProtoBuf.Reflection.CodeFile.Text.get -> string
+ProtoBuf.Reflection.CodeGenerator
+ProtoBuf.Reflection.CodeGenerator.CodeGenerator() -> void
+ProtoBuf.Reflection.CodeGenerator.Compile(params ProtoBuf.Reflection.CodeFile[] files) -> ProtoBuf.Reflection.CompilerResult
+ProtoBuf.Reflection.CodeGenerator.Compile(ProtoBuf.Reflection.CodeFile file) -> ProtoBuf.Reflection.CompilerResult
+ProtoBuf.Reflection.CodeGenerator.Generate(Google.Protobuf.Reflection.FileDescriptorSet set, ProtoBuf.Reflection.NameNormalizer normalizer) -> System.Collections.Generic.IEnumerable<ProtoBuf.Reflection.CodeFile>
+ProtoBuf.Reflection.CommonCodeGenerator
+ProtoBuf.Reflection.CommonCodeGenerator.CommonCodeGenerator() -> void
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.EmitCompatibilityLevelAttribute.get -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.EmitListSetters.get -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.EmitNullWrappers.get -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.EmitServices.get -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.EmitServicesFor(ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds anyOf) -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.File.get -> Google.Protobuf.Reflection.FileDescriptorProto
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.GetCustomOption(string key) -> string
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.Indent() -> ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.IndentLevel.get -> int
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.IndentToken.get -> string
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.LanguageVersion.get -> System.Version
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.NameNormalizer.get -> ProtoBuf.Reflection.NameNormalizer
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.Outdent() -> ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.Output.get -> System.IO.TextWriter
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.RepeatedAsList.get -> bool
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.Syntax.get -> string
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.TryFind<T>(string typeName) -> T
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.Write(string value) -> System.IO.TextWriter
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.WriteLine() -> ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext
+ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext.WriteLine(string line) -> ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext
+ProtoBuf.Reflection.CommonCodeGenerator.GetAccess(Google.Protobuf.Reflection.DescriptorProto obj) -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.CommonCodeGenerator.GetAccess(Google.Protobuf.Reflection.EnumDescriptorProto obj) -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.CommonCodeGenerator.GetAccess(Google.Protobuf.Reflection.FieldDescriptorProto obj) -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.CommonCodeGenerator.GetAccess(Google.Protobuf.Reflection.FileDescriptorProto obj) -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.CommonCodeGenerator.GetAccess(Google.Protobuf.Reflection.ServiceDescriptorProto obj) -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub
+ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub.Index.get -> int
+ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub.OneOf.get -> Google.Protobuf.Reflection.OneofDescriptorProto
+ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds
+ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds.Grpc = 2 -> ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds
+ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds.None = 0 -> ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds
+ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds.Wcf = 1 -> ProtoBuf.Reflection.CommonCodeGenerator.ServiceKinds
+ProtoBuf.Reflection.CommonCodeGenerator.TrackFieldPresence(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub[] oneOfs, out ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub oneOf) -> bool
+ProtoBuf.Reflection.CompilerResult
+ProtoBuf.Reflection.CompilerResult.Errors.get -> ProtoBuf.Reflection.Error[]
+ProtoBuf.Reflection.CompilerResult.Files.get -> ProtoBuf.Reflection.CodeFile[]
+ProtoBuf.Reflection.CSharpCodeGenerator
+ProtoBuf.Reflection.CSharpCodeGenerator.CSharpCodeGenerator() -> void
+ProtoBuf.Reflection.CSharpCodeGenerator.MakeRelativeName(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, string typeName) -> string
+ProtoBuf.Reflection.DescriptorExtensions
+ProtoBuf.Reflection.Error
+ProtoBuf.Reflection.Error.ColumnNumber.get -> int
+ProtoBuf.Reflection.Error.ErrorNumber.get -> int
+ProtoBuf.Reflection.Error.File.get -> string
+ProtoBuf.Reflection.Error.IsError.get -> bool
+ProtoBuf.Reflection.Error.IsWarning.get -> bool
+ProtoBuf.Reflection.Error.LineContents.get -> string
+ProtoBuf.Reflection.Error.LineNumber.get -> int
+ProtoBuf.Reflection.Error.Message.get -> string
+ProtoBuf.Reflection.Error.Text.get -> string
+ProtoBuf.Reflection.Extensions
+ProtoBuf.Reflection.MessageKind
+ProtoBuf.Reflection.MessageKind.None = 0 -> ProtoBuf.Reflection.MessageKind
+ProtoBuf.Reflection.MessageKind.NullWrapper = 1 -> ProtoBuf.Reflection.MessageKind
+ProtoBuf.Reflection.NameNormalizer
+ProtoBuf.Reflection.NameNormalizer.BuildConflicts(Google.Protobuf.Reflection.DescriptorProto parent, bool includeDescendents) -> System.Collections.Generic.HashSet<string>
+ProtoBuf.Reflection.NameNormalizer.NameNormalizer() -> void
+ProtoBuf.Reflection.ProtogenEnumOptions
+ProtoBuf.Reflection.ProtogenEnumOptions.Access.get -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.ProtogenEnumOptions.Access.set -> void
+ProtoBuf.Reflection.ProtogenEnumOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenEnumOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenEnumOptions.Namespace.get -> string
+ProtoBuf.Reflection.ProtogenEnumOptions.Namespace.set -> void
+ProtoBuf.Reflection.ProtogenEnumOptions.ProtogenEnumOptions() -> void
+ProtoBuf.Reflection.ProtogenEnumValueOptions
+ProtoBuf.Reflection.ProtogenEnumValueOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenEnumValueOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenEnumValueOptions.ProtogenEnumValueOptions() -> void
+ProtoBuf.Reflection.ProtogenFieldOptions
+ProtoBuf.Reflection.ProtogenFieldOptions.Access.get -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.ProtogenFieldOptions.Access.set -> void
+ProtoBuf.Reflection.ProtogenFieldOptions.AsReference.get -> bool
+ProtoBuf.Reflection.ProtogenFieldOptions.AsReference.set -> void
+ProtoBuf.Reflection.ProtogenFieldOptions.DynamicType.get -> bool
+ProtoBuf.Reflection.ProtogenFieldOptions.DynamicType.set -> void
+ProtoBuf.Reflection.ProtogenFieldOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenFieldOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenFieldOptions.ProtogenFieldOptions() -> void
+ProtoBuf.Reflection.ProtogenFileOptions
+ProtoBuf.Reflection.ProtogenFileOptions.Access.get -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.ProtogenFileOptions.Access.set -> void
+ProtoBuf.Reflection.ProtogenFileOptions.CSharpLanguageVersion.get -> string
+ProtoBuf.Reflection.ProtogenFileOptions.CSharpLanguageVersion.set -> void
+ProtoBuf.Reflection.ProtogenFileOptions.EmitOneOfEnum.get -> bool
+ProtoBuf.Reflection.ProtogenFileOptions.EmitOneOfEnum.set -> void
+ProtoBuf.Reflection.ProtogenFileOptions.EmitRequiredDefaults.get -> bool
+ProtoBuf.Reflection.ProtogenFileOptions.EmitRequiredDefaults.set -> void
+ProtoBuf.Reflection.ProtogenFileOptions.ExtensionTypeName.get -> string
+ProtoBuf.Reflection.ProtogenFileOptions.ExtensionTypeName.set -> void
+ProtoBuf.Reflection.ProtogenFileOptions.Namespace.get -> string
+ProtoBuf.Reflection.ProtogenFileOptions.Namespace.set -> void
+ProtoBuf.Reflection.ProtogenFileOptions.ProtogenFileOptions() -> void
+ProtoBuf.Reflection.ProtogenFileOptions.VisualBasicLanguageVersion.get -> string
+ProtoBuf.Reflection.ProtogenFileOptions.VisualBasicLanguageVersion.set -> void
+ProtoBuf.Reflection.ProtogenMessageOptions
+ProtoBuf.Reflection.ProtogenMessageOptions.Access.get -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.ProtogenMessageOptions.Access.set -> void
+ProtoBuf.Reflection.ProtogenMessageOptions.ExtensionTypeName.get -> string
+ProtoBuf.Reflection.ProtogenMessageOptions.ExtensionTypeName.set -> void
+ProtoBuf.Reflection.ProtogenMessageOptions.MessageKind.get -> ProtoBuf.Reflection.MessageKind
+ProtoBuf.Reflection.ProtogenMessageOptions.MessageKind.set -> void
+ProtoBuf.Reflection.ProtogenMessageOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenMessageOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenMessageOptions.Namespace.get -> string
+ProtoBuf.Reflection.ProtogenMessageOptions.Namespace.set -> void
+ProtoBuf.Reflection.ProtogenMessageOptions.ProtogenMessageOptions() -> void
+ProtoBuf.Reflection.ProtogenMethodOptions
+ProtoBuf.Reflection.ProtogenMethodOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenMethodOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenMethodOptions.ProtogenMethodOptions() -> void
+ProtoBuf.Reflection.ProtogenOneofOptions
+ProtoBuf.Reflection.ProtogenOneofOptions.IsSubType.get -> bool
+ProtoBuf.Reflection.ProtogenOneofOptions.IsSubType.set -> void
+ProtoBuf.Reflection.ProtogenOneofOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenOneofOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenOneofOptions.ProtogenOneofOptions() -> void
+ProtoBuf.Reflection.ProtogenServiceOptions
+ProtoBuf.Reflection.ProtogenServiceOptions.Access.get -> ProtoBuf.Reflection.Access
+ProtoBuf.Reflection.ProtogenServiceOptions.Access.set -> void
+ProtoBuf.Reflection.ProtogenServiceOptions.Name.get -> string
+ProtoBuf.Reflection.ProtogenServiceOptions.Name.set -> void
+ProtoBuf.Reflection.ProtogenServiceOptions.ProtogenServiceOptions() -> void
+ProtoBuf.Reflection.VBCodeGenerator
+ProtoBuf.Reflection.VBCodeGenerator.VBCodeGenerator() -> void
+static Google.Protobuf.Reflection.DescriptorProto.GetExtensionData(ProtoBuf.IExtensible obj) -> byte[]
+static Google.Protobuf.Reflection.DescriptorProto.SetExtensionData(ProtoBuf.IExtensible obj, byte[] data) -> void
+static ProtoBuf.Reflection.CSharpCodeGenerator.Default.get -> ProtoBuf.Reflection.CSharpCodeGenerator
+static ProtoBuf.Reflection.DescriptorExtensions.GetEnumType(this Google.Protobuf.Reflection.FieldDescriptorProto field) -> Google.Protobuf.Reflection.EnumDescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetFullyQualifiedName(this Google.Protobuf.Reflection.DescriptorProto message) -> string
+static ProtoBuf.Reflection.DescriptorExtensions.GetFullyQualifiedName(this Google.Protobuf.Reflection.EnumDescriptorProto enum) -> string
+static ProtoBuf.Reflection.DescriptorExtensions.GetMessageType(this Google.Protobuf.Reflection.FieldDescriptorProto field) -> Google.Protobuf.Reflection.DescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentFile(this Google.Protobuf.Reflection.DescriptorProto message) -> Google.Protobuf.Reflection.FileDescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentFile(this Google.Protobuf.Reflection.EnumDescriptorProto enum) -> Google.Protobuf.Reflection.FileDescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentFile(this Google.Protobuf.Reflection.ServiceDescriptorProto service) -> Google.Protobuf.Reflection.FileDescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentFileSet(this Google.Protobuf.Reflection.FileDescriptorProto file) -> Google.Protobuf.Reflection.FileDescriptorSet
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentMessageType(this Google.Protobuf.Reflection.DescriptorProto message) -> Google.Protobuf.Reflection.DescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentMessageType(this Google.Protobuf.Reflection.EnumDescriptorProto enum) -> Google.Protobuf.Reflection.DescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentMessageType(this Google.Protobuf.Reflection.FieldDescriptorProto field) -> Google.Protobuf.Reflection.DescriptorProto
+static ProtoBuf.Reflection.DescriptorExtensions.GetParentService(this Google.Protobuf.Reflection.MethodDescriptorProto method) -> Google.Protobuf.Reflection.ServiceDescriptorProto
+static ProtoBuf.Reflection.Error.Parse(string stdout, string stderr) -> ProtoBuf.Reflection.Error[]
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.EnumOptions obj) -> ProtoBuf.Reflection.ProtogenEnumOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.EnumValueOptions obj) -> ProtoBuf.Reflection.ProtogenEnumValueOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.FieldOptions obj) -> ProtoBuf.Reflection.ProtogenFieldOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.FileOptions obj) -> ProtoBuf.Reflection.ProtogenFileOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.MessageOptions obj) -> ProtoBuf.Reflection.ProtogenMessageOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.MethodOptions obj) -> ProtoBuf.Reflection.ProtogenMethodOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.OneofOptions obj) -> ProtoBuf.Reflection.ProtogenOneofOptions
+static ProtoBuf.Reflection.Extensions.GetOptions(this Google.Protobuf.Reflection.ServiceOptions obj) -> ProtoBuf.Reflection.ProtogenServiceOptions
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.EnumOptions obj, ProtoBuf.Reflection.ProtogenEnumOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.EnumValueOptions obj, ProtoBuf.Reflection.ProtogenEnumValueOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.FieldOptions obj, ProtoBuf.Reflection.ProtogenFieldOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.FileOptions obj, ProtoBuf.Reflection.ProtogenFileOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.MessageOptions obj, ProtoBuf.Reflection.ProtogenMessageOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.MethodOptions obj, ProtoBuf.Reflection.ProtogenMethodOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.OneofOptions obj, ProtoBuf.Reflection.ProtogenOneofOptions value) -> void
+static ProtoBuf.Reflection.Extensions.SetOptions(this Google.Protobuf.Reflection.ServiceOptions obj, ProtoBuf.Reflection.ProtogenServiceOptions value) -> void
+static ProtoBuf.Reflection.NameNormalizer.AutoCapitalize(string identifier) -> string
+static ProtoBuf.Reflection.NameNormalizer.AutoPluralize(string identifier) -> string
+static ProtoBuf.Reflection.NameNormalizer.Default.get -> ProtoBuf.Reflection.NameNormalizer
+static ProtoBuf.Reflection.NameNormalizer.NoPlural.get -> ProtoBuf.Reflection.NameNormalizer
+static ProtoBuf.Reflection.NameNormalizer.Null.get -> ProtoBuf.Reflection.NameNormalizer
+static ProtoBuf.Reflection.VBCodeGenerator.Default.get -> ProtoBuf.Reflection.VBCodeGenerator
+virtual ProtoBuf.Reflection.CommonCodeGenerator.GetAccess(ProtoBuf.Reflection.Access access) -> string
+virtual ProtoBuf.Reflection.CommonCodeGenerator.GetLanguageVersion(Google.Protobuf.Reflection.FileDescriptorProto obj) -> string
+virtual ProtoBuf.Reflection.CommonCodeGenerator.Indent.get -> string
+virtual ProtoBuf.Reflection.CommonCodeGenerator.IsCaseSensitive.get -> bool
+virtual ProtoBuf.Reflection.CommonCodeGenerator.ShouldOmitMessage(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> bool
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteConstructorFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteContructorHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> bool
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteEnum(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.EnumDescriptorProto obj) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteExtension(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteExtensionsFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteExtensionsFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteExtensionsHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteExtensionsHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteFile(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteFileFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteFileHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FileDescriptorProto file, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteInitField(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub[] oneOfs) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteMessage(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.DescriptorProto message) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteOneOf(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, ProtoBuf.Reflection.CommonCodeGenerator.OneOfStub stub) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteOneOfDiscriminator(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteOneOfEnumFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteOneOfEnumHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.OneofDescriptorProto oneof, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteOneOfEnumValue(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.FieldDescriptorProto field, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteService(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.ServiceDescriptorProto service) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteServiceFooter(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.ServiceDescriptorProto service, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteServiceHeader(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.ServiceDescriptorProto service, ref object state) -> void
+virtual ProtoBuf.Reflection.CommonCodeGenerator.WriteServiceMethod(ProtoBuf.Reflection.CommonCodeGenerator.GeneratorContext ctx, Google.Protobuf.Reflection.MethodDescriptorProto method, ref object state) -> void
+virtual ProtoBuf.Reflection.CSharpCodeGenerator.UseArray(Google.Protobuf.Reflection.FieldDescriptorProto field) -> bool
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.DescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.DescriptorProto parent, string preferred, string fallback, bool includeDescendents) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.EnumDescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.EnumValueDescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.FieldDescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.FileDescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.MethodDescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.OneofDescriptorProto definition) -> string
+virtual ProtoBuf.Reflection.NameNormalizer.GetName(Google.Protobuf.Reflection.ServiceDescriptorProto definition) -> string

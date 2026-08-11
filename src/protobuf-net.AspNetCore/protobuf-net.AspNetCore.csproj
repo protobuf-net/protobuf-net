@@ -13,4 +13,14 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
   </ItemGroup>
+  <ItemGroup Label="public API tracking">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <!-- APIs for all target frameworks -->
+    <AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+    <!-- progressively additive APIs in later frameworks; each folder is effectively NET_X_Y_OR_GREATER -->
+    <AdditionalFiles Include="PublicAPI/netstandard2.1/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.1'))" />
+    <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+    <!-- net4x-only surface (e.g. persist-to-dll) -->
+    <AdditionalFiles Include="PublicAPI/net462/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net462'))" />
+  </ItemGroup>
 </Project>

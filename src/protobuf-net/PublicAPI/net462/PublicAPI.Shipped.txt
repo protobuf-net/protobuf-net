@@ -1,0 +1,1 @@
+ProtoBuf.Meta.RuntimeTypeModel.Compile(string name, string path) -> ProtoBuf.Meta.TypeModel

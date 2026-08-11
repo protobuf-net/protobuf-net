@@ -1,0 +1,4 @@
+ProtoBuf.ProtoReader.State.ReadIntPtr() -> System.IntPtr
+ProtoBuf.ProtoReader.State.ReadUIntPtr() -> System.UIntPtr
+ProtoBuf.ProtoWriter.State.WriteIntPtr(System.IntPtr value) -> void
+ProtoBuf.ProtoWriter.State.WriteUIntPtr(System.UIntPtr value) -> void
