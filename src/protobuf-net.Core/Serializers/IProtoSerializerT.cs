@@ -391,7 +391,29 @@ namespace ProtoBuf.Serializers
             // what they asked for)
             var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
 
-            if (_value is not null) typed = Merge(_context, _value, typed);
+            if (_value is not null)
+            {
+                // The merge below round-trips the existing value into the new one, and that only
+                // means anything when we are *specialising*: an Animal already read at the base
+                // layer being upgraded to a Dog. Two unrelated sub-types of one base cannot merge,
+                // and attempting it does not fail - it ping-pongs. Serializing the Dog as <object>
+                // re-encodes its sub-type marker, which deserializes into the Cat, which calls
+                // ReadSubType<Dog> with the Cat as the existing value, and back again: each hop
+                // swaps which side is "existing", so it never converges and the stack dies.
+                //
+                // Reachable from a payload carrying one field twice with two different sub-type
+                // markers, i.e. from untrusted input, and StackOverflowException cannot be caught.
+                // So: refuse it, and say what is wrong.
+                if (!_value.GetType().IsAssignableFrom(typeof(T)))
+                {
+                    ThrowHelper.ThrowInvalidOperationException(
+                        $"Cannot merge a '{_value.GetType().NormalizeName()}' into a '{typeof(T).NormalizeName()}': "
+                        + "they are different sub-types of the same base, so neither is a specialisation of "
+                        + "the other. This usually means the payload declares the same field more than once "
+                        + "with conflicting sub-type markers.");
+                }
+                typed = Merge(_context, _value, typed);
+            }
             _onBeforeDeserialize?.Invoke(typed, _context);
             _value = typed;
             return typed;

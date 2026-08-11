@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
+using ProtoBuf.BuildTools.Internal;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -109,6 +110,10 @@ namespace ProtoBuf.BuildTools.Analyzers
 
             ctx.RegisterCompilationStartAction(static compilationStart =>
             {
+                // first, and before any symbol work: one property lookup is the whole cost of having
+                // the tooling installed but not wanted
+                if (compilationStart.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+
                 var models = FindModels(compilationStart.Compilation, out var hasContracts);
                 if (models.IsEmpty)
                 {

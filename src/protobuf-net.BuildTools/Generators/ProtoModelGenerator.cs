@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ProtoBuf.BuildTools.Internal;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
@@ -80,9 +81,16 @@ namespace ProtoBuf.BuildTools.Generators
                 .Select(static (result, _) => result?.Diagnostics ?? default)
                 .WithTrackingName(DiagnosticTrackingName);
 
-            context.RegisterSourceOutput(diagnostics, static (ctx, items) =>
+            // the opt-out. Note the parse above is already near-free when unwanted -
+            // ForAttributeWithMetadataName only fires for a type carrying [ProtoModel] - so this is
+            // about honouring the switch completely rather than about cost
+            var disabled = context.AnalyzerConfigOptionsProvider.Select(static (options, _)
+                => options.BuildToolsDisabled());
+
+            context.RegisterSourceOutput(diagnostics.Combine(disabled), static (ctx, pair) =>
             {
-                foreach (var item in items) ctx.ReportDiagnostic(ToDiagnostic(item));
+                if (pair.Right) return;
+                foreach (var item in pair.Left) ctx.ReportDiagnostic(ToDiagnostic(item));
             });
 
             var languageVersion = context.ParseOptionsProvider.Select(static (options, _)
@@ -90,9 +98,10 @@ namespace ProtoBuf.BuildTools.Generators
                     ? cs.LanguageVersion.MapSpecifiedToEffectiveVersion()
                     : LanguageVersion.Default);
 
-            context.RegisterSourceOutput(models.Combine(languageVersion), static (ctx, pair) =>
+            context.RegisterSourceOutput(models.Combine(languageVersion).Combine(disabled), static (ctx, outer) =>
             {
-                var (plan, languageVersion) = pair;
+                if (outer.Right) return;
+                var (plan, languageVersion) = outer.Left;
                 if (plan is null) return;
 
                 if (languageVersion < MinimumLanguageVersion)

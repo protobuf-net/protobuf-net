@@ -232,8 +232,19 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(context => ConsiderPossibleProtoBufType(ref context), s_syntaxKinds);
-            ctx.RegisterCompilationAction(context => ConsiderCompilation(ref context));
+            // the disable switch is read per-callback rather than once, because AnalysisContext has
+            // no compilation-start hook here; it is a dictionary lookup, which is cheap enough to be
+            // the first thing either callback does
+            ctx.RegisterSyntaxNodeAction(context =>
+            {
+                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                ConsiderPossibleProtoBufType(ref context);
+            }, s_syntaxKinds);
+            ctx.RegisterCompilationAction(context =>
+            {
+                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                ConsiderCompilation(ref context);
+            });
         }
 
         private void ConsiderCompilation(ref CompilationAnalysisContext context)

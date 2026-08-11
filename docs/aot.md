@@ -59,6 +59,13 @@ The trigger attributes are `[Experimental]` with the id `PBN9001`, so you must s
 </PropertyGroup>
 ```
 
+If you want none of this — no analyzers, no generators — one property turns off everything
+`protobuf-net.BuildTools` does, and is checked before any work happens:
+
+``` xml
+<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>
+```
+
 ## Requirements
 
 - **C# 12 or later.** Below that the generator reports `PBN2000` and emits nothing, rather than

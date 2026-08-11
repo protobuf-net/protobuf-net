@@ -185,6 +185,22 @@ Design constraints that are settled, and should not be quietly relaxed:
   versions multiplies every emitted construct for no benefit to anyone doing AOT. (netstandard2.0
   and net4x default to C# 7.3, so those consumers must set `<LangVersion>` — accepted deliberately.)
 
+### One switch to decline all of it
+
+`<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>` (surfaced as
+`build_property.ProtoBufDisableBuildTools`, see `Literals.DisableProperty`) turns off every analyzer
+and generator here. It exists so that shipping the tooling *by default* is cheap to decline, which is
+the thing that makes shipping-by-default arguable at all.
+
+**Check it first, before any symbol work** — `Utils.BuildToolsDisabled()` is the shared helper, and
+every entry point calls it as its opening line: both analyzers, `ProtoFileGenerator.Execute`, and
+`ProtoModelGenerator`'s two source outputs. The promise is that being installed-but-unwanted costs one
+dictionary lookup, so anything added here has to keep it.
+
+Note `ProtoModelGenerator`'s parse was already near-free when unwanted, since
+`ForAttributeWithMetadataName` only fires for a type carrying `[ProtoModel]`; gating it is about
+honouring the switch completely rather than about cost.
+
 ### The migration analyzer
 
 `AotMigrationAnalyzer` (`PBN2010`/`PBN2011`) exists because turning the generator on **moves no
