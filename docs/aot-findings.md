@@ -648,10 +648,15 @@ survives, not as a commitment.
    and `PBN2012`/`PBN2013` announce the feature to a project that has contracts and no model, with
    `AddProtoModelCodeFixProvider` offering to write the stub. The reasoning behind the severity split
    is under "Future ideas".
-3. ~~**Ship `protobuf-net.BuildTools` by default.**~~ **Done** — packed into `protobuf-net` as
-   `analyzers/dotnet/cs` plus `build/protobuf-net.props`. The severity audit that gated it is done
-   (three false positives found and fixed), and `ProtoBufDisableBuildTools` makes declining it one
-   property.
+3. ~~**Ship `protobuf-net.BuildTools` by default.**~~ **Done** — packed into `protobuf-net.Core` as
+   `analyzers/dotnet/cs` plus `build/protobuf-net.Core.props` (originally into `protobuf-net`; moved
+   down so a generated model needs no `RuntimeTypeModel` reference at all). protobuf-net opens its
+   Core dependency edge with `PrivateAssets="none"` — NuGet's default edge excludes `Build,Analyzers`,
+   which would otherwise stop the tooling and the disable switch reaching transitive consumers; all
+   four reference shapes (Core-only, protobuf-net-only, both, legacy BuildTools alongside) were
+   verified against packed nupkgs, including the disable switch on the transitive path. The severity
+   audit that gated it is done (three false positives found and fixed), and
+   `ProtoBufDisableBuildTools` makes declining it one property.
 
    **The build-time cost is measured, and it is below the noise floor.** `Examples` is the largest
    project here — 34k lines, and the corpus sweep counts ~1400 contracts across the three test

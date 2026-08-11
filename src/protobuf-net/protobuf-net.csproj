@@ -19,29 +19,11 @@
     <PackageReference Include="System.Reflection.Emit.Lightweight" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
-  </ItemGroup>
-
-  <!-- Ship the build-time tooling with the library rather than as an opt-in package: the analyzers
-       and the AOT generator are only useful if they are present, and a feature nobody can find is a
-       feature nobody uses. Declining is one property - see ProtoBufDisableBuildTools - which is what
-       makes shipping it by default reasonable.
-
-       ReferenceOutputAssembly="false": we need it *built* (for the pack below), but protobuf-net must
-       not reference an analyzer assembly that compiles in Core's own sources. No cycle either way -
-       BuildTools includes Core's sources rather than referencing the project. -->
-  <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj"
-                      ReferenceOutputAssembly="false" PrivateAssets="all" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\protobuf-net.BuildTools\bin\$(Configuration)\netstandard2.0\protobuf-net.BuildTools.dll"
-          Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <!-- renamed on the way in: a package's build props is auto-imported only when it is named after
-         the package, so protobuf-net.BuildTools.props has to arrive here as protobuf-net.props -->
-    <None Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.props"
-          Pack="true" PackagePath="build/protobuf-net.props" Visible="false" />
+    <!-- PrivateAssets="none": the build-time tooling ships inside protobuf-net.Core (see there), and
+         NuGet's default dependency edge excludes Build,Analyzers - which would stop the tooling
+         reaching anyone who references protobuf-net without an explicit protobuf-net.Core ref.
+         Opening this edge is what makes the tooling flow transitively. -->
+    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" PrivateAssets="none" />
   </ItemGroup>
 
   <ItemGroup>
