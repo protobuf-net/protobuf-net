@@ -295,7 +295,11 @@ public class Foo
 }
 ");
             var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.DeclaredAndIgnored);
-            Assert.Equal(DiagnosticSeverity.Error, diag.Severity);
+            // Warning rather than Error, deliberately: [ProtoPartialIgnore] wins over everything,
+            // including a [ProtoMember] the member declares itself, so this shape has *defined*
+            // behaviour and builds working code. Worth flagging as a contradiction; not worth
+            // breaking a build over. Partial.input.cs relies on that same precedence.
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
             Assert.Equal($"The member 'A' is marked to be ignored; additional annotations will be ignored.", diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
@@ -889,6 +893,43 @@ public class Bar : System.Collections.Generic.List<int>
     [ProtoMember(1)] public string Name {get;set;}
 }");
             Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNonDerived);
+        }
+
+        /// <summary>
+        /// `[DataContract]` and `[XmlType]` are contract markers in their own right, and the families
+        /// *mix*: a `[DataContract]` type may pin one member with `[ProtoMember]` and let
+        /// `[DataMember(Order)]` supply the rest. protobuf-net honours both — verified by serializing
+        /// this shape, which gives field 1 from the DataMember and field 3 from the ProtoMember — so
+        /// PBN0009's "additional annotations will be ignored" was both false and, as an error, a
+        /// build break for working code.
+        /// </summary>
+        [Fact]
+        public async Task MixedContractFamiliesAreNotReported()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using System.Runtime.Serialization;
+[DataContract]
+public class Mixed
+{
+    [ProtoMember(3)] public int Pinned { get; set; }
+    [DataMember(Order = 1)] public int Ordered { get; set; }
+}");
+            Assert.Empty(diagnostics.Where(x => x.Id == "PBN0009"));
+        }
+
+        /// <summary>...but a type with no contract marker at all really does ignore them.</summary>
+        [Fact]
+        public async Task AnnotationsWithNoContractMarkerAtAllAreStillAnError()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+public class NoContract
+{
+    [ProtoMember(1)] public int Nope { get; set; }
+}");
+            var hit = Assert.Single(diagnostics.Where(x => x.Id == "PBN0009"));
+            Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Error, hit.Severity);
         }
     }
 }

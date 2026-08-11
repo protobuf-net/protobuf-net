@@ -73,12 +73,16 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
+                    // Warning, not Error: MetaType *defines* the resolution - the first declaration to pin a
+            // tag wins - so this is "you probably did not mean this", not "this is broken".
+            // Partial.input.cs suppresses it precisely in order to pin that precedence, which is
+            // evidence enough that the shape has defined behaviour.
+internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
             id: "PBN0008",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateMemberName),
             messageFormat: "The underlying member '{0}' is described multiple times.",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new(
@@ -89,12 +93,15 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
+                    // Warning, not Error: [ProtoPartialIgnore] wins over everything, including a [ProtoMember]
+            // the member declares itself (ApplyDefaultBehaviour tests it first). Deterministic, and
+            // pinned by Partial.input.cs - so a contradiction worth flagging, not a build break.
+internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             id: "PBN0010",
             title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredAndIgnored),
             messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored.",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor DuplicateInclude = new(
@@ -406,6 +413,13 @@ namespace ProtoBuf.BuildTools.Analyzers
                 {
                     case nameof(ProtoContractAttribute) when ac.InProtoBufNamespace():
                         Context().SetContract(type, attrib);
+                        break;
+                    // [DataContract] and [XmlType] are contract markers in their own right
+                    // (MetaType.GetContractFamily), and the families mix - so ProtoBuf annotations on
+                    // one of these are honoured, not ignored, and must not be reported as an error
+                    case "DataContractAttribute" when ac.InNamespace("System", "Runtime", "Serialization"):
+                    case "XmlTypeAttribute" when ac.InNamespace("System", "Xml", "Serialization"):
+                        Context().SetOtherContractFamily();
                         break;
                     case nameof(ProtoIncludeAttribute) when ac.InProtoBufNamespace():
                         Context().AddInclude(type, attrib);

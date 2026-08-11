@@ -166,7 +166,11 @@ namespace ProtoBuf.BuildTools.Internal
 
             if (!(_members is not null || _includes is not null || _reservations is not null || _ignores is not null)) return;
 
-            if (!HasFlag(DataContractContextFlags.IsProtoContract))
+            // ...but only when there is no contract marker *at all*: with [DataContract] or [XmlType]
+            // present the ProtoBuf annotations are honoured rather than ignored, so saying otherwise
+            // is both wrong and, as an error, a build break for a shape that works
+            if (!HasFlag(DataContractContextFlags.IsProtoContract)
+                && !HasFlag(DataContractContextFlags.HasOtherContractFamily))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     descriptor: DataContractAnalyzer.ShouldBeProtoContract,
@@ -616,6 +620,8 @@ namespace ProtoBuf.BuildTools.Internal
             .FirstOrDefault(attrib => attrib.AttributeClass != null
                 && attrib.AttributeClass.Name == nameof(DefaultValueAttribute)
                 && attrib.AttributeClass.InNamespace(nameof(System), nameof(System.ComponentModel))) as AttributeData;
+
+        internal void SetOtherContractFamily() => _flags |= DataContractContextFlags.HasOtherContractFamily;
 
         internal void SetContract(ISymbol blame, AttributeData attrib)
         {

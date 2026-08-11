@@ -47,8 +47,9 @@ MyModel.Instance.Serialize(stream, order);
 var clone = MyModel.Instance.Deserialize<Order>(stream);
 ```
 
-You only need to name your **roots**. Everything reachable from a seed — member types, collection
-elements, map keys and values, `[ProtoInclude]` sub-types — is pulled in automatically.
+You only need to name your **top-level types** — the ones you serialize directly. Everything
+reachable from those is included automatically: member types, collection elements, map keys and
+values, `[ProtoInclude]` sub-types.
 
 The trigger attributes are `[Experimental]` with the id `PBN9001`, so you must suppress it:
 
@@ -164,7 +165,7 @@ put `[ProtoModel]` in the same project. Source generators all run against the sa
 and never see each other's output, so the model finds nothing to serialize.
 
 Put the `.proto` and its generated DTOs in one project, and reference it from the project holding the
-model. The generator reports `PBN2002` with this explanation if it sees an unresolved seed.
+model. The generator reports `PBN2002` with this explanation if it cannot resolve a type you listed.
 
 ### Two references that declare the same type
 

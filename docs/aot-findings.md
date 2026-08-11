@@ -598,9 +598,35 @@ survives, not as a commitment.
    hierarchies, `PBN0015` on surrogated types), both fixed here, and neither was found by anything
    other than trying the shapes.
 
-   So the order is: audit those eleven first — keep `Error` only where the shape genuinely cannot
-   work at run time, demote the rest to `Warning` — and only then flip the default. Worth checking
-   the build-time cost on a large project at the same time, since it would then be paid by everyone.
+   **The audit is done**, against the bar "for an error, be *confident* it is actively wrong;
+   otherwise narrow it or downgrade it". It found a third false positive and two over-reaches, and
+   eight of the eleven survive:
+
+   - **`PBN0009` was wrong, and demonstrably so.** It fired on any type carrying ProtoBuf annotations
+     without `[ProtoContract]` — but `[DataContract]` and `[XmlType]` are contract markers in their
+     own right and the families **mix**, which `MetaType` supports deliberately. A `[DataContract]`
+     type pinning one member with `[ProtoMember]` is valid, working code, and it was a **build
+     error** saying "additional annotations will be ignored". Probed rather than argued: with the
+     rule suppressed, that shape serializes as `08-05-18-07` — field 1 from the `[DataMember]`, field
+     3 from the `[ProtoMember]` — so the message was simply false. Now narrowed to fire only when
+     there is no contract marker *at all*, which is a case where the annotations really are ignored,
+     silently, and an error is right.
+   - **`PBN0008` and `PBN0010` downgraded to `Warning`.** Both describe *contradictions* whose
+     resolution `MetaType` defines — the first declaration to pin a tag wins; `[ProtoPartialIgnore]`
+     beats everything. The code builds and behaves deterministically, so they are "you probably did
+     not mean this", not "this is broken". The clinching evidence is our own `Partial.input.cs`,
+     which `#pragma`-suppresses both *in order to pin that precedence*: a rule you have to switch off
+     to document the behaviour it describes is not an error.
+   - The other eight stand: invalid or duplicate field numbers, an unresolvable member name, a
+     duplicate or non-deriving `[ProtoInclude]`, a missing constructor, an unsupported enum value.
+     Each is a shape protobuf-net refuses at run time. `PBN0015` was already correctly narrowed
+     (abstract, `SkipConstructor` and surrogate are all exempt), which is worth noting as the pattern
+     to follow rather than a lucky escape.
+
+   Three false positives found among eleven error-severity rules, all of the same shape — a rule that
+   knows about one way of writing something and treats the others as mistakes. Worth remembering
+   before shipping this by default, and worth checking the build-time cost on a large project at the
+   same time, since it would then be paid by everyone.
 
 4. ~~**An "announce" diagnostic for discoverability.**~~ **Done** — `PBN2012` (warning, for a project
    that has asked for AOT) and `PBN2013` (info, on cold-start grounds, for everyone else). The

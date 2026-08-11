@@ -9,9 +9,9 @@ PBN0004  | Usage    | Warning  | Reserved field name
 PBN0005  | Usage    | Warning  | Reserved field number
 PBN0006  | Usage    | Warning  | Duplicated field name
 PBN0007  | Usage    | Info     | Overlapping reservation
-PBN0008  | Usage    | Error    | Member described multiple times
+PBN0008  | Usage    | Warning   | Member described multiple times
 PBN0009  | Usage    | Error    | Type not marked as proto-contract
-PBN0010  | Usage    | Error    | Member described and ignored
+PBN0010  | Usage    | Warning   | Member described and ignored
 PBN0011  | Usage    | Error    | Duplicate include
 PBN0012  | Usage    | Error    | Include of non-derived type
 PBN0013  | Usage    | Warning  | Include not declared
