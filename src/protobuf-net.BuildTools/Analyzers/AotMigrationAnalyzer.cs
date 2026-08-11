@@ -39,7 +39,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             title: "Call uses the runtime model, not the AOT model",
             messageFormat: "'{0}' serializes through the runtime model, which reflects and so does not "
                 + "work under native AOT; this project declares {1}, so call it on that instead "
-                + "(for example '{2}.{3}').",
+                + "(for example '{2}.Instance.{3}').",
             category: "ProtoBuf",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -273,9 +273,12 @@ namespace ProtoBuf.BuildTools.Analyzers
                 .Add(ModelsProperty, string.Join(";", models.Select(static m
                     => m.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))));
 
+            // the example names the generated static accessor - Model.Instance.Serialize - which is
+            // the one form guaranteed to exist and compile; a first cut camel-cased the model name
+            // into an imaginary local ('protoModel.Serialize'), which existed nowhere
             context.ReportDiagnostic(Diagnostic.Create(
                 UsesRuntimeModel, operation.Syntax.GetLocation(), properties, name, which,
-                ToCamel(models[0].Name), method.Name));
+                models[0].Name, method.Name));
         }
 
         /// <summary>
@@ -304,7 +307,5 @@ namespace ProtoBuf.BuildTools.Analyzers
             } && property.ContainingType?.ToDisplayString() == RuntimeTypeModelType;
         }
 
-        private static string ToCamel(string name)
-            => name.Length == 0 ? name : char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 }

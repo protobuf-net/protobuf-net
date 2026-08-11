@@ -20,6 +20,11 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   `protobuf-net.BuildTools` package alongside remains harmless
 - **fix**: `protobuf-net.NodaTime` did not produce a package from a plain build (missing
   `GeneratePackageOnBuild`), and packed with a placeholder description
+- **fix**: `PBN2010`'s example now shows `Model.Instance.Serialize` — the generated accessor that
+  actually exists — rather than an imaginary camel-cased local
+- **fix**: the "add an AOT model" code fix now generates the model as `internal` (a fixer should not
+  add to the public surface) and inside the project's namespace (or the anchor contract's), rather
+  than a `public` type in the global root
 
 ## 3.3.0
 

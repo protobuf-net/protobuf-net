@@ -63,18 +63,45 @@ namespace ProtoBuf.CodeFixes
         {
             _ = cancellationToken;
             var name = contract.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            var source = $@"using ProtoBuf;
-using ProtoBuf.Meta;
 
-// Compile-time serializers for this project. Name the types you serialize *directly*; everything
+            // the project's own namespace, falling back to the anchor contract's: the model must not
+            // land in the global root just because a fixer wrote it. DefaultNamespace is null outside
+            // IDE-shaped hosts, which is what the fallback is for.
+            var ns = project.DefaultNamespace;
+            if (string.IsNullOrEmpty(ns) && contract.ContainingNamespace is { IsGlobalNamespace: false } containing)
+            {
+                ns = containing.ToDisplayString();
+            }
+
+            // internal, deliberately: a serialization model is project infrastructure, and a fixer
+            // should not add to the public surface. Block-scoped namespace, so the output parses at
+            // whatever LangVersion the project is on.
+            const string Comment = @"// Compile-time serializers for this project. Name the types you serialize *directly*; everything
 // reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
 // sub-types - is included automatically.
 //
 // See https://protobuf-net.github.io/protobuf-net/aot
-[ProtoModel]
+";
+            var source = string.IsNullOrEmpty(ns)
+                ? $@"using ProtoBuf;
+using ProtoBuf.Meta;
+
+{Comment}[ProtoModel]
 [ProtoSerializable(typeof({name}))]
-public partial class ProtoModel : TypeModel
+internal partial class ProtoModel : TypeModel
 {{
+}}
+"
+                : $@"using ProtoBuf;
+using ProtoBuf.Meta;
+
+{Comment}namespace {ns}
+{{
+    [ProtoModel]
+    [ProtoSerializable(typeof({name}))]
+    internal partial class ProtoModel : TypeModel
+    {{
+    }}
 }}
 ";
             // a unique name, so the fix is safe to apply in a project that already has a ProtoModel.cs
