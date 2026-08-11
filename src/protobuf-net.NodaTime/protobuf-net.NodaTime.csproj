@@ -5,6 +5,9 @@
     <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.Meta</RootNamespace>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>protobuf-net.NodaTime</Title>
+    <Description>NodaTime support for protobuf-net: serializes Instant, Duration etc as the protobuf well-known types</Description>
   </PropertyGroup>
 
   <ItemGroup>

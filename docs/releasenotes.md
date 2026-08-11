@@ -12,6 +12,15 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - future: protogen support for emitting pre-coded custom serializers
 
+## unreleased
+
+- the build-time tooling now ships inside **protobuf-net.Core** rather than protobuf-net, so
+  compile-time serialization works with only a Core reference; it still reaches consumers who
+  reference only protobuf-net (the dependency edge forwards it), and the legacy
+  `protobuf-net.BuildTools` package alongside remains harmless
+- **fix**: `protobuf-net.NodaTime` did not produce a package from a plain build (missing
+  `GeneratePackageOnBuild`), and packed with a placeholder description
+
 ## 3.3.0
 
 - **compile-time serializers, for native AOT and trimming** ([docs](https://protobuf-net.github.io/protobuf-net/aot)):
