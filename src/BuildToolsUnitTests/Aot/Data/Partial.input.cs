@@ -13,6 +13,11 @@ namespace AotFixtures.Partial;
 [ProtoPartialMember(3, nameof(Described.Fixed), DataFormat = DataFormat.FixedSize)]
 [ProtoPartialMember(4, nameof(Described.Always), IsRequired = true)]
 [ProtoPartialMember(5, nameof(Described.Values), IsPacked = true)]
+// OverwriteList was refused here until MetaType stopped reading it from the wrong attribute map -
+// it read the member's own [ProtoMember], which is necessarily null in that branch, so it was
+// silently ignored. Both paths honour it now, and the differential compares the merge rather than
+// taking it on trust: RepeatedFieldOccurrencesMergeIdentically is what exercises it.
+[ProtoPartialMember(6, nameof(Described.Replaced), OverwriteList = true)]
 public class Described
 {
     public int Id { get; set; }
@@ -20,6 +25,7 @@ public class Described
     public int Fixed { get; set; }
     public int Always { get; set; }
     public int[] Values { get; set; }
+    public int[] Replaced { get; set; }
 }
 
 // the member's own [ProtoMember] wins: NormalizeProtoMember only consults the partial list when the
@@ -66,6 +72,9 @@ public class Mixed
     [DataMember(Order = 2)] public int OrderOnly { get; set; }
 }
 
+// OverwriteList on a partial member: silently ignored by MetaType until the `attrib`/`ppma` mix-up
+// was fixed, so the generator refused it rather than merge differently from ref-emit. Both honour it
+// now, and the differential compares the merge behaviour rather than taking it on trust.
 public static class PartialSamples
 {
     public static object[] Values =>

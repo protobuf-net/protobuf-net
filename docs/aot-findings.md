@@ -11,10 +11,10 @@ native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading th
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
 index. **Still outstanding, and candidates to raise against protobuf-net:** 3 (one trim
 warning that needs the annotation on every consumer; see Future Ideas A2 for the measured
-breakdown), 5 (pre-existing test failures on `main`), 7 (`[ProtoPartialMember(OverwriteList)]`
-ignored), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
+breakdown), 5 (pre-existing test failures on `main`), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
 key/value). **Resolved in place:** 1 (the sibling sub-type stack overflow, now a
-catchable exception), 2 (`AppendValue`, now loud rather than silent), 4 (a misplaced annotation on the transport type parameter — 808 KB
+catchable exception), 2 (`AppendValue`, now loud rather than silent), 7 (`OverwriteList` on a partial
+member, a one-token bug in `MetaType`), 4 (a misplaced annotation on the transport type parameter — 808 KB
 of the native binary, the largest single win here), 6 and 9 (analyzer false positives, fixed here), 8 (was the
 harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
 differential's status, currently clean).
@@ -237,7 +237,7 @@ adding an immutable surrogated type to a fixture and watching `AotConformanceTes
 compile. The fix is a new `DataContractContextFlags.HasSurrogate`, set from the attribute and
 checked alongside `SkipConstructor`.
 
-### 7. `[ProtoPartialMember(OverwriteList = ...)]` is silently ignored
+### 7. `[ProtoPartialMember(OverwriteList = ...)]` is silently ignored — **fixed**
 
 **Severity: low** — one option on one attribute, but silent, and it changes read-merge behaviour.
 

@@ -99,6 +99,13 @@ partial class PartialModel
                         if (tmp5 != null) value.Values = tmp5;
                         break;
                     }
+                    case 6:
+                    {
+                        var tmp6 = value.Replaced;
+                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp6);
+                        if (tmp6 != null) value.Replaced = tmp6;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -126,6 +133,11 @@ partial class PartialModel
             if (tmp5 != null)
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp5);
+            }
+            var tmp6 = value.Replaced;
+            if (tmp6 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp6);
             }
         }
 

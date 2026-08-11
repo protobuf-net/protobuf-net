@@ -893,6 +893,7 @@ namespace ProtoBuf.BuildTools.Generators
                     isRequired = partial.IsRequired;
                     isPacked = partial.IsPacked;
                     dataFormat = partial.DataFormat;
+                    overwriteList = partial.OverwriteList;
                 }
                 fieldNumber ??= isDataContract && dataMemberOrder >= 1
                     ? dataMemberOrder + dataMemberOffset : null;
@@ -1644,13 +1645,14 @@ namespace ProtoBuf.BuildTools.Generators
         private readonly struct PartialMember
         {
             public PartialMember(string memberName, int fieldNumber, bool isRequired, bool isPacked,
-                ProtoDataFormat dataFormat)
+                ProtoDataFormat dataFormat, bool overwriteList)
             {
                 MemberName = memberName;
                 FieldNumber = fieldNumber;
                 IsRequired = isRequired;
                 IsPacked = isPacked;
                 DataFormat = dataFormat;
+                OverwriteList = overwriteList;
             }
 
             public string MemberName { get; }
@@ -1658,6 +1660,7 @@ namespace ProtoBuf.BuildTools.Generators
             public bool IsRequired { get; }
             public bool IsPacked { get; }
             public ProtoDataFormat DataFormat { get; }
+            public bool OverwriteList { get; }
         }
 
         /// <summary>
@@ -1674,7 +1677,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Option(diagnostics, at, type, "this form of [ProtoPartialMember]");
                 return null;
             }
-            bool isRequired = false, isPacked = false;
+            bool isRequired = false, isPacked = false, overwriteList = false;
             var dataFormat = ProtoDataFormat.Default;
             foreach (var argument in attribute.NamedArguments)
             {
@@ -1698,16 +1701,20 @@ namespace ProtoBuf.BuildTools.Generators
                     // schema naming only
                     case "Name":
                         continue;
-                    // OverwriteList is deliberately *not* accepted here. MetaType's partial-member
-                    // branch reads it from `attrib` - the member's own [ProtoMember], which is null
-                    // whenever this branch runs - instead of from `ppma`, so protobuf-net silently
-                    // ignores it. Honouring it would make our reads merge differently from ref-emit's;
-                    // see docs/aot-findings.md.
+                    // OverwriteList used to be refused here, because MetaType's partial-member branch
+                    // read it from `attrib` - the member's own [ProtoMember], necessarily null when
+                    // that branch runs - rather than from `ppma`, so protobuf-net silently ignored it
+                    // and honouring it would have made our reads merge differently from ref-emit's.
+                    // That was a one-token bug in MetaType, now fixed, so it is honoured on both paths.
+                    case "OverwriteList" when argument.Value.Value is bool partialOverwrite:
+                        overwriteList = partialOverwrite;
+                        continue;
                 }
                 Option(diagnostics, at, type, $"[ProtoPartialMember({argument.Key} = ...)]");
                 return null;
             }
-            return new PartialMember(memberName, fieldNumber, isRequired, isPacked, dataFormat);
+            return new PartialMember(memberName, fieldNumber, isRequired, isPacked, dataFormat,
+                overwriteList);
         }
 
         /// <summary><c>System.Type</c>, or an array or collection of it.</summary>
