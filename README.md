@@ -25,16 +25,16 @@ The [build tools](https://protobuf-net.github.io/protobuf-net/build_tools) (anal
 
 ## Runtime Installation
 
-All stable and some pre-release packages are available on NuGet. CI Builds are available via MyGet (feed URL: `https://www.myget.org/F/protobuf-net/api/v3/index.json `).
+All stable and some pre-release packages are available on NuGet.
 
 You can use the following command in the Package Manager Console:
 ```ps
 Install-Package protobuf-net
 ```
 
-| Package | NuGet Stable | NuGet Pre-release | Downloads | MyGet |
-| ------- | ------------ | ----------------- | --------- | ----- |
-| [protobuf-net](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/v/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/vpre/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/dt/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net MyGet](https://img.shields.io/myget/protobuf-net/vpre/protobuf-net.svg)](https://www.myget.org/feed/protobuf-net/package/nuget/protobuf-net) |
+| Package | NuGet Stable | NuGet Pre-release | Downloads |
+| ------- | ------------ | ----------------- | --------- |
+| [protobuf-net](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/v/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/vpre/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) | [![protobuf-net](https://img.shields.io/nuget/dt/protobuf-net.svg)](https://www.nuget.org/packages/protobuf-net/) |
 
 ## Basic usage
 
@@ -113,8 +113,8 @@ There is no special significance in the 7 above; it is an integer key, just like
 
 ### .proto file
 
-As an alternative to writing your classes and decorating them, You can generate your types from a .proto schema using [`protogen`](https://protogen.marcgravell.com/);
-the `protogen` tool is available as a zip from that location, or [as a "global tool"](https://www.nuget.org/packages/protobuf-net.Protogen) (multi-platform).
+As an alternative to writing your classes and decorating them, you can generate your types from a .proto schema using the `protogen` tool,
+[available as a multi-platform "global tool"](https://www.nuget.org/packages/protobuf-net.Protogen).
 
 ### Alternative to attributes
 
