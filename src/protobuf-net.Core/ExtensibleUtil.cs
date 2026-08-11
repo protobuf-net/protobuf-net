@@ -103,7 +103,21 @@ namespace ProtoBuf
                 var state = ProtoWriter.State.Create(stream, model, null);
                 try
                 {
-                    model.TrySerializeAuxiliaryType(ref state, null, format, tag, value, false, null, isRoot: false);
+                    // The result was previously discarded, and `commit = true` set regardless - so a
+                    // write that did not happen was committed as though it had. That is silent data
+                    // loss on an API whose entire purpose is round-trip fidelity, and it is the
+                    // normal outcome under native AOT: this path resolves the serializer
+                    // reflectively (note the null type), which is exactly what trimming removes.
+                    //
+                    // Throwing leaves the append transaction abandoned by the catch below, so
+                    // nothing is written either way; the difference is that the caller finds out.
+                    if (!model.TrySerializeAuxiliaryType(ref state, null, format, tag, value, false, null, isRoot: false))
+                    {
+                        ThrowHelper.ThrowInvalidOperationException(
+                            $"Unable to append a value of type {value.GetType().NormalizeName()}: no serializer "
+                            + "could be resolved for it. This API resolves serializers by reflection, so it does "
+                            + "not work under native AOT or aggressive trimming.");
+                    }
                     state.Close();
                 }
                 catch

@@ -747,6 +747,12 @@ internal static class Program
         // point is the *closure* - FileDescriptorSet reaches some thirty generated contracts.
         failures += CheckDescriptors(model);
 
+        // Extensible.AppendValue resolves its serializer reflectively, so it cannot work under native
+        // AOT. It used to *discard* the failed result and report success - silent data loss on an API
+        // whose whole purpose is round-trip fidelity. Both halves are pinned here because the correct
+        // behaviour differs by runtime, and only a native publish exercises the half that was broken.
+        failures += CheckAppendValue();
+
         // and the bytes must be stable across a second pass
         using var second = new MemoryStream();
         model.Serialize(second, clone);
@@ -836,6 +842,34 @@ internal static class Program
         Check(ref failures, "descriptor round-trip bytes", BitConverter.ToString(bytes),
             BitConverter.ToString(again.ToArray()));
 
+        return failures;
+    }
+
+    /// <summary>
+    /// <c>Extensible.AppendValue</c> resolves its serializer reflectively, so whether it can work
+    /// depends on the runtime — but "quietly did nothing" must never be one of the outcomes.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not branched on <c>RuntimeFeature.IsDynamicCodeSupported</c>: <c>PublishAot</c>
+    /// sets that switch to false even for an ordinary <c>dotnet run</c> of this project, while the
+    /// JIT underneath happily supports dynamic code — so it says nothing about whether this call can
+    /// succeed. The property asserted here holds on every runtime instead: either it works and the
+    /// value comes back, or it throws. It used to do neither, which is the bug.
+    /// </remarks>
+    private static int CheckAppendValue()
+    {
+        var failures = 0;
+        var note = new Note { Text = "hi" };
+        try
+        {
+            Extensible.AppendValue(note, 42, 123);
+        }
+        catch (InvalidOperationException)
+        {
+            return failures; // reported that it could not; that is the fix working
+        }
+        Check(ref failures, "AppendValue round-trips when it claims to have worked",
+            123, Extensible.GetValue<int>(note, 42));
         return failures;
     }
 

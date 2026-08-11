@@ -9,12 +9,12 @@ native-AOT smoke test (`src/AotSmoke`) — i.e. by comparison, not by reading th
 ## Open
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
-index. **Still outstanding, and candidates to raise against protobuf-net:** 1 (sibling sub-type
-merge overflows the stack — the serious one), 2 (`Extensible.AppendValue` under AOT), 3 (one trim
+index. **Still outstanding, and candidates to raise against protobuf-net:** 3 (one trim
 warning that needs the annotation on every consumer; see Future Ideas A2 for the measured
 breakdown), 5 (pre-existing test failures on `main`), 7 (`[ProtoPartialMember(OverwriteList)]`
 ignored), 10 (assorted API surprises), 11 (a compiled model throws on a collection-typed map
-key/value). **Resolved in place:** 4 (a misplaced annotation on the transport type parameter — 808 KB
+key/value). **Resolved in place:** 1 (the sibling sub-type stack overflow, now a
+catchable exception), 2 (`AppendValue`, now loud rather than silent), 4 (a misplaced annotation on the transport type parameter — 808 KB
 of the native binary, the largest single win here), 6 and 9 (analyzer false positives, fixed here), 8 (was the
 harness — and was masking a real bug), 12 (`CategoryScalar` serializers, now supported), 13 (the
 differential's status, currently clean).
@@ -42,7 +42,7 @@ Only incompatible siblings do it; same-branch merges are fine in either directio
 deserializing untrusted protobuf into a type with `[ProtoInclude]` is exposed. `Inherit.input.cs`
 keeps its `Holder` samples on one branch because of this.
 
-### 2. `Extensible.AppendValue` silently does nothing under AOT
+### 2. `Extensible.AppendValue` silently does nothing under AOT — **fixed**
 
 **Severity: medium** — silent data loss, on an API whose whole purpose is round-trip fidelity.
 
@@ -53,8 +53,23 @@ is never stored and nothing is reported; a later `GetValue` returns the default.
 Note the serializer's own extension path (`state.AppendExtensionData`) is fine: it only copies raw
 bytes. It is just this "poke a value in by hand" convenience that is reflective.
 
-At minimum the discarded `Try...` result should be checked and throw. `AotSmoke` works around it by
-manufacturing an unknown field with a wider contract instead.
+Fixed by doing exactly that: the result is checked, and a failure throws naming the type and saying
+that this API resolves serializers by reflection. The append transaction is abandoned by the existing
+`catch`, so nothing is written either way — the difference is that the caller finds out.
+
+It does **not** make the API work under AOT; that would need an auxiliary serialization path that
+does not resolve by reflection, which is a much larger piece. It converts silent data loss into a
+loud failure, which is the part that matters for trusting the feature.
+
+`AotSmoke` now pins the property on both runtimes, and the assertion is deliberately *not* branched on
+`RuntimeFeature.IsDynamicCodeSupported`: `PublishAot` sets that switch to false even for an ordinary
+`dotnet run` of the project, while the JIT underneath supports dynamic code perfectly well — so it
+says nothing about whether the call can succeed. Worth knowing before using that flag as a proxy for
+anything. The property asserted instead holds everywhere: **either it works and the value comes back,
+or it throws**. It used to do neither.
+
+`AotSmoke` still manufactures its unknown field with a wider contract rather than with this API,
+since that keeps the extension test on the generated path.
 
 ### 3. `SubTypeState<T>.Cast` → `Merge` keeps one trim warning alive
 
