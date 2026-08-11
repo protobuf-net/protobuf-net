@@ -22,6 +22,19 @@ Ratios travel better than the milliseconds — one machine, one payload — but 
 **3× on an ordinary build**, and ~100× once native. A generated model still pays JIT for its own code
 on an ordinary build, which is why it is not nearer zero there.
 
+That cost **scales with the number of distinct contracts** you serialize, at roughly 0.2 ms each on
+the machine above — so a 400-contract model spends about an eighth of a second before its first byte:
+
+| 400 contracts | time to first serialize |
+| --- | ---: |
+| runtime model | 129 ms |
+| a generated model, ordinary build | 72 ms |
+| a generated model, native AOT | **0.9 ms** |
+
+Note the middle row: on an ordinary build the advantage *narrows* as the model grows, because the
+generated code is itself JIT-compiled and there is more of it. It is native AOT that changes the order
+of magnitude.
+
 The AOT generator builds those serializers at **compile time** instead. Your model becomes ordinary
 C# in your own project — code you can read, step through, and that ILC can compile like anything
 else.

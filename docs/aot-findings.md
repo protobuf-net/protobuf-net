@@ -767,10 +767,37 @@ the two clocks agree independently. For the native arm the wall-clock delta over
 consistent. The same holds for A (67.5 − 15.9 = 51.6 against 50.6).
 
 Caveats worth stating before anyone quotes these: one machine, one payload, Linux; the **ratios** are
-the transferable part, not the milliseconds. And the cost scales with the number of *distinct
-contracts first used* — this closure is a modest ~15 types, so a large model should be proportionally
-worse, which is the shape of the "timeout inspecting metadata" failures that motivated the question.
-That last sentence is inference from the mechanism, not something measured here.
+the transferable part, not the milliseconds.
+
+### ...and it scales with contract count, measured
+
+The claim that this scales with the number of *distinct contracts first used* was inference from the
+mechanism. `AotColdStart`'s `scale25`/`scale100`/`scale400` modes serialize three **disjoint** sets of
+synthetic contracts, so the only thing varying is the type count:
+
+| contracts | runtime model |
+| ---: | ---: |
+| 25 | 44.3 ms |
+| 100 | 58.0 ms |
+| 400 | 129.1 ms |
+
+Roughly linear at **~0.2 ms per contract** above a fixed floor. So a 400-contract model spends about
+an eighth of a second before it serializes its first byte, which is the shape of the "timeout
+inspecting metadata" failures that prompted the question.
+
+**The honest half: a generated model's advantage narrows as the model grows — on a JIT runtime.** The
+same 400 contracts through the generated model take **72.3 ms**, a 1.8× improvement rather than the
+3× seen at descriptor size, because the generated *code* has to be JIT-compiled too and there is now
+a great deal of it. Published native, where nothing is JIT-compiled, the same case is **0.9 ms**.
+
+| 400 contracts | |
+| --- | ---: |
+| runtime model | 129.1 ms |
+| generated, JIT | 72.3 ms |
+| generated, native AOT | **0.9 ms** |
+
+That is worth knowing before quoting a single ratio at people: on an ordinary build the win is real
+but shrinks with model size, and it is native AOT that makes it a different order of magnitude.
 
 ### A. A UTF-8 fast path for string-shaped members (`IUtf8SpanFormattable`)
 

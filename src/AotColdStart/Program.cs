@@ -46,6 +46,26 @@ internal static class Program
             case "vanilla":
                 bytes = Run(RuntimeTypeModel.Default);
                 break;
+
+            // the scaling axis: three disjoint contract sets, so the only thing that varies between
+            // these runs is *how many distinct types* the model has to inspect on first use
+            case "scale25":
+                bytes = RunSynthetic(new Synthetic.SmallRoot());
+                break;
+            case "scale100":
+                bytes = RunSynthetic(new Synthetic.MediumRoot());
+                break;
+            case "scale400":
+                bytes = RunSynthetic(new Synthetic.LargeRoot());
+                break;
+            // the same 400 contracts through the generated model: the contrast is the argument
+            case "scale400gen":
+                {
+                    using var ms = new MemoryStream();
+                    DescriptorModel.Instance.Serialize(ms, new Synthetic.LargeRoot());
+                    bytes = ms.Length;
+                }
+                break;
             case "generated":
                 bytes = Run(DescriptorModel.Instance);
                 break;
@@ -57,6 +77,21 @@ internal static class Program
         var elapsed = (Stopwatch.GetTimestamp() - started) * 1000.0 / Stopwatch.Frequency;
         Console.WriteLine($"{mode}\t{elapsed:0.000}\t{bytes}");
         return 0;
+    }
+
+    /// <summary>
+    /// One serialize of a synthetic root through the *runtime* model, which is the arm whose cost is
+    /// claimed to scale with contract count.
+    /// </summary>
+    private static long RunSynthetic<T>(T value)
+    {
+        using var ms = new MemoryStream();
+        // PBN2010 is *correct* here and suppressed deliberately: the runtime model is the thing being
+        // measured. Pleasingly, the analyzer found this by itself while the harness was being written.
+#pragma warning disable PBN2010
+        RuntimeTypeModel.Default.Serialize(ms, value);
+#pragma warning restore PBN2010
+        return ms.Length;
     }
 
     /// <summary>
@@ -139,6 +174,7 @@ internal static class Program
 
 [ProtoModel]
 [ProtoSerializable(typeof(FileDescriptorSet))]
+[ProtoSerializable(typeof(Synthetic.LargeRoot))]
 public partial class DescriptorModel : TypeModel
 {
 }
