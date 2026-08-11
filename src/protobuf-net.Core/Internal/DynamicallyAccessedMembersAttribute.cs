@@ -10,8 +10,28 @@
             | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods // callbacks
             | DynamicallyAccessedMemberTypes.PublicNestedTypes | DynamicallyAccessedMemberTypes.NonPublicNestedTypes; // nested/child objects
 
+        // NonPublicConstructors is required because SerializerCache<TProvider> activates via
+        // Activator.CreateInstance(type, nonPublic: true); without it the trimmer is not told to keep
+        // a non-public constructor, and IL2087 reports the mismatch
         internal const DynamicallyAccessedMemberTypes Serializer
-            = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.PublicParameterlessConstructor;
+            = DynamicallyAccessedMemberTypes.PublicMethods
+            | DynamicallyAccessedMemberTypes.PublicParameterlessConstructor
+            | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+        /// <summary>
+        /// Just enough for <c>Activator.CreateInstance(type, nonPublic: true)</c>, and no more.
+        /// </summary>
+        /// <remarks>
+        /// This is the collection/map construction path: <c>TypeModel.ActivatorCreate&lt;T&gt;</c>
+        /// builds a <c>HashSet&lt;T&gt;</c>, <c>Queue&lt;T&gt;</c> and so on when the member arrives
+        /// null, and generated code never names those constructors, so ILC trims them and the first
+        /// *deserialize* throws <c>MissingMethodException</c>. Deliberately narrow: the collection is
+        /// constructed, never inspected, so <see cref="ContractType"/> here would keep every member
+        /// of every collection type for no reason - which is the mistake this codebase keeps making.
+        /// </remarks>
+        internal const DynamicallyAccessedMemberTypes Activated
+            = DynamicallyAccessedMemberTypes.PublicParameterlessConstructor
+            | DynamicallyAccessedMemberTypes.NonPublicConstructors;
     }
 }
 
@@ -63,6 +83,28 @@ namespace System.Diagnostics.CodeAnalysis
         /// of members dynamically accessed.
         /// </summary>
         public DynamicallyAccessedMemberTypes MemberTypes { get; }
+    }
+
+    /// <summary>
+    /// Suppresses reporting of a specific rule violation, allowing multiple suppressions on a
+    /// single code artifact. This is the unconditional counterpart to
+    /// <see cref="SuppressMessageAttribute"/>, i.e. it survives into the assembly.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = true)]
+    internal sealed class UnconditionalSuppressMessageAttribute : Attribute
+    {
+        public UnconditionalSuppressMessageAttribute(string category, string checkId)
+        {
+            Category = category;
+            CheckId = checkId;
+        }
+
+        public string Category { get; }
+        public string CheckId { get; }
+        public string Scope { get; set; }
+        public string Target { get; set; }
+        public string MessageId { get; set; }
+        public string Justification { get; set; }
     }
 
     /// <summary>

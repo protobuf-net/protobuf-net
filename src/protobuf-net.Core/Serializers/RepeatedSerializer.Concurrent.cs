@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Concurrent;
@@ -12,30 +12,30 @@ namespace ProtoBuf.Serializers
     {
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateConcurrentBag<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateConcurrentBag<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : ConcurrentBag<T>
             => SerializerCache<ConcurrentBagSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateConcurrentStack<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateConcurrentStack<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : ConcurrentStack<T>
             => SerializerCache<ConcurrentStackSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateConcurrentQueue<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateConcurrentQueue<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : ConcurrentQueue<T>
             => SerializerCache<ConcurrentQueueSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on immutable sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateIProducerConsumerCollection<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateIProducerConsumerCollection<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : class, IProducerConsumerCollection<T>
             => SerializerCache<ProducerConsumerSerializer<TCollection, T>>.InstanceField;
     }
 
-    class ProducerConsumerSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+    class ProducerConsumerSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : RepeatedSerializer<TCollection, T>
         where TCollection : class, IProducerConsumerCollection<T>
     {
         protected override TCollection Clear(TCollection values, ISerializationContext context)
@@ -99,7 +99,7 @@ namespace ProtoBuf.Serializers
             }
         }
     }
-    sealed class ConcurrentBagSerializer<TCollection, T> : ProducerConsumerSerializer<TCollection, T>
+    sealed class ConcurrentBagSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : ProducerConsumerSerializer<TCollection, T>
         where TCollection : ConcurrentBag<T>
     {
 #if PLAT_CONCURRENT_CLEAR
@@ -118,7 +118,7 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    sealed class ConcurrentQueueSerializer<TCollection, T> : ProducerConsumerSerializer<TCollection, T>
+    sealed class ConcurrentQueueSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : ProducerConsumerSerializer<TCollection, T>
         where TCollection : ConcurrentQueue<T>
     {
 #if PLAT_CONCURRENT_CLEAR
@@ -137,7 +137,7 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    sealed class ConcurrentStackSerializer<TCollection, T> : ProducerConsumerSerializer<TCollection, T>
+    sealed class ConcurrentStackSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : ProducerConsumerSerializer<TCollection, T>
         where TCollection : ConcurrentStack<T>
     {
         protected override TCollection Clear(TCollection values, ISerializationContext context)

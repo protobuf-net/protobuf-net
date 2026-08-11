@@ -1,0 +1,255 @@
+using System.Reflection;
+using AotFixtures.Extensible;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___ExtensibleModel : ISerializer<FromBase>, ISerializer<ByHand>, ISerializer<TypedOnly>, ISerializer<BaseExt>, ISubTypeSerializer<BaseExt>, ISerializer<DerivedExt>, ISubTypeSerializer<DerivedExt>
+{
+	FromBase ISerializer<FromBase>.Read(ref ProtoReader.State state, FromBase value)
+	{
+		if (value == null)
+		{
+			FromBase fromBase = new FromBase();
+			value = fromBase;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.AppendExtensionData(value);
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<FromBase>.Write(ref ProtoWriter.State state, FromBase value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		state.AppendExtensionData(value);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<FromBase>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<ByHand>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<TypedOnly>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<BaseExt>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<DerivedExt>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	ByHand ISerializer<ByHand>.Read(ref ProtoReader.State state, ByHand value)
+	{
+		if (value == null)
+		{
+			ByHand byHand = new ByHand();
+			value = byHand;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.AppendExtensionData(value);
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<ByHand>.Write(ref ProtoWriter.State state, ByHand value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		state.AppendExtensionData(value);
+	}
+
+	TypedOnly ISerializer<TypedOnly>.Read(ref ProtoReader.State state, TypedOnly value)
+	{
+		if (value == null)
+		{
+			TypedOnly typedOnly = new TypedOnly();
+			value = typedOnly;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.AppendExtensionData(value, typeof(TypedOnly));
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<TypedOnly>.Write(ref ProtoWriter.State state, TypedOnly value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		state.AppendExtensionData(value, typeof(TypedOnly));
+	}
+
+	BaseExt ISerializer<BaseExt>.Read(ref ProtoReader.State state, BaseExt value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return ((ISubTypeSerializer<BaseExt>)this).ReadSubType(ref state, SubTypeState<BaseExt>.Create(state.Context, value));
+	}
+
+	void ISerializer<BaseExt>.Write(ref ProtoWriter.State state, BaseExt value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<BaseExt>)this).WriteSubType(ref state, value);
+	}
+
+	void ISubTypeSerializer<BaseExt>.WriteSubType(ref ProtoWriter.State state, BaseExt value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is DerivedExt value2)
+			{
+				state.WriteSubType(100, value2, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+		int shared = value.Shared;
+		if (shared != 0)
+		{
+			state.WriteInt32Varint(1, shared);
+		}
+		state.AppendExtensionData(value, typeof(BaseExt));
+	}
+
+	BaseExt ISubTypeSerializer<BaseExt>.ReadSubType(ref ProtoReader.State state, SubTypeState<BaseExt> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				BaseExt value2 = value.Value;
+				int shared = state.ReadInt32();
+				value2.Shared = shared;
+				break;
+			}
+			case 100:
+				value.ReadSubType<DerivedExt>(ref state, this);
+				break;
+			default:
+				state.AppendExtensionData(value.Value, typeof(BaseExt));
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	DerivedExt ISerializer<DerivedExt>.Read(ref ProtoReader.State state, DerivedExt value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (DerivedExt)((ISubTypeSerializer<BaseExt>)this).ReadSubType(ref state, SubTypeState<BaseExt>.Create(state.Context, value));
+	}
+
+	void ISerializer<DerivedExt>.Write(ref ProtoWriter.State state, DerivedExt value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<BaseExt>)this).WriteSubType(ref state, (BaseExt)value);
+	}
+
+	void ISubTypeSerializer<DerivedExt>.WriteSubType(ref ProtoWriter.State state, DerivedExt value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int extra = value.Extra;
+		if (extra != 0)
+		{
+			state.WriteInt32Varint(1, extra);
+		}
+		state.AppendExtensionData(value, typeof(DerivedExt));
+	}
+
+	DerivedExt ISubTypeSerializer<DerivedExt>.ReadSubType(ref ProtoReader.State state, SubTypeState<DerivedExt> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				DerivedExt value2 = value.Value;
+				int extra = state.ReadInt32();
+				value2.Extra = extra;
+			}
+			else
+			{
+				state.AppendExtensionData(value.Value, typeof(DerivedExt));
+			}
+		}
+		return value.Value;
+	}
+}
+public sealed class ExtensibleModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___ExtensibleModel, T>();
+	}
+}

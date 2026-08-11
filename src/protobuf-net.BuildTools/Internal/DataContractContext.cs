@@ -74,10 +74,38 @@ namespace ProtoBuf.BuildTools.Internal
             HashSet<string>? uniqueFieldNames = null;
             HashSet<string>? coveredMemberNames = null;
 
-            void AssertAvailableNumber(int fieldNumber, Location? blame)
+            // A generic base declares its [ProtoInclude] list once and shares it with every closed
+            // construction, but each construction only ever matches the includes that actually derive
+            // from it. So two includes may carry the same tag when they belong to *different*
+            // constructions - Holder<T> naming both ShipHolder : Holder<Ship> and CrateHolder :
+            // Holder<Crate> at tag 1 is legal, and ref-emit serializes it. The number is therefore
+            // claimed per construction, keyed on the base each include really derives from; for a
+            // non-generic declaring type that key is the same for all of them, so nothing changes.
+            Dictionary<string, HashSet<int>>? perConstruction = null;
+
+            void AssertAvailableNumber(int fieldNumber, Location? blame, string? construction = null)
             {
                 uniqueFieldNumbers ??= new HashSet<int>();
-                if (!uniqueFieldNumbers.Add(fieldNumber))
+
+                // The shared set is always claimed, so a member and an include still collide however
+                // the includes are grouped - and note the includes are walked *before* the members,
+                // so this cannot be done by snapshotting one set into the other. What the grouping
+                // changes is only which collisions are *reported*: for an include, that is a clash
+                // within its own construction.
+                bool collides;
+                if (construction is null)
+                {
+                    collides = !uniqueFieldNumbers.Add(fieldNumber);
+                }
+                else
+                {
+                    collides = !Claim(construction).Add(fieldNumber);
+                    // claimed for the members' benefit, but a clash here is never reported *as* the
+                    // include's: a sibling construction legitimately holds the same number
+                    uniqueFieldNumbers.Add(fieldNumber);
+                }
+
+                if (collides)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         descriptor: DataContractAnalyzer.DuplicateFieldNumber,
@@ -97,6 +125,18 @@ namespace ProtoBuf.BuildTools.Internal
                         properties: null
                     ));
                 }
+            }
+
+            // an include's numbering space is the members' *plus* the other includes on the same
+            // construction: a member and an include still cannot share a number
+            HashSet<int> Claim(string construction)
+            {
+                perConstruction ??= new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
+                if (!perConstruction.TryGetValue(construction, out var claimed))
+                {
+                    perConstruction[construction] = claimed = new HashSet<int>();
+                }
+                return claimed;
             }
 
             void AssertAvailableName(string name, Location? blame)
@@ -126,7 +166,11 @@ namespace ProtoBuf.BuildTools.Internal
 
             if (!(_members is not null || _includes is not null || _reservations is not null || _ignores is not null)) return;
 
-            if (!HasFlag(DataContractContextFlags.IsProtoContract))
+            // ...but only when there is no contract marker *at all*: with [DataContract] or [XmlType]
+            // present the ProtoBuf annotations are honoured rather than ignored, so saying otherwise
+            // is both wrong and, as an error, a build break for a shape that works
+            if (!HasFlag(DataContractContextFlags.IsProtoContract)
+                && !HasFlag(DataContractContextFlags.HasOtherContractFamily))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     descriptor: DataContractAnalyzer.ShouldBeProtoContract,
@@ -176,10 +220,30 @@ namespace ProtoBuf.BuildTools.Internal
                 {
                     if (AssertLegalFieldNumber(ref context, include.FieldNumber, include.Blame))
                     {
-                        AssertAvailableNumber(include.FieldNumber, include.Blame);
+                        // the construction this include actually belongs to; only distinguishable
+                        // when the declaring type is generic, which is the only case that needs it
+                        var construction = type is INamedTypeSymbol { IsGenericType: true }
+                            ? (include.Type.BaseType?.ToDisplayString() ?? "?") : "";
+                        AssertAvailableNumber(include.FieldNumber, include.Blame, construction);
                     }
 
-                    if (!SymbolEqualityComparer.Default.Equals(include.Type.BaseType, type))
+                    // an interface is a legal include root - protobuf-net treats implementing one
+                    // exactly as deriving from a base class - so the base-type test alone reports a
+                    // build *error* for a pattern that works perfectly well at runtime.
+                    // Compared by *original definition*, because a generic root carries the attribute
+                    // on the open type while the sub-type names a closed construction: the include on
+                    // IBox<T> is inherited by every IBox<int>, and ref-emit resolves it happily
+                    var linked = Linked(include.Type.BaseType)
+                        || (type.TypeKind == TypeKind.Interface
+                            && include.Type.AllInterfaces.Any(Linked));
+
+                    bool Linked(INamedTypeSymbol? candidate)
+                        => candidate is not null
+                            && (SymbolEqualityComparer.Default.Equals(candidate, type)
+                                || SymbolEqualityComparer.Default.Equals(
+                                    candidate.OriginalDefinition, type.OriginalDefinition));
+
+                    if (!linked)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             descriptor: DataContractAnalyzer.IncludeNonDerived,
@@ -557,6 +621,8 @@ namespace ProtoBuf.BuildTools.Internal
                 && attrib.AttributeClass.Name == nameof(DefaultValueAttribute)
                 && attrib.AttributeClass.InNamespace(nameof(System), nameof(System.ComponentModel))) as AttributeData;
 
+        internal void SetOtherContractFamily() => _flags |= DataContractContextFlags.HasOtherContractFamily;
+
         internal void SetContract(ISymbol blame, AttributeData attrib)
         {
             _ = blame;
@@ -565,6 +631,13 @@ namespace ProtoBuf.BuildTools.Internal
                 _flags |= DataContractContextFlags.SkipConstructor;
             if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreUnknownSubTypes), out val) && val)
                 _flags |= DataContractContextFlags.IgnoreUnknownSubTypes;
+            foreach (var named in attrib.NamedArguments)
+            {
+                if (named.Key == nameof(ProtoContractAttribute.Surrogate) && named.Value.Value is not null)
+                {
+                    _flags |= DataContractContextFlags.HasSurrogate;
+                }
+            }
         }
 
         public bool HasFlag(DataContractContextFlags flag)

@@ -1,0 +1,302 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.MapFormat;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___MapFormatModel : ISerializer<Maps>, ISerializer<Nested>
+{
+	Maps ISerializer<Maps>.Read(ref ProtoReader.State state, Maps value)
+	{
+		if (value == null)
+		{
+			Maps maps = new Maps();
+			value = maps;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dictionary<int, int> overwrite = value.Plain;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+				if (overwrite != null)
+				{
+					value.Plain = overwrite;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dictionary<int, int> overwrite = value.Bare;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+				if (overwrite != null)
+				{
+					value.Bare = overwrite;
+				}
+				break;
+			}
+			case 3:
+			{
+				Dictionary<int, int> overwrite = value.FixedKey;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeVarint);
+				if (overwrite != null)
+				{
+					value.FixedKey = overwrite;
+				}
+				break;
+			}
+			case 4:
+			{
+				Dictionary<int, int> overwrite = value.FixedValue;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeFixed32);
+				if (overwrite != null)
+				{
+					value.FixedValue = overwrite;
+				}
+				break;
+			}
+			case 5:
+			{
+				Dictionary<int, int> overwrite = value.FixedBoth;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeFixed32);
+				if (overwrite != null)
+				{
+					value.FixedBoth = overwrite;
+				}
+				break;
+			}
+			case 6:
+			{
+				Dictionary<int, int> overwrite = value.ZigZagKey;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeSignedVarint, SerializerFeatures.WireTypeVarint);
+				if (overwrite != null)
+				{
+					value.ZigZagKey = overwrite;
+				}
+				break;
+			}
+			case 7:
+			{
+				Dictionary<int, int> overwrite = value.ZigZagValue;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, overwrite, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeSignedVarint);
+				if (overwrite != null)
+				{
+					value.ZigZagValue = overwrite;
+				}
+				break;
+			}
+			case 8:
+			{
+				Dictionary<long, long> fixedWide = value.FixedWide;
+				fixedWide = MapSerializer.CreateDictionary<long, long>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, fixedWide, SerializerFeatures.WireTypeFixed64, SerializerFeatures.WireTypeFixed64);
+				if (fixedWide != null)
+				{
+					value.FixedWide = fixedWide;
+				}
+				break;
+			}
+			case 9:
+			{
+				Dictionary<string, int> stringKey = value.StringKey;
+				stringKey = MapSerializer.CreateDictionary<string, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, stringKey, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint);
+				if (stringKey != null)
+				{
+					value.StringKey = stringKey;
+				}
+				break;
+			}
+			case 10:
+			{
+				Dictionary<int, Nested> noMapMessage = value.GroupValue;
+				noMapMessage = MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, noMapMessage, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeStartGroup, null, this);
+				if (noMapMessage != null)
+				{
+					value.GroupValue = noMapMessage;
+				}
+				break;
+			}
+			case 11:
+			{
+				Dictionary<int, int> overwrite = value.NoMap;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, overwrite, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+				if (overwrite != null)
+				{
+					value.NoMap = overwrite;
+				}
+				break;
+			}
+			case 12:
+			{
+				Dictionary<int, Nested> noMapMessage = value.NoMapMessage;
+				noMapMessage = MapSerializer.CreateDictionary<int, Nested>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, noMapMessage, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+				if (noMapMessage != null)
+				{
+					value.NoMapMessage = noMapMessage;
+				}
+				break;
+			}
+			case 13:
+			{
+				Dictionary<int, int> overwrite = value.Overwrite;
+				overwrite = MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionClearCollection, overwrite, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeVarint);
+				if (overwrite != null)
+				{
+					value.Overwrite = overwrite;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Maps>.Write(ref ProtoWriter.State state, Maps value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Dictionary<int, int> plain = value.Plain;
+		if (plain != null)
+		{
+			Dictionary<int, int> values = plain;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, int> bare = value.Bare;
+		if (bare != null)
+		{
+			Dictionary<int, int> values = bare;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, int> fixedKey = value.FixedKey;
+		if (fixedKey != null)
+		{
+			Dictionary<int, int> values = fixedKey;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, int> fixedValue = value.FixedValue;
+		if (fixedValue != null)
+		{
+			Dictionary<int, int> values = fixedValue;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeFixed32);
+		}
+		Dictionary<int, int> fixedBoth = value.FixedBoth;
+		if (fixedBoth != null)
+		{
+			Dictionary<int, int> values = fixedBoth;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeFixed32);
+		}
+		Dictionary<int, int> zigZagKey = value.ZigZagKey;
+		if (zigZagKey != null)
+		{
+			Dictionary<int, int> values = zigZagKey;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 6, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeSignedVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, int> zigZagValue = value.ZigZagValue;
+		if (zigZagValue != null)
+		{
+			Dictionary<int, int> values = zigZagValue;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 7, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeSignedVarint);
+		}
+		Dictionary<long, long> fixedWide = value.FixedWide;
+		if (fixedWide != null)
+		{
+			Dictionary<long, long> values2 = fixedWide;
+			MapSerializer.CreateDictionary<long, long>().WriteMap(ref state, 8, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeFixed64, SerializerFeatures.WireTypeFixed64);
+		}
+		Dictionary<string, int> stringKey = value.StringKey;
+		if (stringKey != null)
+		{
+			Dictionary<string, int> values3 = stringKey;
+			MapSerializer.CreateDictionary<string, int>().WriteMap(ref state, 9, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values3, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, Nested> groupValue = value.GroupValue;
+		if (groupValue != null)
+		{
+			Dictionary<int, Nested> values4 = groupValue;
+			MapSerializer.CreateDictionary<int, Nested>().WriteMap(ref state, 10, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values4, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeStartGroup, null, this);
+		}
+		Dictionary<int, int> noMap = value.NoMap;
+		if (noMap != null)
+		{
+			Dictionary<int, int> values = noMap;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 11, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint);
+		}
+		Dictionary<int, Nested> noMapMessage = value.NoMapMessage;
+		if (noMapMessage != null)
+		{
+			Dictionary<int, Nested> values4 = noMapMessage;
+			MapSerializer.CreateDictionary<int, Nested>().WriteMap(ref state, 12, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values4, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+		}
+		Dictionary<int, int> overwrite = value.Overwrite;
+		if (overwrite != null)
+		{
+			Dictionary<int, int> values = overwrite;
+			MapSerializer.CreateDictionary<int, int>().WriteMap(ref state, 13, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionClearCollection, values, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeVarint);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Maps>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Nested>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Nested ISerializer<Nested>.Read(ref ProtoReader.State state, Nested value)
+	{
+		if (value == null)
+		{
+			Nested nested = new Nested();
+			value = nested;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int id = state.ReadInt32();
+				value.Id = id;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Nested>.Write(ref ProtoWriter.State state, Nested value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int id = value.Id;
+		if (id != 0)
+		{
+			state.WriteInt32Varint(1, id);
+		}
+	}
+}
+public sealed class MapFormatModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___MapFormatModel, T>();
+	}
+}

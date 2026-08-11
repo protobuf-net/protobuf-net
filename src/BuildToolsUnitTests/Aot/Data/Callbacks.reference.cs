@@ -1,0 +1,149 @@
+using System.Reflection;
+using AotFixtures.Callbacks;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___CallbacksModel : ISerializer<Hooked>, ISerializer<Standard>, ISerializer<AfterOnly>
+{
+	Hooked ISerializer<Hooked>.Read(ref ProtoReader.State state, Hooked value)
+	{
+		if (value == null)
+		{
+			Hooked hooked = new Hooked();
+			value = hooked;
+		}
+		value.BeforeDes();
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		value.AfterDes();
+		return value;
+	}
+
+	void ISerializer<Hooked>.Write(ref ProtoWriter.State state, Hooked value)
+	{
+		value.BeforeSer();
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		value.AfterSer();
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Hooked>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Standard>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<AfterOnly>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Standard ISerializer<Standard>.Read(ref ProtoReader.State state, Standard value)
+	{
+		if (value == null)
+		{
+			Standard standard = new Standard();
+			value = standard;
+		}
+		value.OnDes(SerializationContext.AsStreamingContext(state.Context));
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		value.OnDesd(SerializationContext.AsStreamingContext(state.Context));
+		return value;
+	}
+
+	void ISerializer<Standard>.Write(ref ProtoWriter.State state, Standard value)
+	{
+		value.OnSer(SerializationContext.AsStreamingContext(state.Context));
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		value.OnSerd(SerializationContext.AsStreamingContext(state.Context));
+	}
+
+	AfterOnly ISerializer<AfterOnly>.Read(ref ProtoReader.State state, AfterOnly value)
+	{
+		if (value == null)
+		{
+			AfterOnly afterOnly = new AfterOnly();
+			value = afterOnly;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		value.AfterDes();
+		return value;
+	}
+
+	void ISerializer<AfterOnly>.Write(ref ProtoWriter.State state, AfterOnly value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+	}
+}
+public sealed class CallbacksModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___CallbacksModel, T>();
+	}
+}

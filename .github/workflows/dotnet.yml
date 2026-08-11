@@ -30,3 +30,11 @@ jobs:
       run: dotnet build Build.csproj --no-restore
     - name: Test
       run: dotnet test Build.csproj --no-build --verbosity normal
+    # Runs the AOT generator over every [ProtoContract] in the already-built test assemblies and
+    # compares its bytes against RuntimeTypeModel's. Exits non-zero only on a *byte mismatch*, which
+    # is a generator bug by construction - the same instance serialized two ways, disagreeing on the
+    # wire. Worth a CI step because that class of bug compiles cleanly and passes every other test
+    # here; several shipped for months before this existed. Needs no extra build: the traversal
+    # project above already produces the assemblies it scans.
+    - name: AOT differential
+      run: dotnet run --project src/AotDifferential/AotDifferential.csproj --no-build

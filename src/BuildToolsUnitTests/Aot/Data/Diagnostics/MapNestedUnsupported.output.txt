@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN2001 Aot/Data/Diagnostics/MapNestedUnsupported.input.cs L15 C65
+Contract 'AotFixtures.MapNestedUnsupported.NestedKey' is omitted from the AOT model: member 'Value' has unsupported type 'System.Collections.Generic.Dictionary<System.Collections.Generic.List<int>, System.Collections.Generic.List<string>>'.

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>ProtoBuf.AotDifferential</RootNamespace>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- a reviewing aid, not a test: never fail a build over its own analysis -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- TypeModel's non-generic Serialize/Deserialize are the right shape for reflection-driven work -->
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="4.8.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <!-- the .proto half of the corpus: DTOs are generated in-process from the schema tree, so the
+         generated code cannot drift from the generator that produced it -->
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+    <!-- ReferenceOutputAssembly="false" is load-bearing, not tidiness: BuildTools *compiles in*
+         protobuf-net.Core's sources, so referencing its output alongside protobuf-net would make
+         every type in Core ambiguous. We need it built, and we load it reflectively at runtime,
+         talking to it only through Roslyn's interfaces - so the two copies of Core never meet. -->
+    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

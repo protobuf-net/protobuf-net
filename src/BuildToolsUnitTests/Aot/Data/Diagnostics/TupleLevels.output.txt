@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN2002  L1 C1
+Contract '(global::System.DateTime, global::System.TimeSpan)' is omitted from the AOT model: it is reached at more than one compatibility level, and protobuf-net refuses that too: "must use a single compatibility level ... this usually means it is being used in different contexts in the same model".
+Warning PBN2004 Aot/Data/Diagnostics/TupleLevels.input.cs L14 C14
+Contract 'AotFixtures.TupleLevels.Conflicting' is omitted from the AOT model because '(global::System.DateTime, global::System.TimeSpan)', which it references, is also omitted.

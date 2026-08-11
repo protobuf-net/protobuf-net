@@ -73,12 +73,16 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
+                    // Warning, not Error: MetaType *defines* the resolution - the first declaration to pin a
+            // tag wins - so this is "you probably did not mean this", not "this is broken".
+            // Partial.input.cs suppresses it precisely in order to pin that precedence, which is
+            // evidence enough that the shape has defined behaviour.
+internal static readonly DiagnosticDescriptor DuplicateMemberName = new(
             id: "PBN0008",
             title: nameof(DataContractAnalyzer) + "." + nameof(DuplicateMemberName),
             messageFormat: "The underlying member '{0}' is described multiple times.",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor ShouldBeProtoContract = new(
@@ -89,12 +93,15 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true);
 
-        internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
+                    // Warning, not Error: [ProtoPartialIgnore] wins over everything, including a [ProtoMember]
+            // the member declares itself (ApplyDefaultBehaviour tests it first). Deterministic, and
+            // pinned by Partial.input.cs - so a contradiction worth flagging, not a build break.
+internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             id: "PBN0010",
             title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredAndIgnored),
             messageFormat: "The member '{0}' is marked to be ignored; additional annotations will be ignored.",
             category: Literals.CategoryUsage,
-            defaultSeverity: DiagnosticSeverity.Error,
+            defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor DuplicateInclude = new(
@@ -198,6 +205,14 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
+            id: "PBN0023",
+            title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
+            messageFormat: "The proto-contract '{0}' is an interface; this is supported but not recommended. Each implementation is serialized as a sub-type layer, so a member declared on both the interface and the implementing type is written twice - consider an abstract base class, or declaring the members only on the implementations.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>
@@ -205,6 +220,8 @@ namespace ProtoBuf.BuildTools.Analyzers
 
         private static readonly ImmutableArray<SyntaxKind> s_syntaxKinds =
             ImmutableArray.Create(SyntaxKind.ClassDeclaration, SyntaxKind.StructDeclaration, SyntaxKind.EnumDeclaration
+                // the type switch has always handled TypeKind.Interface; it was simply never reached
+                , SyntaxKind.InterfaceDeclaration
 #if !PLAT_NO_RECORDS
                 , SyntaxKind.RecordDeclaration
 #endif
@@ -215,8 +232,19 @@ namespace ProtoBuf.BuildTools.Analyzers
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            ctx.RegisterSyntaxNodeAction(context => ConsiderPossibleProtoBufType(ref context), s_syntaxKinds);
-            ctx.RegisterCompilationAction(context => ConsiderCompilation(ref context));
+            // the disable switch is read per-callback rather than once, because AnalysisContext has
+            // no compilation-start hook here; it is a dictionary lookup, which is cheap enough to be
+            // the first thing either callback does
+            ctx.RegisterSyntaxNodeAction(context =>
+            {
+                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                ConsiderPossibleProtoBufType(ref context);
+            }, s_syntaxKinds);
+            ctx.RegisterCompilationAction(context =>
+            {
+                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                ConsiderCompilation(ref context);
+            });
         }
 
         private void ConsiderCompilation(ref CompilationAnalysisContext context)
@@ -397,6 +425,13 @@ namespace ProtoBuf.BuildTools.Analyzers
                     case nameof(ProtoContractAttribute) when ac.InProtoBufNamespace():
                         Context().SetContract(type, attrib);
                         break;
+                    // [DataContract] and [XmlType] are contract markers in their own right
+                    // (MetaType.GetContractFamily), and the families mix - so ProtoBuf annotations on
+                    // one of these are honoured, not ignored, and must not be reported as an error
+                    case "DataContractAttribute" when ac.InNamespace("System", "Runtime", "Serialization"):
+                    case "XmlTypeAttribute" when ac.InNamespace("System", "Xml", "Serialization"):
+                        Context().SetOtherContractFamily();
+                        break;
                     case nameof(ProtoIncludeAttribute) when ac.InProtoBufNamespace():
                         Context().AddInclude(type, attrib);
                         break;
@@ -463,10 +498,29 @@ namespace ProtoBuf.BuildTools.Analyzers
             }
             if (typeContext is not null)
             {
+                // an interface contract works - it is an inheritance root like any other - but the
+                // layering is a trap: the interface's own declared members are written *in addition
+                // to* the implementation's, so a property declared on both goes on the wire twice
+                if (type.TypeKind == TypeKind.Interface
+                    && typeContext.HasFlag(DataContractContextFlags.IsProtoContract))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        descriptor: DataContractAnalyzer.ProtoContractOnInterface,
+                        location: Utils.PickLocation(ref context, type),
+                        messageArgs: new object[] { type.Name },
+                        additionalLocations: null,
+                        properties: null
+                    ));
+                }
+
                 if (!type.IsAbstract // the library won't be directly creating it, so: N/A
                     && hasAnyConstructor && !hasParameterlessConstructor
                     && typeContext.HasFlag(DataContractContextFlags.IsProtoContract)
                     && !typeContext.HasFlag(DataContractContextFlags.SkipConstructor)
+                    // with a surrogate the library constructs *that* and converts, so the type
+                    // itself never needs a constructor - which is the point of surrogating an
+                    // immutable type in the first place
+                    && !typeContext.HasFlag(DataContractContextFlags.HasSurrogate)
                 )
                 {
                     context.ReportDiagnostic(Diagnostic.Create(

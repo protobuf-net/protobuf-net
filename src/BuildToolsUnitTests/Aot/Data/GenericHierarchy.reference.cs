@@ -1,0 +1,409 @@
+using System.Reflection;
+using AotFixtures.GenericHierarchy;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___GenericHierarchyModel : ISerializer<Node>, ISubTypeSerializer<Node>, ISerializer<PlainNode>, ISubTypeSerializer<PlainNode>, ISerializer<Holder<Ship>>, ISubTypeSerializer<Holder<Ship>>, ISerializer<ShipHolder>, ISubTypeSerializer<ShipHolder>, ISerializer<Holder<Crate>>, ISubTypeSerializer<Holder<Crate>>, ISerializer<CrateHolder>, ISubTypeSerializer<CrateHolder>, ISerializer<Ship>, ISerializer<Crate>
+{
+	Node ISerializer<Node>.Read(ref ProtoReader.State state, Node value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return ((ISubTypeSerializer<Node>)this).ReadSubType(ref state, SubTypeState<Node>.Create(state.Context, value));
+	}
+
+	void ISerializer<Node>.Write(ref ProtoWriter.State state, Node value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<Node>)this).WriteSubType(ref state, value);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Node>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<PlainNode>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Holder<Ship>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<ShipHolder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Holder<Crate>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<CrateHolder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Ship>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Crate>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	void ISubTypeSerializer<Node>.WriteSubType(ref ProtoWriter.State state, Node value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is PlainNode value2)
+			{
+				state.WriteSubType(1, value2, this);
+			}
+			else if (value is Holder<Ship> value3)
+			{
+				state.WriteSubType(3, value3, this);
+			}
+			else if (value is Holder<Crate> value4)
+			{
+				state.WriteSubType(4, value4, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+	}
+
+	Node ISubTypeSerializer<Node>.ReadSubType(ref ProtoReader.State state, SubTypeState<Node> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+				value.ReadSubType<PlainNode>(ref state, this);
+				break;
+			case 3:
+				value.ReadSubType<Holder<Ship>>(ref state, this);
+				break;
+			case 4:
+				value.ReadSubType<Holder<Crate>>(ref state, this);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	PlainNode ISerializer<PlainNode>.Read(ref ProtoReader.State state, PlainNode value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (PlainNode)((ISubTypeSerializer<Node>)this).ReadSubType(ref state, SubTypeState<Node>.Create(state.Context, value));
+	}
+
+	void ISerializer<PlainNode>.Write(ref ProtoWriter.State state, PlainNode value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<Node>)this).WriteSubType(ref state, (Node)value);
+	}
+
+	void ISubTypeSerializer<PlainNode>.WriteSubType(ref ProtoWriter.State state, PlainNode value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int n = value.N;
+		if (n != 0)
+		{
+			state.WriteInt32Varint(1, n);
+		}
+	}
+
+	PlainNode ISubTypeSerializer<PlainNode>.ReadSubType(ref ProtoReader.State state, SubTypeState<PlainNode> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				PlainNode value2 = value.Value;
+				int n = state.ReadInt32();
+				value2.N = n;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+
+	Holder<Ship> ISerializer<Holder<Ship>>.Read(ref ProtoReader.State state, Holder<Ship> value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Holder<Ship>)((ISubTypeSerializer<Node>)this).ReadSubType(ref state, SubTypeState<Node>.Create(state.Context, value));
+	}
+
+	void ISerializer<Holder<Ship>>.Write(ref ProtoWriter.State state, Holder<Ship> value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<Node>)this).WriteSubType(ref state, (Node)value);
+	}
+
+	void ISubTypeSerializer<Holder<Ship>>.WriteSubType(ref ProtoWriter.State state, Holder<Ship> value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is ShipHolder value2)
+			{
+				state.WriteSubType(1, value2, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+	}
+
+	Holder<Ship> ISubTypeSerializer<Holder<Ship>>.ReadSubType(ref ProtoReader.State state, SubTypeState<Holder<Ship>> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				value.ReadSubType<ShipHolder>(ref state, this);
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+
+	ShipHolder ISerializer<ShipHolder>.Read(ref ProtoReader.State state, ShipHolder value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (ShipHolder)((ISubTypeSerializer<Node>)this).ReadSubType(ref state, SubTypeState<Node>.Create(state.Context, value));
+	}
+
+	void ISerializer<ShipHolder>.Write(ref ProtoWriter.State state, ShipHolder value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<Node>)this).WriteSubType(ref state, (Node)value);
+	}
+
+	void ISubTypeSerializer<ShipHolder>.WriteSubType(ref ProtoWriter.State state, ShipHolder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Ship value2 = value.Value;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, value2, this);
+	}
+
+	ShipHolder ISubTypeSerializer<ShipHolder>.ReadSubType(ref ProtoReader.State state, SubTypeState<ShipHolder> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				ShipHolder value2 = value.Value;
+				Ship value3 = value2.Value;
+				value3 = state.ReadMessage(SerializerFeatures.CategoryRepeated, value3, this);
+				if (value3 != null)
+				{
+					value2.Value = value3;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+
+	Holder<Crate> ISerializer<Holder<Crate>>.Read(ref ProtoReader.State state, Holder<Crate> value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Holder<Crate>)((ISubTypeSerializer<Node>)this).ReadSubType(ref state, SubTypeState<Node>.Create(state.Context, value));
+	}
+
+	void ISerializer<Holder<Crate>>.Write(ref ProtoWriter.State state, Holder<Crate> value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<Node>)this).WriteSubType(ref state, (Node)value);
+	}
+
+	void ISubTypeSerializer<Holder<Crate>>.WriteSubType(ref ProtoWriter.State state, Holder<Crate> value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is CrateHolder value2)
+			{
+				state.WriteSubType(1, value2, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+	}
+
+	Holder<Crate> ISubTypeSerializer<Holder<Crate>>.ReadSubType(ref ProtoReader.State state, SubTypeState<Holder<Crate>> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				value.ReadSubType<CrateHolder>(ref state, this);
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+
+	CrateHolder ISerializer<CrateHolder>.Read(ref ProtoReader.State state, CrateHolder value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (CrateHolder)((ISubTypeSerializer<Node>)this).ReadSubType(ref state, SubTypeState<Node>.Create(state.Context, value));
+	}
+
+	void ISerializer<CrateHolder>.Write(ref ProtoWriter.State state, CrateHolder value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<Node>)this).WriteSubType(ref state, (Node)value);
+	}
+
+	void ISubTypeSerializer<CrateHolder>.WriteSubType(ref ProtoWriter.State state, CrateHolder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Crate value2 = value.Value;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, value2, this);
+	}
+
+	CrateHolder ISubTypeSerializer<CrateHolder>.ReadSubType(ref ProtoReader.State state, SubTypeState<CrateHolder> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				CrateHolder value2 = value.Value;
+				Crate value3 = value2.Value;
+				value3 = state.ReadMessage(SerializerFeatures.CategoryRepeated, value3, this);
+				if (value3 != null)
+				{
+					value2.Value = value3;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+
+	Ship ISerializer<Ship>.Read(ref ProtoReader.State state, Ship value)
+	{
+		if (value == null)
+		{
+			Ship ship = new Ship();
+			value = ship;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int foo = state.ReadInt32();
+				value.Foo = foo;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Ship>.Write(ref ProtoWriter.State state, Ship value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int foo = value.Foo;
+		if (foo != 0)
+		{
+			state.WriteInt32Varint(1, foo);
+		}
+	}
+
+	Crate ISerializer<Crate>.Read(ref ProtoReader.State state, Crate value)
+	{
+		if (value == null)
+		{
+			Crate crate = new Crate();
+			value = crate;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Bar = text;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Crate>.Write(ref ProtoWriter.State state, Crate value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string bar = value.Bar;
+		state.WriteString(1, bar);
+	}
+}
+public sealed class GenericHierarchyModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___GenericHierarchyModel, T>();
+	}
+}

@@ -15,6 +15,20 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 ## unreleased
 
 - support of deserializing `ISet<T>` and `IReadOnlySet<T>` (ladeak)
+- **fix**: `[ProtoPartialMember(..., OverwriteList = true)]` was silently ignored; the option was read
+  from the member's own `[ProtoMember]`, which is necessarily absent when the partial-member path
+  runs. It is now honoured, so such a member **replaces** rather than appends when deserializing into
+  an existing collection — a behaviour change for anyone who had set it and not noticed it doing
+  nothing
+- **fix**: merging two *unrelated* sub-types of one base (a payload carrying the same field twice with
+  conflicting sub-type markers) recursed without bound and killed the process with a
+  `StackOverflowException`, which cannot be caught and was reachable from untrusted input; it now
+  throws a catchable `InvalidOperationException` naming both types
+- **fix**: `Extensible.AppendValue` discarded the result of the underlying write and reported success
+  regardless, so a failure was silent data loss; it now throws if it cannot write
+- `Extensible.AppendValue<T>`/`GetValue<T>`/`TryGetValue<T>` now keep `T` rather than boxing to
+  `object` and re-resolving by reflection, so they **work under native AOT** at the default
+  `DataFormat`; other formats and the legacy `object`-based overload are unchanged
 
 ## 3.2.30
 

@@ -1,0 +1,116 @@
+using System.Reflection;
+using AotFixtures.AbstractLeaf;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___AbstractLeafModel : ISerializer<Holder>, ISerializer<Shape>
+{
+	Holder ISerializer<Holder>.Read(ref ProtoReader.State state, Holder value)
+	{
+		if (value == null)
+		{
+			Holder holder = new Holder();
+			value = holder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Shape value2 = value.Value;
+				value2 = state.ReadMessage(SerializerFeatures.CategoryRepeated, value2, this);
+				if (value2 != null)
+				{
+					value.Value = value2;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Name = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Holder>.Write(ref ProtoWriter.State state, Holder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Shape value2 = value.Value;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, value2, this);
+		string name = value.Name;
+		state.WriteString(2, name);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Holder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Shape>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Shape ISerializer<Shape>.Read(ref ProtoReader.State state, Shape value)
+	{
+		if (value == null)
+		{
+			TypeModel.ThrowCannotCreateInstance(typeof(Shape));
+			value = null;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int sides = state.ReadInt32();
+				value.Sides = sides;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Shape>.Write(ref ProtoWriter.State state, Shape value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int sides = value.Sides;
+		if (sides != 0)
+		{
+			state.WriteInt32Varint(1, sides);
+		}
+	}
+}
+public sealed class AbstractLeafModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___AbstractLeafModel, T>();
+	}
+}

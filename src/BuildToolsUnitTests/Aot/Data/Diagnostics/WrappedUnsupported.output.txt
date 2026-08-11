@@ -1,0 +1,7 @@
+Generator produced 3 diagnostics:
+Warning PBN2002 Aot/Data/Diagnostics/WrappedUnsupported.input.cs L20 C54
+Contract 'AotFixtures.WrappedUnsupported.WrappedMessage' is omitted from the AOT model: member 'Item' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection".
+Warning PBN2002 Aot/Data/Diagnostics/WrappedUnsupported.input.cs L26 C51
+Contract 'AotFixtures.WrappedUnsupported.WrappedNonNullable' is omitted from the AOT model: member 'Value' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values".
+Warning PBN2002 Aot/Data/Diagnostics/WrappedUnsupported.input.cs L32 C57
+Contract 'AotFixtures.WrappedUnsupported.WrappedBcl' is omitted from the AOT model: member 'When' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection".

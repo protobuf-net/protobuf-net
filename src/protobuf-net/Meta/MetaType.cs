@@ -1156,7 +1156,11 @@ namespace ProtoBuf.Meta
                             GetFieldName(ref name, ppma, "Name");
                             GetFieldBoolean(ref isRequired, ppma, "IsRequired");
                             GetFieldBoolean(ref isPacked, ppma, "IsPacked");
-                            GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
+                            // `ppma`, not `attrib`: this branch only runs when the member pinned no
+                            // tag of its own, so `attrib` (its [ProtoMember]) is necessarily null and
+                            // reading OverwriteList from it silently did nothing. Every neighbouring
+                            // line reads ppma; this one did not.
+                            GetFieldBoolean(ref overwriteList, ppma, "OverwriteList");
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
                             GetFieldBoolean(ref asReferenceHasValue, attrib, "AsReferenceHasValue", false);
 

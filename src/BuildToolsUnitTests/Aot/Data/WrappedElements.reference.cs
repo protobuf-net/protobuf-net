@@ -1,0 +1,287 @@
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.WrappedElements;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___WrappedElementsModel : ISerializer<Wrapped>, ISerializer<Payload>
+{
+	Wrapped ISerializer<Wrapped>.Read(ref ProtoReader.State state, Wrapped value)
+	{
+		if (value == null)
+		{
+			Wrapped wrapped = new Wrapped();
+			value = wrapped;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				List<Payload> messages = value.Messages;
+				messages = RepeatedSerializer.CreateList<Payload>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, messages, this);
+				if (messages != null)
+				{
+					value.Messages = messages;
+				}
+				break;
+			}
+			case 2:
+			{
+				Payload[] array = value.Array;
+				array = RepeatedSerializer.CreateVector<Payload>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, array, this);
+				if (array != null)
+				{
+					value.Array = array;
+				}
+				break;
+			}
+			case 3:
+			{
+				List<Shade?> shades = value.Shades;
+				shades = RepeatedSerializer.CreateList<Shade?>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, shades, this as ISerializer<Shade?>);
+				if (shades != null)
+				{
+					value.Shades = shades;
+				}
+				break;
+			}
+			case 4:
+			{
+				List<DateTime?> bareDates = value.Dates;
+				bareDates = RepeatedSerializer.CreateList<DateTime?>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, bareDates);
+				if (bareDates != null)
+				{
+					value.Dates = bareDates;
+				}
+				break;
+			}
+			case 5:
+			{
+				List<string> names = value.Names;
+				names = RepeatedSerializer.CreateList<string>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, names);
+				if (names != null)
+				{
+					value.Names = names;
+				}
+				break;
+			}
+			case 6:
+			{
+				Dictionary<int, Payload> byId = value.ById;
+				byId = MapSerializer.CreateDictionary<int, Payload>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence, byId, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue, null, this);
+				if (byId != null)
+				{
+					value.ById = byId;
+				}
+				break;
+			}
+			case 7:
+			{
+				List<Payload> messages = value.Grouped;
+				messages = RepeatedSerializer.CreateList<Payload>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup | SerializerFeatures.OptionWrappedValueFieldPresence, messages, this);
+				if (messages != null)
+				{
+					value.Grouped = messages;
+				}
+				break;
+			}
+			case 8:
+			{
+				List<Shade?> shades = value.BareShades;
+				shades = RepeatedSerializer.CreateList<Shade?>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, shades, this as ISerializer<Shade?>);
+				if (shades != null)
+				{
+					value.BareShades = shades;
+				}
+				break;
+			}
+			case 9:
+			{
+				List<DateTime?> bareDates = value.BareDates;
+				bareDates = RepeatedSerializer.CreateList<DateTime?>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, bareDates);
+				if (bareDates != null)
+				{
+					value.BareDates = bareDates;
+				}
+				break;
+			}
+			case 10:
+			{
+				List<DateTime> plain = value.Plain;
+				plain = RepeatedSerializer.CreateList<DateTime>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, plain);
+				if (plain != null)
+				{
+					value.Plain = plain;
+				}
+				break;
+			}
+			case 11:
+			{
+				List<decimal> amounts = value.Amounts;
+				amounts = RepeatedSerializer.CreateList<decimal>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, amounts);
+				if (amounts != null)
+				{
+					value.Amounts = amounts;
+				}
+				break;
+			}
+			case 12:
+			{
+				Dictionary<int, Guid> ids = value.Ids;
+				ids = MapSerializer.CreateDictionary<int, Guid>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, ids, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+				if (ids != null)
+				{
+					value.Ids = ids;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Wrapped>.Write(ref ProtoWriter.State state, Wrapped value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		List<Payload> messages = value.Messages;
+		if (messages != null)
+		{
+			List<Payload> values = messages;
+			RepeatedSerializer.CreateList<Payload>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, values, this);
+		}
+		Payload[] array = value.Array;
+		if (array != null)
+		{
+			Payload[] values2 = array;
+			RepeatedSerializer.CreateVector<Payload>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, values2, this);
+		}
+		List<Shade?> shades = value.Shades;
+		if (shades != null)
+		{
+			List<Shade?> values3 = shades;
+			RepeatedSerializer.CreateList<Shade?>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, values3, this as ISerializer<Shade?>);
+		}
+		List<DateTime?> dates = value.Dates;
+		if (dates != null)
+		{
+			List<DateTime?> values4 = dates;
+			RepeatedSerializer.CreateList<DateTime?>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, values4);
+		}
+		List<string> names = value.Names;
+		if (names != null)
+		{
+			List<string> values5 = names;
+			RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueFieldPresence, values5);
+		}
+		Dictionary<int, Payload> byId = value.ById;
+		if (byId != null)
+		{
+			Dictionary<int, Payload> values6 = byId;
+			MapSerializer.CreateDictionary<int, Payload>().WriteMap(ref state, 6, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValueFieldPresence, values6, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString | SerializerFeatures.OptionWrappedValue, null, this);
+		}
+		List<Payload> grouped = value.Grouped;
+		if (grouped != null)
+		{
+			List<Payload> values = grouped;
+			RepeatedSerializer.CreateList<Payload>().WriteRepeated(ref state, 7, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionWrappedValueGroup | SerializerFeatures.OptionWrappedValueFieldPresence, values, this);
+		}
+		List<Shade?> bareShades = value.BareShades;
+		if (bareShades != null)
+		{
+			List<Shade?> values3 = bareShades;
+			RepeatedSerializer.CreateList<Shade?>().WriteRepeated(ref state, 8, SerializerFeatures.WireTypeVarint | SerializerFeatures.OptionPackedDisabled, values3, this as ISerializer<Shade?>);
+		}
+		List<DateTime?> bareDates = value.BareDates;
+		if (bareDates != null)
+		{
+			List<DateTime?> values4 = bareDates;
+			RepeatedSerializer.CreateList<DateTime?>().WriteRepeated(ref state, 9, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values4);
+		}
+		List<DateTime> plain = value.Plain;
+		if (plain != null)
+		{
+			List<DateTime> values7 = plain;
+			RepeatedSerializer.CreateList<DateTime>().WriteRepeated(ref state, 10, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values7);
+		}
+		List<decimal> amounts = value.Amounts;
+		if (amounts != null)
+		{
+			List<decimal> values8 = amounts;
+			RepeatedSerializer.CreateList<decimal>().WriteRepeated(ref state, 11, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values8);
+		}
+		Dictionary<int, Guid> ids = value.Ids;
+		if (ids != null)
+		{
+			Dictionary<int, Guid> values9 = ids;
+			MapSerializer.CreateDictionary<int, Guid>().WriteMap(ref state, 12, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values9, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Wrapped>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Payload>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Payload ISerializer<Payload>.Read(ref ProtoReader.State state, Payload value)
+	{
+		if (value == null)
+		{
+			Payload payload = new Payload();
+			value = payload;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int id = state.ReadInt32();
+				value.Id = id;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Payload>.Write(ref ProtoWriter.State state, Payload value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int id = value.Id;
+		if (id != 0)
+		{
+			state.WriteInt32Varint(1, id);
+		}
+	}
+}
+public sealed class WrappedElementsModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___WrappedElementsModel, T>();
+	}
+}

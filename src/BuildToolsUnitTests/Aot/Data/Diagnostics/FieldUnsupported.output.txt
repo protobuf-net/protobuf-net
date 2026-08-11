@@ -1,0 +1,7 @@
+Generator produced 3 diagnostics:
+Warning PBN2001 Aot/Data/Diagnostics/FieldUnsupported.input.cs L11 C42
+Contract 'AotFixtures.FieldUnsupported.ReadOnlyField' is omitted from the AOT model: member 'Value' is read-only.
+Warning PBN2001 Aot/Data/Diagnostics/FieldUnsupported.input.cs L17 C39
+Contract 'AotFixtures.FieldUnsupported.ConstField' is omitted from the AOT model: member 'Value' is a constant.
+Warning PBN2001 Aot/Data/Diagnostics/FieldUnsupported.input.cs L23 C40
+Contract 'AotFixtures.FieldUnsupported.StaticField' is omitted from the AOT model: member 'Value' is static.

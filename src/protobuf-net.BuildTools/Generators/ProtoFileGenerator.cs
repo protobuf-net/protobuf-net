@@ -34,6 +34,10 @@ namespace ProtoBuf.BuildTools.Generators
         {
             try
             {
+                // the opt-out, first and before anything else: one property lookup is the whole cost
+                // of having protobuf-net's build-time tooling installed but switched off
+                if (context.AnalyzerConfigOptions.BuildToolsDisabled()) return;
+
                 var log = Log;
                 log?.Invoke($"Execute with debug log enabled");
 

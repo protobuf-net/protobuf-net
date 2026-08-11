@@ -1,6 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project>
     <ItemGroup>
+        <!-- a single switch to turn the whole of protobuf-net's build-time tooling off. Read before
+             anything else does any work, so the cost of being installed-but-unwanted is one property
+             lookup: <ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools> -->
+        <CompilerVisibleProperty Include="ProtoBufDisableBuildTools" />
+
+        <!-- whether the consumer has asked for AOT or trimming, which decides how loudly the
+             migration analyzer speaks: a project heading for a native publish with no [ProtoModel]
+             has a real defect, where one that is not is merely missing out on cold-start -->
+        <CompilerVisibleProperty Include="PublishAot" />
+        <CompilerVisibleProperty Include="PublishTrimmed" />
+        <CompilerVisibleProperty Include="IsAotCompatible" />
+        <CompilerVisibleProperty Include="IsTrimmable" />
+    </ItemGroup>
+
+    <ItemGroup>
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ImportPaths" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="LangVersion" />
         <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ListSet" />

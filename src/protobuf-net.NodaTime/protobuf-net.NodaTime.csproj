@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- the compile-time model attributes are [Experimental] while the shape settles -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.Meta</RootNamespace>
   </PropertyGroup>

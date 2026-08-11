@@ -368,7 +368,7 @@ namespace ProtoBuf.Meta
             SerializeRootFallback(ref state, value);
         }
 
-        internal static long SerializeImpl<T>(ref ProtoWriter.State state, T value)
+        internal static long SerializeImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref ProtoWriter.State state, T value)
         {
             if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value)) return 0;
 
@@ -1314,7 +1314,7 @@ namespace ProtoBuf.Meta
                 [MethodImpl(MethodImplOptions.NoInlining)]
                 get => s_Singleton;
             }
-            protected override ISerializer<T> GetSerializer<T>() => null;
+            protected override ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>() => null;
         }
 
         /// <summary>
@@ -1378,7 +1378,7 @@ namespace ProtoBuf.Meta
         protected virtual ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
             => this as ISerializer<T>;
 
-        internal virtual ISerializer<T> GetSerializerCore<T>(CompatibilityLevel ambient)
+        internal virtual ISerializer<T> GetSerializerCore<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(CompatibilityLevel ambient)
             => GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -1400,7 +1400,7 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        internal static T CreateInstance<T>(ISerializationContext context, ISerializer<T> serializer = null)
+        internal static T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ISerializationContext context, ISerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsReferenceType)
             {
@@ -1419,7 +1419,7 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ActivatorCreate<T>()
+        internal static T ActivatorCreate<[DynamicallyAccessedMembers(DynamicAccess.Activated)] T>()
         {
             try
             {
@@ -1435,6 +1435,61 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISerializer<T> GetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model, CompatibilityLevel ambient = default)
            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
+            ?? model?.GetSerializerCore<T>(ambient)
+            ?? NoSerializer<T>(model);
+
+        /// <summary>
+        /// Resolve a serializer for <typeparamref name="T"/> from a generic path that is only
+        /// *sometimes* a fallback - i.e. one whose caller usually supplies the serializer outright.
+        /// </summary>
+        /// <remarks>
+        /// <para>The point of this is trimming, not behaviour: the two arms are the same resolution.
+        /// A generic utility that ends <c>serializer ??= GetSerializer&lt;T&gt;(model)</c> must
+        /// declare <see cref="DynamicAccess.ContractType"/> on its own <c>T</c>, and every
+        /// instantiation then inherits that demand - including generated models, which pass a
+        /// serializer and never reach the fallback at all.</para>
+        /// <para>Under native AOT ILC substitutes <c>IsDynamicCodeSupported</c> with a constant and
+        /// removes the dynamic arm <em>before</em> trim analysis runs, so the demand disappears
+        /// rather than moving to the caller - which is what distinguishes this from plain annotation
+        /// removal, and from the <c>Requires*</c> attempt before it. Callers may therefore leave
+        /// their own <c>T</c> unannotated.</para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ISerializer<T> ResolveSerializer<T>(TypeModel model, CompatibilityLevel ambient = default)
+        {
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            if (!RuntimeFeature.IsDynamicCodeSupported) return GetSerializerWithoutReflection<T>(model, ambient);
+#endif
+            return GetSerializerAllowingReflection<T>(model, ambient);
+        }
+
+        // the "annotation demanded" arm; a separate method purely so that the suppression on the
+        // other arm cannot accidentally cover this one
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091",
+            Justification = "The annotation is genuinely required here, and this arm only survives trim analysis when dynamic code does too - see ResolveSerializer.")]
+        private static ISerializer<T> GetSerializerAllowingReflection<T>(TypeModel model, CompatibilityLevel ambient)
+            => GetSerializer<T>(model, ambient);
+
+        /// <summary>
+        /// The resolution that remains available once dynamic code does not: the inbuilt serializers,
+        /// then whatever the model hands out directly.
+        /// </summary>
+        /// <remarks>
+        /// This is the same call chain as <see cref="GetSerializer{T}(TypeModel, CompatibilityLevel)"/>
+        /// - deliberately, since a generated model resolves a repeated enum through it (we pass no
+        /// serializer and rely on <c>ISerializerProxy&lt;TEnum&gt;</c>, so an arm that threw would
+        /// break exactly the shapes AotSmoke covers). What differs is the annotation: the only
+        /// override on this route that reflects over <typeparamref name="T"/> is
+        /// <c>RuntimeTypeModel</c>'s, and it cannot build a serializer at all without dynamic code.
+        /// Where both arms *are* live - ordinary trimming - the other one preserves
+        /// <typeparamref name="T"/> anyway, so the suppression closes no hole that was open.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091",
+            Justification = "Reached only where RuntimeTypeModel - the one override that reflects over T - cannot function; see the remarks.")]
+        private static ISerializer<T> GetSerializerWithoutReflection<T>(TypeModel model, CompatibilityLevel ambient)
+            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializerCore<T>(ambient)
             ?? NoSerializer<T>(model);
 
@@ -1480,12 +1535,12 @@ namespace ProtoBuf.Meta
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISerializer<T> TryGetSerializer<T>(TypeModel model)
+        internal static ISerializer<T> TryGetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model)
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>();
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
+        internal static ISubTypeSerializer<T> GetSubTypeSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model) where T : class
            => model?.GetSerializer<T>() as ISubTypeSerializer<T>
             ?? NoSubTypeSerializer<T>(model);
 
@@ -1624,8 +1679,15 @@ namespace ProtoBuf.Meta
         /// Indicates that while an inheritance tree exists, the exact type encountered was not
         /// specified in that hierarchy and cannot be processed.
         /// </summary>
+        // T is deliberately *not* annotated: nothing here inspects its members. IsSubType<T> is
+        // `typeof(T) != value.GetType()`, and the pair then goes to the Type-based overload, whose
+        // parameters carry no demand of their own. A ContractType demand here was expensive rather
+        // than idle - the mask includes PublicNestedTypes, and a .proto DTO nests its enums inside
+        // the message, so it kept those enums' members reflectable, inherited statics included; that
+        // is where the IL3050s naming Enum.GetValues came from. This call is emitted for every
+        // non-sealed reference-type contract, so the demand applied to the whole model.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ThrowUnexpectedSubtype<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value) where T : class
+        public static void ThrowUnexpectedSubtype<T>(T value) where T : class
         {
             if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T), value.GetType());
         }

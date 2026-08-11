@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN2003 Aot/Data/Diagnostics/MapUnsupported.input.cs L44 C22
+Contract 'AotFixtures.MapUnsupported.NotADictionary' is omitted from the AOT model: [ProtoMap] on a non-dictionary member is not supported yet.

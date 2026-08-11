@@ -8,6 +8,28 @@ Wouldn't it be great if you could see these problems at build time? Well: that's
 `protobuf-net.BuildTools` is a NuGet package that contaings C# "analyzers" that warn you about problems it can see, that works with most build tools,
 including Visual Studio and `dotnet build` at the command-line. It has no runtime dependencies and doesn't need to be shipped with your application.
 
+## Turning it off
+
+Everything `protobuf-net.BuildTools` contributes at build time — the analyzers, the `.proto`
+generator, the AOT model generator — can be switched off with one property:
+
+``` xml
+<PropertyGroup>
+  <ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>
+</PropertyGroup>
+```
+
+This is read *before* anything else does any work, so the cost of having the tooling present but
+unwanted is a single property lookup rather than a walk of your compilation. Useful if the package
+arrives transitively, or if you want it in most of a solution but not in one project.
+
+To silence individual rules rather than all of them, prefer the usual mechanisms — `<NoWarn>` for a
+specific id, or `.editorconfig`:
+
+```
+dotnet_diagnostic.PBN0022.severity = none
+```
+
 ## Installation
 
 To install `protobuf-net.BuildTools`, you would add - to your csproj:

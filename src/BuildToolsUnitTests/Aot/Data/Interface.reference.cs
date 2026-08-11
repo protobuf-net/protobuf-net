@@ -1,0 +1,415 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.Interface;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___InterfaceModel : ISerializer<Zoo>, ISerializer<IAnimal>, ISubTypeSerializer<IAnimal>, ISerializer<Dog>, ISubTypeSerializer<Dog>, ISerializer<Cat>, ISubTypeSerializer<Cat>, ISerializer<INamed>, ISubTypeSerializer<INamed>, ISerializer<Tagged>, ISubTypeSerializer<Tagged>
+{
+	Zoo ISerializer<Zoo>.Read(ref ProtoReader.State state, Zoo value)
+	{
+		if (value == null)
+		{
+			Zoo zoo = new Zoo();
+			value = zoo;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				IAnimal backup = value.Star;
+				backup = state.ReadMessage(SerializerFeatures.CategoryRepeated, backup, this);
+				if (backup != null)
+				{
+					value.Star = backup;
+				}
+				break;
+			}
+			case 2:
+			{
+				List<IAnimal> all = value.All;
+				all = RepeatedSerializer.CreateList<IAnimal>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, all, this);
+				if (all != null)
+				{
+					value.All = all;
+				}
+				break;
+			}
+			case 3:
+			{
+				INamed tag = value.Tag;
+				tag = state.ReadMessage(SerializerFeatures.CategoryRepeated, tag, this);
+				if (tag != null)
+				{
+					value.Tag = tag;
+				}
+				break;
+			}
+			case 4:
+			{
+				IAnimal backup = value.Backup;
+				backup = state.ReadMessage(SerializerFeatures.CategoryRepeated, backup, this);
+				if (backup != null)
+				{
+					value.Backup = backup;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Zoo>.Write(ref ProtoWriter.State state, Zoo value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		IAnimal star = value.Star;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, star, this);
+		List<IAnimal> all = value.All;
+		if (all != null)
+		{
+			List<IAnimal> values = all;
+			RepeatedSerializer.CreateList<IAnimal>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+		INamed tag = value.Tag;
+		state.WriteMessage(3, SerializerFeatures.CategoryRepeated, tag, this);
+		star = value.Backup;
+		state.WriteMessage(4, SerializerFeatures.CategoryRepeated, star, this);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Zoo>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<IAnimal>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Dog>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Cat>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<INamed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Tagged>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	IAnimal ISerializer<IAnimal>.Read(ref ProtoReader.State state, IAnimal value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return ((ISubTypeSerializer<IAnimal>)this).ReadSubType(ref state, SubTypeState<IAnimal>.Create(state.Context, value));
+	}
+
+	void ISerializer<IAnimal>.Write(ref ProtoWriter.State state, IAnimal value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<IAnimal>)this).WriteSubType(ref state, value);
+	}
+
+	void ISubTypeSerializer<IAnimal>.WriteSubType(ref ProtoWriter.State state, IAnimal value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is Dog value2)
+			{
+				state.WriteSubType(10, value2, this);
+			}
+			else if (value is Cat value3)
+			{
+				state.WriteSubType(11, value3, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+	}
+
+	IAnimal ISubTypeSerializer<IAnimal>.ReadSubType(ref ProtoReader.State state, SubTypeState<IAnimal> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 10:
+				value.ReadSubType<Dog>(ref state, this);
+				break;
+			case 11:
+				value.ReadSubType<Cat>(ref state, this);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	Dog ISerializer<Dog>.Read(ref ProtoReader.State state, Dog value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Dog)((ISubTypeSerializer<IAnimal>)this).ReadSubType(ref state, SubTypeState<IAnimal>.Create(state.Context, value));
+	}
+
+	void ISerializer<Dog>.Write(ref ProtoWriter.State state, Dog value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<IAnimal>)this).WriteSubType(ref state, (IAnimal)value);
+	}
+
+	void ISubTypeSerializer<Dog>.WriteSubType(ref ProtoWriter.State state, Dog value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string name = value.Name;
+		state.WriteString(1, name);
+		int fetches = value.Fetches;
+		if (fetches != 0)
+		{
+			state.WriteInt32Varint(2, fetches);
+		}
+	}
+
+	Dog ISubTypeSerializer<Dog>.ReadSubType(ref ProtoReader.State state, SubTypeState<Dog> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dog value2 = value.Value;
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value2.Name = text;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dog value2 = value.Value;
+				int fetches = state.ReadInt32();
+				value2.Fetches = fetches;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	Cat ISerializer<Cat>.Read(ref ProtoReader.State state, Cat value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Cat)((ISubTypeSerializer<IAnimal>)this).ReadSubType(ref state, SubTypeState<IAnimal>.Create(state.Context, value));
+	}
+
+	void ISerializer<Cat>.Write(ref ProtoWriter.State state, Cat value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<IAnimal>)this).WriteSubType(ref state, (IAnimal)value);
+	}
+
+	void ISubTypeSerializer<Cat>.WriteSubType(ref ProtoWriter.State state, Cat value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string name = value.Name;
+		state.WriteString(1, name);
+		bool aloof = value.Aloof;
+		if (aloof)
+		{
+			state.WriteFieldHeader(3, WireType.Variant);
+			state.WriteBoolean(aloof);
+		}
+	}
+
+	Cat ISubTypeSerializer<Cat>.ReadSubType(ref ProtoReader.State state, SubTypeState<Cat> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Cat value2 = value.Value;
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value2.Name = text;
+				}
+				break;
+			}
+			case 3:
+			{
+				Cat value2 = value.Value;
+				bool aloof = state.ReadBoolean();
+				value2.Aloof = aloof;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	INamed ISerializer<INamed>.Read(ref ProtoReader.State state, INamed value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return ((ISubTypeSerializer<INamed>)this).ReadSubType(ref state, SubTypeState<INamed>.Create(state.Context, value));
+	}
+
+	void ISerializer<INamed>.Write(ref ProtoWriter.State state, INamed value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<INamed>)this).WriteSubType(ref state, value);
+	}
+
+	void ISubTypeSerializer<INamed>.WriteSubType(ref ProtoWriter.State state, INamed value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is Tagged value2)
+			{
+				state.WriteSubType(10, value2, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+		string label = value.Label;
+		state.WriteString(1, label);
+	}
+
+	INamed ISubTypeSerializer<INamed>.ReadSubType(ref ProtoReader.State state, SubTypeState<INamed> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				INamed value2 = value.Value;
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value2.Label = text;
+				}
+				break;
+			}
+			case 10:
+				value.ReadSubType<Tagged>(ref state, this);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	Tagged ISerializer<Tagged>.Read(ref ProtoReader.State state, Tagged value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (Tagged)((ISubTypeSerializer<INamed>)this).ReadSubType(ref state, SubTypeState<INamed>.Create(state.Context, value));
+	}
+
+	void ISerializer<Tagged>.Write(ref ProtoWriter.State state, Tagged value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<INamed>)this).WriteSubType(ref state, (INamed)value);
+	}
+
+	void ISubTypeSerializer<Tagged>.WriteSubType(ref ProtoWriter.State state, Tagged value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string label = value.Label;
+		state.WriteString(1, label);
+		int order = value.Order;
+		if (order != 0)
+		{
+			state.WriteInt32Varint(2, order);
+		}
+	}
+
+	Tagged ISubTypeSerializer<Tagged>.ReadSubType(ref ProtoReader.State state, SubTypeState<Tagged> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Tagged value2 = value.Value;
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value2.Label = text;
+				}
+				break;
+			}
+			case 2:
+			{
+				Tagged value2 = value.Value;
+				int order = state.ReadInt32();
+				value2.Order = order;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+}
+public sealed class InterfaceModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___InterfaceModel, T>();
+	}
+}

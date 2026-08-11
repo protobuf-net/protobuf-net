@@ -1,0 +1,9 @@
+Generator produced 4 diagnostics:
+Warning PBN2001 Aot/Data/Diagnostics/MemberTypeAdvice.input.cs L16 C39
+Contract 'AotFixtures.MemberTypeAdvice.NeedsOption' is omitted from the AOT model: member 'Address' has unsupported type 'System.Net.IPAddress'; it has a ToString() and a static Parse(string), so [ProtoModel(AllowParseableTypes = true)] would include it - off by default, matching RuntimeTypeModel.
+Warning PBN2001 Aot/Data/Diagnostics/MemberTypeAdvice.input.cs L24 C34
+Contract 'AotFixtures.MemberTypeAdvice.UsesSystemType' is omitted from the AOT model: member 'Which' has unsupported type 'System.Type'; System.Type is deliberately not supported, because ref-emit serializes it through Type.GetType, which native AOT cannot do.
+Warning PBN2001 Aot/Data/Diagnostics/MemberTypeAdvice.input.cs L30 C36
+Contract 'AotFixtures.MemberTypeAdvice.UsesSystemTypeArray' is omitted from the AOT model: member 'Several' has unsupported type 'System.Type[]'; System.Type is deliberately not supported, because ref-emit serializes it through Type.GetType, which native AOT cannot do.
+Warning PBN2001 Aot/Data/Diagnostics/MemberTypeAdvice.input.cs L41 C75
+Contract 'AotFixtures.MemberTypeAdvice.ListOfUndecorated' is omitted from the AOT model: member 'Items' has unsupported type 'System.Collections.Generic.List<AotFixtures.MemberTypeAdvice.IUndecorated>'; its element 'AotFixtures.MemberTypeAdvice.IUndecorated' is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own.

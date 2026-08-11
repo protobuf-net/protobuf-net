@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN2003 Aot/Data/Diagnostics/ExtensibleUnsupported.input.cs L9 C15
+Contract 'AotFixtures.ExtensibleUnsupported.ExtensibleStruct' is omitted from the AOT model: IExtensible on a struct is not supported yet.
+Warning PBN2003 Aot/Data/Diagnostics/ExtensibleUnsupported.input.cs L22 C14
+Contract 'AotFixtures.ExtensibleUnsupported.UntypedBase' is omitted from the AOT model: IExtensible without ITypedExtensible on a type with inheritance is not supported yet.

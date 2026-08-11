@@ -1,0 +1,696 @@
+using System;
+using System.Reflection;
+using AotFixtures.Compat;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___CompatModel : ISerializer<Legacy>, ISerializer<Level240>, ISerializer<Level300>, ISerializer<Mixed>, ISerializer<WellKnown>, ISerializer<LegacyFixed>, ISerializer<Formats>, ISerializer<LevelledBase>, ISubTypeSerializer<LevelledBase>, ISerializer<InheritsLevel>, ISubTypeSerializer<InheritsLevel>
+{
+	Legacy ISerializer<Legacy>.Read(ref ProtoReader.State state, Legacy value)
+	{
+		if (value == null)
+		{
+			Legacy legacy = new Legacy();
+			value = legacy;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime when = BclHelpers.ReadDateTime(ref state);
+				value.When = when;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan how = BclHelpers.ReadTimeSpan(ref state);
+				value.How = how;
+				break;
+			}
+			case 3:
+			{
+				Guid id = BclHelpers.ReadGuid(ref state);
+				value.Id = id;
+				break;
+			}
+			case 4:
+			{
+				decimal amount = BclHelpers.ReadDecimal(ref state);
+				value.Amount = amount;
+				break;
+			}
+			case 5:
+			{
+				DateTime? whenMaybe = BclHelpers.ReadDateTime(ref state);
+				value.WhenMaybe = whenMaybe;
+				break;
+			}
+			case 6:
+			{
+				decimal? amountMaybe = BclHelpers.ReadDecimal(ref state);
+				value.AmountMaybe = amountMaybe;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Legacy>.Write(ref ProtoWriter.State state, Legacy value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = when;
+		BclHelpers.WriteDateTime(ref state, value2);
+		TimeSpan how = value.How;
+		if (!(how == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteTimeSpan(ref state, how);
+		}
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			BclHelpers.WriteGuid(ref state, id);
+		}
+		decimal amount = value.Amount;
+		if (!(amount == 0m))
+		{
+			state.WriteFieldHeader(4, WireType.String);
+			BclHelpers.WriteDecimal(ref state, amount);
+		}
+		DateTime? whenMaybe = value.WhenMaybe;
+		if (whenMaybe.HasValue)
+		{
+			DateTime valueOrDefault = whenMaybe.GetValueOrDefault();
+			state.WriteFieldHeader(5, WireType.String);
+			value2 = valueOrDefault;
+			BclHelpers.WriteDateTime(ref state, value2);
+		}
+		decimal? amountMaybe = value.AmountMaybe;
+		if (amountMaybe.HasValue)
+		{
+			decimal valueOrDefault2 = amountMaybe.GetValueOrDefault();
+			state.WriteFieldHeader(6, WireType.String);
+			amount = valueOrDefault2;
+			BclHelpers.WriteDecimal(ref state, amount);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Legacy>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Level240>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Level300>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Mixed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<WellKnown>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<LegacyFixed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Formats>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<LevelledBase>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<InheritsLevel>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Level240 ISerializer<Level240>.Read(ref ProtoReader.State state, Level240 value)
+	{
+		if (value == null)
+		{
+			Level240 level = new Level240();
+			value = level;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime when = BclHelpers.ReadTimestamp(ref state);
+				value.When = when;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan how = BclHelpers.ReadDuration(ref state);
+				value.How = how;
+				break;
+			}
+			case 3:
+			{
+				Guid id = BclHelpers.ReadGuid(ref state);
+				value.Id = id;
+				break;
+			}
+			case 4:
+			{
+				decimal amount = BclHelpers.ReadDecimal(ref state);
+				value.Amount = amount;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Level240>.Write(ref ProtoWriter.State state, Level240 value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = when;
+		BclHelpers.WriteTimestamp(ref state, value2);
+		TimeSpan how = value.How;
+		if (!(how == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteDuration(ref state, how);
+		}
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			BclHelpers.WriteGuid(ref state, id);
+		}
+		decimal amount = value.Amount;
+		if (!(amount == 0m))
+		{
+			state.WriteFieldHeader(4, WireType.String);
+			BclHelpers.WriteDecimal(ref state, amount);
+		}
+	}
+
+	Level300 ISerializer<Level300>.Read(ref ProtoReader.State state, Level300 value)
+	{
+		if (value == null)
+		{
+			Level300 level = new Level300();
+			value = level;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime when = BclHelpers.ReadTimestamp(ref state);
+				value.When = when;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan how = BclHelpers.ReadDuration(ref state);
+				value.How = how;
+				break;
+			}
+			case 3:
+			{
+				Guid guid = BclHelpers.ReadGuidString(ref state);
+				value.Id = guid;
+				break;
+			}
+			case 4:
+			{
+				decimal amount = BclHelpers.ReadDecimalString(ref state);
+				value.Amount = amount;
+				break;
+			}
+			case 5:
+			{
+				Guid guid = BclHelpers.ReadGuidBytes(ref state);
+				value.Fixed = guid;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Level300>.Write(ref ProtoWriter.State state, Level300 value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = when;
+		BclHelpers.WriteTimestamp(ref state, value2);
+		TimeSpan how = value.How;
+		if (!(how == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteDuration(ref state, how);
+		}
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			BclHelpers.WriteGuidString(ref state, id);
+		}
+		decimal amount = value.Amount;
+		if (!(amount == 0m))
+		{
+			state.WriteFieldHeader(4, WireType.String);
+			BclHelpers.WriteDecimalString(ref state, amount);
+		}
+		id = value.Fixed;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(5, WireType.String);
+			BclHelpers.WriteGuidBytes(ref state, id);
+		}
+	}
+
+	Mixed ISerializer<Mixed>.Read(ref ProtoReader.State state, Mixed value)
+	{
+		if (value == null)
+		{
+			Mixed mixed = new Mixed();
+			value = mixed;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime downgraded = BclHelpers.ReadTimestamp(ref state);
+				value.Inherited = downgraded;
+				break;
+			}
+			case 2:
+			{
+				DateTime downgraded = BclHelpers.ReadDateTime(ref state);
+				value.Downgraded = downgraded;
+				break;
+			}
+			case 3:
+			{
+				Guid downgradedGuid = BclHelpers.ReadGuid(ref state);
+				value.DowngradedGuid = downgradedGuid;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Mixed>.Write(ref ProtoWriter.State state, Mixed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime inherited = value.Inherited;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = inherited;
+		BclHelpers.WriteTimestamp(ref state, value2);
+		DateTime downgraded = value.Downgraded;
+		state.WriteFieldHeader(2, WireType.String);
+		value2 = downgraded;
+		BclHelpers.WriteDateTime(ref state, value2);
+		Guid downgradedGuid = value.DowngradedGuid;
+		if (!(downgradedGuid == Guid.Empty))
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			BclHelpers.WriteGuid(ref state, downgradedGuid);
+		}
+	}
+
+	WellKnown ISerializer<WellKnown>.Read(ref ProtoReader.State state, WellKnown value)
+	{
+		if (value == null)
+		{
+			WellKnown wellKnown = new WellKnown();
+			value = wellKnown;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime when = BclHelpers.ReadTimestamp(ref state);
+				value.When = when;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan how = BclHelpers.ReadDuration(ref state);
+				value.How = how;
+				break;
+			}
+			case 3:
+			{
+				Guid id = BclHelpers.ReadGuid(ref state);
+				value.Id = id;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<WellKnown>.Write(ref ProtoWriter.State state, WellKnown value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = when;
+		BclHelpers.WriteTimestamp(ref state, value2);
+		TimeSpan how = value.How;
+		if (!(how == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteDuration(ref state, how);
+		}
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			BclHelpers.WriteGuid(ref state, id);
+		}
+	}
+
+	LegacyFixed ISerializer<LegacyFixed>.Read(ref ProtoReader.State state, LegacyFixed value)
+	{
+		if (value == null)
+		{
+			LegacyFixed legacyFixed = new LegacyFixed();
+			value = legacyFixed;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				Guid id = BclHelpers.ReadGuid(ref state);
+				value.Id = id;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<LegacyFixed>.Write(ref ProtoWriter.State state, LegacyFixed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(1, WireType.String);
+			BclHelpers.WriteGuid(ref state, id);
+		}
+	}
+
+	Formats ISerializer<Formats>.Read(ref ProtoReader.State state, Formats value)
+	{
+		if (value == null)
+		{
+			Formats formats = new Formats();
+			value = formats;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime groupedWhen = BclHelpers.ReadDateTime(ref state);
+				value.FixedWhen = groupedWhen;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan groupedHow = BclHelpers.ReadTimeSpan(ref state);
+				value.FixedHow = groupedHow;
+				break;
+			}
+			case 3:
+			{
+				DateTime groupedWhen = BclHelpers.ReadDateTime(ref state);
+				value.GroupedWhen = groupedWhen;
+				break;
+			}
+			case 4:
+			{
+				TimeSpan groupedHow = BclHelpers.ReadTimeSpan(ref state);
+				value.GroupedHow = groupedHow;
+				break;
+			}
+			case 5:
+			{
+				Guid fixedId = BclHelpers.ReadGuid(ref state);
+				value.GroupedId = fixedId;
+				break;
+			}
+			case 6:
+			{
+				decimal fixedAmount = BclHelpers.ReadDecimal(ref state);
+				value.GroupedAmount = fixedAmount;
+				break;
+			}
+			case 7:
+			{
+				decimal fixedAmount = BclHelpers.ReadDecimal(ref state);
+				value.FixedAmount = fixedAmount;
+				break;
+			}
+			case 8:
+			{
+				Guid fixedId = BclHelpers.ReadGuid(ref state);
+				value.FixedId = fixedId;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Formats>.Write(ref ProtoWriter.State state, Formats value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime fixedWhen = value.FixedWhen;
+		state.WriteFieldHeader(1, WireType.Fixed64);
+		DateTime value2 = fixedWhen;
+		BclHelpers.WriteDateTime(ref state, value2);
+		TimeSpan fixedHow = value.FixedHow;
+		if (!(fixedHow == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.Fixed64);
+			BclHelpers.WriteTimeSpan(ref state, fixedHow);
+		}
+		DateTime groupedWhen = value.GroupedWhen;
+		state.WriteFieldHeader(3, WireType.StartGroup);
+		value2 = groupedWhen;
+		BclHelpers.WriteDateTime(ref state, value2);
+		fixedHow = value.GroupedHow;
+		if (!(fixedHow == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(4, WireType.StartGroup);
+			BclHelpers.WriteTimeSpan(ref state, fixedHow);
+		}
+		Guid groupedId = value.GroupedId;
+		if (!(groupedId == Guid.Empty))
+		{
+			state.WriteFieldHeader(5, WireType.StartGroup);
+			BclHelpers.WriteGuid(ref state, groupedId);
+		}
+		decimal groupedAmount = value.GroupedAmount;
+		if (!(groupedAmount == 0m))
+		{
+			state.WriteFieldHeader(6, WireType.String);
+			BclHelpers.WriteDecimal(ref state, groupedAmount);
+		}
+		groupedAmount = value.FixedAmount;
+		if (!(groupedAmount == 0m))
+		{
+			state.WriteFieldHeader(7, WireType.String);
+			BclHelpers.WriteDecimal(ref state, groupedAmount);
+		}
+		groupedId = value.FixedId;
+		if (!(groupedId == Guid.Empty))
+		{
+			state.WriteFieldHeader(8, WireType.String);
+			BclHelpers.WriteGuid(ref state, groupedId);
+		}
+	}
+
+	LevelledBase ISerializer<LevelledBase>.Read(ref ProtoReader.State state, LevelledBase value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return ((ISubTypeSerializer<LevelledBase>)this).ReadSubType(ref state, SubTypeState<LevelledBase>.Create(state.Context, value));
+	}
+
+	void ISerializer<LevelledBase>.Write(ref ProtoWriter.State state, LevelledBase value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<LevelledBase>)this).WriteSubType(ref state, value);
+	}
+
+	void ISubTypeSerializer<LevelledBase>.WriteSubType(ref ProtoWriter.State state, LevelledBase value)
+	{
+		if (TypeModel.IsSubType(value))
+		{
+			if (value is InheritsLevel value2)
+			{
+				state.WriteSubType(100, value2, this);
+			}
+			else
+			{
+				TypeModel.ThrowUnexpectedSubtype(value);
+			}
+		}
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value3 = when;
+		BclHelpers.WriteTimestamp(ref state, value3);
+	}
+
+	LevelledBase ISubTypeSerializer<LevelledBase>.ReadSubType(ref ProtoReader.State state, SubTypeState<LevelledBase> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				LevelledBase value2 = value.Value;
+				DateTime when = BclHelpers.ReadTimestamp(ref state);
+				value2.When = when;
+				break;
+			}
+			case 100:
+				value.ReadSubType<InheritsLevel>(ref state, this);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value.Value;
+	}
+
+	InheritsLevel ISerializer<InheritsLevel>.Read(ref ProtoReader.State state, InheritsLevel value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return (InheritsLevel)((ISubTypeSerializer<LevelledBase>)this).ReadSubType(ref state, SubTypeState<LevelledBase>.Create(state.Context, value));
+	}
+
+	void ISerializer<InheritsLevel>.Write(ref ProtoWriter.State state, InheritsLevel value)
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		((ISubTypeSerializer<LevelledBase>)this).WriteSubType(ref state, (LevelledBase)value);
+	}
+
+	void ISubTypeSerializer<InheritsLevel>.WriteSubType(ref ProtoWriter.State state, InheritsLevel value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(1, WireType.String);
+			BclHelpers.WriteGuidString(ref state, id);
+		}
+	}
+
+	InheritsLevel ISubTypeSerializer<InheritsLevel>.ReadSubType(ref ProtoReader.State state, SubTypeState<InheritsLevel> value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				InheritsLevel value2 = value.Value;
+				Guid id = BclHelpers.ReadGuidString(ref state);
+				value2.Id = id;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value.Value;
+	}
+}
+public sealed class CompatModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___CompatModel, T>();
+	}
+}

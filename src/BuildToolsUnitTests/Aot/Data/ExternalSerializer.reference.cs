@@ -1,0 +1,110 @@
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using AotFixtures.ExternalSerializer;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___ExternalSerializerModel : ISerializer<Holder>, ISerializerProxy<Thing>, ISerializerProxy<Ticket>, ISerializerProxy<Stamp>
+{
+	Holder ISerializer<Holder>.Read(ref ProtoReader.State state, Holder value)
+	{
+		if (value == null)
+		{
+			Holder holder = new Holder();
+			value = holder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Thing thing = value.Thing;
+				thing = state.ReadMessage(SerializerFeatures.CategoryRepeated, thing, SerializerCache.Get<ThingSerializer, Thing>());
+				if (thing != null)
+				{
+					value.Thing = thing;
+				}
+				break;
+			}
+			case 2:
+			{
+				Ticket ticket = value.Ticket;
+				ticket = SerializerCache.Get<TicketSerializer, Ticket>().Read(ref state, ticket);
+				value.Ticket = ticket;
+				break;
+			}
+			case 3:
+			{
+				Stamp stamp = value.Stamp;
+				stamp = SerializerCache.Get<StampSerializer, Stamp>().Read(ref state, stamp);
+				value.Stamp = stamp;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Holder>.Write(ref ProtoWriter.State state, Holder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Thing thing = value.Thing;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, thing, SerializerCache.Get<ThingSerializer, Thing>());
+		Ticket ticket = value.Ticket;
+		state.WriteFieldHeader(2, WireType.Variant);
+		Ticket value2 = ticket;
+		SerializerCache.Get<TicketSerializer, Ticket>().Write(ref state, value2);
+		Stamp stamp = value.Stamp;
+		state.WriteFieldHeader(3, WireType.Fixed32);
+		Stamp value3 = stamp;
+		SerializerCache.Get<StampSerializer, Stamp>().Write(ref state, value3);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Holder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	[SpecialName]
+	ISerializer<Thing> ISerializerProxy<Thing>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<ThingSerializer, Thing>();
+	}
+
+	[SpecialName]
+	ISerializer<Ticket> ISerializerProxy<Ticket>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<TicketSerializer, Ticket>();
+	}
+
+	[SpecialName]
+	ISerializer<Stamp> ISerializerProxy<Stamp>.get_Serializer()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<StampSerializer, Stamp>();
+	}
+}
+public sealed class ExternalSerializerModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___ExternalSerializerModel, T>();
+	}
+}

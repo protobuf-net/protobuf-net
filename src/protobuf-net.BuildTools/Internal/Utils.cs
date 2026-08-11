@@ -92,6 +92,17 @@ namespace ProtoBuf.BuildTools.Internal
         internal static bool InProtoBufNamespace(this INamedTypeSymbol symbol)
             => InNamespace(symbol, ProtoBufNamespace);
 
+        /// <summary>
+        /// Whether the consumer has switched protobuf-net's build-time tooling off entirely.
+        /// </summary>
+        /// <remarks>
+        /// Checked first by every analyzer and generator, before any symbol work, so that declining
+        /// the tooling costs a single property lookup. See <see cref="Literals.DisableProperty"/>.
+        /// </remarks>
+        internal static bool BuildToolsDisabled(this AnalyzerConfigOptionsProvider options)
+            => options.GlobalOptions.TryGetValue(Literals.DisableProperty, out var value)
+                && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+
         internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
         {
             var cs = symbol.ContainingNamespace;

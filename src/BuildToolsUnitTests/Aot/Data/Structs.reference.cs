@@ -1,0 +1,134 @@
+using System.Reflection;
+using AotFixtures.Structs;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___StructsModel : ISerializer<Point>, ISerializer<HasStructs>
+{
+	Point ISerializer<Point>.Read(ref ProtoReader.State state, Point value)
+	{
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int x = state.ReadInt32();
+				value.X = x;
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Point>.Write(ref ProtoWriter.State state, Point value)
+	{
+		int x = value.X;
+		if (x != 0)
+		{
+			state.WriteInt32Varint(1, x);
+		}
+		string label = value.Label;
+		state.WriteString(2, label);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Point>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<HasStructs>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	HasStructs ISerializer<HasStructs>.Read(ref ProtoReader.State state, HasStructs value)
+	{
+		if (value == null)
+		{
+			HasStructs hasStructs = new HasStructs();
+			value = hasStructs;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Point valueOrDefault = value.Location;
+				valueOrDefault = state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this);
+				value.Location = valueOrDefault;
+				break;
+			}
+			case 2:
+			{
+				Point valueOrDefault = value.MaybeLocation.GetValueOrDefault();
+				Point? maybeLocation = state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this);
+				value.MaybeLocation = maybeLocation;
+				break;
+			}
+			case 3:
+			{
+				int other = state.ReadInt32();
+				value.Other = other;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<HasStructs>.Write(ref ProtoWriter.State state, HasStructs value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Point location = value.Location;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, location, this);
+		Point? maybeLocation = value.MaybeLocation;
+		if (maybeLocation.HasValue)
+		{
+			location = maybeLocation.GetValueOrDefault();
+			state.WriteMessage(2, SerializerFeatures.CategoryRepeated, location, this);
+		}
+		int other = value.Other;
+		if (other != 0)
+		{
+			state.WriteInt32Varint(3, other);
+		}
+	}
+}
+public sealed class StructsModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___StructsModel, T>();
+	}
+}

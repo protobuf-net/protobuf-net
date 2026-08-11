@@ -1,0 +1,190 @@
+using System.Net;
+using System.Reflection;
+using AotFixtures.Parseable;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___ParseableModel : ISerializer<Endpoint>, ISerializer<Holder>, ISerializer<NotParseable>
+{
+	Endpoint ISerializer<Endpoint>.Read(ref ProtoReader.State state, Endpoint value)
+	{
+		if (value == null)
+		{
+			Endpoint endpoint = new Endpoint();
+			value = endpoint;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Moniker moniker = Moniker.Parse(state.ReadString());
+				if (moniker != null)
+				{
+					value.Address = moniker;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Name = text;
+				}
+				break;
+			}
+			case 3:
+			{
+				IPAddress iPAddress = IPAddress.Parse(state.ReadString());
+				if (iPAddress != null)
+				{
+					value.Ip = iPAddress;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Endpoint>.Write(ref ProtoWriter.State state, Endpoint value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Moniker address = value.Address;
+		if (address != null)
+		{
+			state.WriteFieldHeader(1, WireType.String);
+			Moniker moniker = address;
+			state.WriteString(moniker.ToString());
+		}
+		string name = value.Name;
+		state.WriteString(2, name);
+		IPAddress ip = value.Ip;
+		if (ip != null)
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			IPAddress iPAddress = ip;
+			state.WriteString(iPAddress.ToString());
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Endpoint>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Holder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<NotParseable>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Holder ISerializer<Holder>.Read(ref ProtoReader.State state, Holder value)
+	{
+		if (value == null)
+		{
+			Holder holder = new Holder();
+			value = holder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Fraction ratio = Fraction.Parse(state.ReadString());
+				value.Ratio = ratio;
+				break;
+			}
+			case 2:
+			{
+				NotParseable child = value.Child;
+				child = state.ReadMessage(SerializerFeatures.CategoryRepeated, child, this);
+				if (child != null)
+				{
+					value.Child = child;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Holder>.Write(ref ProtoWriter.State state, Holder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Fraction ratio = value.Ratio;
+		state.WriteFieldHeader(1, WireType.String);
+		Fraction fraction = ratio;
+		state.WriteString(fraction.ToString());
+		NotParseable child = value.Child;
+		state.WriteMessage(2, SerializerFeatures.CategoryRepeated, child, this);
+	}
+
+	NotParseable ISerializer<NotParseable>.Read(ref ProtoReader.State state, NotParseable value)
+	{
+		if (value == null)
+		{
+			NotParseable notParseable = new NotParseable();
+			value = notParseable;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<NotParseable>.Write(ref ProtoWriter.State state, NotParseable value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+	}
+}
+public sealed class ParseableModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___ParseableModel, T>();
+	}
+}

@@ -1,0 +1,354 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.Surrogate;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___SurrogateModel : ISerializer<Holder>, ISerializer<Money>, ISerializer<Tag>, ISerializer<MoneySurrogate>, ISerializer<TagSurrogate>, ISerializer<Code>, ISerializer<CodeSurrogate>
+{
+	Holder ISerializer<Holder>.Read(ref ProtoReader.State state, Holder value)
+	{
+		if (value == null)
+		{
+			Holder holder = new Holder();
+			value = holder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Money amount = value.Amount;
+				amount = state.ReadMessage(SerializerFeatures.CategoryRepeated, amount, this);
+				value.Amount = amount;
+				break;
+			}
+			case 2:
+			{
+				Tag label = value.Label;
+				label = state.ReadMessage(SerializerFeatures.CategoryRepeated, label, this);
+				if (label != null)
+				{
+					value.Label = label;
+				}
+				break;
+			}
+			case 3:
+			{
+				Code code = value.Code;
+				code = state.ReadMessage(SerializerFeatures.CategoryRepeated, code, this);
+				value.Code = code;
+				break;
+			}
+			case 4:
+			{
+				List<Money> amounts = value.Amounts;
+				RepeatedSerializer.CreateList<Money>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, amounts, this);
+				break;
+			}
+			case 5:
+			{
+				Dictionary<int, Tag> tags = value.Tags;
+				MapSerializer.CreateDictionary<int, Tag>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, tags, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Holder>.Write(ref ProtoWriter.State state, Holder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Money amount = value.Amount;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, amount, this);
+		Tag label = value.Label;
+		state.WriteMessage(2, SerializerFeatures.CategoryRepeated, label, this);
+		Code code = value.Code;
+		state.WriteMessage(3, SerializerFeatures.CategoryRepeated, code, this);
+		List<Money> amounts = value.Amounts;
+		if (amounts != null)
+		{
+			List<Money> values = amounts;
+			RepeatedSerializer.CreateList<Money>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+		Dictionary<int, Tag> tags = value.Tags;
+		if (tags != null)
+		{
+			Dictionary<int, Tag> values2 = tags;
+			MapSerializer.CreateDictionary<int, Tag>().WriteMap(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Holder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Money>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Tag>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<MoneySurrogate>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<TagSurrogate>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Code>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<CodeSurrogate>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	Money ISerializer<Money>.Read(ref ProtoReader.State state, Money value)
+	{
+		MoneySurrogate moneySurrogate = value;
+		if (moneySurrogate == null)
+		{
+			MoneySurrogate moneySurrogate2 = new MoneySurrogate();
+			moneySurrogate = moneySurrogate2;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				long units = state.ReadInt64();
+				moneySurrogate.Units = units;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		value = moneySurrogate;
+		return value;
+	}
+
+	void ISerializer<Money>.Write(ref ProtoWriter.State state, Money value)
+	{
+		MoneySurrogate moneySurrogate = value;
+		TypeModel.ThrowUnexpectedSubtype(moneySurrogate);
+		long units = moneySurrogate.Units;
+		if (units != 0L)
+		{
+			state.WriteFieldHeader(1, WireType.Variant);
+			state.WriteInt64(units);
+		}
+	}
+
+	Tag ISerializer<Tag>.Read(ref ProtoReader.State state, Tag value)
+	{
+		TagSurrogate tagSurrogate = value;
+		if (tagSurrogate == null)
+		{
+			TagSurrogate tagSurrogate2 = new TagSurrogate();
+			tagSurrogate = tagSurrogate2;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					tagSurrogate.Text = text;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		value = tagSurrogate;
+		return value;
+	}
+
+	void ISerializer<Tag>.Write(ref ProtoWriter.State state, Tag value)
+	{
+		TagSurrogate tagSurrogate = value;
+		TypeModel.ThrowUnexpectedSubtype(tagSurrogate);
+		string text = tagSurrogate.Text;
+		state.WriteString(1, text);
+	}
+
+	MoneySurrogate ISerializer<MoneySurrogate>.Read(ref ProtoReader.State state, MoneySurrogate value)
+	{
+		if (value == null)
+		{
+			MoneySurrogate moneySurrogate = new MoneySurrogate();
+			value = moneySurrogate;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				long units = state.ReadInt64();
+				value.Units = units;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<MoneySurrogate>.Write(ref ProtoWriter.State state, MoneySurrogate value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		long units = value.Units;
+		if (units != 0L)
+		{
+			state.WriteFieldHeader(1, WireType.Variant);
+			state.WriteInt64(units);
+		}
+	}
+
+	TagSurrogate ISerializer<TagSurrogate>.Read(ref ProtoReader.State state, TagSurrogate value)
+	{
+		if (value == null)
+		{
+			TagSurrogate tagSurrogate = new TagSurrogate();
+			value = tagSurrogate;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Text = text;
+				}
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<TagSurrogate>.Write(ref ProtoWriter.State state, TagSurrogate value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		string text = value.Text;
+		state.WriteString(1, text);
+	}
+
+	Code ISerializer<Code>.Read(ref ProtoReader.State state, Code value)
+	{
+		CodeSurrogate codeSurrogate = (CodeSurrogate)value;
+		if (codeSurrogate == null)
+		{
+			CodeSurrogate codeSurrogate2 = new CodeSurrogate();
+			codeSurrogate = codeSurrogate2;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				codeSurrogate.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		value = (Code)codeSurrogate;
+		return value;
+	}
+
+	void ISerializer<Code>.Write(ref ProtoWriter.State state, Code value)
+	{
+		CodeSurrogate codeSurrogate = (CodeSurrogate)value;
+		TypeModel.ThrowUnexpectedSubtype(codeSurrogate);
+		int value2 = codeSurrogate.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+	}
+
+	CodeSurrogate ISerializer<CodeSurrogate>.Read(ref ProtoReader.State state, CodeSurrogate value)
+	{
+		if (value == null)
+		{
+			CodeSurrogate codeSurrogate = new CodeSurrogate();
+			value = codeSurrogate;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			if (num == 1)
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+			}
+			else
+			{
+				state.SkipField();
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<CodeSurrogate>.Write(ref ProtoWriter.State state, CodeSurrogate value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+	}
+}
+public sealed class SurrogateModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___SurrogateModel, T>();
+	}
+}

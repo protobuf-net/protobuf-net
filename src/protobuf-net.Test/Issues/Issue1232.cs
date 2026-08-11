@@ -26,6 +26,8 @@ namespace ProtoBuf.Test.Issues
             this.log = log;
             writeCallCount = 0;
             measureCallCount = 0;
+            StreamSerializer.trySkipWritingWhenMeasuring = false;
+            StreamSerializer.intentionallyMiscalculateLength = false;
         }
 
         [Theory]

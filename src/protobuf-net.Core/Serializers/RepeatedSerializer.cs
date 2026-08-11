@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections;
@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
-        public static RepeatedSerializer<TCollection, T> CreateNestedDataNotSupported<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateNestedDataNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNestedDataNotSupported(typeof(TCollection));
             return default;
@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
         /// <summary>Create a serializer that indicates that a scenario is not supported</summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
         [Obsolete("Since this isn't supported, you probably shouldn't be doing it...", false)]
-        public static RepeatedSerializer<TCollection, T> CreateNotSupported<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateNotSupported<TCollection, T>()
         {
             ThrowHelper.ThrowNotSupportedException($"Repeated data of type {typeof(TCollection)} is not supported");
             return default;
@@ -37,55 +37,55 @@ namespace ProtoBuf.Serializers
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<List<T>, T> CreateList<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<List<T>, T> CreateList<T>()
             => SerializerCache<ListSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TList, T> CreateList<TList, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TList, T> CreateList<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TList, T>()
             where TList : List<T>
             => SerializerCache<ListSerializer<TList, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on most common collections</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateEnumerable<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateEnumerable<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : class, IEnumerable<T>
             => SerializerCache<EnumerableSerializer<TCollection, TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on most common collections</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateEnumerable<TCollection, TCreate, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateEnumerable<TCollection, [DynamicallyAccessedMembers(DynamicAccess.Activated)] TCreate, T>()
             where TCollection : class, IEnumerable<T>
             where TCreate : TCollection
             => SerializerCache<EnumerableSerializer<TCollection, TCreate, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<T[], T> CreateVector<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<T[], T> CreateVector<T>()
             => SerializerCache<VectorSerializer<T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateQueue<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateQueue<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : Queue<T>
             => SerializerCache<QueueSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on lists</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateStack<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateStack<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : Stack<T>
             => SerializerCache<StackSerializer<TCollection, T>>.InstanceField;
 
         /// <summary>Create a serializer that operates on sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<TCollection, T> CreateSet<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<TCollection, T> CreateSet<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T>()
             where TCollection : ISet<T>
             => SerializerCache<SetSerializer<TCollection, T>>.InstanceField;
 
 #if NET6_0_OR_GREATER
         /// <summary>Create a serializer that operates on sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>()
+        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<T>()
             => SerializerCache<ReadOnlySetSerializer<T>>.InstanceField;
 #endif
 
@@ -100,7 +100,14 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Base class for simple collection serializers
     /// </summary>
-    public abstract class RepeatedSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
+    /// <remarks>
+    /// <typeparamref name="TItem"/> carries no <see cref="DynamicallyAccessedMembersAttribute"/>,
+    /// and deliberately: the only thing that ever wanted one was the <c>serializer ??=</c> fallback
+    /// in <see cref="WriteRepeated"/>/<see cref="ReadRepeated"/>, which is dead code for a generated
+    /// model. <see cref="TypeModel.ResolveSerializer"/> confines that demand to the arm ILC removes,
+    /// which is what lets this - and everything deriving from it - stay unannotated.
+    /// </remarks>
+    public abstract class RepeatedSerializer<TCollection, TItem> : IRepeatedSerializer<TCollection>, IFactory<TCollection>
     {
         TCollection IFactory<TCollection>.Create(ISerializationContext context) => Initialize(default, context);
 
@@ -144,7 +151,7 @@ namespace ProtoBuf.Serializers
                 return;
             }
 
-            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
+            serializer ??= TypeModel.ResolveSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);
@@ -346,7 +353,7 @@ namespace ProtoBuf.Serializers
                 return ReadNullWrapped(ref state, features, values, serializer);
             }
 
-            serializer ??= TypeModel.GetSerializer<TItem>(state.Model);
+            serializer ??= TypeModel.ResolveSerializer<TItem>(state.Model);
             var serializerFeatures = serializer.Features;
             if (serializerFeatures.IsRepeated()) TypeModel.ThrowNestedListsNotSupported(typeof(TItem));
             features.InheritFrom(serializerFeatures);
@@ -375,7 +382,7 @@ namespace ProtoBuf.Serializers
         // note: not "in" because ArraySegment<T> is not "readonly" on all targeted TFMs
     }
 
-    sealed class StackSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+    sealed class StackSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : RepeatedSerializer<TCollection, T>
         where TCollection : Stack<T>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
@@ -419,7 +426,7 @@ namespace ProtoBuf.Serializers
         protected override List<T> Initialize(List<T> values, ISerializationContext context)
             => values ?? new List<T>();
     }
-    class ListSerializer<TList, T> : RepeatedSerializer<TList, T>
+    class ListSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TList, T> : RepeatedSerializer<TList, T>
         where TList : List<T>
     {
         protected override TList Initialize(TList values, ISerializationContext context)
@@ -456,7 +463,7 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    class EnumerableSerializer<TCollection, TCreate, T> : RepeatedSerializer<TCollection, T>
+    class EnumerableSerializer<TCollection, [DynamicallyAccessedMembers(DynamicAccess.Activated)] TCreate, T> : RepeatedSerializer<TCollection, T>
         where TCollection : class, IEnumerable<T>
         where TCreate : TCollection
     {
@@ -598,7 +605,7 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    sealed class QueueSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+    sealed class QueueSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : RepeatedSerializer<TCollection, T>
         where TCollection : Queue<T>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context)
@@ -635,7 +642,7 @@ namespace ProtoBuf.Serializers
         }
     }
 
-    sealed class SetSerializer<TCollection, T> : RepeatedSerializer<TCollection, T>
+    sealed class SetSerializer<[DynamicallyAccessedMembers(DynamicAccess.Activated)] TCollection, T> : RepeatedSerializer<TCollection, T>
         where TCollection : ISet<T>
     {
         protected override TCollection Initialize(TCollection values, ISerializationContext context) =>

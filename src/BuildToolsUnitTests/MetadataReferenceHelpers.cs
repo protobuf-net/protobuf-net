@@ -20,6 +20,23 @@ namespace BuildToolsUnitTests
         {
             MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location),
             MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location),
+            // needed to resolve the Memory<byte>/ReadOnlyMemory<byte> overloads of WriteBytes during
+            // overload resolution; netstandard2.0 predates those types, so the facade doesn't supply them
+            MetadataReference.CreateFromFile(Assembly.Load("System.Memory").Location),
+            // List<T> members, and the RepeatedSerializer overloads that take them; note this must be
+            // the System.Collections facade, not typeof(List<>).Assembly (System.Private.CoreLib)
+            MetadataReference.CreateFromFile(Assembly.Load("System.Collections").Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Collections.Immutable").Location),
+            MetadataReference.CreateFromFile(Assembly.Load("System.Collections.Concurrent").Location),
+            // System.Uri lives in its own assembly, and is the motivating example for a model-level
+            // [ProtoSurrogate] - a type a consumer could never attribute themselves
+            MetadataReference.CreateFromFile(typeof(System.Uri).Assembly.Location),
+            // System.Net.IPAddress is the canonical parseable type, and the one the corpus uses;
+            // it lives in System.Net.Primitives rather than the core facades
+            MetadataReference.CreateFromFile(typeof(System.Net.IPAddress).Assembly.Location),
+            // fixtures declare contracts via [DataContract]/[DataMember] and [XmlType]/[XmlElement]
+            MetadataReference.CreateFromFile(typeof(System.Runtime.Serialization.DataMemberAttribute).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Xml.Serialization.XmlElementAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(TypeModel).Assembly.Location)
         };
 

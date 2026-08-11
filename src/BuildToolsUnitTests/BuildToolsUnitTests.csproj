@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- the compile-time model attributes are [Experimental] while the shape settles -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>BuildToolsUnitTests</RootNamespace>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
@@ -20,7 +22,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
+    <!-- the shipped analyzer still compiles against the low Roslyn baseline; the tests need a
+         newer one purely so they can parse C# 12, which is the generator's declared floor -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
 
@@ -28,6 +32,13 @@
     <Compile Update="DataContractAnalyzerTests.DefaultValueAttribute.cs">
       <DependentUpon>DataContractAnalyzerTests.cs</DependentUpon>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- golden-file fixtures: input/output pairs are data, not code to compile -->
+    <Compile Remove="Aot/Data/**/*.*.cs" />
+    <None Include="Aot/Data/**/*.*" />
+    <None Update="Aot/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

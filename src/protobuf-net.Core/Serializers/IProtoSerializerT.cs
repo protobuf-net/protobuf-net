@@ -244,7 +244,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing messages or values
     /// </summary>
-    public interface ISerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public interface ISerializer<T>
     {
         /// <summary>
         /// Deserialize an instance from the supplied writer
@@ -265,7 +265,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Provides indirect access to a serializer for a given type
     /// </summary>
-    public interface ISerializerProxy<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public interface ISerializerProxy<T>
     {
         /// <summary>
         /// Gets the actual serializer for the type
@@ -276,7 +276,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of measuring values without writing them
     /// </summary>
-    public interface IMeasuringSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
+    public interface IMeasuringSerializer<T> : ISerializer<T>
     {
         /// <summary>
         /// Measure the given value, reporting the required length for the payload (not including the field-header)
@@ -287,7 +287,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing a sequence of messages or values
     /// </summary>
-    public interface IRepeatedSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> : ISerializer<T>
+    public interface IRepeatedSerializer<T> : ISerializer<T>
     {
         /// <summary>
         /// Serialize a sequence of values to the supplied writer
@@ -316,7 +316,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy
     /// </summary>
-    public interface ISubTypeSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T> where T : class
+    public interface ISubTypeSerializer<T> where T : class
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
@@ -333,7 +333,7 @@ namespace ProtoBuf.Serializers
     /// Represents the state of an inheritance deserialization operation
     /// </summary>
     [StructLayout(LayoutKind.Auto)]
-    public struct SubTypeState<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public struct SubTypeState<T>
         where T : class
     {
         private readonly ISerializationContext _context;
@@ -391,7 +391,29 @@ namespace ProtoBuf.Serializers
             // what they asked for)
             var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
 
-            if (_value is not null) typed = Merge(_context, _value, typed);
+            if (_value is not null)
+            {
+                // The merge below round-trips the existing value into the new one, and that only
+                // means anything when we are *specialising*: an Animal already read at the base
+                // layer being upgraded to a Dog. Two unrelated sub-types of one base cannot merge,
+                // and attempting it does not fail - it ping-pongs. Serializing the Dog as <object>
+                // re-encodes its sub-type marker, which deserializes into the Cat, which calls
+                // ReadSubType<Dog> with the Cat as the existing value, and back again: each hop
+                // swaps which side is "existing", so it never converges and the stack dies.
+                //
+                // Reachable from a payload carrying one field twice with two different sub-type
+                // markers, i.e. from untrusted input, and StackOverflowException cannot be caught.
+                // So: refuse it, and say what is wrong.
+                if (!_value.GetType().IsAssignableFrom(typeof(T)))
+                {
+                    ThrowHelper.ThrowInvalidOperationException(
+                        $"Cannot merge a '{_value.GetType().NormalizeName()}' into a '{typeof(T).NormalizeName()}': "
+                        + "they are different sub-types of the same base, so neither is a specialisation of "
+                        + "the other. This usually means the payload declares the same field more than once "
+                        + "with conflicting sub-type markers.");
+                }
+                typed = Merge(_context, _value, typed);
+            }
             _onBeforeDeserialize?.Invoke(typed, _context);
             _value = typed;
             return typed;
@@ -411,7 +433,7 @@ namespace ProtoBuf.Serializers
         /// <summary>
         /// Parse the input as a sub-type of the instance
         /// </summary>
-        public void ReadSubType<TSubType>(ref ProtoReader.State state, ISubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
+        public void ReadSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] TSubType>(ref ProtoReader.State state, ISubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
             var tok = state.StartSubItem();
             _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(ref state,
@@ -436,7 +458,7 @@ namespace ProtoBuf.Serializers
     /// <summary>
     /// Abstract API capable of serializing/deserializing complex objects with inheritance
     /// </summary>
-    public interface IFactory<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>
+    public interface IFactory<T>
     {
         /// <summary>
         /// Create a new instance of the type

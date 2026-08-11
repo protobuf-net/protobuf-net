@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- the compile-time model attributes are [Experimental] while the shape settles -->
+    <NoWarn>$(NoWarn);PBN9001</NoWarn>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>ProtoBuf.AotSmoke</RootNamespace>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+
+    <!-- the whole point of this project: prove the generated serializers survive native AOT -->
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- report every trim/AOT warning individually rather than one rolled-up warning per assembly;
+         this is how we find out whether the generated code needs its own annotations -->
+    <TrimmerSingleWarn>false</TrimmerSingleWarn>
+    <SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
+    <!-- DTOs generated from descriptor.proto, in their own assembly because a generator cannot see
+         another generator's output in the same compilation -->
+    <ProjectReference Include="../AotSchemaDtos/AotSchemaDtos.csproj" />
+    <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+</Project>

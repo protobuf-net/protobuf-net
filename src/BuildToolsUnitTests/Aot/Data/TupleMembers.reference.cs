@@ -1,0 +1,249 @@
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using AotFixtures.TupleMembers;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: InternalsVisibleTo("System, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Core, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Numerics, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Reflection.Context, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Runtime.WindowsRuntime, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Runtime.WindowsRuntime.UI.Xaml, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("WindowsBase, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: InternalsVisibleTo("PresentationCore, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: InternalsVisibleTo("PresentationFramework, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___TupleMembersModel : ISerializer<HasTuples>, ISerializer<(int, string)>, ISerializer<(int, (int, string))>, ISerializer<KeyValuePair<int, string>>
+{
+	HasTuples ISerializer<HasTuples>.Read(ref ProtoReader.State state, HasTuples value)
+	{
+		if (value == null)
+		{
+			HasTuples hasTuples = new HasTuples();
+			value = hasTuples;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				(int, string) valueOrDefault = value.Named;
+				valueOrDefault = state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this);
+				value.Named = valueOrDefault;
+				break;
+			}
+			case 2:
+			{
+				(int, string) valueOrDefault = value.Anonymous;
+				valueOrDefault = state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this);
+				value.Anonymous = valueOrDefault;
+				break;
+			}
+			case 3:
+			{
+				(int, (int, string)) deep = value.Deep;
+				deep = state.ReadMessage(SerializerFeatures.CategoryRepeated, deep, this);
+				value.Deep = deep;
+				break;
+			}
+			case 4:
+			{
+				KeyValuePair<int, string> pair = value.Pair;
+				pair = state.ReadMessage(SerializerFeatures.CategoryRepeated, pair, this);
+				value.Pair = pair;
+				break;
+			}
+			case 5:
+			{
+				(int, string) valueOrDefault = value.MaybePair.GetValueOrDefault();
+				(int, string)? maybePair = state.ReadMessage(SerializerFeatures.CategoryRepeated, valueOrDefault, this);
+				value.MaybePair = maybePair;
+				break;
+			}
+			case 6:
+			{
+				int other = state.ReadInt32();
+				value.Other = other;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<HasTuples>.Write(ref ProtoWriter.State state, HasTuples value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		(int, string) named = value.Named;
+		state.WriteMessage(1, SerializerFeatures.CategoryRepeated, named, this);
+		named = value.Anonymous;
+		state.WriteMessage(2, SerializerFeatures.CategoryRepeated, named, this);
+		(int, (int, string)) deep = value.Deep;
+		state.WriteMessage(3, SerializerFeatures.CategoryRepeated, deep, this);
+		KeyValuePair<int, string> pair = value.Pair;
+		state.WriteMessage(4, SerializerFeatures.CategoryRepeated, pair, this);
+		(int, string)? maybePair = value.MaybePair;
+		if (maybePair.HasValue)
+		{
+			named = maybePair.GetValueOrDefault();
+			state.WriteMessage(5, SerializerFeatures.CategoryRepeated, named, this);
+		}
+		int other = value.Other;
+		if (other != 0)
+		{
+			state.WriteInt32Varint(6, other);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<HasTuples>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<(int, string)>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<(int, (int, string))>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<KeyValuePair<int, string>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	(int, string) ISerializer<(int, string)>.Read(ref ProtoReader.State state, (int, string) value)
+	{
+		var (item, item2) = value;
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+				item = state.ReadInt32();
+				break;
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					item2 = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		value = (item, item2);
+		return value;
+	}
+
+	void ISerializer<(int, string)>.Write(ref ProtoWriter.State state, (int, string) value)
+	{
+		var (value2, _) = value;
+		state.WriteInt32Varint(1, value2);
+		string item = value.Item2;
+		state.WriteString(2, item);
+	}
+
+	(int, (int, string)) ISerializer<(int, (int, string))>.Read(ref ProtoReader.State state, (int, (int, string)) value)
+	{
+		var (item, tuple2) = value;
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+				item = state.ReadInt32();
+				break;
+			case 2:
+				tuple2 = state.ReadMessage(SerializerFeatures.CategoryRepeated, tuple2, this);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		value = (item, tuple2);
+		return value;
+	}
+
+	void ISerializer<(int, (int, string))>.Write(ref ProtoWriter.State state, (int, (int, string)) value)
+	{
+		var (value2, _) = value;
+		state.WriteInt32Varint(1, value2);
+		(int, string) item = value.Item2;
+		state.WriteMessage(2, SerializerFeatures.CategoryRepeated, item, this);
+	}
+
+	KeyValuePair<int, string> ISerializer<KeyValuePair<int, string>>.Read(ref ProtoReader.State state, KeyValuePair<int, string> value)
+	{
+		int key = value.Key;
+		string value2 = value.Value;
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+				key = state.ReadInt32();
+				break;
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value2 = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		value = new KeyValuePair<int, string>(key, value2);
+		return value;
+	}
+
+	void ISerializer<KeyValuePair<int, string>>.Write(ref ProtoWriter.State state, KeyValuePair<int, string> value)
+	{
+		int key = value.Key;
+		state.WriteInt32Varint(1, key);
+		string value2 = value.Value;
+		state.WriteString(2, value2);
+	}
+}
+public sealed class TupleMembersModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___TupleMembersModel, T>();
+	}
+}

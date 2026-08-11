@@ -1,0 +1,179 @@
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using AotFixtures.MapNested;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: InternalsVisibleTo("System, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Core, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Numerics, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Reflection.Context, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Runtime.WindowsRuntime, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Runtime.WindowsRuntime.UI.Xaml, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("WindowsBase, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: InternalsVisibleTo("PresentationCore, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: InternalsVisibleTo("PresentationFramework, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___MapNestedModel : ISerializer<Nested>, ISerializer<KeyValuePair<string, string>>
+{
+	Nested ISerializer<Nested>.Read(ref ProtoReader.State state, Nested value)
+	{
+		if (value == null)
+		{
+			Nested nested = new Nested();
+			value = nested;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				Dictionary<int, List<int>> lists = value.Lists;
+				lists = MapSerializer.CreateDictionary<int, List<int>>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, lists, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, null, this as ISerializer<List<int>>);
+				if (lists != null)
+				{
+					value.Lists = lists;
+				}
+				break;
+			}
+			case 2:
+			{
+				Dictionary<long, long[]> arrays = value.Arrays;
+				arrays = MapSerializer.CreateDictionary<long, long[]>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, arrays, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, null, this as ISerializer<long[]>);
+				if (arrays != null)
+				{
+					value.Arrays = arrays;
+				}
+				break;
+			}
+			case 3:
+			{
+				Dictionary<string, Dictionary<string, string>> maps = value.Maps;
+				maps = MapSerializer.CreateDictionary<string, Dictionary<string, string>>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, maps, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString, null, this as ISerializer<Dictionary<string, string>>);
+				if (maps != null)
+				{
+					value.Maps = maps;
+				}
+				break;
+			}
+			case 4:
+			{
+				Dictionary<float, List<int>> floatKeyed = value.FloatKeyed;
+				floatKeyed = MapSerializer.CreateDictionary<float, List<int>>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, floatKeyed, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeVarint, null, this as ISerializer<List<int>>);
+				if (floatKeyed != null)
+				{
+					value.FloatKeyed = floatKeyed;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Nested>.Write(ref ProtoWriter.State state, Nested value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		Dictionary<int, List<int>> lists = value.Lists;
+		if (lists != null)
+		{
+			Dictionary<int, List<int>> values = lists;
+			MapSerializer.CreateDictionary<int, List<int>>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, null, this as ISerializer<List<int>>);
+		}
+		Dictionary<long, long[]> arrays = value.Arrays;
+		if (arrays != null)
+		{
+			Dictionary<long, long[]> values2 = arrays;
+			MapSerializer.CreateDictionary<long, long[]>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values2, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeVarint, null, this as ISerializer<long[]>);
+		}
+		Dictionary<string, Dictionary<string, string>> maps = value.Maps;
+		if (maps != null)
+		{
+			Dictionary<string, Dictionary<string, string>> values3 = maps;
+			MapSerializer.CreateDictionary<string, Dictionary<string, string>>().WriteMap(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values3, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeString, null, this as ISerializer<Dictionary<string, string>>);
+		}
+		Dictionary<float, List<int>> floatKeyed = value.FloatKeyed;
+		if (floatKeyed != null)
+		{
+			Dictionary<float, List<int>> values4 = floatKeyed;
+			MapSerializer.CreateDictionary<float, List<int>>().WriteMap(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled | SerializerFeatures.OptionFailOnDuplicateKey, values4, SerializerFeatures.WireTypeFixed32, SerializerFeatures.WireTypeVarint, null, this as ISerializer<List<int>>);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Nested>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<KeyValuePair<string, string>>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	KeyValuePair<string, string> ISerializer<KeyValuePair<string, string>>.Read(ref ProtoReader.State state, KeyValuePair<string, string> value)
+	{
+		string key = value.Key;
+		string value2 = value.Value;
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				string text2 = state.ReadString();
+				if (text2 != null)
+				{
+					key = text2;
+				}
+				break;
+			}
+			case 2:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value2 = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		value = new KeyValuePair<string, string>(key, value2);
+		return value;
+	}
+
+	void ISerializer<KeyValuePair<string, string>>.Write(ref ProtoWriter.State state, KeyValuePair<string, string> value)
+	{
+		string key = value.Key;
+		state.WriteString(1, key);
+		key = value.Value;
+		state.WriteString(2, key);
+	}
+}
+public sealed class MapNestedModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___MapNestedModel, T>();
+	}
+}

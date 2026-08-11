@@ -1,0 +1,147 @@
+using System.Reflection;
+using AotFixtures.Nullables;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___NullablesModel : ISerializer<Optional>
+{
+	Optional ISerializer<Optional>.Read(ref ProtoReader.State state, Optional value)
+	{
+		if (value == null)
+		{
+			Optional optional = new Optional();
+			value = optional;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int? intWithNullDefault = state.ReadInt32();
+				value.MaybeInt = intWithNullDefault;
+				break;
+			}
+			case 2:
+			{
+				bool? maybeBool = state.ReadBoolean();
+				value.MaybeBool = maybeBool;
+				break;
+			}
+			case 3:
+			{
+				double? maybeDouble = state.ReadDouble();
+				value.MaybeDouble = maybeDouble;
+				break;
+			}
+			case 4:
+			{
+				long? maybeLong = state.ReadInt64();
+				value.MaybeLong = maybeLong;
+				break;
+			}
+			case 5:
+			{
+				int? intWithNullDefault = state.ReadInt32();
+				value.IntWithDefault = intWithNullDefault;
+				break;
+			}
+			case 6:
+			{
+				int? intWithNullDefault = state.ReadInt32();
+				value.IntWithNullDefault = intWithNullDefault;
+				break;
+			}
+			case 7:
+			{
+				int plain = state.ReadInt32();
+				value.Plain = plain;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Optional>.Write(ref ProtoWriter.State state, Optional value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int? maybeInt = value.MaybeInt;
+		int valueOrDefault;
+		if (maybeInt.HasValue)
+		{
+			valueOrDefault = maybeInt.GetValueOrDefault();
+			state.WriteInt32Varint(1, valueOrDefault);
+		}
+		bool? maybeBool = value.MaybeBool;
+		if (maybeBool.HasValue)
+		{
+			bool valueOrDefault2 = maybeBool == true;
+			state.WriteFieldHeader(2, WireType.Variant);
+			bool value2 = valueOrDefault2;
+			state.WriteBoolean(value2);
+		}
+		double? maybeDouble = value.MaybeDouble;
+		if (maybeDouble.HasValue)
+		{
+			double valueOrDefault3 = maybeDouble.GetValueOrDefault();
+			state.WriteFieldHeader(3, WireType.Fixed64);
+			double value3 = valueOrDefault3;
+			state.WriteDouble(value3);
+		}
+		long? maybeLong = value.MaybeLong;
+		if (maybeLong.HasValue)
+		{
+			long valueOrDefault4 = maybeLong.GetValueOrDefault();
+			state.WriteFieldHeader(4, WireType.Variant);
+			long value4 = valueOrDefault4;
+			state.WriteInt64(value4);
+		}
+		maybeInt = value.IntWithDefault;
+		if (maybeInt.HasValue)
+		{
+			valueOrDefault = maybeInt.GetValueOrDefault();
+			if (valueOrDefault != 5)
+			{
+				state.WriteInt32Varint(5, valueOrDefault);
+			}
+		}
+		maybeInt = value.IntWithNullDefault;
+		if (maybeInt.HasValue)
+		{
+			valueOrDefault = maybeInt.GetValueOrDefault();
+			state.WriteInt32Varint(6, valueOrDefault);
+		}
+		valueOrDefault = value.Plain;
+		if (valueOrDefault != 0)
+		{
+			state.WriteInt32Varint(7, valueOrDefault);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Optional>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class NullablesModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___NullablesModel, T>();
+	}
+}

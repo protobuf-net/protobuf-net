@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN2002 Aot/Data/Diagnostics/ListLikeContract.input.cs L12 C14
+Contract 'AotFixtures.ListLikeContract.Basket' is omitted from the AOT model: protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message.
+Warning PBN2004 Aot/Data/Diagnostics/ListLikeContract.input.cs L23 C14
+Contract 'AotFixtures.ListLikeContract.Holder' is omitted from the AOT model because 'AotFixtures.ListLikeContract.Basket', which it references, is also omitted.
