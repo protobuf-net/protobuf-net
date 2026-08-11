@@ -4,6 +4,11 @@ using System.Collections.Generic;
 
 namespace AotFixtures.InheritAccessor;
 
+// No .reference.cs, and deliberately: every member here is an [UnsafeAccessor] shape - a private
+// field, a getter-only property, an init-only setter - and ref-emit's *compiled* path refuses all of
+// them ("Non-public member cannot be used with full dll compilation"), exactly as for
+// NonPublicSetter. There is no ref-emit output to compare against.
+//
 // A member needing [UnsafeAccessor] *inside a hierarchy*. Nothing covered this combination, and it
 // did not compile: ReadSubType hoists the instance into a per-case local because reading value.Value
 // is what constructs it, but the accessor call was passing the literal `value` - which there is the

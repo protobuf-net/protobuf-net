@@ -1797,11 +1797,23 @@ fixture change so the two cannot drift.
 - Contract types in fixtures must be `public` — full ref-emit compilation only reaches public members.
 - `src/AotRefGen/TriggerAttributes.cs` duplicates the generator's post-init attributes so the shared
   fixtures compile; keep the two in step.
-- **It is net472, so it does not run on Linux at all** — `Keywords.input.cs` was added from there and
-  has no `.reference.cs` yet for exactly that reason. That is a *missing* reference rather than a
-  meaningful one: per the paragraph above, an absence proves nothing, so run `AotRefGen` on Windows
-  and commit the result. The fixture is not unmeasured in the meantime — the differential suite is
-  net8.0 and compares it against `RuntimeTypeModel` on every run.
+- **It is net472, so it does not run on Linux at all.** Anything added from there has no
+  `.reference.cs` until someone runs it on Windows.
+
+**Every fixture without a `.reference.cs` now says why, in its own header**, because an absence and a
+genuinely-empty ref-emit output look identical and that has already caused one wrong conclusion. The
+list splits in two, and only the first half is work:
+
+| fixture | why |
+| --- | --- |
+| `Keywords`, `DynamicCategory` | **owed a reference** — added on Linux; nothing about them is refused by ref-emit. Run `AotRefGen` on Windows and commit the result. |
+| `NonPublicSetter`, `NonPublicCtor`, `InheritAccessor`, `ImplicitPrivate` | ref-emit's *compiled* path refuses the shape outright ("Non-public member cannot be used with full dll compilation"), so there is no output to compare |
+| `TrivialGetter` | no reference behaviour exists — we are strictly more capable there |
+| `DateOnly` | `<Compile Remove>`d from `AotRefGen`, which is net472 and has no `DateOnly` |
+
+Neither of the first two is unmeasured in the meantime: `AotConformanceTests` is net8.0 and compares
+both against `RuntimeTypeModel` in each direction on every run. What is missing is the decompiled
+ref-emit output, which is a reviewing aid rather than a test.
 
 Two artefacts of decompilation are cosmetic, not semantic: `Features` appears as a uniquely-named
 method plus an ILSpy `.override` note (it's really an explicit-interface property), and

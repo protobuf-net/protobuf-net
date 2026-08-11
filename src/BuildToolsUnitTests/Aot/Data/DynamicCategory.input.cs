@@ -1,3 +1,8 @@
+// NOTE: no .reference.cs yet - added on Linux, and AotRefGen is net472 so it could not be run.
+// Nothing here is refused by ref-emit, so this fixture *should* have one.
+// Differentially covered in the meantime by AotConformanceTests, which is net8.0 and compares
+// these samples against RuntimeTypeModel in both directions; what is missing is the decompiled
+// ref-emit output, which is a reviewing aid. Run AotRefGen on Windows and commit the result.
 using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;

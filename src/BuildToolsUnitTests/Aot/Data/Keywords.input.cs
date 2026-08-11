@@ -1,3 +1,9 @@
+// NOTE: no .reference.cs yet - added on Linux, and AotRefGen is net472 so it could not be run.
+// Keyword-named members are nothing special to ref-emit - IL has no reserved words - so
+// this fixture *should* have one.
+// Differentially covered in the meantime by AotConformanceTests, which is net8.0 and compares
+// these samples against RuntimeTypeModel in both directions; what is missing is the decompiled
+// ref-emit output, which is a reviewing aid. Run AotRefGen on Windows and commit the result.
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
