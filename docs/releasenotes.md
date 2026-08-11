@@ -25,6 +25,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - **fix**: the "add an AOT model" code fix now generates the model as `internal` (a fixer should not
   add to the public surface) and inside the project's namespace (or the anchor contract's), rather
   than a `public` type in the global root
+- **fix**: `PBN0022` ("should declare `IsRequired`") no longer fires for collection members —
+  `List<T> Lines { get; } = [];` is the standard pattern, an empty collection has no wire presence
+  to force, and `IsRequired` is only observable for value-type scalars anyway
 
 ## 3.3.0
 

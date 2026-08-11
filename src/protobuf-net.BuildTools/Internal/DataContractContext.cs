@@ -556,7 +556,27 @@ namespace ProtoBuf.BuildTools.Internal
         }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
-        private bool ShouldDeclareIsRequired(Member member) => !member.IsRequired;
+        private bool ShouldDeclareIsRequired(Member member)
+            => !member.IsRequired && !IsCollectionLike(member.MemberType);
+
+        // A collection member is exempt from the IsRequired nag: an empty collection has no wire
+        // presence to force (repeated fields write per element), initializing to an empty collection
+        // is the standard pattern, and IsRequired is only observable for value-type scalars anyway.
+        // This is deliberately broader than the runtime's TryGetRepeatedProvider walk, which decides
+        // the *serializer*: suppressing the nag on an exotic type the runtime treats as a message is
+        // harmless, where nagging on `List<T> x { get; } = [];` is not. Strings are IEnumerable but
+        // are scalars, and are kept out explicitly.
+        private static bool IsCollectionLike(ITypeSymbol? type)
+        {
+            if (type is null || type.SpecialType == SpecialType.System_String) return false;
+            if (type is IArrayTypeSymbol) return true;
+            if (type.SpecialType == SpecialType.System_Collections_IEnumerable) return true;
+            foreach (var iface in type.AllInterfaces)
+            {
+                if (iface.SpecialType == SpecialType.System_Collections_IEnumerable) return true;
+            }
+            return false;
+        }
 
         /// <remarks>Ensure to validate member before (i.e. calculate default value of member)</remarks>
         private bool ShouldDeclareDefault(Member member, object? memberInitValue)

@@ -42,6 +42,31 @@ namespace BuildToolsUnitTests
             );
         }
 
+        // a collection member has no wire presence to force - an empty collection writes nothing,
+        // and IsRequired is only observable for value-type scalars - so initializing one (the
+        // standard pattern, including getter-only) must not trigger the IsRequired nag
+        [Theory]
+        [InlineData("System.Collections.Generic.List<int>", "new()")]
+        [InlineData("System.Collections.Generic.Dictionary<int, string>", "new()")]
+        [InlineData("System.Collections.Generic.IList<int>", "new System.Collections.Generic.List<int>()")]
+        [InlineData("int[]", "new int[0]")]
+        public async Task DoesNotReportShouldDeclareIsRequiredForCollections(string type, string value)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+
+                [ProtoContract]
+                public class Foo {{
+                    [ProtoMember(1)] public {type} FieldBar = {value};
+                    [ProtoMember(2)] public {type} PropertyBar {{ get; set; }} = {value};
+                    [ProtoMember(3)] public {type} GetterOnlyBar {{ get; }} = {value};
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired));
+        }
+
         [Theory]
         [InlineData("bool", "true")]
         [InlineData("DayOfWeek", "DayOfWeek.Monday")]

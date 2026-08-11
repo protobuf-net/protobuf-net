@@ -25,17 +25,18 @@ namespace ProtoBuf.BuildTools.Internal
         public ISymbol Symbol { get; }
         public bool IsRequired { get; }
 
+        public ITypeSymbol? MemberType => Symbol switch
+        {
+            IPropertySymbol propSym => propSym.Type,
+            IFieldSymbol fieldSym => fieldSym.Type,
+            _ => null
+        };
+
         public SpecialType? SymbolSpecialType
         {
             get
             {
-                var memberSymbol = Symbol switch
-                {
-                    IPropertySymbol propSym => propSym.Type,
-                    IFieldSymbol fieldSym => fieldSym.Type,
-                    _ => null
-                };
-
+                var memberSymbol = MemberType;
                 if (memberSymbol?.TypeKind == TypeKind.Enum) return SpecialType.System_Enum;
                 return memberSymbol?.SpecialType;
             }
