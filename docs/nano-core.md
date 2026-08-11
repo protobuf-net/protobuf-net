@@ -54,6 +54,32 @@ Each of these is visible in the v4 code, and most are the same discipline as SE.
    over lists, `Unsafe.As` reinterprets, and the `USE_SPAN_BUFFER` A/B (span-field vs array-field
    buffer representation — benchmark both; v4 kept both compiled).
 
+## Micro-benchmarks: "functionally correct" is step 0
+
+Expect a *lot* of silly micro-benchmarks for minutiae, and treat that as the method, not overhead.
+The differential suite gets a change through the door; the benchmark table is the actual review.
+Every hot-path method — field headers, integer reads/writes, varint/zigzag, strings, length
+prefixes — gets squeezed individually, because this is exactly where v4 found its wins and its
+traps:
+
+- **winners flip with the input distribution.** The tzcnt varint decode is ~2× at length ≥4 and a
+  *regression* at length 1–2 (see `DecodeResults.md`) — which is why the `PreferShort` hedge exists,
+  and why every varint benchmark is parameterised by byte-length *and* buffer offset. A single
+  "varint benchmark" number is a lie; the table is the result.
+- **the v4 convention is the right one**: per-concern benchmark files
+  (`DecodeIntrinsicBenchmarks`, `EncodeIntrinsicBenchmarks`, `StringMaterialization`,
+  `MemorySliceBenchmarks`, `ArrayAllocBenchmarks`, `ConstructionBenchmarks`) with the results
+  **committed as markdown tables beside them**, so review sees numbers, not claims — the same
+  derive-don't-guess rule the AOT work ran on, applied to nanoseconds.
+- **2022 numbers are hypotheses, not facts.** Everything in the v4 tables predates net8/net10
+  codegen changes and newer intrinsics; re-measure before locking any variant in, and note the
+  hardware in the committed table (deltas on one machine, never absolute figures across machines —
+  the same rule the AOT binary-size work used).
+
+The micro-benchmarks resurrect under `src/Benchmark` (the project already exists and carried the
+v4 Nano suites). The working rule for the hot path: **no change without its table** — a hot-path
+PR that says "should be faster" without a before/after is not reviewable.
+
 ## What v4 never built — and the rewrite cannot dodge
 
 The POC only ever handles a **single contiguous buffer**: `ReadStringSlow`, `ReadRawByteSlow` and
@@ -117,4 +143,5 @@ between "compatibility floor" and "new surface" stays visible in the file layout
 
 Rules of the road, inherited from the AOT work: derive rather than guess (the shape files are
 generated; the perf tables are measured), and nothing merges on "should be faster" — the
-differential decides correctness and BenchmarkDotNet decides speed.
+differential decides correctness, and correctness is only the entry ticket: BenchmarkDotNet tables,
+committed beside the benchmarks, decide the rest.
