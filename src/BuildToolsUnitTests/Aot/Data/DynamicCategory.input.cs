@@ -1,6 +1,7 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using System.Collections.Generic;
 
 namespace AotFixtures.DynamicCategory;
 
@@ -69,6 +70,12 @@ public class Reading
     [ProtoMember(1)] public Measure Scalar { get; set; }
     [ProtoMember(2)] public Label Message { get; set; }
     [ProtoMember(3)] public int Other { get; set; }
+
+    // ...and as collection elements. These state *no* wire type in the element features and pass the
+    // element serializer instead, so WriteRepeated/ReadRepeated inherit the category and wire type
+    // from it - the same deferral the unary members above get from WriteAny/ReadAny.
+    [ProtoMember(4)] public List<Measure> Scalars { get; set; }
+    [ProtoMember(5)] public List<Label> Messages { get; set; }
 }
 
 [ProtoModel]
@@ -85,5 +92,15 @@ public static class DynamicCategorySamples
         new Reading { Scalar = new Measure(42), Other = 7 },
         new Reading { Message = new Label { Text = "hi" } },
         new Reading { Scalar = new Measure(-1), Message = new Label { Text = "" }, Other = -2 },
+        new Reading { Scalars = [new Measure(1), new Measure(0), new Measure(-3)] },
+        new Reading { Messages = [new Label { Text = "a" }, new Label { Text = "b" }] },
+        new Reading
+        {
+            Scalar = new Measure(5),
+            Scalars = [new Measure(9)],
+            Message = new Label { Text = "m" },
+            Messages = [new Label { Text = "n" }],
+            Other = 11,
+        },
     ];
 }

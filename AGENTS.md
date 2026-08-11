@@ -787,12 +787,18 @@ Two things are genuinely ours rather than matches:
 
   So: a fair omission for a first release, and if it is ever built, the reference behaviour to copy is
   the *reflection* path, since the compiled one throws;
-- a **hand-written serializer as a collection element or map value** whose category is scalar *or*
-  simply unknown. The unary form defers framing to the serializer (below); an element cannot, because
-  the element's wire type is baked into the collection's features at the call site. Emitting the
-  message form regardless is what produced `Invalid wire-type String` on `Issue1083`'s
-  `List<WrappingStruct>` — so this one is refused, and the diagnostic says which of the two reasons
-  applies.
+- a **hand-written serializer as a map key or value** whose category is scalar *or* simply unknown.
+  The unary and *collection* forms both defer the decision to the serializer (below); a map does not
+  yet, because its key and value features are separate arguments composed differently.
+
+  **The collection form was refused on a wrong premise, and it is worth knowing why.** The claim was
+  that an element cannot defer because its wire type is baked into the collection's features at the
+  call site. It is baked in only because we chose to bake it in: `WriteRepeated`/`ReadRepeated` both
+  call `features.InheritFrom(serializer.Features)`, and `InheritFrom` fills in the category and wire
+  type **precisely when they were not specified** — so stating no wire type and passing the element
+  serializer defers exactly as `WriteAny` does. Emitting the *message* form regardless is what
+  produced `Invalid wire-type String` on `Issue1083`'s `List<WrappingStruct>`; that contract now
+  emits and matches ref-emit byte-for-byte.
 
 Everything else that is refused either matches ref-emit or is a deliberate AOT decision
 (`System.Type`), and each says which in its diagnostic. Two entries that used to be here went the

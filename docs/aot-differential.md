@@ -9,7 +9,7 @@ backlog — the durable record of what is still outstanding is item 13 of
 Every `[ProtoContract]` the generator emits, serialized from a populated
 instance and compared byte-for-byte against `RuntimeTypeModel`.
 
-seeded: **3117**, of which 125 dropped with a diagnostic
+seeded: **3117**, of which 124 dropped with a diagnostic
 - not seedable, not public: 157
 - not seedable, generic: 19
 
@@ -21,8 +21,8 @@ seeded: **3117**, of which 125 dropped with a diagnostic
   - e.g. descriptor.cs, google/protobuf/descriptor.cs
 - generated DTO does not compile: Unexpected character '\' (2)
   - e.g. google/protobuf/unittest.cs, stringEscaping.cs
-- generated DTO does not compile: The type or namespace name 'ForeignMessage' could not be found (are you missing a using directive or… (2)
-  - e.g. google/protobuf/map_unittest.cs, google/protobuf/unittest_optimize_for.cs
+- generated DTO does not compile: The type or namespace name 'TestAllTypes' could not be found (are you missing a using directive or a… (2)
+  - e.g. google/protobuf/map_unittest.cs, google/protobuf/unittest_lite_imports_nonlite.cs
 - schema does not parse: unable to find: 'sdk/logical/identity.proto' (1)
   - e.g. vault/backend.proto
 - name already declared by the hand-written corpus: Google.Protobuf.WellKnownTypes.Duration (1)
@@ -51,18 +51,18 @@ seeded: **3117**, of which 125 dropped with a diagnostic
   - e.g. using_bcl.cs
 - generated DTO does not compile: The type or namespace name 'ForeignMessageLite' could not be found (are you missing a using directiv… (1)
   - e.g. google/protobuf/map_lite_unittest.cs
-- generated DTO does not compile: The type or namespace name 'TestAllTypes' could not be found (are you missing a using directive or a… (1)
-  - e.g. google/protobuf/unittest_lite_imports_nonlite.cs
 - generated DTO does not compile: The type or namespace name 'ProtocolBuffers' does not exist in the namespace 'Google' (are you missi… (1)
   - e.g. google/protobuf/unittest_mset.cs
 - generated DTO does not compile: The type or namespace name 'TestAllTypes' does not exist in the namespace 'ProtobufUnittest' (are yo… (1)
   - e.g. google/protobuf/unittest_no_field_presence.cs
+- generated DTO does not compile: The type or namespace name 'ForeignMessage' could not be found (are you missing a using directive or… (1)
+  - e.g. google/protobuf/unittest_optimize_for.cs
 - generated DTO does not compile: The type or namespace name 'TestOptimizedForSize' could not be found (are you missing a using direct… (1)
   - e.g. google/protobuf/unittest_embed_optimize_for.cs
 
 | outcome | count |
 | --- | ---: |
-| **bytes match ref-emit** | 2993 |
+| **bytes match ref-emit** | 2994 |
 | **bytes differ** | 0 |
 | one model threw | 0 |
 | both threw (a shape protobuf-net refuses too) | 1 |
@@ -70,7 +70,7 @@ seeded: **3117**, of which 125 dropped with a diagnostic
 | no instance can exist (abstract, no sub-types) | 5 |
 | the reference model refused the contract | 0 |
 
-of the 2993 actually compared, **100% match**.
+of the 2994 actually compared, **100% match**.
 
 ## What went wrong
 

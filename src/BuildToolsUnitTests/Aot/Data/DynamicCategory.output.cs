@@ -51,6 +51,20 @@ partial class DynamicCategoryModel
                         value.Other = state.ReadInt32();
                         break;
                     }
+                    case 4:
+                    {
+                        var tmp4 = value.Scalars;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Measure>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                        if (tmp4 != null) value.Scalars = tmp4;
+                        break;
+                    }
+                    case 5:
+                    {
+                        var tmp5 = value.Messages;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+                        if (tmp5 != null) value.Messages = tmp5;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -68,6 +82,16 @@ partial class DynamicCategoryModel
             state.WriteAny<global::AotFixtures.DynamicCategory.Label>(2, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
             var tmp3 = value.Other;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            var tmp4 = value.Scalars;
+            if (tmp4 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Measure>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+            }
+            var tmp5 = value.Messages;
+            if (tmp5 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+            }
         }
     }
 }

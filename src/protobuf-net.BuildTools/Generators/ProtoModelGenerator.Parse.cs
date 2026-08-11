@@ -1251,8 +1251,11 @@ namespace ProtoBuf.BuildTools.Generators
                     // serializer's declaration is not in this compilation. Rather than refuse, defer
                     // the framing to WriteAny/ReadAny, which switch on it at run time
                     var subDynamic = hasExternal && subCategory is null && HasExternalSerializer(message!);
-                    if ((subScalar || subDynamic)
-                        && (shape.Repeated.Factory is not null || shape.Map.Factory is not null))
+                    // A *collection* element can defer its wire type after all - RepeatedFeatures
+                    // states none and WriteRepeated/ReadRepeated inherit it from the element
+                    // serializer. A map cannot yet: its key and value features are separate
+                    // arguments and are composed differently, so that shape is still refused.
+                    if ((subScalar || subDynamic) && shape.Map.Factory is not null)
                     {
                         // The unary form defers framing to WriteAny/ReadAny, which pick it from the
                         // serializer at run time. An *element* cannot: the element's wire type goes

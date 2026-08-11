@@ -943,22 +943,34 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static string RepeatedFeatures(ProtoMemberPlan member)
         {
-            var result = $"{Features}.{ElementWireType(member)}";
-            if (!member.IsPacked) result += $" | {Features}.OptionPackedDisabled";
+            // An element served by a hand-written serializer that is scalar - or whose category we
+            // could not establish - states *no* wire type, and lets WriteRepeated/ReadRepeated take
+            // it from the element serializer: both call features.InheritFrom(serializer.Features),
+            // which fills in the category and the wire type precisely when they were not specified,
+            // and reads the category off the serializer regardless. So the same deferral the unary
+            // form gets from WriteAny/ReadAny is available here after all; it was only ever baked in
+            // because we chose to bake it in.
+            var result = member.SubSerializerIsScalar || member.SubSerializerDynamic
+                ? null
+                : $"{Features}.{ElementWireType(member)}";
+            void Add(string token) => result = result is null ? token : result + " | " + token;
+            if (!member.IsPacked) Add($"{Features}.OptionPackedDisabled");
             if (member.WrappedValue)
             {
                 // field presence in the wrapper is what separates a null element from a zero one
-                result += $" | {Features}.OptionWrappedValue";
-                if (member.WrappedValueGroup) result += $" | {Features}.OptionWrappedValueGroup";
-                result += $" | {Features}.OptionWrappedValueFieldPresence";
+                Add($"{Features}.OptionWrappedValue");
+                if (member.WrappedValueGroup) Add($"{Features}.OptionWrappedValueGroup");
+                Add($"{Features}.OptionWrappedValueFieldPresence");
             }
             if (member.WrappedCollection)
             {
-                result += $" | {Features}.OptionWrappedCollection";
-                if (member.WrappedCollectionGroup) result += $" | {Features}.OptionWrappedCollectionGroup";
+                Add($"{Features}.OptionWrappedCollection");
+                if (member.WrappedCollectionGroup) Add($"{Features}.OptionWrappedCollectionGroup");
             }
-            if (member.OverwriteList) result += $" | {Features}.OptionClearCollection";
-            return result;
+            if (member.OverwriteList) Add($"{Features}.OptionClearCollection");
+            // every path adds OptionPackedDisabled unless IsPacked, so null here means "packed, and
+            // deferring the wire type" - which is still a legal features value
+            return result ?? "default";
         }
 
         private static string ElementWireType(ProtoMemberPlan member) => member.DataFormat switch
