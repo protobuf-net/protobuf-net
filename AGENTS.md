@@ -1662,10 +1662,15 @@ Precedence, taken from `Partial.reference.cs`:
 - Two declarations naming the same member: the **first** to pin a tag wins (`break` on match).
 - `IsRequired`, `IsPacked`, `DataFormat` and `Name` carry over exactly as on `[ProtoMember]`.
 
-**`OverwriteList` is refused here on purpose.** `MetaType`'s partial branch reads it from `attrib` —
-the member's *own* `[ProtoMember]`, which is necessarily null whenever that branch runs — rather than
-from `ppma`, so protobuf-net silently ignores it. Accepting it would make our reads merge differently
-from ref-emit's; refusing at least says so. Recorded in `docs/aot-findings.md`.
+**`OverwriteList` used to be refused here, and no longer is.** `MetaType`'s partial branch read it
+from `attrib` — the member's *own* `[ProtoMember]`, necessarily null whenever that branch runs —
+rather than from `ppma`, so protobuf-net silently ignored it, and accepting it would have made our
+reads merge differently from ref-emit's. That was a one-token bug in `MetaType`, fixed on this
+branch; both paths honour it now, and `Partial.input.cs` carries a member exercising it.
+
+Worth keeping as a pattern rather than as a fact about this option: **a generator refusal justified
+by "the runtime ignores it" is worth re-reading as a possible bug report about the runtime.** This
+one sat recorded as settled behaviour for months.
 
 Note the shipped analyzer makes the two *contradictory* shapes build **errors** — `PBN0008` for a
 member described by both a `[ProtoMember]` and a `[ProtoPartialMember]`, `PBN0010` for one both
