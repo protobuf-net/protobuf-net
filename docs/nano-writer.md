@@ -99,12 +99,12 @@ already exists at the API level; the prototype shows it need not exist per-messa
 - **Constant tags cost nothing in either pass.** The generator knows every tag at compile
   time: Measure_ statics fold tag lengths into literal constants (no MeasureVarint32 call
   for tags), and the write side emits pre-encoded constant bytes - a single store for
-  fields <= 15 (the dominant case; the write mirror of the read''s range-trick), unrolled
+  fields <= 15 (the dominant case; the write mirror of the read's range-trick), unrolled
   stores beyond. Consequence: the repeated-measure cost concentrates in STRING sizing
   (GetByteCount is the one measure that touches data) and sub-message recursion.
 - **The deep-tree memoization race, three entrants, tiebreaker-ruled on the descriptor set:**
   1. recompute-always (prototype default; zero context, wins at typical depth);
-  2. keyed memo on the writer (Marc''s length-lookup sketch, morally v3''s
+  2. keyed memo on the writer (Marc's length-lookup sketch, morally v3's
      Measure/MeasureState machinery - inspect that in step 1): pooled
      Dictionary<object, long> by reference identity, post-order populated; costs a hash
      per node and needs an identity story for struct contracts;
