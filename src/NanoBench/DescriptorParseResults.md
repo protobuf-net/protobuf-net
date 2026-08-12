@@ -23,14 +23,14 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), x86-64-v4
 
 | whole-document parse | Legacy (real stack) | Google.Protobuf | NanoRaw |
 | --- | ---: | ---: | ---: |
-| net10 | 22.80 µs / 62.3 KB | 12.24 µs / 53.1 KB | **8.34 µs / 51.9 KB** |
-| net472 | 44.88 µs / 69.2 KB | 28.31 µs / 71.0 KB | **14.68 µs / 55.8 KB** |
+| net10 | 25.00 µs / 62.3 KB | 12.57 µs / 53.1 KB | **8.32 µs / 51.9 KB** |
+| net472 | 44.56 µs / 69.2 KB | 28.10 µs / 71.0 KB | **14.89 µs / 55.8 KB** |
 
 ## What the table says
 
-1. **Nano beats Google.Protobuf on its home-turf format: 1.47× (net10), 1.93× (net472)** — and
-   legacy by 2.7×/3.1×. The composite landed where the per-primitive calibration predicted
-   (between the framing rows' 3–5× and the string rows' ~1.1–1.3×, weighted by
+1. **Nano beats Google.Protobuf on its home-turf format: 1.51× (net10), 1.89× (net472)** — and
+   legacy by 3.0× on both runtimes. The composite landed where the per-primitive calibration
+   predicted (between the framing rows' 3–5× and the string rows' ~1.1–1.3×, weighted by
    descriptor.proto's message-heavy, string-heavy mix).
 2. **Lowest allocations of the three** (0.83× legacy on net10), with the caveat that the object
    models differ by design: the nano DTO has no unknown-field bags (legacy's IExtensible) and no
@@ -43,8 +43,35 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), x86-64-v4
    this payload: packed ints (`loc=0`), bytes, `UninterpretedOption` — the parser covers them,
    the data does not reach them.
 
+## The review pass (2026-08-12): every change priced
+
+The first human read (Marc) produced five changes, applied and measured in two steps against the
+pre-review baseline (8.34 µs net10 / 14.68 µs net472, full-job):
+
+| step | change | net10 | net472 |
+| --- | --- | ---: | ---: |
+| A | framing pairs (`PushScope(tag)`, length-or-group on every message field), auto-properties for all DTO scalars, real enums | 8.19 µs (short) | 14.71 µs (short) |
+| B | +86 wire-type tolerance labels (varint/fixed32/fixed64 on every scalar; 160 → 246 labels) | 8.35 µs (short) | 14.85 µs (short) |
+| final | full-job confirmation of the reviewed shape | **8.32 µs** | **14.89 µs** |
+
+Readings:
+
+- **Everything measured free on net10** — the whole review pass nets −0.02 µs against baseline.
+  The sparse-switch concern (`FileOptions` reaches field 999, so these are binary-search trees,
+  not jump tables) did not materialize: unhit labels stay unpriced even there. net472 shows
+  +0.21 µs (+1.4%) for the full pass — real but marginal on the old JIT.
+- **Consequence: tolerant is simply the default; no strict-mode knob is built.** The strict-mode
+  design (a model attribute, natural wire type only) stays recorded in docs/nano-core.md with no
+  trigger. Packed↔unpacked and length↔group pairs are spec, not tolerance, and would survive
+  strict mode anyway.
+- The one tolerance exception: `double` stays fixed64-only — the fixed32 float promotion needs
+  `Int32BitsToSingle`, which netfx lacks.
+- Also in the pass: every case label now carries its `// name, field N, wire` comment
+  (unconditionally — comments are free in every configuration), and the model rewrite retired
+  both of the file's earlier abbreviation caveats.
+
 ## Milestone gate (docs/nano-core.md)
 
-The full-job run above is half the gate. Remaining: the human top-to-bottom read of
-`DescriptorNano.cs` — which was written to be read: it is the emitted-shape reference for the
-generator's nano pass at document scale.
+Both halves of the gate are now done: the full-job runs above, and the human top-to-bottom read
+of `DescriptorNano.cs` — whose feedback also produced the forward-only rule for the reader (see
+docs/nano-core.md) and the deferred-construction design note for the inheritance brick.

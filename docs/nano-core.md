@@ -215,7 +215,18 @@ caller states the encoding, and the tag flows through parameters.**
   each dispatching to the correctly-named raw read: the jump table absorbs the labels for free, and
   strictness stays expressible per contract. Note the differential suite is currently blind to this
   divergence (fixtures read and write the same format), so a deliberate cross-format test lands
-  with the change.
+  with the change. **Message fields get the same treatment for framing** — length prefix or group,
+  accepted without prejudice as legacy always has, as a case-label pair over one `PushScope(tag)`
+  body (the framing is in the tag; an end-group sentinel is the start tag plus one, so the group
+  arm costs nothing to derive). In a repeated run the loop compares against a `last` local rather
+  than a constant; a payload alternating framings mid-run just exits the run compare and re-enters
+  the sibling label. Two categories must not be confused with tolerance, because they are **spec,
+  not lenience**: packed↔unpacked for repeated primitives (both Google.Protobuf and protobuf-net
+  deliberately write whichever encoding is optimal, regardless of the declared option), and the
+  message framing pair above (`DataFormat.Group` is a legitimate writer choice). Any future
+  strict-mode knob (a model attribute accepting only the natural wire type per field — build it
+  only if measurement shows tolerance labels cost on realistic sparse switches) governs scalar
+  wire interchange ONLY; the spec pairs stay unconditional.
 
 **The read signature is value-in, value-out** — `static T NanoRead_X(ref ReaderState, T value)`,
 with `??=` construction inside and merge by mutation. The alternatives were weighed: v4's
@@ -284,6 +295,27 @@ checks earn their keep and the elision analysis meets a case it must NOT elide),
 collection properties. Extension retention stays out of scope for the milestone: the payload
 contains no unknown fields for its own schema, so SkipTag-as-default is honest. The milestone
 gate: benchmarks reviewed, and the emitted code read top-to-bottom by a human.
+
+Decisions from the first human read of the document-scale emitted shape (2026-08-12):
+
+- **`??=` construction at method entry is the sealed-type shape only.** A `[ProtoInclude]`
+  hierarchy must DEFER construction — the sub-type marker decides the concrete type, so the emit
+  shape for a hierarchy root is: no entry-point construction, marker cases construct the derived
+  type in their dive, member cases materialize the current layer on first touch. The corner is
+  root-members-before-marker: legacy handles it via `SubTypeState` convert-and-merge (`Cast`,
+  with its recorded incompatible-siblings hazard); refusing instead would reject payloads legacy
+  accepts. Well-formed protobuf-net output always writes markers first, so the corner only opens
+  on reordered/concatenated input. Design note for the inheritance brick, recorded here so it is
+  not rediscovered.
+- **Every emitted case label carries a comment** — `// options, field 7, group` — unconditionally:
+  comments have no runtime existence in any configuration, and gating them on Debug would split
+  the incremental cache and the golden files per configuration for zero benefit.
+- **Benchmark DTOs use auto-properties, never public fields.** The generator's real targets are
+  properties; a field-assigning benchmark measures a capability the emitted code will not have.
+- Parked, protogen-scoped (the `.proto`→C# generator, NOT this work): its generated DTOs could
+  bit-pack presence — and `bool` values — hasBits-style, as Google's generated C# does; a run of
+  twenty `bool?` properties is ~40 bytes of nullable machinery for 40 bits of information, and
+  the property surface (and so any serializer emitting against it) is unchanged.
 
 ## Step plan
 

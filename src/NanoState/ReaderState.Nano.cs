@@ -273,6 +273,26 @@ public ref partial struct ReaderState
         => PushLimit(ReadRawVarint32());
 
     /// <summary>
+    /// Enters the scope a message-field tag implies: length mode for wire-type 2, group mode for
+    /// wire-type 3 - the framing decision is already in the tag, so a dive site accepting both
+    /// framings (as legacy always has, without prejudice) needs no branch of its own beyond its
+    /// two case labels. The end-group sentinel is the start tag plus one: only the low 3 bits
+    /// differ (3 becomes 4).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadScope PushScope(uint tag)
+        => (tag & 7) switch
+        {
+            2 => PushLengthPrefix(),
+            3 => PushGroup(tag + 1),
+            _ => ThrowNotAScope(tag),
+        };
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static ReadScope ThrowNotAScope(uint tag)
+        => throw new InvalidOperationException($"tag {tag} (wire-type {tag & 7}) does not open a sub-message scope");
+
+    /// <summary>
     /// Enters a group scope: sets the end-group sentinel (checked in the switch default case via
     /// <see cref="IsScopeEnd"/> - matched fields never test it). Position becomes unbounded, which
     /// is legacy semantics exactly - see the recorded trade on <see cref="_scope"/>.

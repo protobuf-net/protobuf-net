@@ -33,19 +33,15 @@ public ref partial struct ReaderState
     }
 
     /// <summary>
-    /// Legacy sub-item entry: framing selected by the wire type in state - length prefix or group
-    /// - and the token is the prior scope, because SubItemToken and ReadScope are literally the
-    /// same encoding: a sign-discriminated long, negative for groups, prior-limit otherwise.
-    /// Reaching the internal SubItemToken constructor is what the IVT grant exists for.
+    /// Legacy sub-item entry: reassembles the tag from state and defers the framing decision to
+    /// <see cref="PushScope"/> - the token is the prior scope, because SubItemToken and ReadScope
+    /// are literally the same encoding: a sign-discriminated long, negative for groups,
+    /// prior-limit otherwise. Reaching the internal SubItemToken constructor is what the IVT
+    /// grant exists for.
     /// </summary>
     public SubItemToken StartSubItem()
     {
-        var scope = _wireType switch
-        {
-            WireType.String => PushLengthPrefix(),
-            WireType.StartGroup => PushGroup((uint)((_fieldNumber << 3) | 4)),
-            _ => ThrowWireType<ReadScope>(),
-        };
+        var scope = PushScope((uint)((_fieldNumber << 3) | ((int)_wireType & 7)));
         return new SubItemToken(scope.Value);
     }
 

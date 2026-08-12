@@ -143,7 +143,7 @@ public class DescriptorParseBenchmarks
                     {
                         c.OptionsObjects++;
                         if (m.Options.Deprecated == true) c.BoolTrues++;
-                        c.ScalarSum += m.Options.IdempotencyLevel ?? 0;
+                        c.ScalarSum += (int)(m.Options.IdempotencyLevel ?? 0);
                         c.Uninterpreted += m.Options.UninterpretedOptions.Count;
                     }
                 }
@@ -156,7 +156,7 @@ public class DescriptorParseBenchmarks
                 Census.Chars(c, o.CsharpNamespace); Census.Chars(c, o.SwiftPrefix);
                 Census.Chars(c, o.PhpClassPrefix); Census.Chars(c, o.PhpNamespace);
                 Census.Chars(c, o.PhpMetadataNamespace); Census.Chars(c, o.RubyPackage);
-                if (o.OptimizeFor is { } om) c.ScalarSum += om;
+                if (o.OptimizeFor is { } om) c.ScalarSum += (int)om;
                 foreach (var b in new[] { o.JavaMultipleFiles, o.JavaGenerateEqualsAndHash,
                     o.JavaStringCheckUtf8, o.CcGenericServices, o.JavaGenericServices,
                     o.PyGenericServices, o.PhpGenericServices, o.Deprecated, o.CcEnableArenas })
@@ -211,14 +211,14 @@ public class DescriptorParseBenchmarks
             c.FieldNumberSum += fd.Number ?? 0;
             Census.Chars(c, fd.Name); Census.Chars(c, fd.TypeName); Census.Chars(c, fd.Extendee);
             Census.Chars(c, fd.DefaultValue); Census.Chars(c, fd.JsonName);
-            if (fd.Label is { } l) c.ScalarSum += l;
-            if (fd.Type is { } t) c.ScalarSum += t;
+            if (fd.Label is { } l) c.ScalarSum += (int)l;
+            if (fd.Type is { } t) c.ScalarSum += (int)t;
             c.ScalarSum += fd.OneofIndex ?? 0;
             if (fd.Proto3Optional == true) c.BoolTrues++;
             if (fd.Options is { } o)
             {
                 c.OptionsObjects++;
-                c.ScalarSum += (o.Ctype ?? 0) + (o.Jstype ?? 0);
+                c.ScalarSum += (int)(o.Ctype ?? 0) + (int)(o.Jstype ?? 0);
                 foreach (var b in new[] { o.Packed, o.Lazy, o.Deprecated, o.Weak })
                 {
                     if (b == true) c.BoolTrues++;
