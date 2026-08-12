@@ -444,6 +444,29 @@ namespace ProtoBuf.BuildTools.Generators
                 // assign it (classic's early paths skip it), which the arms above preserve by
                 // never reaching here.
                 var setSpecified = member.SpecifiedMember is { } sp ? $"value.{sp} = true;" : null;
+                if (RawBclForm(member) is { } bclRead)
+                {
+                    // a compatibility-level BCL member: the length-prefixed form (how these are
+                    // written) reads natively; the OTHER framings the stateful path tolerated -
+                    // StartGroup for all four, Fixed64 raw ticks for DateTime/TimeSpan - take a
+                    // StashTag arm to the wire-aware BclHelpers read, so acceptance is unchanged
+                    Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
+                    Line(sb, indent + 4, $"value.{name} = {bclRead};");
+                    if (setSpecified is not null) Line(sb, indent + 4, setSpecified);
+                    Line(sb, indent + 4, "break;");
+                    if (member.Kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan)
+                    {
+                        Line(sb, indent + 3, $"case ({n} << 3) | 1:  // {member.Name}, field {n}, fixed64 ticks");
+                    }
+                    Line(sb, indent + 3, $"case ({n} << 3) | 3:  // {member.Name}, field {n}, group");
+                    Line(sb, indent + 3, "{");
+                    Line(sb, indent + 4, "state.StashTag(tag);");
+                    Line(sb, indent + 4, $"value.{name} = {ScalarRead(member)};");
+                    if (setSpecified is not null) Line(sb, indent + 4, setSpecified);
+                    Line(sb, indent + 4, "break;");
+                    Line(sb, indent + 3, "}");
+                    continue;
+                }
                 switch (member.Kind)
                 {
                     case ProtoMemberKind.Message:
@@ -527,12 +550,9 @@ namespace ProtoBuf.BuildTools.Generators
             if (contract.Members.Count != 0)
             {
                 sb.AppendLine();
-                Line(sb, indent + 1, "static bool IsKnownField(uint tag) => (tag >> 3) switch");
-                Line(sb, indent + 1, "{");
-                Line(sb, indent + 2, string.Join(" or ",
-                    contract.Members.Select(static m => m.FieldNumber.ToString(CultureInfo.InvariantCulture))) + " => true,");
-                Line(sb, indent + 2, "_ => false,");
-                Line(sb, indent + 1, "};");
+                Line(sb, indent + 1, "static bool IsKnownField(uint tag) => (tag >> 3) is "
+                    + string.Join(" or ", contract.Members.Select(static m => m.FieldNumber.ToString(CultureInfo.InvariantCulture)))
+                    + ";");
             }
             Line(sb, indent, "}");
         }
@@ -750,8 +770,29 @@ namespace ProtoBuf.BuildTools.Generators
                     ? null : "target type not raw-eligible";
             }
             if (member.IsReadOnly) return "getter-only scalar";
+            if (RawBclForm(member) is not null) return null;
             return NativeScalarKind(member.Kind) ? null : $"kind {member.Kind}";
         }
+
+        /// <summary>
+        /// The self-framing raw read for a compatibility-level BCL member, or null when the
+        /// combination stays legacy-mode. The level selection mirrors <see cref="BclSuffix"/>
+        /// exactly (member.CompatibilityLevel is the EFFECTIVE level, so a WellKnown-format
+        /// promotion is already applied); the level-300 string forms of Guid/Decimal are not
+        /// built yet and stay stateful. This serves the wire-2 arm only - fixed64 and group
+        /// framings take StashTag arms to the wire-aware BclHelpers read, so the native form
+        /// never sees them.
+        /// </summary>
+        private static string? RawBclForm(ProtoMemberPlan member) => member.Kind switch
+        {
+            ProtoMemberKind.DateTime => member.CompatibilityLevel >= 240
+                ? "state.ReadRawTimestamp()" : "state.ReadRawDateTimeBcl()",
+            ProtoMemberKind.TimeSpan => member.CompatibilityLevel >= 240
+                ? "state.ReadRawDuration()" : "state.ReadRawTimeSpanBcl()",
+            ProtoMemberKind.Guid when member.CompatibilityLevel < 300 => "state.ReadRawGuidBcl()",
+            ProtoMemberKind.Decimal when member.CompatibilityLevel < 300 => "state.ReadRawDecimalBcl()",
+            _ => null,
+        };
 
         private static bool NativeScalarKind(ProtoMemberKind kind) => kind is
             ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
@@ -777,6 +818,17 @@ namespace ProtoBuf.BuildTools.Generators
             if (member.EnumTypeName is not null) return $"non-default DataFormat ({format} on enum)";
             var kind = member.Kind;
             if (kind == ProtoMemberKind.Message) return null;
+            if (kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                or ProtoMemberKind.Guid or ProtoMemberKind.Decimal)
+            {
+                // every non-ZigZag format on the BCL kinds reads through the same arm set - |2
+                // native, |1/|3 StashTag tolerance - and the write is classic regardless; a
+                // WellKnown promotion is already folded into the effective level, and whether
+                // the KIND itself goes native at this level is RawBclForm's decision, not a
+                // format question. ZigZag throws while building the model and was dropped
+                // upstream; named here only defensively.
+                return format == ProtoDataFormat.ZigZag ? $"non-default DataFormat ({format} on {kind})" : null;
+            }
             if (format == ProtoDataFormat.ZigZag
                 && kind is ProtoMemberKind.Int32 or ProtoMemberKind.Int64) return null;
             if (format == ProtoDataFormat.FixedSize

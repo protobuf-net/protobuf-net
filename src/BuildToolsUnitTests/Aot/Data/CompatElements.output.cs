@@ -179,11 +179,7 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Features
@@ -282,7 +278,7 @@ partial class CompatElementsModel
                         if (tmp4 != null) value.Spans = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat (FixedSize on Guid)
+                    // raw read pass: legacy-mode - member Fixed: element kind Guid
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // Fixed, field 5
@@ -305,11 +301,7 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Map>.Features
@@ -377,11 +369,7 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.WellKnownLists>.Features
@@ -418,7 +406,7 @@ partial class CompatElementsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Dates: non-default DataFormat (WellKnown on DateTime)
+                    // raw read pass: legacy-mode - member Dates: element kind DateTime
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // Dates, field 1
@@ -431,7 +419,7 @@ partial class CompatElementsModel
                         if (tmp1 != null) value.Dates = tmp1;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Spans: non-default DataFormat (WellKnown on TimeSpan)
+                    // raw read pass: legacy-mode - member Spans: element kind TimeSpan
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // Spans, field 2
@@ -467,11 +455,7 @@ partial class CompatElementsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
         }
     }
 }

@@ -1,3 +1,6 @@
+using ProtoBuf.Internal;
+using ProtoBuf.WellKnownTypes;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
@@ -6,6 +9,81 @@ namespace ProtoBuf
     {
         public ref partial struct State
         {
+            // ---- self-framing raw readers for the compatibility-level BCL types ----
+            // The tag was consumed by the caller (raw convention); these frame the
+            // length-prefixed body themselves and delegate to the SAME loop bodies the
+            // stateful serializers now run (PrimaryTypeProvider - "change BclHelpers to use
+            // the raw API"), so there is exactly one decode per shape. Fixed64/group
+            // framings of these types stay on the stateful path via StashTag arms in the
+            // generated code, so these only ever see wire 2.
+
+            /// <summary>Raw-convention read of a bcl.TimeSpan (compatibility level 200).</summary>
+            public TimeSpan ReadRawTimeSpanBcl()
+            {
+                var scope = PushLengthPrefix();
+                var ticks = PrimaryTypeProvider.ReadRawScaledTicksBody(ref this);
+                PopScope(scope);
+                return ticks.ToTimeSpan();
+            }
+
+            /// <summary>Raw-convention read of a bcl.DateTime (compatibility level 200).</summary>
+            public DateTime ReadRawDateTimeBcl()
+            {
+                var scope = PushLengthPrefix();
+                var ticks = PrimaryTypeProvider.ReadRawScaledTicksBody(ref this);
+                PopScope(scope);
+                return ticks.ToDateTime();
+            }
+
+            /// <summary>Raw-convention read of a google.protobuf.Duration (level 240+).</summary>
+            public TimeSpan ReadRawDuration()
+            {
+                long seconds = 0;
+                int nanos = 0;
+                if (TryReadWellKnownPairFast(ref seconds, ref nanos))
+                {
+                    return new Duration(seconds, nanos).AsTimeSpan();
+                }
+                var scope = PushLengthPrefix();
+                var duration = PrimaryTypeProvider.ReadRawSecondsNanosBody(ref this, default);
+                PopScope(scope);
+                return duration.AsTimeSpan();
+            }
+
+            /// <summary>Raw-convention read of a google.protobuf.Timestamp (level 240+).</summary>
+            public DateTime ReadRawTimestamp()
+            {
+                long seconds = 0;
+                int nanos = 0;
+                if (!TryReadWellKnownPairFast(ref seconds, ref nanos))
+                {
+                    var scope = PushLengthPrefix();
+                    var duration = PrimaryTypeProvider.ReadRawSecondsNanosBody(ref this, default);
+                    PopScope(scope);
+                    seconds = duration.Seconds;
+                    nanos = duration.Nanoseconds;
+                }
+                return new Timestamp(seconds, nanos).AsDateTime();
+            }
+
+            /// <summary>Raw-convention read of a bcl.Guid (compatibility levels 200/240).</summary>
+            public Guid ReadRawGuidBcl()
+            {
+                var scope = PushLengthPrefix();
+                var guid = PrimaryTypeProvider.ReadRawGuidBody(ref this);
+                PopScope(scope);
+                return guid;
+            }
+
+            /// <summary>Raw-convention read of a bcl.Decimal (compatibility levels 200/240).</summary>
+            public decimal ReadRawDecimalBcl()
+            {
+                var scope = PushLengthPrefix();
+                var result = PrimaryTypeProvider.ReadRawDecimalBody(ref this);
+                PopScope(scope);
+                return result;
+            }
+
             /// <summary>
             /// The Duration/Timestamp fast path: a fully-resident peek of the canonical
             /// [len][field 1 varint][field 2 varint] sub-message shape, committing only on a
