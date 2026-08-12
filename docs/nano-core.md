@@ -166,6 +166,12 @@ caller states the encoding, and the tag flows through parameters.**
   and the match makes the `StartSubItem`/`EndSubItem` veneer mechanical.
 - The legacy API becomes a veneer: `ReadFieldHeader()` is `ReadRawTag()` plus the shift/mask and
   state writes — one implementation core, two surfaces, the stateful one paying for its own state.
+- **The legacy header state stays as two separate ints** (`_fieldNumber`, `_wireType`), written
+  only by the veneers and left stale by the raw path (the two APIs do not interleave within one
+  consumer). They cannot be re-packed into a raw-tag field: `Hint` stretches the wire type past
+  3 bits — `SignedVarint = Varint | (1 << 3)` = 8, a literal fourth bit, upgraded in place when
+  the low 3 bits match (verified in `ProtoReader.Hint`) — and `WireType.None = -1` needs sign on
+  top. Cold fields for raw consumers; the cost lands where the statefulness lives.
 - **Wire-type tolerance is preserved by case labels, not by state.** The legacy reader accepts an
   int32 arriving as Fixed32/Fixed64 (and protobuf-net itself writes those under
   `DataFormat.FixedSize`), so a naive single-label raw-tag switch would silently demote known
