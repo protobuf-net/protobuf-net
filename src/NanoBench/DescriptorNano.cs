@@ -1,3 +1,4 @@
+using ProtoBuf;
 using ProtoBuf.Nano;
 using System;
 using System.Collections.Generic;
@@ -26,57 +27,63 @@ namespace ProtoBuf.Nano.Bench.DescriptorModel;
 // - ??= construction at method entry is the SEALED-type shape; a [ProtoInclude] hierarchy must
 //   defer construction until the sub-type marker or first member touch (see docs/nano-core.md).
 
+[ProtoContract]
 public sealed class FileDescriptorSet
 {
-    public List<FileDescriptorProto> Files { get; } = [];
+    [ProtoMember(1)] public List<FileDescriptorProto> Files { get; } = [];
 }
 
+[ProtoContract]
 public sealed class FileDescriptorProto
 {
-    public string Name { get; set; }
-    public string Package { get; set; }
-    public List<string> Dependencies { get; } = [];
-    public List<int> PublicDependencies { get; } = [];
-    public List<int> WeakDependencies { get; } = [];
-    public List<DescriptorProto> MessageTypes { get; } = [];
-    public List<EnumDescriptorProto> EnumTypes { get; } = [];
-    public List<ServiceDescriptorProto> Services { get; } = [];
-    public List<FieldDescriptorProto> Extensions { get; } = [];
-    public FileOptions Options { get; set; }
-    public SourceCodeInfo SourceCodeInfo { get; set; }
-    public string Syntax { get; set; }
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public string Package { get; set; }
+    [ProtoMember(3)] public List<string> Dependencies { get; } = [];
+    [ProtoMember(10)] public List<int> PublicDependencies { get; } = [];
+    [ProtoMember(11)] public List<int> WeakDependencies { get; } = [];
+    [ProtoMember(4)] public List<DescriptorProto> MessageTypes { get; } = [];
+    [ProtoMember(5)] public List<EnumDescriptorProto> EnumTypes { get; } = [];
+    [ProtoMember(6)] public List<ServiceDescriptorProto> Services { get; } = [];
+    [ProtoMember(7)] public List<FieldDescriptorProto> Extensions { get; } = [];
+    [ProtoMember(8)] public FileOptions Options { get; set; }
+    [ProtoMember(9)] public SourceCodeInfo SourceCodeInfo { get; set; }
+    [ProtoMember(12)] public string Syntax { get; set; }
 }
 
+[ProtoContract]
 public sealed class DescriptorProto
 {
-    public string Name { get; set; }
-    public List<FieldDescriptorProto> Fields { get; } = [];
-    public List<FieldDescriptorProto> Extensions { get; } = [];
-    public List<DescriptorProto> NestedTypes { get; } = [];
-    public List<EnumDescriptorProto> EnumTypes { get; } = [];
-    public List<ExtensionRange> ExtensionRanges { get; } = [];
-    public List<OneofDescriptorProto> OneofDecls { get; } = [];
-    public MessageOptions Options { get; set; }
-    public List<ReservedRange> ReservedRanges { get; } = [];
-    public List<string> ReservedNames { get; } = [];
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public List<FieldDescriptorProto> Fields { get; } = [];
+    [ProtoMember(6)] public List<FieldDescriptorProto> Extensions { get; } = [];
+    [ProtoMember(3)] public List<DescriptorProto> NestedTypes { get; } = [];
+    [ProtoMember(4)] public List<EnumDescriptorProto> EnumTypes { get; } = [];
+    [ProtoMember(5)] public List<ExtensionRange> ExtensionRanges { get; } = [];
+    [ProtoMember(8)] public List<OneofDescriptorProto> OneofDecls { get; } = [];
+    [ProtoMember(7)] public MessageOptions Options { get; set; }
+    [ProtoMember(9)] public List<ReservedRange> ReservedRanges { get; } = [];
+    [ProtoMember(10)] public List<string> ReservedNames { get; } = [];
 }
 
+[ProtoContract]
 public sealed class ExtensionRange
 {
-    public int? Start { get; set; }
-    public int? End { get; set; }
-    public ExtensionRangeOptions Options { get; set; }
+    [ProtoMember(1)] public int? Start { get; set; }
+    [ProtoMember(2)] public int? End { get; set; }
+    [ProtoMember(3)] public ExtensionRangeOptions Options { get; set; }
 }
 
+[ProtoContract]
 public sealed class ReservedRange
 {
-    public int? Start { get; set; }
-    public int? End { get; set; }
+    [ProtoMember(1)] public int? Start { get; set; }
+    [ProtoMember(2)] public int? End { get; set; }
 }
 
+[ProtoContract]
 public sealed class ExtensionRangeOptions
 {
-    public List<UninterpretedOption> UninterpretedOptions { get; } = [];
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = [];
 }
 
 public enum FieldLabel
@@ -108,64 +115,71 @@ public enum FieldType
     TypeSint64 = 18,
 }
 
+[ProtoContract]
 public sealed class FieldDescriptorProto
 {
-    public string Name { get; set; }
-    public int? Number { get; set; }
-    public FieldLabel? Label { get; set; }
-    public FieldType? Type { get; set; }
-    public string TypeName { get; set; }
-    public string Extendee { get; set; }
-    public string DefaultValue { get; set; }
-    public int? OneofIndex { get; set; }
-    public string JsonName { get; set; }
-    public FieldOptions Options { get; set; }
-    public bool? Proto3Optional { get; set; }
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(3)] public int? Number { get; set; }
+    [ProtoMember(4)] public FieldLabel? Label { get; set; }
+    [ProtoMember(5)] public FieldType? Type { get; set; }
+    [ProtoMember(6)] public string TypeName { get; set; }
+    [ProtoMember(2)] public string Extendee { get; set; }
+    [ProtoMember(7)] public string DefaultValue { get; set; }
+    [ProtoMember(9)] public int? OneofIndex { get; set; }
+    [ProtoMember(10)] public string JsonName { get; set; }
+    [ProtoMember(8)] public FieldOptions Options { get; set; }
+    [ProtoMember(17)] public bool? Proto3Optional { get; set; }
 }
 
+[ProtoContract]
 public sealed class OneofDescriptorProto
 {
-    public string Name { get; set; }
-    public OneofOptions Options { get; set; }
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public OneofOptions Options { get; set; }
 }
 
+[ProtoContract]
 public sealed class EnumDescriptorProto
 {
-    public string Name { get; set; }
-    public List<EnumValueDescriptorProto> Values { get; } = [];
-    public EnumOptions Options { get; set; }
-    public List<EnumReservedRange> ReservedRanges { get; } = [];
-    public List<string> ReservedNames { get; } = [];
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public List<EnumValueDescriptorProto> Values { get; } = [];
+    [ProtoMember(3)] public EnumOptions Options { get; set; }
+    [ProtoMember(4)] public List<EnumReservedRange> ReservedRanges { get; } = [];
+    [ProtoMember(5)] public List<string> ReservedNames { get; } = [];
 }
 
+[ProtoContract]
 public sealed class EnumReservedRange
 {
-    public int? Start { get; set; }
-    public int? End { get; set; }
+    [ProtoMember(1)] public int? Start { get; set; }
+    [ProtoMember(2)] public int? End { get; set; }
 }
 
+[ProtoContract]
 public sealed class EnumValueDescriptorProto
 {
-    public string Name { get; set; }
-    public int? Number { get; set; }
-    public EnumValueOptions Options { get; set; }
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public int? Number { get; set; }
+    [ProtoMember(3)] public EnumValueOptions Options { get; set; }
 }
 
+[ProtoContract]
 public sealed class ServiceDescriptorProto
 {
-    public string Name { get; set; }
-    public List<MethodDescriptorProto> Methods { get; } = [];
-    public ServiceOptions Options { get; set; }
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public List<MethodDescriptorProto> Methods { get; } = [];
+    [ProtoMember(3)] public ServiceOptions Options { get; set; }
 }
 
+[ProtoContract]
 public sealed class MethodDescriptorProto
 {
-    public string Name { get; set; }
-    public string InputType { get; set; }
-    public string OutputType { get; set; }
-    public MethodOptions Options { get; set; }
-    public bool? ClientStreaming { get; set; }
-    public bool? ServerStreaming { get; set; }
+    [ProtoMember(1)] public string Name { get; set; }
+    [ProtoMember(2)] public string InputType { get; set; }
+    [ProtoMember(3)] public string OutputType { get; set; }
+    [ProtoMember(4)] public MethodOptions Options { get; set; }
+    [ProtoMember(5)] public bool? ClientStreaming { get; set; }
+    [ProtoMember(6)] public bool? ServerStreaming { get; set; }
 }
 
 public enum OptimizeMode
@@ -175,38 +189,40 @@ public enum OptimizeMode
     LiteRuntime = 3,
 }
 
+[ProtoContract]
 public sealed class FileOptions
 {
-    public string JavaPackage { get; set; }              // 1
-    public string JavaOuterClassname { get; set; }       // 8
-    public bool? JavaMultipleFiles { get; set; }         // 10
-    public bool? JavaGenerateEqualsAndHash { get; set; } // 20
-    public bool? JavaStringCheckUtf8 { get; set; }       // 27
-    public OptimizeMode? OptimizeFor { get; set; }       // 9
-    public string GoPackage { get; set; }                // 11
-    public bool? CcGenericServices { get; set; }         // 16
-    public bool? JavaGenericServices { get; set; }       // 17
-    public bool? PyGenericServices { get; set; }         // 18
-    public bool? PhpGenericServices { get; set; }        // 42
-    public bool? Deprecated { get; set; }                // 23
-    public bool? CcEnableArenas { get; set; }            // 31
-    public string ObjcClassPrefix { get; set; }          // 36
-    public string CsharpNamespace { get; set; }          // 37
-    public string SwiftPrefix { get; set; }              // 39
-    public string PhpClassPrefix { get; set; }           // 40
-    public string PhpNamespace { get; set; }             // 41
-    public string PhpMetadataNamespace { get; set; }     // 44
-    public string RubyPackage { get; set; }              // 45
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(1)] public string JavaPackage { get; set; }              // 1
+    [ProtoMember(8)] public string JavaOuterClassname { get; set; }       // 8
+    [ProtoMember(10)] public bool? JavaMultipleFiles { get; set; }         // 10
+    [ProtoMember(20)] public bool? JavaGenerateEqualsAndHash { get; set; } // 20
+    [ProtoMember(27)] public bool? JavaStringCheckUtf8 { get; set; }       // 27
+    [ProtoMember(9)] public OptimizeMode? OptimizeFor { get; set; }       // 9
+    [ProtoMember(11)] public string GoPackage { get; set; }                // 11
+    [ProtoMember(16)] public bool? CcGenericServices { get; set; }         // 16
+    [ProtoMember(17)] public bool? JavaGenericServices { get; set; }       // 17
+    [ProtoMember(18)] public bool? PyGenericServices { get; set; }         // 18
+    [ProtoMember(42)] public bool? PhpGenericServices { get; set; }        // 42
+    [ProtoMember(23)] public bool? Deprecated { get; set; }                // 23
+    [ProtoMember(31)] public bool? CcEnableArenas { get; set; }            // 31
+    [ProtoMember(36)] public string ObjcClassPrefix { get; set; }          // 36
+    [ProtoMember(37)] public string CsharpNamespace { get; set; }          // 37
+    [ProtoMember(39)] public string SwiftPrefix { get; set; }              // 39
+    [ProtoMember(40)] public string PhpClassPrefix { get; set; }           // 40
+    [ProtoMember(41)] public string PhpNamespace { get; set; }             // 41
+    [ProtoMember(44)] public string PhpMetadataNamespace { get; set; }     // 44
+    [ProtoMember(45)] public string RubyPackage { get; set; }              // 45
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
+[ProtoContract]
 public sealed class MessageOptions
 {
-    public bool? MessageSetWireFormat { get; set; }         // 1
-    public bool? NoStandardDescriptorAccessor { get; set; } // 2
-    public bool? Deprecated { get; set; }                   // 3
-    public bool? MapEntry { get; set; }                     // 7
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(1)] public bool? MessageSetWireFormat { get; set; }         // 1
+    [ProtoMember(2)] public bool? NoStandardDescriptorAccessor { get; set; } // 2
+    [ProtoMember(3)] public bool? Deprecated { get; set; }                   // 3
+    [ProtoMember(7)] public bool? MapEntry { get; set; }                     // 7
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
 public enum CType
@@ -223,39 +239,44 @@ public enum JSType
     JsNumber = 2,
 }
 
+[ProtoContract]
 public sealed class FieldOptions
 {
-    public CType? Ctype { get; set; }      // 1
-    public bool? Packed { get; set; }      // 2
-    public JSType? Jstype { get; set; }    // 6
-    public bool? Lazy { get; set; }        // 5
-    public bool? Deprecated { get; set; }  // 3
-    public bool? Weak { get; set; }        // 10
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(1)] public CType? Ctype { get; set; }      // 1
+    [ProtoMember(2)] public bool? Packed { get; set; }      // 2
+    [ProtoMember(6)] public JSType? Jstype { get; set; }    // 6
+    [ProtoMember(5)] public bool? Lazy { get; set; }        // 5
+    [ProtoMember(3)] public bool? Deprecated { get; set; }  // 3
+    [ProtoMember(10)] public bool? Weak { get; set; }        // 10
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
+[ProtoContract]
 public sealed class OneofOptions
 {
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
+[ProtoContract]
 public sealed class EnumOptions
 {
-    public bool? AllowAlias { get; set; }  // 2
-    public bool? Deprecated { get; set; }  // 3
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(2)] public bool? AllowAlias { get; set; }  // 2
+    [ProtoMember(3)] public bool? Deprecated { get; set; }  // 3
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
+[ProtoContract]
 public sealed class EnumValueOptions
 {
-    public bool? Deprecated { get; set; }  // 1
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(1)] public bool? Deprecated { get; set; }  // 1
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
+[ProtoContract]
 public sealed class ServiceOptions
 {
-    public bool? Deprecated { get; set; }  // 33
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(33)] public bool? Deprecated { get; set; }  // 33
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
 public enum IdempotencyLevel
@@ -265,42 +286,59 @@ public enum IdempotencyLevel
     Idempotent = 2,
 }
 
+[ProtoContract]
 public sealed class MethodOptions
 {
-    public bool? Deprecated { get; set; }                  // 33
-    public IdempotencyLevel? IdempotencyLevel { get; set; } // 34
-    public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
+    [ProtoMember(33)] public bool? Deprecated { get; set; }                  // 33
+    [ProtoMember(34)] public IdempotencyLevel? IdempotencyLevel { get; set; } // 34
+    [ProtoMember(999)] public List<UninterpretedOption> UninterpretedOptions { get; } = []; // 999
 }
 
+[ProtoContract]
 public sealed class UninterpretedOption
 {
-    public List<NamePart> Names { get; } = [];       // 2
-    public string IdentifierValue { get; set; }      // 3
-    public ulong? PositiveIntValue { get; set; }     // 4
-    public long? NegativeIntValue { get; set; }      // 5
-    public double? DoubleValue { get; set; }         // 6
-    public byte[] StringValue { get; set; }          // 7
-    public string AggregateValue { get; set; }       // 8
+    [ProtoMember(2)] public List<NamePart> Names { get; } = [];       // 2
+    [ProtoMember(3)] public string IdentifierValue { get; set; }      // 3
+    [ProtoMember(4)] public ulong? PositiveIntValue { get; set; }     // 4
+    [ProtoMember(5)] public long? NegativeIntValue { get; set; }      // 5
+    [ProtoMember(6)] public double? DoubleValue { get; set; }         // 6
+    [ProtoMember(7)] public byte[] StringValue { get; set; }          // 7
+    [ProtoMember(8)] public string AggregateValue { get; set; }       // 8
 }
 
+[ProtoContract]
 public sealed class NamePart
 {
-    public string Name { get; set; }        // 1, required
-    public bool? IsExtension { get; set; }  // 2, required
+    [ProtoMember(1)] public string Name { get; set; }        // 1, required
+    [ProtoMember(2)] public bool? IsExtension { get; set; }  // 2, required
 }
 
+[ProtoContract]
 public sealed class SourceCodeInfo
 {
-    public List<Location> Locations { get; } = []; // 1
+    [ProtoMember(1)] public List<Location> Locations { get; } = []; // 1
 }
 
+[ProtoContract]
 public sealed class Location
 {
-    public List<int> Path { get; } = [];  // 1, packed
-    public List<int> Span { get; } = [];  // 2, packed
-    public string LeadingComments { get; set; }   // 3
-    public string TrailingComments { get; set; }  // 4
-    public List<string> LeadingDetachedComments { get; } = []; // 6
+    [ProtoMember(1)] public List<int> Path { get; } = [];  // 1, packed
+    [ProtoMember(2)] public List<int> Span { get; } = [];  // 2, packed
+    [ProtoMember(3)] public string LeadingComments { get; set; }   // 3
+    [ProtoMember(4)] public string TrailingComments { get; set; }  // 4
+    [ProtoMember(6)] public List<string> LeadingDetachedComments { get; } = []; // 6
+}
+
+/// <summary>
+/// The generator's seed: BuildTools runs as a real analyzer over the attributed DTOs above, and
+/// its nano pass (symbol-gated on the NanoState reference) emits NanoRead_ methods for the whole
+/// tree - which the equivalence gate then compares against the hand-written readers below. Same
+/// types, same census walker, two authors; any emission divergence shifts a counter.
+/// </summary>
+[ProtoModel]
+[ProtoSerializable(typeof(FileDescriptorSet))]
+public partial class NanoDescriptorModel : ProtoBuf.Meta.TypeModel
+{
 }
 
 public static class DescriptorNanoReader

@@ -6,7 +6,10 @@
     <RootNamespace>ProtoBuf.Nano.Bench</RootNamespace>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <!-- PBN9001: [ProtoModel] is [Experimental]; PBN2010: the runtime-model calls it flags ARE
+         the measured legacy baseline here, not migration debt - benchmarks are the one place
+         that advice is deliberately declined -->
+    <NoWarn>$(NoWarn);CS1591;PBN9001;PBN2010</NoWarn>
     <!-- nano-core micro-benchmarks: see docs/nano-core.md - "functionally correct" is step 0 -->
   </PropertyGroup>
 
@@ -21,6 +24,12 @@
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+    <!-- referenced as an analyzer, so the generator runs for real during this project's build:
+         the descriptor DTOs carry [ProtoContract], and the nano pass (symbol-gated on the
+         NanoState reference) emits NanoRead_ methods that the equivalence gate compares against
+         the hand-written readers -->
+    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

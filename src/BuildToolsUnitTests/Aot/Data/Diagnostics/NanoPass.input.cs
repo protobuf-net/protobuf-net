@@ -18,6 +18,8 @@ namespace ProtoBuf.Nano
         public uint ReadRawFixed32() => throw new System.NotImplementedException();
         public ulong ReadRawFixed64() => throw new System.NotImplementedException();
         public string ReadRawString() => throw new System.NotImplementedException();
+        public double ReadRawDouble() => throw new System.NotImplementedException();
+        public byte[] ReadRawBytes() => throw new System.NotImplementedException();
         public ReadScope PushScope(uint tag) => throw new System.NotImplementedException();
         public ReadScope PushLengthPrefix() => throw new System.NotImplementedException();
         public void PopScope(in ReadScope prior) => throw new System.NotImplementedException();
@@ -53,6 +55,8 @@ namespace AotFixtures.NanoPass
         [ProtoMember(8)] public List<int> Codes { get; } = new List<int>();
         [ProtoMember(9)] public List<Child> Items { get; } = new List<Child>();
         [ProtoMember(10)] public Child Favourite { get; set; }
+        [ProtoMember(11)] public double Score { get; set; }
+        [ProtoMember(12)] public byte[] Blob { get; set; }
     }
 
     [ProtoContract]

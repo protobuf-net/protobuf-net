@@ -67,6 +67,16 @@ public class DescriptorParseBenchmarks
             throw new InvalidOperationException(
                 $"census disagreement:\nlegacy {legacy}\ngoogle {google}\nnano   {nano}");
         }
+
+        // the equivalence gate: the GENERATOR-EMITTED nano reader (BuildTools running as a real
+        // analyzer over the attributed DTOs) against the hand-written one - same types, same
+        // census, two authors
+        var generated = CensusNano(ParseNanoGenerated());
+        if (generated != nano)
+        {
+            throw new InvalidOperationException(
+                $"generated-vs-hand disagreement:\ngenerated {generated}\nhand      {nano}");
+        }
         Console.WriteLine($"// payload {_data.Length} bytes; census {nano}");
     }
 
@@ -100,6 +110,47 @@ public class DescriptorParseBenchmarks
         {
             state.Dispose();
         }
+    }
+
+    [Benchmark]
+    public object NanoGenerated() => ParseNanoGenerated();
+
+    private Model.FileDescriptorSet ParseNanoGenerated()
+    {
+        var state = new ReaderState(_data, 0, _data.Length);
+        try
+        {
+            return s_generatedRead(ref state, null);
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    private delegate Model.FileDescriptorSet GeneratedRead(ref ReaderState state, Model.FileDescriptorSet value);
+
+    // resolved once by reflection (the generated services type is private inside the model),
+    // then invoked as a cached delegate - full speed on the measured path
+    private static readonly GeneratedRead s_generatedRead = ResolveGeneratedRead();
+
+    private static GeneratedRead ResolveGeneratedRead()
+    {
+        foreach (var nested in typeof(Model.NanoDescriptorModel).GetNestedTypes(
+            System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic))
+        {
+            foreach (var method in nested.GetMethods(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+            {
+                if (method.Name.StartsWith("NanoRead_", StringComparison.Ordinal)
+                    && method.Name.EndsWith("FileDescriptorSet", StringComparison.Ordinal))
+                {
+                    return (GeneratedRead)method.CreateDelegate(typeof(GeneratedRead));
+                }
+            }
+        }
+        throw new InvalidOperationException(
+            "generated NanoRead for FileDescriptorSet not found - did the nano pass emit?");
     }
 
     // ---------------------------------------------------------------- census

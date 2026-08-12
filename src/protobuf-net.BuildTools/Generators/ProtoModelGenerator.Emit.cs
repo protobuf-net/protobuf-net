@@ -374,6 +374,12 @@ namespace ProtoBuf.BuildTools.Generators
                     (1, "state.ReadRawFixed64()"),
                     (5, "(ulong)state.ReadRawFixed32()"),
                 ],
+                // double is fixed64-only: the fixed32 float promotion needs Int32BitsToSingle,
+                // which netfx lacks - the one deliberate tolerance exception
+                ProtoMemberKind.Double => [(1, "state.ReadRawDouble()")],
+                // bytes: REPLACE semantics, the decided default (LegacyAppendBytes is the opt-in
+                // for the historical append, not yet emitted)
+                ProtoMemberKind.Bytes => [(2, "state.ReadRawBytes()")],
                 _ => [], // unreachable: NanoEligible already filtered
             };
             if (enumTypeName is not null)
@@ -435,6 +441,9 @@ namespace ProtoBuf.BuildTools.Generators
                     if (member.Repeated.Factory != "CreateList") { reason += $": collection shape {member.Repeated.Factory}"; return false; }
                     if (member.OverwriteList) { reason += ": OverwriteList"; return false; }
                     if (member.IsNullable) { reason += ": nullable collection element"; return false; }
+                    // Double/Bytes are single-member kinds only for now (no packed-double or
+                    // repeated-bytes emission yet)
+                    if (member.Kind is ProtoMemberKind.Double or ProtoMemberKind.Bytes) { reason += $": repeated {member.Kind}"; return false; }
                 }
                 else if (member.IsReadOnly)
                 {
@@ -455,6 +464,8 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Int64:
                     case ProtoMemberKind.UInt64:
                     case ProtoMemberKind.String:
+                    case ProtoMemberKind.Double:
+                    case ProtoMemberKind.Bytes:
                         break;
                     default:
                         reason += $": kind {member.Kind}";

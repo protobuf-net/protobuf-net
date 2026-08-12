@@ -223,6 +223,18 @@ partial class NanoPassModel
                         if (tmp10 != null) value.Favourite = tmp10;
                         break;
                     }
+                    case 11:
+                    {
+                        value.Score = state.ReadDouble();
+                        break;
+                    }
+                    case 12:
+                    {
+                        var tmp12 = value.Blob;
+                        tmp12 = state.AppendBytes(tmp12);
+                        if (tmp12 != null) value.Blob = tmp12;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -275,6 +287,18 @@ partial class NanoPassModel
             }
             var tmp10 = value.Favourite;
             state.WriteMessage<global::AotFixtures.NanoPass.Child>(10, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp10, this);
+            var tmp11 = value.Score;
+            if (tmp11 != 0d)
+            {
+                state.WriteFieldHeader(11, global::ProtoBuf.WireType.Fixed64);
+                state.WriteDouble(tmp11);
+            }
+            var tmp12 = value.Blob;
+            if (tmp12 != null)
+            {
+                state.WriteFieldHeader(12, global::ProtoBuf.WireType.String);
+                state.WriteBytes(tmp12);
+            }
         }
 
         public static global::AotFixtures.NanoPass.Order NanoRead_AotFixtures_NanoPass_Order(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Order value)
@@ -373,6 +397,12 @@ partial class NanoPassModel
                         state.PopScope(scope);
                         break;
                     }
+                    case (11 << 3) | 1:  // Score, field 11, fixed64
+                        value.Score = state.ReadRawDouble();
+                        break;
+                    case (12 << 3) | 2:  // Blob, field 12, length-prefixed
+                        value.Blob = state.ReadRawBytes();
+                        break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         state.SkipTag(tag);
