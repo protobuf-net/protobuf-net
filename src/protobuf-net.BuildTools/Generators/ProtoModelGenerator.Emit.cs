@@ -213,9 +213,16 @@ namespace ProtoBuf.BuildTools.Generators
             var readTag = fallback.Count != 0 ? "state.ReadRawTagOrPending()" : "state.ReadRawTag()";
 
             sb.AppendLine();
+            // the after-deserialize hook must fire on EVERY exit, and the raw body has two -
+            // the tag==0 loop exit and the scope-end early return - so its presence swaps the
+            // early return for a goto to a shared exit label
+            var hasAfter = HasCallback(contract, ProtoCallbackKind.AfterDeserialize);
+
             Line(sb, indent, $"public static {contract.TypeName} RawRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
             Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
+            // placement is ref-emit's: after construction, before the field loop
+            EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.BeforeDeserialize);
             // the tag lives in a local and the loop reads at the BOTTOM, so a repeated-field run
             // can make the tag read its own do-while condition and hand a miss straight back to
             // dispatch via continue - the run-consumption shape, see docs/nano-core.md
@@ -295,7 +302,7 @@ namespace ProtoBuf.BuildTools.Generators
                             break;
                         default: // varint-kind scalar or enum element
                         {
-                            var forms = RawScalarForms(member.Kind, member.EnumTypeName);
+                            var forms = RawScalarForms(member.Kind, member.EnumTypeName, member.DataFormat);
                             Line(sb, indent + 3, $"case ({n} << 3) | 0:  // {member.Name}, field {n}, unpacked run");
                             if (ensure is not null) Line(sb, indent + 4, ensure);
                             Line(sb, indent + 4, $"do {{ value.{name}.Add({forms[0].Read}); }}");
@@ -310,6 +317,7 @@ namespace ProtoBuf.BuildTools.Generators
                             // here is the element type's own spelling.
                             if (member.Kind == ProtoMemberKind.Int32 && member.EnumTypeName is null
                                 && !member.Repeated.TakesCollectionType
+                                && member.DataFormat == ProtoDataFormat.Default
                                 && member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) != true)
                             {
                                 // plain List<int>: the library fast path (bulk arms, residency-switched)
@@ -339,6 +347,11 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                     continue;
                 }
+                // the presence flag is assigned on read, outside any null test the arm itself
+                // carries - matching the classic emission exactly. Repeated/map members never
+                // assign it (classic's early paths skip it), which the arms above preserve by
+                // never reaching here.
+                var setSpecified = member.SpecifiedMember is { } sp ? $"value.{sp} = true;" : null;
                 switch (member.Kind)
                 {
                     case ProtoMemberKind.Message:
@@ -348,6 +361,7 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 4, "var scope = state.PushScope(tag);");
                         Line(sb, indent + 4, $"value.{name} = RawRead_{Sanitise(member.TypeName!)}(ref state, value.{name});");
                         Line(sb, indent + 4, "state.PopScope(scope);");
+                        if (setSpecified is not null) Line(sb, indent + 4, setSpecified);
                         Line(sb, indent + 4, "break;");
                         Line(sb, indent + 3, "}");
                         break;
@@ -357,6 +371,7 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 3, "{");
                         Line(sb, indent + 4, $"var tmp{n} = state.ReadRawString();");
                         Line(sb, indent + 4, $"if (tmp{n} != null) value.{name} = tmp{n};");
+                        if (setSpecified is not null) Line(sb, indent + 4, setSpecified);
                         Line(sb, indent + 4, "break;");
                         Line(sb, indent + 3, "}");
                         break;
@@ -368,6 +383,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // raw form on the forms table already is, so that shape falls through.
                         Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
                         Line(sb, indent + 4, $"value.{name} = state.AppendRawBytes(value.{name});");
+                        if (setSpecified is not null) Line(sb, indent + 4, setSpecified);
                         Line(sb, indent + 4, "break;");
                         break;
                     default:
@@ -379,10 +395,11 @@ namespace ProtoBuf.BuildTools.Generators
                         // Conversions mirror the legacy ReadInt32/ReadInt64 wire switch; an enum
                         // is its underlying scalar plus a cast the JIT erases; a nullable member
                         // takes the same assignment.
-                        foreach (var (wire, read) in RawScalarForms(member.Kind, member.EnumTypeName))
+                        foreach (var (wire, read) in RawScalarForms(member.Kind, member.EnumTypeName, member.DataFormat))
                         {
                             Line(sb, indent + 3, $"case ({n} << 3) | {wire}:  // {member.Name}, field {n}, {WireName(wire)}");
                             Line(sb, indent + 4, $"value.{name} = {read};");
+                            if (setSpecified is not null) Line(sb, indent + 4, setSpecified);
                             Line(sb, indent + 4, "break;");
                         }
                         break;
@@ -390,7 +407,9 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
             Line(sb, indent + 3, "default:");
-            Line(sb, indent + 4, "if (state.IsScopeEnd(tag)) return value;");
+            Line(sb, indent + 4, hasAfter
+                ? "if (state.IsScopeEnd(tag)) goto afterRead;"
+                : "if (state.IsScopeEnd(tag)) return value;");
             if (contract.Members.Count != 0)
             {
                 // a KNOWN field arriving on a wire type no label matched is invalid data, and the
@@ -407,6 +426,11 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, "}");
             Line(sb, indent + 2, $"tag = {readTag};");
             Line(sb, indent + 1, "}");
+            if (hasAfter)
+            {
+                Line(sb, indent + 1, "afterRead:");
+                EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.AfterDeserialize);
+            }
             Line(sb, indent + 1, "return value;");
             if (contract.Members.Count != 0)
             {
@@ -431,8 +455,65 @@ namespace ProtoBuf.BuildTools.Generators
             _ => "?",
         };
 
-        private static (int Wire, string Read)[] RawScalarForms(ProtoMemberKind kind, string? enumTypeName)
+        private static (int Wire, string Read)[] RawScalarForms(ProtoMemberKind kind, string? enumTypeName,
+            ProtoDataFormat format = ProtoDataFormat.Default)
         {
+            // the format changes at most two things, mirroring the legacy per-wire read switch:
+            // ZigZag swaps the wire-0 DECODE (only SignedVarint zags - the fixed tolerance arms
+            // stay plain, exactly as ReadInt32's switch has it), and FixedSize promotes the
+            // natural wire to forms[0], which the repeated run and packed-drain arms key on
+            // (a fixed-size packed payload is fixed-width content). RawFormatReason has already
+            // routed every other kind/format pairing to legacy-mode.
+            if (format == ProtoDataFormat.ZigZag)
+            {
+                return kind switch
+                {
+                    ProtoMemberKind.Int32 =>
+                    [
+                        (0, "state.ReadRawZigZag32()"),
+                        (5, "unchecked((int)state.ReadRawFixed32())"),
+                        (1, "checked((int)unchecked((long)state.ReadRawFixed64()))"),
+                    ],
+                    ProtoMemberKind.Int64 =>
+                    [
+                        (0, "state.ReadRawZigZag64()"),
+                        (1, "unchecked((long)state.ReadRawFixed64())"),
+                        (5, "(long)unchecked((int)state.ReadRawFixed32())"),
+                    ],
+                    _ => [], // unreachable: RawFormatReason already filtered
+                };
+            }
+            if (format == ProtoDataFormat.FixedSize)
+            {
+                return kind switch
+                {
+                    ProtoMemberKind.Int32 =>
+                    [
+                        (5, "unchecked((int)state.ReadRawFixed32())"),
+                        (0, "unchecked((int)state.ReadRawVarint32())"),
+                        (1, "checked((int)unchecked((long)state.ReadRawFixed64()))"),
+                    ],
+                    ProtoMemberKind.UInt32 =>
+                    [
+                        (5, "state.ReadRawFixed32()"),
+                        (0, "state.ReadRawVarint32()"),
+                        (1, "checked((uint)state.ReadRawFixed64())"),
+                    ],
+                    ProtoMemberKind.Int64 =>
+                    [
+                        (1, "unchecked((long)state.ReadRawFixed64())"),
+                        (0, "unchecked((long)state.ReadRawVarint64())"),
+                        (5, "(long)unchecked((int)state.ReadRawFixed32())"),
+                    ],
+                    ProtoMemberKind.UInt64 =>
+                    [
+                        (1, "state.ReadRawFixed64()"),
+                        (0, "state.ReadRawVarint64()"),
+                        (5, "(ulong)state.ReadRawFixed32()"),
+                    ],
+                    _ => [], // unreachable: RawFormatReason already filtered
+                };
+            }
             (int Wire, string Read)[] forms = kind switch
             {
                 ProtoMemberKind.Bool =>
@@ -501,15 +582,10 @@ namespace ProtoBuf.BuildTools.Generators
                 reason = "contract shape (value type, tuple, hierarchy, surrogate or external serializer)";
                 return false;
             }
-            // Callbacks is always a fixed 4-slot array indexed by kind; null MethodName = none
-            for (int i = 0; i < contract.Callbacks.Count; i++)
-            {
-                if (contract.Callbacks[i].MethodName is not null)
-                {
-                    reason = "serialization callbacks";
-                    return false;
-                }
-            }
+            // note: callbacks are NOT a gate. The deserialize pair maps onto the raw body
+            // directly (before = after construction, ahead of the loop; after = every exit,
+            // via a shared label since scope-end returns early), and the serialize pair only
+            // touches the write body, which is classic regardless.
             reason = null;
             return true;
         }
@@ -526,14 +602,16 @@ namespace ProtoBuf.BuildTools.Generators
         {
             if (member.Map.Factory is not null) return "map";
             if (member.WrappedValue || member.WrappedCollection) return "null-wrapped";
-            if (member.DataFormat != ProtoDataFormat.Default) return "non-default DataFormat";
+            if (RawFormatReason(member) is { } badFormat) return badFormat;
             if (member.AccessorReads) return "accessor-reached member";
             // UsesAccessor is a SETTER-side fact; a repeated member reads through Add on the
             // public getter, so only a scalar/message member needs the stateful path for it
             if (member.UsesAccessor && member.Repeated.Factory is null) return "accessor-reached setter";
-            // {Name}Specified is assigned ON READ, so it is a read-shape fact (unlike
-            // ShouldSerialize, which is write-only and native)
-            if (member.SpecifiedMember is not null) return "Specified presence member";
+            // note: {Name}Specified is assigned ON READ, but that is one extra statement per
+            // arm rather than a shape change, so it is native (the assignment sits outside any
+            // null test, matching classic; repeated/map members never assign it, also matching
+            // classic, whose early paths skip it). ShouldSerialize is write-only and never
+            // mattered here.
             // "this" is just the normal message-member plumbing; anything ELSE is a hand-written
             // serializer whose framing the raw pass has not derived
             if (member.SubSerializer is not (null or "this")) return "hand-written serializer";
@@ -576,6 +654,33 @@ namespace ProtoBuf.BuildTools.Generators
             ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
             or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.String
             or ProtoMemberKind.Double or ProtoMemberKind.Bytes;
+
+        /// <summary>
+        /// Whether the member's DataFormat has a native raw form; null means it does. The rules
+        /// mirror what the format actually selects on the READ side (this pass emits no writes):
+        /// TwosComplement is byte-identical to Default everywhere; on a sub-message every format
+        /// is native because Group only changes the write and the native message arm already
+        /// accepts both framings off the header; ZigZag is a different wire-0 decode
+        /// (ReadRawZigZag32/64) for the signed varint kinds; FixedSize merely reorders the
+        /// tolerance forms so the natural wire leads (which the repeated run/packed arms key on).
+        /// Formats on enums, BCL kinds, bool and the rest stay legacy-mode.
+        /// </summary>
+        private static string? RawFormatReason(ProtoMemberPlan member)
+        {
+            // note TwosComplement never reaches here: the parse folds it onto Default, being
+            // byte-identical for every type handled
+            var format = member.DataFormat;
+            if (format == ProtoDataFormat.Default) return null;
+            if (member.EnumTypeName is not null) return $"non-default DataFormat ({format} on enum)";
+            var kind = member.Kind;
+            if (kind == ProtoMemberKind.Message) return null;
+            if (format == ProtoDataFormat.ZigZag
+                && kind is ProtoMemberKind.Int32 or ProtoMemberKind.Int64) return null;
+            if (format == ProtoDataFormat.FixedSize
+                && kind is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                    or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64) return null;
+            return $"non-default DataFormat ({format} on {kind})";
+        }
 
         private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false)
         {
@@ -736,6 +841,9 @@ namespace ProtoBuf.BuildTools.Generators
         /// populated instance. The <c>System.Runtime.Serialization</c> spelling takes a
         /// <c>StreamingContext</c>, which comes from the state.
         /// </remarks>
+        private static bool HasCallback(ProtoContractPlan contract, ProtoCallbackKind kind)
+            => contract.Callbacks.Count > (int)kind && contract.Callbacks[(int)kind].MethodName is not null;
+
         private static void EmitCallback(StringBuilder sb, int indent, ProtoContractPlan contract,
             string instance, ProtoCallbackKind kind)
         {

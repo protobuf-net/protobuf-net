@@ -132,7 +132,7 @@ partial class NativeScalarsModel
                         value.MaybeSize = state.ReadUIntPtr();
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
+                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat (FixedSize on IntPtr)
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // Fixed, field 5
@@ -143,7 +143,7 @@ partial class NativeScalarsModel
                         value.Fixed = state.ReadIntPtr();
                         break;
                     }
-                    // raw read pass: legacy-mode - member Zigzag: non-default DataFormat
+                    // raw read pass: legacy-mode - member Zigzag: non-default DataFormat (ZigZag on IntPtr)
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // Zigzag, field 6

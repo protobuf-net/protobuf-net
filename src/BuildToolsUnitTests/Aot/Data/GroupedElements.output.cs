@@ -59,20 +59,20 @@ partial class GroupedElementsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Items: non-default DataFormat
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Items, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Items, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Items, field 1, group
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.Items;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.GroupedElements.Item>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, s_default);
-                        if (tmp1 != null) value.Items = tmp1;
-                        break;
+                        value.Items ??= new global::System.Collections.Generic.List<global::AotFixtures.GroupedElements.Item>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            value.Items.Add(RawRead_AotFixtures_GroupedElements_Item(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
-                    // raw read pass: legacy-mode - member Array: non-default DataFormat
+                    // raw read pass: legacy-mode - member Array: collection shape CreateVector
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // Array, field 2
@@ -98,17 +98,12 @@ partial class GroupedElementsModel
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
                     }
-                    // raw read pass: legacy-mode - member Single: non-default DataFormat
-                    case (5 << 3) | 0:
-                    case (5 << 3) | 1:
-                    case (5 << 3) | 2:  // Single, field 5
-                    case (5 << 3) | 3:
-                    case (5 << 3) | 5:
+                    case (5 << 3) | 2:  // Single, field 5, length-prefixed
+                    case (5 << 3) | 3:  // Single, field 5, group
                     {
-                        state.StashTag(tag);
-                        var tmp5 = value.Single;
-                        tmp5 = state.ReadMessage<global::AotFixtures.GroupedElements.Item>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, s_default);
-                        if (tmp5 != null) value.Single = tmp5;
+                        var scope = state.PushScope(tag);
+                        value.Single = RawRead_AotFixtures_GroupedElements_Item(ref state, value.Single);
+                        state.PopScope(scope);
                         break;
                     }
                     default:

@@ -138,17 +138,15 @@ partial class PartialModel
                         if (tmp2 != null) value.Name = tmp2;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // Fixed, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        value.Fixed = state.ReadInt32();
+                    case (3 << 3) | 5:  // Fixed, field 3, fixed32
+                        value.Fixed = unchecked((int)state.ReadRawFixed32());
                         break;
-                    }
+                    case (3 << 3) | 0:  // Fixed, field 3, varint
+                        value.Fixed = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 1:  // Fixed, field 3, fixed64
+                        value.Fixed = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     case (4 << 3) | 0:  // Always, field 4, varint
                         value.Always = unchecked((int)state.ReadRawVarint32());
                         break;

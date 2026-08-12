@@ -25,26 +25,7 @@ partial class CallbacksModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Callbacks.AfterOnly global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)
-        {
-            value ??= new global::AotFixtures.Callbacks.AfterOnly();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            value.AfterDes();
-            return value;
-        }
+            => RawRead_AotFixtures_Callbacks_AfterOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
         {
@@ -53,33 +34,47 @@ partial class CallbacksModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - serialization callbacks
+        public static global::AotFixtures.Callbacks.AfterOnly RawRead_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)
+        {
+            value ??= new global::AotFixtures.Callbacks.AfterOnly();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto afterRead;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            afterRead:
+            value.AfterDes();
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Hooked>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Callbacks.Hooked global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Hooked>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Hooked value)
-        {
-            value ??= new global::AotFixtures.Callbacks.Hooked();
-            value.BeforeDes();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            value.AfterDes();
-            return value;
-        }
+            => RawRead_AotFixtures_Callbacks_Hooked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Hooked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.Hooked value)
         {
@@ -90,33 +85,48 @@ partial class CallbacksModel
             value.AfterSer();
         }
 
-        // raw read pass: skipped - serialization callbacks
+        public static global::AotFixtures.Callbacks.Hooked RawRead_AotFixtures_Callbacks_Hooked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Hooked value)
+        {
+            value ??= new global::AotFixtures.Callbacks.Hooked();
+            value.BeforeDes();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto afterRead;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            afterRead:
+            value.AfterDes();
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Standard>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Callbacks.Standard global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Standard>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Standard value)
-        {
-            value ??= new global::AotFixtures.Callbacks.Standard();
-            value.OnDes(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            value.OnDesd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
-            return value;
-        }
+            => RawRead_AotFixtures_Callbacks_Standard(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Standard>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.Standard value)
         {
@@ -127,6 +137,41 @@ partial class CallbacksModel
             value.OnSerd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
         }
 
-        // raw read pass: skipped - serialization callbacks
+        public static global::AotFixtures.Callbacks.Standard RawRead_AotFixtures_Callbacks_Standard(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Standard value)
+        {
+            value ??= new global::AotFixtures.Callbacks.Standard();
+            value.OnDes(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto afterRead;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            afterRead:
+            value.OnDesd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
     }
 }

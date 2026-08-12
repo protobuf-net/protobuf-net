@@ -85,52 +85,42 @@ partial class FormatsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member ZigZagInt: non-default DataFormat
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // ZigZagInt, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
-                        value.ZigZagInt = state.ReadInt32();
+                    case (1 << 3) | 0:  // ZigZagInt, field 1, varint
+                        value.ZigZagInt = state.ReadRawZigZag32();
                         break;
-                    }
-                    // raw read pass: legacy-mode - member FixedInt: non-default DataFormat
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // FixedInt, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        value.FixedInt = state.ReadInt32();
+                    case (1 << 3) | 5:  // ZigZagInt, field 1, fixed32
+                        value.ZigZagInt = unchecked((int)state.ReadRawFixed32());
                         break;
-                    }
-                    // raw read pass: legacy-mode - member ZigZagLong: non-default DataFormat
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // ZigZagLong, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
-                        value.ZigZagLong = state.ReadInt64();
+                    case (1 << 3) | 1:  // ZigZagInt, field 1, fixed64
+                        value.ZigZagInt = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
-                    }
-                    // raw read pass: legacy-mode - member FixedLong: non-default DataFormat
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // FixedLong, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        value.FixedLong = state.ReadInt64();
+                    case (2 << 3) | 5:  // FixedInt, field 2, fixed32
+                        value.FixedInt = unchecked((int)state.ReadRawFixed32());
                         break;
-                    }
+                    case (2 << 3) | 0:  // FixedInt, field 2, varint
+                        value.FixedInt = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 1:  // FixedInt, field 2, fixed64
+                        value.FixedInt = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 0:  // ZigZagLong, field 3, varint
+                        value.ZigZagLong = state.ReadRawZigZag64();
+                        break;
+                    case (3 << 3) | 1:  // ZigZagLong, field 3, fixed64
+                        value.ZigZagLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (3 << 3) | 5:  // ZigZagLong, field 3, fixed32
+                        value.ZigZagLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (4 << 3) | 1:  // FixedLong, field 4, fixed64
+                        value.FixedLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (4 << 3) | 0:  // FixedLong, field 4, varint
+                        value.FixedLong = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (4 << 3) | 5:  // FixedLong, field 4, fixed32
+                        value.FixedLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
                     case (5 << 3) | 0:  // TwosComplement, field 5, varint
                         value.TwosComplement = unchecked((int)state.ReadRawVarint32());
                         break;
@@ -155,17 +145,12 @@ partial class FormatsModel
                         if (tmp7 != null) value.RequiredString = tmp7;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Grouped: non-default DataFormat
-                    case (8 << 3) | 0:
-                    case (8 << 3) | 1:
-                    case (8 << 3) | 2:  // Grouped, field 8
-                    case (8 << 3) | 3:
-                    case (8 << 3) | 5:
+                    case (8 << 3) | 2:  // Grouped, field 8, length-prefixed
+                    case (8 << 3) | 3:  // Grouped, field 8, group
                     {
-                        state.StashTag(tag);
-                        var tmp8 = value.Grouped;
-                        tmp8 = state.ReadMessage<global::AotFixtures.Formats.Inner>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, s_default);
-                        if (tmp8 != null) value.Grouped = tmp8;
+                        var scope = state.PushScope(tag);
+                        value.Grouped = RawRead_AotFixtures_Formats_Inner(ref state, value.Grouped);
+                        state.PopScope(scope);
                         break;
                     }
                     case (9 << 3) | 2:  // Plain, field 9, length-prefixed
@@ -176,7 +161,7 @@ partial class FormatsModel
                         state.PopScope(scope);
                         break;
                     }
-                    // raw read pass: legacy-mode - member ZigZagArray: non-default DataFormat
+                    // raw read pass: legacy-mode - member ZigZagArray: collection shape CreateVector
                     case (10 << 3) | 0:
                     case (10 << 3) | 1:
                     case (10 << 3) | 2:  // ZigZagArray, field 10
@@ -189,7 +174,7 @@ partial class FormatsModel
                         if (tmp10 != null) value.ZigZagArray = tmp10;
                         break;
                     }
-                    // raw read pass: legacy-mode - member PackedFixed: non-default DataFormat
+                    // raw read pass: legacy-mode - member PackedFixed: collection shape CreateVector
                     case (11 << 3) | 0:
                     case (11 << 3) | 1:
                     case (11 << 3) | 2:  // PackedFixed, field 11

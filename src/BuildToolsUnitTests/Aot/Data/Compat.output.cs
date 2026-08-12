@@ -92,7 +92,7 @@ partial class CompatModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member FixedWhen: non-default DataFormat
+                    // raw read pass: legacy-mode - member FixedWhen: non-default DataFormat (FixedSize on DateTime)
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // FixedWhen, field 1
@@ -103,7 +103,7 @@ partial class CompatModel
                         value.FixedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedHow: non-default DataFormat
+                    // raw read pass: legacy-mode - member FixedHow: non-default DataFormat (FixedSize on TimeSpan)
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // FixedHow, field 2
@@ -114,7 +114,7 @@ partial class CompatModel
                         value.FixedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedWhen: non-default DataFormat
+                    // raw read pass: legacy-mode - member GroupedWhen: non-default DataFormat (Group on DateTime)
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // GroupedWhen, field 3
@@ -125,7 +125,7 @@ partial class CompatModel
                         value.GroupedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedHow: non-default DataFormat
+                    // raw read pass: legacy-mode - member GroupedHow: non-default DataFormat (Group on TimeSpan)
                     case (4 << 3) | 0:
                     case (4 << 3) | 1:
                     case (4 << 3) | 2:  // GroupedHow, field 4
@@ -136,7 +136,7 @@ partial class CompatModel
                         value.GroupedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedId: non-default DataFormat
+                    // raw read pass: legacy-mode - member GroupedId: non-default DataFormat (Group on Guid)
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // GroupedId, field 5
@@ -147,7 +147,7 @@ partial class CompatModel
                         value.GroupedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedAmount: non-default DataFormat
+                    // raw read pass: legacy-mode - member GroupedAmount: non-default DataFormat (Group on Decimal)
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // GroupedAmount, field 6
@@ -158,7 +158,7 @@ partial class CompatModel
                         value.GroupedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedAmount: non-default DataFormat
+                    // raw read pass: legacy-mode - member FixedAmount: non-default DataFormat (FixedSize on Decimal)
                     case (7 << 3) | 0:
                     case (7 << 3) | 1:
                     case (7 << 3) | 2:  // FixedAmount, field 7
@@ -169,7 +169,7 @@ partial class CompatModel
                         value.FixedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedId: non-default DataFormat
+                    // raw read pass: legacy-mode - member FixedId: non-default DataFormat (FixedSize on Guid)
                     case (8 << 3) | 0:
                     case (8 << 3) | 1:
                     case (8 << 3) | 2:  // FixedId, field 8
@@ -402,7 +402,7 @@ partial class CompatModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Id: non-default DataFormat
+                    // raw read pass: legacy-mode - member Id: non-default DataFormat (FixedSize on Guid)
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // Id, field 1
@@ -621,7 +621,7 @@ partial class CompatModel
                         value.Amount = global::ProtoBuf.BclHelpers.ReadDecimalString(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
+                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat (FixedSize on Guid)
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // Fixed, field 5
@@ -817,7 +817,7 @@ partial class CompatModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member When: non-default DataFormat
+                    // raw read pass: legacy-mode - member When: non-default DataFormat (WellKnown on DateTime)
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // When, field 1
@@ -828,7 +828,7 @@ partial class CompatModel
                         value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member How: non-default DataFormat
+                    // raw read pass: legacy-mode - member How: non-default DataFormat (WellKnown on TimeSpan)
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // How, field 2
@@ -839,7 +839,7 @@ partial class CompatModel
                         value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Id: non-default DataFormat
+                    // raw read pass: legacy-mode - member Id: non-default DataFormat (WellKnown on Guid)
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // Id, field 3
