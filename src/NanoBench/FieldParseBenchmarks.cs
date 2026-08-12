@@ -148,8 +148,21 @@ public class FieldParseBenchmarks
             {
                 switch (tag)
                 {
+                    // wire-type tolerance by case labels, mirroring the emitted shape: the legacy
+                    // rows accept any suitable wire form at runtime, so the raw row carries the
+                    // same tolerance for a fair switch
                     case (1 << 3) | 0:
                         last = unchecked((int)state.ReadRawVarint32());
+                        unchecked { sum += (uint)last; }
+                        count++;
+                        break;
+                    case (1 << 3) | 5:
+                        last = unchecked((int)state.ReadRawFixed32());
+                        unchecked { sum += (uint)last; }
+                        count++;
+                        break;
+                    case (1 << 3) | 1:
+                        last = checked((int)unchecked((long)state.ReadRawFixed64()));
                         unchecked { sum += (uint)last; }
                         count++;
                         break;

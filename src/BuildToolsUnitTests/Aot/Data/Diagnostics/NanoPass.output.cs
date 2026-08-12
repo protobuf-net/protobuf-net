@@ -125,6 +125,12 @@ partial class NanoPassModel
                     case (1 << 3) | 0:
                         value.Id = unchecked((int)state.ReadRawVarint32());
                         break;
+                    case (1 << 3) | 5:
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     case (2 << 3) | 2:
                     {
                         var tmp2 = state.ReadRawString();
@@ -134,8 +140,20 @@ partial class NanoPassModel
                     case (3 << 3) | 0:
                         value.Active = state.ReadRawVarint32() != 0;
                         break;
+                    case (3 << 3) | 5:
+                        value.Active = state.ReadRawFixed32() != 0;
+                        break;
+                    case (3 << 3) | 1:
+                        value.Active = state.ReadRawFixed64() != 0;
+                        break;
                     case (4 << 3) | 0:
                         value.Total = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (4 << 3) | 1:
+                        value.Total = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (4 << 3) | 5:
+                        value.Total = (long)unchecked((int)state.ReadRawFixed32());
                         break;
                     default:
                         state.SkipTag(tag);

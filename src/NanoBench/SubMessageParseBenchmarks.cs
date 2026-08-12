@@ -246,8 +246,15 @@ public class SubMessageParseBenchmarks
         {
             switch (tag)
             {
+                // wire-type tolerance by case labels, mirroring the emitted shape
                 case (1 << 3) | 0:
                     value.Value = unchecked((int)state.ReadRawVarint32());
+                    break;
+                case (1 << 3) | 5:
+                    value.Value = unchecked((int)state.ReadRawFixed32());
+                    break;
+                case (1 << 3) | 1:
+                    value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
                     break;
                 default:
                     if (state.IsScopeEnd(tag)) return value;

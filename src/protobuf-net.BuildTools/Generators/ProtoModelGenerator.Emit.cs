@@ -171,31 +171,63 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, "{");
             foreach (var member in contract.Members)
             {
-                var (wire, read) = member.Kind switch
+                // wire-type tolerance by case labels, not state: the legacy reader accepts any
+                // suitable wire form for an integer (and protobuf-net itself writes fixed under
+                // DataFormat.FixedSize), so each label dispatches to the correctly-named raw read
+                // and the jump table absorbs the extra labels. Conversions mirror the legacy
+                // ReadInt32/ReadInt64 wire switch.
+                (int Wire, string Read)[] forms = member.Kind switch
                 {
-                    ProtoMemberKind.Bool => (0, "state.ReadRawVarint32() != 0"),
-                    ProtoMemberKind.Int32 => (0, "unchecked((int)state.ReadRawVarint32())"),
-                    ProtoMemberKind.UInt32 => (0, "state.ReadRawVarint32()"),
-                    ProtoMemberKind.Int64 => (0, "unchecked((long)state.ReadRawVarint64())"),
-                    ProtoMemberKind.UInt64 => (0, "state.ReadRawVarint64()"),
-                    ProtoMemberKind.String => (2, "state.ReadRawString()"),
-                    _ => (-1, ""), // unreachable: NanoEligible already filtered
+                    ProtoMemberKind.Bool =>
+                    [
+                        (0, "state.ReadRawVarint32() != 0"),
+                        (5, "state.ReadRawFixed32() != 0"),
+                        (1, "state.ReadRawFixed64() != 0"),
+                    ],
+                    ProtoMemberKind.Int32 =>
+                    [
+                        (0, "unchecked((int)state.ReadRawVarint32())"),
+                        (5, "unchecked((int)state.ReadRawFixed32())"),
+                        (1, "checked((int)unchecked((long)state.ReadRawFixed64()))"),
+                    ],
+                    ProtoMemberKind.UInt32 =>
+                    [
+                        (0, "state.ReadRawVarint32()"),
+                        (5, "state.ReadRawFixed32()"),
+                        (1, "checked((uint)state.ReadRawFixed64())"),
+                    ],
+                    ProtoMemberKind.Int64 =>
+                    [
+                        (0, "unchecked((long)state.ReadRawVarint64())"),
+                        (1, "unchecked((long)state.ReadRawFixed64())"),
+                        (5, "(long)unchecked((int)state.ReadRawFixed32())"),
+                    ],
+                    ProtoMemberKind.UInt64 =>
+                    [
+                        (0, "state.ReadRawVarint64()"),
+                        (1, "state.ReadRawFixed64()"),
+                        (5, "(ulong)state.ReadRawFixed32()"),
+                    ],
+                    ProtoMemberKind.String => [(2, "state.ReadRawString()")],
+                    _ => [], // unreachable: NanoEligible already filtered
                 };
-                if (wire < 0) continue;
-                Line(sb, indent + 3, $"case ({member.FieldNumber} << 3) | {wire}:");
-                if (member.Kind == ProtoMemberKind.String)
+                foreach (var (wire, read) in forms)
                 {
-                    // same semantics as the legacy read: a null string does not overwrite
-                    Line(sb, indent + 3, "{");
-                    Line(sb, indent + 4, $"var tmp{member.FieldNumber} = {read};");
-                    Line(sb, indent + 4, $"if (tmp{member.FieldNumber} != null) value.{Escape(member.Name)} = tmp{member.FieldNumber};");
-                    Line(sb, indent + 4, "break;");
-                    Line(sb, indent + 3, "}");
-                }
-                else
-                {
-                    Line(sb, indent + 4, $"value.{Escape(member.Name)} = {read};");
-                    Line(sb, indent + 4, "break;");
+                    Line(sb, indent + 3, $"case ({member.FieldNumber} << 3) | {wire}:");
+                    if (member.Kind == ProtoMemberKind.String)
+                    {
+                        // same semantics as the legacy read: a null string does not overwrite
+                        Line(sb, indent + 3, "{");
+                        Line(sb, indent + 4, $"var tmp{member.FieldNumber} = {read};");
+                        Line(sb, indent + 4, $"if (tmp{member.FieldNumber} != null) value.{Escape(member.Name)} = tmp{member.FieldNumber};");
+                        Line(sb, indent + 4, "break;");
+                        Line(sb, indent + 3, "}");
+                    }
+                    else
+                    {
+                        Line(sb, indent + 4, $"value.{Escape(member.Name)} = {read};");
+                        Line(sb, indent + 4, "break;");
+                    }
                 }
             }
             Line(sb, indent + 3, "default:");

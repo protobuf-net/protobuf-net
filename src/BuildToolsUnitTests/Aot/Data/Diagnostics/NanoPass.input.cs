@@ -14,6 +14,8 @@ namespace ProtoBuf.Nano
         public void SkipTag(uint tag) => throw new System.NotImplementedException();
         public uint ReadRawVarint32() => throw new System.NotImplementedException();
         public ulong ReadRawVarint64() => throw new System.NotImplementedException();
+        public uint ReadRawFixed32() => throw new System.NotImplementedException();
+        public ulong ReadRawFixed64() => throw new System.NotImplementedException();
         public string ReadRawString() => throw new System.NotImplementedException();
     }
 }
