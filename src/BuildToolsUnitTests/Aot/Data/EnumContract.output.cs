@@ -52,7 +52,7 @@ partial class EnumContractModel
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);
         }
 
-        public static int Measure_AotFixtures_EnumContract_Holder(global::AotFixtures.EnumContract.Holder value, int depth)
+        public static int Measure_AotFixtures_EnumContract_Holder(global::AotFixtures.EnumContract.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

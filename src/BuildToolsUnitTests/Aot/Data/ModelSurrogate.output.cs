@@ -54,7 +54,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth)
+        public static int Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -241,7 +241,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth)
+        public static int Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -300,7 +300,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth)
+        public static int Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

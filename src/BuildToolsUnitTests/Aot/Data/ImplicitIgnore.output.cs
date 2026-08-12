@@ -41,7 +41,7 @@ partial class ImplicitIgnoreModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static int Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth)
+        public static int Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -122,7 +122,7 @@ partial class ImplicitIgnoreModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static int Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth)
+        public static int Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

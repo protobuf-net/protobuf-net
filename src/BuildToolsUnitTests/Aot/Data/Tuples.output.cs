@@ -75,7 +75,7 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure__int__string_((int, string) value, int depth)
+        public static int Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -144,7 +144,7 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth)
+        public static int Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -206,7 +206,7 @@ partial class TuplesModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
         }
 
-        public static int Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth)
+        public static int Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -269,7 +269,7 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth)
+        public static int Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -335,7 +335,7 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
+        public static int Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -404,7 +404,7 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth)
+        public static int Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

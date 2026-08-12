@@ -65,7 +65,7 @@ partial class DefaultsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static int Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth)
+        public static int Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -197,7 +197,7 @@ partial class DefaultsModel
             }
         }
 
-        public static int Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth)
+        public static int Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

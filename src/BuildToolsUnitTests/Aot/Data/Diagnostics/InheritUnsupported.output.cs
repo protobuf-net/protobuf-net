@@ -55,7 +55,7 @@ partial class InheritUnsupportedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth)
+        public static int Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -82,7 +82,7 @@ partial class InheritUnsupportedModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth)
+        public static int Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

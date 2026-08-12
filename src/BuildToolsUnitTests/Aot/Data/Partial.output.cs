@@ -61,7 +61,7 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth)
+        public static int Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -258,7 +258,7 @@ partial class PartialModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth)
+        public static int Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -315,7 +315,7 @@ partial class PartialModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static int Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth)
+        public static int Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

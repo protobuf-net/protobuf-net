@@ -42,7 +42,7 @@ partial class ReservedModel
             }
         }
 
-        public static int Measure_AotFixtures_Reserved_ReservedButClear(global::AotFixtures.Reserved.ReservedButClear value, int depth)
+        public static int Measure_AotFixtures_Reserved_ReservedButClear(global::AotFixtures.Reserved.ReservedButClear value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

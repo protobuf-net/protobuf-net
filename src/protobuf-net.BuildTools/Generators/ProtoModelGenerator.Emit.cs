@@ -1208,8 +1208,11 @@ namespace ProtoBuf.BuildTools.Generators
                 // divergence between the two is a corrupt stream, which is exactly what the
                 // differential and conformance suites exist to catch. Only the measure recursion
                 // carries the depth budget - the write recursion that follows traverses the graph
-                // the measure just proved finite.
-                Line(sb, indent, $"public static int Measure_{san}({contract.TypeName} value, int depth)");
+                // the measure just proved finite. The lengths dictionary is the ??= cache
+                // (docs/nano-writer.md): populated post-order here, consumed at the write sites,
+                // so each reference-typed object is measured once per root however deep or
+                // shared it is; struct contracts have no identity and bypass it.
+                Line(sb, indent, $"public static int Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 Line(sb, indent + 1, "int len = 0;");
@@ -1800,7 +1803,22 @@ namespace ProtoBuf.BuildTools.Generators
                             inner++;
                         }
                         Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
-                        Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget);");
+                        if (target.IsValueType)
+                        {
+                            // a struct has no reference identity to key on
+                            Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
+                        }
+                        else
+                        {
+                            // usually a HIT: an enclosing measure already walked this object and
+                            // recorded it (the ??= cache); the miss arm serves a root write
+                            Line(sb, inner, $"var lengths{number} = state.RawLengths;");
+                            Line(sb, inner, $"if (!lengths{number}.TryGetValue(tmp{number}, out var len{number}))");
+                            Line(sb, inner, "{");
+                            Line(sb, inner + 1, $"len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget, lengths{number});");
+                            Line(sb, inner + 1, $"lengths{number}[tmp{number}] = len{number};");
+                            Line(sb, inner, "}");
+                        }
                         Line(sb, inner, $"state.WriteRawVarint32((uint)len{number});");
                         Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number});");
                         if (!target.IsValueType) Line(sb, indent, "}");
@@ -2630,6 +2648,11 @@ namespace ProtoBuf.BuildTools.Generators
                 ? $"global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp{number})"
                 : $"tmp{number}";
             var item = $"item{number}";
+            if (messageTarget is not null)
+            {
+                // hoisted once per run: every element consults (or feeds) the same cache
+                Line(sb, indent, $"var lengths{number} = state.RawLengths;");
+            }
             Line(sb, indent, $"foreach (var {item} in {source})");
             Line(sb, indent, "{");
             // AsRepeated erases element nullability from the plan (it is an ordinary element on
@@ -2645,7 +2668,18 @@ namespace ProtoBuf.BuildTools.Generators
             if (messageTarget is not null)
             {
                 var targetName = Sanitise(member.TypeName!);
-                Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, state.RawDepthBudget);");
+                if (messageTarget.IsValueType)
+                {
+                    Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, state.RawDepthBudget, lengths{number});");
+                }
+                else
+                {
+                    Line(sb, indent + 1, $"if (!lengths{number}.TryGetValue({item}, out var len{number}))");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"len{number} = Measure_{targetName}({item}, state.RawDepthBudget, lengths{number});");
+                    Line(sb, indent + 2, $"lengths{number}[{item}] = len{number};");
+                    Line(sb, indent + 1, "}");
+                }
                 Line(sb, indent + 1, $"state.WriteRawVarint32((uint)len{number});");
                 Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item});");
             }
@@ -2910,7 +2944,19 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent, "{");
                             inner++;
                         }
-                        Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, depth);");
+                        if (target.IsValueType)
+                        {
+                            // a struct has no reference identity to key on
+                            Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, depth, lengths);");
+                        }
+                        else
+                        {
+                            Line(sb, inner, $"if (!lengths.TryGetValue(tmp{number}, out var len{number}))");
+                            Line(sb, inner, "{");
+                            Line(sb, inner + 1, $"len{number} = Measure_{targetName}(tmp{number}, depth, lengths);");
+                            Line(sb, inner + 1, $"lengths[tmp{number}] = len{number};");
+                            Line(sb, inner, "}");
+                        }
                         Line(sb, inner, MeasureAdd(member, 2,
                             $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len{number}) + len{number}"));
                         if (!target.IsValueType) Line(sb, indent, "}");
@@ -2972,7 +3018,18 @@ namespace ProtoBuf.BuildTools.Generators
             if (messageTarget is not null)
             {
                 var targetName = Sanitise(member.TypeName!);
-                Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, depth);");
+                if (messageTarget.IsValueType)
+                {
+                    Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, depth, lengths);");
+                }
+                else
+                {
+                    Line(sb, indent + 1, $"if (!lengths.TryGetValue({item}, out var len{number}))");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"len{number} = Measure_{targetName}({item}, depth, lengths);");
+                    Line(sb, indent + 2, $"lengths[{item}] = len{number};");
+                    Line(sb, indent + 1, "}");
+                }
                 Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len{number}) + len{number};");
             }
             else if (member.Kind == ProtoMemberKind.String)

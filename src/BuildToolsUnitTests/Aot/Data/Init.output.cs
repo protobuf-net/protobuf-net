@@ -56,7 +56,7 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth)
+        public static int Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -91,7 +91,12 @@ partial class InitModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                var len3 = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget);
+                var lengths3 = state.RawLengths;
+                if (!lengths3.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget, lengths3);
+                    lengths3[tmp3] = len3;
+                }
                 state.WriteRawVarint32((uint)len3);
                 RawWrite_AotFixtures_Init_Nested(ref state, tmp3);
             }
@@ -99,7 +104,7 @@ partial class InitModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        public static int Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth)
+        public static int Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -113,7 +118,11 @@ partial class InitModel
             var tmp3 = value.Message;
             if (tmp3 != null)
             {
-                var len3 = Measure_AotFixtures_Init_Nested(tmp3, depth);
+                if (!lengths.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Init_Nested(tmp3, depth, lengths);
+                    lengths[tmp3] = len3;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;  // Message
             }
             var tmp4 = value.Mutable;
@@ -203,7 +212,7 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth)
+        public static int Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

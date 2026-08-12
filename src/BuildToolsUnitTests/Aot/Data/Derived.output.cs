@@ -43,7 +43,7 @@ partial class DerivedModel
             }
         }
 
-        public static int Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth)
+        public static int Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -110,7 +110,12 @@ partial class DerivedModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Ambiguous
-                var len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget);
+                var lengths4 = state.RawLengths;
+                if (!lengths4.TryGetValue(tmp4, out var len4))
+                {
+                    len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, lengths4);
+                    lengths4[tmp4] = len4;
+                }
                 state.WriteRawVarint32((uint)len4);
                 RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4);
             }

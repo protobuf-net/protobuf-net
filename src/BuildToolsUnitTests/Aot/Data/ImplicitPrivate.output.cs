@@ -39,7 +39,7 @@ partial class ImplicitPrivateModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth)
+        public static int Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -104,7 +104,7 @@ partial class ImplicitPrivateModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth)
+        public static int Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

@@ -186,6 +186,16 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// The measure pass's length cache (docs/nano-writer.md, the <c>??=</c> design):
+            /// sub-message lengths keyed by reference identity, populated by the generated
+            /// Measure_ statics and consumed at the write sites, so each object is measured
+            /// once per root serialize however deep or shared it is. Cleared per root by the
+            /// writer; value-type contracts have no identity and bypass it.
+            /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public System.Collections.Generic.Dictionary<object, int> RawLengths => _writer.RawLengths;
+
+            /// <summary>
             /// The remaining nesting budget for a generated measure recursion, honouring
             /// <see cref="Meta.TypeModel.MaxDepth"/> exactly as the raw reader's depth cap does.
             /// Only the measure walk needs guarding: the write recursion that follows traverses

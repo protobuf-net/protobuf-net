@@ -40,8 +40,20 @@ public class DescriptorSerializeBenchmarks
     private MemoryStream _ms = null!;
     private Meta.TypeModel _protogenModel = null!;
 
-    private delegate int GeneratedMeasure(Model.FileDescriptorSet value, int depth);
+    private delegate int GeneratedMeasure(Model.FileDescriptorSet value, int depth,
+        System.Collections.Generic.Dictionary<object, int> lengths);
     private static readonly GeneratedMeasure s_generatedMeasure = ResolveMeasure();
+
+    // reference identity, both TFMs (the BCL's ReferenceEqualityComparer is net5+ only)
+    private sealed class RefComparer : System.Collections.Generic.IEqualityComparer<object>
+    {
+        internal static readonly RefComparer Instance = new();
+        bool System.Collections.Generic.IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+        int System.Collections.Generic.IEqualityComparer<object>.GetHashCode(object obj)
+            => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+    }
+
+    private readonly System.Collections.Generic.Dictionary<object, int> _measureScratch = new(RefComparer.Instance);
 
     [GlobalSetup]
     public void Setup()
@@ -144,7 +156,13 @@ public class DescriptorSerializeBenchmarks
     }
 
     [Benchmark]
-    public int NanoGeneratedMeasure() => s_generatedMeasure(_nanoSet, 512);
+    public int NanoGeneratedMeasure()
+    {
+        // cleared per invoke: the row prices a cold measure INCLUDING cache population,
+        // which is what a root serialize actually pays
+        _measureScratch.Clear();
+        return s_generatedMeasure(_nanoSet, 512, _measureScratch);
+    }
 
     [Benchmark]
     public object GoogleProtobuf()
@@ -164,7 +182,7 @@ public class DescriptorSerializeBenchmarks
                 | System.Reflection.BindingFlags.Static))
             {
                 if (method.Name.StartsWith("Measure_", StringComparison.Ordinal)
-                    && method.GetParameters() is { Length: 2 } p
+                    && method.GetParameters() is { Length: 3 } p
                     && p[0].ParameterType == typeof(Model.FileDescriptorSet))
                 {
                     return (GeneratedMeasure)method.CreateDelegate(typeof(GeneratedMeasure));

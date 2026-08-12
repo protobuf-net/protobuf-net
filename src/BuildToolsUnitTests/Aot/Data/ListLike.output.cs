@@ -37,7 +37,12 @@ partial class ListLikeModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // NotAList
-                var len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1);
             }
@@ -45,14 +50,18 @@ partial class ListLikeModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth)
+        public static int Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.NotAList;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // NotAList
             }
             var tmp2 = value.Other;
@@ -120,7 +129,7 @@ partial class ListLikeModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth)
+        public static int Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

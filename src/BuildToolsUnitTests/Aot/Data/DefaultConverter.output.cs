@@ -62,7 +62,7 @@ partial class DefaultConverterModel
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static int Measure_AotFixtures_DefaultConverter_Converted(global::AotFixtures.DefaultConverter.Converted value, int depth)
+        public static int Measure_AotFixtures_DefaultConverter_Converted(global::AotFixtures.DefaultConverter.Converted value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

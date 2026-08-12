@@ -98,7 +98,7 @@ partial class ScalarsModel
             }
         }
 
-        public static int Measure_AotFixtures_Scalars_Primitives(global::AotFixtures.Scalars.Primitives value, int depth)
+        public static int Measure_AotFixtures_Scalars_Primitives(global::AotFixtures.Scalars.Primitives value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

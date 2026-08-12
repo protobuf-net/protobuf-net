@@ -1,5 +1,28 @@
 # Descriptor serialize composite (docs/nano-writer.md)
 
+## The memoization race: lengthCache wins (net10.0, 2026-08-12, cut 5)
+
+Same rig, same machine, `??=` lengthCache in place (per-writer Dictionary keyed by
+reference identity, populated post-order by Measure_, consumed at write sites). Baseline
+drift between runs: legacy +1.6%, Google +1.8% - normalize before reading deltas.
+
+| row | recompute (cuts 1-4) | lengthCache (cut 5) | normalized delta |
+| --- | ---: | ---: | ---: |
+| LegacyReal | 20.64 us | 20.97 us | (drift) |
+| GeneratedProtogen | 13.56 us | 13.93 us | ~wash |
+| NanoGenerated | 14.48 us | **12.64 us** | **-14%** |
+| NanoGeneratedMeasure | 2.23 us | 3.82 us | cold measure now includes cache population |
+| GoogleProtobuf | 13.08 us | 13.32 us | (drift) |
+
+Verdict per the tiebreaker rule: **keep the cache**. It wins outright on the plain-DTO
+row - which puts the generated model AHEAD of Google.Protobuf on its home turf (12.64 vs
+13.32 us) - is a wash on the extensible protogen row, regresses nothing, and is the only
+entrant that also answers shared references (measured once) and the future mixed-contract
+counting mode. The measure row's rise is the cost moving, not growing: the write rows pay
+exactly one cold population plus all-hit lookups, where recompute paid a full re-walk per
+nesting level.
+
+
 The self-describing descriptor payload (7,670 bytes), serialized five ways into one reused
 MemoryStream. Setup gates: byte identity with the legacy payload for BOTH Reflection-DTO
 rows *and* (observed, reported rather than required) the bench-DTO row; census equality

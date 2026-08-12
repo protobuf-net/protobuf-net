@@ -43,7 +43,7 @@ partial class OrderingModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static int Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth)
+        public static int Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -109,7 +109,7 @@ partial class OrderingModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth)
+        public static int Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -164,7 +164,12 @@ partial class OrderingModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // FromDataContract
-                var len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1);
             }
@@ -172,38 +177,56 @@ partial class OrderingModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // FromXmlType
-                var len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget);
+                var lengths2 = state.RawLengths;
+                if (!lengths2.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget, lengths2);
+                    lengths2[tmp2] = len2;
+                }
                 state.WriteRawVarint32((uint)len2);
                 RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2);
             }
             var tmp3 = value.Several;
             if (tmp3 != null)
             {
+                var lengths3 = state.RawLengths;
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
                     state.WriteRawTag((3 << 3) | 2);  // Several
-                    var len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, state.RawDepthBudget);
+                    if (!lengths3.TryGetValue(item3, out var len3))
+                    {
+                        len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, state.RawDepthBudget, lengths3);
+                        lengths3[item3] = len3;
+                    }
                     state.WriteRawVarint32((uint)len3);
                     RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, item3);
                 }
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth)
+        public static int Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.FromDataContract;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // FromDataContract
             }
             var tmp2 = value.FromXmlType;
             if (tmp2 != null)
             {
-                var len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth);
+                if (!lengths.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, lengths);
+                    lengths[tmp2] = len2;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // FromXmlType
             }
             var tmp3 = value.Several;
@@ -212,7 +235,11 @@ partial class OrderingModel
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
-                    var len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth);
+                    if (!lengths.TryGetValue(item3, out var len3))
+                    {
+                        len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, lengths);
+                        lengths[item3] = len3;
+                    }
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;
                 }
             }
@@ -291,7 +318,7 @@ partial class OrderingModel
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth)
+        public static int Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -363,7 +390,7 @@ partial class OrderingModel
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth)
+        public static int Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -435,7 +462,7 @@ partial class OrderingModel
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth)
+        public static int Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

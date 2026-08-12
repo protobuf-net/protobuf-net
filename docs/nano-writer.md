@@ -160,6 +160,22 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## Cut 5 landed: the ??= lengthCache, and it wins the race (2026-08-12)
+
+The design as sketched: a per-writer `Dictionary<object, int>` keyed by REFERENCE identity
+(RuntimeHelpers.GetHashCode via a custom comparer - the BCL's is net5+ only), surfaced as
+`state.RawLengths`, cleared in the writer's Init AND Cleanup (a stale entry is a corrupt
+stream, not an error). Measure_ gained the cache as a third parameter, populating it
+post-order for every reference-typed sub-message it walks; write sites then hit it -
+usually populated by an enclosing measure - with the miss arm serving root writes. Struct
+contracts have no identity and bypass it.
+
+Race result (DescriptorSerializeResults.md): -14% on the plain-DTO row - which puts the
+generated model AHEAD of Google.Protobuf on home turf (12.64 vs 13.32 us) - a wash on the
+extensible protogen row, no regressions. Kept, per the tiebreaker rule; it is also the
+only entrant that answers shared references and the future mixed-contract counting mode.
+Remaining lever: the presized buffer core (every raw op is still a virtual Impl* call).
+
 ## First serialize numbers (2026-08-12, cuts 1-4 in place)
 
 `src/NanoBench/DescriptorSerializeResults.md`: on the self-describing descriptor payload,

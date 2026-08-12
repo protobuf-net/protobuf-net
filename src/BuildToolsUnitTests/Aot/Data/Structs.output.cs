@@ -34,7 +34,7 @@ partial class StructsModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
-            var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget);
+            var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len1);
             RawWrite_AotFixtures_Structs_Point(ref state, tmp1);
             var tmp2 = value.MaybeLocation;
@@ -144,7 +144,7 @@ partial class StructsModel
             }
         }
 
-        public static int Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth)
+        public static int Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

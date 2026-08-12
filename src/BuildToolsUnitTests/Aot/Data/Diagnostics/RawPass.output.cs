@@ -43,7 +43,7 @@ partial class RawPassModel
             state.AppendExtensionData(value);
         }
 
-        public static int Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth)
+        public static int Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -141,7 +141,7 @@ partial class RawPassModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth)
+        public static int Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -293,11 +293,16 @@ partial class RawPassModel
             var tmp9 = value.Items;
             if (tmp9 != null)
             {
+                var lengths9 = state.RawLengths;
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
                     state.WriteRawTag((9 << 3) | 2);  // Items
-                    var len9 = Measure_AotFixtures_RawPass_Child(item9, state.RawDepthBudget);
+                    if (!lengths9.TryGetValue(item9, out var len9))
+                    {
+                        len9 = Measure_AotFixtures_RawPass_Child(item9, state.RawDepthBudget, lengths9);
+                        lengths9[item9] = len9;
+                    }
                     state.WriteRawVarint32((uint)len9);
                     RawWrite_AotFixtures_RawPass_Child(ref state, item9);
                 }
@@ -306,7 +311,12 @@ partial class RawPassModel
             if (tmp10 != null)
             {
                 state.WriteRawTag((10 << 3) | 2);  // Favourite
-                var len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget);
+                var lengths10 = state.RawLengths;
+                if (!lengths10.TryGetValue(tmp10, out var len10))
+                {
+                    len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget, lengths10);
+                    lengths10[tmp10] = len10;
+                }
                 state.WriteRawVarint32((uint)len10);
                 RawWrite_AotFixtures_RawPass_Child(ref state, tmp10);
             }
@@ -324,7 +334,7 @@ partial class RawPassModel
             }
         }
 
-        public static int Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth)
+        public static int Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -370,14 +380,22 @@ partial class RawPassModel
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
-                    var len9 = Measure_AotFixtures_RawPass_Child(item9, depth);
+                    if (!lengths.TryGetValue(item9, out var len9))
+                    {
+                        len9 = Measure_AotFixtures_RawPass_Child(item9, depth, lengths);
+                        lengths[item9] = len9;
+                    }
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len9) + len9;
                 }
             }
             var tmp10 = value.Favourite;
             if (tmp10 != null)
             {
-                var len10 = Measure_AotFixtures_RawPass_Child(tmp10, depth);
+                if (!lengths.TryGetValue(tmp10, out var len10))
+                {
+                    len10 = Measure_AotFixtures_RawPass_Child(tmp10, depth, lengths);
+                    lengths[tmp10] = len10;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len10) + len10;  // Favourite
             }
             var tmp11 = value.Score;

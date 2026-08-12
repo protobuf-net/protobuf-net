@@ -81,7 +81,7 @@ partial class NullablesModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static int Measure_AotFixtures_Nullables_Optional(global::AotFixtures.Nullables.Optional value, int depth)
+        public static int Measure_AotFixtures_Nullables_Optional(global::AotFixtures.Nullables.Optional value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

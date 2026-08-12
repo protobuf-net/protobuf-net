@@ -118,7 +118,12 @@ partial class ParseableModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Child
-                var len2 = Measure_AotFixtures_Parseable_NotParseable(tmp2, state.RawDepthBudget);
+                var lengths2 = state.RawLengths;
+                if (!lengths2.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Parseable_NotParseable(tmp2, state.RawDepthBudget, lengths2);
+                    lengths2[tmp2] = len2;
+                }
                 state.WriteRawVarint32((uint)len2);
                 RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2);
             }
@@ -180,7 +185,7 @@ partial class ParseableModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Parseable_NotParseable(global::AotFixtures.Parseable.NotParseable value, int depth)
+        public static int Measure_AotFixtures_Parseable_NotParseable(global::AotFixtures.Parseable.NotParseable value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

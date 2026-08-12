@@ -39,7 +39,12 @@ partial class AbstractLeafModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1);
             }
@@ -51,14 +56,18 @@ partial class AbstractLeafModel
             }
         }
 
-        public static int Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth)
+        public static int Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Value
             }
             var tmp2 = value.Name;
@@ -143,7 +152,7 @@ partial class AbstractLeafModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth)
+        public static int Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

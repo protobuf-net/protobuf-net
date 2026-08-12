@@ -114,7 +114,7 @@ partial class EnumsModel
             }
         }
 
-        public static int Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth)
+        public static int Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

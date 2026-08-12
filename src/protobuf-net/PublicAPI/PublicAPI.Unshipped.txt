@@ -61,3 +61,4 @@
 [PBN9002]static ProtoBuf.ProtoWriter.State.ThrowRawTooDeep() -> void (forwarded, contained in protobuf-net.Core)
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.IExtensible instance) -> int (forwarded, contained in protobuf-net.Core)
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.ITypedExtensible instance, System.Type type) -> int (forwarded, contained in protobuf-net.Core)
+[PBN9002]ProtoBuf.ProtoWriter.State.RawLengths.get -> System.Collections.Generic.Dictionary<object, int> (forwarded, contained in protobuf-net.Core)

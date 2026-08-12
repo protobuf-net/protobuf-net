@@ -64,11 +64,16 @@ partial class GroupedElementsModel
             var tmp3 = value.Plain;
             if (tmp3 != null)
             {
+                var lengths3 = state.RawLengths;
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedElements.Item>();
                     state.WriteRawTag((3 << 3) | 2);  // Plain
-                    var len3 = Measure_AotFixtures_GroupedElements_Item(item3, state.RawDepthBudget);
+                    if (!lengths3.TryGetValue(item3, out var len3))
+                    {
+                        len3 = Measure_AotFixtures_GroupedElements_Item(item3, state.RawDepthBudget, lengths3);
+                        lengths3[item3] = len3;
+                    }
                     state.WriteRawVarint32((uint)len3);
                     RawWrite_AotFixtures_GroupedElements_Item(ref state, item3);
                 }
@@ -304,7 +309,7 @@ partial class GroupedElementsModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth)
+        public static int Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

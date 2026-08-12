@@ -47,7 +47,7 @@ partial class ContractOptionsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_ContractOptions_BothFamilies(global::AotFixtures.ContractOptions.BothFamilies value, int depth)
+        public static int Measure_AotFixtures_ContractOptions_BothFamilies(global::AotFixtures.ContractOptions.BothFamilies value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -157,7 +157,7 @@ partial class ContractOptionsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_ContractOptions_Lenient(global::AotFixtures.ContractOptions.Lenient value, int depth)
+        public static int Measure_AotFixtures_ContractOptions_Lenient(global::AotFixtures.ContractOptions.Lenient value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -320,7 +320,7 @@ partial class ContractOptionsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_ContractOptions_ProtoOnly(global::AotFixtures.ContractOptions.ProtoOnly value, int depth)
+        public static int Measure_AotFixtures_ContractOptions_ProtoOnly(global::AotFixtures.ContractOptions.ProtoOnly value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

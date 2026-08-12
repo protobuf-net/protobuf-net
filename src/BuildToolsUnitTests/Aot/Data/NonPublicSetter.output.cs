@@ -55,7 +55,7 @@ partial class NonPublicSetterModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        public static int Measure_AotFixtures_NonPublicSetter_Guarded(global::AotFixtures.NonPublicSetter.Guarded value, int depth)
+        public static int Measure_AotFixtures_NonPublicSetter_Guarded(global::AotFixtures.NonPublicSetter.Guarded value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

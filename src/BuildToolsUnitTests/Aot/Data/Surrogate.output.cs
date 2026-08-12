@@ -80,7 +80,7 @@ partial class SurrogateModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth)
+        public static int Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -290,7 +290,7 @@ partial class SurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth)
+        public static int Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -390,7 +390,7 @@ partial class SurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth)
+        public static int Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

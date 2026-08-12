@@ -83,7 +83,7 @@ partial class ListOptionsModel
             }
         }
 
-        public static int Measure_AotFixtures_ListOptions_NotACollection(global::AotFixtures.ListOptions.NotACollection value, int depth)
+        public static int Measure_AotFixtures_ListOptions_NotACollection(global::AotFixtures.ListOptions.NotACollection value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

@@ -47,7 +47,12 @@ partial class GenericModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Number
-                var len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1);
             }
@@ -55,7 +60,12 @@ partial class GenericModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Text
-                var len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, state.RawDepthBudget);
+                var lengths2 = state.RawLengths;
+                if (!lengths2.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, state.RawDepthBudget, lengths2);
+                    lengths2[tmp2] = len2;
+                }
                 state.WriteRawVarint32((uint)len2);
                 RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, tmp2);
             }
@@ -63,7 +73,12 @@ partial class GenericModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                var len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, state.RawDepthBudget);
+                var lengths3 = state.RawLengths;
+                if (!lengths3.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, state.RawDepthBudget, lengths3);
+                    lengths3[tmp3] = len3;
+                }
                 state.WriteRawVarint32((uint)len3);
                 RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, tmp3);
             }
@@ -71,7 +86,12 @@ partial class GenericModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Deep
-                var len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, state.RawDepthBudget);
+                var lengths4 = state.RawLengths;
+                if (!lengths4.TryGetValue(tmp4, out var len4))
+                {
+                    len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, state.RawDepthBudget, lengths4);
+                    lengths4[tmp4] = len4;
+                }
                 state.WriteRawVarint32((uint)len4);
                 RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, tmp4);
             }
@@ -79,65 +99,95 @@ partial class GenericModel
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // Many
-                var len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, state.RawDepthBudget);
+                var lengths5 = state.RawLengths;
+                if (!lengths5.TryGetValue(tmp5, out var len5))
+                {
+                    len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, state.RawDepthBudget, lengths5);
+                    lengths5[tmp5] = len5;
+                }
                 state.WriteRawVarint32((uint)len5);
                 RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, tmp5);
             }
             var tmp6 = value.Pair;
             state.WriteRawTag((6 << 3) | 2);  // Pair
-            var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, state.RawDepthBudget);
+            var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len6);
             RawWrite_AotFixtures_Generic_Pair_int__string_(ref state, tmp6);
             var tmp7 = value.Wrappers;
             if (tmp7 != null)
             {
+                var lengths7 = state.RawLengths;
                 foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Generic.Wrapper<int>>();
                     state.WriteRawTag((7 << 3) | 2);  // Wrappers
-                    var len7 = Measure_AotFixtures_Generic_Wrapper_int_(item7, state.RawDepthBudget);
+                    if (!lengths7.TryGetValue(item7, out var len7))
+                    {
+                        len7 = Measure_AotFixtures_Generic_Wrapper_int_(item7, state.RawDepthBudget, lengths7);
+                        lengths7[item7] = len7;
+                    }
                     state.WriteRawVarint32((uint)len7);
                     RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, item7);
                 }
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Holder(global::AotFixtures.Generic.Holder value, int depth)
+        public static int Measure_AotFixtures_Generic_Holder(global::AotFixtures.Generic.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.Number;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Number
             }
             var tmp2 = value.Text;
             if (tmp2 != null)
             {
-                var len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, depth);
+                if (!lengths.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, depth, lengths);
+                    lengths[tmp2] = len2;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // Text
             }
             var tmp3 = value.Message;
             if (tmp3 != null)
             {
-                var len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, depth);
+                if (!lengths.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, depth, lengths);
+                    lengths[tmp3] = len3;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;  // Message
             }
             var tmp4 = value.Deep;
             if (tmp4 != null)
             {
-                var len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, depth);
+                if (!lengths.TryGetValue(tmp4, out var len4))
+                {
+                    len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, depth, lengths);
+                    lengths[tmp4] = len4;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len4) + len4;  // Deep
             }
             var tmp5 = value.Many;
             if (tmp5 != null)
             {
-                var len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, depth);
+                if (!lengths.TryGetValue(tmp5, out var len5))
+                {
+                    len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, depth, lengths);
+                    lengths[tmp5] = len5;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len5) + len5;  // Many
             }
             var tmp6 = value.Pair;
-            var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, depth);
+            var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, depth, lengths);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len6) + len6;  // Pair
             var tmp7 = value.Wrappers;
             if (tmp7 != null)
@@ -145,7 +195,11 @@ partial class GenericModel
                 foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Generic.Wrapper<int>>();
-                    var len7 = Measure_AotFixtures_Generic_Wrapper_int_(item7, depth);
+                    if (!lengths.TryGetValue(item7, out var len7))
+                    {
+                        len7 = Measure_AotFixtures_Generic_Wrapper_int_(item7, depth, lengths);
+                        lengths[item7] = len7;
+                    }
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len7) + len7;
                 }
             }
@@ -254,7 +308,7 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth)
+        public static int Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -337,7 +391,7 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Pair_int__string_(global::AotFixtures.Generic.Pair<int, string> value, int depth)
+        public static int Measure_AotFixtures_Generic_Pair_int__string_(global::AotFixtures.Generic.Pair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -369,7 +423,7 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth)
+        public static int Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -428,7 +482,7 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Standalone_string_(global::AotFixtures.Generic.Standalone<string> value, int depth)
+        public static int Measure_AotFixtures_Generic_Standalone_string_(global::AotFixtures.Generic.Standalone<string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -483,7 +537,12 @@ partial class GenericModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var len1 = Measure_AotFixtures_Generic_Nested(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Generic_Nested(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_Generic_Nested(ref state, tmp1);
             }
@@ -495,14 +554,18 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth)
+        public static int Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_Generic_Nested(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Generic_Nested(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Value
             }
             var tmp2 = value.Label;
@@ -564,7 +627,12 @@ partial class GenericModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1);
             }
@@ -576,14 +644,18 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth)
+        public static int Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Value
             }
             var tmp2 = value.Label;
@@ -658,7 +730,7 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth)
+        public static int Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -744,7 +816,7 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_int_(global::AotFixtures.Generic.Wrapper<int> value, int depth)
+        public static int Measure_AotFixtures_Generic_Wrapper_int_(global::AotFixtures.Generic.Wrapper<int> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -820,7 +892,7 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_string_(global::AotFixtures.Generic.Wrapper<string> value, int depth)
+        public static int Measure_AotFixtures_Generic_Wrapper_string_(global::AotFixtures.Generic.Wrapper<string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

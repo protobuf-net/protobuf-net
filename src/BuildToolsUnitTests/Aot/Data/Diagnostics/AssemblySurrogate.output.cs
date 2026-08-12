@@ -91,7 +91,7 @@ partial class AssemblySurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth)
+        public static int Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

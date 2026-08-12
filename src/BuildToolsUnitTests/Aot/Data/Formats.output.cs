@@ -88,7 +88,12 @@ partial class FormatsModel
             if (tmp9 != null)
             {
                 state.WriteRawTag((9 << 3) | 2);  // Plain
-                var len9 = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget);
+                var lengths9 = state.RawLengths;
+                if (!lengths9.TryGetValue(tmp9, out var len9))
+                {
+                    len9 = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, lengths9);
+                    lengths9[tmp9] = len9;
+                }
                 state.WriteRawVarint32((uint)len9);
                 RawWrite_AotFixtures_Formats_Inner(ref state, tmp9);
             }
@@ -263,7 +268,7 @@ partial class FormatsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Formats_Inner(global::AotFixtures.Formats.Inner value, int depth)
+        public static int Measure_AotFixtures_Formats_Inner(global::AotFixtures.Formats.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

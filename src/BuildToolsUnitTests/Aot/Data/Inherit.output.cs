@@ -328,7 +328,7 @@ partial class InheritModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Inherit_Standalone(global::AotFixtures.Inherit.Standalone value, int depth)
+        public static int Measure_AotFixtures_Inherit_Standalone(global::AotFixtures.Inherit.Standalone value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

@@ -69,19 +69,19 @@ partial class TupleMembersModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Item2;
             state.WriteRawTag((2 << 3) | 2);  // Item2
-            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget);
+            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len2);
             RawWrite__int__string_(ref state, tmp2);
         }
 
-        public static int Measure__int___int__string__((int, (int, string)) value, int depth)
+        public static int Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
-            var len2 = Measure__int__string_(tmp2, depth);
+            var len2 = Measure__int__string_(tmp2, depth, lengths);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // Item2
             return len;
         }
@@ -138,7 +138,7 @@ partial class TupleMembersModel
             }
         }
 
-        public static int Measure__int__string_((int, string) value, int depth)
+        public static int Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -165,22 +165,22 @@ partial class TupleMembersModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
-            var len1 = Measure__int__string_(tmp1, state.RawDepthBudget);
+            var len1 = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len1);
             RawWrite__int__string_(ref state, tmp1);
             var tmp2 = value.Anonymous;
             state.WriteRawTag((2 << 3) | 2);  // Anonymous
-            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget);
+            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len2);
             RawWrite__int__string_(ref state, tmp2);
             var tmp3 = value.Deep;
             state.WriteRawTag((3 << 3) | 2);  // Deep
-            var len3 = Measure__int___int__string__(tmp3, state.RawDepthBudget);
+            var len3 = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len3);
             RawWrite__int___int__string__(ref state, tmp3);
             var tmp4 = value.Pair;
             state.WriteRawTag((4 << 3) | 2);  // Pair
-            var len4 = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget);
+            var len4 = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len4);
             RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4);
             var tmp5 = value.MaybePair;
@@ -332,7 +332,7 @@ partial class TupleMembersModel
             }
         }
 
-        public static int Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
+        public static int Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

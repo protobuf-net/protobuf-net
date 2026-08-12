@@ -40,7 +40,7 @@ partial class DroppedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth)
+        public static int Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -107,7 +107,7 @@ partial class DroppedModel
             }
         }
 
-        public static int Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth)
+        public static int Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -176,20 +176,29 @@ partial class DroppedModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Child
-                var len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp1);
             }
         }
 
-        public static int Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth)
+        public static int Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
             var tmp1 = value.Child;
             if (tmp1 != null)
             {
-                var len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth);
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Child
             }
             return len;
@@ -240,7 +249,7 @@ partial class DroppedModel
             if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth)
+        public static int Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -295,7 +304,7 @@ partial class DroppedModel
             state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth)
+        public static int Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

@@ -51,7 +51,12 @@ partial class GetterModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Child
-                var len3 = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget);
+                var lengths3 = state.RawLengths;
+                if (!lengths3.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget, lengths3);
+                    lengths3[tmp3] = len3;
+                }
                 state.WriteRawVarint32((uint)len3);
                 RawWrite_AotFixtures_Getter_Nested(ref state, tmp3);
             }
@@ -92,7 +97,7 @@ partial class GetterModel
             }
             var tmp11 = value.Where;
             state.WriteRawTag((11 << 3) | 2);  // Where
-            var len11 = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget);
+            var len11 = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint32((uint)len11);
             RawWrite_AotFixtures_Getter_Point(ref state, tmp11);
             var tmp12 = value.Maybe2;
@@ -288,7 +293,7 @@ partial class GetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth)
+        public static int Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -359,7 +364,7 @@ partial class GetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth)
+        public static int Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

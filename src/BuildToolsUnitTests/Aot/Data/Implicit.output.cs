@@ -46,7 +46,7 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_Implicit_AllFields(global::AotFixtures.Implicit.AllFields value, int depth)
+        public static int Measure_AotFixtures_Implicit_AllFields(global::AotFixtures.Implicit.AllFields value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -133,7 +133,7 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_Implicit_AllPublic(global::AotFixtures.Implicit.AllPublic value, int depth)
+        public static int Measure_AotFixtures_Implicit_AllPublic(global::AotFixtures.Implicit.AllPublic value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -212,7 +212,7 @@ partial class ImplicitModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static int Measure_AotFixtures_Implicit_FirstTag(global::AotFixtures.Implicit.FirstTag value, int depth)
+        public static int Measure_AotFixtures_Implicit_FirstTag(global::AotFixtures.Implicit.FirstTag value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -278,7 +278,7 @@ partial class ImplicitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Implicit_Ignoring(global::AotFixtures.Implicit.Ignoring value, int depth)
+        public static int Measure_AotFixtures_Implicit_Ignoring(global::AotFixtures.Implicit.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -337,7 +337,7 @@ partial class ImplicitModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static int Measure_AotFixtures_Implicit_Mixed(global::AotFixtures.Implicit.Mixed value, int depth)
+        public static int Measure_AotFixtures_Implicit_Mixed(global::AotFixtures.Implicit.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

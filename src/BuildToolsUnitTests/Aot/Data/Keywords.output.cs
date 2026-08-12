@@ -40,7 +40,7 @@ partial class KeywordsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth)
+        public static int Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -112,7 +112,12 @@ partial class KeywordsModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // class
-                var len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget);
+                var lengths4 = state.RawLengths;
+                if (!lengths4.TryGetValue(tmp4, out var len4))
+                {
+                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, lengths4);
+                    lengths4[tmp4] = len4;
+                }
                 state.WriteRawVarint32((uint)len4);
                 RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4);
             }
@@ -120,7 +125,12 @@ partial class KeywordsModel
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // lock
-                var len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget);
+                var lengths5 = state.RawLengths;
+                if (!lengths5.TryGetValue(tmp5, out var len5))
+                {
+                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, lengths5);
+                    lengths5[tmp5] = len5;
+                }
                 state.WriteRawVarint32((uint)len5);
                 RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5);
             }
@@ -128,7 +138,7 @@ partial class KeywordsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static int Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth)
+        public static int Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -150,13 +160,21 @@ partial class KeywordsModel
             var tmp4 = value.@class;
             if (tmp4 != null)
             {
-                var len4 = Measure_AotFixtures_Keywords_Inner(tmp4, depth);
+                if (!lengths.TryGetValue(tmp4, out var len4))
+                {
+                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
+                    lengths[tmp4] = len4;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len4) + len4;  // class
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
             {
-                var len5 = Measure_AotFixtures_Keywords_Pair(tmp5, depth);
+                if (!lengths.TryGetValue(tmp5, out var len5))
+                {
+                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
+                    lengths[tmp5] = len5;
+                }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len5) + len5;  // lock
             }
             var tmp6 = value.value;
@@ -300,7 +318,7 @@ partial class KeywordsModel
             }
         }
 
-        public static int Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth)
+        public static int Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

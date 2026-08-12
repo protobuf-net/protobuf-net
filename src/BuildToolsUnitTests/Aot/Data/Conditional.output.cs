@@ -71,7 +71,7 @@ partial class ConditionalModel
             }
         }
 
-        public static int Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth)
+        public static int Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;

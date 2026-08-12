@@ -55,7 +55,7 @@ partial class GenericHierarchyModel
             }
         }
 
-        public static int Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth)
+        public static int Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -110,7 +110,12 @@ partial class GenericHierarchyModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var len1 = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1);
             }
@@ -385,7 +390,7 @@ partial class GenericHierarchyModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth)
+        public static int Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             int len = 0;
@@ -440,7 +445,12 @@ partial class GenericHierarchyModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var len1 = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, state.RawDepthBudget);
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
                 state.WriteRawVarint32((uint)len1);
                 RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1);
             }
