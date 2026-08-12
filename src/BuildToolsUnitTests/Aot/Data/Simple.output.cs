@@ -23,31 +23,7 @@ partial class SimpleModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Simple.Order global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
-        {
-            value ??= new global::AotFixtures.Simple.Order();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Name = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Simple_Order(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value)
         {
@@ -56,6 +32,46 @@ partial class SimpleModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Name;
             state.WriteString(2, tmp2);
+        }
+
+        public static global::AotFixtures.Simple.Order RawRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
+        {
+            value ??= new global::AotFixtures.Simple.Order();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Name, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Name = tmp2;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
     }
 }

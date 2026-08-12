@@ -20,6 +20,8 @@ partial class TupleLevelsModel
         : global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -63,37 +65,13 @@ partial class TupleLevelsModel
             global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.TupleLevels.Agreeing global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleLevels.Agreeing value)
-        {
-            value ??= new global::AotFixtures.TupleLevels.Agreeing();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.One;
-                        value.One = state.ReadMessage<(global::System.Guid, decimal)>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Two;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(global::System.Guid, decimal)>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
-                        if (tmp2 != null) value.Two = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_TupleLevels_Agreeing(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleLevels.Agreeing value)
         {
@@ -105,6 +83,56 @@ partial class TupleLevelsModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(global::System.Guid, decimal)>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
             }
+        }
+
+        public static global::AotFixtures.TupleLevels.Agreeing RawRead_AotFixtures_TupleLevels_Agreeing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleLevels.Agreeing value)
+        {
+            value ??= new global::AotFixtures.TupleLevels.Agreeing();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member One: message shape (nullable or struct)
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // One, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.One;
+                        value.One = state.ReadMessage<(global::System.Guid, decimal)>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Two: element type not raw-eligible
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Two, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Two;
+                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(global::System.Guid, decimal)>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, s_default);
+                        if (tmp2 != null) value.Two = tmp2;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
     }
 }

@@ -130,38 +130,30 @@ namespace ProtoBuf.BuildTools.Generators
 
             EmitExternalCategoryAsserts(sb, indent + 2, plan);
 
-            // nano eligibility is a FIXPOINT, not a per-contract predicate: a message member
-            // emits a direct static call to the target's NanoRead_ method, so a contract whose
-            // target fell out must fall out too - the same cascade DropUnsatisfiable performs for
-            // the legacy pass, for the same reason (emitting a call to a method that does not
-            // exist is a compile error in the consumer's build, the worst failure mode)
-            var nanoSet = new HashSet<string>();
-            var nanoReasons = new Dictionary<string, string>();
-            if (plan.NanoReader)
+            // raw-read eligibility is CONTRACT-level only (shape and callbacks): any member the
+            // raw pass has no native form for takes a legacy-mode arm inside the raw body
+            // instead of costing the whole contract, so there is no cascade - a message member
+            // whose target is not raw-eligible reads through state.ReadMessage exactly as the
+            // classic body would, and only a NATIVE message member emits the direct static call
+            // (which is why the member classifier consults this set)
+            var rawSet = new HashSet<string>();
+            var rawReasons = new Dictionary<string, string>();
+            if (plan.RawReader)
             {
                 foreach (var contract in plan.Contracts)
                 {
-                    if (NanoEligible(contract, out var reason)) nanoSet.Add(contract.TypeName);
-                    else nanoReasons[contract.TypeName] = reason!;
+                    if (RawReadEligible(contract, out var reason)) rawSet.Add(contract.TypeName);
+                    else rawReasons[contract.TypeName] = reason!;
                 }
-                bool changed = true;
-                while (changed)
+                // a legacy-mode member arm runs inside a STATIC RawRead_ body, where `this`
+                // cannot appear - the shared instance stands in as the sub-serializer argument.
+                // The serializers are stateless, so a second instance beside SerializerCache's
+                // is only a second run of the Debug-only category asserts.
+                if (plan.Contracts.Any(c => rawSet.Contains(c.TypeName)
+                    && c.Members.Any(m => RawMemberFallbackReason(m, rawSet) is not null)))
                 {
-                    changed = false;
-                    foreach (var contract in plan.Contracts)
-                    {
-                        if (!nanoSet.Contains(contract.TypeName)) continue;
-                        foreach (var member in contract.Members)
-                        {
-                            if (member.Kind == ProtoMemberKind.Message && !nanoSet.Contains(member.TypeName!))
-                            {
-                                nanoSet.Remove(contract.TypeName);
-                                nanoReasons[contract.TypeName] = $"member {member.Name}: target {member.TypeName} is not nano-eligible (cascade)";
-                                changed = true;
-                                break;
-                            }
-                        }
-                    }
+                    Line(sb, indent + 2, $"private static readonly {ServicesTypeName} s_default = new {ServicesTypeName}();");
+                    sb.AppendLine();
                 }
             }
 
@@ -170,17 +162,18 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 if (!first) sb.AppendLine();
                 first = false;
-                EmitContract(sb, indent + 2, contract);
-                if (nanoSet.Contains(contract.TypeName))
+                var raw = rawSet.Contains(contract.TypeName);
+                EmitContract(sb, indent + 2, contract, raw);
+                if (raw)
                 {
-                    EmitNanoRead(sb, indent + 2, contract);
+                    EmitRawRead(sb, indent + 2, contract, rawSet);
                 }
-                else if (plan.NanoReader && nanoReasons.TryGetValue(contract.TypeName, out var why))
+                else if (plan.RawReader && rawReasons.TryGetValue(contract.TypeName, out var why))
                 {
                     // say WHY in the output itself: an absence and an oversight look identical
                     // otherwise, which this branch has been burned by before
                     sb.AppendLine();
-                    Line(sb, indent + 2, $"// nano pass: skipped - {why}");
+                    Line(sb, indent + 2, $"// raw read pass: skipped - {why}");
                 }
             }
 
@@ -194,24 +187,39 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
-        /// The nano pass: a second, parallel emission against the experimental raw reader (see
-        /// docs/nano-core.md). Symbol-gated on ProtoBuf.Nano.ReaderState being visible - today
-        /// that is nobody outside this repo's own rigs - and dormant even then: nothing routes
-        /// here, invocation is manual. public static deliberately: static IS the direct-call
-        /// design. v1 eligibility is a strict subset (plain reference-type messages of varint
-        /// scalars and strings at default format); an ineligible contract simply gets no nano
-        /// method, which cascades nowhere because nothing depends on these yet.
+        /// The raw read pass: the optimized read emission against the raw reader surface (see
+        /// docs/nano-core.md), symbol-gated on ProtoReader.State exposing ReadRawTag. This is the
+        /// LIVE read path for an eligible contract - ISerializer&lt;T&gt;.Read proxies here - and
+        /// a sibling NATIVE message member calls the target's static directly, skipping the
+        /// interface dispatch. public static deliberately: static IS the direct-call design.
+        /// A member with no native form takes a LEGACY-MODE arm - StashTag hands the consumed tag
+        /// to the stateful surface and the classic member body runs verbatim - so one slow member
+        /// costs itself, not the contract; only contract-level shape falls back to the classic
+        /// body, with a comment in the output saying why.
         /// </summary>
-        private static void EmitNanoRead(StringBuilder sb, int indent, ProtoContractPlan contract)
+        private static void EmitRawRead(StringBuilder sb, int indent, ProtoContractPlan contract,
+            HashSet<string> rawSet)
         {
+            // classify once: null = native form; a reason string = legacy-mode arm, and the
+            // reason is emitted as a breadcrumb so the census can tally what is still stateful
+            var fallback = new Dictionary<string, string>();
+            foreach (var member in contract.Members)
+            {
+                if (RawMemberFallbackReason(member, rawSet) is { } why) fallback[member.Name] = why;
+            }
+            // the stateful repeated/map engines park run-terminating headers in the pending slot,
+            // so a loop that mixes stateful members must drain it at every dispatch read; a pure
+            // native loop never populates it and keeps the cheaper read
+            var readTag = fallback.Count != 0 ? "state.ReadRawTagOrPending()" : "state.ReadRawTag()";
+
             sb.AppendLine();
-            Line(sb, indent, $"public static {contract.TypeName} NanoRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.Nano.ReaderState state, {contract.TypeName} value)");
+            Line(sb, indent, $"public static {contract.TypeName} RawRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
             Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
             // the tag lives in a local and the loop reads at the BOTTOM, so a repeated-field run
             // can make the tag read its own do-while condition and hand a miss straight back to
             // dispatch via continue - the run-consumption shape, see docs/nano-core.md
-            Line(sb, indent + 1, "uint tag = state.ReadRawTag();");
+            Line(sb, indent + 1, $"uint tag = {readTag};");
             Line(sb, indent + 1, "while (tag != 0)");
             Line(sb, indent + 1, "{");
             Line(sb, indent + 2, "switch (tag)");
@@ -220,12 +228,52 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 var name = Escape(member.Name);
                 var n = member.FieldNumber;
+                if (fallback.TryGetValue(member.Name, out var reason))
+                {
+                    // legacy-mode: labels for every data wire type, generously - the classic body
+                    // validates the wire itself, so a wrong-wired arrival throws exactly as the
+                    // classic loop would rather than being skipped as unknown. StashTag is the
+                    // whole bridge: field number and wire type land where the stateful surface
+                    // expects them, and the body below is the classic emission, verbatim.
+                    Line(sb, indent + 3, $"// raw read pass: legacy-mode - member {member.Name}: {reason}");
+                    Line(sb, indent + 3, $"case ({n} << 3) | 0:");
+                    Line(sb, indent + 3, $"case ({n} << 3) | 1:");
+                    Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}");
+                    Line(sb, indent + 3, $"case ({n} << 3) | 3:");
+                    Line(sb, indent + 3, $"case ({n} << 3) | 5:");
+                    Line(sb, indent + 3, "{");
+                    Line(sb, indent + 4, "state.StashTag(tag);");
+                    EmitClassicMemberBody(sb, indent + 1, contract, member, "value", self: "s_default");
+                    Line(sb, indent + 4, "break;");
+                    Line(sb, indent + 3, "}");
+                    continue;
+                }
                 if (member.Repeated.Factory is not null)
                 {
+                    // construct-on-first-presence, matching the classic read (ReadRepeated creates
+                    // the collection and assigns it back): a null collection is created the moment
+                    // its field appears, and never when it does not. A getter-only or
+                    // non-public/init setter cannot take the ??= directly (CS0200), but its
+                    // [UnsafeAccessor] is emitted regardless of body shape, so the construction
+                    // routes through it - a nameable backing field hands back a ref, a setter
+                    // accessor takes a null test. The one shape left out is IsReadOnly (a
+                    // non-trivial getter with no nameable field): classic silently loses the data
+                    // when the collection is null, we NRE - neither restores it, and the getter
+                    // still serves the overwhelmingly common initialized-inline case.
+                    var ensure = member switch
+                    {
+                        { IsReadOnly: true } => null,
+                        { UsesAccessor: true, AccessorField: not null }
+                            => $"{AccessorName(contract, member)}(value) ??= new {member.DeclaredTypeName}();",
+                        { UsesAccessor: true }
+                            => $"if (value.{name} is null) {AccessorName(contract, member)}(value, new {member.DeclaredTypeName}());",
+                        _ => $"value.{name} ??= new {member.DeclaredTypeName}();",
+                    };
                     switch (member.Kind)
                     {
                         case ProtoMemberKind.String:
                             Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed run");
+                            if (ensure is not null) Line(sb, indent + 4, ensure);
                             Line(sb, indent + 4, $"do {{ value.{name}.Add(state.ReadRawString()); }}");
                             Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | 2));");
                             Line(sb, indent + 4, "continue;");
@@ -234,11 +282,12 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
                             Line(sb, indent + 3, $"case ({n} << 3) | 3:  // {member.Name}, field {n}, group");
                             Line(sb, indent + 3, "{");
+                            if (ensure is not null) Line(sb, indent + 4, ensure);
                             Line(sb, indent + 4, "var last = tag;");
                             Line(sb, indent + 4, "do");
                             Line(sb, indent + 4, "{");
                             Line(sb, indent + 5, "var scope = state.PushScope(last);");
-                            Line(sb, indent + 5, $"value.{name}.Add(NanoRead_{Sanitise(member.TypeName!)}(ref state, null));");
+                            Line(sb, indent + 5, $"value.{name}.Add(RawRead_{Sanitise(member.TypeName!)}(ref state, null));");
                             Line(sb, indent + 5, "state.PopScope(scope);");
                             Line(sb, indent + 4, "} while ((tag = state.ReadRawTag()) == last);");
                             Line(sb, indent + 4, "continue;");
@@ -246,22 +295,32 @@ namespace ProtoBuf.BuildTools.Generators
                             break;
                         default: // varint-kind scalar or enum element
                         {
-                            var forms = NanoScalarForms(member.Kind, member.EnumTypeName);
+                            var forms = RawScalarForms(member.Kind, member.EnumTypeName);
                             Line(sb, indent + 3, $"case ({n} << 3) | 0:  // {member.Name}, field {n}, unpacked run");
+                            if (ensure is not null) Line(sb, indent + 4, ensure);
                             Line(sb, indent + 4, $"do {{ value.{name}.Add({forms[0].Read}); }}");
                             Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | 0));");
                             Line(sb, indent + 4, "continue;");
                             Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, packed");
+                            // a nullable element (List<int?>) takes every OTHER form unchanged -
+                            // int converts to int? implicitly on Add, and the wire is identical -
+                            // but the library fast path is typed List<int>, so it falls to the
+                            // inline drain. AsRepeated erases element nullability from the plan
+                            // deliberately (it is an ordinary element on the wire), so the test
+                            // here is the element type's own spelling.
                             if (member.Kind == ProtoMemberKind.Int32 && member.EnumTypeName is null
-                                && !member.Repeated.TakesCollectionType)
+                                && !member.Repeated.TakesCollectionType
+                                && member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) != true)
                             {
                                 // plain List<int>: the library fast path (bulk arms, residency-switched)
+                                if (ensure is not null) Line(sb, indent + 4, ensure);
                                 Line(sb, indent + 4, $"state.ReadPackedVarint32(value.{name});");
                                 Line(sb, indent + 4, "break;");
                             }
                             else
                             {
                                 Line(sb, indent + 3, "{");
+                                if (ensure is not null) Line(sb, indent + 4, ensure);
                                 Line(sb, indent + 4, "var scope = state.PushLengthPrefix();");
                                 Line(sb, indent + 4, $"while (!state.AtScopeEnd) value.{name}.Add({forms[0].Read});");
                                 Line(sb, indent + 4, "state.PopScope(scope);");
@@ -271,6 +330,7 @@ namespace ProtoBuf.BuildTools.Generators
                             for (int i = 1; i < forms.Length; i++)
                             {
                                 Line(sb, indent + 3, $"case ({n} << 3) | {forms[i].Wire}:  // {member.Name}, field {n}, {WireName(forms[i].Wire)}");
+                                if (ensure is not null) Line(sb, indent + 4, ensure);
                                 Line(sb, indent + 4, $"value.{name}.Add({forms[i].Read});");
                                 Line(sb, indent + 4, "break;");
                             }
@@ -286,7 +346,7 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 3, $"case ({n} << 3) | 3:  // {member.Name}, field {n}, group");
                         Line(sb, indent + 3, "{");
                         Line(sb, indent + 4, "var scope = state.PushScope(tag);");
-                        Line(sb, indent + 4, $"value.{name} = NanoRead_{Sanitise(member.TypeName!)}(ref state, value.{name});");
+                        Line(sb, indent + 4, $"value.{name} = RawRead_{Sanitise(member.TypeName!)}(ref state, value.{name});");
                         Line(sb, indent + 4, "state.PopScope(scope);");
                         Line(sb, indent + 4, "break;");
                         Line(sb, indent + 3, "}");
@@ -300,6 +360,16 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 4, "break;");
                         Line(sb, indent + 3, "}");
                         break;
+                    case ProtoMemberKind.Bytes when !member.OverwriteList:
+                        // legacy merge semantics for a plain bytes member: repeated occurrences
+                        // CONCATENATE (AppendBytes), which ReadRawBytes' replace silently diverges
+                        // from - caught by RepeatedFieldOccurrencesMergeIdentically the moment the
+                        // interface read routed here. OverwriteList opts into replace, which the
+                        // raw form on the forms table already is, so that shape falls through.
+                        Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
+                        Line(sb, indent + 4, $"value.{name} = state.AppendRawBytes(value.{name});");
+                        Line(sb, indent + 4, "break;");
+                        break;
                     default:
                     {
                         // wire-type tolerance by case labels, not state: the legacy reader accepts
@@ -309,7 +379,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // Conversions mirror the legacy ReadInt32/ReadInt64 wire switch; an enum
                         // is its underlying scalar plus a cast the JIT erases; a nullable member
                         // takes the same assignment.
-                        foreach (var (wire, read) in NanoScalarForms(member.Kind, member.EnumTypeName))
+                        foreach (var (wire, read) in RawScalarForms(member.Kind, member.EnumTypeName))
                         {
                             Line(sb, indent + 3, $"case ({n} << 3) | {wire}:  // {member.Name}, field {n}, {WireName(wire)}");
                             Line(sb, indent + 4, $"value.{name} = {read};");
@@ -321,6 +391,13 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent + 3, "default:");
             Line(sb, indent + 4, "if (state.IsScopeEnd(tag)) return value;");
+            if (contract.Members.Count != 0)
+            {
+                // a KNOWN field arriving on a wire type no label matched is invalid data, and the
+                // classic loop THROWS for it (the member read rejects the wire type); skipping it
+                // as unknown would silently discard - a detection gap, not tolerance
+                Line(sb, indent + 4, "if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);");
+            }
             // an extensible contract CAPTURES the unknown field instead of skipping it - the tag
             // rides the parameter, per the raw convention
             Line(sb, indent + 4, contract.Extensible == ProtoExtensibleKind.None
@@ -328,9 +405,19 @@ namespace ProtoBuf.BuildTools.Generators
                 : $"state.AppendExtensionData(tag, value{ExtensionType(contract)});");
             Line(sb, indent + 4, "break;");
             Line(sb, indent + 2, "}");
-            Line(sb, indent + 2, "tag = state.ReadRawTag();");
+            Line(sb, indent + 2, $"tag = {readTag};");
             Line(sb, indent + 1, "}");
             Line(sb, indent + 1, "return value;");
+            if (contract.Members.Count != 0)
+            {
+                sb.AppendLine();
+                Line(sb, indent + 1, "static bool IsKnownField(uint tag) => (tag >> 3) switch");
+                Line(sb, indent + 1, "{");
+                Line(sb, indent + 2, string.Join(" or ",
+                    contract.Members.Select(static m => m.FieldNumber.ToString(CultureInfo.InvariantCulture))) + " => true,");
+                Line(sb, indent + 2, "_ => false,");
+                Line(sb, indent + 1, "};");
+            }
             Line(sb, indent, "}");
         }
 
@@ -344,7 +431,7 @@ namespace ProtoBuf.BuildTools.Generators
             _ => "?",
         };
 
-        private static (int Wire, string Read)[] NanoScalarForms(ProtoMemberKind kind, string? enumTypeName)
+        private static (int Wire, string Read)[] RawScalarForms(ProtoMemberKind kind, string? enumTypeName)
         {
             (int Wire, string Read)[] forms = kind switch
             {
@@ -381,10 +468,12 @@ namespace ProtoBuf.BuildTools.Generators
                 // double is fixed64-only: the fixed32 float promotion needs Int32BitsToSingle,
                 // which netfx lacks - the one deliberate tolerance exception
                 ProtoMemberKind.Double => [(1, "state.ReadRawDouble()")],
-                // bytes: REPLACE semantics, the decided default (LegacyAppendBytes is the opt-in
-                // for the historical append, not yet emitted)
+                // bytes: replace. Only reached for OverwriteList members - a PLAIN bytes member
+                // is special-cased at the emit site to state.AppendBytes (legacy concatenation),
+                // because the generated model must merge identically to RuntimeTypeModel. The
+                // raw surface itself keeps replace as its native default (docs/nano-core.md).
                 ProtoMemberKind.Bytes => [(2, "state.ReadRawBytes()")],
-                _ => [], // unreachable: NanoEligible already filtered
+                _ => [], // unreachable: RawReadEligible already filtered
             };
             if (enumTypeName is not null)
             {
@@ -396,7 +485,12 @@ namespace ProtoBuf.BuildTools.Generators
             return forms;
         }
 
-        private static bool NanoEligible(ProtoContractPlan contract, out string? reason)
+        /// <summary>
+        /// CONTRACT-level raw-read eligibility: shape and callbacks only. Member-level
+        /// difficulty never disqualifies a contract - <see cref="RawMemberFallbackReason"/>
+        /// routes such a member to a legacy-mode arm inside the raw body instead.
+        /// </summary>
+        private static bool RawReadEligible(ProtoContractPlan contract, out string? reason)
         {
             if (contract.IsValueType || contract.IsTuple || contract.IsAbstract || contract.IsGroup
                 || contract.SkipConstructor || contract.UsesConstructorAccessor
@@ -416,70 +510,74 @@ namespace ProtoBuf.BuildTools.Generators
                     return false;
                 }
             }
-            foreach (var member in contract.Members)
-            {
-                reason = $"member {member.Name}";
-                if (member.Map.Factory is not null) { reason += ": map"; return false; }
-                if (member.WrappedValue || member.WrappedCollection) { reason += ": null-wrapped"; return false; }
-                if (member.DataFormat != ProtoDataFormat.Default) { reason += ": non-default DataFormat"; return false; }
-                if (member.IsRequired) { reason += ": IsRequired"; return false; }
-                // UsesAccessor is a SETTER-side fact (legacy assigns getter-only collections
-                // through their backing field); nano never assigns a collection - Add through the
-                // public getter is the whole mechanism - so for repeated members only an
-                // unreadable getter disqualifies. Known divergence, accepted: a getter-only
-                // collection left null NREs here where legacy constructs via the accessor;
-                // protogen-style DTOs always initialize.
-                if (member.AccessorReads) { reason += ": accessor-reached"; return false; }
-                if (member.UsesAccessor && member.Repeated.Factory is null) { reason += ": accessor-reached setter"; return false; }
-                if (member.WriteCondition is not null || member.SpecifiedMember is not null) { reason += ": conditional serialization"; return false; }
-                if (member.DefaultLiteral is not null) { reason += ": [DefaultValue]"; return false; }
-                // "this" is just the normal message-member plumbing (the nano pass replaces it
-                // with a direct static call); anything ELSE is a hand-written serializer whose
-                // framing the nano pass has not derived
-                if (member.SubSerializer is not (null or "this")) { reason += ": hand-written serializer"; return false; }
-                if (member.Repeated.Factory is not null)
-                {
-                    // List<T>-shaped only: Add is the read mechanism, which is also why a
-                    // getter-only list property is fine here where a getter-only scalar is not
-                    if (member.Repeated.Factory != "CreateList") { reason += $": collection shape {member.Repeated.Factory}"; return false; }
-                    if (member.OverwriteList) { reason += ": OverwriteList"; return false; }
-                    if (member.IsNullable) { reason += ": nullable collection element"; return false; }
-                    // Double/Bytes are single-member kinds only for now (no packed-double or
-                    // repeated-bytes emission yet)
-                    if (member.Kind is ProtoMemberKind.Double or ProtoMemberKind.Bytes) { reason += $": repeated {member.Kind}"; return false; }
-                }
-                else if (member.IsReadOnly)
-                {
-                    reason += ": getter-only (a scalar/message needs assignment)";
-                    return false;
-                }
-                if (member.Kind == ProtoMemberKind.Message)
-                {
-                    // the TARGET's eligibility is the fixpoint's job, not this predicate's
-                    if (member.TypeName is null || member.IsNullable) { reason += ": unusable message shape"; return false; }
-                    continue;
-                }
-                switch (member.Kind)
-                {
-                    case ProtoMemberKind.Bool:
-                    case ProtoMemberKind.Int32:
-                    case ProtoMemberKind.UInt32:
-                    case ProtoMemberKind.Int64:
-                    case ProtoMemberKind.UInt64:
-                    case ProtoMemberKind.String:
-                    case ProtoMemberKind.Double:
-                    case ProtoMemberKind.Bytes:
-                        break;
-                    default:
-                        reason += $": kind {member.Kind}";
-                        return false;
-                }
-            }
             reason = null;
             return true;
         }
 
-        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract)
+        /// <summary>
+        /// Why a member takes the LEGACY-MODE arm (StashTag + the classic member body, verbatim)
+        /// instead of a native raw form; null means native. This is the gap-tracking surface: the
+        /// reason lands as a comment in the emitted output and is tallied by the coverage census,
+        /// so "what member shapes are still on the stateful path" stays a measured list rather
+        /// than a guess. Note what is NOT here: IsRequired, [DefaultValue] and ShouldSerialize
+        /// conditions are write-side facts that never change the read.
+        /// </summary>
+        private static string? RawMemberFallbackReason(ProtoMemberPlan member, HashSet<string> rawSet)
+        {
+            if (member.Map.Factory is not null) return "map";
+            if (member.WrappedValue || member.WrappedCollection) return "null-wrapped";
+            if (member.DataFormat != ProtoDataFormat.Default) return "non-default DataFormat";
+            if (member.AccessorReads) return "accessor-reached member";
+            // UsesAccessor is a SETTER-side fact; a repeated member reads through Add on the
+            // public getter, so only a scalar/message member needs the stateful path for it
+            if (member.UsesAccessor && member.Repeated.Factory is null) return "accessor-reached setter";
+            // {Name}Specified is assigned ON READ, so it is a read-shape fact (unlike
+            // ShouldSerialize, which is write-only and native)
+            if (member.SpecifiedMember is not null) return "Specified presence member";
+            // "this" is just the normal message-member plumbing; anything ELSE is a hand-written
+            // serializer whose framing the raw pass has not derived
+            if (member.SubSerializer is not (null or "this")) return "hand-written serializer";
+            if (member.Repeated.Factory is not null)
+            {
+                // native repeated is List<T>-shaped only: Add is the read mechanism
+                if (member.Repeated.Factory != "CreateList") return $"collection shape {member.Repeated.Factory}";
+                if (member.OverwriteList) return "OverwriteList collection";
+                // note: no nullable-element gate. AsRepeated erases element nullability from
+                // the plan (IsNullable is always false here), and none is needed: a nullable
+                // element takes the same emitted forms - the packed fast path alone is typed
+                // to the non-nullable list and dodges via the element spelling at the emit site.
+                // Double/Bytes are single-member kinds only for now (no packed-double or
+                // repeated-bytes emission yet)
+                if (member.Kind is ProtoMemberKind.Double or ProtoMemberKind.Bytes) return $"repeated {member.Kind}";
+                if (member.Kind == ProtoMemberKind.Message)
+                {
+                    return member.TypeName is not null && rawSet.Contains(member.TypeName)
+                        ? null : "element type not raw-eligible";
+                }
+                return NativeScalarKind(member.Kind) ? null : $"element kind {member.Kind}";
+            }
+            if (member.Kind == ProtoMemberKind.Message)
+            {
+                // nullable/struct messages have their own classic shapes (GetValueOrDefault
+                // seeding, no null test); the native form is the plain reference sub-message
+                if (member.IsNullable || member.MemberIsValueType) return "message shape (nullable or struct)";
+                if (member.IsReadOnly) return "getter-only message";
+                // only a NATIVE message member emits the direct RawRead_ call, so the target must
+                // be raw-eligible; a fallen target is read via state.ReadMessage instead - this
+                // replaces the old whole-contract cascade
+                return member.TypeName is not null && rawSet.Contains(member.TypeName)
+                    ? null : "target type not raw-eligible";
+            }
+            if (member.IsReadOnly) return "getter-only scalar";
+            return NativeScalarKind(member.Kind) ? null : $"kind {member.Kind}";
+        }
+
+        private static bool NativeScalarKind(ProtoMemberKind kind) => kind is
+            ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+            or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.String
+            or ProtoMemberKind.Double or ProtoMemberKind.Bytes;
+
+        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
 
@@ -537,6 +635,19 @@ namespace ProtoBuf.BuildTools.Generators
             var instance = surrogate is null ? "value" : "surrogate";
             var bodyType = surrogate ?? contract.TypeName;
 
+            // a raw-read-eligible contract's interface read proxies to the RawRead_ static: one body,
+            // reachable both through the model (ReadMessage, the conformance suite, real consumers)
+            // and by direct static call (generated siblings, benchmarks). Eligibility already
+            // excludes every shape the classic body below exists to handle - surrogates, tuples,
+            // abstract roots, callbacks - so the proxy is exact, not a shortcut.
+            if (raw)
+            {
+                Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
+                Line(sb, indent + 1, $"=> RawRead_{Sanitise(contract.TypeName)}(ref state, value);");
+                sb.AppendLine();
+            }
+            else
+            {
             Line(sb, indent, $"{contract.TypeName} {self}.Read(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
             if (surrogate is not null)
@@ -596,6 +707,7 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, "return value;");
             Line(sb, indent, "}");
             sb.AppendLine();
+            }
 
             Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
@@ -672,19 +784,59 @@ namespace ProtoBuf.BuildTools.Generators
             foreach (var member in contract.Members)
             {
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
-                // a tuple reads into the locals it will pass to the constructor, not into the member
-                var target = contract.IsTuple ? $"arg{number}" : MemberAccess(contract, member, instance);
                 Line(sb, indent + 2, $"case {number}:");
                 Line(sb, indent + 2, "{");
                 // a sub-type read holds the instance inside SubTypeState, and reading it is what
                 // constructs it - so it is hoisted per case, exactly as ref-emit does
                 if (fromSubTypeState) Line(sb, indent + 3, $"var {instance} = value.Value;");
-                if (member.Map.Factory is not null)
-                {
+                EmitClassicMemberBody(sb, indent, contract, member, instance);
+                Line(sb, indent + 3, "break;");
+                Line(sb, indent + 2, "}");
+            }
+            // a derived layer arrives as a nested sub-item at its own field number; reading it hands
+            // the whole SubTypeState down, so the instance is constructed at the deepest layer
+            foreach (var subType in subTypes)
+            {
+                var number = subType.FieldNumber.ToString(CultureInfo.InvariantCulture);
+                Line(sb, indent + 2, $"case {number}:");
+                Line(sb, indent + 3, $"value.ReadSubType<{subType.TypeName}>(ref state, this);");
+                Line(sb, indent + 3, "break;");
+            }
+            // an extensible contract keeps what it does not recognise rather than discarding it; the
+            // instance has to be materialised for that, which is why the sub-type form reads
+            // value.Value here rather than using the per-case local
+            Line(sb, indent + 2, "default:");
+            Line(sb, indent + 3, unknown);
+            Line(sb, indent + 3, "break;");
+            Line(sb, indent + 1, "}");
+            Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// The statements that read ONE member through the stateful surface - everything between
+        /// the case label and its <c>break</c>. Shared verbatim by the classic field loop and the
+        /// raw pass's legacy-mode arms (which enter via <c>state.StashTag(tag)</c>), so the two
+        /// paths cannot drift: a member is either native raw or exactly its classic self.
+        /// Statements land at <paramref name="indent"/> + 3, matching the classic loop's layout;
+        /// the raw arm passes its own base + 1 to line up.
+        /// </summary>
+        /// <param name="self">
+        /// The expression for "ourselves as the sub-serializer" - <c>this</c> in the classic
+        /// instance body, the <c>s_default</c> shared instance inside a static RawRead_ body
+        /// (CS0026 otherwise).
+        /// </param>
+        private static void EmitClassicMemberBody(StringBuilder sb, int indent,
+            ProtoContractPlan contract, ProtoMemberPlan member, string instance, string self = "this")
+        {
+            var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
+            // a tuple reads into the locals it will pass to the constructor, not into the member
+            var target = contract.IsTuple ? $"arg{number}" : MemberAccess(contract, member, instance);
+            if (member.Map.Factory is not null)
+            {
                     // same merge shape as a collection, but the key and value features - and any
                     // sub-serializers they need - ride alongside
                     Line(sb, indent + 3, $"var tmp{number} = {target};");
-                    var readMap = $"{Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)})";
+                    var readMap = $"{Map(member)}.ReadMap(ref state, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member, self)})";
                     if (member.IsReadOnly)
                     {
                         Line(sb, indent + 3, $"{readMap};");
@@ -694,16 +846,14 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 3, $"tmp{number} = {readMap};");
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
                     }
-                    Line(sb, indent + 3, "break;");
-                    Line(sb, indent + 2, "}");
-                    continue;
+                    return;
                 }
                 if (member.Repeated.Factory is not null)
                 {
                     // same merge shape as a sub-message: the existing collection is passed in, and
                     // the result assigned back only if non-null
                     Line(sb, indent + 3, $"var tmp{number} = {target};");
-                    var readRepeated = $"{Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)})";
+                    var readRepeated = $"{Repeated(member)}.ReadRepeated(ref state, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member, self)})";
                     if (member.IsReadOnly)
                     {
                         Line(sb, indent + 3, $"{readRepeated};");
@@ -716,9 +866,7 @@ namespace ProtoBuf.BuildTools.Generators
                             ? Assign(contract, member, instance, target, $"tmp{number}")
                             : $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
                     }
-                    Line(sb, indent + 3, "break;");
-                    Line(sb, indent + 2, "}");
-                    continue;
+                    return;
                 }
                 // a lone wrapped value has its own API: the extra message layer is not expressible
                 // as features on an ordinary read, so ReadAny/WriteAny handle it
@@ -729,9 +877,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 3, NullableTarget(member)
                         ? $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}"
                         : Assign(contract, member, instance, target, $"tmp{number}"));
-                    Line(sb, indent + 3, "break;");
-                    Line(sb, indent + 2, "}");
-                    continue;
+                    return;
                 }
                 switch (member.Kind)
                 {
@@ -821,12 +967,12 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Message when member.SubSerializerDynamic:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
                         Line(sb, indent + 3, $"tmp{number} = state.ReadAny<{member.TypeName}>(default, tmp{number}, "
-                            + $"{SubSerializer(member)});");
+                            + $"{SubSerializer(member, self)});");
                         Line(sb, indent + 3, Assign(contract, member, instance, target, $"tmp{number}"));
                         break;
                     case ProtoMemberKind.Message when member.SubSerializerIsScalar:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
-                        Line(sb, indent + 3, $"tmp{number} = {SubSerializer(member)}.Read(ref state, tmp{number});");
+                        Line(sb, indent + 3, $"tmp{number} = {SubSerializer(member, self)}.Read(ref state, tmp{number});");
                         Line(sb, indent + 3, Assign(contract, member, instance, target, $"tmp{number}"));
                         break;
                     // in all three cases the *existing* value is passed in, so repeated occurrences
@@ -835,21 +981,21 @@ namespace ProtoBuf.BuildTools.Generators
                         // a nullable struct message: seed from the current value, assign the result
                         // straight back - the read cannot produce a null
                         Line(sb, indent + 3, $"var tmp{number} = {target}.GetValueOrDefault();");
-                        Line(sb, indent + 3, Assign(contract, member, instance, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)})"));
+                        Line(sb, indent + 3, Assign(contract, member, instance, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member, self)})"));
                         break;
                     case ProtoMemberKind.Message when member.MemberIsValueType:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
-                        Line(sb, indent + 3, Assign(contract, member, instance, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)})"));
+                        Line(sb, indent + 3, Assign(contract, member, instance, target, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member, self)})"));
                         break;
                     case ProtoMemberKind.Message:
                         Line(sb, indent + 3, $"var tmp{number} = {target};");
                         if (member.IsReadOnly)
                         {
                             // the instance it already holds is what gets populated
-                            Line(sb, indent + 3, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
+                            Line(sb, indent + 3, $"state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member, self)});");
                             break;
                         }
-                        Line(sb, indent + 3, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
+                        Line(sb, indent + 3, $"tmp{number} = state.ReadMessage<{member.TypeName}>({Features}.CategoryRepeated, tmp{number}, {SubSerializer(member, self)});");
                         Line(sb, indent + 3, $"if (tmp{number} != null) {Assign(contract, member, instance, target, $"tmp{number}")}");
                         break;
                 }
@@ -859,26 +1005,6 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     Line(sb, indent + 3, $"{instance}.{specified} = true;");
                 }
-                Line(sb, indent + 3, "break;");
-                Line(sb, indent + 2, "}");
-            }
-            // a derived layer arrives as a nested sub-item at its own field number; reading it hands
-            // the whole SubTypeState down, so the instance is constructed at the deepest layer
-            foreach (var subType in subTypes)
-            {
-                var number = subType.FieldNumber.ToString(CultureInfo.InvariantCulture);
-                Line(sb, indent + 2, $"case {number}:");
-                Line(sb, indent + 3, $"value.ReadSubType<{subType.TypeName}>(ref state, this);");
-                Line(sb, indent + 3, "break;");
-            }
-            // an extensible contract keeps what it does not recognise rather than discarding it; the
-            // instance has to be materialised for that, which is why the sub-type form reads
-            // value.Value here rather than using the per-case local
-            Line(sb, indent + 2, "default:");
-            Line(sb, indent + 3, unknown);
-            Line(sb, indent + 3, "break;");
-            Line(sb, indent + 1, "}");
-            Line(sb, indent, "}");
         }
 
         /// <summary>
@@ -1461,12 +1587,12 @@ namespace ProtoBuf.BuildTools.Generators
             sb.AppendLine();
         }
 
-        private static string SubSerializer(ProtoMemberPlan member) => member.SubSerializer ?? "this";
+        private static string SubSerializer(ProtoMemberPlan member, string self = "this") => member.SubSerializer ?? self;
 
         /// <summary>A message element needs a serializer passed along; a scalar does not.</summary>
-        private static string RepeatedSubSerializer(ProtoMemberPlan member)
+        private static string RepeatedSubSerializer(ProtoMemberPlan member, string self = "this")
         {
-            if (member.Kind == ProtoMemberKind.Message) return $", {SubSerializer(member)}";
+            if (member.Kind == ProtoMemberKind.Message) return $", {SubSerializer(member, self)}";
             // a compatibility-level BCL element does not use the inbuilt default once the level or
             // format selects another form, so ref-emit hands the collection an explicit serializer.
             // CompatibilityLevel is already the *effective* one for the element
@@ -1733,17 +1859,17 @@ namespace ProtoBuf.BuildTools.Generators
         /// A message key or value needs us passed along as its serializer. The two are positional, so
         /// a message value alone still has to pass a null for the key.
         /// </summary>
-        private static string MapSubSerializers(ProtoMemberPlan member)
+        private static string MapSubSerializers(ProtoMemberPlan member, string self = "this")
         {
             // the two sides are positional, so a value serializer needs the key slot filled with
             // null. Either side may want `this` (a message) or an inbuilt (a levelled BCL type);
             // note the *declared* level is combined with that side's own [ProtoMap] format, since
             // the member's own DataFormat selects the map's root wire type and nothing else
-            var key = member.Map.KeyKind == ProtoMemberKind.Message ? "this"
+            var key = member.Map.KeyKind == ProtoMemberKind.Message ? self
                 : InbuiltSerializer(member.Map.KeyKind, member.Map.KeyTypeName,
                     EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapKeyFormat),
                     member.MapKeyFormat);
-            var value = member.Map.ValueKind == ProtoMemberKind.Message ? "this"
+            var value = member.Map.ValueKind == ProtoMemberKind.Message ? self
                 : InbuiltSerializer(member.Map.ValueKind, member.Map.ValueTypeName,
                     EffectiveCompatibilityLevel(member.DeclaredCompatibilityLevel, member.MapValueFormat),
                     member.MapValueFormat);

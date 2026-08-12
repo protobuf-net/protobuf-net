@@ -30,30 +30,7 @@ partial class ContractOptionsModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ContractOptions.BothFamilies global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
-        {
-            value ??= new global::AotFixtures.ContractOptions.BothFamilies();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Ordered = state.ReadInt32();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Tagged = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ContractOptions_BothFamilies(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.BothFamilies value)
         {
@@ -62,6 +39,49 @@ partial class ContractOptionsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp3 = value.Tagged;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static global::AotFixtures.ContractOptions.BothFamilies RawRead_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
+        {
+            value ??= new global::AotFixtures.ContractOptions.BothFamilies();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Ordered, field 1, varint
+                        value.Ordered = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Ordered, field 1, fixed32
+                        value.Ordered = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Ordered, field 1, fixed64
+                        value.Ordered = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 0:  // Tagged, field 3, varint
+                        value.Tagged = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 5:  // Tagged, field 3, fixed32
+                        value.Tagged = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 1:  // Tagged, field 3, fixed64
+                        value.Tagged = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 3 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Grouped>.Features
@@ -103,34 +123,52 @@ partial class ContractOptionsModel
             state.WriteString(2, tmp2);
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ContractOptions.Lenient global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
-        {
-            value ??= new global::AotFixtures.ContractOptions.Lenient();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ContractOptions_Lenient(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value)
         {
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.ContractOptions.Lenient RawRead_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
+        {
+            value ??= new global::AotFixtures.ContractOptions.Lenient();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.LenientBase>.Features
@@ -179,6 +217,8 @@ partial class ContractOptionsModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.LenientDerived>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -217,35 +257,53 @@ partial class ContractOptionsModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ContractOptions.ProtoOnly global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
-        {
-            value ??= new global::AotFixtures.ContractOptions.ProtoOnly();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 3:
-                    {
-                        value.Tagged = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ContractOptions_ProtoOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.Tagged;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static global::AotFixtures.ContractOptions.ProtoOnly RawRead_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
+        {
+            value ??= new global::AotFixtures.ContractOptions.ProtoOnly();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (3 << 3) | 0:  // Tagged, field 3, varint
+                        value.Tagged = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 5:  // Tagged, field 3, fixed32
+                        value.Tagged = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 1:  // Tagged, field 3, fixed64
+                        value.Tagged = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                3 => true,
+                _ => false,
+            };
         }
     }
 }

@@ -20,41 +20,13 @@ partial class StructsModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Structs.HasStructs global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)
-        {
-            value ??= new global::AotFixtures.Structs.HasStructs();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Location;
-                        value.Location = state.ReadMessage<global::AotFixtures.Structs.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.MaybeLocation.GetValueOrDefault();
-                        value.MaybeLocation = state.ReadMessage<global::AotFixtures.Structs.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Other = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Structs_HasStructs(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.HasStructs value)
         {
@@ -68,6 +40,64 @@ partial class StructsModel
             }
             var tmp3 = value.Other;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static global::AotFixtures.Structs.HasStructs RawRead_AotFixtures_Structs_HasStructs(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)
+        {
+            value ??= new global::AotFixtures.Structs.HasStructs();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Location: message shape (nullable or struct)
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Location, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Location;
+                        value.Location = state.ReadMessage<global::AotFixtures.Structs.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member MaybeLocation: message shape (nullable or struct)
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // MaybeLocation, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.MaybeLocation.GetValueOrDefault();
+                        value.MaybeLocation = state.ReadMessage<global::AotFixtures.Structs.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, s_default);
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Other, field 3, varint
+                        value.Other = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 5:  // Other, field 3, fixed32
+                        value.Other = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 1:  // Other, field 3, fixed64
+                        value.Other = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Features
@@ -106,5 +136,7 @@ partial class StructsModel
             var tmp2 = value.Label;
             state.WriteString(2, tmp2);
         }
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

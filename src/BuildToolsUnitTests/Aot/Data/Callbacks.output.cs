@@ -53,6 +53,8 @@ partial class CallbacksModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        // raw read pass: skipped - serialization callbacks
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Hooked>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -88,6 +90,8 @@ partial class CallbacksModel
             value.AfterSer();
         }
 
+        // raw read pass: skipped - serialization callbacks
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Standard>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -122,5 +126,7 @@ partial class CallbacksModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             value.OnSerd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
         }
+
+        // raw read pass: skipped - serialization callbacks
     }
 }

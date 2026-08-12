@@ -21,31 +21,13 @@ partial class AssemblySurrogateModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.AssemblySurrogate.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.Holder value)
-        {
-            value ??= new global::AotFixtures.AssemblySurrogate.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Version;
-                        tmp1 = state.ReadMessage<global::System.Version>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Version = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_AssemblySurrogate_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.Holder value)
         {
@@ -54,36 +36,86 @@ partial class AssemblySurrogateModel
             state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
+        public static global::AotFixtures.AssemblySurrogate.Holder RawRead_AotFixtures_AssemblySurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.Holder value)
+        {
+            value ??= new global::AotFixtures.AssemblySurrogate.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Version: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Version, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Version;
+                        tmp1 = state.ReadMessage<global::System.Version>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Version = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.AssemblySurrogate.VersionSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
-        {
-            value ??= new global::AotFixtures.AssemblySurrogate.VersionSurrogate();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             state.WriteString(1, tmp1);
+        }
+
+        public static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+        {
+            value ??= new global::AotFixtures.AssemblySurrogate.VersionSurrogate();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Value, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Value = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Features
@@ -120,5 +152,7 @@ partial class AssemblySurrogateModel
             var tmp1 = surrogate.Value;
             state.WriteString(1, tmp1);
         }
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

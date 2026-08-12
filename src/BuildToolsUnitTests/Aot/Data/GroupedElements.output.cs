@@ -21,52 +21,13 @@ partial class GroupedElementsModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Grouped>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.GroupedElements.Grouped global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Grouped>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Grouped value)
-        {
-            value ??= new global::AotFixtures.GroupedElements.Grouped();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Items;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.GroupedElements.Item>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, this);
-                        if (tmp1 != null) value.Items = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Array;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.GroupedElements.Item>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
-                        if (tmp2 != null) value.Array = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Plain;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.GroupedElements.Item>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, this);
-                        if (tmp3 != null) value.Plain = tmp3;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Single;
-                        tmp5 = state.ReadMessage<global::AotFixtures.GroupedElements.Item>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
-                        if (tmp5 != null) value.Single = tmp5;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_GroupedElements_Grouped(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Grouped>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Grouped value)
         {
@@ -90,52 +51,88 @@ partial class GroupedElementsModel
             state.WriteGroup<global::AotFixtures.GroupedElements.Item>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
         }
 
+        public static global::AotFixtures.GroupedElements.Grouped RawRead_AotFixtures_GroupedElements_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Grouped value)
+        {
+            value ??= new global::AotFixtures.GroupedElements.Grouped();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Items: non-default DataFormat
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Items, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Items;
+                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.GroupedElements.Item>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, s_default);
+                        if (tmp1 != null) value.Items = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Array: non-default DataFormat
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Array, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Array;
+                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.GroupedElements.Item>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, s_default);
+                        if (tmp2 != null) value.Array = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 2:  // Plain, field 3, length-prefixed
+                    case (3 << 3) | 3:  // Plain, field 3, group
+                    {
+                        value.Plain ??= new global::System.Collections.Generic.List<global::AotFixtures.GroupedElements.Item>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            value.Plain.Add(RawRead_AotFixtures_GroupedElements_Item(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    // raw read pass: legacy-mode - member Single: non-default DataFormat
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Single, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Single;
+                        tmp5 = state.ReadMessage<global::AotFixtures.GroupedElements.Item>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, s_default);
+                        if (tmp5 != null) value.Single = tmp5;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 5 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.GroupedElements.GroupedMaps global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.GroupedMaps value)
-        {
-            value ??= new global::AotFixtures.GroupedElements.GroupedMaps();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.ByIndex;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, this);
-                        if (tmp1 != null) value.ByIndex = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Scalars;
-                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
-                        if (tmp2 != null) value.Scalars = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.ViaMap;
-                        tmp3 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup, null, this);
-                        if (tmp3 != null) value.ViaMap = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Plain;
-                        tmp4 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, this);
-                        if (tmp4 != null) value.Plain = tmp4;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_GroupedElements_GroupedMaps(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.GroupedMaps value)
         {
@@ -162,35 +159,88 @@ partial class GroupedElementsModel
             }
         }
 
+        public static global::AotFixtures.GroupedElements.GroupedMaps RawRead_AotFixtures_GroupedElements_GroupedMaps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.GroupedMaps value)
+        {
+            value ??= new global::AotFixtures.GroupedElements.GroupedMaps();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member ByIndex: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // ByIndex, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.ByIndex;
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, s_default);
+                        if (tmp1 != null) value.ByIndex = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Scalars: map
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Scalars, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Scalars;
+                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp2 != null) value.Scalars = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ViaMap: map
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // ViaMap, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.ViaMap;
+                        tmp3 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeStartGroup, null, s_default);
+                        if (tmp3 != null) value.ViaMap = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Plain: map
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Plain, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.Plain;
+                        tmp4 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, s_default);
+                        if (tmp4 != null) value.Plain = tmp4;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.GroupedElements.Item global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
-        {
-            value ??= new global::AotFixtures.GroupedElements.Item();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Name = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Count = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_GroupedElements_Item(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Item value)
         {
@@ -199,6 +249,46 @@ partial class GroupedElementsModel
             state.WriteString(1, tmp1);
             var tmp2 = value.Count;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
+        {
+            value ??= new global::AotFixtures.GroupedElements.Item();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Name, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Name = tmp1;
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Count, field 2, varint
+                        value.Count = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Count, field 2, fixed32
+                        value.Count = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Count, field 2, fixed64
+                        value.Count = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
     }
 }

@@ -23,55 +23,7 @@ partial class NullablesModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Nullables.Optional global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nullables.Optional>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)
-        {
-            value ??= new global::AotFixtures.Nullables.Optional();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.MaybeInt = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.MaybeBool = state.ReadBoolean();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.MaybeDouble = state.ReadDouble();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.MaybeLong = state.ReadInt64();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.IntWithDefault = state.ReadInt32();
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.IntWithNullDefault = state.ReadInt32();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.Plain = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Nullables_Optional(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nullables.Optional>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nullables.Optional value)
         {
@@ -120,6 +72,88 @@ partial class NullablesModel
             }
             var tmp7 = value.Plain;
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+        }
+
+        public static global::AotFixtures.Nullables.Optional RawRead_AotFixtures_Nullables_Optional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)
+        {
+            value ??= new global::AotFixtures.Nullables.Optional();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // MaybeInt, field 1, varint
+                        value.MaybeInt = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // MaybeInt, field 1, fixed32
+                        value.MaybeInt = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // MaybeInt, field 1, fixed64
+                        value.MaybeInt = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 0:  // MaybeBool, field 2, varint
+                        value.MaybeBool = state.ReadRawVarint32() != 0;
+                        break;
+                    case (2 << 3) | 5:  // MaybeBool, field 2, fixed32
+                        value.MaybeBool = state.ReadRawFixed32() != 0;
+                        break;
+                    case (2 << 3) | 1:  // MaybeBool, field 2, fixed64
+                        value.MaybeBool = state.ReadRawFixed64() != 0;
+                        break;
+                    case (3 << 3) | 1:  // MaybeDouble, field 3, fixed64
+                        value.MaybeDouble = state.ReadRawDouble();
+                        break;
+                    case (4 << 3) | 0:  // MaybeLong, field 4, varint
+                        value.MaybeLong = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (4 << 3) | 1:  // MaybeLong, field 4, fixed64
+                        value.MaybeLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (4 << 3) | 5:  // MaybeLong, field 4, fixed32
+                        value.MaybeLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (5 << 3) | 0:  // IntWithDefault, field 5, varint
+                        value.IntWithDefault = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (5 << 3) | 5:  // IntWithDefault, field 5, fixed32
+                        value.IntWithDefault = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (5 << 3) | 1:  // IntWithDefault, field 5, fixed64
+                        value.IntWithDefault = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (6 << 3) | 0:  // IntWithNullDefault, field 6, varint
+                        value.IntWithNullDefault = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // IntWithNullDefault, field 6, fixed32
+                        value.IntWithNullDefault = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // IntWithNullDefault, field 6, fixed64
+                        value.IntWithNullDefault = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // Plain, field 7, varint
+                        value.Plain = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (7 << 3) | 5:  // Plain, field 7, fixed32
+                        value.Plain = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 1:  // Plain, field 7, fixed64
+                        value.Plain = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
+                _ => false,
+            };
         }
     }
 }

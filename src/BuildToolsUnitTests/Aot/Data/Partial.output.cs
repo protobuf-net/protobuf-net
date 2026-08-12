@@ -22,34 +22,13 @@ partial class PartialModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Contested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
-        {
-            value ??= new global::AotFixtures.Partial.Contested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Pinned = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.FromPartial = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Contested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value)
         {
@@ -60,59 +39,54 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
+        public static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
+        {
+            value ??= new global::AotFixtures.Partial.Contested();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Pinned, field 1, varint
+                        value.Pinned = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Pinned, field 1, fixed32
+                        value.Pinned = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Pinned, field 1, fixed64
+                        value.Pinned = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 0:  // FromPartial, field 2, varint
+                        value.FromPartial = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // FromPartial, field 2, fixed32
+                        value.FromPartial = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // FromPartial, field 2, fixed64
+                        value.FromPartial = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Described>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Described global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Described>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Described value)
-        {
-            value ??= new global::AotFixtures.Partial.Described();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Name = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Fixed = state.ReadInt32();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Always = state.ReadInt32();
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Values;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp5);
-                        if (tmp5 != null) value.Values = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.Replaced;
-                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp6);
-                        if (tmp6 != null) value.Replaced = tmp6;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Described(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Described>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Described value)
         {
@@ -141,29 +115,97 @@ partial class PartialModel
             }
         }
 
+        public static global::AotFixtures.Partial.Described RawRead_AotFixtures_Partial_Described(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Described value)
+        {
+            value ??= new global::AotFixtures.Partial.Described();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Name, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Name = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Fixed, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Fixed = state.ReadInt32();
+                        break;
+                    }
+                    case (4 << 3) | 0:  // Always, field 4, varint
+                        value.Always = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (4 << 3) | 5:  // Always, field 4, fixed32
+                        value.Always = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (4 << 3) | 1:  // Always, field 4, fixed64
+                        value.Always = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    // raw read pass: legacy-mode - member Values: collection shape CreateVector
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Values, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Values;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp5);
+                        if (tmp5 != null) value.Values = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Replaced: collection shape CreateVector
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // Replaced, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.Replaced;
+                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp6);
+                        if (tmp6 != null) value.Replaced = tmp6;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Excluded global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
-        {
-            value ??= new global::AotFixtures.Partial.Excluded();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Kept = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value)
         {
@@ -172,34 +214,45 @@ partial class PartialModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        public static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
+        {
+            value ??= new global::AotFixtures.Partial.Excluded();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Kept, field 1, varint
+                        value.Kept = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Kept, field 1, fixed32
+                        value.Kept = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Kept, field 1, fixed64
+                        value.Kept = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
-        {
-            value ??= new global::AotFixtures.Partial.Mixed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 2:
-                    {
-                        value.OrderOnly = state.ReadInt32();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.Both = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value)
         {
@@ -208,6 +261,49 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
             var tmp7 = value.Both;
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+        }
+
+        public static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
+        {
+            value ??= new global::AotFixtures.Partial.Mixed();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (2 << 3) | 0:  // OrderOnly, field 2, varint
+                        value.OrderOnly = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // OrderOnly, field 2, fixed32
+                        value.OrderOnly = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // OrderOnly, field 2, fixed64
+                        value.OrderOnly = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // Both, field 7, varint
+                        value.Both = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (7 << 3) | 5:  // Both, field 7, fixed32
+                        value.Both = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 1:  // Both, field 7, fixed64
+                        value.Both = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                2 or 7 => true,
+                _ => false,
+            };
         }
     }
 }

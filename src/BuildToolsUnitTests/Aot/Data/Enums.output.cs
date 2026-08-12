@@ -19,94 +19,13 @@ partial class EnumsModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Enums.WithEnums global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
-        {
-            value ??= new global::AotFixtures.Enums.WithEnums();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.SByteEnum = (global::AotFixtures.Enums.AsSByte)state.ReadSByte();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.ByteEnum = (global::AotFixtures.Enums.AsByte)state.ReadByte();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Int16Enum = (global::AotFixtures.Enums.AsInt16)state.ReadInt16();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.UInt16Enum = (global::AotFixtures.Enums.AsUInt16)state.ReadUInt16();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Int32Enum = (global::AotFixtures.Enums.AsInt32)state.ReadInt32();
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.UInt32Enum = (global::AotFixtures.Enums.AsUInt32)state.ReadUInt32();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.Int64Enum = (global::AotFixtures.Enums.AsInt64)state.ReadInt64();
-                        break;
-                    }
-                    case 8:
-                    {
-                        value.UInt64Enum = (global::AotFixtures.Enums.AsUInt64)state.ReadUInt64();
-                        break;
-                    }
-                    case 9:
-                    {
-                        value.Flags = (global::AotFixtures.Enums.Flagged)state.ReadInt32();
-                        break;
-                    }
-                    case 10:
-                    {
-                        value.MaybeEnum = (global::AotFixtures.Enums.AsInt32)state.ReadInt32();
-                        break;
-                    }
-                    case 11:
-                    {
-                        value.EnumWithDefault = (global::AotFixtures.Enums.AsInt32)state.ReadInt32();
-                        break;
-                    }
-                    case 12:
-                    {
-                        value.MaybeFlagsWithDefault = (global::AotFixtures.Enums.Flagged)state.ReadInt32();
-                        break;
-                    }
-                    case 13:
-                    {
-                        value.Character = (char)state.ReadUInt16();
-                        break;
-                    }
-                    case 14:
-                    {
-                        value.MaybeCharacter = (char)state.ReadUInt16();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Enums_WithEnums(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Enums.WithEnums value)
         {
@@ -187,6 +106,169 @@ partial class EnumsModel
                 state.WriteFieldHeader(14, global::ProtoBuf.WireType.Varint);
                 state.WriteUInt16(val14);
             }
+        }
+
+        public static global::AotFixtures.Enums.WithEnums RawRead_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
+        {
+            value ??= new global::AotFixtures.Enums.WithEnums();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member SByteEnum: kind SByte
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // SByteEnum, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.SByteEnum = (global::AotFixtures.Enums.AsSByte)state.ReadSByte();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ByteEnum: kind Byte
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // ByteEnum, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.ByteEnum = (global::AotFixtures.Enums.AsByte)state.ReadByte();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Int16Enum: kind Int16
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Int16Enum, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Int16Enum = (global::AotFixtures.Enums.AsInt16)state.ReadInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member UInt16Enum: kind UInt16
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // UInt16Enum, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.UInt16Enum = (global::AotFixtures.Enums.AsUInt16)state.ReadUInt16();
+                        break;
+                    }
+                    case (5 << 3) | 0:  // Int32Enum, field 5, varint
+                        value.Int32Enum = (global::AotFixtures.Enums.AsInt32)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (5 << 3) | 5:  // Int32Enum, field 5, fixed32
+                        value.Int32Enum = (global::AotFixtures.Enums.AsInt32)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (5 << 3) | 1:  // Int32Enum, field 5, fixed64
+                        value.Int32Enum = (global::AotFixtures.Enums.AsInt32)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (6 << 3) | 0:  // UInt32Enum, field 6, varint
+                        value.UInt32Enum = (global::AotFixtures.Enums.AsUInt32)(state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // UInt32Enum, field 6, fixed32
+                        value.UInt32Enum = (global::AotFixtures.Enums.AsUInt32)(state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // UInt32Enum, field 6, fixed64
+                        value.UInt32Enum = (global::AotFixtures.Enums.AsUInt32)(checked((uint)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // Int64Enum, field 7, varint
+                        value.Int64Enum = (global::AotFixtures.Enums.AsInt64)(unchecked((long)state.ReadRawVarint64()));
+                        break;
+                    case (7 << 3) | 1:  // Int64Enum, field 7, fixed64
+                        value.Int64Enum = (global::AotFixtures.Enums.AsInt64)(unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 5:  // Int64Enum, field 7, fixed32
+                        value.Int64Enum = (global::AotFixtures.Enums.AsInt64)((long)unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (8 << 3) | 0:  // UInt64Enum, field 8, varint
+                        value.UInt64Enum = (global::AotFixtures.Enums.AsUInt64)(state.ReadRawVarint64());
+                        break;
+                    case (8 << 3) | 1:  // UInt64Enum, field 8, fixed64
+                        value.UInt64Enum = (global::AotFixtures.Enums.AsUInt64)(state.ReadRawFixed64());
+                        break;
+                    case (8 << 3) | 5:  // UInt64Enum, field 8, fixed32
+                        value.UInt64Enum = (global::AotFixtures.Enums.AsUInt64)((ulong)state.ReadRawFixed32());
+                        break;
+                    case (9 << 3) | 0:  // Flags, field 9, varint
+                        value.Flags = (global::AotFixtures.Enums.Flagged)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (9 << 3) | 5:  // Flags, field 9, fixed32
+                        value.Flags = (global::AotFixtures.Enums.Flagged)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (9 << 3) | 1:  // Flags, field 9, fixed64
+                        value.Flags = (global::AotFixtures.Enums.Flagged)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (10 << 3) | 0:  // MaybeEnum, field 10, varint
+                        value.MaybeEnum = (global::AotFixtures.Enums.AsInt32)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (10 << 3) | 5:  // MaybeEnum, field 10, fixed32
+                        value.MaybeEnum = (global::AotFixtures.Enums.AsInt32)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (10 << 3) | 1:  // MaybeEnum, field 10, fixed64
+                        value.MaybeEnum = (global::AotFixtures.Enums.AsInt32)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (11 << 3) | 0:  // EnumWithDefault, field 11, varint
+                        value.EnumWithDefault = (global::AotFixtures.Enums.AsInt32)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (11 << 3) | 5:  // EnumWithDefault, field 11, fixed32
+                        value.EnumWithDefault = (global::AotFixtures.Enums.AsInt32)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (11 << 3) | 1:  // EnumWithDefault, field 11, fixed64
+                        value.EnumWithDefault = (global::AotFixtures.Enums.AsInt32)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (12 << 3) | 0:  // MaybeFlagsWithDefault, field 12, varint
+                        value.MaybeFlagsWithDefault = (global::AotFixtures.Enums.Flagged)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (12 << 3) | 5:  // MaybeFlagsWithDefault, field 12, fixed32
+                        value.MaybeFlagsWithDefault = (global::AotFixtures.Enums.Flagged)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (12 << 3) | 1:  // MaybeFlagsWithDefault, field 12, fixed64
+                        value.MaybeFlagsWithDefault = (global::AotFixtures.Enums.Flagged)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member Character: kind Char
+                    case (13 << 3) | 0:
+                    case (13 << 3) | 1:
+                    case (13 << 3) | 2:  // Character, field 13
+                    case (13 << 3) | 3:
+                    case (13 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Character = (char)state.ReadUInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member MaybeCharacter: kind Char
+                    case (14 << 3) | 0:
+                    case (14 << 3) | 1:
+                    case (14 << 3) | 2:  // MaybeCharacter, field 14
+                    case (14 << 3) | 3:
+                    case (14 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.MaybeCharacter = (char)state.ReadUInt16();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 => true,
+                _ => false,
+            };
         }
     }
 }

@@ -2,6 +2,7 @@ using ProtoBuf;
 using ProtoBuf.Nano;
 using System;
 using System.Collections.Generic;
+using ReaderState = ProtoBuf.ProtoReader.State;
 
 namespace ProtoBuf.Nano.Bench.DescriptorModel;
 
@@ -341,9 +342,9 @@ public partial class NanoDescriptorModel : ProtoBuf.Meta.TypeModel
 {
 }
 
-public static class DescriptorNanoReader
+internal static class DescriptorNanoReader
 {
-    public static FileDescriptorSet ReadFileDescriptorSet(ref ReaderState state, FileDescriptorSet value)
+    internal static FileDescriptorSet ReadFileDescriptorSet(ref ReaderState state, FileDescriptorSet value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -373,7 +374,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static FileDescriptorProto ReadFileDescriptorProto(ref ReaderState state, FileDescriptorProto value)
+    internal static FileDescriptorProto ReadFileDescriptorProto(ref ReaderState state, FileDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -494,7 +495,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static DescriptorProto ReadDescriptorProto(ref ReaderState state, DescriptorProto value)
+    internal static DescriptorProto ReadDescriptorProto(ref ReaderState state, DescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -611,7 +612,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static ExtensionRange ReadExtensionRange(ref ReaderState state, ExtensionRange value)
+    internal static ExtensionRange ReadExtensionRange(ref ReaderState state, ExtensionRange value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -655,7 +656,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static ReservedRange ReadReservedRange(ref ReaderState state, ReservedRange value)
+    internal static ReservedRange ReadReservedRange(ref ReaderState state, ReservedRange value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -691,7 +692,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static ExtensionRangeOptions ReadExtensionRangeOptions(ref ReaderState state, ExtensionRangeOptions value)
+    internal static ExtensionRangeOptions ReadExtensionRangeOptions(ref ReaderState state, ExtensionRangeOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -721,7 +722,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static FieldDescriptorProto ReadFieldDescriptorProto(ref ReaderState state, FieldDescriptorProto value)
+    internal static FieldDescriptorProto ReadFieldDescriptorProto(ref ReaderState state, FieldDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -807,7 +808,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static OneofDescriptorProto ReadOneofDescriptorProto(ref ReaderState state, OneofDescriptorProto value)
+    internal static OneofDescriptorProto ReadOneofDescriptorProto(ref ReaderState state, OneofDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -836,7 +837,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static EnumDescriptorProto ReadEnumDescriptorProto(ref ReaderState state, EnumDescriptorProto value)
+    internal static EnumDescriptorProto ReadEnumDescriptorProto(ref ReaderState state, EnumDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -893,7 +894,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static EnumReservedRange ReadEnumReservedRange(ref ReaderState state, EnumReservedRange value)
+    internal static EnumReservedRange ReadEnumReservedRange(ref ReaderState state, EnumReservedRange value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -929,7 +930,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static EnumValueDescriptorProto ReadEnumValueDescriptorProto(ref ReaderState state, EnumValueDescriptorProto value)
+    internal static EnumValueDescriptorProto ReadEnumValueDescriptorProto(ref ReaderState state, EnumValueDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -967,7 +968,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static ServiceDescriptorProto ReadServiceDescriptorProto(ref ReaderState state, ServiceDescriptorProto value)
+    internal static ServiceDescriptorProto ReadServiceDescriptorProto(ref ReaderState state, ServiceDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1008,7 +1009,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static MethodDescriptorProto ReadMethodDescriptorProto(ref ReaderState state, MethodDescriptorProto value)
+    internal static MethodDescriptorProto ReadMethodDescriptorProto(ref ReaderState state, MethodDescriptorProto value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1061,7 +1062,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static FileOptions ReadFileOptions(ref ReaderState state, FileOptions value)
+    internal static FileOptions ReadFileOptions(ref ReaderState state, FileOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1211,7 +1212,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static MessageOptions ReadMessageOptions(ref ReaderState state, MessageOptions value)
+    internal static MessageOptions ReadMessageOptions(ref ReaderState state, MessageOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1277,7 +1278,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static FieldOptions ReadFieldOptions(ref ReaderState state, FieldOptions value)
+    internal static FieldOptions ReadFieldOptions(ref ReaderState state, FieldOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1361,7 +1362,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static OneofOptions ReadOneofOptions(ref ReaderState state, OneofOptions value)
+    internal static OneofOptions ReadOneofOptions(ref ReaderState state, OneofOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1391,7 +1392,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static EnumOptions ReadEnumOptions(ref ReaderState state, EnumOptions value)
+    internal static EnumOptions ReadEnumOptions(ref ReaderState state, EnumOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1439,7 +1440,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static EnumValueOptions ReadEnumValueOptions(ref ReaderState state, EnumValueOptions value)
+    internal static EnumValueOptions ReadEnumValueOptions(ref ReaderState state, EnumValueOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1478,7 +1479,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static ServiceOptions ReadServiceOptions(ref ReaderState state, ServiceOptions value)
+    internal static ServiceOptions ReadServiceOptions(ref ReaderState state, ServiceOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1517,7 +1518,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static MethodOptions ReadMethodOptions(ref ReaderState state, MethodOptions value)
+    internal static MethodOptions ReadMethodOptions(ref ReaderState state, MethodOptions value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1565,7 +1566,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static UninterpretedOption ReadUninterpretedOption(ref ReaderState state, UninterpretedOption value)
+    internal static UninterpretedOption ReadUninterpretedOption(ref ReaderState state, UninterpretedOption value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1625,7 +1626,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static NamePart ReadNamePart(ref ReaderState state, NamePart value)
+    internal static NamePart ReadNamePart(ref ReaderState state, NamePart value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1655,7 +1656,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static SourceCodeInfo ReadSourceCodeInfo(ref ReaderState state, SourceCodeInfo value)
+    internal static SourceCodeInfo ReadSourceCodeInfo(ref ReaderState state, SourceCodeInfo value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();
@@ -1685,7 +1686,7 @@ public static class DescriptorNanoReader
         return value;
     }
 
-    public static Location ReadLocation(ref ReaderState state, Location value)
+    internal static Location ReadLocation(ref ReaderState state, Location value)
     {
         value ??= new();
         uint tag = state.ReadRawTag();

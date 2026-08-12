@@ -108,6 +108,7 @@ internal static class Program
         }
 
         Report(contracts.Count, diagnostics);
+        RawReadReport(driver);
 
         // the emitted code has to actually compile; anything else is a generator bug, not a gap
         var errors = output.GetDiagnostics()
@@ -137,6 +138,80 @@ internal static class Program
                 + $"declare the same type name, e.g. {group.First().GetMessage()}");
         }
         return 0;
+    }
+
+    /// <summary>
+    /// The raw-read-pass census: parsed from the EMISSION itself (the skip-reason breadcrumbs and the
+    /// RawRead_ methods), so it needs no generator API and cannot drift from what consumers see.
+    /// The question it answers is Marc's: how often does the fallback fire, and is any category
+    /// common enough to warrant first-class support (arrays? maps? which collection shapes?).
+    /// </summary>
+    private static void RawReadReport(GeneratorDriver driver)
+    {
+        int emitted = 0;
+        var reasons = new Dictionary<string, int>();
+        var legacyMembers = new Dictionary<string, int>();
+        foreach (var result in driver.GetRunResult().Results)
+        {
+            foreach (var source in result.GeneratedSources)
+            {
+                var text = source.SourceText.ToString();
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(
+                    text, @"public static [^\r\n]+ RawRead_\w+\(ref"))
+                {
+                    emitted++;
+                }
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(
+                    text, @"// raw read pass: skipped - ([^\r\n]+)"))
+                {
+                    var category = NormaliseRawReadReason(m.Groups[1].Value.Trim());
+                    reasons.TryGetValue(category, out var n);
+                    reasons[category] = n + 1;
+                }
+                // per-member gap tracking: a raw contract's stateful members, by category - the
+                // list of "what still reads through the legacy machinery", measured not guessed
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(
+                    text, @"// raw read pass: legacy-mode - member \w+: ([^\r\n]+)"))
+                {
+                    var category = m.Groups[1].Value.Trim();
+                    legacyMembers.TryGetValue(category, out var n);
+                    legacyMembers[category] = n + 1;
+                }
+            }
+        }
+        Console.WriteLine();
+        Console.WriteLine("## raw read pass (the optimized emit): who falls back, and why");
+        Console.WriteLine();
+        var skipped = reasons.Values.Sum();
+        Console.WriteLine($"| optimized read emitted | {emitted} |");
+        Console.WriteLine($"| classic fallback (whole contract) | {skipped} |");
+        Console.WriteLine($"| legacy-mode members inside raw contracts | {legacyMembers.Values.Sum()} |");
+        Console.WriteLine();
+        Console.WriteLine("| contract fallback category | contracts |");
+        Console.WriteLine("| --- | ---: |");
+        foreach (var pair in reasons.OrderByDescending(static p => p.Value))
+        {
+            Console.WriteLine($"| {pair.Key} | {pair.Value} |");
+        }
+        Console.WriteLine();
+        Console.WriteLine("| legacy-mode member category | members |");
+        Console.WriteLine("| --- | ---: |");
+        foreach (var pair in legacyMembers.OrderByDescending(static p => p.Value))
+        {
+            Console.WriteLine($"| {pair.Key} | {pair.Value} |");
+        }
+    }
+
+    private static string NormaliseRawReadReason(string reason)
+    {
+        // strip the member name ("member Foo: map" -> "map"); keep contract-level reasons whole
+        if (reason.StartsWith("member ", StringComparison.Ordinal))
+        {
+            var idx = reason.IndexOf(": ", StringComparison.Ordinal);
+            if (idx >= 0) reason = reason.Substring(idx + 2);
+        }
+        if (reason.StartsWith("target ", StringComparison.Ordinal)) return "cascade (member type not eligible)";
+        return reason;
     }
 
     /// <summary>

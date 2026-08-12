@@ -19,49 +19,13 @@ partial class ConditionalModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Conditional.Conditional global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
-        {
-            value ??= new global::AotFixtures.Conditional.Conditional();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        value.ValueSpecified = true;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Both = state.ReadInt32();
-                        value.BothSpecified = true;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = state.ReadString();
-                        if (tmp4 != null) value.Named = tmp4;
-                        value.NamedSpecified = true;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Conditional_Conditional(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
         {
@@ -86,6 +50,74 @@ partial class ConditionalModel
                 var tmp4 = value.Named;
                 state.WriteString(4, tmp4);
             }
+        }
+
+        public static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
+        {
+            value ??= new global::AotFixtures.Conditional.Conditional();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Value: Specified presence member
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Value = state.ReadInt32();
+                        value.ValueSpecified = true;
+                        break;
+                    }
+                    case (2 << 3) | 2:  // Text, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Text = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Both: Specified presence member
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Both, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Both = state.ReadInt32();
+                        value.BothSpecified = true;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Named: Specified presence member
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Named, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = state.ReadString();
+                        if (tmp4 != null) value.Named = tmp4;
+                        value.NamedSpecified = true;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
         }
     }
 }

@@ -95,6 +95,8 @@ partial class IncludeGroupModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Grouped>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -132,6 +134,8 @@ partial class IncludeGroupModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -168,5 +172,7 @@ partial class IncludeGroupModel
             }
             return value.Value;
         }
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

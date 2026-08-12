@@ -3,6 +3,7 @@ using ProtoBuf;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
+using ReaderState = ProtoBuf.ProtoReader.State;
 
 namespace ProtoBuf.Nano.Bench;
 

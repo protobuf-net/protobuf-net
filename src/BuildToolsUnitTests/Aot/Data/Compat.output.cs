@@ -29,64 +29,13 @@ partial class CompatModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.Formats global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Formats value)
-        {
-            value ??= new global::AotFixtures.Compat.Formats();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.FixedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.FixedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.GroupedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.GroupedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.GroupedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.GroupedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.FixedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
-                        break;
-                    }
-                    case 8:
-                    {
-                        value.FixedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_Formats(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Formats value)
         {
@@ -135,6 +84,119 @@ partial class CompatModel
             }
         }
 
+        public static global::AotFixtures.Compat.Formats RawRead_AotFixtures_Compat_Formats(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Formats value)
+        {
+            value ??= new global::AotFixtures.Compat.Formats();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member FixedWhen: non-default DataFormat
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // FixedWhen, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.FixedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member FixedHow: non-default DataFormat
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // FixedHow, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.FixedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedWhen: non-default DataFormat
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // GroupedWhen, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.GroupedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedHow: non-default DataFormat
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // GroupedHow, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.GroupedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedId: non-default DataFormat
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // GroupedId, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.GroupedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedAmount: non-default DataFormat
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // GroupedAmount, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.GroupedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member FixedAmount: non-default DataFormat
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // FixedAmount, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.FixedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member FixedId: non-default DataFormat
+                    case (8 << 3) | 0:
+                    case (8 << 3) | 1:
+                    case (8 << 3) | 2:  // FixedId, field 8
+                    case (8 << 3) | 3:
+                    case (8 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.FixedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -176,54 +238,13 @@ partial class CompatModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Legacy>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.Legacy global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Legacy>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Legacy value)
-        {
-            value ??= new global::AotFixtures.Compat.Legacy();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.When = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.How = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.WhenMaybe = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.AmountMaybe = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_Legacy(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Legacy>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Legacy value)
         {
@@ -265,29 +286,102 @@ partial class CompatModel
             }
         }
 
+        public static global::AotFixtures.Compat.Legacy RawRead_AotFixtures_Compat_Legacy(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Legacy value)
+        {
+            value ??= new global::AotFixtures.Compat.Legacy();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member When: kind DateTime
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // When, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.When = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member How: kind TimeSpan
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // How, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.How = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Id: kind Guid
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Id, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Amount: kind Decimal
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Amount, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member WhenMaybe: kind DateTime
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // WhenMaybe, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.WhenMaybe = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member AmountMaybe: kind Decimal
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // AmountMaybe, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.AmountMaybe = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.LegacyFixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.LegacyFixed value)
-        {
-            value ??= new global::AotFixtures.Compat.LegacyFixed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_LegacyFixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.LegacyFixed value)
         {
@@ -300,44 +394,47 @@ partial class CompatModel
             }
         }
 
+        public static global::AotFixtures.Compat.LegacyFixed RawRead_AotFixtures_Compat_LegacyFixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.LegacyFixed value)
+        {
+            value ??= new global::AotFixtures.Compat.LegacyFixed();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Id: non-default DataFormat
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Id, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.Level240 global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
-        {
-            value ??= new global::AotFixtures.Compat.Level240();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_Level240(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Level240 value)
         {
@@ -365,49 +462,80 @@ partial class CompatModel
             }
         }
 
+        public static global::AotFixtures.Compat.Level240 RawRead_AotFixtures_Compat_Level240(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
+        {
+            value ??= new global::AotFixtures.Compat.Level240();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member When: kind DateTime
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // When, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member How: kind TimeSpan
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // How, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Id: kind Guid
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Id, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Amount: kind Decimal
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Amount, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.Level300 global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level300 value)
-        {
-            value ??= new global::AotFixtures.Compat.Level300();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuidString(ref state);
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimalString(ref state);
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Fixed = global::ProtoBuf.BclHelpers.ReadGuidBytes(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_Level300(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Level300 value)
         {
@@ -439,6 +567,86 @@ partial class CompatModel
                 state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, tmp5);
             }
+        }
+
+        public static global::AotFixtures.Compat.Level300 RawRead_AotFixtures_Compat_Level300(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level300 value)
+        {
+            value ??= new global::AotFixtures.Compat.Level300();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member When: kind DateTime
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // When, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member How: kind TimeSpan
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // How, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Id: kind Guid
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Id, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuidString(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Amount: kind Decimal
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Amount, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimalString(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Fixed, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Fixed = global::ProtoBuf.BclHelpers.ReadGuidBytes(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LevelledBase>.Features
@@ -492,39 +700,13 @@ partial class CompatModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
-        {
-            value ??= new global::AotFixtures.Compat.Mixed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Inherited = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Downgraded = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.DowngradedGuid = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Mixed value)
         {
@@ -543,39 +725,69 @@ partial class CompatModel
             }
         }
 
+        public static global::AotFixtures.Compat.Mixed RawRead_AotFixtures_Compat_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
+        {
+            value ??= new global::AotFixtures.Compat.Mixed();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Inherited: kind DateTime
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Inherited, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Inherited = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Downgraded: kind DateTime
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Downgraded, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Downgraded = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member DowngradedGuid: kind Guid
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // DowngradedGuid, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.DowngradedGuid = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Compat.WellKnown global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.WellKnown value)
-        {
-            value ??= new global::AotFixtures.Compat.WellKnown();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Compat_WellKnown(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.WellKnown value)
         {
@@ -595,6 +807,64 @@ partial class CompatModel
                 state.WriteFieldHeader(3, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp3);
             }
+        }
+
+        public static global::AotFixtures.Compat.WellKnown RawRead_AotFixtures_Compat_WellKnown(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.WellKnown value)
+        {
+            value ??= new global::AotFixtures.Compat.WellKnown();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member When: non-default DataFormat
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // When, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member How: non-default DataFormat
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // How, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Id: non-default DataFormat
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Id, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
         }
     }
 }

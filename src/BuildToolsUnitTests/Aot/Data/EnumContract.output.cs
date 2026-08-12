@@ -25,39 +25,13 @@ partial class EnumContractModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Size>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Size?>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.EnumContract.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
-        {
-            value ??= new global::AotFixtures.EnumContract.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Shade = (global::AotFixtures.EnumContract.Shade)state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Size = (global::AotFixtures.EnumContract.Size)state.ReadByte();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Options = (global::AotFixtures.EnumContract.Options)state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_EnumContract_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.EnumContract.Holder value)
         {
@@ -72,6 +46,60 @@ partial class EnumContractModel
             }
             var tmp3 = value.Options;
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);
+        }
+
+        public static global::AotFixtures.EnumContract.Holder RawRead_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
+        {
+            value ??= new global::AotFixtures.EnumContract.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Shade, field 1, varint
+                        value.Shade = (global::AotFixtures.EnumContract.Shade)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (1 << 3) | 5:  // Shade, field 1, fixed32
+                        value.Shade = (global::AotFixtures.EnumContract.Shade)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (1 << 3) | 1:  // Shade, field 1, fixed64
+                        value.Shade = (global::AotFixtures.EnumContract.Shade)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member Size: kind Byte
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Size, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Size = (global::AotFixtures.EnumContract.Size)state.ReadByte();
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Options, field 3, varint
+                        value.Options = (global::AotFixtures.EnumContract.Options)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (3 << 3) | 5:  // Options, field 3, fixed32
+                        value.Options = (global::AotFixtures.EnumContract.Options)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (3 << 3) | 1:  // Options, field 3, fixed64
+                        value.Options = (global::AotFixtures.EnumContract.Options)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Options> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Options>.Serializer

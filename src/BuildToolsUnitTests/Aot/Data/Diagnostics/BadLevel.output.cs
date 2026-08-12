@@ -23,31 +23,47 @@ partial class BadLevelModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.BadLevel.GoodLevel global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BadLevel.GoodLevel>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
-        {
-            value ??= new global::AotFixtures.BadLevel.GoodLevel();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_BadLevel_GoodLevel(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BadLevel.GoodLevel>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.BadLevel.GoodLevel RawRead_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
+        {
+            value ??= new global::AotFixtures.BadLevel.GoodLevel();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
     }
 }

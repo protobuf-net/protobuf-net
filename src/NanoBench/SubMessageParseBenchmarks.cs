@@ -2,6 +2,7 @@ using BenchmarkDotNet.Attributes;
 using ProtoBuf;
 using ProtoBuf.Nano;
 using System;
+using ReaderState = ProtoBuf.ProtoReader.State;
 
 namespace ProtoBuf.Nano.Bench;
 

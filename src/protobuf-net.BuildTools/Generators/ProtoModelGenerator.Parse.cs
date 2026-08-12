@@ -174,9 +174,21 @@ namespace ProtoBuf.BuildTools.Generators
                     // both the opt-out and the way to keep `new` working
                     emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
                     isSealed: model.IsSealed,
-                    // the nano pass is symbol-gated: it exists wherever the experimental reader is
-                    // visible, which today is only this repo's own rigs
-                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.Nano.ReaderState") is not null);
+                    // the raw read pass is symbol-gated on the raw surface being present: the
+                    // reader IS ProtoReader.State (nested metadata name), and the gate probes
+                    // for RAW members rather than the type - State always exists, but only a
+                    // Core with the raw surface can satisfy emitted calls. Accessibility-checked
+                    // so a future internal surface fails closed rather than emitting broken code.
+                    // The probe names the NEWEST member the emission calls (StashTag, the
+                    // legacy-mode bridge), not the oldest: a consumer mixing a newer BuildTools
+                    // with an older raw-surface Core must fall back to the classic emission
+                    // rather than emit calls that do not compile - which is exactly how this
+                    // gate's insufficiency was discovered (the differential corpus referenced a
+                    // one-wave-stale Core).
+                    rawReader: compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } rawType
+                        && rawType.GetMembers("ReadRawTag").Length != 0
+                        && rawType.GetMembers("StashTag").Length != 0
+                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));

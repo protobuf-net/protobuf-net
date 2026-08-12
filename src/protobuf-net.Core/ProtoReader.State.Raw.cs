@@ -5,11 +5,14 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ProtoBuf.Nano;
+namespace ProtoBuf
+{
+    partial class ProtoReader
+    {
 
 // The NEW surface - hand-written, beside the generated compatibility floor. The existing API is
 // reimplemented over these primitives; the generator emits against them directly.
-public ref partial struct ReaderState
+public ref partial struct State
 {
     // ---------------------------------------------------------------- state
     //
@@ -126,18 +129,62 @@ public ref partial struct ReaderState
 
     /// <summary>
     /// Sub-item nesting depth, capped exactly as legacy TypeModel.MaxDepth is (default 512) -
-    /// nano's direct child calls recurse per wire nesting level, so without the cap a malicious
+    /// the generated direct child calls recurse per wire nesting level, so without the cap a malicious
     /// deeply-nested payload is a stack overflow. Reference-tracking recursion detection is
     /// deliberately NOT reproduced: the depth cap is the fair trade, decided.
     /// </summary>
     private int _depth;
-    private const int MaxDepth = 512; // = TypeModel.DefaultMaxDepth; configurable when this lands in Core
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IncrDepthExceeded()
+        => ++_depth >= (_model is null ? global::ProtoBuf.Meta.TypeModel.DefaultMaxDepth : _model.MaxDepth);
 
-    /// <summary>The field number of the last header read via the legacy API.</summary>
-    public int FieldNumber => _fieldNumber;
+    // ---------------------------------------------------------------- state extras (the swap)
+    //
+    // What the class reader used to hold: the model, user state, the lazy serialization-context
+    // shim, and the lazy string interner. Class-typed or value fields only; State travels by
+    // ref, so mutations flow, and struct copies share the class-typed instances.
 
-    /// <summary>The wire type of the last header read via the legacy API, including hints.</summary>
-    public WireType WireType => _wireType;
+    internal global::ProtoBuf.Meta.TypeModel _model;
+    internal ISerializationContext _contextShim;
+    internal object _userState;
+    internal bool _internStrings;
+    private System.Collections.Generic.Dictionary<string, string> _stringInterner;
+
+    internal string Intern(string value)
+    {
+        if (value is null) return null;
+        if (value.Length == 0) return "";
+        if (_stringInterner is null)
+        {
+            _stringInterner = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal) { { value, value } };
+        }
+        else if (_stringInterner.TryGetValue(value, out var found))
+        {
+            value = found;
+        }
+        else
+        {
+            _stringInterner.Add(value, value);
+        }
+        return value;
+    }
+
+    /// <summary>Fills the span exactly, crossing refills - the Span counterpart of FillFrom.</summary>
+    internal void ReadRawBytesInto(Span<byte> destination)
+    {
+        while (!destination.IsEmpty)
+        {
+            if (_offset >= _count && !GetNextBuffer()) ThrowEndOfData();
+            int take = Math.Min(destination.Length, _count - _offset);
+#if NET7_0_OR_GREATER
+            MemoryMarshal.CreateReadOnlySpan(ref At(_offset), take).CopyTo(destination);
+#else
+            new ReadOnlySpan<byte>(_buffer, _segmentStart + _offset, take).CopyTo(destination);
+#endif
+            _offset += take;
+            destination = destination.Slice(take);
+        }
+    }
 
     /// <summary>Absolute position of the reader.</summary>
     public long Position => _positionBase + _offset;
@@ -145,7 +192,7 @@ public ref partial struct ReaderState
     // ---------------------------------------------------------------- construction
 
     /// <summary>Single array: the trivial single-segment case; nothing leased, no source.</summary>
-    public ReaderState(byte[] buffer, int offset, int count)
+    public State(byte[] buffer, int offset, int count)
     {
         _buffer = buffer;
 #if NET7_0_OR_GREATER
@@ -165,7 +212,7 @@ public ref partial struct ReaderState
     }
 
     /// <summary>Memory: used in place when array-backed, else leased-and-copied once.</summary>
-    public ReaderState(ReadOnlyMemory<byte> value)
+    public State(ReadOnlyMemory<byte> value)
     {
         if (MemoryMarshal.TryGetArray(value, out var array))
         {
@@ -203,11 +250,11 @@ public ref partial struct ReaderState
     /// sequence (one allocation) is walked via a SequencePosition cursor, per-window
     /// TryGetArray-else-lease. The root scope is the sequence's known length.
     /// </summary>
-    public ReaderState(in ReadOnlySequence<byte> value)
+    public State(scoped in ReadOnlySequence<byte> value)
     {
         if (value.IsSingleSegment)
         {
-            this = new ReaderState(value.First);
+            this = new State(value.First);
             return;
         }
         _buffer = [];
@@ -233,13 +280,13 @@ public ref partial struct ReaderState
     /// caller knows - a length-prefixed network frame) seeds _remaining and bounds the root
     /// scope; without it the root is unbounded and EOF is the clean end of the document.
     /// </summary>
-    public ReaderState(Stream source, long lengthHint = -1)
+    public State(Stream source, long lengthHint = -1)
     {
         if (source is MemoryStream ms && ms.GetType() == typeof(MemoryStream) && ms.CanSeek
             && ms.TryGetBuffer(out var segment))
         {
             int position = checked((int)ms.Position);
-            this = new ReaderState(segment.Array!, segment.Offset + position, segment.Count - position);
+            this = new State(segment.Array!, segment.Offset + position, segment.Count - position);
             return;
         }
         _buffer = ArrayPool<byte>.Shared.Rent(16 * 1024);
@@ -394,7 +441,7 @@ public ref partial struct ReaderState
         // plausibility where totals are known (Memory/sequence/hinted stream); a bare stream
         // cannot verify up front and is validated by consumption/EOF instead
         if (length < 0 || (_remaining >= 0 && end - _positionBase > (long)_count + _remaining)) ThrowEndOfData();
-        if (++_depth >= MaxDepth) ThrowTooDeep();
+        if (IncrDepthExceeded()) ThrowTooDeep();
         _scope = end;
         _effectiveEnd = (int)Math.Max(0, Math.Min(_count, end - _positionBase));
         return new ReadScope(prior);
@@ -437,7 +484,7 @@ public ref partial struct ReaderState
     public ReadScope PushGroup(uint endGroupTag)
     {
         if ((endGroupTag & 7) != 4) ThrowMalformed();
-        if (++_depth >= MaxDepth) ThrowTooDeep();
+        if (IncrDepthExceeded()) ThrowTooDeep();
         var prior = _scope;
         _scope = -(long)(endGroupTag >> 3);
         _effectiveEnd = _count;
@@ -462,7 +509,7 @@ public ref partial struct ReaderState
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void ThrowTooDeep() // graduated: matches the legacy shape's member
-        => throw new InvalidOperationException($"maximum depth {MaxDepth} exceeded");
+        => throw new InvalidOperationException("Maximum model depth exceeded (see " + nameof(global::ProtoBuf.Meta.TypeModel) + "." + nameof(global::ProtoBuf.Meta.TypeModel.MaxDepth) + "): " + _depth.ToString());
 
     /// <summary>
     /// Whether <paramref name="tag"/> is the current group's end sentinel - the switch-default
@@ -472,7 +519,36 @@ public ref partial struct ReaderState
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsScopeEnd(uint tag)
-        => (tag & 7) == 4 && (long)(tag >> 3) == -_scope;
+    {
+        if ((tag & 7) != 4) return false;
+        if ((long)(tag >> 3) == -_scope) return true;
+        return LegacyGroupEnd(tag);
+    }
+
+    /// <summary>
+    /// A generated raw read can be invoked THROUGH the legacy framing: a classic serializer (or
+    /// <c>ReadMessage</c> on a group-formatted member) calls <c>StartSubItem</c>, whose group arm
+    /// mints a token and increments depth WITHOUT pushing a raw scope - so the end-group tag
+    /// belongs to a frame this scope slot knows nothing about. Stash it exactly as
+    /// <c>ReadFieldHeader</c>'s end-group spoof would (<c>_wireType</c>/<c>_fieldNumber</c>), so
+    /// the caller's <c>EndSubItem</c> verifies the right group ended. Guarded to legacy frames
+    /// only (<c>_scope</c> not group-encoded): inside a RAW group scope a mismatched end tag
+    /// stays false, falls to <c>SkipTag</c>, and throws. The two remaining stray-tag routes are
+    /// both caught downstream - under a raw length scope by <c>PopScope</c>'s exact-consumption
+    /// check, under a legacy length frame by <c>EndSubItem</c>'s "terminated via end-group"
+    /// check - and at the root (<c>_depth == 0</c>) there is no frame, so it stays false.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private bool LegacyGroupEnd(uint tag)
+    {
+        if (_depth > 0 && _scope >= 0)
+        {
+            _wireType = WireType.EndGroup;
+            _fieldNumber = (int)(tag >> 3);
+            return true;
+        }
+        return false;
+    }
 
     /// <summary>
     /// Whether the current LENGTH scope is exhausted - the loop test for packed elements, which
@@ -489,17 +565,52 @@ public ref partial struct ReaderState
     // ---------------------------------------------------------------- snapshot
 
     /// <summary>
-    /// The storable (non-ref-struct) form, for async resume at refill boundaries - the reader
-    /// itself stays sync. The ref field needs no slot: the segment-start index is recovered via
-    /// Unsafe.ByteOffset against the array root at snapshot time, and the ref is re-derived on
-    /// restore.
+    /// The storable (non-ref-struct) form: the class-API bridge and the iterator paths (which
+    /// cannot hold a ref struct) live on this. Verbatim fields; the ref needs no slot - the
+    /// segment-start index is recovered via ByteOffset at snapshot time and the ref re-derived
+    /// on restore. The leased buffer is held DIRECTLY (in-process ownership; see PORTING.md).
     /// </summary>
-    public ReaderSnapshot Snapshot()
-        => throw new NotImplementedException();
+    internal readonly ReaderSnapshot Snapshot()
+        => new ReaderSnapshot(
+            _buffer,
+#if NET7_0_OR_GREATER
+            _buffer is null ? 0 : (int)Unsafe.ByteOffset(ref MemoryMarshal.GetArrayDataReference(_buffer), ref Unsafe.AsRef(in _segment)),
+#else
+            _segmentStart,
+#endif
+            _offset, _count, _effectiveEnd, _leased, _positionBase, _remaining, _scope,
+            _source, _nextPosition, _depth, _fieldNumber, _wireType, _pendingTag,
+            _model, _userState, _internStrings, _stringInterner);
 
     /// <summary>Reconstitutes a reader from a snapshot.</summary>
-    public ReaderState(in ReaderSnapshot snapshot)
-        => throw new NotImplementedException();
+    internal State(scoped in ReaderSnapshot snapshot)
+    {
+        _buffer = snapshot.Buffer;
+#if NET7_0_OR_GREATER
+        _segment = ref snapshot.Buffer is null
+            ? ref Unsafe.NullRef<byte>()
+            : ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(snapshot.Buffer), snapshot.SegmentStart);
+#else
+        _segmentStart = snapshot.SegmentStart;
+#endif
+        _offset = snapshot.Offset;
+        _count = snapshot.Count;
+        _effectiveEnd = snapshot.EffectiveEnd;
+        _leased = snapshot.Leased;
+        _positionBase = snapshot.PositionBase;
+        _remaining = snapshot.Remaining;
+        _scope = snapshot.Scope;
+        _source = snapshot.Source;
+        _nextPosition = snapshot.NextPosition;
+        _depth = snapshot.Depth;
+        _fieldNumber = snapshot.FieldNumber;
+        _wireType = snapshot.WireTypeValue;
+        _pendingTag = snapshot.PendingTag;
+        _model = snapshot.Model;
+        _userState = snapshot.UserState;
+        _internStrings = snapshot.InternStringsValue;
+        _stringInterner = snapshot.Interner;
+    }
 
     // ---------------------------------------------------------------- raw reads
 
@@ -580,7 +691,7 @@ public ref partial struct ReaderState
             if ((b & 0x80) == 0) return value;
             shift += 7;
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
         return 0;
     }
 
@@ -630,7 +741,7 @@ public ref partial struct ReaderState
     /// </summary>
     private void SkipGroup(uint startTag)
     {
-        if (++_depth >= MaxDepth) ThrowTooDeep();
+        if (IncrDepthExceeded()) ThrowTooDeep();
         uint endTag = startTag + 1; // only the low 3 bits differ: 3 becomes 4
         while (true)
         {
@@ -642,7 +753,7 @@ public ref partial struct ReaderState
         _depth--;
     }
 
-    private void Advance(int bytes)
+    internal void Advance(int bytes)
     {
         if (bytes < 0) ThrowEndOfData();
         while (true)
@@ -660,10 +771,10 @@ public ref partial struct ReaderState
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowEndOfData() => throw new InvalidOperationException("unexpected end of data");
+    private void ThrowEndOfData() => throw AddErrorData(new EndOfStreamException(), ref this);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowMalformed() => throw new InvalidOperationException("malformed data");
+    private void ThrowMalformed() => throw AddErrorData(new InvalidOperationException("malformed data"), ref this);
 
     /// <summary>
     /// Reads a varint as u32, tolerant of the 10-byte sign-extended form a negative int32 arrives
@@ -713,7 +824,7 @@ public ref partial struct ReaderState
                 return value;
             }
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
         return 0;
     }
 
@@ -770,7 +881,7 @@ public ref partial struct ReaderState
                 ulong b = Unsafe.Add(ref src, i);
                 value |= (b & 0x7F) << shift;
                 if ((b & 0x80) == 0) { _offset = offset + i + 1; return value; }
-                if (++i == 10) { ThrowMalformed(); return 0; }
+                if (++i == 10) { ThrowOverflowError(); return 0; }
                 shift += 7;
             }
         }
@@ -789,7 +900,7 @@ public ref partial struct ReaderState
             if ((b & 0x80) == 0) return value;
             shift += 7;
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
         return 0;
     }
 
@@ -840,7 +951,7 @@ public ref partial struct ReaderState
             FillFrom(scratch, 0, len);
             return scratch;
         }
-        var grow = ArrayPool<byte>.Shared.Rent(Math.Min(len, 64 * 1024));
+        var grow = ArrayPool<byte>.Shared.Rent(Math.Min(len, EagerAllocationLimit));
         int filled = 0;
         while (filled < len)
         {
@@ -944,7 +1055,7 @@ public ref partial struct ReaderState
             }
             case 3: // group: recursive capture to the matching sentinel (start tag + 1)
             {
-                if (++_depth >= MaxDepth) ThrowTooDeep();
+                if (IncrDepthExceeded()) ThrowTooDeep();
                 uint endTag = tag + 1;
                 while (true)
                 {
@@ -989,7 +1100,7 @@ public ref partial struct ReaderState
             dest.WriteByte(b);
             if ((b & 0x80) == 0) return;
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
     }
 
     private void CaptureBytes(Stream dest, int bytes)
@@ -1008,6 +1119,71 @@ public ref partial struct ReaderState
             bytes -= take;
         }
     }
+
+    /// <summary>Reads 4 bytes little-endian. The big-endian branch folds away at JIT time on
+    /// every little-endian platform (IsLittleEndian is a JIT constant), so correctness on BE
+    /// costs nothing - and legacy is BE-correct via BinaryPrimitives, so anything less would be
+    /// a platform regression.</summary>
+    public uint ReadRawFixed32()
+    {
+        if (_count - _offset < 4) return ReadRawFixed32Straddle();
+        var value = Unsafe.ReadUnaligned<uint>(ref At(_offset));
+        if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+        _offset += 4;
+        return value;
+    }
+
+    // byte-wise LE assembly: endian-free by construction, and crosses refills like every straddle
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private uint ReadRawFixed32Straddle()
+        => ReadRawByte()
+        | ((uint)ReadRawByte() << 8)
+        | ((uint)ReadRawByte() << 16)
+        | ((uint)ReadRawByte() << 24);
+
+    /// <summary>Reads 8 bytes little-endian; same folded BE handling as <see cref="ReadRawFixed32"/>.</summary>
+    public ulong ReadRawFixed64()
+    {
+        if (_count - _offset < 8) return ReadRawFixed64Straddle();
+        var value = Unsafe.ReadUnaligned<ulong>(ref At(_offset));
+        if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+        _offset += 8;
+        return value;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ulong ReadRawFixed64Straddle()
+        => ReadRawFixed32Straddle() | ((ulong)ReadRawFixed32Straddle() << 32);
+
+    /// <summary>
+    /// Reads a varint as u32, STRICT: overflow beyond 32 bits throws rather than truncating -
+    /// the legacy Unsigned mode, used for lengths, where a lying 10-byte form must not quietly
+    /// become a garbage length.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint ReadRawVarint32Strict()
+    {
+        uint value = ReadRawByte();
+        if ((value & 0x80) == 0) return value;
+        value &= 0x7F;
+        int shift = 7;
+        for (int i = 1; i < 5; i++)
+        {
+            uint b = ReadRawByte();
+            value |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0)
+            {
+                if (i == 4 && (b & 0xF0) != 0) ThrowOverflowError(); // only 4 bits fit from byte 5
+                return value;
+            }
+            shift += 7;
+        }
+        ThrowOverflowError();
+        return 0;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ThrowOverflowError() => throw AddErrorData(new OverflowException(), ref this);
 
     // ------------------------------------------------------------ packed fast paths
     //
@@ -1176,12 +1352,41 @@ public readonly struct ReadScope
 }
 
 /// <summary>
-/// The storable (non-ref-struct) snapshot of a <see cref="ReaderState"/>: the async/resume story
-/// (what <c>ProtoReader.SolidState</c> is to the legacy reader). Plain fields only - the ref
-/// field is represented as the segment-start index within the buffer.
+/// The storable (non-ref-struct) snapshot of a <see cref="ProtoReader.State"/>: plain fields
+/// only, the ref field represented as a segment-start index. The class-API bridge and the
+/// iterator paths live on this.
 /// </summary>
-public readonly struct ReaderSnapshot
+internal readonly struct ReaderSnapshot
 {
-    // buffer + segment-start index + offset/count + positionBase + remaining + source + scope;
-    // shape only for now - members arrive with the implementation
+    internal readonly byte[] Buffer;
+    internal readonly int SegmentStart, Offset, Count, EffectiveEnd;
+    internal readonly bool Leased;
+    internal readonly long PositionBase, Remaining, Scope;
+    internal readonly object Source;
+    internal readonly System.SequencePosition NextPosition;
+    internal readonly int Depth, FieldNumber;
+    internal readonly WireType WireTypeValue;
+    internal readonly uint PendingTag;
+    internal readonly global::ProtoBuf.Meta.TypeModel Model;
+    internal readonly object UserState;
+    internal readonly bool InternStringsValue;
+    internal readonly System.Collections.Generic.Dictionary<string, string> Interner;
+
+    internal ReaderSnapshot(byte[] buffer, int segmentStart, int offset, int count,
+        int effectiveEnd, bool leased, long positionBase, long remaining, long scope,
+        object source, System.SequencePosition nextPosition, int depth, int fieldNumber,
+        WireType wireType, uint pendingTag, global::ProtoBuf.Meta.TypeModel model,
+        object userState, bool internStrings,
+        System.Collections.Generic.Dictionary<string, string> interner)
+    {
+        Buffer = buffer; SegmentStart = segmentStart; Offset = offset; Count = count;
+        EffectiveEnd = effectiveEnd; Leased = leased; PositionBase = positionBase;
+        Remaining = remaining; Scope = scope; Source = source; NextPosition = nextPosition;
+        Depth = depth; FieldNumber = fieldNumber; WireTypeValue = wireType;
+        PendingTag = pendingTag; Model = model; UserState = userState;
+        InternStringsValue = internStrings; Interner = interner;
+    }
+}
+
+    }
 }

@@ -22,52 +22,13 @@ partial class MapNestedModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
         , global::ProtoBuf.Serializers.ISerializerProxy<long[]>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.MapNested.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Nested value)
-        {
-            value ??= new global::AotFixtures.MapNested.Nested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Lists;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.Lists = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Arrays;
-                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<long, long[]>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp2 != null) value.Arrays = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Maps;
-                        tmp3 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.Collections.Generic.Dictionary<string, string>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
-                        if (tmp3 != null) value.Maps = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.FloatKeyed;
-                        tmp4 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp4 != null) value.FloatKeyed = tmp4;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_MapNested_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapNested.Nested value)
         {
@@ -92,6 +53,83 @@ partial class MapNestedModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+        }
+
+        public static global::AotFixtures.MapNested.Nested RawRead_AotFixtures_MapNested_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Nested value)
+        {
+            value ??= new global::AotFixtures.MapNested.Nested();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Lists: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Lists, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Lists;
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp1 != null) value.Lists = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Arrays: map
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Arrays, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Arrays;
+                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<long, long[]>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp2 != null) value.Arrays = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Maps: map
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Maps, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Maps;
+                        tmp3 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, global::System.Collections.Generic.Dictionary<string, string>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp3 != null) value.Maps = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member FloatKeyed: map
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // FloatKeyed, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.FloatKeyed;
+                        tmp4 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<float, global::System.Collections.Generic.List<int>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp4 != null) value.FloatKeyed = tmp4;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<string, string>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>.Serializer

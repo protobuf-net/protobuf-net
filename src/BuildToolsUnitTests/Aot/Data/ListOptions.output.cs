@@ -20,60 +20,13 @@ partial class ListOptionsModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ListOptions.NotACollection global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
-        {
-            value ??= new global::AotFixtures.ListOptions.NotACollection();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.PackedScalar = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.OverwriteScalar = state.ReadInt32();
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = state.ReadString();
-                        if (tmp3 != null) value.BothOnString = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.AppendedBytes;
-                        tmp4 = state.AppendBytes(tmp4);
-                        if (tmp4 != null) value.AppendedBytes = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = state.AppendBytes(default(byte[]));
-                        if (tmp5 != null) value.OverwrittenBytes = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.PackedBytes;
-                        tmp6 = state.AppendBytes(tmp6);
-                        if (tmp6 != null) value.PackedBytes = tmp6;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ListOptions_NotACollection(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
@@ -104,66 +57,69 @@ partial class ListOptionsModel
             }
         }
 
+        public static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
+        {
+            value ??= new global::AotFixtures.ListOptions.NotACollection();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // PackedScalar, field 1, varint
+                        value.PackedScalar = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // PackedScalar, field 1, fixed32
+                        value.PackedScalar = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // PackedScalar, field 1, fixed64
+                        value.PackedScalar = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 0:  // OverwriteScalar, field 2, varint
+                        value.OverwriteScalar = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // OverwriteScalar, field 2, fixed32
+                        value.OverwriteScalar = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // OverwriteScalar, field 2, fixed64
+                        value.OverwriteScalar = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 2:  // BothOnString, field 3, length-prefixed
+                    {
+                        var tmp3 = state.ReadRawString();
+                        if (tmp3 != null) value.BothOnString = tmp3;
+                        break;
+                    }
+                    case (4 << 3) | 2:  // AppendedBytes, field 4, length-prefixed
+                        value.AppendedBytes = state.AppendRawBytes(value.AppendedBytes);
+                        break;
+                    case (5 << 3) | 2:  // OverwrittenBytes, field 5, length-prefixed
+                        value.OverwrittenBytes = state.ReadRawBytes();
+                        break;
+                    case (6 << 3) | 2:  // PackedBytes, field 6, length-prefixed
+                        value.PackedBytes = state.AppendRawBytes(value.PackedBytes);
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ListOptions.Options global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.Options value)
-        {
-            value ??= new global::AotFixtures.ListOptions.Options();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Default;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) value.Default = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Packed;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp2);
-                        if (tmp2 != null) value.Packed = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Overwrite;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp3);
-                        if (tmp3 != null) value.Overwrite = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.PackedOverwrite;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp4);
-                        if (tmp4 != null) value.PackedOverwrite = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.NotPacked;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
-                        if (tmp5 != null) value.NotPacked = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.PackedDouble;
-                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp6);
-                        if (tmp6 != null) value.PackedDouble = tmp6;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ListOptions_Options(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.Options value)
         {
@@ -198,6 +154,109 @@ partial class ListOptionsModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp6);
             }
+        }
+
+        public static global::AotFixtures.ListOptions.Options RawRead_AotFixtures_ListOptions_Options(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.Options value)
+        {
+            value ??= new global::AotFixtures.ListOptions.Options();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Default: collection shape CreateVector
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Default, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Default;
+                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                        if (tmp1 != null) value.Default = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Packed: collection shape CreateVector
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Packed, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Packed;
+                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp2);
+                        if (tmp2 != null) value.Packed = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Overwrite: OverwriteList collection
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Overwrite, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Overwrite;
+                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp3);
+                        if (tmp3 != null) value.Overwrite = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member PackedOverwrite: OverwriteList collection
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // PackedOverwrite, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.PackedOverwrite;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp4);
+                        if (tmp4 != null) value.PackedOverwrite = tmp4;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member NotPacked: collection shape CreateVector
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // NotPacked, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.NotPacked;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                        if (tmp5 != null) value.NotPacked = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member PackedDouble: collection shape CreateVector
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // PackedDouble, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.PackedDouble;
+                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp6);
+                        if (tmp6 != null) value.PackedDouble = tmp6;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
         }
     }
 }

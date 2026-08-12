@@ -21,6 +21,8 @@ partial class InitModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Inits>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Nested>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.InitStruct>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -50,47 +52,13 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Inits>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Init.Inits global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Inits>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Inits value)
-        {
-            value ??= new global::AotFixtures.Init.Inits();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        Field_AotFixtures_Init_Inits_Number(value) = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) Field_AotFixtures_Init_Inits_Text(value) = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Message;
-                        tmp3 = state.ReadMessage<global::AotFixtures.Init.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) Field_AotFixtures_Init_Inits_Message(value) = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Mutable = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Init_Inits(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Inits>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Inits value)
         {
@@ -105,35 +73,123 @@ partial class InitModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
+        public static global::AotFixtures.Init.Inits RawRead_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Inits value)
+        {
+            value ??= new global::AotFixtures.Init.Inits();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Number: accessor-reached setter
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Number, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Init_Inits_Number(value) = state.ReadInt32();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Text: accessor-reached setter
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Text, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) Field_AotFixtures_Init_Inits_Text(value) = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Message: accessor-reached setter
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Message, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Message;
+                        tmp3 = state.ReadMessage<global::AotFixtures.Init.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, s_default);
+                        if (tmp3 != null) Field_AotFixtures_Init_Inits_Message(value) = tmp3;
+                        break;
+                    }
+                    case (4 << 3) | 0:  // Mutable, field 4, varint
+                        value.Mutable = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (4 << 3) | 5:  // Mutable, field 4, fixed32
+                        value.Mutable = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (4 << 3) | 1:  // Mutable, field 4, fixed64
+                        value.Mutable = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Init.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Nested value)
-        {
-            value ??= new global::AotFixtures.Init.Nested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        Field_AotFixtures_Init_Nested_Id(value) = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Init_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Nested value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.Init.Nested RawRead_AotFixtures_Init_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Nested value)
+        {
+            value ??= new global::AotFixtures.Init.Nested();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Id: accessor-reached setter
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Id, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Init_Nested_Id(value) = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Number>k__BackingField")]

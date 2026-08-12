@@ -4,6 +4,7 @@ using ProtoBuf.Nano;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ReaderState = ProtoBuf.ProtoReader.State;
 
 namespace ProtoBuf.Nano.Bench;
 

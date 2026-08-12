@@ -19,79 +19,13 @@ partial class ScalarsModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Scalars.Primitives global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
-        {
-            value ??= new global::AotFixtures.Scalars.Primitives();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Bool = state.ReadBoolean();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.SByte = state.ReadSByte();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Byte = state.ReadByte();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Int16 = state.ReadInt16();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.UInt16 = state.ReadUInt16();
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.Int32 = state.ReadInt32();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.UInt32 = state.ReadUInt32();
-                        break;
-                    }
-                    case 8:
-                    {
-                        value.Int64 = state.ReadInt64();
-                        break;
-                    }
-                    case 9:
-                    {
-                        value.UInt64 = state.ReadUInt64();
-                        break;
-                    }
-                    case 10:
-                    {
-                        value.Single = state.ReadSingle();
-                        break;
-                    }
-                    case 11:
-                    {
-                        value.Double = state.ReadDouble();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Scalars_Primitives(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
         {
@@ -158,6 +92,134 @@ partial class ScalarsModel
                 state.WriteFieldHeader(11, global::ProtoBuf.WireType.Fixed64);
                 state.WriteDouble(tmp11);
             }
+        }
+
+        public static global::AotFixtures.Scalars.Primitives RawRead_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
+        {
+            value ??= new global::AotFixtures.Scalars.Primitives();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Bool, field 1, varint
+                        value.Bool = state.ReadRawVarint32() != 0;
+                        break;
+                    case (1 << 3) | 5:  // Bool, field 1, fixed32
+                        value.Bool = state.ReadRawFixed32() != 0;
+                        break;
+                    case (1 << 3) | 1:  // Bool, field 1, fixed64
+                        value.Bool = state.ReadRawFixed64() != 0;
+                        break;
+                    // raw read pass: legacy-mode - member SByte: kind SByte
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // SByte, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.SByte = state.ReadSByte();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Byte: kind Byte
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Byte, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Byte = state.ReadByte();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Int16: kind Int16
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Int16, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Int16 = state.ReadInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member UInt16: kind UInt16
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // UInt16, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.UInt16 = state.ReadUInt16();
+                        break;
+                    }
+                    case (6 << 3) | 0:  // Int32, field 6, varint
+                        value.Int32 = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // Int32, field 6, fixed32
+                        value.Int32 = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // Int32, field 6, fixed64
+                        value.Int32 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // UInt32, field 7, varint
+                        value.UInt32 = state.ReadRawVarint32();
+                        break;
+                    case (7 << 3) | 5:  // UInt32, field 7, fixed32
+                        value.UInt32 = state.ReadRawFixed32();
+                        break;
+                    case (7 << 3) | 1:  // UInt32, field 7, fixed64
+                        value.UInt32 = checked((uint)state.ReadRawFixed64());
+                        break;
+                    case (8 << 3) | 0:  // Int64, field 8, varint
+                        value.Int64 = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (8 << 3) | 1:  // Int64, field 8, fixed64
+                        value.Int64 = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (8 << 3) | 5:  // Int64, field 8, fixed32
+                        value.Int64 = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (9 << 3) | 0:  // UInt64, field 9, varint
+                        value.UInt64 = state.ReadRawVarint64();
+                        break;
+                    case (9 << 3) | 1:  // UInt64, field 9, fixed64
+                        value.UInt64 = state.ReadRawFixed64();
+                        break;
+                    case (9 << 3) | 5:  // UInt64, field 9, fixed32
+                        value.UInt64 = (ulong)state.ReadRawFixed32();
+                        break;
+                    // raw read pass: legacy-mode - member Single: kind Single
+                    case (10 << 3) | 0:
+                    case (10 << 3) | 1:
+                    case (10 << 3) | 2:  // Single, field 10
+                    case (10 << 3) | 3:
+                    case (10 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Single = state.ReadSingle();
+                        break;
+                    }
+                    case (11 << 3) | 1:  // Double, field 11, fixed64
+                        value.Double = state.ReadRawDouble();
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 => true,
+                _ => false,
+            };
         }
     }
 }

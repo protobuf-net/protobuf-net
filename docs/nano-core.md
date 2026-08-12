@@ -233,8 +233,11 @@ caller states the encoding, and the tag flows through parameters.**
   only if measurement shows tolerance labels cost on realistic sparse switches) governs scalar
   wire interchange ONLY; the spec pairs stay unconditional.
 
-**The read signature is value-in, value-out** — `static T NanoRead_X(ref ReaderState, T value)`,
-with `??=` construction inside and merge by mutation. The alternatives were weighed: v4's
+**The read signature is value-in, value-out** — `static T RawRead_X(ref ProtoReader.State, T value)`
+(the emitted name; "nano" survives only in the planning docs), with `??=` construction inside and
+merge by mutation. Since the swap, `ISerializer<T>.Read` *proxies to this static* for every
+eligible contract — the optimized emit is the live read path, exercised by the conformance and
+differential suites through the model, not a parallel artifact awaiting a caller. The alternatives were weighed: v4's
 `void Merge(ref T? value, …)` saves the return shuffle, but a `ref` argument binds only to
 fields, locals and array/span elements — never to properties or fresh collection slots — and the
 generated targets are overwhelmingly properties, so the general path would spill through a local
@@ -437,6 +440,46 @@ the shape stabilises: types into Core under `[Experimental]`, the new surface in
   never wrote. Emit iff opted-in AND symbol present; opted-in without the symbol gets a clean
   "needs protobuf-net.Core ≥ X" diagnostic — the same probe-the-reference discipline as
   `UnsafeAccessorAttribute` and `ReadDateOnly`.
+- **classic emission stays available as an opt-out, disabled by default** (Marc's call, at the
+  swap; confirmed as a committed post-green work item during gate 3): a model flag forcing the
+  stateful-API-shaped codegen even for nano-eligible contracts. The intellisense wording is part
+  of the design (paraphrase to polish, keep the intent): *"Only for use if you experience
+  problems with the default optimized emit; if enabling this fixes a symptom, that symptom is a
+  bug in the optimized path - please report it as an issue."* Self-triaging by construction:
+  every use of the flag becomes a field report rather than a silent divergence.
+  Near-free, because the `Instance` fallback keeps the classic pass maintained regardless — and
+  post-swap it is NOT "the old reader back": both shapes run over the nano internals (classic =
+  the veneer path, the measured `NanoViaLegacyApi` configuration). Its value is bisection — flip
+  the flag on a field report and emission bugs separate from core bugs — plus one documented
+  consequence: classic reads bytes through `AppendBytes`, so the flag pins legacy append
+  semantics regardless of `LegacyAppendBytes`, which is likely what anyone reaching for it
+  wants. Deletion horizon, so it stays an escape hatch rather than a second dialect: when nano
+  eligibility reaches parity and a release cycle passes without a report needing it.
+
+## The nano-swap sub-branch: replacing State's internals (in flight)
+
+Step 1 landed: `ReaderState` lives in Core (internal + IVT for spike speed; public +
+PublicAPI.Unshipped + `[Experimental]` at the real merge), the generator's symbol gate learned
+accessibility, and the whole gate battery runs against the Core-hosted reader. Step 2 is the
+port of `ProtoReader.State.ReadMethods.cs` (~80 members) onto the nano core, with these shapes
+settled by survey rather than discovery:
+
+- **`GetReader()` has two call sites in all of Core** — serializers reach the model through
+  State properties, so the port perimeter is ReadMethods.cs itself.
+- **State's new storage**: the nano `ReaderState` fields plus `TypeModel`/user-state and a
+  lazily-allocated reference-tracking cache (class-typed, so struct copies share it; State
+  travels by `ref`, so mutations flow).
+- **The obsolete class API bridges through `ReaderSnapshot`** — the solid form nano always
+  planned. The class holds a snapshot (plain fields, including the leased buffer, which the
+  bridge may hold directly since ownership stays in-process); each instance-API call liquifies,
+  operates, re-solidifies (~40 mechanical rewrites, since `DefaultState().X()` temporaries stop
+  carrying state). Museum API, museum prices — and the old class backends
+  (`StreamProtoReader`, `ReadOnlySequenceProtoReader`) become fully deletable, which is the
+  point of the exercise.
+- **Bytes members keep legacy append semantics on this surface** (`AppendBytes` is the veneer;
+  the replace default is the generated path's, selected by the emitted code, not by State).
+- Gates in order, per Marc: does it compile; the byte corpus (`AotDifferential`); the entire
+  compat suite.
 
 ## Landing strategy: side-by-side, with the v4 lesson as the guardrail
 
@@ -464,3 +507,16 @@ Rules of the road, inherited from the AOT work: derive rather than guess (the sh
 generated; the perf tables are measured), and nothing merges on "should be faster" — the
 differential decides correctness, and correctness is only the entry ticket: BenchmarkDotNet tables,
 committed beside the benchmarks, decide the rest.
+
+## Dispatch shape: measured, decided (2026-08-13)
+
+Is `switch (tag)` over full-tag constants (sparse: field << 3 spreads by 8, plus tolerance
+labels multiply them) faster or slower than `switch (tag >> 3)` over dense field numbers
+(jump-table friendly) with a `when` guard per wire form? The IL says the latter, decisively;
+the hardware says the opposite where it matters: on ORDERED tag streams (how writers emit)
+the predicted binary-search chain runs 3-4x faster than the jump table's indirect branch,
+and the tolerance labels are free (+1-8%) on the winning shape. The jump table only wins on
+shuffled streams (0.68-0.90x), which real payloads are not. Decision: keep the full-tag
+switch; the known-field/invalid-wire detection stays in the default arm's IsKnownField
+(cold by construction). Full table and the end-group field-space caveat for any future
+revisit: `src/NanoBench/DispatchResults.md`.

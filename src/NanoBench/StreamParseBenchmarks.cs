@@ -5,6 +5,7 @@ using System.Buffers;
 using System.IO;
 using Model = ProtoBuf.Nano.Bench.DescriptorModel;
 using Pbn = Google.Protobuf.Reflection; // protobuf-net.Reflection's DTOs (legacy row)
+using ReaderState = ProtoBuf.ProtoReader.State;  // the nano-swap: the reader IS State now
 
 namespace ProtoBuf.Nano.Bench;
 

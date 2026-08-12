@@ -28,6 +28,8 @@ partial class InheritModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Animal>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -86,6 +88,8 @@ partial class InheritModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Cat>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -125,6 +129,8 @@ partial class InheritModel
             }
             return value.Value;
         }
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Dog>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -176,37 +182,57 @@ partial class InheritModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Inherit.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Holder value)
-        {
-            value ??= new global::AotFixtures.Inherit.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Animal;
-                        tmp1 = state.ReadMessage<global::AotFixtures.Inherit.Animal>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Animal = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Inherit_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Animal;
             state.WriteMessage<global::AotFixtures.Inherit.Animal>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+        }
+
+        public static global::AotFixtures.Inherit.Holder RawRead_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Holder value)
+        {
+            value ??= new global::AotFixtures.Inherit.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Animal: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Animal, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Animal;
+                        tmp1 = state.ReadMessage<global::AotFixtures.Inherit.Animal>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Animal = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Puppy>.Features
@@ -246,34 +272,52 @@ partial class InheritModel
             return value.Value;
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Inherit.Standalone global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)
-        {
-            value ??= new global::AotFixtures.Inherit.Standalone();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Inherit_Standalone(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value)
         {
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.Inherit.Standalone RawRead_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)
+        {
+            value ??= new global::AotFixtures.Inherit.Standalone();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
     }
 }

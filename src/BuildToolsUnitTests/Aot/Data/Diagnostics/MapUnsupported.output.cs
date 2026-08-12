@@ -25,31 +25,13 @@ partial class MapUnsupportedModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade?>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.MapUnsupported.EnumKey global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
-        {
-            value ??= new global::AotFixtures.MapUnsupported.EnumKey();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_MapUnsupported_EnumKey(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.EnumKey value)
         {
@@ -61,31 +43,49 @@ partial class MapUnsupportedModel
             }
         }
 
-        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
-
-        global::AotFixtures.MapUnsupported.EnumValue global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
+        public static global::AotFixtures.MapUnsupported.EnumKey RawRead_AotFixtures_MapUnsupported_EnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
         {
-            value ??= new global::AotFixtures.MapUnsupported.EnumValue();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            value ??= new global::AotFixtures.MapUnsupported.EnumKey();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    // raw read pass: legacy-mode - member Value: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
                     {
+                        state.StashTag(tag);
                         var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
                         if (tmp1 != null) value.Value = tmp1;
                         break;
                     }
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTagOrPending();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.MapUnsupported.EnumValue global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
+            => RawRead_AotFixtures_MapUnsupported_EnumValue(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.EnumValue value)
         {
@@ -97,31 +97,49 @@ partial class MapUnsupportedModel
             }
         }
 
-        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
-
-        global::AotFixtures.MapUnsupported.MappedEnum global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
+        public static global::AotFixtures.MapUnsupported.EnumValue RawRead_AotFixtures_MapUnsupported_EnumValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
         {
-            value ??= new global::AotFixtures.MapUnsupported.MappedEnum();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            value ??= new global::AotFixtures.MapUnsupported.EnumValue();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    // raw read pass: legacy-mode - member Value: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
                     {
+                        state.StashTag(tag);
                         var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
                         if (tmp1 != null) value.Value = tmp1;
                         break;
                     }
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTagOrPending();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.MapUnsupported.MappedEnum global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
+            => RawRead_AotFixtures_MapUnsupported_MappedEnum(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
         {
@@ -133,31 +151,49 @@ partial class MapUnsupportedModel
             }
         }
 
-        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
-
-        global::AotFixtures.MapUnsupported.RepeatedValue global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
+        public static global::AotFixtures.MapUnsupported.MappedEnum RawRead_AotFixtures_MapUnsupported_MappedEnum(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
         {
-            value ??= new global::AotFixtures.MapUnsupported.RepeatedValue();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            value ??= new global::AotFixtures.MapUnsupported.MappedEnum();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    // raw read pass: legacy-mode - member Value: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
                     {
+                        state.StashTag(tag);
                         var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
                         if (tmp1 != null) value.Value = tmp1;
                         break;
                     }
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTagOrPending();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.MapUnsupported.RepeatedValue global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
+            => RawRead_AotFixtures_MapUnsupported_RepeatedValue(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
         {
@@ -167,6 +203,44 @@ partial class MapUnsupportedModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+        }
+
+        public static global::AotFixtures.MapUnsupported.RepeatedValue RawRead_AotFixtures_MapUnsupported_RepeatedValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
+        {
+            value ??= new global::AotFixtures.MapUnsupported.RepeatedValue();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Value: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Value;
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp1 != null) value.Value = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade>.Serializer

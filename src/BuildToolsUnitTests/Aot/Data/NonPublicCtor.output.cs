@@ -22,37 +22,57 @@ partial class NonPublicCtorModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.NonPublicCtor.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
-        {
-            value ??= new global::AotFixtures.NonPublicCtor.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Child;
-                        tmp1 = state.ReadMessage<global::AotFixtures.NonPublicCtor.PrivateCtor>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Child = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_NonPublicCtor_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Child;
             state.WriteMessage<global::AotFixtures.NonPublicCtor.PrivateCtor>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+        }
+
+        public static global::AotFixtures.NonPublicCtor.Holder RawRead_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
+        {
+            value ??= new global::AotFixtures.NonPublicCtor.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Child: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Child, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Child;
+                        tmp1 = state.ReadMessage<global::AotFixtures.NonPublicCtor.PrivateCtor>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Child = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Features
@@ -85,6 +105,8 @@ partial class NonPublicCtorModel
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -125,6 +147,8 @@ partial class NonPublicCtorModel
             state.WriteString(2, tmp2);
         }
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -155,6 +179,8 @@ partial class NonPublicCtorModel
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Constructor)]
         private static extern global::AotFixtures.NonPublicCtor.InternalCtor Create_AotFixtures_NonPublicCtor_InternalCtor();

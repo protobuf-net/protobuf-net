@@ -44,45 +44,13 @@ partial class ExternalSerializerModel
                     + "set [ProtoContract(IsScalar = false)] on it, or correct the serializer.");
         }
 
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ExternalSerializer.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Holder value)
-        {
-            value ??= new global::AotFixtures.ExternalSerializer.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Thing;
-                        tmp1 = state.ReadMessage<global::AotFixtures.ExternalSerializer.Thing>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>());
-                        if (tmp1 != null) value.Thing = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Ticket;
-                        tmp2 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>().Read(ref state, tmp2);
-                        value.Ticket = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Stamp;
-                        tmp3 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>().Read(ref state, tmp3);
-                        value.Stamp = tmp3;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ExternalSerializer_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ExternalSerializer.Holder value)
         {
@@ -95,13 +63,83 @@ partial class ExternalSerializerModel
             state.WriteAny<global::AotFixtures.ExternalSerializer.Stamp>(3, tmp3, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>());
         }
 
+        public static global::AotFixtures.ExternalSerializer.Holder RawRead_AotFixtures_ExternalSerializer_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Holder value)
+        {
+            value ??= new global::AotFixtures.ExternalSerializer.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Thing: hand-written serializer
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Thing, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Thing;
+                        tmp1 = state.ReadMessage<global::AotFixtures.ExternalSerializer.Thing>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>());
+                        if (tmp1 != null) value.Thing = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Ticket: hand-written serializer
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Ticket, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Ticket;
+                        tmp2 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>().Read(ref state, tmp2);
+                        value.Ticket = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Stamp: hand-written serializer
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Stamp, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Stamp;
+                        tmp3 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>().Read(ref state, tmp3);
+                        value.Stamp = tmp3;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
+
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Stamp> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Stamp>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>();
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Thing> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Thing>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>();
 
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Ticket> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Ticket>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>();
+
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

@@ -887,7 +887,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
             EquatableArray<string> aliases = default, bool emitInstance = true,
-            bool emitConstructor = false, bool isSealed = false, bool nanoReader = false)
+            bool emitConstructor = false, bool isSealed = false, bool rawReader = false)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -898,17 +898,16 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             EmitInstance = emitInstance;
             EmitConstructor = emitConstructor;
             IsSealed = isSealed;
-            NanoReader = nanoReader;
+            RawReader = rawReader;
         }
 
         /// <summary>
-        /// Whether <c>ProtoBuf.Nano.ReaderState</c> is visible to the compilation, enabling the
-        /// experimental second emission pass (see <c>docs/nano-core.md</c>). Symbol-gated rather
-        /// than configured: today nothing outside this repo's own rigs can see the type, so the
-        /// pass costs real consumers nothing - and when the type ships in Core, the emitted
-        /// methods stay dormant until something calls them.
+        /// Whether the raw reader surface (<c>ProtoReader.State.ReadRawTag</c> and friends) is
+        /// visible to the compilation, enabling the optimized read emission (see
+        /// <c>docs/nano-core.md</c>). Symbol-gated rather than configured, so a consumer on an
+        /// older Core keeps the classic emission with no knob to set.
         /// </summary>
-        public bool NanoReader { get; }
+        public bool RawReader { get; }
 
         /// <summary>
         /// Every <c>extern alias</c> declared on a reference in the consumer's compilation.
@@ -996,13 +995,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
                 && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
-                && IsSealed == other.IsSealed && NanoReader == other.NanoReader;
+                && IsSealed == other.IsSealed && RawReader == other.RawReader;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 
         public override int GetHashCode()
             => ((Namespace?.GetHashCode() ?? 0) * 397) ^ (TypeName.GetHashCode() * 31)
                 ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7)
-                ^ (NanoReader ? 8191 : 0);
+                ^ (RawReader ? 8191 : 0);
     }
 }

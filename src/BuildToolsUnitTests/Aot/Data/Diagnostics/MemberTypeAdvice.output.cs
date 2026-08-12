@@ -21,31 +21,13 @@ partial class MemberTypeAdviceModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade?>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.MemberTypeAdvice.MapWithEnumKey global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
-        {
-            value ??= new global::AotFixtures.MemberTypeAdvice.MapWithEnumKey();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.ByShade;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.ByShade = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
         {
@@ -55,6 +37,44 @@ partial class MemberTypeAdviceModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+        }
+
+        public static global::AotFixtures.MemberTypeAdvice.MapWithEnumKey RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
+        {
+            value ??= new global::AotFixtures.MemberTypeAdvice.MapWithEnumKey();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member ByShade: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // ByShade, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.ByShade;
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp1 != null) value.ByShade = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade>.Serializer

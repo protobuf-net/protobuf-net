@@ -19,192 +19,13 @@ partial class ExoticModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Exotic.Exotics>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Exotic.Exotics>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Exotic.Exotics global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Exotic.Exotics>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Exotic.Exotics value)
-        {
-            value ??= new global::AotFixtures.Exotic.Exotics();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Interface;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) value.Interface = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Collection;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.ICollection<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
-                        if (tmp2 != null) value.Collection = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Enumerable;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IEnumerable<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) value.Enumerable = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.ReadOnlyList;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyList<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
-                        if (tmp4 != null) value.ReadOnlyList = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Set;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.HashSet<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
-                        if (tmp5 != null) value.Set = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.Queue;
-                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::System.Collections.Generic.Queue<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
-                        if (tmp6 != null) value.Queue = tmp6;
-                        break;
-                    }
-                    case 7:
-                    {
-                        var tmp7 = value.Stack;
-                        tmp7 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateStack<global::System.Collections.Generic.Stack<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
-                        if (tmp7 != null) value.Stack = tmp7;
-                        break;
-                    }
-                    case 8:
-                    {
-                        var tmp8 = value.ImmutableArray;
-                        tmp8 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableArray<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
-                        value.ImmutableArray = tmp8;
-                        break;
-                    }
-                    case 9:
-                    {
-                        var tmp9 = value.ImmutableList;
-                        tmp9 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9);
-                        if (tmp9 != null) value.ImmutableList = tmp9;
-                        break;
-                    }
-                    case 10:
-                    {
-                        var tmp10 = value.ImmutableInterface;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
-                        if (tmp10 != null) value.ImmutableInterface = tmp10;
-                        break;
-                    }
-                    case 11:
-                    {
-                        var tmp11 = value.ConcurrentQueue;
-                        tmp11 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentQueue<global::System.Collections.Concurrent.ConcurrentQueue<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp11);
-                        if (tmp11 != null) value.ConcurrentQueue = tmp11;
-                        break;
-                    }
-                    case 12:
-                    {
-                        var tmp12 = value.ConcurrentBag;
-                        tmp12 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentBag<global::System.Collections.Concurrent.ConcurrentBag<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
-                        if (tmp12 != null) value.ConcurrentBag = tmp12;
-                        break;
-                    }
-                    case 13:
-                    {
-                        var tmp13 = value.Strings;
-                        tmp13 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<string>, string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
-                        if (tmp13 != null) value.Strings = tmp13;
-                        break;
-                    }
-                    case 14:
-                    {
-                        var tmp14 = value.SortedSet;
-                        tmp14 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.SortedSet<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp14);
-                        if (tmp14 != null) value.SortedSet = tmp14;
-                        break;
-                    }
-                    case 15:
-                    {
-                        var tmp15 = value.ISet;
-                        tmp15 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.ISet<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15);
-                        if (tmp15 != null) value.ISet = tmp15;
-                        break;
-                    }
-                    case 16:
-                    {
-                        var tmp16 = value.ReadOnlyCollection;
-                        tmp16 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyCollection<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp16);
-                        if (tmp16 != null) value.ReadOnlyCollection = tmp16;
-                        break;
-                    }
-                    case 17:
-                    {
-                        var tmp17 = value.ConcurrentStack;
-                        tmp17 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentStack<global::System.Collections.Concurrent.ConcurrentStack<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp17);
-                        if (tmp17 != null) value.ConcurrentStack = tmp17;
-                        break;
-                    }
-                    case 19:
-                    {
-                        var tmp19 = value.ImmutableQueue;
-                        tmp19 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableQueue<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp19);
-                        if (tmp19 != null) value.ImmutableQueue = tmp19;
-                        break;
-                    }
-                    case 20:
-                    {
-                        var tmp20 = value.ImmutableIQueue;
-                        tmp20 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIQueue<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp20);
-                        if (tmp20 != null) value.ImmutableIQueue = tmp20;
-                        break;
-                    }
-                    case 21:
-                    {
-                        var tmp21 = value.ImmutableStack;
-                        tmp21 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableStack<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp21);
-                        if (tmp21 != null) value.ImmutableStack = tmp21;
-                        break;
-                    }
-                    case 22:
-                    {
-                        var tmp22 = value.ImmutableIStack;
-                        tmp22 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIStack<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp22);
-                        if (tmp22 != null) value.ImmutableIStack = tmp22;
-                        break;
-                    }
-                    case 23:
-                    {
-                        var tmp23 = value.ImmutableHashSet;
-                        tmp23 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableHashSet<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp23);
-                        if (tmp23 != null) value.ImmutableHashSet = tmp23;
-                        break;
-                    }
-                    case 24:
-                    {
-                        var tmp24 = value.ImmutableSortedSet;
-                        tmp24 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableSortedSet<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp24);
-                        if (tmp24 != null) value.ImmutableSortedSet = tmp24;
-                        break;
-                    }
-                    case 25:
-                    {
-                        var tmp25 = value.ImmutableISet;
-                        tmp25 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp25);
-                        if (tmp25 != null) value.ImmutableISet = tmp25;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Exotic_Exotics(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Exotic.Exotics>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Exotic.Exotics value)
         {
@@ -326,6 +147,343 @@ partial class ExoticModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().WriteRepeated(ref state, 25, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp25);
             }
+        }
+
+        public static global::AotFixtures.Exotic.Exotics RawRead_AotFixtures_Exotic_Exotics(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Exotic.Exotics value)
+        {
+            value ??= new global::AotFixtures.Exotic.Exotics();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Interface: collection shape CreateEnumerable
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Interface, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Interface;
+                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                        if (tmp1 != null) value.Interface = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Collection: collection shape CreateEnumerable
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Collection, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Collection;
+                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.ICollection<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
+                        if (tmp2 != null) value.Collection = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Enumerable: collection shape CreateEnumerable
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Enumerable, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Enumerable;
+                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IEnumerable<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                        if (tmp3 != null) value.Enumerable = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ReadOnlyList: collection shape CreateEnumerable
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // ReadOnlyList, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.ReadOnlyList;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyList<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                        if (tmp4 != null) value.ReadOnlyList = tmp4;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Set: collection shape CreateSet
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Set, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Set;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.HashSet<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                        if (tmp5 != null) value.Set = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Queue: collection shape CreateQueue
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // Queue, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.Queue;
+                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::System.Collections.Generic.Queue<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
+                        if (tmp6 != null) value.Queue = tmp6;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Stack: collection shape CreateStack
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // Stack, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp7 = value.Stack;
+                        tmp7 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateStack<global::System.Collections.Generic.Stack<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+                        if (tmp7 != null) value.Stack = tmp7;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableArray: collection shape CreateImmutableArray
+                    case (8 << 3) | 0:
+                    case (8 << 3) | 1:
+                    case (8 << 3) | 2:  // ImmutableArray, field 8
+                    case (8 << 3) | 3:
+                    case (8 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp8 = value.ImmutableArray;
+                        tmp8 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableArray<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+                        value.ImmutableArray = tmp8;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableList: collection shape CreateImmutableList
+                    case (9 << 3) | 0:
+                    case (9 << 3) | 1:
+                    case (9 << 3) | 2:  // ImmutableList, field 9
+                    case (9 << 3) | 3:
+                    case (9 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp9 = value.ImmutableList;
+                        tmp9 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9);
+                        if (tmp9 != null) value.ImmutableList = tmp9;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableInterface: collection shape CreateImmutableIList
+                    case (10 << 3) | 0:
+                    case (10 << 3) | 1:
+                    case (10 << 3) | 2:  // ImmutableInterface, field 10
+                    case (10 << 3) | 3:
+                    case (10 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp10 = value.ImmutableInterface;
+                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                        if (tmp10 != null) value.ImmutableInterface = tmp10;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ConcurrentQueue: collection shape CreateConcurrentQueue
+                    case (11 << 3) | 0:
+                    case (11 << 3) | 1:
+                    case (11 << 3) | 2:  // ConcurrentQueue, field 11
+                    case (11 << 3) | 3:
+                    case (11 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp11 = value.ConcurrentQueue;
+                        tmp11 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentQueue<global::System.Collections.Concurrent.ConcurrentQueue<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp11);
+                        if (tmp11 != null) value.ConcurrentQueue = tmp11;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ConcurrentBag: collection shape CreateConcurrentBag
+                    case (12 << 3) | 0:
+                    case (12 << 3) | 1:
+                    case (12 << 3) | 2:  // ConcurrentBag, field 12
+                    case (12 << 3) | 3:
+                    case (12 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp12 = value.ConcurrentBag;
+                        tmp12 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentBag<global::System.Collections.Concurrent.ConcurrentBag<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
+                        if (tmp12 != null) value.ConcurrentBag = tmp12;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Strings: collection shape CreateEnumerable
+                    case (13 << 3) | 0:
+                    case (13 << 3) | 1:
+                    case (13 << 3) | 2:  // Strings, field 13
+                    case (13 << 3) | 3:
+                    case (13 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp13 = value.Strings;
+                        tmp13 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IList<string>, string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
+                        if (tmp13 != null) value.Strings = tmp13;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member SortedSet: collection shape CreateEnumerable
+                    case (14 << 3) | 0:
+                    case (14 << 3) | 1:
+                    case (14 << 3) | 2:  // SortedSet, field 14
+                    case (14 << 3) | 3:
+                    case (14 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp14 = value.SortedSet;
+                        tmp14 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.SortedSet<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp14);
+                        if (tmp14 != null) value.SortedSet = tmp14;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ISet: collection shape CreateSet
+                    case (15 << 3) | 0:
+                    case (15 << 3) | 1:
+                    case (15 << 3) | 2:  // ISet, field 15
+                    case (15 << 3) | 3:
+                    case (15 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp15 = value.ISet;
+                        tmp15 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateSet<global::System.Collections.Generic.ISet<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15);
+                        if (tmp15 != null) value.ISet = tmp15;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ReadOnlyCollection: collection shape CreateEnumerable
+                    case (16 << 3) | 0:
+                    case (16 << 3) | 1:
+                    case (16 << 3) | 2:  // ReadOnlyCollection, field 16
+                    case (16 << 3) | 3:
+                    case (16 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp16 = value.ReadOnlyCollection;
+                        tmp16 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.IReadOnlyCollection<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp16);
+                        if (tmp16 != null) value.ReadOnlyCollection = tmp16;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ConcurrentStack: collection shape CreateConcurrentStack
+                    case (17 << 3) | 0:
+                    case (17 << 3) | 1:
+                    case (17 << 3) | 2:  // ConcurrentStack, field 17
+                    case (17 << 3) | 3:
+                    case (17 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp17 = value.ConcurrentStack;
+                        tmp17 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateConcurrentStack<global::System.Collections.Concurrent.ConcurrentStack<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp17);
+                        if (tmp17 != null) value.ConcurrentStack = tmp17;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableQueue: collection shape CreateImmutableQueue
+                    case (19 << 3) | 0:
+                    case (19 << 3) | 1:
+                    case (19 << 3) | 2:  // ImmutableQueue, field 19
+                    case (19 << 3) | 3:
+                    case (19 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp19 = value.ImmutableQueue;
+                        tmp19 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableQueue<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp19);
+                        if (tmp19 != null) value.ImmutableQueue = tmp19;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableIQueue: collection shape CreateImmutableIQueue
+                    case (20 << 3) | 0:
+                    case (20 << 3) | 1:
+                    case (20 << 3) | 2:  // ImmutableIQueue, field 20
+                    case (20 << 3) | 3:
+                    case (20 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp20 = value.ImmutableIQueue;
+                        tmp20 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIQueue<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp20);
+                        if (tmp20 != null) value.ImmutableIQueue = tmp20;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableStack: collection shape CreateImmutableStack
+                    case (21 << 3) | 0:
+                    case (21 << 3) | 1:
+                    case (21 << 3) | 2:  // ImmutableStack, field 21
+                    case (21 << 3) | 3:
+                    case (21 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp21 = value.ImmutableStack;
+                        tmp21 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableStack<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp21);
+                        if (tmp21 != null) value.ImmutableStack = tmp21;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableIStack: collection shape CreateImmutableIStack
+                    case (22 << 3) | 0:
+                    case (22 << 3) | 1:
+                    case (22 << 3) | 2:  // ImmutableIStack, field 22
+                    case (22 << 3) | 3:
+                    case (22 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp22 = value.ImmutableIStack;
+                        tmp22 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableIStack<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp22);
+                        if (tmp22 != null) value.ImmutableIStack = tmp22;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableHashSet: collection shape CreateImmutableHashSet
+                    case (23 << 3) | 0:
+                    case (23 << 3) | 1:
+                    case (23 << 3) | 2:  // ImmutableHashSet, field 23
+                    case (23 << 3) | 3:
+                    case (23 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp23 = value.ImmutableHashSet;
+                        tmp23 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableHashSet<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp23);
+                        if (tmp23 != null) value.ImmutableHashSet = tmp23;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableSortedSet: collection shape CreateImmutableSortedSet
+                    case (24 << 3) | 0:
+                    case (24 << 3) | 1:
+                    case (24 << 3) | 2:  // ImmutableSortedSet, field 24
+                    case (24 << 3) | 3:
+                    case (24 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp24 = value.ImmutableSortedSet;
+                        tmp24 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableSortedSet<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp24);
+                        if (tmp24 != null) value.ImmutableSortedSet = tmp24;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ImmutableISet: collection shape CreateImmutableISet
+                    case (25 << 3) | 0:
+                    case (25 << 3) | 1:
+                    case (25 << 3) | 2:  // ImmutableISet, field 25
+                    case (25 << 3) | 3:
+                    case (25 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp25 = value.ImmutableISet;
+                        tmp25 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp25);
+                        if (tmp25 != null) value.ImmutableISet = tmp25;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 or 15 or 16 or 17 or 19 or 20 or 21 or 22 or 23 or 24 or 25 => true,
+                _ => false,
+            };
         }
     }
 }
