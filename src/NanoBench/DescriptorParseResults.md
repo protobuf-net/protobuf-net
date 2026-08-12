@@ -91,3 +91,32 @@ to at document scale, with the goldens holding it at snippet scale.
 Measured (ShortRun): NanoGenerated 8.65 µs vs NanoRaw 8.51 (net10, within error), 15.59 vs
 15.30 (net472), allocations byte-identical. The machine writes what the hand wrote, at the same
 speed.
+
+## Re-verification on the swapped tree (2026-08-14, net10, full job)
+
+| Method         | Mean      | Ratio | Allocated |
+| -------------- | --------: | ----: | --------: |
+| LegacyReal     | 17.755 us |  1.00 |  62.27 KB |
+| GoogleProtobuf | 12.309 us |  0.69 |  53.14 KB |
+| NanoRaw        |  9.266 us |  0.52 |  51.91 KB |
+| NanoGenerated  |  9.122 us |  0.51 |  51.91 KB |
+
+Three readings, in order of importance:
+
+1. **The generated readers are at parity with the hand-written ones** (9.12 vs 9.27 us) -
+   the goal of the whole generator arc. Both remain ~26% faster than Google.Protobuf.
+2. **The "legacy" classic path got ~29% faster by riding the swapped core** (25.0 -> 17.8 us
+   against the pre-swap record): the classic emit shapes now run over the raw core's veneers,
+   so even un-regenerated consumers benefit from the swap.
+3. NanoRaw drifted 8.32 -> 9.27 us against the spike record. Same machine, but a different
+   session/thermal state and the raw surface has since grown the forward-only pending slot,
+   the IsScopeEnd legacy fallback and scope bookkeeping - per the tiebreaker rule this is a
+   measure-before-concluding item, not a finding; if it holds under a controlled A/B it is
+   the price of the compatibility seams and worth attributing properly.
+
+Native AOT re-verified the same day: AotSmoke publish green (round-trip PASSED as ILC
+native code, the full raw read stack under it), trim/AOT warnings 19 = the recorded
+baseline count (membership drift inside the structural residue: DeserializeRootFallback
+and KeyValuePairSerializer.CreateDefault appear; both runtime-model fallback paths).
+Binary 3.65 MB - a NEW baseline datum (fixture set and ILC version both moved since the
+2.7 MB-era records; do not compare across them).

@@ -78,6 +78,12 @@ namespace ProtoBuf.BuildTools.Generators
             // form of any member whose type qualifies, so it has to be opted into on both sides
             var allowParseableTypes = false;
 
+            // the escape hatch: suppress the optimized read emission entirely, keeping the classic
+            // bodies - one flag on the plan, and everything downstream (proxies, RawRead_ statics,
+            // breadcrumbs) reverts. Only for use if the optimized emit misbehaves; the attribute's
+            // doc asks anyone who needs it to report the symptom as an issue.
+            var classicEmit = false;
+
             foreach (var attribute in model.GetAttributes())
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -90,6 +96,10 @@ namespace ProtoBuf.BuildTools.Generators
                         if (named.Key == "AllowParseableTypes" && named.Value.Value is true)
                         {
                             allowParseableTypes = true;
+                        }
+                        if (named.Key == "ClassicEmit" && named.Value.Value is true)
+                        {
+                            classicEmit = true;
                         }
                     }
                     continue;
@@ -185,7 +195,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // rather than emit calls that do not compile - which is exactly how this
                     // gate's insufficiency was discovered (the differential corpus referenced a
                     // one-wave-stale Core).
-                    rawReader: compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } rawType
+                    rawReader: !classicEmit
+                        && compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } rawType
                         && rawType.GetMembers("ReadRawTag").Length != 0
                         && rawType.GetMembers("StashTag").Length != 0
                         && rawType.GetMembers("ReadRawTimestamp").Length != 0 // the BCL wrappers wave

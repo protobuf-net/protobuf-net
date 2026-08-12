@@ -167,6 +167,7 @@ namespace ProtoBuf
             /// validation is repeated here.
             /// </summary>
             [MethodImpl(HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void StashTag(uint tag)
             {
                 _fieldNumber = (int)(tag >> 3);
@@ -182,6 +183,7 @@ namespace ProtoBuf
             /// does not pay for this branch.
             /// </summary>
             [MethodImpl(HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public uint ReadRawTagOrPending()
             {
                 var tag = _pendingTag;
@@ -200,6 +202,7 @@ namespace ProtoBuf
             /// gap.
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void ThrowUnexpectedWireType(uint tag)
             {
                 StashTag(tag);
@@ -628,21 +631,25 @@ namespace ProtoBuf
             /// this does not consult the stateful wire type, so it is callable mid-raw-read.
             /// </summary>
             [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public byte[] AppendRawBytes(byte[] value)
                 => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <inheritdoc cref="AppendRawBytes(byte[])"/>
             [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public ReadOnlyMemory<byte> AppendRawBytes(ReadOnlyMemory<byte> value)
                 => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <inheritdoc cref="AppendRawBytes(byte[])"/>
             [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public Memory<byte> AppendRawBytes(Memory<byte> value)
                 => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
 
             /// <inheritdoc cref="AppendRawBytes(byte[])"/>
             [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public ArraySegment<byte> AppendRawBytes(ArraySegment<byte> value)
                 => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
 

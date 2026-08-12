@@ -188,8 +188,11 @@ public class DescriptorParseBenchmarks
         foreach (var nested in typeof(Model.NanoDescriptorModel).GetNestedTypes(
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic))
         {
+            // the RawRead_ statics are private (the services class is too - direct calls are a
+            // sibling-to-sibling design, not consumer API); this rig reaches them reflectively
             foreach (var method in nested.GetMethods(
-                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic
+                | System.Reflection.BindingFlags.Static))
             {
                 if (method.Name.StartsWith("RawRead_", StringComparison.Ordinal)
                     && method.ReturnType == contractType)

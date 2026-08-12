@@ -229,7 +229,7 @@ namespace ProtoBuf.AotConformance
                 var type = declaration.GetType();
                 var underlying = (Type)type.GetProperty("Type")!.GetValue(declaration)!;
                 var surrogate = (Type)type.GetProperty("Surrogate")!.GetValue(declaration)!;
-                var converter = (Type?)type.GetProperty("Converter")!.GetValue(declaration);
+                var converter = (Type)type.GetProperty("Converter")!.GetValue(declaration);
 
                 if (converter is null)
                 {
@@ -284,7 +284,7 @@ namespace ProtoBuf.AotConformance
             // have no parameterless constructor, so they can only be covered by declared samples.
             var defaults = from attribute in modelType.GetCustomAttributes()
                            where attribute.GetType().FullName == ProtoSerializableAttribute
-                           let seed = (Type?)attribute.GetType().GetProperty("Type")?.GetValue(attribute)
+                           let seed = (Type)attribute.GetType().GetProperty("Type")?.GetValue(attribute)
                            where seed is not null
                               && (seed.IsValueType || seed.GetConstructor(Type.EmptyTypes) is not null)
                            select Activator.CreateInstance(seed!)!;
