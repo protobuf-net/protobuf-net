@@ -437,6 +437,16 @@ the shape stabilises: types into Core under `[Experimental]`, the new surface in
   never wrote. Emit iff opted-in AND symbol present; opted-in without the symbol gets a clean
   "needs protobuf-net.Core ≥ X" diagnostic — the same probe-the-reference discipline as
   `UnsafeAccessorAttribute` and `ReadDateOnly`.
+- **classic emission stays available as an opt-out, disabled by default** (Marc's call, at the
+  swap): a model flag forcing the stateful-API-shaped codegen even for nano-eligible contracts.
+  Near-free, because the `Instance` fallback keeps the classic pass maintained regardless — and
+  post-swap it is NOT "the old reader back": both shapes run over the nano internals (classic =
+  the veneer path, the measured `NanoViaLegacyApi` configuration). Its value is bisection — flip
+  the flag on a field report and emission bugs separate from core bugs — plus one documented
+  consequence: classic reads bytes through `AppendBytes`, so the flag pins legacy append
+  semantics regardless of `LegacyAppendBytes`, which is likely what anyone reaching for it
+  wants. Deletion horizon, so it stays an escape hatch rather than a second dialect: when nano
+  eligibility reaches parity and a release cycle passes without a report needing it.
 
 ## The nano-swap sub-branch: replacing State's internals (in flight)
 
