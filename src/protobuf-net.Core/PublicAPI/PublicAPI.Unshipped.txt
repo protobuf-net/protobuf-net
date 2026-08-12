@@ -1,0 +1,6 @@
+[PBN9001]ProtoBuf.ProtoSerializerAttribute
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.ProtoSerializerAttribute(System.Type type, System.Type serializer) -> void
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.Type.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.Serializer.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.IsScalar.get -> bool
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.IsScalar.set -> void
