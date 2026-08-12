@@ -84,8 +84,9 @@ assembly):
   final authority on itself. (Carried to upstream review as an open question.)
 - **Matching is by full name**, never symbol identity — repo doctrine; the test harnesses and the
   reflectively-loaded generator in AotDifferential cannot share symbol identity with consumers.
-- **Validation** (each failure a warning-level diagnostic naming the fix, new IDs in the PBN2xxx
-  block, recorded in `AnalyzerReleases.Unshipped.md`):
+- **Validation** (each failure a warning-level diagnostic naming the fix, reported through the
+  existing PBN2002/PBN2003 kinds with explanatory strings, matching every existing surrogate
+  refusal; no new IDs, so `AnalyzerReleases.Unshipped.md` is untouched):
   - arity mismatch between `Type` and `Serializer`, or one open and one closed;
   - the closed serializer does not implement `ISerializer<T>` for the closed `T`;
   - the serializer is not a class, is inaccessible from the generated code, or has no
@@ -184,7 +185,7 @@ Not `[Experimental]`: it is a runtime feature in its own right and its precedent
 
 ### Proposal 1
 
-- **Golden fixtures** (`BuildToolsUnitTests/Aot/Data/`): `ExternalSerializer.input.cs` — a
+- **Golden fixtures** (`BuildToolsUnitTests/Aot/Data/`): `ModelSerializer.input.cs` — a
   `[DataContract]`/`[DataMember(Order)]` contract with a Norse-shaped
   `readonly record struct Wrapped<T>` member and a `Wrapped<T>?` member, served by a model-level
   open declaration; a closed declaration overriding the open mapping; `Diagnostics/` fixtures per
