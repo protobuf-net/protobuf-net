@@ -93,3 +93,28 @@ already exists at the API level; the prototype shows it need not exist per-messa
    battery did).
 4. Widen per the census machinery (it already tallies write-relevant member shapes);
    legacy-mode arms carry the rest from day one.
+
+## Design refinements (Marc, 2026-08-14)
+
+- **Constant tags cost nothing in either pass.** The generator knows every tag at compile
+  time: Measure_ statics fold tag lengths into literal constants (no MeasureVarint32 call
+  for tags), and the write side emits pre-encoded constant bytes - a single store for
+  fields <= 15 (the dominant case; the write mirror of the read''s range-trick), unrolled
+  stores beyond. Consequence: the repeated-measure cost concentrates in STRING sizing
+  (GetByteCount is the one measure that touches data) and sub-message recursion.
+- **The deep-tree memoization race, three entrants, tiebreaker-ruled on the descriptor set:**
+  1. recompute-always (prototype default; zero context, wins at typical depth);
+  2. keyed memo on the writer (Marc''s length-lookup sketch, morally v3''s
+     Measure/MeasureState machinery - inspect that in step 1): pooled
+     Dictionary<object, long> by reference identity, post-order populated; costs a hash
+     per node and needs an identity story for struct contracts;
+  3. ordered length QUEUE: the root measure appends each sub-message length to a pooled
+     buffer in traversal order, the write pass consumes via cursor - no keys, O(1),
+     struct-friendly, valid because measure and write are emitted from the same plan and
+     traverse identically BY CONSTRUCTION. Suggested default; the keyed memo is the
+     fallback if any shape breaks traversal identity. All schemes share the existing
+     assumption that the value (including ShouldSerialize answers) does not mutate
+     mid-serialization.
+- **Buffer storage reworks like the read side**: per-TFM accessor (ref byte root + offset
+  on net7+, arr[index] down-level behind one inlined accessor), presized-region fast path,
+  flush boundary as the refill problem mirrored.
