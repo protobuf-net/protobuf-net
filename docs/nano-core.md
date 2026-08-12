@@ -438,6 +438,31 @@ the shape stabilises: types into Core under `[Experimental]`, the new surface in
   "needs protobuf-net.Core ≥ X" diagnostic — the same probe-the-reference discipline as
   `UnsafeAccessorAttribute` and `ReadDateOnly`.
 
+## The nano-swap sub-branch: replacing State's internals (in flight)
+
+Step 1 landed: `ReaderState` lives in Core (internal + IVT for spike speed; public +
+PublicAPI.Unshipped + `[Experimental]` at the real merge), the generator's symbol gate learned
+accessibility, and the whole gate battery runs against the Core-hosted reader. Step 2 is the
+port of `ProtoReader.State.ReadMethods.cs` (~80 members) onto the nano core, with these shapes
+settled by survey rather than discovery:
+
+- **`GetReader()` has two call sites in all of Core** — serializers reach the model through
+  State properties, so the port perimeter is ReadMethods.cs itself.
+- **State's new storage**: the nano `ReaderState` fields plus `TypeModel`/user-state and a
+  lazily-allocated reference-tracking cache (class-typed, so struct copies share it; State
+  travels by `ref`, so mutations flow).
+- **The obsolete class API bridges through `ReaderSnapshot`** — the solid form nano always
+  planned. The class holds a snapshot (plain fields, including the leased buffer, which the
+  bridge may hold directly since ownership stays in-process); each instance-API call liquifies,
+  operates, re-solidifies (~40 mechanical rewrites, since `DefaultState().X()` temporaries stop
+  carrying state). Museum API, museum prices — and the old class backends
+  (`StreamProtoReader`, `ReadOnlySequenceProtoReader`) become fully deletable, which is the
+  point of the exercise.
+- **Bytes members keep legacy append semantics on this surface** (`AppendBytes` is the veneer;
+  the replace default is the generated path's, selected by the emitted code, not by State).
+- Gates in order, per Marc: does it compile; the byte corpus (`AotDifferential`); the entire
+  compat suite.
+
 ## Landing strategy: side-by-side, with the v4 lesson as the guardrail
 
 Incremental (build the nano reader alongside the incumbent, migrate logic, swap at the end) beats
