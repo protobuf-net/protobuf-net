@@ -54,6 +54,15 @@ public ref partial struct ReaderState
     /// </summary>
     private object? _source;
 
+    /// <summary>
+    /// The end-group sentinel for the innermost group scope, 0 when in length/EOF mode. A state
+    /// slot rather than a parameter, because the ISerializer&lt;T&gt;.Read signature is immovable -
+    /// and since the slot must exist for that path, it is the ONLY mechanism (direct calls use it
+    /// too; one approach, and a slightly smaller frame). Routine fields never read it: the check
+    /// lives in the switch default case.
+    /// </summary>
+    private uint _stopTag;
+
     /// <summary>Absolute position of the reader.</summary>
     public long Position => _positionBase + _offset;
 
@@ -147,17 +156,26 @@ public ref partial struct ReaderState
     // ---------------------------------------------------------------- termination
 
     /// <summary>
-    /// Enters a length-prefixed scope: returns the prior limit for the caller to hold as a local
-    /// and restore via <see cref="PopLimit"/> - the nesting stack lives in generated code, not in
-    /// state. Group (sentinel) termination deliberately has NO state here: the end-group tag
-    /// reaches the shared serializer as its stopTag parameter and is handled in the switch's
-    /// default case, so matched fields never test it.
+    /// Enters a length-prefixed scope: sets the limit AND clears the group sentinel - a stale
+    /// outer stopTag inside a length-bounded sub-message could false-match a wiretype-4 tag, so
+    /// every dive pushes scope, either kind. The prior scope goes into a generated-code local and
+    /// comes back via <see cref="PopScope"/>: the nesting stack lives in the callers, state holds
+    /// only the innermost.
     /// </summary>
-    public long PushLimit(long length)
+    public ReadScope PushLimit(long length)
         => throw new NotImplementedException();
 
-    /// <summary>Restores the enclosing limit captured by <see cref="PushLimit"/>.</summary>
-    public void PopLimit(long prior)
+    /// <summary>
+    /// Enters a group scope: sets the end-group sentinel (checked in the switch default case -
+    /// matched fields never test it) and leaves the enclosing length limit in force. A wiretype-4
+    /// tag that is not the current sentinel reaches <see cref="SkipTag"/>, which throws: the
+    /// mismatched-end-group check falls out free.
+    /// </summary>
+    public ReadScope PushGroup(uint endGroupTag)
+        => throw new NotImplementedException();
+
+    /// <summary>Restores the enclosing scope captured by a push.</summary>
+    public void PopScope(in ReadScope prior)
         => throw new NotImplementedException();
 
     // ---------------------------------------------------------------- snapshot
@@ -206,12 +224,21 @@ public ref partial struct ReaderState
 }
 
 /// <summary>
+/// The prior termination scope - the innermost length limit and group sentinel together - held in
+/// a generated-code local across a dive and restored on the way out.
+/// </summary>
+public readonly struct ReadScope
+{
+    // prior absolute limit + prior stopTag; shape only for now
+}
+
+/// <summary>
 /// The storable (non-ref-struct) snapshot of a <see cref="ReaderState"/>: the async/resume story
 /// (what <c>ProtoReader.SolidState</c> is to the legacy reader). Plain fields only - the ref
 /// field is represented as the segment-start index within the buffer.
 /// </summary>
 public readonly struct ReaderSnapshot
 {
-    // buffer + segment-start index + offset/count + positionBase + remaining + source + limit;
+    // buffer + segment-start index + offset/count + positionBase + remaining + source + scope;
     // shape only for now - members arrive with the implementation
 }

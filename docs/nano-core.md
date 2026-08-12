@@ -148,6 +148,17 @@ caller states the encoding, and the tag flows through parameters.**
   hottest loop in the library, and the generated code already holds the tag in a local everywhere
   it could be needed — so `SkipTag(tag)`, `AppendExtensionData(tag, …)` and the throw helpers take
   it as a parameter (v4's shape exactly).
+- **One exception, forced by an immovable signature: the group sentinel is a state slot.** The
+  end-group tag cannot be a parameter, because `ISerializer<T>.Read(ref State, T value)` cannot
+  change — and since the slot must exist for that path, it is the *only* mechanism (direct calls
+  use it too: one approach, and a slightly smaller frame). It stays off the hot path: matched
+  fields never read it; the check is the switch's `default:` case. Push/pop happens in
+  generated-code locals around dives — and **every dive pushes scope, either kind**: a group dive
+  sets the sentinel, a length dive clears it, because a stale outer sentinel inside a
+  length-bounded sub-message could false-match a wiretype-4 tag. `PushLimit`/`PushGroup` return the
+  prior `ReadScope` (limit + sentinel together) for the caller to hold and `PopScope`; state holds
+  only the innermost. A wiretype-4 tag that is not the current sentinel reaches `SkipTag`, which
+  throws — mismatched end-group detection falls out free.
 - The legacy API becomes a veneer: `ReadFieldHeader()` is `ReadRawTag()` plus the shift/mask and
   state writes — one implementation core, two surfaces, the stateful one paying for its own state.
 - **Wire-type tolerance is preserved by case labels, not by state.** The legacy reader accepts an
