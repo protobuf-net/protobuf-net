@@ -174,9 +174,14 @@ namespace ProtoBuf.BuildTools.Generators
                     // both the opt-out and the way to keep `new` working
                     emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
                     isSealed: model.IsSealed,
-                    // the nano pass is symbol-gated: it exists wherever the experimental reader is
-                    // visible, which today is only this repo's own rigs
-                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.Nano.ReaderState") is not null);
+                    // the nano pass is symbol-gated on the experimental reader being visible AND
+                    // ACCESSIBLE: on the nano-swap branch the type lives internal in Core, so a
+                    // bare existence probe would emit calls that fail accessibility in every
+                    // consumer's build - only IVT'd rigs (and in-compilation stubs, which are the
+                    // test harnesses) pass this gate. The real merge makes it public and this
+                    // reduces to the existence check.
+                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.Nano.ReaderState") is { } nanoType
+                        && compilation.IsSymbolAccessibleWithin(nanoType, compilation.Assembly));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));

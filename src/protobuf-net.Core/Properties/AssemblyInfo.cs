@@ -47,6 +47,16 @@ using System.Runtime.CompilerServices;
     + "0815a096e4483605139a32a76ec2fef196507487329c12047bf6a68bca8ee9354155f4d01daf6e"
     + "ec5ff6bc")]
 
+// the nano-swap sub-branch: ReaderState lives in Core now, internal for spike speed - the real
+// merge makes it public with PublicAPI.Unshipped entries and the [Experimental] ceremony, per
+// the move plan in docs/nano-core.md. IVT lets the benchmark rig keep consuming it meanwhile.
+[assembly: InternalsVisibleTo("NanoBench, PublicKey="
+    + "002400000480000094000000060200000024000052534131000400000100010009ed9caa457bfc"
+    + "205716c3d4e8b255a63ddf71c9e53b1b5f574ab6ffdba11e80ab4b50be9c46d43b75206280070d"
+    + "dba67bd4c830f93f0317504a76ba6a48243c36d2590695991164592767a7bbc4453b34694e31e2"
+    + "0815a096e4483605139a32a76ec2fef196507487329c12047bf6a68bca8ee9354155f4d01daf6e"
+    + "ec5ff6bc")]
+
 #if !NETSTANDARD2_0_OR_GREATER // see #1214
 [module: SkipLocalsInit]
 #endif
