@@ -653,8 +653,9 @@ public ref partial struct ReaderState
 
     /// <summary>
     /// Reads a packed fixed32 run into <paramref name="values"/> (appending). The count is exact
-    /// by construction (length / 4), and on net8+ the fill is a single block copy - little-endian
-    /// assumed, as recorded for the fixed readers generally.
+    /// by construction (length / 4), and on net8+ little-endian the fill is a single block copy;
+    /// the big-endian branch (per-element, endian-corrected by ReadRawFixed32) folds away at JIT
+    /// time on every little-endian platform.
     /// </summary>
     public void ReadPackedFixed32(List<int> values)
     {
@@ -666,9 +667,17 @@ public ref partial struct ReaderState
 #if NET8_0_OR_GREATER
         int oldCount = values.Count;
         CollectionsMarshal.SetCount(values, oldCount + count);
-        MemoryMarshal.Cast<byte, int>(MemoryMarshal.CreateReadOnlySpan(ref At(_offset), len))
-            .CopyTo(CollectionsMarshal.AsSpan(values).Slice(oldCount));
-        _offset += len;
+        var dest = CollectionsMarshal.AsSpan(values).Slice(oldCount);
+        if (BitConverter.IsLittleEndian)
+        {
+            MemoryMarshal.Cast<byte, int>(MemoryMarshal.CreateReadOnlySpan(ref At(_offset), len))
+                .CopyTo(dest);
+            _offset += len;
+        }
+        else
+        {
+            foreach (ref var slot in dest) slot = unchecked((int)ReadRawFixed32());
+        }
 #else
         for (int i = 0; i < count; i++) values.Add(unchecked((int)ReadRawFixed32()));
 #endif

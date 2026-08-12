@@ -120,20 +120,25 @@ public ref partial struct ReaderState
     private T ThrowWireType<T>()
         => throw new InvalidOperationException($"invalid wire-type {_wireType} for this read");
 
-    /// <summary>Reads 4 bytes little-endian.</summary>
+    /// <summary>Reads 4 bytes little-endian. The big-endian branch folds away at JIT time on
+    /// every little-endian platform (IsLittleEndian is a JIT constant), so correctness on BE
+    /// (.NET on s390x exists) costs nothing - and legacy is BE-correct via BinaryPrimitives, so
+    /// anything less would be a platform regression.</summary>
     public uint ReadRawFixed32()
     {
         if (_count - _offset < 4) ThrowEndOfData();
         var value = Unsafe.ReadUnaligned<uint>(ref At(_offset));
+        if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
         _offset += 4;
-        return value; // little-endian assumed; see docs/nano-core.md
+        return value;
     }
 
-    /// <summary>Reads 8 bytes little-endian.</summary>
+    /// <summary>Reads 8 bytes little-endian; same folded BE handling as <see cref="ReadRawFixed32"/>.</summary>
     public ulong ReadRawFixed64()
     {
         if (_count - _offset < 8) ThrowEndOfData();
         var value = Unsafe.ReadUnaligned<ulong>(ref At(_offset));
+        if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
         _offset += 8;
         return value;
     }

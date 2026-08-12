@@ -43,6 +43,18 @@ every nano strategy is zero-allocation.
    ~3.1–4.8 ns/element against legacy's 12.5–32.2 (3.5–8×). Legacy's short-run cost is the
    per-field amortization of the pooled-buffer read path — flexibility priced per element.
 
+## Endianness
+
+The wire format is LE-by-definition and the fixed readers are endian-corrected via folded
+`BitConverter.IsLittleEndian` guards (verified free: the memcpy row re-measured byte-identical,
+0.452 vs 0.455 ns, both runtimes) — matching the guarantee legacy already makes through
+`BinaryPrimitives.*LittleEndian` on both reader backends and both writer backends. Calibrated
+claim, not implied: the BE arms are three one-line fragments delegating to the BCL-tested
+`ReverseEndianness`, and **no CPU this project runs has ever executed them** — the Itanium
+landmine we all live with, kept deliberately small. The honest-refusal alternative (a folded
+constructor throw on BE, letting the arms be deleted; legacy stays available to any real BE
+user) remains a one-line swap if preferred.
+
 ## Constraints carried forward
 
 - **Residency**: the bulk arms peek without consuming, which is legal only over bytes already in
