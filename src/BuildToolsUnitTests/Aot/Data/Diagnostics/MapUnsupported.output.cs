@@ -74,11 +74,7 @@ partial class MapUnsupportedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Features
@@ -128,11 +124,7 @@ partial class MapUnsupportedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Features
@@ -182,11 +174,7 @@ partial class MapUnsupportedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Features
@@ -236,11 +224,7 @@ partial class MapUnsupportedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade>.Serializer

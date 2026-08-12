@@ -87,94 +87,82 @@ partial class CompatModel
         public static global::AotFixtures.Compat.Formats RawRead_AotFixtures_Compat_Formats(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Formats value)
         {
             value ??= new global::AotFixtures.Compat.Formats();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member FixedWhen: non-default DataFormat
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // FixedWhen, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // FixedWhen, field 1, length-prefixed
+                        value.FixedWhen = state.ReadRawDateTimeBcl();
+                        break;
+                    case (1 << 3) | 1:  // FixedWhen, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // FixedWhen, field 1, group
                     {
                         state.StashTag(tag);
                         value.FixedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedHow: non-default DataFormat
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // FixedHow, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // FixedHow, field 2, length-prefixed
+                        value.FixedHow = state.ReadRawTimeSpanBcl();
+                        break;
+                    case (2 << 3) | 1:  // FixedHow, field 2, fixed64 ticks
+                    case (2 << 3) | 3:  // FixedHow, field 2, group
                     {
                         state.StashTag(tag);
                         value.FixedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedWhen: non-default DataFormat
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // GroupedWhen, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
+                    case (3 << 3) | 2:  // GroupedWhen, field 3, length-prefixed
+                        value.GroupedWhen = state.ReadRawDateTimeBcl();
+                        break;
+                    case (3 << 3) | 1:  // GroupedWhen, field 3, fixed64 ticks
+                    case (3 << 3) | 3:  // GroupedWhen, field 3, group
                     {
                         state.StashTag(tag);
                         value.GroupedWhen = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedHow: non-default DataFormat
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // GroupedHow, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
+                    case (4 << 3) | 2:  // GroupedHow, field 4, length-prefixed
+                        value.GroupedHow = state.ReadRawTimeSpanBcl();
+                        break;
+                    case (4 << 3) | 1:  // GroupedHow, field 4, fixed64 ticks
+                    case (4 << 3) | 3:  // GroupedHow, field 4, group
                     {
                         state.StashTag(tag);
                         value.GroupedHow = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedId: non-default DataFormat
-                    case (5 << 3) | 0:
-                    case (5 << 3) | 1:
-                    case (5 << 3) | 2:  // GroupedId, field 5
-                    case (5 << 3) | 3:
-                    case (5 << 3) | 5:
+                    case (5 << 3) | 2:  // GroupedId, field 5, length-prefixed
+                        value.GroupedId = state.ReadRawGuidBcl();
+                        break;
+                    case (5 << 3) | 3:  // GroupedId, field 5, group
                     {
                         state.StashTag(tag);
                         value.GroupedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupedAmount: non-default DataFormat
-                    case (6 << 3) | 0:
-                    case (6 << 3) | 1:
-                    case (6 << 3) | 2:  // GroupedAmount, field 6
-                    case (6 << 3) | 3:
-                    case (6 << 3) | 5:
+                    case (6 << 3) | 2:  // GroupedAmount, field 6, length-prefixed
+                        value.GroupedAmount = state.ReadRawDecimalBcl();
+                        break;
+                    case (6 << 3) | 3:  // GroupedAmount, field 6, group
                     {
                         state.StashTag(tag);
                         value.GroupedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedAmount: non-default DataFormat
-                    case (7 << 3) | 0:
-                    case (7 << 3) | 1:
-                    case (7 << 3) | 2:  // FixedAmount, field 7
-                    case (7 << 3) | 3:
-                    case (7 << 3) | 5:
+                    case (7 << 3) | 2:  // FixedAmount, field 7, length-prefixed
+                        value.FixedAmount = state.ReadRawDecimalBcl();
+                        break;
+                    case (7 << 3) | 3:  // FixedAmount, field 7, group
                     {
                         state.StashTag(tag);
                         value.FixedAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedId: non-default DataFormat
-                    case (8 << 3) | 0:
-                    case (8 << 3) | 1:
-                    case (8 << 3) | 2:  // FixedId, field 8
-                    case (8 << 3) | 3:
-                    case (8 << 3) | 5:
+                    case (8 << 3) | 2:  // FixedId, field 8, length-prefixed
+                        value.FixedId = state.ReadRawGuidBcl();
+                        break;
+                    case (8 << 3) | 3:  // FixedId, field 8, group
                     {
                         state.StashTag(tag);
                         value.FixedId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
@@ -186,15 +174,11 @@ partial class CompatModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>.Features
@@ -289,72 +273,63 @@ partial class CompatModel
         public static global::AotFixtures.Compat.Legacy RawRead_AotFixtures_Compat_Legacy(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Legacy value)
         {
             value ??= new global::AotFixtures.Compat.Legacy();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member When: kind DateTime
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // When, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // When, field 1, length-prefixed
+                        value.When = state.ReadRawDateTimeBcl();
+                        break;
+                    case (1 << 3) | 1:  // When, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // When, field 1, group
                     {
                         state.StashTag(tag);
                         value.When = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member How: kind TimeSpan
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // How, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // How, field 2, length-prefixed
+                        value.How = state.ReadRawTimeSpanBcl();
+                        break;
+                    case (2 << 3) | 1:  // How, field 2, fixed64 ticks
+                    case (2 << 3) | 3:  // How, field 2, group
                     {
                         state.StashTag(tag);
                         value.How = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Id: kind Guid
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // Id, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
+                    case (3 << 3) | 2:  // Id, field 3, length-prefixed
+                        value.Id = state.ReadRawGuidBcl();
+                        break;
+                    case (3 << 3) | 3:  // Id, field 3, group
                     {
                         state.StashTag(tag);
                         value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Amount: kind Decimal
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // Amount, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
+                    case (4 << 3) | 2:  // Amount, field 4, length-prefixed
+                        value.Amount = state.ReadRawDecimalBcl();
+                        break;
+                    case (4 << 3) | 3:  // Amount, field 4, group
                     {
                         state.StashTag(tag);
                         value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member WhenMaybe: kind DateTime
-                    case (5 << 3) | 0:
-                    case (5 << 3) | 1:
-                    case (5 << 3) | 2:  // WhenMaybe, field 5
-                    case (5 << 3) | 3:
-                    case (5 << 3) | 5:
+                    case (5 << 3) | 2:  // WhenMaybe, field 5, length-prefixed
+                        value.WhenMaybe = state.ReadRawDateTimeBcl();
+                        break;
+                    case (5 << 3) | 1:  // WhenMaybe, field 5, fixed64 ticks
+                    case (5 << 3) | 3:  // WhenMaybe, field 5, group
                     {
                         state.StashTag(tag);
                         value.WhenMaybe = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member AmountMaybe: kind Decimal
-                    case (6 << 3) | 0:
-                    case (6 << 3) | 1:
-                    case (6 << 3) | 2:  // AmountMaybe, field 6
-                    case (6 << 3) | 3:
-                    case (6 << 3) | 5:
+                    case (6 << 3) | 2:  // AmountMaybe, field 6, length-prefixed
+                        value.AmountMaybe = state.ReadRawDecimalBcl();
+                        break;
+                    case (6 << 3) | 3:  // AmountMaybe, field 6, group
                     {
                         state.StashTag(tag);
                         value.AmountMaybe = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
@@ -366,15 +341,11 @@ partial class CompatModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>.Features
@@ -397,17 +368,15 @@ partial class CompatModel
         public static global::AotFixtures.Compat.LegacyFixed RawRead_AotFixtures_Compat_LegacyFixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.LegacyFixed value)
         {
             value ??= new global::AotFixtures.Compat.LegacyFixed();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Id: non-default DataFormat
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Id, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Id, field 1, length-prefixed
+                        value.Id = state.ReadRawGuidBcl();
+                        break;
+                    case (1 << 3) | 3:  // Id, field 1, group
                     {
                         state.StashTag(tag);
                         value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
@@ -419,15 +388,11 @@ partial class CompatModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Features
@@ -465,50 +430,44 @@ partial class CompatModel
         public static global::AotFixtures.Compat.Level240 RawRead_AotFixtures_Compat_Level240(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
         {
             value ??= new global::AotFixtures.Compat.Level240();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member When: kind DateTime
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // When, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // When, field 1, length-prefixed
+                        value.When = state.ReadRawTimestamp();
+                        break;
+                    case (1 << 3) | 1:  // When, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // When, field 1, group
                     {
                         state.StashTag(tag);
                         value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member How: kind TimeSpan
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // How, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // How, field 2, length-prefixed
+                        value.How = state.ReadRawDuration();
+                        break;
+                    case (2 << 3) | 1:  // How, field 2, fixed64 ticks
+                    case (2 << 3) | 3:  // How, field 2, group
                     {
                         state.StashTag(tag);
                         value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Id: kind Guid
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // Id, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
+                    case (3 << 3) | 2:  // Id, field 3, length-prefixed
+                        value.Id = state.ReadRawGuidBcl();
+                        break;
+                    case (3 << 3) | 3:  // Id, field 3, group
                     {
                         state.StashTag(tag);
                         value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Amount: kind Decimal
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // Amount, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
+                    case (4 << 3) | 2:  // Amount, field 4, length-prefixed
+                        value.Amount = state.ReadRawDecimalBcl();
+                        break;
+                    case (4 << 3) | 3:  // Amount, field 4, group
                     {
                         state.StashTag(tag);
                         value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
@@ -520,15 +479,11 @@ partial class CompatModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Features
@@ -577,23 +532,21 @@ partial class CompatModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member When: kind DateTime
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // When, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // When, field 1, length-prefixed
+                        value.When = state.ReadRawTimestamp();
+                        break;
+                    case (1 << 3) | 1:  // When, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // When, field 1, group
                     {
                         state.StashTag(tag);
                         value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member How: kind TimeSpan
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // How, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // How, field 2, length-prefixed
+                        value.How = state.ReadRawDuration();
+                        break;
+                    case (2 << 3) | 1:  // How, field 2, fixed64 ticks
+                    case (2 << 3) | 3:  // How, field 2, group
                     {
                         state.StashTag(tag);
                         value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
@@ -621,7 +574,7 @@ partial class CompatModel
                         value.Amount = global::ProtoBuf.BclHelpers.ReadDecimalString(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
+                    // raw read pass: legacy-mode - member Fixed: kind Guid
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // Fixed, field 5
@@ -642,11 +595,7 @@ partial class CompatModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LevelledBase>.Features
@@ -728,39 +677,35 @@ partial class CompatModel
         public static global::AotFixtures.Compat.Mixed RawRead_AotFixtures_Compat_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
         {
             value ??= new global::AotFixtures.Compat.Mixed();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Inherited: kind DateTime
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Inherited, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Inherited, field 1, length-prefixed
+                        value.Inherited = state.ReadRawTimestamp();
+                        break;
+                    case (1 << 3) | 1:  // Inherited, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // Inherited, field 1, group
                     {
                         state.StashTag(tag);
                         value.Inherited = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Downgraded: kind DateTime
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // Downgraded, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // Downgraded, field 2, length-prefixed
+                        value.Downgraded = state.ReadRawDateTimeBcl();
+                        break;
+                    case (2 << 3) | 1:  // Downgraded, field 2, fixed64 ticks
+                    case (2 << 3) | 3:  // Downgraded, field 2, group
                     {
                         state.StashTag(tag);
                         value.Downgraded = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member DowngradedGuid: kind Guid
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // DowngradedGuid, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
+                    case (3 << 3) | 2:  // DowngradedGuid, field 3, length-prefixed
+                        value.DowngradedGuid = state.ReadRawGuidBcl();
+                        break;
+                    case (3 << 3) | 3:  // DowngradedGuid, field 3, group
                     {
                         state.StashTag(tag);
                         value.DowngradedGuid = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
@@ -772,15 +717,11 @@ partial class CompatModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>.Features
@@ -812,39 +753,35 @@ partial class CompatModel
         public static global::AotFixtures.Compat.WellKnown RawRead_AotFixtures_Compat_WellKnown(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.WellKnown value)
         {
             value ??= new global::AotFixtures.Compat.WellKnown();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member When: non-default DataFormat
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // When, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // When, field 1, length-prefixed
+                        value.When = state.ReadRawTimestamp();
+                        break;
+                    case (1 << 3) | 1:  // When, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // When, field 1, group
                     {
                         state.StashTag(tag);
                         value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member How: non-default DataFormat
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // How, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // How, field 2, length-prefixed
+                        value.How = state.ReadRawDuration();
+                        break;
+                    case (2 << 3) | 1:  // How, field 2, fixed64 ticks
+                    case (2 << 3) | 3:  // How, field 2, group
                     {
                         state.StashTag(tag);
                         value.How = global::ProtoBuf.BclHelpers.ReadDuration(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Id: non-default DataFormat
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // Id, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
+                    case (3 << 3) | 2:  // Id, field 3, length-prefixed
+                        value.Id = state.ReadRawGuidBcl();
+                        break;
+                    case (3 << 3) | 3:  // Id, field 3, group
                     {
                         state.StashTag(tag);
                         value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
@@ -856,15 +793,11 @@ partial class CompatModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
         }
     }
 }

@@ -26,6 +26,24 @@ partial class ListsModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
+        {
+            if (value is null || value.Length == 0) return extra.ToArray();
+            var result = new T[value.Length + extra.Count];
+            value.CopyTo(result, 0);
+            extra.CopyTo(result, value.Length);
+            return result;
+        }
+
+        private static T[] ArrayAppend<T>(T[] value, T extra)
+        {
+            var offset = value?.Length ?? 0;
+            var result = new T[offset + 1];
+            value?.CopyTo(result, 0);
+            result[offset] = extra;
+            return result;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -74,11 +92,7 @@ partial class ListsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Features
@@ -159,20 +173,30 @@ partial class ListsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Int32Array: collection shape CreateVector
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Int32Array, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 0:  // Int32Array, field 1, unpacked run (varint)
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.Int32Array;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) value.Int32Array = tmp1;
+                        var buf1 = new global::System.Collections.Generic.List<int>();
+                        do { buf1.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
+                        value.Int32Array = ArrayAppend(value.Int32Array, buf1);
+                        continue;
+                    }
+                    case (1 << 3) | 2:  // Int32Array, field 1, packed
+                    {
+                        var buf1p = new global::System.Collections.Generic.List<int>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) buf1p.Add(unchecked((int)state.ReadRawVarint32()));
+                        state.PopScope(scope);
+                        value.Int32Array = ArrayAppend(value.Int32Array, buf1p);
                         break;
                     }
-                    case (2 << 3) | 0:  // Int32List, field 2, unpacked run
+                    case (1 << 3) | 5:  // Int32Array, field 1, fixed32
+                        value.Int32Array = ArrayAppend(value.Int32Array, unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (1 << 3) | 1:  // Int32Array, field 1, fixed64
+                        value.Int32Array = ArrayAppend(value.Int32Array, checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (2 << 3) | 0:  // Int32List, field 2, unpacked run (varint)
                         value.Int32List ??= new global::System.Collections.Generic.List<int>();
                         do { value.Int32List.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((2 << 3) | 0));
@@ -189,7 +213,7 @@ partial class ListsModel
                         value.Int32List ??= new global::System.Collections.Generic.List<int>();
                         value.Int32List.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
                         break;
-                    // raw read pass: legacy-mode - member DoubleArray: collection shape CreateVector
+                    // raw read pass: legacy-mode - member DoubleArray: repeated Double
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // DoubleArray, field 3
@@ -202,7 +226,7 @@ partial class ListsModel
                         if (tmp3 != null) value.DoubleArray = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member SingleArray: collection shape CreateVector
+                    // raw read pass: legacy-mode - member SingleArray: element kind Single
                     case (4 << 3) | 0:
                     case (4 << 3) | 1:
                     case (4 << 3) | 2:  // SingleArray, field 4
@@ -215,7 +239,7 @@ partial class ListsModel
                         if (tmp4 != null) value.SingleArray = tmp4;
                         break;
                     }
-                    case (5 << 3) | 0:  // BoolList, field 5, unpacked run
+                    case (5 << 3) | 0:  // BoolList, field 5, unpacked run (varint)
                         value.BoolList ??= new global::System.Collections.Generic.List<bool>();
                         do { value.BoolList.Add(state.ReadRawVarint32() != 0); }
                         while ((tag = state.ReadRawTag()) == ((5 << 3) | 0));
@@ -236,18 +260,13 @@ partial class ListsModel
                         value.BoolList ??= new global::System.Collections.Generic.List<bool>();
                         value.BoolList.Add(state.ReadRawFixed64() != 0);
                         break;
-                    // raw read pass: legacy-mode - member StringArray: collection shape CreateVector
-                    case (6 << 3) | 0:
-                    case (6 << 3) | 1:
-                    case (6 << 3) | 2:  // StringArray, field 6
-                    case (6 << 3) | 3:
-                    case (6 << 3) | 5:
+                    case (6 << 3) | 2:  // StringArray, field 6, length-prefixed run
                     {
-                        state.StashTag(tag);
-                        var tmp6 = value.StringArray;
-                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
-                        if (tmp6 != null) value.StringArray = tmp6;
-                        break;
+                        var buf6 = new global::System.Collections.Generic.List<string>();
+                        do { buf6.Add(state.ReadRawString()); }
+                        while ((tag = state.ReadRawTag()) == ((6 << 3) | 2));
+                        value.StringArray = ArrayAppend(value.StringArray, buf6);
+                        continue;
                     }
                     case (7 << 3) | 2:  // StringList, field 7, length-prefixed run
                         value.StringList ??= new global::System.Collections.Generic.List<string>();
@@ -267,18 +286,19 @@ partial class ListsModel
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
                     }
-                    // raw read pass: legacy-mode - member MessageArray: collection shape CreateVector
-                    case (10 << 3) | 0:
-                    case (10 << 3) | 1:
-                    case (10 << 3) | 2:  // MessageArray, field 10
-                    case (10 << 3) | 3:
-                    case (10 << 3) | 5:
+                    case (10 << 3) | 2:  // MessageArray, field 10, length-prefixed
+                    case (10 << 3) | 3:  // MessageArray, field 10, group
                     {
-                        state.StashTag(tag);
-                        var tmp10 = value.MessageArray;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Inner>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10, s_default);
-                        if (tmp10 != null) value.MessageArray = tmp10;
-                        break;
+                        var buf10 = new global::System.Collections.Generic.List<global::AotFixtures.Lists.Inner>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            buf10.Add(RawRead_AotFixtures_Lists_Inner(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        value.MessageArray = ArrayAppend(value.MessageArray, buf10);
+                        continue;
                     }
                     case (11 << 3) | 0:  // Scalar, field 11, varint
                         value.Scalar = unchecked((int)state.ReadRawVarint32());
@@ -289,7 +309,7 @@ partial class ListsModel
                     case (11 << 3) | 1:  // Scalar, field 11, fixed64
                         value.Scalar = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
-                    case (12 << 3) | 0:  // Colours, field 12, unpacked run
+                    case (12 << 3) | 0:  // Colours, field 12, unpacked run (varint)
                         value.Colours ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour>();
                         do { value.Colours.Add((global::AotFixtures.Lists.Colour)(unchecked((int)state.ReadRawVarint32()))); }
                         while ((tag = state.ReadRawTag()) == ((12 << 3) | 0));
@@ -310,7 +330,7 @@ partial class ListsModel
                         value.Colours ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour>();
                         value.Colours.Add((global::AotFixtures.Lists.Colour)(checked((int)unchecked((long)state.ReadRawFixed64()))));
                         break;
-                    // raw read pass: legacy-mode - member Smalls: collection shape CreateVector
+                    // raw read pass: legacy-mode - member Smalls: element kind Byte
                     case (13 << 3) | 0:
                     case (13 << 3) | 1:
                     case (13 << 3) | 2:  // Smalls, field 13
@@ -342,11 +362,7 @@ partial class ListsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 or 9 or 10 or 11 or 12 or 13 or 14 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 9 or 10 or 11 or 12 or 13 or 14;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Colour> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour>.Serializer

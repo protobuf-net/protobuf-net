@@ -82,11 +82,7 @@ partial class ImplicitIgnoreModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 4 or 5 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 4 or 5;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Features
@@ -151,11 +147,7 @@ partial class ImplicitIgnoreModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                2 or 10 or 11 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 2 or 10 or 11;
         }
     }
 }

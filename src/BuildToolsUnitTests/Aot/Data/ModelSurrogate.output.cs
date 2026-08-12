@@ -88,11 +88,7 @@ partial class ModelSurrogateModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Features
@@ -167,11 +163,7 @@ partial class ModelSurrogateModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Features
@@ -258,11 +250,7 @@ partial class ModelSurrogateModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Features
@@ -302,11 +290,7 @@ partial class ModelSurrogateModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Features

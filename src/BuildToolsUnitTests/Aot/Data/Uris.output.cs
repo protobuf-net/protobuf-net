@@ -115,7 +115,7 @@ partial class UrisModel
                         if (tmp4 != null) value.All = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member More: collection shape CreateVector
+                    // raw read pass: legacy-mode - member More: element kind Uri
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // More, field 5
@@ -163,11 +163,7 @@ partial class UrisModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7;
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Fixed>k__BackingField")]

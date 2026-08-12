@@ -132,7 +132,7 @@ partial class NativeScalarsModel
                         value.MaybeSize = state.ReadUIntPtr();
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
+                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat (FixedSize on IntPtr)
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // Fixed, field 5
@@ -143,7 +143,7 @@ partial class NativeScalarsModel
                         value.Fixed = state.ReadIntPtr();
                         break;
                     }
-                    // raw read pass: legacy-mode - member Zigzag: non-default DataFormat
+                    // raw read pass: legacy-mode - member Zigzag: non-default DataFormat (ZigZag on IntPtr)
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // Zigzag, field 6
@@ -168,7 +168,7 @@ partial class NativeScalarsModel
                         if (tmp7 != null) value.Handles = tmp7;
                         break;
                     }
-                    // raw read pass: legacy-mode - member More: collection shape CreateVector
+                    // raw read pass: legacy-mode - member More: element kind IntPtr
                     case (8 << 3) | 0:
                     case (8 << 3) | 1:
                     case (8 << 3) | 2:  // More, field 8
@@ -191,11 +191,7 @@ partial class NativeScalarsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
         }
     }
 }

@@ -73,7 +73,7 @@ partial class TrivialGetterModel
                         if (tmp2 != null) Field_AotFixtures_TrivialGetter_Backed_Text(value) = tmp2;
                         break;
                     }
-                    case (3 << 3) | 0:  // Numbers, field 3, unpacked run
+                    case (3 << 3) | 0:  // Numbers, field 3, unpacked run (varint)
                         Field_AotFixtures_TrivialGetter_Backed_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
                         do { value.Numbers.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));
@@ -100,11 +100,7 @@ partial class TrivialGetterModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Features
@@ -149,11 +145,7 @@ partial class TrivialGetterModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "_value")]

@@ -188,6 +188,7 @@ namespace ProtoBuf.BuildTools.Generators
                     rawReader: compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } rawType
                         && rawType.GetMembers("ReadRawTag").Length != 0
                         && rawType.GetMembers("StashTag").Length != 0
+                        && rawType.GetMembers("ReadRawTimestamp").Length != 0 // the BCL wrappers wave
                         && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly));
             }
 

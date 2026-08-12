@@ -15,21 +15,45 @@ namespace ProtoBuf.Internal
             => ((ISerializer<decimal>)this).Write(ref state, value.Value);
 
         decimal ISerializer<decimal>.Read(ref ProtoReader.State state, decimal value)
+            => ReadRawDecimalBody(ref state);
+
+        /// <summary>
+        /// The bcl.Decimal loop over the raw surface, reading within the CURRENT scope (the
+        /// caller frames it - ReadMessage on the stateful path, a self-framing raw wrapper on
+        /// the generated path). Wire tolerance per field mirrors the stateful
+        /// ReadUInt64/ReadUInt32 this replaced: varint, fixed64 and fixed32 all accepted.
+        /// </summary>
+        internal static decimal ReadRawDecimalBody(ref ProtoReader.State state)
         {
             ulong low = 0;
             uint high = 0;
             uint signScale = 0;
-            int fieldNumber;
-            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (fieldNumber)
+                switch (tag)
                 {
-                    case FieldDecimalLow: low = state.ReadUInt64(); break;
-                    case FieldDecimalHigh: high = state.ReadUInt32(); break;
-                    case FieldDecimalSignScale: signScale = state.ReadUInt32(); break;
-                    default: state.SkipField(); break;
+                    case (FieldDecimalLow << 3) | 0: low = state.ReadRawVarint64(); break;
+                    case (FieldDecimalLow << 3) | 1: low = state.ReadRawFixed64(); break;
+                    case (FieldDecimalLow << 3) | 5: low = state.ReadRawFixed32(); break;
+                    case (FieldDecimalHigh << 3) | 0: high = state.ReadRawVarint32(); break;
+                    case (FieldDecimalHigh << 3) | 5: high = state.ReadRawFixed32(); break;
+                    case (FieldDecimalHigh << 3) | 1: high = checked((uint)state.ReadRawFixed64()); break;
+                    case (FieldDecimalSignScale << 3) | 0: signScale = state.ReadRawVarint32(); break;
+                    case (FieldDecimalSignScale << 3) | 5: signScale = state.ReadRawFixed32(); break;
+                    case (FieldDecimalSignScale << 3) | 1: signScale = checked((uint)state.ReadRawFixed64()); break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto done;
+                        if ((tag >> 3) is FieldDecimalLow or FieldDecimalHigh or FieldDecimalSignScale)
+                        {
+                            state.ThrowUnexpectedWireType(tag);
+                        }
+                        state.SkipTag(tag);
+                        break;
                 }
+                tag = state.ReadRawTag();
             }
+            done:
             int lo = (int)(low & 0xFFFFFFFFL),
                mid = (int)((low >> 32) & 0xFFFFFFFFL),
                hi = (int)high;

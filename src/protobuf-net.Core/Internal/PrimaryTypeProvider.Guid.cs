@@ -29,18 +29,40 @@ namespace ProtoBuf.Internal
             => ((ISerializer<Guid>)this).Write(ref state, value.Value);
 
         Guid ISerializer<Guid>.Read(ref ProtoReader.State state, Guid value)
+            => ReadRawGuidBody(ref state);
+
+        /// <summary>
+        /// The bcl.Guid loop over the raw surface, reading within the CURRENT scope (the caller
+        /// frames it - ReadMessage on the stateful path, a self-framing raw wrapper on the
+        /// generated path). The fields are written Fixed64; wire tolerance mirrors the stateful
+        /// ReadUInt64 this replaced (varint/fixed64/fixed32).
+        /// </summary>
+        internal static Guid ReadRawGuidBody(ref ProtoReader.State state)
         {
             ulong low = 0, high = 0;
-            int fieldNumber;
-            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (fieldNumber)
+                switch (tag)
                 {
-                    case FieldGuidLow: low = state.ReadUInt64(); break;
-                    case FieldGuidHigh: high = state.ReadUInt64(); break;
-                    default: state.SkipField(); break;
+                    case (FieldGuidLow << 3) | 1: low = state.ReadRawFixed64(); break;
+                    case (FieldGuidLow << 3) | 0: low = state.ReadRawVarint64(); break;
+                    case (FieldGuidLow << 3) | 5: low = state.ReadRawFixed32(); break;
+                    case (FieldGuidHigh << 3) | 1: high = state.ReadRawFixed64(); break;
+                    case (FieldGuidHigh << 3) | 0: high = state.ReadRawVarint64(); break;
+                    case (FieldGuidHigh << 3) | 5: high = state.ReadRawFixed32(); break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto done;
+                        if ((tag >> 3) is FieldGuidLow or FieldGuidHigh)
+                        {
+                            state.ThrowUnexpectedWireType(tag);
+                        }
+                        state.SkipTag(tag);
+                        break;
                 }
+                tag = state.ReadRawTag();
             }
+            done: ;
 
             if (low == 0 & high == 0) return default;
             if (s_guidOptimized)

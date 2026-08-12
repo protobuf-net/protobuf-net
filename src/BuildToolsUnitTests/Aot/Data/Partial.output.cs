@@ -24,6 +24,24 @@ partial class PartialModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
+        {
+            if (value is null || value.Length == 0) return extra.ToArray();
+            var result = new T[value.Length + extra.Count];
+            value.CopyTo(result, 0);
+            extra.CopyTo(result, value.Length);
+            return result;
+        }
+
+        private static T[] ArrayAppend<T>(T[] value, T extra)
+        {
+            var offset = value?.Length ?? 0;
+            var result = new T[offset + 1];
+            value?.CopyTo(result, 0);
+            result[offset] = extra;
+            return result;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -75,11 +93,7 @@ partial class PartialModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Described>.Features
@@ -138,17 +152,15 @@ partial class PartialModel
                         if (tmp2 != null) value.Name = tmp2;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Fixed: non-default DataFormat
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // Fixed, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        value.Fixed = state.ReadInt32();
+                    case (3 << 3) | 5:  // Fixed, field 3, fixed32
+                        value.Fixed = unchecked((int)state.ReadRawFixed32());
                         break;
-                    }
+                    case (3 << 3) | 0:  // Fixed, field 3, varint
+                        value.Fixed = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 1:  // Fixed, field 3, fixed64
+                        value.Fixed = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     case (4 << 3) | 0:  // Always, field 4, varint
                         value.Always = unchecked((int)state.ReadRawVarint32());
                         break;
@@ -158,20 +170,30 @@ partial class PartialModel
                     case (4 << 3) | 1:  // Always, field 4, fixed64
                         value.Always = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
-                    // raw read pass: legacy-mode - member Values: collection shape CreateVector
-                    case (5 << 3) | 0:
-                    case (5 << 3) | 1:
-                    case (5 << 3) | 2:  // Values, field 5
-                    case (5 << 3) | 3:
-                    case (5 << 3) | 5:
+                    case (5 << 3) | 0:  // Values, field 5, unpacked run (varint)
                     {
-                        state.StashTag(tag);
-                        var tmp5 = value.Values;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp5);
-                        if (tmp5 != null) value.Values = tmp5;
+                        var buf5 = new global::System.Collections.Generic.List<int>();
+                        do { buf5.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((5 << 3) | 0));
+                        value.Values = ArrayAppend(value.Values, buf5);
+                        continue;
+                    }
+                    case (5 << 3) | 2:  // Values, field 5, packed
+                    {
+                        var buf5p = new global::System.Collections.Generic.List<int>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) buf5p.Add(unchecked((int)state.ReadRawVarint32()));
+                        state.PopScope(scope);
+                        value.Values = ArrayAppend(value.Values, buf5p);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Replaced: collection shape CreateVector
+                    case (5 << 3) | 5:  // Values, field 5, fixed32
+                        value.Values = ArrayAppend(value.Values, unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (5 << 3) | 1:  // Values, field 5, fixed64
+                        value.Values = ArrayAppend(value.Values, checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member Replaced: OverwriteList collection
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // Replaced, field 6
@@ -194,11 +216,7 @@ partial class PartialModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Features
@@ -241,11 +259,7 @@ partial class PartialModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Features
@@ -299,11 +313,7 @@ partial class PartialModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                2 or 7 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 2 or 7;
         }
     }
 }

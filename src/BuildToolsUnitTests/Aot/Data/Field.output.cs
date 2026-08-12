@@ -22,8 +22,6 @@ partial class FieldModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>
     {
-        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
-
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -72,11 +70,7 @@ partial class FieldModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Features
@@ -146,7 +140,7 @@ partial class FieldModel
         public static global::AotFixtures.Field.Fields RawRead_AotFixtures_Field_Fields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Fields value)
         {
             value ??= new global::AotFixtures.Field.Fields();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
@@ -174,18 +168,15 @@ partial class FieldModel
                         state.PopScope(scope);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Zig: non-default DataFormat
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // Zig, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
-                        value.Zig = state.ReadInt32();
+                    case (4 << 3) | 0:  // Zig, field 4, varint
+                        value.Zig = state.ReadRawZigZag32();
                         break;
-                    }
+                    case (4 << 3) | 5:  // Zig, field 4, fixed32
+                        value.Zig = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (4 << 3) | 1:  // Zig, field 4, fixed64
+                        value.Zig = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     case (5 << 3) | 0:  // Defaulted, field 5, varint
                         value.Defaulted = unchecked((int)state.ReadRawVarint32());
                         break;
@@ -219,15 +210,11 @@ partial class FieldModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Features
@@ -270,11 +257,7 @@ partial class FieldModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
     }
 }

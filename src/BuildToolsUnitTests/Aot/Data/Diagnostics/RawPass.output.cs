@@ -66,11 +66,7 @@ partial class RawPassModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Features
@@ -112,11 +108,7 @@ partial class RawPassModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>.Features
@@ -159,11 +151,7 @@ partial class RawPassModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Features
@@ -213,11 +201,7 @@ partial class RawPassModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>.Features
@@ -348,7 +332,7 @@ partial class RawPassModel
                         do { value.Tags.Add(state.ReadRawString()); }
                         while ((tag = state.ReadRawTag()) == ((7 << 3) | 2));
                         continue;
-                    case (8 << 3) | 0:  // Codes, field 8, unpacked run
+                    case (8 << 3) | 0:  // Codes, field 8, unpacked run (varint)
                         Field_AotFixtures_RawPass_Order_Codes(value) ??= new global::System.Collections.Generic.List<int>();
                         do { value.Codes.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((8 << 3) | 0));
@@ -402,11 +386,7 @@ partial class RawPassModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12;
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Lookup>k__BackingField")]

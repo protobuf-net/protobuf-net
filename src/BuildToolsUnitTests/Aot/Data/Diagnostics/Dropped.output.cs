@@ -27,26 +27,7 @@ partial class DroppedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Dropped.HasCallback global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
-        {
-            value ??= new global::AotFixtures.Dropped.HasCallback();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            value.AfterRead(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
-            return value;
-        }
+            => RawRead_AotFixtures_Dropped_HasCallback(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.HasCallback value)
         {
@@ -55,7 +36,37 @@ partial class DroppedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - serialization callbacks
+        public static global::AotFixtures.Dropped.HasCallback RawRead_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
+        {
+            value ??= new global::AotFixtures.Dropped.HasCallback();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto afterRead;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            afterRead:
+            value.AfterRead(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -107,11 +118,7 @@ partial class DroppedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>.Features
@@ -153,11 +160,7 @@ partial class DroppedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Features
@@ -200,11 +203,7 @@ partial class DroppedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Features
@@ -247,11 +246,7 @@ partial class DroppedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
     }
 }

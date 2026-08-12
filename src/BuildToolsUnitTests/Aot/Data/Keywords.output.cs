@@ -63,11 +63,7 @@ partial class KeywordsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Features
@@ -119,7 +115,7 @@ partial class KeywordsModel
                         if (tmp2 != null) value.@event = tmp2;
                         break;
                     }
-                    case (3 << 3) | 0:  // params, field 3, unpacked run
+                    case (3 << 3) | 0:  // params, field 3, unpacked run (varint)
                         value.@params ??= new global::System.Collections.Generic.List<int>();
                         do { value.@params.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));
@@ -176,11 +172,7 @@ partial class KeywordsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Features

@@ -20,7 +20,23 @@ partial class FormatsModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>
     {
-        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+        private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
+        {
+            if (value is null || value.Length == 0) return extra.ToArray();
+            var result = new T[value.Length + extra.Count];
+            value.CopyTo(result, 0);
+            extra.CopyTo(result, value.Length);
+            return result;
+        }
+
+        private static T[] ArrayAppend<T>(T[] value, T extra)
+        {
+            var offset = value?.Length ?? 0;
+            var result = new T[offset + 1];
+            value?.CopyTo(result, 0);
+            result[offset] = extra;
+            return result;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -80,57 +96,47 @@ partial class FormatsModel
         public static global::AotFixtures.Formats.Formatted RawRead_AotFixtures_Formats_Formatted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Formatted value)
         {
             value ??= new global::AotFixtures.Formats.Formatted();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member ZigZagInt: non-default DataFormat
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // ZigZagInt, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
-                        value.ZigZagInt = state.ReadInt32();
+                    case (1 << 3) | 0:  // ZigZagInt, field 1, varint
+                        value.ZigZagInt = state.ReadRawZigZag32();
                         break;
-                    }
-                    // raw read pass: legacy-mode - member FixedInt: non-default DataFormat
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // FixedInt, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        value.FixedInt = state.ReadInt32();
+                    case (1 << 3) | 5:  // ZigZagInt, field 1, fixed32
+                        value.ZigZagInt = unchecked((int)state.ReadRawFixed32());
                         break;
-                    }
-                    // raw read pass: legacy-mode - member ZigZagLong: non-default DataFormat
-                    case (3 << 3) | 0:
-                    case (3 << 3) | 1:
-                    case (3 << 3) | 2:  // ZigZagLong, field 3
-                    case (3 << 3) | 3:
-                    case (3 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
-                        value.ZigZagLong = state.ReadInt64();
+                    case (1 << 3) | 1:  // ZigZagInt, field 1, fixed64
+                        value.ZigZagInt = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
-                    }
-                    // raw read pass: legacy-mode - member FixedLong: non-default DataFormat
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // FixedLong, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
-                    {
-                        state.StashTag(tag);
-                        value.FixedLong = state.ReadInt64();
+                    case (2 << 3) | 5:  // FixedInt, field 2, fixed32
+                        value.FixedInt = unchecked((int)state.ReadRawFixed32());
                         break;
-                    }
+                    case (2 << 3) | 0:  // FixedInt, field 2, varint
+                        value.FixedInt = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 1:  // FixedInt, field 2, fixed64
+                        value.FixedInt = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 0:  // ZigZagLong, field 3, varint
+                        value.ZigZagLong = state.ReadRawZigZag64();
+                        break;
+                    case (3 << 3) | 1:  // ZigZagLong, field 3, fixed64
+                        value.ZigZagLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (3 << 3) | 5:  // ZigZagLong, field 3, fixed32
+                        value.ZigZagLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (4 << 3) | 1:  // FixedLong, field 4, fixed64
+                        value.FixedLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (4 << 3) | 0:  // FixedLong, field 4, varint
+                        value.FixedLong = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (4 << 3) | 5:  // FixedLong, field 4, fixed32
+                        value.FixedLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
                     case (5 << 3) | 0:  // TwosComplement, field 5, varint
                         value.TwosComplement = unchecked((int)state.ReadRawVarint32());
                         break;
@@ -155,17 +161,12 @@ partial class FormatsModel
                         if (tmp7 != null) value.RequiredString = tmp7;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Grouped: non-default DataFormat
-                    case (8 << 3) | 0:
-                    case (8 << 3) | 1:
-                    case (8 << 3) | 2:  // Grouped, field 8
-                    case (8 << 3) | 3:
-                    case (8 << 3) | 5:
+                    case (8 << 3) | 2:  // Grouped, field 8, length-prefixed
+                    case (8 << 3) | 3:  // Grouped, field 8, group
                     {
-                        state.StashTag(tag);
-                        var tmp8 = value.Grouped;
-                        tmp8 = state.ReadMessage<global::AotFixtures.Formats.Inner>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, s_default);
-                        if (tmp8 != null) value.Grouped = tmp8;
+                        var scope = state.PushScope(tag);
+                        value.Grouped = RawRead_AotFixtures_Formats_Inner(ref state, value.Grouped);
+                        state.PopScope(scope);
                         break;
                     }
                     case (9 << 3) | 2:  // Plain, field 9, length-prefixed
@@ -176,47 +177,63 @@ partial class FormatsModel
                         state.PopScope(scope);
                         break;
                     }
-                    // raw read pass: legacy-mode - member ZigZagArray: non-default DataFormat
-                    case (10 << 3) | 0:
-                    case (10 << 3) | 1:
-                    case (10 << 3) | 2:  // ZigZagArray, field 10
-                    case (10 << 3) | 3:
-                    case (10 << 3) | 5:
+                    case (10 << 3) | 0:  // ZigZagArray, field 10, unpacked run (varint)
                     {
-                        state.StashTag(tag);
-                        var tmp10 = value.ZigZagArray;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
-                        if (tmp10 != null) value.ZigZagArray = tmp10;
+                        var buf10 = new global::System.Collections.Generic.List<int>();
+                        do { buf10.Add(state.ReadRawZigZag32()); }
+                        while ((tag = state.ReadRawTag()) == ((10 << 3) | 0));
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, buf10);
+                        continue;
+                    }
+                    case (10 << 3) | 2:  // ZigZagArray, field 10, packed
+                    {
+                        var buf10p = new global::System.Collections.Generic.List<int>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) buf10p.Add(state.ReadRawZigZag32());
+                        state.PopScope(scope);
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, buf10p);
                         break;
                     }
-                    // raw read pass: legacy-mode - member PackedFixed: non-default DataFormat
-                    case (11 << 3) | 0:
-                    case (11 << 3) | 1:
-                    case (11 << 3) | 2:  // PackedFixed, field 11
-                    case (11 << 3) | 3:
-                    case (11 << 3) | 5:
+                    case (10 << 3) | 5:  // ZigZagArray, field 10, fixed32
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (10 << 3) | 1:  // ZigZagArray, field 10, fixed64
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (11 << 3) | 1:  // PackedFixed, field 11, unpacked run (fixed64)
                     {
-                        state.StashTag(tag);
-                        var tmp11 = value.PackedFixed;
-                        tmp11 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<long>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp11);
-                        if (tmp11 != null) value.PackedFixed = tmp11;
+                        var buf11 = new global::System.Collections.Generic.List<long>();
+                        do { buf11.Add(unchecked((long)state.ReadRawFixed64())); }
+                        while ((tag = state.ReadRawTag()) == ((11 << 3) | 1));
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, buf11);
+                        continue;
+                    }
+                    case (11 << 3) | 2:  // PackedFixed, field 11, packed
+                    {
+                        var buf11p = new global::System.Collections.Generic.List<long>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) buf11p.Add(unchecked((long)state.ReadRawFixed64()));
+                        state.PopScope(scope);
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, buf11p);
                         break;
                     }
+                    case (11 << 3) | 0:  // PackedFixed, field 11, varint
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, unchecked((long)state.ReadRawVarint64()));
+                        break;
+                    case (11 << 3) | 5:  // PackedFixed, field 11, fixed32
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, (long)unchecked((int)state.ReadRawFixed32()));
+                        break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Features
@@ -259,11 +276,7 @@ partial class FormatsModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
     }
 }

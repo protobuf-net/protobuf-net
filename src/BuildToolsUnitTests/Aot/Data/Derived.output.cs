@@ -59,11 +59,7 @@ partial class DerivedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>.Features
@@ -102,7 +98,7 @@ partial class DerivedModel
             {
                 switch (tag)
                 {
-                    case (1 << 3) | 0:  // List, field 1, unpacked run
+                    case (1 << 3) | 0:  // List, field 1, unpacked run (varint)
                         value.List ??= new global::AotFixtures.Derived.MyList();
                         do { value.List.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
@@ -167,11 +163,7 @@ partial class DerivedModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) switch
-            {
-                1 or 2 or 3 or 4 => true,
-                _ => false,
-            };
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
         }
     }
 }
