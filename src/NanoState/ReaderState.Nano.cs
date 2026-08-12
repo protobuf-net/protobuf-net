@@ -107,6 +107,7 @@ public ref partial struct ReaderState
         _offset = 0;
         _count = count;
         _effectiveEnd = count;
+        _scope = count; // root scope: length mode, ending at the data end
         _leased = false;
         _positionBase = 0;
         _remaining = 0;
@@ -134,6 +135,7 @@ public ref partial struct ReaderState
         _offset = 0;
         _count = value.Length;
         _effectiveEnd = value.Length;
+        _scope = value.Length; // root scope: length mode, ending at the data end
         _positionBase = 0;
         _remaining = 0;
         _source = null;
@@ -195,20 +197,49 @@ public ref partial struct ReaderState
     /// only the innermost.
     /// </summary>
     public ReadScope PushLimit(long length)
-        => throw new NotImplementedException();
+    {
+        var prior = _scope;
+        long end = Position + length;
+        // single-segment v1: the whole limit must land inside the data we have
+        if (length < 0 || end - _positionBase > _count) ThrowEndOfData();
+        _scope = end;
+        _effectiveEnd = (int)(end - _positionBase);
+        return new ReadScope(prior);
+    }
 
     /// <summary>
-    /// Enters a group scope: sets the end-group sentinel (checked in the switch default case -
-    /// matched fields never test it) and leaves the enclosing length limit in force. A wiretype-4
-    /// tag that is not the current sentinel reaches <see cref="SkipTag"/>, which throws: the
-    /// mismatched-end-group check falls out free.
+    /// Enters a group scope: sets the end-group sentinel (checked in the switch default case via
+    /// <see cref="IsScopeEnd"/> - matched fields never test it). Position becomes unbounded, which
+    /// is legacy semantics exactly - see the recorded trade on <see cref="_scope"/>.
     /// </summary>
     public ReadScope PushGroup(uint endGroupTag)
-        => throw new NotImplementedException();
+    {
+        if ((endGroupTag & 7) != 4) ThrowMalformed();
+        var prior = _scope;
+        _scope = -(long)(endGroupTag >> 3);
+        _effectiveEnd = _count;
+        return new ReadScope(prior);
+    }
 
     /// <summary>Restores the enclosing scope captured by a push.</summary>
     public void PopScope(in ReadScope prior)
-        => throw new NotImplementedException();
+    {
+        var value = prior.Value;
+        _scope = value;
+        _effectiveEnd = value >= 0
+            ? (int)Math.Min(_count, value - _positionBase)
+            : _count;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="tag"/> is the current group's end sentinel - the switch-default
+    /// test, so matched fields never pay for it. The tag was already consumed by
+    /// <see cref="ReadRawTag"/>; a wiretype-4 tag that fails this test belongs to nobody and
+    /// should go to <see cref="SkipTag"/>, which throws.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsScopeEnd(uint tag)
+        => (tag & 7) == 4 && (long)(tag >> 3) == -_scope;
 
     // ---------------------------------------------------------------- snapshot
 
