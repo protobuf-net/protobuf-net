@@ -358,12 +358,8 @@ public static class DescriptorNanoReader
                     while ((tag = state.ReadRawTag()) == ((10 << 3) | 0));
                     continue;
                 case (10 << 3) | 2: // public_dependency, field 10, packed
-                {
-                    var scope = state.PushLengthPrefix();
-                    while (!state.AtScopeEnd) value.PublicDependencies.Add(unchecked((int)state.ReadRawVarint32()));
-                    state.PopScope(scope);
+                    state.ReadPackedVarint32(value.PublicDependencies);
                     break;
-                }
                 case (10 << 3) | 5: // public_dependency, field 10, fixed32
                     value.PublicDependencies.Add(unchecked((int)state.ReadRawFixed32()));
                     break;
@@ -375,12 +371,8 @@ public static class DescriptorNanoReader
                     while ((tag = state.ReadRawTag()) == ((11 << 3) | 0));
                     continue;
                 case (11 << 3) | 2: // weak_dependency, field 11, packed
-                {
-                    var scope = state.PushLengthPrefix();
-                    while (!state.AtScopeEnd) value.WeakDependencies.Add(unchecked((int)state.ReadRawVarint32()));
-                    state.PopScope(scope);
+                    state.ReadPackedVarint32(value.WeakDependencies);
                     break;
-                }
                 case (11 << 3) | 5: // weak_dependency, field 11, fixed32
                     value.WeakDependencies.Add(unchecked((int)state.ReadRawFixed32()));
                     break;
@@ -1664,12 +1656,8 @@ public static class DescriptorNanoReader
             switch (tag)
             {
                 case (1 << 3) | 2:  // path, field 1, packed
-                {
-                    var scope = state.PushLengthPrefix();
-                    while (!state.AtScopeEnd) value.Path.Add(unchecked((int)state.ReadRawVarint32()));
-                    state.PopScope(scope);
+                    state.ReadPackedVarint32(value.Path);
                     break;
-                }
                 case (1 << 3) | 0:  // path, field 1, unpacked run
                     do { value.Path.Add(unchecked((int)state.ReadRawVarint32())); }
                     while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
@@ -1681,12 +1669,8 @@ public static class DescriptorNanoReader
                     value.Path.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
                     break;
                 case (2 << 3) | 2:  // span, field 2, packed
-                {
-                    var scope = state.PushLengthPrefix();
-                    while (!state.AtScopeEnd) value.Span.Add(unchecked((int)state.ReadRawVarint32()));
-                    state.PopScope(scope);
+                    state.ReadPackedVarint32(value.Span);
                     break;
-                }
                 case (2 << 3) | 0:  // span, field 2, unpacked run
                     do { value.Span.Add(unchecked((int)state.ReadRawVarint32())); }
                     while ((tag = state.ReadRawTag()) == ((2 << 3) | 0));

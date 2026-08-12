@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -593,6 +594,83 @@ public ref partial struct ReaderState
 #else
         // the buffer+index layout is the natural netfx fast path here
         return System.Text.Encoding.UTF8.GetString(_buffer, _segmentStart + offset, len);
+#endif
+    }
+
+    // ------------------------------------------------------------ packed fast paths
+    //
+    // Packed reads are one-line helper calls from generated code, and the platform fork lives
+    // HERE as ordinary #if - not in the emitted code, not as a generator decision - so every
+    // scenario is reviewable in one place, the goldens stay TFM-independent, and the multi-TFM
+    // test legs exercise each arm for free. The rule (docs/nano-core.md): #if in the library for
+    // body-shape variants that are perf-only and keyed by BCL availability; the generator decides
+    // only where the choice alters the plan or diagnostics. A packed run is not nesting, so these
+    // bound by length directly: no scope push/pop, no depth count.
+    //
+    // RESIDENCY (the forward-only rule's other edge): the bulk arms - the terminator pre-scan and
+    // the block copy - peek ahead without consuming, which is legal ONLY over bytes already in
+    // the current segment; nothing can replay across a refill, and a run larger than the buffer
+    // can never be made resident at all. So the plausible-length check below, which in
+    // single-segment v1 means "truncated data, throw", becomes the FAST/SLOW SWITCH when
+    // GetNextBuffer arrives: resident -> bulk arm; straddling -> the plain per-element forward
+    // loop, crossing refills exactly as ordinary reads do. (The Stream refill may choose to make
+    // residency common - shift-and-top-up already preserves from the current offset, so topping
+    // up until the run is local, capped by buffer size, is a legal courtesy - but that is the
+    // refill layer's decision; these helpers only ask whether the bytes are here.)
+
+    /// <summary>
+    /// Reads a packed varint-encoded run into <paramref name="values"/> (appending - merge
+    /// semantics account for pre-existing elements). On net8+ the element count is computed
+    /// exactly up front - every varint ends with exactly one non-continuation byte, so the count
+    /// of high-bit-clear bytes IS the element count - allowing SetCount + a bounds-check-free
+    /// span fill; whether that beats the plain Add loop is measured, not assumed
+    /// (PackedParseResults.md). A truncated trailing varint fails the exact-consumption check.
+    /// </summary>
+    public void ReadPackedVarint32(List<int> values)
+    {
+        int len = checked((int)ReadRawVarint32());
+        if (len == 0) return;
+        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        int end = _offset + len;
+#if NET8_0_OR_GREATER
+        int count = 0;
+        for (int i = _offset; i < end; i++)
+        {
+            if ((At(i) & 0x80) == 0) count++;
+        }
+        int oldCount = values.Count;
+        CollectionsMarshal.SetCount(values, oldCount + count);
+        foreach (ref var slot in CollectionsMarshal.AsSpan(values).Slice(oldCount))
+        {
+            slot = unchecked((int)ReadRawVarint32());
+        }
+        if (_offset != end) ThrowMalformed(); // trailing bytes the scan did not count as elements
+#else
+        while (_offset < end) values.Add(unchecked((int)ReadRawVarint32()));
+        if (_offset != end) ThrowMalformed(); // the final varint overran the declared length
+#endif
+    }
+
+    /// <summary>
+    /// Reads a packed fixed32 run into <paramref name="values"/> (appending). The count is exact
+    /// by construction (length / 4), and on net8+ the fill is a single block copy - little-endian
+    /// assumed, as recorded for the fixed readers generally.
+    /// </summary>
+    public void ReadPackedFixed32(List<int> values)
+    {
+        int len = checked((int)ReadRawVarint32());
+        if (len == 0) return;
+        if ((len & 3) != 0) ThrowMalformed();
+        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        int count = len >> 2;
+#if NET8_0_OR_GREATER
+        int oldCount = values.Count;
+        CollectionsMarshal.SetCount(values, oldCount + count);
+        MemoryMarshal.Cast<byte, int>(MemoryMarshal.CreateReadOnlySpan(ref At(_offset), len))
+            .CopyTo(CollectionsMarshal.AsSpan(values).Slice(oldCount));
+        _offset += len;
+#else
+        for (int i = 0; i < count; i++) values.Add(unchecked((int)ReadRawFixed32()));
 #endif
     }
 
