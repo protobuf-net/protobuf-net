@@ -136,6 +136,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!first) sb.AppendLine();
                 first = false;
                 EmitContract(sb, indent + 2, contract);
+                if (plan.NanoReader) EmitNanoRead(sb, indent + 2, contract);
             }
 
             EmitEnumProxies(sb, indent + 2, plan);
@@ -145,6 +146,110 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// The nano pass: a second, parallel emission against the experimental raw reader (see
+        /// docs/nano-core.md). Symbol-gated on ProtoBuf.Nano.ReaderState being visible - today
+        /// that is nobody outside this repo's own rigs - and dormant even then: nothing routes
+        /// here, invocation is manual. public static deliberately: static IS the direct-call
+        /// design. v1 eligibility is a strict subset (plain reference-type messages of varint
+        /// scalars and strings at default format); an ineligible contract simply gets no nano
+        /// method, which cascades nowhere because nothing depends on these yet.
+        /// </summary>
+        private static void EmitNanoRead(StringBuilder sb, int indent, ProtoContractPlan contract)
+        {
+            if (!NanoEligible(contract)) return;
+            sb.AppendLine();
+            Line(sb, indent, $"public static {contract.TypeName} NanoRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.Nano.ReaderState state, {contract.TypeName} value)");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
+            Line(sb, indent + 1, "uint tag;");
+            Line(sb, indent + 1, "while ((tag = state.ReadRawTag()) != 0)");
+            Line(sb, indent + 1, "{");
+            Line(sb, indent + 2, "switch (tag)");
+            Line(sb, indent + 2, "{");
+            foreach (var member in contract.Members)
+            {
+                var (wire, read) = member.Kind switch
+                {
+                    ProtoMemberKind.Bool => (0, "state.ReadRawVarint32() != 0"),
+                    ProtoMemberKind.Int32 => (0, "unchecked((int)state.ReadRawVarint32())"),
+                    ProtoMemberKind.UInt32 => (0, "state.ReadRawVarint32()"),
+                    ProtoMemberKind.Int64 => (0, "unchecked((long)state.ReadRawVarint64())"),
+                    ProtoMemberKind.UInt64 => (0, "state.ReadRawVarint64()"),
+                    ProtoMemberKind.String => (2, "state.ReadRawString()"),
+                    _ => (-1, ""), // unreachable: NanoEligible already filtered
+                };
+                if (wire < 0) continue;
+                Line(sb, indent + 3, $"case ({member.FieldNumber} << 3) | {wire}:");
+                if (member.Kind == ProtoMemberKind.String)
+                {
+                    // same semantics as the legacy read: a null string does not overwrite
+                    Line(sb, indent + 3, "{");
+                    Line(sb, indent + 4, $"var tmp{member.FieldNumber} = {read};");
+                    Line(sb, indent + 4, $"if (tmp{member.FieldNumber} != null) value.{Escape(member.Name)} = tmp{member.FieldNumber};");
+                    Line(sb, indent + 4, "break;");
+                    Line(sb, indent + 3, "}");
+                }
+                else
+                {
+                    Line(sb, indent + 4, $"value.{Escape(member.Name)} = {read};");
+                    Line(sb, indent + 4, "break;");
+                }
+            }
+            Line(sb, indent + 3, "default:");
+            Line(sb, indent + 4, "state.SkipTag(tag);");
+            Line(sb, indent + 4, "break;");
+            Line(sb, indent + 2, "}");
+            Line(sb, indent + 1, "}");
+            Line(sb, indent + 1, "return value;");
+            Line(sb, indent, "}");
+        }
+
+        private static bool NanoEligible(ProtoContractPlan contract)
+        {
+            if (contract.IsValueType || contract.IsTuple || contract.IsAbstract || contract.IsGroup
+                || contract.SkipConstructor || contract.UsesConstructorAccessor
+                || contract.RootTypeName is not null || contract.SubTypes.Count != 0
+                || contract.Extensible != ProtoExtensibleKind.None
+                || contract.SurrogateTypeName is not null
+                || contract.ExternalSerializerTypeName is not null)
+            {
+                return false;
+            }
+            // Callbacks is always a fixed 4-slot array indexed by kind; null MethodName = none
+            for (int i = 0; i < contract.Callbacks.Count; i++)
+            {
+                if (contract.Callbacks[i].MethodName is not null) return false;
+            }
+            foreach (var member in contract.Members)
+            {
+                if (member.Repeated.Factory is not null || member.Map.Factory is not null
+                    || member.WrappedValue || member.WrappedCollection
+                    || member.DataFormat != ProtoDataFormat.Default
+                    || member.IsRequired || member.UsesAccessor || member.AccessorReads
+                    || member.IsReadOnly || member.IsNullable
+                    || member.WriteCondition is not null || member.SpecifiedMember is not null
+                    || member.DefaultLiteral is not null || member.SubSerializer is not null
+                    || member.EnumTypeName is not null)
+                {
+                    return false;
+                }
+                switch (member.Kind)
+                {
+                    case ProtoMemberKind.Bool:
+                    case ProtoMemberKind.Int32:
+                    case ProtoMemberKind.UInt32:
+                    case ProtoMemberKind.Int64:
+                    case ProtoMemberKind.UInt64:
+                    case ProtoMemberKind.String:
+                        break;
+                    default:
+                        return false;
+                }
+            }
+            return true;
         }
 
         private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract)

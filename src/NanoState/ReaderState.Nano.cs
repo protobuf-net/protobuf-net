@@ -253,6 +253,21 @@ public ref partial struct ReaderState
     /// </summary>
     public void SkipTag(uint tag)
         => throw new NotImplementedException();
+
+    /// <summary>
+    /// Reads a varint as u32, tolerant of the 10-byte sign-extended form a negative int32 arrives
+    /// in (high garbage discarded) - values are tolerant, tags are strict.
+    /// </summary>
+    public uint ReadRawVarint32()
+        => throw new NotImplementedException();
+
+    /// <summary>Reads a varint as u64.</summary>
+    public ulong ReadRawVarint64()
+        => throw new NotImplementedException();
+
+    /// <summary>Reads a length-prefixed UTF-8 string.</summary>
+    public string ReadRawString()
+        => throw new NotImplementedException();
 }
 
 /// <summary>

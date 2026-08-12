@@ -173,7 +173,10 @@ namespace ProtoBuf.BuildTools.Generators
                     // and only when they have not written one themselves - a declared constructor is
                     // both the opt-out and the way to keep `new` working
                     emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
-                    isSealed: model.IsSealed);
+                    isSealed: model.IsSealed,
+                    // the nano pass is symbol-gated: it exists wherever the experimental reader is
+                    // visible, which today is only this repo's own rigs
+                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.Nano.ReaderState") is not null);
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
