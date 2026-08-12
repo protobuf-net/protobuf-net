@@ -42,7 +42,7 @@ partial class StructsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.Structs.HasStructs RawRead_AotFixtures_Structs_HasStructs(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)
+        private static global::AotFixtures.Structs.HasStructs RawRead_AotFixtures_Structs_HasStructs(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)
         {
             value ??= new global::AotFixtures.Structs.HasStructs();
             uint tag = state.ReadRawTagOrPending();

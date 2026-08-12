@@ -57,7 +57,7 @@ partial class ExtensibleModel
         global::AotFixtures.Extensible.BaseExt global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt> value)
             => RawReadSub_AotFixtures_Extensible_BaseExt(ref state, value);
 
-        public static global::AotFixtures.Extensible.BaseExt RawReadSub_AotFixtures_Extensible_BaseExt(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt> value)
+        private static global::AotFixtures.Extensible.BaseExt RawReadSub_AotFixtures_Extensible_BaseExt(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -105,7 +105,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        public static global::AotFixtures.Extensible.ByHand RawRead_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
+        private static global::AotFixtures.Extensible.ByHand RawRead_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
         {
             value ??= new global::AotFixtures.Extensible.ByHand();
             uint tag = state.ReadRawTag();
@@ -155,7 +155,7 @@ partial class ExtensibleModel
         global::AotFixtures.Extensible.DerivedExt global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.DerivedExt>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.DerivedExt> value)
             => RawReadSub_AotFixtures_Extensible_DerivedExt(ref state, value);
 
-        public static global::AotFixtures.Extensible.DerivedExt RawReadSub_AotFixtures_Extensible_DerivedExt(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.DerivedExt> value)
+        private static global::AotFixtures.Extensible.DerivedExt RawReadSub_AotFixtures_Extensible_DerivedExt(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.DerivedExt> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -198,7 +198,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        public static global::AotFixtures.Extensible.FromBase RawRead_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
+        private static global::AotFixtures.Extensible.FromBase RawRead_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
         {
             value ??= new global::AotFixtures.Extensible.FromBase();
             uint tag = state.ReadRawTag();
@@ -242,7 +242,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
 
-        public static global::AotFixtures.Extensible.TypedOnly RawRead_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)
+        private static global::AotFixtures.Extensible.TypedOnly RawRead_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)
         {
             value ??= new global::AotFixtures.Extensible.TypedOnly();
             uint tag = state.ReadRawTag();

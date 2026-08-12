@@ -37,7 +37,7 @@ partial class FieldModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Field.DataFields RawRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
+        private static global::AotFixtures.Field.DataFields RawRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
         {
             value ??= new global::AotFixtures.Field.DataFields();
             uint tag = state.ReadRawTag();
@@ -137,7 +137,7 @@ partial class FieldModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static global::AotFixtures.Field.Fields RawRead_AotFixtures_Field_Fields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Fields value)
+        private static global::AotFixtures.Field.Fields RawRead_AotFixtures_Field_Fields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Fields value)
         {
             value ??= new global::AotFixtures.Field.Fields();
             uint tag = state.ReadRawTag();
@@ -230,7 +230,7 @@ partial class FieldModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Field.Nested RawRead_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)
+        private static global::AotFixtures.Field.Nested RawRead_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)
         {
             value ??= new global::AotFixtures.Field.Nested();
             uint tag = state.ReadRawTag();

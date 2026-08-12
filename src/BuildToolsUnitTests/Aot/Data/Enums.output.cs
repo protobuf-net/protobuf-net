@@ -108,7 +108,7 @@ partial class EnumsModel
             }
         }
 
-        public static global::AotFixtures.Enums.WithEnums RawRead_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
+        private static global::AotFixtures.Enums.WithEnums RawRead_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
         {
             value ??= new global::AotFixtures.Enums.WithEnums();
             uint tag = state.ReadRawTagOrPending();

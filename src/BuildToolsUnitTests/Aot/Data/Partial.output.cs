@@ -57,7 +57,7 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
+        private static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
         {
             value ??= new global::AotFixtures.Partial.Contested();
             uint tag = state.ReadRawTag();
@@ -129,7 +129,7 @@ partial class PartialModel
             }
         }
 
-        public static global::AotFixtures.Partial.Described RawRead_AotFixtures_Partial_Described(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Described value)
+        private static global::AotFixtures.Partial.Described RawRead_AotFixtures_Partial_Described(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Described value)
         {
             value ??= new global::AotFixtures.Partial.Described();
             uint tag = state.ReadRawTagOrPending();
@@ -232,7 +232,7 @@ partial class PartialModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
+        private static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
         {
             value ??= new global::AotFixtures.Partial.Excluded();
             uint tag = state.ReadRawTag();
@@ -277,7 +277,7 @@ partial class PartialModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
+        private static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
         {
             value ??= new global::AotFixtures.Partial.Mixed();
             uint tag = state.ReadRawTag();

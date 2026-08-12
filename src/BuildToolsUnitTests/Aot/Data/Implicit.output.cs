@@ -42,7 +42,7 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.Implicit.AllFields RawRead_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllFields value)
+        private static global::AotFixtures.Implicit.AllFields RawRead_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllFields value)
         {
             value ??= new global::AotFixtures.Implicit.AllFields();
             uint tag = state.ReadRawTagOrPending();
@@ -109,7 +109,7 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.Implicit.AllPublic RawRead_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllPublic value)
+        private static global::AotFixtures.Implicit.AllPublic RawRead_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllPublic value)
         {
             value ??= new global::AotFixtures.Implicit.AllPublic();
             uint tag = state.ReadRawTag();
@@ -169,7 +169,7 @@ partial class ImplicitModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static global::AotFixtures.Implicit.FirstTag RawRead_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.FirstTag value)
+        private static global::AotFixtures.Implicit.FirstTag RawRead_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.FirstTag value)
         {
             value ??= new global::AotFixtures.Implicit.FirstTag();
             uint tag = state.ReadRawTag();
@@ -221,7 +221,7 @@ partial class ImplicitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Implicit.Ignoring RawRead_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Ignoring value)
+        private static global::AotFixtures.Implicit.Ignoring RawRead_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Ignoring value)
         {
             value ??= new global::AotFixtures.Implicit.Ignoring();
             uint tag = state.ReadRawTag();
@@ -268,7 +268,7 @@ partial class ImplicitModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static global::AotFixtures.Implicit.Mixed RawRead_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Mixed value)
+        private static global::AotFixtures.Implicit.Mixed RawRead_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Mixed value)
         {
             value ??= new global::AotFixtures.Implicit.Mixed();
             uint tag = state.ReadRawTag();

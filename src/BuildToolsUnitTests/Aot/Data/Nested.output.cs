@@ -34,7 +34,7 @@ partial class NestedModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Nested.Address RawRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
+        private static global::AotFixtures.Nested.Address RawRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
         {
             value ??= new global::AotFixtures.Nested.Address();
             uint tag = state.ReadRawTag();
@@ -76,7 +76,7 @@ partial class NestedModel
             state.WriteMessage<global::AotFixtures.Nested.Address>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
         }
 
-        public static global::AotFixtures.Nested.Customer RawRead_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
+        private static global::AotFixtures.Nested.Customer RawRead_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
         {
             value ??= new global::AotFixtures.Nested.Customer();
             uint tag = state.ReadRawTag();
@@ -131,7 +131,7 @@ partial class NestedModel
             state.WriteMessage<global::AotFixtures.Nested.Address>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
         }
 
-        public static global::AotFixtures.Nested.Invoice RawRead_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
+        private static global::AotFixtures.Nested.Invoice RawRead_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
         {
             value ??= new global::AotFixtures.Nested.Invoice();
             uint tag = state.ReadRawTag();

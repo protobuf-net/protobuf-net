@@ -55,7 +55,7 @@ partial class MapNestedModel
             }
         }
 
-        public static global::AotFixtures.MapNested.Nested RawRead_AotFixtures_MapNested_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Nested value)
+        private static global::AotFixtures.MapNested.Nested RawRead_AotFixtures_MapNested_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapNested.Nested value)
         {
             value ??= new global::AotFixtures.MapNested.Nested();
             uint tag = state.ReadRawTagOrPending();

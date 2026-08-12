@@ -43,7 +43,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        public static global::AotFixtures.MapUnsupported.EnumKey RawRead_AotFixtures_MapUnsupported_EnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
+        private static global::AotFixtures.MapUnsupported.EnumKey RawRead_AotFixtures_MapUnsupported_EnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
         {
             value ??= new global::AotFixtures.MapUnsupported.EnumKey();
             uint tag = state.ReadRawTag();
@@ -126,7 +126,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        public static global::AotFixtures.MapUnsupported.EnumValue RawRead_AotFixtures_MapUnsupported_EnumValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
+        private static global::AotFixtures.MapUnsupported.EnumValue RawRead_AotFixtures_MapUnsupported_EnumValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
         {
             value ??= new global::AotFixtures.MapUnsupported.EnumValue();
             uint tag = state.ReadRawTag();
@@ -209,7 +209,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        public static global::AotFixtures.MapUnsupported.MappedEnum RawRead_AotFixtures_MapUnsupported_MappedEnum(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
+        private static global::AotFixtures.MapUnsupported.MappedEnum RawRead_AotFixtures_MapUnsupported_MappedEnum(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.MappedEnum value)
         {
             value ??= new global::AotFixtures.MapUnsupported.MappedEnum();
             uint tag = state.ReadRawTagOrPending();
@@ -259,7 +259,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        public static global::AotFixtures.MapUnsupported.RepeatedValue RawRead_AotFixtures_MapUnsupported_RepeatedValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
+        private static global::AotFixtures.MapUnsupported.RepeatedValue RawRead_AotFixtures_MapUnsupported_RepeatedValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.RepeatedValue value)
         {
             value ??= new global::AotFixtures.MapUnsupported.RepeatedValue();
             uint tag = state.ReadRawTagOrPending();

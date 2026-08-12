@@ -43,7 +43,7 @@ partial class ContractOptionsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.ContractOptions.BothFamilies RawRead_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
+        private static global::AotFixtures.ContractOptions.BothFamilies RawRead_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
         {
             value ??= new global::AotFixtures.ContractOptions.BothFamilies();
             uint tag = state.ReadRawTag();
@@ -135,7 +135,7 @@ partial class ContractOptionsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.ContractOptions.Lenient RawRead_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
+        private static global::AotFixtures.ContractOptions.Lenient RawRead_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
         {
             value ??= new global::AotFixtures.ContractOptions.Lenient();
             uint tag = state.ReadRawTag();
@@ -190,7 +190,7 @@ partial class ContractOptionsModel
         global::AotFixtures.ContractOptions.LenientBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.ContractOptions.LenientBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientBase> value)
             => RawReadSub_AotFixtures_ContractOptions_LenientBase(ref state, value);
 
-        public static global::AotFixtures.ContractOptions.LenientBase RawReadSub_AotFixtures_ContractOptions_LenientBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientBase> value)
+        private static global::AotFixtures.ContractOptions.LenientBase RawReadSub_AotFixtures_ContractOptions_LenientBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientBase> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -243,7 +243,7 @@ partial class ContractOptionsModel
         global::AotFixtures.ContractOptions.LenientDerived global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.ContractOptions.LenientDerived>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientDerived> value)
             => RawReadSub_AotFixtures_ContractOptions_LenientDerived(ref state, value);
 
-        public static global::AotFixtures.ContractOptions.LenientDerived RawReadSub_AotFixtures_ContractOptions_LenientDerived(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientDerived> value)
+        private static global::AotFixtures.ContractOptions.LenientDerived RawReadSub_AotFixtures_ContractOptions_LenientDerived(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientDerived> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -282,7 +282,7 @@ partial class ContractOptionsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.ContractOptions.ProtoOnly RawRead_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
+        private static global::AotFixtures.ContractOptions.ProtoOnly RawRead_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
         {
             value ??= new global::AotFixtures.ContractOptions.ProtoOnly();
             uint tag = state.ReadRawTag();

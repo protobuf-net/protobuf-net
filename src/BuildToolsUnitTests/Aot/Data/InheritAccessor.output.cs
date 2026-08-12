@@ -63,7 +63,7 @@ partial class InheritAccessorModel
         global::AotFixtures.InheritAccessor.Base global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Base>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Base> value)
             => RawReadSub_AotFixtures_InheritAccessor_Base(ref state, value);
 
-        public static global::AotFixtures.InheritAccessor.Base RawReadSub_AotFixtures_InheritAccessor_Base(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Base> value)
+        private static global::AotFixtures.InheritAccessor.Base RawReadSub_AotFixtures_InheritAccessor_Base(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Base> value)
         {
             uint tag = state.ReadRawTagOrPending();
             while (tag != 0)
@@ -154,7 +154,7 @@ partial class InheritAccessorModel
         global::AotFixtures.InheritAccessor.Derived global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Derived>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Derived> value)
             => RawReadSub_AotFixtures_InheritAccessor_Derived(ref state, value);
 
-        public static global::AotFixtures.InheritAccessor.Derived RawReadSub_AotFixtures_InheritAccessor_Derived(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Derived> value)
+        private static global::AotFixtures.InheritAccessor.Derived RawReadSub_AotFixtures_InheritAccessor_Derived(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Derived> value)
         {
             uint tag = state.ReadRawTagOrPending();
             while (tag != 0)

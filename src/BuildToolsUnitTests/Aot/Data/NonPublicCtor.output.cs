@@ -37,7 +37,7 @@ partial class NonPublicCtorModel
             state.WriteMessage<global::AotFixtures.NonPublicCtor.PrivateCtor>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        public static global::AotFixtures.NonPublicCtor.Holder RawRead_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
+        private static global::AotFixtures.NonPublicCtor.Holder RawRead_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
         {
             value ??= new global::AotFixtures.NonPublicCtor.Holder();
             uint tag = state.ReadRawTagOrPending();

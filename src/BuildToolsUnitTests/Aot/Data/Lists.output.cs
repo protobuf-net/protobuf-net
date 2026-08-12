@@ -59,7 +59,7 @@ partial class ListsModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
+        private static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
         {
             value ??= new global::AotFixtures.Lists.Inner();
             uint tag = state.ReadRawTag();
@@ -165,7 +165,7 @@ partial class ListsModel
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
         }
 
-        public static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
+        private static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
         {
             value ??= new global::AotFixtures.Lists.Repeated();
             uint tag = state.ReadRawTagOrPending();

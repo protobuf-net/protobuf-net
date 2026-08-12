@@ -66,7 +66,7 @@ partial class IncludeGroupModel
         global::AotFixtures.IncludeGroup.Base global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)
             => RawReadSub_AotFixtures_IncludeGroup_Base(ref state, value);
 
-        public static global::AotFixtures.IncludeGroup.Base RawReadSub_AotFixtures_IncludeGroup_Base(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)
+        private static global::AotFixtures.IncludeGroup.Base RawReadSub_AotFixtures_IncludeGroup_Base(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -130,7 +130,7 @@ partial class IncludeGroupModel
         global::AotFixtures.IncludeGroup.Grouped global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Grouped>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
             => RawReadSub_AotFixtures_IncludeGroup_Grouped(ref state, value);
 
-        public static global::AotFixtures.IncludeGroup.Grouped RawReadSub_AotFixtures_IncludeGroup_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
+        private static global::AotFixtures.IncludeGroup.Grouped RawReadSub_AotFixtures_IncludeGroup_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -178,7 +178,7 @@ partial class IncludeGroupModel
         global::AotFixtures.IncludeGroup.Plain global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)
             => RawReadSub_AotFixtures_IncludeGroup_Plain(ref state, value);
 
-        public static global::AotFixtures.IncludeGroup.Plain RawReadSub_AotFixtures_IncludeGroup_Plain(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)
+        private static global::AotFixtures.IncludeGroup.Plain RawReadSub_AotFixtures_IncludeGroup_Plain(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)

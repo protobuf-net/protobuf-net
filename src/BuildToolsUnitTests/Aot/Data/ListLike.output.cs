@@ -35,7 +35,7 @@ partial class ListLikeModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.ListLike.Holder RawRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
+        private static global::AotFixtures.ListLike.Holder RawRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
         {
             value ??= new global::AotFixtures.ListLike.Holder();
             uint tag = state.ReadRawTag();
@@ -88,7 +88,7 @@ partial class ListLikeModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.ListLike.NotAList RawRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
+        private static global::AotFixtures.ListLike.NotAList RawRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
         {
             value ??= new global::AotFixtures.ListLike.NotAList();
             uint tag = state.ReadRawTag();

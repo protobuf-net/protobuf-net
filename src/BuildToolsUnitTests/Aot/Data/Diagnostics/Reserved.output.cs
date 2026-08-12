@@ -34,7 +34,7 @@ partial class ReservedModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Reserved.ReservedButClear RawRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
+        private static global::AotFixtures.Reserved.ReservedButClear RawRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
         {
             value ??= new global::AotFixtures.Reserved.ReservedButClear();
             uint tag = state.ReadRawTag();

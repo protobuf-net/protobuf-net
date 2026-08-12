@@ -50,7 +50,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+        private static global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
         {
             value ??= new global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate();
             uint tag = state.ReadRawTagOrPending();
@@ -108,7 +108,7 @@ partial class ModelSurrogateModel
             state.WriteMessage<global::System.DateTimeOffset>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
         }
 
-        public static global::AotFixtures.ModelSurrogate.Holder RawRead_AotFixtures_ModelSurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Holder value)
+        private static global::AotFixtures.ModelSurrogate.Holder RawRead_AotFixtures_ModelSurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Holder value)
         {
             value ??= new global::AotFixtures.ModelSurrogate.Holder();
             uint tag = state.ReadRawTagOrPending();
@@ -223,7 +223,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static global::AotFixtures.ModelSurrogate.TicksSurrogate RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
+        private static global::AotFixtures.ModelSurrogate.TicksSurrogate RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
         {
             value ??= new global::AotFixtures.ModelSurrogate.TicksSurrogate();
             uint tag = state.ReadRawTag();
@@ -266,7 +266,7 @@ partial class ModelSurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.ModelSurrogate.VersionSurrogate RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
+        private static global::AotFixtures.ModelSurrogate.VersionSurrogate RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {
             value ??= new global::AotFixtures.ModelSurrogate.VersionSurrogate();
             uint tag = state.ReadRawTag();

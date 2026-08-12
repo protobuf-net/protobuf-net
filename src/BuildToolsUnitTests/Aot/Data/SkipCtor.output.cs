@@ -78,7 +78,7 @@ partial class SkipCtorModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.SkipCtor.Constructed RawRead_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
+        private static global::AotFixtures.SkipCtor.Constructed RawRead_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
         {
             value ??= new global::AotFixtures.SkipCtor.Constructed();
             uint tag = state.ReadRawTag();

@@ -6,6 +6,12 @@ namespace ProtoBuf.Reflection.Internal;
 
 partial class CustomProtogenSerializer
 {
+    /// <summary>Use <see cref="Instance"/>; a <c>TypeModel</c> is a cache, and is intended to be shared rather than constructed per use.</summary>
+    private CustomProtogenSerializer() { }
+
+    /// <summary>A shared instance of this model; a <c>TypeModel</c> is thread-safe and is intended to be reused.</summary>
+    public static CustomProtogenSerializer Instance { get; } = new CustomProtogenSerializer();
+
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
@@ -121,7 +127,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.DescriptorProto RawRead_Google_Protobuf_Reflection_DescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
+        private static global::Google.Protobuf.Reflection.DescriptorProto RawRead_Google_Protobuf_Reflection_DescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.DescriptorProto();
             uint tag = state.ReadRawTag();
@@ -268,7 +274,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
+        private static global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
         {
             value ??= new global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange();
             uint tag = state.ReadRawTag();
@@ -337,7 +343,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
+        private static global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
         {
             value ??= new global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange();
             uint tag = state.ReadRawTag();
@@ -410,7 +416,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.EnumDescriptorProto RawRead_Google_Protobuf_Reflection_EnumDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.EnumDescriptorProto RawRead_Google_Protobuf_Reflection_EnumDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -495,7 +501,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange RawRead_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
+        private static global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange RawRead_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange();
             uint tag = state.ReadRawTag();
@@ -563,7 +569,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.EnumOptions RawRead_Google_Protobuf_Reflection_EnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumOptions value)
+        private static global::Google.Protobuf.Reflection.EnumOptions RawRead_Google_Protobuf_Reflection_EnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumOptions();
             uint tag = state.ReadRawTag();
@@ -638,7 +644,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.EnumValueDescriptorProto RawRead_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.EnumValueDescriptorProto RawRead_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumValueDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -705,7 +711,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.EnumValueOptions RawRead_Google_Protobuf_Reflection_EnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
+        private static global::Google.Protobuf.Reflection.EnumValueOptions RawRead_Google_Protobuf_Reflection_EnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumValueOptions();
             uint tag = state.ReadRawTag();
@@ -764,7 +770,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.ExtensionRangeOptions RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
+        private static global::Google.Protobuf.Reflection.ExtensionRangeOptions RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.ExtensionRangeOptions();
             uint tag = state.ReadRawTag();
@@ -862,7 +868,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.FieldDescriptorProto RawRead_Google_Protobuf_Reflection_FieldDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.FieldDescriptorProto RawRead_Google_Protobuf_Reflection_FieldDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.FieldDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -1017,7 +1023,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.FieldOptions RawRead_Google_Protobuf_Reflection_FieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions value)
+        private static global::Google.Protobuf.Reflection.FieldOptions RawRead_Google_Protobuf_Reflection_FieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.FieldOptions();
             uint tag = state.ReadRawTag();
@@ -1170,7 +1176,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.FileDescriptorProto RawRead_Google_Protobuf_Reflection_FileDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.FileDescriptorProto RawRead_Google_Protobuf_Reflection_FileDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.FileDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -1340,7 +1346,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.FileDescriptorSet RawRead_Google_Protobuf_Reflection_FileDescriptorSet(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileDescriptorSet value)
+        private static global::Google.Protobuf.Reflection.FileDescriptorSet RawRead_Google_Protobuf_Reflection_FileDescriptorSet(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileDescriptorSet value)
         {
             value ??= new global::Google.Protobuf.Reflection.FileDescriptorSet();
             uint tag = state.ReadRawTag();
@@ -1499,7 +1505,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.FileOptions RawRead_Google_Protobuf_Reflection_FileOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileOptions value)
+        private static global::Google.Protobuf.Reflection.FileOptions RawRead_Google_Protobuf_Reflection_FileOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.FileOptions();
             uint tag = state.ReadRawTag();
@@ -1723,7 +1729,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.MessageOptions RawRead_Google_Protobuf_Reflection_MessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MessageOptions value)
+        private static global::Google.Protobuf.Reflection.MessageOptions RawRead_Google_Protobuf_Reflection_MessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MessageOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.MessageOptions();
             uint tag = state.ReadRawTag();
@@ -1833,7 +1839,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.MethodDescriptorProto RawRead_Google_Protobuf_Reflection_MethodDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.MethodDescriptorProto RawRead_Google_Protobuf_Reflection_MethodDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.MethodDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -1926,7 +1932,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.MethodOptions RawRead_Google_Protobuf_Reflection_MethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodOptions value)
+        private static global::Google.Protobuf.Reflection.MethodOptions RawRead_Google_Protobuf_Reflection_MethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.MethodOptions();
             uint tag = state.ReadRawTag();
@@ -1996,7 +2002,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.OneofDescriptorProto RawRead_Google_Protobuf_Reflection_OneofDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.OneofDescriptorProto RawRead_Google_Protobuf_Reflection_OneofDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.OneofDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -2048,7 +2054,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.OneofOptions RawRead_Google_Protobuf_Reflection_OneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofOptions value)
+        private static global::Google.Protobuf.Reflection.OneofOptions RawRead_Google_Protobuf_Reflection_OneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.OneofOptions();
             uint tag = state.ReadRawTag();
@@ -2105,7 +2111,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.ServiceDescriptorProto RawRead_Google_Protobuf_Reflection_ServiceDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
+        private static global::Google.Protobuf.Reflection.ServiceDescriptorProto RawRead_Google_Protobuf_Reflection_ServiceDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.ServiceDescriptorProto();
             uint tag = state.ReadRawTag();
@@ -2175,7 +2181,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.ServiceOptions RawRead_Google_Protobuf_Reflection_ServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
+        private static global::Google.Protobuf.Reflection.ServiceOptions RawRead_Google_Protobuf_Reflection_ServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.ServiceOptions();
             uint tag = state.ReadRawTag();
@@ -2234,7 +2240,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.SourceCodeInfo RawRead_Google_Protobuf_Reflection_SourceCodeInfo(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.SourceCodeInfo value)
+        private static global::Google.Protobuf.Reflection.SourceCodeInfo RawRead_Google_Protobuf_Reflection_SourceCodeInfo(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.SourceCodeInfo value)
         {
             value ??= new global::Google.Protobuf.Reflection.SourceCodeInfo();
             uint tag = state.ReadRawTag();
@@ -2304,7 +2310,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.SourceCodeInfo.Location RawRead_Google_Protobuf_Reflection_SourceCodeInfo_Location(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.SourceCodeInfo.Location value)
+        private static global::Google.Protobuf.Reflection.SourceCodeInfo.Location RawRead_Google_Protobuf_Reflection_SourceCodeInfo_Location(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.SourceCodeInfo.Location value)
         {
             value ??= new global::Google.Protobuf.Reflection.SourceCodeInfo.Location();
             uint tag = state.ReadRawTag();
@@ -2441,7 +2447,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.UninterpretedOption RawRead_Google_Protobuf_Reflection_UninterpretedOption(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
+        private static global::Google.Protobuf.Reflection.UninterpretedOption RawRead_Google_Protobuf_Reflection_UninterpretedOption(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
         {
             value ??= new global::Google.Protobuf.Reflection.UninterpretedOption();
             uint tag = state.ReadRawTag();
@@ -2527,7 +2533,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::Google.Protobuf.Reflection.UninterpretedOption.NamePart RawRead_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
+        private static global::Google.Protobuf.Reflection.UninterpretedOption.NamePart RawRead_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
         {
             value ??= new global::Google.Protobuf.Reflection.UninterpretedOption.NamePart();
             uint tag = state.ReadRawTag();
@@ -2587,7 +2593,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenEnumOptions RawRead_ProtoBuf_Reflection_ProtogenEnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenEnumOptions RawRead_ProtoBuf_Reflection_ProtogenEnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenEnumOptions();
             uint tag = state.ReadRawTag();
@@ -2646,7 +2652,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenEnumValueOptions RawRead_ProtoBuf_Reflection_ProtogenEnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenEnumValueOptions RawRead_ProtoBuf_Reflection_ProtogenEnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenEnumValueOptions();
             uint tag = state.ReadRawTag();
@@ -2704,7 +2710,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenFieldOptions RawRead_ProtoBuf_Reflection_ProtogenFieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenFieldOptions RawRead_ProtoBuf_Reflection_ProtogenFieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenFieldOptions();
             uint tag = state.ReadRawTag();
@@ -2804,7 +2810,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenFileOptions RawRead_ProtoBuf_Reflection_ProtogenFileOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFileOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenFileOptions RawRead_ProtoBuf_Reflection_ProtogenFileOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFileOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenFileOptions();
             uint tag = state.ReadRawTag();
@@ -2907,7 +2913,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenMessageOptions RawRead_ProtoBuf_Reflection_ProtogenMessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenMessageOptions RawRead_ProtoBuf_Reflection_ProtogenMessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenMessageOptions();
             uint tag = state.ReadRawTag();
@@ -2981,7 +2987,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenMethodOptions RawRead_ProtoBuf_Reflection_ProtogenMethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenMethodOptions RawRead_ProtoBuf_Reflection_ProtogenMethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenMethodOptions();
             uint tag = state.ReadRawTag();
@@ -3031,7 +3037,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenOneofOptions RawRead_ProtoBuf_Reflection_ProtogenOneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenOneofOptions RawRead_ProtoBuf_Reflection_ProtogenOneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenOneofOptions();
             uint tag = state.ReadRawTag();
@@ -3086,7 +3092,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        public static global::ProtoBuf.Reflection.ProtogenServiceOptions RawRead_ProtoBuf_Reflection_ProtogenServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
+        private static global::ProtoBuf.Reflection.ProtogenServiceOptions RawRead_ProtoBuf_Reflection_ProtogenServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenServiceOptions();
             uint tag = state.ReadRawTag();

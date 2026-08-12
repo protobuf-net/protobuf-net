@@ -66,7 +66,7 @@ partial class InheritUnsupportedModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
+        private static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {
             value ??= new global::AotFixtures.InheritUnsupported.Unlinked();
             uint tag = state.ReadRawTag();

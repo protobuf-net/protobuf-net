@@ -34,7 +34,7 @@ partial class CallbacksModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Callbacks.AfterOnly RawRead_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)
+        private static global::AotFixtures.Callbacks.AfterOnly RawRead_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)
         {
             value ??= new global::AotFixtures.Callbacks.AfterOnly();
             uint tag = state.ReadRawTag();
@@ -81,7 +81,7 @@ partial class CallbacksModel
             value.AfterSer();
         }
 
-        public static global::AotFixtures.Callbacks.Hooked RawRead_AotFixtures_Callbacks_Hooked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Hooked value)
+        private static global::AotFixtures.Callbacks.Hooked RawRead_AotFixtures_Callbacks_Hooked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Hooked value)
         {
             value ??= new global::AotFixtures.Callbacks.Hooked();
             value.BeforeDes();
@@ -129,7 +129,7 @@ partial class CallbacksModel
             value.OnSerd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
         }
 
-        public static global::AotFixtures.Callbacks.Standard RawRead_AotFixtures_Callbacks_Standard(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Standard value)
+        private static global::AotFixtures.Callbacks.Standard RawRead_AotFixtures_Callbacks_Standard(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Standard value)
         {
             value ??= new global::AotFixtures.Callbacks.Standard();
             value.OnDes(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));

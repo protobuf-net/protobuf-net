@@ -43,7 +43,7 @@ partial class NonPublicSetterModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        public static global::AotFixtures.NonPublicSetter.Guarded RawRead_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicSetter.Guarded value)
+        private static global::AotFixtures.NonPublicSetter.Guarded RawRead_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicSetter.Guarded value)
         {
             value ??= new global::AotFixtures.NonPublicSetter.Guarded();
             uint tag = state.ReadRawTagOrPending();

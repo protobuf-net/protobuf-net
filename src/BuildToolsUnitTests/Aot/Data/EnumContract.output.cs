@@ -48,7 +48,7 @@ partial class EnumContractModel
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);
         }
 
-        public static global::AotFixtures.EnumContract.Holder RawRead_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
+        private static global::AotFixtures.EnumContract.Holder RawRead_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
         {
             value ??= new global::AotFixtures.EnumContract.Holder();
             uint tag = state.ReadRawTagOrPending();

@@ -149,7 +149,7 @@ partial class ExoticModel
             }
         }
 
-        public static global::AotFixtures.Exotic.Exotics RawRead_AotFixtures_Exotic_Exotics(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Exotic.Exotics value)
+        private static global::AotFixtures.Exotic.Exotics RawRead_AotFixtures_Exotic_Exotics(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Exotic.Exotics value)
         {
             value ??= new global::AotFixtures.Exotic.Exotics();
             uint tag = state.ReadRawTagOrPending();

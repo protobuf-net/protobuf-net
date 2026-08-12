@@ -36,7 +36,7 @@ partial class AssemblySurrogateModel
             state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        public static global::AotFixtures.AssemblySurrogate.Holder RawRead_AotFixtures_AssemblySurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.Holder value)
+        private static global::AotFixtures.AssemblySurrogate.Holder RawRead_AotFixtures_AssemblySurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.Holder value)
         {
             value ??= new global::AotFixtures.AssemblySurrogate.Holder();
             uint tag = state.ReadRawTagOrPending();
@@ -83,7 +83,7 @@ partial class AssemblySurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+        private static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {
             value ??= new global::AotFixtures.AssemblySurrogate.VersionSurrogate();
             uint tag = state.ReadRawTag();

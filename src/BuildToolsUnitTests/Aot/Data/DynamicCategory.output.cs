@@ -60,7 +60,7 @@ partial class DynamicCategoryModel
             }
         }
 
-        public static global::AotFixtures.DynamicCategory.Reading RawRead_AotFixtures_DynamicCategory_Reading(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DynamicCategory.Reading value)
+        private static global::AotFixtures.DynamicCategory.Reading RawRead_AotFixtures_DynamicCategory_Reading(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DynamicCategory.Reading value)
         {
             value ??= new global::AotFixtures.DynamicCategory.Reading();
             uint tag = state.ReadRawTagOrPending();

@@ -27,10 +27,11 @@ namespace ProtoBuf.Reflection.Internal
     [ProtoSerializable(typeof(global::ProtoBuf.Reflection.ProtogenServiceOptions))]
     [ProtoSerializable(typeof(global::ProtoBuf.Reflection.ProtogenMethodOptions))]
     [ProtoSerializable(typeof(global::ProtoBuf.Reflection.ProtogenOneofOptions))]
+    // the constructor and Instance are the generator's to provide: it emits a private
+    // parameterless constructor (the class is sealed) and the shared Instance accessor,
+    // exactly as it would for any consumer's model
     internal sealed partial class CustomProtogenSerializer : TypeModel
     {
-        private CustomProtogenSerializer() { }
-        internal static TypeModel Instance { get; } = new CustomProtogenSerializer();
     }
 #pragma warning restore PBN9001
 }

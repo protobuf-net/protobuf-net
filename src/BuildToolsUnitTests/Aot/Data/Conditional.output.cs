@@ -55,7 +55,7 @@ partial class ConditionalModel
             }
         }
 
-        public static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
+        private static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
         {
             value ??= new global::AotFixtures.Conditional.Conditional();
             uint tag = state.ReadRawTag();

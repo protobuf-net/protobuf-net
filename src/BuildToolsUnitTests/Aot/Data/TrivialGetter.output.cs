@@ -42,7 +42,7 @@ partial class TrivialGetterModel
             }
         }
 
-        public static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
+        private static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
             value ??= new global::AotFixtures.TrivialGetter.Backed();
             uint tag = state.ReadRawTagOrPending();
@@ -116,7 +116,7 @@ partial class TrivialGetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
+        private static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
         {
             value ??= new global::AotFixtures.TrivialGetter.Computed();
             uint tag = state.ReadRawTagOrPending();

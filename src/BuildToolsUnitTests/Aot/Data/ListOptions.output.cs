@@ -75,7 +75,7 @@ partial class ListOptionsModel
             }
         }
 
-        public static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
+        private static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
             value ??= new global::AotFixtures.ListOptions.NotACollection();
             uint tag = state.ReadRawTag();
@@ -170,7 +170,7 @@ partial class ListOptionsModel
             }
         }
 
-        public static global::AotFixtures.ListOptions.Options RawRead_AotFixtures_ListOptions_Options(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.Options value)
+        private static global::AotFixtures.ListOptions.Options RawRead_AotFixtures_ListOptions_Options(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.Options value)
         {
             value ??= new global::AotFixtures.ListOptions.Options();
             uint tag = state.ReadRawTagOrPending();

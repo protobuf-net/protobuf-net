@@ -32,7 +32,7 @@ partial class BadLevelModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.BadLevel.GoodLevel RawRead_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
+        private static global::AotFixtures.BadLevel.GoodLevel RawRead_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
         {
             value ??= new global::AotFixtures.BadLevel.GoodLevel();
             uint tag = state.ReadRawTag();

@@ -36,7 +36,7 @@ partial class DroppedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Dropped.HasCallback RawRead_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
+        private static global::AotFixtures.Dropped.HasCallback RawRead_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
         {
             value ??= new global::AotFixtures.Dropped.HasCallback();
             uint tag = state.ReadRawTag();
@@ -86,7 +86,7 @@ partial class DroppedModel
             }
         }
 
-        public static global::AotFixtures.Dropped.HasUnsupportedMember RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
+        private static global::AotFixtures.Dropped.HasUnsupportedMember RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
         {
             value ??= new global::AotFixtures.Dropped.HasUnsupportedMember();
             uint tag = state.ReadRawTag();
@@ -134,7 +134,7 @@ partial class DroppedModel
             state.WriteMessage<global::AotFixtures.Dropped.HasUnsupportedMember>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        public static global::AotFixtures.Dropped.ReferencesDropped RawRead_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
+        private static global::AotFixtures.Dropped.ReferencesDropped RawRead_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
         {
             value ??= new global::AotFixtures.Dropped.ReferencesDropped();
             uint tag = state.ReadRawTag();
@@ -176,7 +176,7 @@ partial class DroppedModel
             if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Dropped.UnrenderableDefault RawRead_AotFixtures_Dropped_UnrenderableDefault(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
+        private static global::AotFixtures.Dropped.UnrenderableDefault RawRead_AotFixtures_Dropped_UnrenderableDefault(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
         {
             value ??= new global::AotFixtures.Dropped.UnrenderableDefault();
             uint tag = state.ReadRawTag();
@@ -219,7 +219,7 @@ partial class DroppedModel
             state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Dropped.UsesMemberOptions RawRead_AotFixtures_Dropped_UsesMemberOptions(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
+        private static global::AotFixtures.Dropped.UsesMemberOptions RawRead_AotFixtures_Dropped_UsesMemberOptions(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
         {
             value ??= new global::AotFixtures.Dropped.UsesMemberOptions();
             uint tag = state.ReadRawTag();

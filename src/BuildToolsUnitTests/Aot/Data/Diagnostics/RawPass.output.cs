@@ -39,7 +39,7 @@ partial class RawPassModel
             state.AppendExtensionData(value);
         }
 
-        public static global::AotFixtures.RawPass.Bag RawRead_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Bag value)
+        private static global::AotFixtures.RawPass.Bag RawRead_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Bag value)
         {
             value ??= new global::AotFixtures.RawPass.Bag();
             uint tag = state.ReadRawTag();
@@ -82,7 +82,7 @@ partial class RawPassModel
             state.WriteMessage<global::AotFixtures.RawPass.Holder>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        public static global::AotFixtures.RawPass.Chain RawRead_AotFixtures_RawPass_Chain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Chain value)
+        private static global::AotFixtures.RawPass.Chain RawRead_AotFixtures_RawPass_Chain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Chain value)
         {
             value ??= new global::AotFixtures.RawPass.Chain();
             uint tag = state.ReadRawTag();
@@ -124,7 +124,7 @@ partial class RawPassModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.RawPass.Child RawRead_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Child value)
+        private static global::AotFixtures.RawPass.Child RawRead_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Child value)
         {
             value ??= new global::AotFixtures.RawPass.Child();
             uint tag = state.ReadRawTag();
@@ -170,7 +170,7 @@ partial class RawPassModel
             }
         }
 
-        public static global::AotFixtures.RawPass.Holder RawRead_AotFixtures_RawPass_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Holder value)
+        private static global::AotFixtures.RawPass.Holder RawRead_AotFixtures_RawPass_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Holder value)
         {
             value ??= new global::AotFixtures.RawPass.Holder();
             uint tag = state.ReadRawTagOrPending();
@@ -268,7 +268,7 @@ partial class RawPassModel
             }
         }
 
-        public static global::AotFixtures.RawPass.Order RawRead_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Order value)
+        private static global::AotFixtures.RawPass.Order RawRead_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Order value)
         {
             value ??= new global::AotFixtures.RawPass.Order();
             uint tag = state.ReadRawTag();

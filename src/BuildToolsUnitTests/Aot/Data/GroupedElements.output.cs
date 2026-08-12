@@ -69,7 +69,7 @@ partial class GroupedElementsModel
             state.WriteGroup<global::AotFixtures.GroupedElements.Item>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
         }
 
-        public static global::AotFixtures.GroupedElements.Grouped RawRead_AotFixtures_GroupedElements_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Grouped value)
+        private static global::AotFixtures.GroupedElements.Grouped RawRead_AotFixtures_GroupedElements_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Grouped value)
         {
             value ??= new global::AotFixtures.GroupedElements.Grouped();
             uint tag = state.ReadRawTag();
@@ -169,7 +169,7 @@ partial class GroupedElementsModel
             }
         }
 
-        public static global::AotFixtures.GroupedElements.GroupedMaps RawRead_AotFixtures_GroupedElements_GroupedMaps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.GroupedMaps value)
+        private static global::AotFixtures.GroupedElements.GroupedMaps RawRead_AotFixtures_GroupedElements_GroupedMaps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.GroupedMaps value)
         {
             value ??= new global::AotFixtures.GroupedElements.GroupedMaps();
             uint tag = state.ReadRawTagOrPending();
@@ -289,7 +289,7 @@ partial class GroupedElementsModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
+        private static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
         {
             value ??= new global::AotFixtures.GroupedElements.Item();
             uint tag = state.ReadRawTag();

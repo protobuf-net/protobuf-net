@@ -37,7 +37,7 @@ partial class AbstractLeafModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
+        private static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
         {
             value ??= new global::AotFixtures.AbstractLeaf.Holder();
             uint tag = state.ReadRawTagOrPending();

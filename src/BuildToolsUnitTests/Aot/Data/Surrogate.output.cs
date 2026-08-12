@@ -76,7 +76,7 @@ partial class SurrogateModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Surrogate.CodeSurrogate RawRead_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
+        private static global::AotFixtures.Surrogate.CodeSurrogate RawRead_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
         {
             value ??= new global::AotFixtures.Surrogate.CodeSurrogate();
             uint tag = state.ReadRawTag();
@@ -133,7 +133,7 @@ partial class SurrogateModel
             }
         }
 
-        public static global::AotFixtures.Surrogate.Holder RawRead_AotFixtures_Surrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.Holder value)
+        private static global::AotFixtures.Surrogate.Holder RawRead_AotFixtures_Surrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.Holder value)
         {
             value ??= new global::AotFixtures.Surrogate.Holder();
             uint tag = state.ReadRawTagOrPending();
@@ -274,7 +274,7 @@ partial class SurrogateModel
             }
         }
 
-        public static global::AotFixtures.Surrogate.MoneySurrogate RawRead_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
+        private static global::AotFixtures.Surrogate.MoneySurrogate RawRead_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
         {
             value ??= new global::AotFixtures.Surrogate.MoneySurrogate();
             uint tag = state.ReadRawTag();
@@ -354,7 +354,7 @@ partial class SurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Surrogate.TagSurrogate RawRead_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)
+        private static global::AotFixtures.Surrogate.TagSurrogate RawRead_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)
         {
             value ??= new global::AotFixtures.Surrogate.TagSurrogate();
             uint tag = state.ReadRawTag();

@@ -94,7 +94,7 @@ partial class ScalarsModel
             }
         }
 
-        public static global::AotFixtures.Scalars.Primitives RawRead_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
+        private static global::AotFixtures.Scalars.Primitives RawRead_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
         {
             value ??= new global::AotFixtures.Scalars.Primitives();
             uint tag = state.ReadRawTagOrPending();

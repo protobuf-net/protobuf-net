@@ -74,7 +74,7 @@ partial class NullablesModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static global::AotFixtures.Nullables.Optional RawRead_AotFixtures_Nullables_Optional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)
+        private static global::AotFixtures.Nullables.Optional RawRead_AotFixtures_Nullables_Optional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)
         {
             value ??= new global::AotFixtures.Nullables.Optional();
             uint tag = state.ReadRawTag();

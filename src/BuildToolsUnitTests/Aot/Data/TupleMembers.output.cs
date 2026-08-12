@@ -138,7 +138,7 @@ partial class TupleMembersModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static global::AotFixtures.TupleMembers.HasTuples RawRead_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleMembers.HasTuples value)
+        private static global::AotFixtures.TupleMembers.HasTuples RawRead_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleMembers.HasTuples value)
         {
             value ??= new global::AotFixtures.TupleMembers.HasTuples();
             uint tag = state.ReadRawTagOrPending();

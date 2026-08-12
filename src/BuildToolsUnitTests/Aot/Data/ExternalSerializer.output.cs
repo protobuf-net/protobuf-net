@@ -63,7 +63,7 @@ partial class ExternalSerializerModel
             state.WriteAny<global::AotFixtures.ExternalSerializer.Stamp>(3, tmp3, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>());
         }
 
-        public static global::AotFixtures.ExternalSerializer.Holder RawRead_AotFixtures_ExternalSerializer_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Holder value)
+        private static global::AotFixtures.ExternalSerializer.Holder RawRead_AotFixtures_ExternalSerializer_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Holder value)
         {
             value ??= new global::AotFixtures.ExternalSerializer.Holder();
             uint tag = state.ReadRawTagOrPending();

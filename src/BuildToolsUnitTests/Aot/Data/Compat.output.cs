@@ -84,7 +84,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.Formats RawRead_AotFixtures_Compat_Formats(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Formats value)
+        private static global::AotFixtures.Compat.Formats RawRead_AotFixtures_Compat_Formats(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Formats value)
         {
             value ??= new global::AotFixtures.Compat.Formats();
             uint tag = state.ReadRawTag();
@@ -204,7 +204,7 @@ partial class CompatModel
         global::AotFixtures.Compat.InheritsLevel global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.InheritsLevel>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.InheritsLevel> value)
             => RawReadSub_AotFixtures_Compat_InheritsLevel(ref state, value);
 
-        public static global::AotFixtures.Compat.InheritsLevel RawReadSub_AotFixtures_Compat_InheritsLevel(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.InheritsLevel> value)
+        private static global::AotFixtures.Compat.InheritsLevel RawReadSub_AotFixtures_Compat_InheritsLevel(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.InheritsLevel> value)
         {
             uint tag = state.ReadRawTagOrPending();
             while (tag != 0)
@@ -281,7 +281,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.Legacy RawRead_AotFixtures_Compat_Legacy(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Legacy value)
+        private static global::AotFixtures.Compat.Legacy RawRead_AotFixtures_Compat_Legacy(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Legacy value)
         {
             value ??= new global::AotFixtures.Compat.Legacy();
             uint tag = state.ReadRawTag();
@@ -376,7 +376,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.LegacyFixed RawRead_AotFixtures_Compat_LegacyFixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.LegacyFixed value)
+        private static global::AotFixtures.Compat.LegacyFixed RawRead_AotFixtures_Compat_LegacyFixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.LegacyFixed value)
         {
             value ??= new global::AotFixtures.Compat.LegacyFixed();
             uint tag = state.ReadRawTag();
@@ -438,7 +438,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.Level240 RawRead_AotFixtures_Compat_Level240(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
+        private static global::AotFixtures.Compat.Level240 RawRead_AotFixtures_Compat_Level240(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
         {
             value ??= new global::AotFixtures.Compat.Level240();
             uint tag = state.ReadRawTag();
@@ -535,7 +535,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.Level300 RawRead_AotFixtures_Compat_Level300(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level300 value)
+        private static global::AotFixtures.Compat.Level300 RawRead_AotFixtures_Compat_Level300(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level300 value)
         {
             value ??= new global::AotFixtures.Compat.Level300();
             uint tag = state.ReadRawTagOrPending();
@@ -639,7 +639,7 @@ partial class CompatModel
         global::AotFixtures.Compat.LevelledBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.LevelledBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.LevelledBase> value)
             => RawReadSub_AotFixtures_Compat_LevelledBase(ref state, value);
 
-        public static global::AotFixtures.Compat.LevelledBase RawReadSub_AotFixtures_Compat_LevelledBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.LevelledBase> value)
+        private static global::AotFixtures.Compat.LevelledBase RawReadSub_AotFixtures_Compat_LevelledBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.LevelledBase> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -697,7 +697,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.Mixed RawRead_AotFixtures_Compat_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
+        private static global::AotFixtures.Compat.Mixed RawRead_AotFixtures_Compat_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
         {
             value ??= new global::AotFixtures.Compat.Mixed();
             uint tag = state.ReadRawTag();
@@ -773,7 +773,7 @@ partial class CompatModel
             }
         }
 
-        public static global::AotFixtures.Compat.WellKnown RawRead_AotFixtures_Compat_WellKnown(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.WellKnown value)
+        private static global::AotFixtures.Compat.WellKnown RawRead_AotFixtures_Compat_WellKnown(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.WellKnown value)
         {
             value ??= new global::AotFixtures.Compat.WellKnown();
             uint tag = state.ReadRawTag();

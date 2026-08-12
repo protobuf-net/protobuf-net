@@ -58,7 +58,7 @@ partial class GenericModel
             }
         }
 
-        public static global::AotFixtures.Generic.Holder RawRead_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Holder value)
+        private static global::AotFixtures.Generic.Holder RawRead_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Holder value)
         {
             value ??= new global::AotFixtures.Generic.Holder();
             uint tag = state.ReadRawTagOrPending();
@@ -157,7 +157,7 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Generic.Nested RawRead_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Nested value)
+        private static global::AotFixtures.Generic.Nested RawRead_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Nested value)
         {
             value ??= new global::AotFixtures.Generic.Nested();
             uint tag = state.ReadRawTag();
@@ -239,7 +239,7 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Generic.Standalone<int> RawRead_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<int> value)
+        private static global::AotFixtures.Generic.Standalone<int> RawRead_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<int> value)
         {
             value ??= new global::AotFixtures.Generic.Standalone<int>();
             uint tag = state.ReadRawTag();
@@ -282,7 +282,7 @@ partial class GenericModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Generic.Standalone<string> RawRead_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<string> value)
+        private static global::AotFixtures.Generic.Standalone<string> RawRead_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<string> value)
         {
             value ??= new global::AotFixtures.Generic.Standalone<string>();
             uint tag = state.ReadRawTag();
@@ -324,7 +324,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
+        private static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>();
             uint tag = state.ReadRawTag();
@@ -374,7 +374,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
+        private static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>();
             uint tag = state.ReadRawTag();
@@ -427,7 +427,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
+        private static global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>();
             uint tag = state.ReadRawTag();
@@ -486,7 +486,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<int> RawRead_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<int> value)
+        private static global::AotFixtures.Generic.Wrapper<int> RawRead_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<int> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<int>();
             uint tag = state.ReadRawTag();
@@ -537,7 +537,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<string> RawRead_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<string> value)
+        private static global::AotFixtures.Generic.Wrapper<string> RawRead_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<string> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<string>();
             uint tag = state.ReadRawTag();

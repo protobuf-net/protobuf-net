@@ -73,7 +73,7 @@ partial class InitModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        public static global::AotFixtures.Init.Inits RawRead_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Inits value)
+        private static global::AotFixtures.Init.Inits RawRead_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Inits value)
         {
             value ??= new global::AotFixtures.Init.Inits();
             uint tag = state.ReadRawTagOrPending();
@@ -152,7 +152,7 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Init.Nested RawRead_AotFixtures_Init_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Nested value)
+        private static global::AotFixtures.Init.Nested RawRead_AotFixtures_Init_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Nested value)
         {
             value ??= new global::AotFixtures.Init.Nested();
             uint tag = state.ReadRawTagOrPending();

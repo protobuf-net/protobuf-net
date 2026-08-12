@@ -39,7 +39,7 @@ partial class OrderingModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static global::AotFixtures.Ordering.Mixed RawRead_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
+        private static global::AotFixtures.Ordering.Mixed RawRead_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
         {
             value ??= new global::AotFixtures.Ordering.Mixed();
             uint tag = state.ReadRawTag();
@@ -91,7 +91,7 @@ partial class OrderingModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Ordering.OffsetIgnoredByXml RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
+        private static global::AotFixtures.Ordering.OffsetIgnoredByXml RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
         {
             value ??= new global::AotFixtures.Ordering.OffsetIgnoredByXml();
             uint tag = state.ReadRawTag();
@@ -141,7 +141,7 @@ partial class OrderingModel
             }
         }
 
-        public static global::AotFixtures.Ordering.Referencing RawRead_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
+        private static global::AotFixtures.Ordering.Referencing RawRead_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
         {
             value ??= new global::AotFixtures.Ordering.Referencing();
             uint tag = state.ReadRawTag();
@@ -206,7 +206,7 @@ partial class OrderingModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Ordering.ViaDataMember RawRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
+        private static global::AotFixtures.Ordering.ViaDataMember RawRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
         {
             value ??= new global::AotFixtures.Ordering.ViaDataMember();
             uint tag = state.ReadRawTag();
@@ -257,7 +257,7 @@ partial class OrderingModel
             state.WriteString(12, tmp12);
         }
 
-        public static global::AotFixtures.Ordering.ViaDataMemberOffset RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
+        private static global::AotFixtures.Ordering.ViaDataMemberOffset RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
         {
             value ??= new global::AotFixtures.Ordering.ViaDataMemberOffset();
             uint tag = state.ReadRawTag();
@@ -308,7 +308,7 @@ partial class OrderingModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Ordering.ViaXmlElement RawRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
+        private static global::AotFixtures.Ordering.ViaXmlElement RawRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
         {
             value ??= new global::AotFixtures.Ordering.ViaXmlElement();
             uint tag = state.ReadRawTag();

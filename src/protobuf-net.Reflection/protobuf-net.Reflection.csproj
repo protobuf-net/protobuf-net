@@ -11,7 +11,13 @@
          generator, and the output is EMITTED TO DISK and committed: protobuf-net.BuildTools
          compiles this project's sources in rather than referencing the assembly, so it needs
          the generated half of the partial on disk. Regenerated on every build, so drift shows
-         as a git diff - the same convention as the golden files. -->
+         as a git diff - the same convention as the golden files. BuildTools compiles the
+         COMMITTED copy while this project compiles the fresh one, so BuildTools runs one build
+         behind whenever the file changes; build twice to converge. The one case that needs a
+         hand-nudge: moving a member between the hand-written and generated halves (e.g. letting
+         the generator own Instance) - the committed copy predates the move and BuildTools
+         cannot build to regenerate it, so edit the committed file to declare the member in
+         whichever half is GAINING it, then build both; the next regeneration is authoritative. -->
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>

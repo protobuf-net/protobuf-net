@@ -64,7 +64,7 @@ partial class UrisModel
             }
         }
 
-        public static global::AotFixtures.Uris.Links RawRead_AotFixtures_Uris_Links(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Uris.Links value)
+        private static global::AotFixtures.Uris.Links RawRead_AotFixtures_Uris_Links(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Uris.Links value)
         {
             value ??= new global::AotFixtures.Uris.Links();
             uint tag = state.ReadRawTagOrPending();

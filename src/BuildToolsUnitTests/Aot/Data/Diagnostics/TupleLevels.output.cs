@@ -85,7 +85,7 @@ partial class TupleLevelsModel
             }
         }
 
-        public static global::AotFixtures.TupleLevels.Agreeing RawRead_AotFixtures_TupleLevels_Agreeing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleLevels.Agreeing value)
+        private static global::AotFixtures.TupleLevels.Agreeing RawRead_AotFixtures_TupleLevels_Agreeing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleLevels.Agreeing value)
         {
             value ??= new global::AotFixtures.TupleLevels.Agreeing();
             uint tag = state.ReadRawTagOrPending();

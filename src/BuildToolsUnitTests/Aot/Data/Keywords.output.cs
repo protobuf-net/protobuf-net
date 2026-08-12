@@ -36,7 +36,7 @@ partial class KeywordsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Keywords.Inner RawRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
+        private static global::AotFixtures.Keywords.Inner RawRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
         {
             value ??= new global::AotFixtures.Keywords.Inner();
             uint tag = state.ReadRawTag();
@@ -92,7 +92,7 @@ partial class KeywordsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static global::AotFixtures.Keywords.Keywords RawRead_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
+        private static global::AotFixtures.Keywords.Keywords RawRead_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
         {
             value ??= new global::AotFixtures.Keywords.Keywords();
             uint tag = state.ReadRawTagOrPending();

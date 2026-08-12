@@ -35,7 +35,7 @@ partial class ImplicitPrivateModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.ImplicitPrivate.Explicit RawRead_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
+        private static global::AotFixtures.ImplicitPrivate.Explicit RawRead_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
         {
             value ??= new global::AotFixtures.ImplicitPrivate.Explicit();
             uint tag = state.ReadRawTagOrPending();
@@ -84,7 +84,7 @@ partial class ImplicitPrivateModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.ImplicitPrivate.Private RawRead_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)
+        private static global::AotFixtures.ImplicitPrivate.Private RawRead_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)
         {
             value ??= new global::AotFixtures.ImplicitPrivate.Private();
             uint tag = state.ReadRawTagOrPending();

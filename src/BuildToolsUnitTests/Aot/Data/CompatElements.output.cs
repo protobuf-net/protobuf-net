@@ -70,7 +70,7 @@ partial class CompatElementsModel
             }
         }
 
-        public static global::AotFixtures.CompatElements.CompatMaps RawRead_AotFixtures_CompatElements_CompatMaps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.CompatMaps value)
+        private static global::AotFixtures.CompatElements.CompatMaps RawRead_AotFixtures_CompatElements_CompatMaps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.CompatMaps value)
         {
             value ??= new global::AotFixtures.CompatElements.CompatMaps();
             uint tag = state.ReadRawTagOrPending();
@@ -218,7 +218,7 @@ partial class CompatElementsModel
             }
         }
 
-        public static global::AotFixtures.CompatElements.Level300Lists RawRead_AotFixtures_CompatElements_Level300Lists(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.Level300Lists value)
+        private static global::AotFixtures.CompatElements.Level300Lists RawRead_AotFixtures_CompatElements_Level300Lists(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.Level300Lists value)
         {
             value ??= new global::AotFixtures.CompatElements.Level300Lists();
             uint tag = state.ReadRawTagOrPending();
@@ -325,7 +325,7 @@ partial class CompatElementsModel
             }
         }
 
-        public static global::AotFixtures.CompatElements.Level300Map RawRead_AotFixtures_CompatElements_Level300Map(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.Level300Map value)
+        private static global::AotFixtures.CompatElements.Level300Map RawRead_AotFixtures_CompatElements_Level300Map(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.Level300Map value)
         {
             value ??= new global::AotFixtures.CompatElements.Level300Map();
             uint tag = state.ReadRawTagOrPending();
@@ -398,7 +398,7 @@ partial class CompatElementsModel
             }
         }
 
-        public static global::AotFixtures.CompatElements.WellKnownLists RawRead_AotFixtures_CompatElements_WellKnownLists(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.WellKnownLists value)
+        private static global::AotFixtures.CompatElements.WellKnownLists RawRead_AotFixtures_CompatElements_WellKnownLists(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.WellKnownLists value)
         {
             value ??= new global::AotFixtures.CompatElements.WellKnownLists();
             uint tag = state.ReadRawTagOrPending();

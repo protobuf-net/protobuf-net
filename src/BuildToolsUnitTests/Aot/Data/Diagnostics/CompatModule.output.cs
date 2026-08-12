@@ -48,7 +48,7 @@ partial class CompatModuleModel
             }
         }
 
-        public static global::AotFixtures.CompatModule.FromModule RawRead_AotFixtures_CompatModule_FromModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.FromModule value)
+        private static global::AotFixtures.CompatModule.FromModule RawRead_AotFixtures_CompatModule_FromModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.FromModule value)
         {
             value ??= new global::AotFixtures.CompatModule.FromModule();
             uint tag = state.ReadRawTagOrPending();
@@ -121,7 +121,7 @@ partial class CompatModuleModel
             }
         }
 
-        public static global::AotFixtures.CompatModule.OverridesModule RawRead_AotFixtures_CompatModule_OverridesModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.OverridesModule value)
+        private static global::AotFixtures.CompatModule.OverridesModule RawRead_AotFixtures_CompatModule_OverridesModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.OverridesModule value)
         {
             value ??= new global::AotFixtures.CompatModule.OverridesModule();
             uint tag = state.ReadRawTag();

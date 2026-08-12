@@ -63,7 +63,7 @@ partial class InheritModel
         global::AotFixtures.Inherit.Animal global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal> value)
             => RawReadSub_AotFixtures_Inherit_Animal(ref state, value);
 
-        public static global::AotFixtures.Inherit.Animal RawReadSub_AotFixtures_Inherit_Animal(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal> value)
+        private static global::AotFixtures.Inherit.Animal RawReadSub_AotFixtures_Inherit_Animal(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -121,7 +121,7 @@ partial class InheritModel
         global::AotFixtures.Inherit.Cat global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Cat>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Cat> value)
             => RawReadSub_AotFixtures_Inherit_Cat(ref state, value);
 
-        public static global::AotFixtures.Inherit.Cat RawReadSub_AotFixtures_Inherit_Cat(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Cat> value)
+        private static global::AotFixtures.Inherit.Cat RawReadSub_AotFixtures_Inherit_Cat(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Cat> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -179,7 +179,7 @@ partial class InheritModel
         global::AotFixtures.Inherit.Dog global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Dog>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Dog> value)
             => RawReadSub_AotFixtures_Inherit_Dog(ref state, value);
 
-        public static global::AotFixtures.Inherit.Dog RawReadSub_AotFixtures_Inherit_Dog(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Dog> value)
+        private static global::AotFixtures.Inherit.Dog RawReadSub_AotFixtures_Inherit_Dog(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Dog> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -226,7 +226,7 @@ partial class InheritModel
             state.WriteMessage<global::AotFixtures.Inherit.Animal>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        public static global::AotFixtures.Inherit.Holder RawRead_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Holder value)
+        private static global::AotFixtures.Inherit.Holder RawRead_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Holder value)
         {
             value ??= new global::AotFixtures.Inherit.Holder();
             uint tag = state.ReadRawTagOrPending();
@@ -279,7 +279,7 @@ partial class InheritModel
         global::AotFixtures.Inherit.Puppy global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Puppy> value)
             => RawReadSub_AotFixtures_Inherit_Puppy(ref state, value);
 
-        public static global::AotFixtures.Inherit.Puppy RawReadSub_AotFixtures_Inherit_Puppy(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Puppy> value)
+        private static global::AotFixtures.Inherit.Puppy RawReadSub_AotFixtures_Inherit_Puppy(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Puppy> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -320,7 +320,7 @@ partial class InheritModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Inherit.Standalone RawRead_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)
+        private static global::AotFixtures.Inherit.Standalone RawRead_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)
         {
             value ??= new global::AotFixtures.Inherit.Standalone();
             uint tag = state.ReadRawTag();

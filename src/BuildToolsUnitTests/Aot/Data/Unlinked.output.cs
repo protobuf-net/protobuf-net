@@ -41,7 +41,7 @@ partial class UnlinkedModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.Unlinked.Derived RawRead_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
+        private static global::AotFixtures.Unlinked.Derived RawRead_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
         {
             value ??= new global::AotFixtures.Unlinked.Derived();
             uint tag = state.ReadRawTag();
@@ -100,7 +100,7 @@ partial class UnlinkedModel
         global::AotFixtures.Unlinked.ForkedBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.ForkedBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.ForkedBase> value)
             => RawReadSub_AotFixtures_Unlinked_ForkedBase(ref state, value);
 
-        public static global::AotFixtures.Unlinked.ForkedBase RawReadSub_AotFixtures_Unlinked_ForkedBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.ForkedBase> value)
+        private static global::AotFixtures.Unlinked.ForkedBase RawReadSub_AotFixtures_Unlinked_ForkedBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.ForkedBase> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -147,7 +147,7 @@ partial class UnlinkedModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Unlinked.FromPlain RawRead_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
+        private static global::AotFixtures.Unlinked.FromPlain RawRead_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
         {
             value ??= new global::AotFixtures.Unlinked.FromPlain();
             uint tag = state.ReadRawTag();
@@ -187,7 +187,7 @@ partial class UnlinkedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Unlinked.Reuses RawRead_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
+        private static global::AotFixtures.Unlinked.Reuses RawRead_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
         {
             value ??= new global::AotFixtures.Unlinked.Reuses();
             uint tag = state.ReadRawTag();
@@ -236,7 +236,7 @@ partial class UnlinkedModel
         global::AotFixtures.Unlinked.Sibling global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.Sibling>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.Sibling> value)
             => RawReadSub_AotFixtures_Unlinked_Sibling(ref state, value);
 
-        public static global::AotFixtures.Unlinked.Sibling RawReadSub_AotFixtures_Unlinked_Sibling(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.Sibling> value)
+        private static global::AotFixtures.Unlinked.Sibling RawReadSub_AotFixtures_Unlinked_Sibling(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.Sibling> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -278,7 +278,7 @@ partial class UnlinkedModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.Unlinked.Unlinked RawRead_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)
+        private static global::AotFixtures.Unlinked.Unlinked RawRead_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)
         {
             value ??= new global::AotFixtures.Unlinked.Unlinked();
             uint tag = state.ReadRawTag();

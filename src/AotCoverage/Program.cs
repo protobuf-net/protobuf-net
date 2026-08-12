@@ -157,7 +157,7 @@ internal static class Program
             {
                 var text = source.SourceText.ToString();
                 foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(
-                    text, @"public static [^\r\n]+ RawRead(Sub)?_\w+\(ref"))
+                    text, @"(public|private) static [^\r\n]+ RawRead(Sub)?_\w+\(ref"))
                 {
                     emitted++;
                 }

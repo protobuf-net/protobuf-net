@@ -47,7 +47,7 @@ partial class GenericHierarchyModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.GenericHierarchy.Crate RawRead_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)
+        private static global::AotFixtures.GenericHierarchy.Crate RawRead_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)
         {
             value ??= new global::AotFixtures.GenericHierarchy.Crate();
             uint tag = state.ReadRawTag();
@@ -93,7 +93,7 @@ partial class GenericHierarchyModel
         global::AotFixtures.GenericHierarchy.CrateHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
             => RawReadSub_AotFixtures_GenericHierarchy_CrateHolder(ref state, value);
 
-        public static global::AotFixtures.GenericHierarchy.CrateHolder RawReadSub_AotFixtures_GenericHierarchy_CrateHolder(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
+        private static global::AotFixtures.GenericHierarchy.CrateHolder RawReadSub_AotFixtures_GenericHierarchy_CrateHolder(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -148,7 +148,7 @@ partial class GenericHierarchyModel
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>> value)
             => RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(ref state, value);
 
-        public static global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>> value)
+        private static global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -200,7 +200,7 @@ partial class GenericHierarchyModel
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>> value)
             => RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(ref state, value);
 
-        public static global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>> value)
+        private static global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -260,7 +260,7 @@ partial class GenericHierarchyModel
         global::AotFixtures.GenericHierarchy.Node global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node> value)
             => RawReadSub_AotFixtures_GenericHierarchy_Node(ref state, value);
 
-        public static global::AotFixtures.GenericHierarchy.Node RawReadSub_AotFixtures_GenericHierarchy_Node(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node> value)
+        private static global::AotFixtures.GenericHierarchy.Node RawReadSub_AotFixtures_GenericHierarchy_Node(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -314,7 +314,7 @@ partial class GenericHierarchyModel
         global::AotFixtures.GenericHierarchy.PlainNode global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.PlainNode>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
             => RawReadSub_AotFixtures_GenericHierarchy_PlainNode(ref state, value);
 
-        public static global::AotFixtures.GenericHierarchy.PlainNode RawReadSub_AotFixtures_GenericHierarchy_PlainNode(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
+        private static global::AotFixtures.GenericHierarchy.PlainNode RawReadSub_AotFixtures_GenericHierarchy_PlainNode(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -356,7 +356,7 @@ partial class GenericHierarchyModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.GenericHierarchy.Ship RawRead_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Ship value)
+        private static global::AotFixtures.GenericHierarchy.Ship RawRead_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Ship value)
         {
             value ??= new global::AotFixtures.GenericHierarchy.Ship();
             uint tag = state.ReadRawTag();
@@ -405,7 +405,7 @@ partial class GenericHierarchyModel
         global::AotFixtures.GenericHierarchy.ShipHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)
             => RawReadSub_AotFixtures_GenericHierarchy_ShipHolder(ref state, value);
 
-        public static global::AotFixtures.GenericHierarchy.ShipHolder RawReadSub_AotFixtures_GenericHierarchy_ShipHolder(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)
+        private static global::AotFixtures.GenericHierarchy.ShipHolder RawReadSub_AotFixtures_GenericHierarchy_ShipHolder(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)

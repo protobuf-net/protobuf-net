@@ -60,7 +60,7 @@ partial class DefaultsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
+        private static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
         {
             value ??= new global::AotFixtures.Defaults.Declared();
             uint tag = state.ReadRawTag();
@@ -167,7 +167,7 @@ partial class DefaultsModel
             }
         }
 
-        public static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
+        private static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
         {
             value ??= new global::AotFixtures.Defaults.Parsed();
             uint tag = state.ReadRawTagOrPending();

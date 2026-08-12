@@ -37,7 +37,7 @@ partial class ImplicitIgnoreModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static global::AotFixtures.ImplicitIgnore.Excluded RawRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
+        private static global::AotFixtures.ImplicitIgnore.Excluded RawRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
         {
             value ??= new global::AotFixtures.ImplicitIgnore.Excluded();
             uint tag = state.ReadRawTag();
@@ -102,7 +102,7 @@ partial class ImplicitIgnoreModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static global::AotFixtures.ImplicitIgnore.PartiallyPinned RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
+        private static global::AotFixtures.ImplicitIgnore.PartiallyPinned RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
         {
             value ??= new global::AotFixtures.ImplicitIgnore.PartiallyPinned();
             uint tag = state.ReadRawTag();

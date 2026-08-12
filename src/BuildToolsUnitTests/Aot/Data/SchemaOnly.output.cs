@@ -34,7 +34,7 @@ partial class SchemaOnlyModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
         }
 
-        public static global::AotFixtures.SchemaOnly.Empty RawRead_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
+        private static global::AotFixtures.SchemaOnly.Empty RawRead_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
         {
             value ??= new global::AotFixtures.SchemaOnly.Empty();
             uint tag = state.ReadRawTag();
@@ -64,7 +64,7 @@ partial class SchemaOnlyModel
             state.AppendExtensionData(value);
         }
 
-        public static global::AotFixtures.SchemaOnly.EmptyExtensible RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
+        private static global::AotFixtures.SchemaOnly.EmptyExtensible RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
         {
             value ??= new global::AotFixtures.SchemaOnly.EmptyExtensible();
             uint tag = state.ReadRawTag();
@@ -97,7 +97,7 @@ partial class SchemaOnlyModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.SchemaOnly.Ignoring RawRead_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
+        private static global::AotFixtures.SchemaOnly.Ignoring RawRead_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
         {
             value ??= new global::AotFixtures.SchemaOnly.Ignoring();
             uint tag = state.ReadRawTag();
@@ -148,7 +148,7 @@ partial class SchemaOnlyModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.SchemaOnly.Plain RawRead_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
+        private static global::AotFixtures.SchemaOnly.Plain RawRead_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
         {
             value ??= new global::AotFixtures.SchemaOnly.Plain();
             uint tag = state.ReadRawTag();
@@ -199,7 +199,7 @@ partial class SchemaOnlyModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.SchemaOnly.SchemaOnly RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
+        private static global::AotFixtures.SchemaOnly.SchemaOnly RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
         {
             value ??= new global::AotFixtures.SchemaOnly.SchemaOnly();
             uint tag = state.ReadRawTag();

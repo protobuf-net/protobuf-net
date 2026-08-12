@@ -59,7 +59,7 @@ partial class BytesModel
             state.WriteBytes(tmp6);
         }
 
-        public static global::AotFixtures.Bytes.Blob RawRead_AotFixtures_Bytes_Blob(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Bytes.Blob value)
+        private static global::AotFixtures.Bytes.Blob RawRead_AotFixtures_Bytes_Blob(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Bytes.Blob value)
         {
             value ??= new global::AotFixtures.Bytes.Blob();
             uint tag = state.ReadRawTagOrPending();

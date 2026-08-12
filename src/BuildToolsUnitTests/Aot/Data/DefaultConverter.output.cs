@@ -57,7 +57,7 @@ partial class DefaultConverterModel
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static global::AotFixtures.DefaultConverter.Converted RawRead_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
+        private static global::AotFixtures.DefaultConverter.Converted RawRead_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
         {
             value ??= new global::AotFixtures.DefaultConverter.Converted();
             uint tag = state.ReadRawTag();

@@ -125,7 +125,7 @@ partial class MapModel
             }
         }
 
-        public static global::AotFixtures.Map.Maps RawRead_AotFixtures_Map_Maps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Maps value)
+        private static global::AotFixtures.Map.Maps RawRead_AotFixtures_Map_Maps(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Maps value)
         {
             value ??= new global::AotFixtures.Map.Maps();
             uint tag = state.ReadRawTagOrPending();
@@ -611,7 +611,7 @@ partial class MapModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Map.Payload RawRead_AotFixtures_Map_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Payload value)
+        private static global::AotFixtures.Map.Payload RawRead_AotFixtures_Map_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Payload value)
         {
             value ??= new global::AotFixtures.Map.Payload();
             uint tag = state.ReadRawTag();

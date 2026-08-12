@@ -56,7 +56,7 @@ partial class InterfaceModel
         global::AotFixtures.Interface.Cat global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Cat>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Cat> value)
             => RawReadSub_AotFixtures_Interface_Cat(ref state, value);
 
-        public static global::AotFixtures.Interface.Cat RawReadSub_AotFixtures_Interface_Cat(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Cat> value)
+        private static global::AotFixtures.Interface.Cat RawReadSub_AotFixtures_Interface_Cat(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Cat> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -112,7 +112,7 @@ partial class InterfaceModel
         global::AotFixtures.Interface.Dog global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Dog>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Dog> value)
             => RawReadSub_AotFixtures_Interface_Dog(ref state, value);
 
-        public static global::AotFixtures.Interface.Dog RawReadSub_AotFixtures_Interface_Dog(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Dog> value)
+        private static global::AotFixtures.Interface.Dog RawReadSub_AotFixtures_Interface_Dog(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Dog> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -178,7 +178,7 @@ partial class InterfaceModel
         global::AotFixtures.Interface.IAnimal global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.IAnimal>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.IAnimal> value)
             => RawReadSub_AotFixtures_Interface_IAnimal(ref state, value);
 
-        public static global::AotFixtures.Interface.IAnimal RawReadSub_AotFixtures_Interface_IAnimal(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.IAnimal> value)
+        private static global::AotFixtures.Interface.IAnimal RawReadSub_AotFixtures_Interface_IAnimal(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.IAnimal> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -237,7 +237,7 @@ partial class InterfaceModel
         global::AotFixtures.Interface.INamed global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.INamed>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.INamed> value)
             => RawReadSub_AotFixtures_Interface_INamed(ref state, value);
 
-        public static global::AotFixtures.Interface.INamed RawReadSub_AotFixtures_Interface_INamed(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.INamed> value)
+        private static global::AotFixtures.Interface.INamed RawReadSub_AotFixtures_Interface_INamed(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.INamed> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -289,7 +289,7 @@ partial class InterfaceModel
         global::AotFixtures.Interface.Tagged global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Tagged>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Tagged> value)
             => RawReadSub_AotFixtures_Interface_Tagged(ref state, value);
 
-        public static global::AotFixtures.Interface.Tagged RawReadSub_AotFixtures_Interface_Tagged(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Tagged> value)
+        private static global::AotFixtures.Interface.Tagged RawReadSub_AotFixtures_Interface_Tagged(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Tagged> value)
         {
             uint tag = state.ReadRawTag();
             while (tag != 0)
@@ -346,7 +346,7 @@ partial class InterfaceModel
             state.WriteMessage<global::AotFixtures.Interface.IAnimal>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
         }
 
-        public static global::AotFixtures.Interface.Zoo RawRead_AotFixtures_Interface_Zoo(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Interface.Zoo value)
+        private static global::AotFixtures.Interface.Zoo RawRead_AotFixtures_Interface_Zoo(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Interface.Zoo value)
         {
             value ??= new global::AotFixtures.Interface.Zoo();
             uint tag = state.ReadRawTagOrPending();

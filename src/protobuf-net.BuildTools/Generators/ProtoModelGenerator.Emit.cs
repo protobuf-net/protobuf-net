@@ -267,13 +267,13 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (subType)
             {
-                Line(sb, indent, $"public static {contract.TypeName} RawReadSub_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, "
+                Line(sb, indent, $"private static {contract.TypeName} RawReadSub_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, "
                     + $"global::ProtoBuf.Serializers.SubTypeState<{contract.TypeName}> value)");
                 Line(sb, indent, "{");
             }
             else
             {
-                Line(sb, indent, $"public static {contract.TypeName} RawRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
+                Line(sb, indent, $"private static {contract.TypeName} RawRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
                 // placement is ref-emit's: after construction, before the field loop

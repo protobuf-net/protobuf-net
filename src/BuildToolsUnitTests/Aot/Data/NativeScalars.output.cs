@@ -80,7 +80,7 @@ partial class NativeScalarsModel
             }
         }
 
-        public static global::AotFixtures.NativeScalars.Natives RawRead_AotFixtures_NativeScalars_Natives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NativeScalars.Natives value)
+        private static global::AotFixtures.NativeScalars.Natives RawRead_AotFixtures_NativeScalars_Natives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NativeScalars.Natives value)
         {
             value ??= new global::AotFixtures.NativeScalars.Natives();
             uint tag = state.ReadRawTagOrPending();

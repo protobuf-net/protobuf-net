@@ -79,7 +79,7 @@ partial class GetterModel
             }
         }
 
-        public static global::AotFixtures.Getter.Getters RawRead_AotFixtures_Getter_Getters(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Getters value)
+        private static global::AotFixtures.Getter.Getters RawRead_AotFixtures_Getter_Getters(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Getters value)
         {
             value ??= new global::AotFixtures.Getter.Getters();
             uint tag = state.ReadRawTagOrPending();
@@ -262,7 +262,7 @@ partial class GetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Getter.Nested RawRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
+        private static global::AotFixtures.Getter.Nested RawRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
         {
             value ??= new global::AotFixtures.Getter.Nested();
             uint tag = state.ReadRawTag();

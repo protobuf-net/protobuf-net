@@ -58,7 +58,7 @@ partial class MapKeyModel
             }
         }
 
-        public static global::AotFixtures.MapKey.Keys RawRead_AotFixtures_MapKey_Keys(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Keys value)
+        private static global::AotFixtures.MapKey.Keys RawRead_AotFixtures_MapKey_Keys(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Keys value)
         {
             value ??= new global::AotFixtures.MapKey.Keys();
             uint tag = state.ReadRawTagOrPending();
@@ -190,7 +190,7 @@ partial class MapKeyModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.MapKey.Payload RawRead_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
+        private static global::AotFixtures.MapKey.Payload RawRead_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
         {
             value ??= new global::AotFixtures.MapKey.Payload();
             uint tag = state.ReadRawTag();

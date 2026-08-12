@@ -37,7 +37,7 @@ partial class MemberTypeAdviceModel
             }
         }
 
-        public static global::AotFixtures.MemberTypeAdvice.MapWithEnumKey RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
+        private static global::AotFixtures.MemberTypeAdvice.MapWithEnumKey RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
         {
             value ??= new global::AotFixtures.MemberTypeAdvice.MapWithEnumKey();
             uint tag = state.ReadRawTag();

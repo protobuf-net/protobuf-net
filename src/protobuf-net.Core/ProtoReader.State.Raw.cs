@@ -41,7 +41,7 @@ public ref partial struct State
     /// down-level path pays, and modern TFMs are the optimization target).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ref byte At(int offset)
+    private readonly ref byte At(int offset)
     {
 #if NET7_0_OR_GREATER
         return ref Unsafe.Add(ref _segment, offset);
@@ -78,7 +78,7 @@ public ref partial struct State
     /// <see cref="ReadOnlySequence{T}"/> (one allocation per multi-segment reader, walked via
     /// <see cref="_nextPosition"/>), or null when the current segment is the last.
     /// </summary>
-    private object? _source;
+    private object _source; // Stream, boxed ReadOnlySequence<byte>, or null (resident buffer)
 
     /// <summary>The walk cursor within a multi-segment sequence.</summary>
     private SequencePosition _nextPosition;
@@ -187,7 +187,7 @@ public ref partial struct State
     }
 
     /// <summary>Absolute position of the reader.</summary>
-    public long Position => _positionBase + _offset;
+    public readonly long Position => _positionBase + _offset;
 
     // ---------------------------------------------------------------- construction
 

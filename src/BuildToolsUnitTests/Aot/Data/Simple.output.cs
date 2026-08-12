@@ -34,7 +34,7 @@ partial class SimpleModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Simple.Order RawRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
+        private static global::AotFixtures.Simple.Order RawRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
         {
             value ??= new global::AotFixtures.Simple.Order();
             uint tag = state.ReadRawTag();

@@ -37,7 +37,7 @@ partial class WrappedElementsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.WrappedElements.Payload RawRead_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
+        private static global::AotFixtures.WrappedElements.Payload RawRead_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
         {
             value ??= new global::AotFixtures.WrappedElements.Payload();
             uint tag = state.ReadRawTag();
@@ -138,7 +138,7 @@ partial class WrappedElementsModel
             }
         }
 
-        public static global::AotFixtures.WrappedElements.Wrapped RawRead_AotFixtures_WrappedElements_Wrapped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Wrapped value)
+        private static global::AotFixtures.WrappedElements.Wrapped RawRead_AotFixtures_WrappedElements_Wrapped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Wrapped value)
         {
             value ??= new global::AotFixtures.WrappedElements.Wrapped();
             uint tag = state.ReadRawTagOrPending();
