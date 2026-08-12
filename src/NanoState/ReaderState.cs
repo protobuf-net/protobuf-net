@@ -106,12 +106,10 @@ public ref partial struct ReaderState
         => throw new NotImplementedException();
     public double ReadDouble()
         => throw new NotImplementedException();
-    public int ReadFieldHeader()
-        => throw new NotImplementedException();
+    // ReadFieldHeader: graduated - implemented in ReaderState.Nano.cs
     public short ReadInt16()
         => throw new NotImplementedException();
-    public int ReadInt32()
-        => throw new NotImplementedException();
+    // ReadInt32: graduated - implemented in ReaderState.Nano.cs
     public long ReadInt64()
         => throw new NotImplementedException();
     public nint ReadIntPtr()

@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
+    <ProjectReference Include="..\NanoState\NanoState.csproj" />
+    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
   </ItemGroup>
 
 </Project>

@@ -234,10 +234,45 @@ public ref partial struct ReaderState
     /// dispatches on compile-time constants (for example
     /// <c>case (2 &lt;&lt; 3) | (int)WireType.String:</c>), so no decomposition happens and no
     /// state is written; the legacy <c>ReadFieldHeader()</c>/<c>WireType</c> pair becomes a
-    /// shift-and-mask veneer over this.
+    /// shift-and-mask veneer over this. Strict-5: tags never take the sign-extended form.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint ReadRawTag()
-        => throw new NotImplementedException();
+    {
+        var offset = _offset;
+        if (offset >= _effectiveEnd) return 0;
+        // the dominant case - fields 1-15 - is a single byte
+        uint b0 = Unsafe.Add(ref _segment, offset);
+        if ((b0 & 0x80) == 0)
+        {
+            _offset = offset + 1;
+            return b0;
+        }
+        return ReadRawTagTail(b0, offset);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private uint ReadRawTagTail(uint value, int offset)
+    {
+        // continuation beyond byte 0: rarer, and bounds-guarded per byte so the buffer tail
+        // needs no special-casing (ByteUnrolled shape - see VarintU32DecodeResults.md)
+        value &= 0x7F;
+        int shift = 7;
+        for (int i = 1; i < 5; i++)
+        {
+            if (offset + i >= _count) ThrowEndOfData();
+            uint b = Unsafe.Add(ref _segment, offset + i);
+            value |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0)
+            {
+                _offset = offset + i + 1;
+                return value;
+            }
+            shift += 7;
+        }
+        ThrowMalformed();
+        return 0;
+    }
 
     /// <summary>
     /// Consumes the next tag only if it is exactly <paramref name="tag"/> - the fields-in-order
@@ -250,20 +285,137 @@ public ref partial struct ReaderState
     /// <summary>
     /// Skips the field whose raw tag was just read - the untyped counterpart of the legacy
     /// <c>SkipField()</c>, taking the wire type from the tag's low bits rather than from state.
+    /// A wiretype-4 tag (end-group) reaching here is by definition not the current sentinel, so
+    /// it throws - the mismatched-end-group check, for free.
     /// </summary>
     public void SkipTag(uint tag)
-        => throw new NotImplementedException();
+    {
+        switch (tag & 7)
+        {
+            case 0: // varint
+                _ = ReadRawVarint64();
+                break;
+            case 1: // fixed64
+                Advance(8);
+                break;
+            case 2: // length-prefixed
+                Advance(checked((int)ReadRawVarint32()));
+                break;
+            case 5: // fixed32
+                Advance(4);
+                break;
+            case 3: // start-group: v1 does not skip groups yet
+                throw new NotImplementedException("group skip");
+            default: // 4 = end-group that nothing expected; 6/7 are not wire types
+                ThrowMalformed();
+                break;
+        }
+    }
+
+    private void Advance(int bytes)
+    {
+        if (bytes < 0 || _count - _offset < bytes) ThrowEndOfData();
+        _offset += bytes;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowEndOfData() => throw new InvalidOperationException("unexpected end of data");
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowMalformed() => throw new InvalidOperationException("malformed data");
 
     /// <summary>
     /// Reads a varint as u32, tolerant of the 10-byte sign-extended form a negative int32 arrives
-    /// in (high garbage discarded) - values are tolerant, tags are strict.
+    /// in (high garbage discarded) - values are tolerant, tags are strict. ByteUnrolled per the
+    /// measured table; the fast path assumes the 10-byte window and the buffer tail falls to the
+    /// per-byte guarded slow path.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint ReadRawVarint32()
-        => throw new NotImplementedException();
+    {
+        var offset = _offset;
+        if (_count - offset >= 10)
+        {
+            ref byte src = ref Unsafe.Add(ref _segment, offset);
+            uint b0 = src;
+            if ((b0 & 0x80) == 0) { _offset = offset + 1; return b0; }
+            uint value = b0 & 0x7F;
+            uint b = Unsafe.Add(ref src, 1);
+            value |= (b & 0x7F) << 7;
+            if ((b & 0x80) == 0) { _offset = offset + 2; return value; }
+            b = Unsafe.Add(ref src, 2);
+            value |= (b & 0x7F) << 14;
+            if ((b & 0x80) == 0) { _offset = offset + 3; return value; }
+            b = Unsafe.Add(ref src, 3);
+            value |= (b & 0x7F) << 21;
+            if ((b & 0x80) == 0) { _offset = offset + 4; return value; }
+            b = Unsafe.Add(ref src, 4);
+            value |= b << 28;
+            if ((b & 0x80) == 0) { _offset = offset + 5; return value; }
+            return TolerantSpill(value, offset + 5);
+        }
+        return unchecked((uint)ReadRawVarint64Slow()); // tolerant: high garbage discarded
+    }
 
-    /// <summary>Reads a varint as u64.</summary>
+    /// <summary>
+    /// The sign-extension garbage of a 6-10 byte "u32": bytes 5-9 are skipped, the value is the
+    /// low 32 bits already accumulated. Rare by construction, hence out of line.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private uint TolerantSpill(uint value, int offset)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if ((Unsafe.Add(ref _segment, offset + i) & 0x80) == 0)
+            {
+                _offset = offset + i + 1;
+                return value;
+            }
+        }
+        ThrowMalformed();
+        return 0;
+    }
+
+    /// <summary>Reads a varint as u64; ByteUnrolled, same tail discipline as u32.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong ReadRawVarint64()
-        => throw new NotImplementedException();
+    {
+        var offset = _offset;
+        if (_count - offset >= 10)
+        {
+            ref byte src = ref Unsafe.Add(ref _segment, offset);
+            uint b0 = src;
+            if ((b0 & 0x80) == 0) { _offset = offset + 1; return b0; }
+            ulong value = b0 & 0x7Fu;
+            int shift = 7, i = 1;
+            while (true)
+            {
+                ulong b = Unsafe.Add(ref src, i);
+                value |= (b & 0x7F) << shift;
+                if ((b & 0x80) == 0) { _offset = offset + i + 1; return value; }
+                if (++i == 10) { ThrowMalformed(); return 0; }
+                shift += 7;
+            }
+        }
+        return ReadRawVarint64Slow();
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ulong ReadRawVarint64Slow()
+    {
+        ulong value = 0;
+        int shift = 0;
+        for (int i = 0; i < 10; i++)
+        {
+            if (_offset >= _count) ThrowEndOfData();
+            ulong b = Unsafe.Add(ref _segment, _offset++);
+            value |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0) return value;
+            shift += 7;
+        }
+        ThrowMalformed();
+        return 0;
+    }
 
     /// <summary>Reads a length-prefixed UTF-8 string.</summary>
     public string ReadRawString()
