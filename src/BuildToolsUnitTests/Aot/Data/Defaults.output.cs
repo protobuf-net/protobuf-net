@@ -30,6 +30,9 @@ partial class DefaultsModel
             => RawRead_AotFixtures_Defaults_Declared(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
+            => RawWrite_AotFixtures_Defaults_Declared(ref state, value);
+
+        public static void RawWrite_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
@@ -60,6 +63,28 @@ partial class DefaultsModel
             }
             var tmp6 = value.Plain;
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+        }
+
+        public static int Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Number;
+            if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
+            var tmp2 = value.Text;
+            if (tmp2 != null && tmp2 != "abc")
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            var tmp3 = value.Flag;
+            if (tmp3 != true) len += 2;  // Flag
+            var tmp4 = value.Ratio;
+            if (tmp4 != 2.5D) len += 9;  // Ratio
+            var tmp5 = value.Big;
+            if (tmp5 != 7L) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp5));  // Big
+            var tmp6 = value.Plain;
+            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Plain
+            return len;
         }
 
         private static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
@@ -135,6 +160,9 @@ partial class DefaultsModel
             => RawRead_AotFixtures_Defaults_Parsed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
+            => RawWrite_AotFixtures_Defaults_Parsed(ref state, value);
+
+        public static void RawWrite_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.ByName;
@@ -167,6 +195,23 @@ partial class DefaultsModel
                 state.WriteRawTag((5 << 3) | 0);  // ByConverter
                 state.WriteRawVarint32((ushort)tmp5);
             }
+        }
+
+        public static int Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.ByName;
+            if (tmp1 != (global::AotFixtures.Defaults.Shade)(2)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp1);  // ByName
+            var tmp2 = value.ByValue;
+            if (tmp2 != (global::AotFixtures.Defaults.Shade)(4)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp2);  // ByValue
+            var tmp3 = value.Letter;
+            if (tmp3 != 'x') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Letter
+            var tmp4 = value.DirectChar;
+            if (tmp4 != 'y') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp4);  // DirectChar
+            var tmp5 = value.ByConverter;
+            if (tmp5 != (global::AotFixtures.Defaults.Shade)(1)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp5);  // ByConverter
+            return len;
         }
 
         private static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)

@@ -36,12 +36,26 @@ partial class ContractOptionsModel
             => RawRead_AotFixtures_ContractOptions_BothFamilies(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.BothFamilies value)
+            => RawWrite_AotFixtures_ContractOptions_BothFamilies(ref state, value);
+
+        public static void RawWrite_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.BothFamilies value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Ordered;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp3 = value.Tagged;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static int Measure_AotFixtures_ContractOptions_BothFamilies(global::AotFixtures.ContractOptions.BothFamilies value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Ordered;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Ordered
+            var tmp3 = value.Tagged;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
+            return len;
         }
 
         private static global::AotFixtures.ContractOptions.BothFamilies RawRead_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
@@ -135,9 +149,21 @@ partial class ContractOptionsModel
             => RawRead_AotFixtures_ContractOptions_Lenient(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value)
+            => RawWrite_AotFixtures_ContractOptions_Lenient(ref state, value);
+
+        public static void RawWrite_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value)
         {
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_ContractOptions_Lenient(global::AotFixtures.ContractOptions.Lenient value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
         }
 
         private static global::AotFixtures.ContractOptions.Lenient RawRead_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
@@ -285,10 +311,22 @@ partial class ContractOptionsModel
             => RawRead_AotFixtures_ContractOptions_ProtoOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
+            => RawWrite_AotFixtures_ContractOptions_ProtoOnly(ref state, value);
+
+        public static void RawWrite_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.Tagged;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static int Measure_AotFixtures_ContractOptions_ProtoOnly(global::AotFixtures.ContractOptions.ProtoOnly value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp3 = value.Tagged;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
+            return len;
         }
 
         private static global::AotFixtures.ContractOptions.ProtoOnly RawRead_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)

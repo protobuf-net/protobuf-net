@@ -42,6 +42,9 @@ partial class GenericHierarchyModel
             => RawRead_AotFixtures_GenericHierarchy_Crate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Crate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Crate value)
+            => RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, value);
+
+        public static void RawWrite_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Crate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Bar;
@@ -50,6 +53,18 @@ partial class GenericHierarchyModel
                 state.WriteRawTag((1 << 3) | 2);  // Bar
                 state.WriteRawString(tmp1);
             }
+        }
+
+        public static int Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Bar;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Bar
+            }
+            return len;
         }
 
         private static global::AotFixtures.GenericHierarchy.Crate RawRead_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)
@@ -92,7 +107,13 @@ partial class GenericHierarchyModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            state.WriteMessage<global::AotFixtures.GenericHierarchy.Crate>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Value
+                var len1 = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len1);
+                RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1);
+            }
         }
 
         global::AotFixtures.GenericHierarchy.CrateHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
@@ -355,10 +376,22 @@ partial class GenericHierarchyModel
             => RawRead_AotFixtures_GenericHierarchy_Ship(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Ship>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Ship value)
+            => RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, value);
+
+        public static void RawWrite_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Ship value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Foo;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Foo;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Foo
+            return len;
         }
 
         private static global::AotFixtures.GenericHierarchy.Ship RawRead_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Ship value)
@@ -404,7 +437,13 @@ partial class GenericHierarchyModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            state.WriteMessage<global::AotFixtures.GenericHierarchy.Ship>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Value
+                var len1 = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len1);
+                RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1);
+            }
         }
 
         global::AotFixtures.GenericHierarchy.ShipHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)

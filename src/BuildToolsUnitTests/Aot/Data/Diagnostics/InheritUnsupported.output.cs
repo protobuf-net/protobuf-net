@@ -46,10 +46,22 @@ partial class InheritUnsupportedModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
+            => RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref state, value);
+
+        public static void RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -61,10 +73,22 @@ partial class InheritUnsupportedModel
             => RawRead_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
+            => RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
+
+        public static void RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Extra;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static int Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp2 = value.Extra;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Extra
+            return len;
         }
 
         private static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)

@@ -32,10 +32,22 @@ partial class WrappedElementsModel
             => RawRead_AotFixtures_WrappedElements_Payload(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrappedElements.Payload value)
+            => RawWrite_AotFixtures_WrappedElements_Payload(ref state, value);
+
+        public static void RawWrite_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrappedElements.Payload value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_WrappedElements_Payload(global::AotFixtures.WrappedElements.Payload value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
         }
 
         private static global::AotFixtures.WrappedElements.Payload RawRead_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
@@ -117,7 +129,7 @@ partial class WrappedElementsModel
             {
                 foreach (var item8 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp8))
                 {
-                    if (item8 is null) state.ThrowNullRepeatedContents<global::AotFixtures.WrappedElements.Shade?>();
+                    if (item8 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.WrappedElements.Shade?>();
                     state.WriteRawTag((8 << 3) | 0);  // BareShades
                     state.WriteRawVarint64(unchecked((ulong)(long)(int)item8.GetValueOrDefault()));
                 }

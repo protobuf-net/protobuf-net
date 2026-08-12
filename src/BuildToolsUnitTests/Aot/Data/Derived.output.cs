@@ -30,6 +30,9 @@ partial class DerivedModel
             => RawRead_AotFixtures_Derived_Ambiguous(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
+            => RawWrite_AotFixtures_Derived_Ambiguous(ref state, value);
+
+        public static void RawWrite_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
@@ -38,6 +41,18 @@ partial class DerivedModel
                 state.WriteRawTag((1 << 3) | 2);  // Label
                 state.WriteRawString(tmp1);
             }
+        }
+
+        public static int Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Label;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+            }
+            return len;
         }
 
         private static global::AotFixtures.Derived.Ambiguous RawRead_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
@@ -92,7 +107,13 @@ partial class DerivedModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::AotFixtures.Derived.MyQueue, int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
             }
             var tmp4 = value.Ambiguous;
-            state.WriteMessage<global::AotFixtures.Derived.Ambiguous>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
+            if (tmp4 != null)
+            {
+                state.WriteRawTag((4 << 3) | 2);  // Ambiguous
+                var len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len4);
+                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4);
+            }
         }
 
         private static global::AotFixtures.Derived.Derives RawRead_AotFixtures_Derived_Derives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Derives value)

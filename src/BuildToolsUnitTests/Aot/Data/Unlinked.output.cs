@@ -36,10 +36,22 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Derived(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value)
+            => RawWrite_AotFixtures_Unlinked_Derived(ref state, value);
+
+        public static void RawWrite_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.FromDerived;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static int Measure_AotFixtures_Unlinked_Derived(global::AotFixtures.Unlinked.Derived value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp2 = value.FromDerived;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // FromDerived
+            return len;
         }
 
         private static global::AotFixtures.Unlinked.Derived RawRead_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
@@ -142,6 +154,9 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_FromPlain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value)
+            => RawWrite_AotFixtures_Unlinked_FromPlain(ref state, value);
+
+        public static void RawWrite_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Name;
@@ -150,6 +165,18 @@ partial class UnlinkedModel
                 state.WriteRawTag((1 << 3) | 2);  // Name
                 state.WriteRawString(tmp1);
             }
+        }
+
+        public static int Measure_AotFixtures_Unlinked_FromPlain(global::AotFixtures.Unlinked.FromPlain value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Name;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+            }
+            return len;
         }
 
         private static global::AotFixtures.Unlinked.FromPlain RawRead_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
@@ -186,10 +213,22 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Reuses(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value)
+            => RawWrite_AotFixtures_Unlinked_Reuses(ref state, value);
+
+        public static void RawWrite_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Mine;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Unlinked_Reuses(global::AotFixtures.Unlinked.Reuses value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Mine;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Mine
+            return len;
         }
 
         private static global::AotFixtures.Unlinked.Reuses RawRead_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
@@ -277,10 +316,22 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value)
+            => RawWrite_AotFixtures_Unlinked_Unlinked(ref state, value);
+
+        public static void RawWrite_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.NotLinked;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static int Measure_AotFixtures_Unlinked_Unlinked(global::AotFixtures.Unlinked.Unlinked value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp3 = value.NotLinked;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // NotLinked
+            return len;
         }
 
         private static global::AotFixtures.Unlinked.Unlinked RawRead_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)

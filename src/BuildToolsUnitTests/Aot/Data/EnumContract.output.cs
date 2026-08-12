@@ -35,6 +35,9 @@ partial class EnumContractModel
             => RawRead_AotFixtures_EnumContract_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.EnumContract.Holder value)
+            => RawWrite_AotFixtures_EnumContract_Holder(ref state, value);
+
+        public static void RawWrite_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.EnumContract.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Shade;
@@ -47,6 +50,19 @@ partial class EnumContractModel
             }
             var tmp3 = value.Options;
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);
+        }
+
+        public static int Measure_AotFixtures_EnumContract_Holder(global::AotFixtures.EnumContract.Holder value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Shade;
+            if (tmp1 != default(global::AotFixtures.EnumContract.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp1));  // Shade
+            var tmp2 = value.Size;
+            if (tmp2 != default(global::AotFixtures.EnumContract.Size)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)tmp2);  // Size
+            var tmp3 = value.Options;
+            if (tmp3 != default(global::AotFixtures.EnumContract.Options)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp3));  // Options
+            return len;
         }
 
         private static global::AotFixtures.EnumContract.Holder RawRead_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)

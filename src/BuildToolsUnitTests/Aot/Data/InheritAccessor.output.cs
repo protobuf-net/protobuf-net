@@ -223,9 +223,21 @@ partial class InheritAccessorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
+            => RawWrite_AotFixtures_InheritAccessor_Holder(ref state, value);
+
+        public static void RawWrite_AotFixtures_InheritAccessor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
         {
             var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_InheritAccessor_Holder(global::AotFixtures.InheritAccessor.Holder value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _n
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

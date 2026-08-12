@@ -33,7 +33,10 @@ partial class StructsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Location;
-            state.WriteMessage<global::AotFixtures.Structs.Point>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            state.WriteRawTag((1 << 3) | 2);  // Location
+            var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget);
+            state.WriteRawVarint32((uint)len1);
+            RawWrite_AotFixtures_Structs_Point(ref state, tmp1);
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)
             {
@@ -127,6 +130,9 @@ partial class StructsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
+            => RawWrite_AotFixtures_Structs_Point(ref state, value);
+
+        public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
         {
             var tmp1 = value.X;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
@@ -136,6 +142,20 @@ partial class StructsModel
                 state.WriteRawTag((2 << 3) | 2);  // Label
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.X;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
+            var tmp2 = value.Label;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+            }
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

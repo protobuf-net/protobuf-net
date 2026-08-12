@@ -27,6 +27,9 @@ partial class ReservedModel
             => RawRead_AotFixtures_Reserved_ReservedButClear(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Reserved.ReservedButClear value)
+            => RawWrite_AotFixtures_Reserved_ReservedButClear(ref state, value);
+
+        public static void RawWrite_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Reserved.ReservedButClear value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.A;
@@ -37,6 +40,20 @@ partial class ReservedModel
                 state.WriteRawTag((2 << 3) | 2);  // B
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Reserved_ReservedButClear(global::AotFixtures.Reserved.ReservedButClear value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.A;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // A
+            var tmp2 = value.B;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // B
+            }
+            return len;
         }
 
         private static global::AotFixtures.Reserved.ReservedButClear RawRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)

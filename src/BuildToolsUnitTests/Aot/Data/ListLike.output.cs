@@ -28,12 +28,36 @@ partial class ListLikeModel
             => RawRead_AotFixtures_ListLike_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value)
+            => RawWrite_AotFixtures_ListLike_Holder(ref state, value);
+
+        public static void RawWrite_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.NotAList;
-            state.WriteMessage<global::AotFixtures.ListLike.NotAList>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // NotAList
+                var len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len1);
+                RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1);
+            }
             var tmp2 = value.Other;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static int Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.NotAList;
+            if (tmp1 != null)
+            {
+                var len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, depth);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // NotAList
+            }
+            var tmp2 = value.Other;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Other
+            return len;
         }
 
         private static global::AotFixtures.ListLike.Holder RawRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
@@ -81,6 +105,9 @@ partial class ListLikeModel
             => RawRead_AotFixtures_ListLike_NotAList(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value)
+            => RawWrite_AotFixtures_ListLike_NotAList(ref state, value);
+
+        public static void RawWrite_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
@@ -91,6 +118,20 @@ partial class ListLikeModel
             }
             var tmp2 = value.Count2;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static int Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Label;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+            }
+            var tmp2 = value.Count2;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Count2
+            return len;
         }
 
         private static global::AotFixtures.ListLike.NotAList RawRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)

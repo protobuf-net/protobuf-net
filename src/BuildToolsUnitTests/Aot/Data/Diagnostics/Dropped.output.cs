@@ -31,10 +31,22 @@ partial class DroppedModel
             => RawRead_AotFixtures_Dropped_HasCallback(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.HasCallback value)
+            => RawWrite_AotFixtures_Dropped_HasCallback(ref state, value);
+
+        public static void RawWrite_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.HasCallback value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.Dropped.HasCallback RawRead_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
@@ -76,6 +88,9 @@ partial class DroppedModel
             => RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
+            => RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, value);
+
+        public static void RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
@@ -85,11 +100,29 @@ partial class DroppedModel
             {
                 foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
                 {
-                    if (item2 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((2 << 3) | 2);  // Tags
                     state.WriteRawString(item2);
                 }
             }
+        }
+
+        public static int Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            var tmp2 = value.Tags;
+            if (tmp2 != null)
+            {
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item2);
+                }
+            }
+            return len;
         }
 
         private static global::AotFixtures.Dropped.HasUnsupportedMember RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
@@ -134,10 +167,32 @@ partial class DroppedModel
             => RawRead_AotFixtures_Dropped_ReferencesDropped(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.ReferencesDropped value)
+            => RawWrite_AotFixtures_Dropped_ReferencesDropped(ref state, value);
+
+        public static void RawWrite_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.ReferencesDropped value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Child;
-            state.WriteMessage<global::AotFixtures.Dropped.HasUnsupportedMember>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Child
+                var len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len1);
+                RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp1);
+            }
+        }
+
+        public static int Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Child;
+            if (tmp1 != null)
+            {
+                var len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Child
+            }
+            return len;
         }
 
         private static global::AotFixtures.Dropped.ReferencesDropped RawRead_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
@@ -176,10 +231,22 @@ partial class DroppedModel
             => RawRead_AotFixtures_Dropped_UnrenderableDefault(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
+            => RawWrite_AotFixtures_Dropped_UnrenderableDefault(ref state, value);
+
+        public static void RawWrite_AotFixtures_Dropped_UnrenderableDefault(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.Dropped.UnrenderableDefault RawRead_AotFixtures_Dropped_UnrenderableDefault(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
@@ -219,10 +286,22 @@ partial class DroppedModel
             => RawRead_AotFixtures_Dropped_UsesMemberOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
+            => RawWrite_AotFixtures_Dropped_UsesMemberOptions(ref state, value);
+
+        public static void RawWrite_AotFixtures_Dropped_UsesMemberOptions(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.Dropped.UsesMemberOptions RawRead_AotFixtures_Dropped_UsesMemberOptions(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UsesMemberOptions value)

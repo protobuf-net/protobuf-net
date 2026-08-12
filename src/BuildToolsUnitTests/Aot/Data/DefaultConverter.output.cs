@@ -27,6 +27,9 @@ partial class DefaultConverterModel
             => RawRead_AotFixtures_DefaultConverter_Converted(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DefaultConverter.Converted value)
+            => RawWrite_AotFixtures_DefaultConverter_Converted(ref state, value);
+
+        public static void RawWrite_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DefaultConverter.Converted value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
@@ -57,6 +60,28 @@ partial class DefaultConverterModel
             }
             var tmp7 = value.Plain;
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
+        }
+
+        public static int Measure_AotFixtures_DefaultConverter_Converted(global::AotFixtures.DefaultConverter.Converted value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Number;
+            if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
+            var tmp2 = value.Text;
+            if (tmp2 != null && tmp2 != "abc")
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            var tmp3 = value.Flag;
+            if (tmp3 != true) len += 2;  // Flag
+            var tmp5 = value.Ratio;
+            if (tmp5 != 2.25D) len += 9;  // Ratio
+            var tmp6 = value.Big;
+            if (tmp6 != -7L) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp6));  // Big
+            var tmp7 = value.Plain;
+            if (tmp7 != 9) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
+            return len;
         }
 
         private static global::AotFixtures.DefaultConverter.Converted RawRead_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)

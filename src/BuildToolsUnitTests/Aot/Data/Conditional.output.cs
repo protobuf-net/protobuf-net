@@ -27,6 +27,9 @@ partial class ConditionalModel
             => RawRead_AotFixtures_Conditional_Conditional(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
+            => RawWrite_AotFixtures_Conditional_Conditional(ref state, value);
+
+        public static void RawWrite_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ValueSpecified)
@@ -66,6 +69,47 @@ partial class ConditionalModel
                     state.WriteRawString(tmp5);
                 }
             }
+        }
+
+        public static int Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            if (value.ValueSpecified)
+            {
+                var tmp1 = value.Value;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            }
+            if (value.ShouldSerializeText())
+            {
+                var tmp2 = value.Text;
+                if (tmp2 != null)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+                }
+            }
+            if (value.BothSpecified)
+            {
+                var tmp3 = value.Both;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Both
+            }
+            if (value.NamedSpecified)
+            {
+                var tmp4 = value.Named;
+                if (tmp4 != null)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // Named
+                }
+            }
+            if (value.ShouldSerializePresence())
+            {
+                var tmp5 = value.Presence;
+                if (tmp5 != null)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // Presence
+                }
+            }
+            return len;
         }
 
         private static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)

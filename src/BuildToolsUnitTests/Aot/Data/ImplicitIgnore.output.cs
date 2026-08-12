@@ -28,6 +28,9 @@ partial class ImplicitIgnoreModel
             => RawRead_AotFixtures_ImplicitIgnore_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
+            => RawWrite_AotFixtures_ImplicitIgnore_Excluded(ref state, value);
+
+        public static void RawWrite_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Pinned;
@@ -36,6 +39,19 @@ partial class ImplicitIgnoreModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
             var tmp5 = value.ImplicitProperty;
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
+        }
+
+        public static int Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Pinned;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Pinned
+            var tmp4 = value.ImplicitField;
+            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // ImplicitField
+            var tmp5 = value.ImplicitProperty;
+            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // ImplicitProperty
+            return len;
         }
 
         private static global::AotFixtures.ImplicitIgnore.Excluded RawRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
@@ -93,6 +109,9 @@ partial class ImplicitIgnoreModel
             => RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
+            => RawWrite_AotFixtures_ImplicitIgnore_PartiallyPinned(ref state, value);
+
+        public static void RawWrite_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Beta;
@@ -101,6 +120,19 @@ partial class ImplicitIgnoreModel
             if (tmp10 != 0) state.WriteInt32Varint(10, tmp10);
             var tmp11 = value.Gamma;
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+        }
+
+        public static int Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp2 = value.Beta;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Beta
+            var tmp10 = value.Alpha;
+            if (tmp10 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp10));  // Alpha
+            var tmp11 = value.Gamma;
+            if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // Gamma
+            return len;
         }
 
         private static global::AotFixtures.ImplicitIgnore.PartiallyPinned RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)

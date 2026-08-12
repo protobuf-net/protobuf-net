@@ -211,6 +211,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // than emitting calls that do not compile - the identical rule (and the
                         // identical stale-corpus failure) the read side's gate records above
                         && rawWriteType.GetMembers("ThrowNullRepeatedContents").Length != 0 // the repeated wave
+                        && rawWriteType.GetMembers("MeasureRawString").Length != 0 // the measure wave
                         && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly),
                     // net5+ framework capability, probed per compilation like UnsafeAccessor: the
                     // raw repeated write enumerates a List<T> as a span where it can

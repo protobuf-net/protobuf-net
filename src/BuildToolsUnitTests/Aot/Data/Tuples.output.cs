@@ -60,6 +60,9 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
+            => RawWrite__int__string_(ref state, value);
+
+        public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
         {
             var tmp1 = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
@@ -70,6 +73,20 @@ partial class TuplesModel
                 state.WriteRawTag((2 << 3) | 2);  // Item2
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure__int__string_((int, string) value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Item1;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
+            var tmp2 = value.Item2;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Item2
+            }
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -112,6 +129,9 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Tuples.ClassTuple>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.ClassTuple value)
+            => RawWrite_AotFixtures_Tuples_ClassTuple(ref state, value);
+
+        public static void RawWrite_AotFixtures_Tuples_ClassTuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.ClassTuple value)
         {
             var tmp1 = value.A;
             state.WriteRawTag((1 << 3) | 0);  // A
@@ -122,6 +142,20 @@ partial class TuplesModel
                 state.WriteRawTag((2 << 3) | 2);  // B
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.A;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // A
+            var tmp2 = value.B;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // B
+            }
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -160,6 +194,9 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Tuples.NamedLikeATuple>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.NamedLikeATuple value)
+            => RawWrite_AotFixtures_Tuples_NamedLikeATuple(ref state, value);
+
+        public static void RawWrite_AotFixtures_Tuples_NamedLikeATuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.NamedLikeATuple value)
         {
             var tmp1 = value.First;
             state.WriteRawTag((1 << 3) | 0);  // First
@@ -167,6 +204,17 @@ partial class TuplesModel
             var tmp2 = value.Second;
             state.WriteRawTag((2 << 3) | 0);  // Second
             state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+        }
+
+        public static int Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.First;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
+            var tmp2 = value.Second;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Second
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -206,6 +254,9 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Tuples.StructTuple>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.StructTuple value)
+            => RawWrite_AotFixtures_Tuples_StructTuple(ref state, value);
+
+        public static void RawWrite_AotFixtures_Tuples_StructTuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.StructTuple value)
         {
             var tmp1 = value.X;
             state.WriteRawTag((1 << 3) | 0);  // X
@@ -216,6 +267,20 @@ partial class TuplesModel
                 state.WriteRawTag((2 << 3) | 2);  // Y
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.X;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
+            var tmp2 = value.Y;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Y
+            }
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -255,6 +320,9 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
+            => RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value);
+
+        public static void RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
         {
             var tmp1 = value.Key;
             state.WriteRawTag((1 << 3) | 0);  // Key
@@ -265,6 +333,20 @@ partial class TuplesModel
                 state.WriteRawTag((2 << 3) | 2);  // Value
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Key;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Key
+            var tmp2 = value.Value;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Value
+            }
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -307,6 +389,9 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value)
+            => RawWrite_System_Tuple_int__string_(ref state, value);
+
+        public static void RawWrite_System_Tuple_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value)
         {
             var tmp1 = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
@@ -317,6 +402,20 @@ partial class TuplesModel
                 state.WriteRawTag((2 << 3) | 2);  // Item2
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Item1;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
+            var tmp2 = value.Item2;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Item2
+            }
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

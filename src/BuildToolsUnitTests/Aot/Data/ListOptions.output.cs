@@ -48,6 +48,9 @@ partial class ListOptionsModel
             => RawRead_AotFixtures_ListOptions_NotACollection(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
+            => RawWrite_AotFixtures_ListOptions_NotACollection(ref state, value);
+
+        public static void RawWrite_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.PackedScalar;
@@ -78,6 +81,37 @@ partial class ListOptionsModel
                 state.WriteRawTag((6 << 3) | 2);  // PackedBytes
                 state.WriteRawBytes(tmp6);
             }
+        }
+
+        public static int Measure_AotFixtures_ListOptions_NotACollection(global::AotFixtures.ListOptions.NotACollection value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.PackedScalar;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // PackedScalar
+            var tmp2 = value.OverwriteScalar;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OverwriteScalar
+            var tmp3 = value.BothOnString;
+            if (tmp3 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // BothOnString
+            }
+            var tmp4 = value.AppendedBytes;
+            if (tmp4 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp4.Length) + tmp4.Length;  // AppendedBytes
+            }
+            var tmp5 = value.OverwrittenBytes;
+            if (tmp5 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp5.Length) + tmp5.Length;  // OverwrittenBytes
+            }
+            var tmp6 = value.PackedBytes;
+            if (tmp6 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6.Length) + tmp6.Length;  // PackedBytes
+            }
+            return len;
         }
 
         private static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)

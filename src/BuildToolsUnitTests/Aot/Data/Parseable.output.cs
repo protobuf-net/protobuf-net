@@ -115,7 +115,13 @@ partial class ParseableModel
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
             state.WriteString(tmp1.ToString());
             var tmp2 = value.Child;
-            state.WriteMessage<global::AotFixtures.Parseable.NotParseable>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Child
+                var len2 = Measure_AotFixtures_Parseable_NotParseable(tmp2, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len2);
+                RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2);
+            }
         }
 
         private static global::AotFixtures.Parseable.Holder RawRead_AotFixtures_Parseable_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.Holder value)
@@ -165,10 +171,22 @@ partial class ParseableModel
             => RawRead_AotFixtures_Parseable_NotParseable(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.NotParseable value)
+            => RawWrite_AotFixtures_Parseable_NotParseable(ref state, value);
+
+        public static void RawWrite_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.NotParseable value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Parseable_NotParseable(global::AotFixtures.Parseable.NotParseable value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.Parseable.NotParseable RawRead_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.NotParseable value)

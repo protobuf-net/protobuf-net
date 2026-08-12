@@ -119,10 +119,22 @@ partial class RawPassModel
             => RawRead_AotFixtures_RawPass_Child(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Child value)
+            => RawWrite_AotFixtures_RawPass_Child(ref state, value);
+
+        public static void RawWrite_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Child value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.RawPass.Child RawRead_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Child value)
@@ -212,6 +224,9 @@ partial class RawPassModel
             => RawRead_AotFixtures_RawPass_Order(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Order value)
+            => RawWrite_AotFixtures_RawPass_Order(ref state, value);
+
+        public static void RawWrite_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Order value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
@@ -248,7 +263,7 @@ partial class RawPassModel
             {
                 foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
                 {
-                    if (item7 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((7 << 3) | 2);  // Tags
                     state.WriteRawString(item7);
                 }
@@ -265,10 +280,23 @@ partial class RawPassModel
             var tmp9 = value.Items;
             if (tmp9 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.RawPass.Child>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, this);
+                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
+                {
+                    if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
+                    state.WriteRawTag((9 << 3) | 2);  // Items
+                    var len9 = Measure_AotFixtures_RawPass_Child(item9, state.RawDepthBudget);
+                    state.WriteRawVarint32((uint)len9);
+                    RawWrite_AotFixtures_RawPass_Child(ref state, item9);
+                }
             }
             var tmp10 = value.Favourite;
-            state.WriteMessage<global::AotFixtures.RawPass.Child>(10, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp10, this);
+            if (tmp10 != null)
+            {
+                state.WriteRawTag((10 << 3) | 2);  // Favourite
+                var len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len10);
+                RawWrite_AotFixtures_RawPass_Child(ref state, tmp10);
+            }
             var tmp11 = value.Score;
             if (tmp11 != 0d)
             {
@@ -281,6 +309,72 @@ partial class RawPassModel
                 state.WriteRawTag((12 << 3) | 2);  // Blob
                 state.WriteRawBytes(tmp12);
             }
+        }
+
+        public static int Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            var tmp2 = value.Name;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Name
+            }
+            var tmp3 = value.Active;
+            if (tmp3) len += 2;  // Active
+            var tmp4 = value.Total;
+            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp4));  // Total
+            var tmp5 = value.Status;
+            if (tmp5 != default(global::AotFixtures.RawPass.Status)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp5));  // Status
+            var tmp6 = value.Priority;
+            if (tmp6.HasValue)
+            {
+                var val6 = tmp6.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val6));  // Priority
+            }
+            var tmp7 = value.Tags;
+            if (tmp7 != null)
+            {
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                {
+                    if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item7);
+                }
+            }
+            var tmp8 = value.Codes;
+            if (tmp8 != null)
+            {
+                foreach (var item8 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp8))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item8));
+                }
+            }
+            var tmp9 = value.Items;
+            if (tmp9 != null)
+            {
+                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
+                {
+                    if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
+                    var len9 = Measure_AotFixtures_RawPass_Child(item9, depth);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len9) + len9;
+                }
+            }
+            var tmp10 = value.Favourite;
+            if (tmp10 != null)
+            {
+                var len10 = Measure_AotFixtures_RawPass_Child(tmp10, depth);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len10) + len10;  // Favourite
+            }
+            var tmp11 = value.Score;
+            if (tmp11 != 0d) len += 9;  // Score
+            var tmp12 = value.Blob;
+            if (tmp12 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp12.Length) + tmp12.Length;  // Blob
+            }
+            return len;
         }
 
         private static global::AotFixtures.RawPass.Order RawRead_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Order value)

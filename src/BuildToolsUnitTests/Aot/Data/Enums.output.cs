@@ -29,6 +29,9 @@ partial class EnumsModel
             => RawRead_AotFixtures_Enums_WithEnums(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Enums.WithEnums value)
+            => RawWrite_AotFixtures_Enums_WithEnums(ref state, value);
+
+        public static void RawWrite_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Enums.WithEnums value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.SByteEnum;
@@ -109,6 +112,56 @@ partial class EnumsModel
                 state.WriteRawTag((14 << 3) | 0);  // MaybeCharacter
                 state.WriteRawVarint32(val14);
             }
+        }
+
+        public static int Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.SByteEnum;
+            if (tmp1 != default(global::AotFixtures.Enums.AsSByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(sbyte)tmp1));  // SByteEnum
+            var tmp2 = value.ByteEnum;
+            if (tmp2 != default(global::AotFixtures.Enums.AsByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)tmp2);  // ByteEnum
+            var tmp3 = value.Int16Enum;
+            if (tmp3 != default(global::AotFixtures.Enums.AsInt16)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(short)tmp3));  // Int16Enum
+            var tmp4 = value.UInt16Enum;
+            if (tmp4 != default(global::AotFixtures.Enums.AsUInt16)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp4);  // UInt16Enum
+            var tmp5 = value.Int32Enum;
+            if (tmp5 != default(global::AotFixtures.Enums.AsInt32)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp5));  // Int32Enum
+            var tmp6 = value.UInt32Enum;
+            if (tmp6 != default(global::AotFixtures.Enums.AsUInt32)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6);  // UInt32Enum
+            var tmp7 = value.Int64Enum;
+            if (tmp7 != default(global::AotFixtures.Enums.AsInt64)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Int64Enum
+            var tmp8 = value.UInt64Enum;
+            if (tmp8 != default(global::AotFixtures.Enums.AsUInt64)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)tmp8);  // UInt64Enum
+            var tmp9 = value.Flags;
+            if (tmp9 != default(global::AotFixtures.Enums.Flagged)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp9));  // Flags
+            var tmp10 = value.MaybeEnum;
+            if (tmp10.HasValue)
+            {
+                var val10 = tmp10.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)val10));  // MaybeEnum
+            }
+            var tmp11 = value.EnumWithDefault;
+            if (tmp11 != (global::AotFixtures.Enums.AsInt32)(-70000)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp11));  // EnumWithDefault
+            var tmp12 = value.MaybeFlagsWithDefault;
+            if (tmp12.HasValue)
+            {
+                var val12 = tmp12.GetValueOrDefault();
+                if (val12 != (global::AotFixtures.Enums.Flagged)(3))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)val12));  // MaybeFlagsWithDefault
+                }
+            }
+            var tmp13 = value.Character;
+            if (tmp13 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp13);  // Character
+            var tmp14 = value.MaybeCharacter;
+            if (tmp14.HasValue)
+            {
+                var val14 = tmp14.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(val14);  // MaybeCharacter
+            }
+            return len;
         }
 
         private static global::AotFixtures.Enums.WithEnums RawRead_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)

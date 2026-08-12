@@ -56,6 +56,9 @@ partial class SkipCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Bypassed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value)
+            => RawWrite_AotFixtures_SkipCtor_Bypassed(ref state, value);
+
+        public static void RawWrite_AotFixtures_SkipCtor_Bypassed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -68,6 +71,20 @@ partial class SkipCtorModel
             }
         }
 
+        public static int Measure_AotFixtures_SkipCtor_Bypassed(global::AotFixtures.SkipCtor.Bypassed value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Text;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            return len;
+        }
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Features
@@ -77,10 +94,22 @@ partial class SkipCtorModel
             => RawRead_AotFixtures_SkipCtor_Constructed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value)
+            => RawWrite_AotFixtures_SkipCtor_Constructed(ref state, value);
+
+        public static void RawWrite_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_SkipCtor_Constructed(global::AotFixtures.SkipCtor.Constructed value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.SkipCtor.Constructed RawRead_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)

@@ -29,6 +29,9 @@ partial class NonPublicSetterModel
             => RawRead_AotFixtures_NonPublicSetter_Guarded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicSetter.Guarded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicSetter.Guarded value)
+            => RawWrite_AotFixtures_NonPublicSetter_Guarded(ref state, value);
+
+        public static void RawWrite_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicSetter.Guarded value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -50,6 +53,30 @@ partial class NonPublicSetterModel
             }
             var tmp4 = value.Once;
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
+        }
+
+        public static int Measure_AotFixtures_NonPublicSetter_Guarded(global::AotFixtures.NonPublicSetter.Guarded value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Text;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            var tmp3 = value.Numbers;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item3));
+                }
+            }
+            var tmp4 = value.Once;
+            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Once
+            return len;
         }
 
         private static global::AotFixtures.NonPublicSetter.Guarded RawRead_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicSetter.Guarded value)

@@ -48,7 +48,13 @@ partial class GetterModel
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
             var tmp3 = value.Child;
-            state.WriteMessage<global::AotFixtures.Getter.Nested>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // Child
+                var len3 = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len3);
+                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3);
+            }
             var tmp4 = value.Value;
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
             var tmp5 = value.Text;
@@ -85,7 +91,10 @@ partial class GetterModel
                 }
             }
             var tmp11 = value.Where;
-            state.WriteMessage<global::AotFixtures.Getter.Point>(11, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
+            state.WriteRawTag((11 << 3) | 2);  // Where
+            var len11 = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget);
+            state.WriteRawVarint32((uint)len11);
+            RawWrite_AotFixtures_Getter_Point(ref state, tmp11);
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)
             {
@@ -270,10 +279,22 @@ partial class GetterModel
             => RawRead_AotFixtures_Getter_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
+            => RawWrite_AotFixtures_Getter_Nested(ref state, value);
+
+        public static void RawWrite_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
         }
 
         private static global::AotFixtures.Getter.Nested RawRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
@@ -330,9 +351,21 @@ partial class GetterModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
+            => RawWrite_AotFixtures_Getter_Point(ref state, value);
+
+        public static void RawWrite_AotFixtures_Getter_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
         {
             var tmp1 = value.X;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.X;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

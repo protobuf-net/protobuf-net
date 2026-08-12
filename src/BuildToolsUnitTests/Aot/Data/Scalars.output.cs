@@ -29,6 +29,9 @@ partial class ScalarsModel
             => RawRead_AotFixtures_Scalars_Primitives(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
+            => RawWrite_AotFixtures_Scalars_Primitives(ref state, value);
+
+        public static void RawWrite_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Bool;
@@ -93,6 +96,35 @@ partial class ScalarsModel
                 state.WriteRawTag((11 << 3) | 1);  // Double
                 state.WriteRawDouble(tmp11);
             }
+        }
+
+        public static int Measure_AotFixtures_Scalars_Primitives(global::AotFixtures.Scalars.Primitives value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Bool;
+            if (tmp1) len += 2;  // Bool
+            var tmp2 = value.SByte;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // SByte
+            var tmp3 = value.Byte;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Byte
+            var tmp4 = value.Int16;
+            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Int16
+            var tmp5 = value.UInt16;
+            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp5);  // UInt16
+            var tmp6 = value.Int32;
+            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Int32
+            var tmp7 = value.UInt32;
+            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp7);  // UInt32
+            var tmp8 = value.Int64;
+            if (tmp8 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp8));  // Int64
+            var tmp9 = value.UInt64;
+            if (tmp9 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(tmp9);  // UInt64
+            var tmp10 = value.Single;
+            if (tmp10 != 0f) len += 5;  // Single
+            var tmp11 = value.Double;
+            if (tmp11 != 0d) len += 9;  // Double
+            return len;
         }
 
         private static global::AotFixtures.Scalars.Primitives RawRead_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)

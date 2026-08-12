@@ -31,8 +31,18 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Empty(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Empty>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value)
+            => RawWrite_AotFixtures_SchemaOnly_Empty(ref state, value);
+
+        public static void RawWrite_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+        }
+
+        public static int Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            return len;
         }
 
         private static global::AotFixtures.SchemaOnly.Empty RawRead_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
@@ -90,6 +100,9 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value)
+            => RawWrite_AotFixtures_SchemaOnly_Ignoring(ref state, value);
+
+        public static void RawWrite_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -100,6 +113,20 @@ partial class SchemaOnlyModel
                 state.WriteRawTag((2 << 3) | 2);  // Text
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Text;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            return len;
         }
 
         private static global::AotFixtures.SchemaOnly.Ignoring RawRead_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
@@ -145,6 +172,9 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Plain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Plain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value)
+            => RawWrite_AotFixtures_SchemaOnly_Plain(ref state, value);
+
+        public static void RawWrite_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -155,6 +185,20 @@ partial class SchemaOnlyModel
                 state.WriteRawTag((2 << 3) | 2);  // Text
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Text;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            return len;
         }
 
         private static global::AotFixtures.SchemaOnly.Plain RawRead_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
@@ -200,6 +244,9 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.SchemaOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
+            => RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref state, value);
+
+        public static void RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -210,6 +257,20 @@ partial class SchemaOnlyModel
                 state.WriteRawTag((2 << 3) | 2);  // Text
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Text;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            return len;
         }
 
         private static global::AotFixtures.SchemaOnly.SchemaOnly RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)

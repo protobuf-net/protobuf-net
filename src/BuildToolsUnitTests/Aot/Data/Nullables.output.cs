@@ -27,6 +27,9 @@ partial class NullablesModel
             => RawRead_AotFixtures_Nullables_Optional(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nullables.Optional>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nullables.Optional value)
+            => RawWrite_AotFixtures_Nullables_Optional(ref state, value);
+
+        public static void RawWrite_AotFixtures_Nullables_Optional(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nullables.Optional value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.MaybeInt;
@@ -76,6 +79,54 @@ partial class NullablesModel
             }
             var tmp7 = value.Plain;
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+        }
+
+        public static int Measure_AotFixtures_Nullables_Optional(global::AotFixtures.Nullables.Optional value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.MaybeInt;
+            if (tmp1.HasValue)
+            {
+                var val1 = tmp1.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val1));  // MaybeInt
+            }
+            var tmp2 = value.MaybeBool;
+            if (tmp2.HasValue)
+            {
+                var val2 = tmp2.GetValueOrDefault();
+                len += 2;  // MaybeBool
+            }
+            var tmp3 = value.MaybeDouble;
+            if (tmp3.HasValue)
+            {
+                var val3 = tmp3.GetValueOrDefault();
+                len += 9;  // MaybeDouble
+            }
+            var tmp4 = value.MaybeLong;
+            if (tmp4.HasValue)
+            {
+                var val4 = tmp4.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)val4));  // MaybeLong
+            }
+            var tmp5 = value.IntWithDefault;
+            if (tmp5.HasValue)
+            {
+                var val5 = tmp5.GetValueOrDefault();
+                if (val5 != 5)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val5));  // IntWithDefault
+                }
+            }
+            var tmp6 = value.IntWithNullDefault;
+            if (tmp6.HasValue)
+            {
+                var val6 = tmp6.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val6));  // IntWithNullDefault
+            }
+            var tmp7 = value.Plain;
+            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
+            return len;
         }
 
         private static global::AotFixtures.Nullables.Optional RawRead_AotFixtures_Nullables_Optional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)

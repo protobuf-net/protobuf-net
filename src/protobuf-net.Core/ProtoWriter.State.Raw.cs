@@ -147,11 +147,67 @@ namespace ProtoBuf
             /// Throws for a null element inside a collection, matching the stateful repeated
             /// write; generated raw loops call this so the failure is the same exception with
             /// the same message, rather than a bare NullReferenceException from the write.
+            /// Static rather than instance, so a generated Measure_ body - pure arithmetic,
+            /// no state - can report the same failure at the same point.
             /// </summary>
             [MethodImpl(MethodImplOptions.NoInlining)]
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
-            public void ThrowNullRepeatedContents<T>()
+            public static void ThrowNullRepeatedContents<T>()
                 => Internal.ThrowHelper.ThrowNullRepeatedContents<T>();
+
+            // ---- the raw measure surface (docs/nano-writer.md, the measure-first cut) ----
+            //
+            // Generated Measure_ statics size a sub-message by PURE ARITHMETIC - no writer, no
+            // State, no virtual dispatch - so the raw write can emit an exact length prefix and
+            // then the body, instead of the stateful engine's reserve-and-patch. These are the
+            // only pieces of that arithmetic the generator cannot fold at compile time.
+
+            /// <summary>Raw-convention varint measure (32-bit): the encoded byte count.</summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static int MeasureRawVarint32(uint value) => MeasureUInt32(value);
+
+            /// <summary>Raw-convention varint measure (64-bit); a negative int32/int64 arrives
+            /// sign-extended to the 10-byte form, exactly as the raw write encodes it.</summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static int MeasureRawVarint64(ulong value) => MeasureUInt64(value);
+
+            /// <summary>
+            /// Raw-convention string measure: the length prefix plus the UTF-8 body, exactly
+            /// what <see cref="WriteRawString"/> emits. The caller guards null.
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static int MeasureRawString(string value)
+            {
+                var len = value.Length == 0 ? 0 : UTF8.GetByteCount(value);
+                return MeasureUInt32((uint)len) + len;
+            }
+
+            /// <summary>
+            /// The remaining nesting budget for a generated measure recursion, honouring
+            /// <see cref="Meta.TypeModel.MaxDepth"/> exactly as the raw reader's depth cap does.
+            /// Only the measure walk needs guarding: the write recursion that follows traverses
+            /// the identical graph the measure just proved finite.
+            /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public int RawDepthBudget
+            {
+                get
+                {
+                    var writer = _writer;
+                    return (writer.Model is null ? Meta.TypeModel.DefaultMaxDepth : writer.Model.MaxDepth) - writer.Depth;
+                }
+            }
+
+            /// <summary>Throws for an exhausted measure budget - a cyclic or pathologically deep
+            /// object graph - mirroring the stateful writer's depth failure.</summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static void ThrowRawTooDeep()
+                => throw new InvalidOperationException("Maximum model depth exceeded (see "
+                    + nameof(Meta.TypeModel) + "." + nameof(Meta.TypeModel.MaxDepth) + ") while measuring");
         }
     }
 }

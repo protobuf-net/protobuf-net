@@ -52,6 +52,9 @@ partial class ListsModel
             => RawRead_AotFixtures_Lists_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value)
+            => RawWrite_AotFixtures_Lists_Inner(ref state, value);
+
+        public static void RawWrite_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -62,6 +65,20 @@ partial class ListsModel
                 state.WriteRawTag((2 << 3) | 2);  // Label
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Label;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+            }
+            return len;
         }
 
         private static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
@@ -107,6 +124,9 @@ partial class ListsModel
             => RawRead_AotFixtures_Lists_Repeated(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value)
+            => RawWrite_AotFixtures_Lists_Repeated(ref state, value);
+
+        public static void RawWrite_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Int32Array;
@@ -159,7 +179,7 @@ partial class ListsModel
             {
                 foreach (var item6 in tmp6)
                 {
-                    if (item6 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((6 << 3) | 2);  // StringArray
                     state.WriteRawString(item6);
                 }
@@ -169,7 +189,7 @@ partial class ListsModel
             {
                 foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
                 {
-                    if (item7 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((7 << 3) | 2);  // StringList
                     state.WriteRawString(item7);
                 }
@@ -177,12 +197,26 @@ partial class ListsModel
             var tmp9 = value.Messages;
             if (tmp9 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Lists.Inner>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, this);
+                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
+                {
+                    if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
+                    state.WriteRawTag((9 << 3) | 2);  // Messages
+                    var len9 = Measure_AotFixtures_Lists_Inner(item9, state.RawDepthBudget);
+                    state.WriteRawVarint32((uint)len9);
+                    RawWrite_AotFixtures_Lists_Inner(ref state, item9);
+                }
             }
             var tmp10 = value.MessageArray;
             if (tmp10 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Inner>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10, this);
+                foreach (var item10 in tmp10)
+                {
+                    if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
+                    state.WriteRawTag((10 << 3) | 2);  // MessageArray
+                    var len10 = Measure_AotFixtures_Lists_Inner(item10, state.RawDepthBudget);
+                    state.WriteRawVarint32((uint)len10);
+                    RawWrite_AotFixtures_Lists_Inner(ref state, item10);
+                }
             }
             var tmp11 = value.Scalar;
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
@@ -206,6 +240,102 @@ partial class ListsModel
             }
             var tmp14 = value.SingleColour;
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
+        }
+
+        public static int Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Int32Array;
+            if (tmp1 != null)
+            {
+                foreach (var item1 in tmp1)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
+                }
+            }
+            var tmp2 = value.Int32List;
+            if (tmp2 != null)
+            {
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item2));
+                }
+            }
+            var tmp3 = value.DoubleArray;
+            if (tmp3 != null)
+            {
+                len += tmp3.Length * 9;  // DoubleArray
+            }
+            var tmp4 = value.SingleArray;
+            if (tmp4 != null)
+            {
+                len += tmp4.Length * 5;  // SingleArray
+            }
+            var tmp5 = value.BoolList;
+            if (tmp5 != null)
+            {
+                len += tmp5.Count * 2;  // BoolList
+            }
+            var tmp6 = value.StringArray;
+            if (tmp6 != null)
+            {
+                foreach (var item6 in tmp6)
+                {
+                    if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item6);
+                }
+            }
+            var tmp7 = value.StringList;
+            if (tmp7 != null)
+            {
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                {
+                    if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(item7);
+                }
+            }
+            var tmp9 = value.Messages;
+            if (tmp9 != null)
+            {
+                foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
+                {
+                    if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
+                    var len9 = Measure_AotFixtures_Lists_Inner(item9, depth);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len9) + len9;
+                }
+            }
+            var tmp10 = value.MessageArray;
+            if (tmp10 != null)
+            {
+                foreach (var item10 in tmp10)
+                {
+                    if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
+                    var len10 = Measure_AotFixtures_Lists_Inner(item10, depth);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len10) + len10;
+                }
+            }
+            var tmp11 = value.Scalar;
+            if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // Scalar
+            var tmp12 = value.Colours;
+            if (tmp12 != null)
+            {
+                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)item12));
+                }
+            }
+            var tmp13 = value.Smalls;
+            if (tmp13 != null)
+            {
+                foreach (var item13 in tmp13)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((byte)item13);
+                }
+            }
+            var tmp14 = value.SingleColour;
+            if (tmp14 != default(global::AotFixtures.Lists.Colour)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp14));  // SingleColour
+            return len;
         }
 
         private static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)

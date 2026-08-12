@@ -35,6 +35,9 @@ partial class ModelSurrogateModel
             => RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+            => RawWrite_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Ticks;
@@ -49,6 +52,17 @@ partial class ModelSurrogateModel
                 state.WriteRawTag((2 << 3) | 0);  // OffsetMinutes
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
+        }
+
+        public static int Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Ticks;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Ticks
+            var tmp2 = value.OffsetMinutes;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OffsetMinutes
+            return len;
         }
 
         private static global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
@@ -214,6 +228,9 @@ partial class ModelSurrogateModel
             => RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
+            => RawWrite_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -222,6 +239,15 @@ partial class ModelSurrogateModel
                 state.WriteRawTag((1 << 3) | 0);  // Value
                 state.WriteRawVarint64(unchecked((ulong)tmp1));
             }
+        }
+
+        public static int Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.ModelSurrogate.TicksSurrogate RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
@@ -261,6 +287,9 @@ partial class ModelSurrogateModel
             => RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
+            => RawWrite_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -269,6 +298,18 @@ partial class ModelSurrogateModel
                 state.WriteRawTag((1 << 3) | 2);  // Value
                 state.WriteRawString(tmp1);
             }
+        }
+
+        public static int Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+            }
+            return len;
         }
 
         private static global::AotFixtures.ModelSurrogate.VersionSurrogate RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)

@@ -320,9 +320,21 @@ partial class InheritModel
             => RawRead_AotFixtures_Inherit_Standalone(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value)
+            => RawWrite_AotFixtures_Inherit_Standalone(ref state, value);
+
+        public static void RawWrite_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value)
         {
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Inherit_Standalone(global::AotFixtures.Inherit.Standalone value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.Inherit.Standalone RawRead_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)

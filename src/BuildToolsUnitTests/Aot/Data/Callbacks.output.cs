@@ -29,10 +29,22 @@ partial class CallbacksModel
             => RawRead_AotFixtures_Callbacks_AfterOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
+            => RawWrite_AotFixtures_Callbacks_AfterOnly(ref state, value);
+
+        public static void RawWrite_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Callbacks_AfterOnly(global::AotFixtures.Callbacks.AfterOnly value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
         }
 
         private static global::AotFixtures.Callbacks.AfterOnly RawRead_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)

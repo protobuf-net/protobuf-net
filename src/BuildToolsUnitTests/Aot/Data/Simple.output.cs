@@ -27,6 +27,9 @@ partial class SimpleModel
             => RawRead_AotFixtures_Simple_Order(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value)
+            => RawWrite_AotFixtures_Simple_Order(ref state, value);
+
+        public static void RawWrite_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
@@ -37,6 +40,20 @@ partial class SimpleModel
                 state.WriteRawTag((2 << 3) | 2);  // Name
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Simple_Order(global::AotFixtures.Simple.Order value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            var tmp2 = value.Name;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Name
+            }
+            return len;
         }
 
         private static global::AotFixtures.Simple.Order RawRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)

@@ -30,6 +30,9 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_DataFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
+            => RawWrite_AotFixtures_Field_DataFields(ref state, value);
+
+        public static void RawWrite_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
@@ -40,6 +43,20 @@ partial class FieldModel
                 state.WriteRawTag((2 << 3) | 2);  // Second
                 state.WriteRawString(tmp2);
             }
+        }
+
+        public static int Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.First;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
+            var tmp2 = value.Second;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Second
+            }
+            return len;
         }
 
         private static global::AotFixtures.Field.DataFields RawRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
@@ -102,9 +119,21 @@ partial class FieldModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
+            => RawWrite_AotFixtures_Field_FieldStruct(ref state, value);
+
+        public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
         {
             var tmp1 = value.Number;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Number;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
+            return len;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -127,7 +156,13 @@ partial class FieldModel
                 state.WriteRawString(tmp2);
             }
             var tmp3 = value.Message;
-            state.WriteMessage<global::AotFixtures.Field.Nested>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // Message
+                var len3 = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget);
+                state.WriteRawVarint32((uint)len3);
+                RawWrite_AotFixtures_Field_Nested(ref state, tmp3);
+            }
             var tmp4 = value.Zig;
             if (tmp4 != 0)
             {
@@ -234,10 +269,22 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
+            => RawWrite_AotFixtures_Field_Nested(ref state, value);
+
+        public static void RawWrite_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
         }
 
         private static global::AotFixtures.Field.Nested RawRead_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)

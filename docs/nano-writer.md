@@ -160,6 +160,41 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## Cut 3 landed: measure-first sub-messages, recompute-always (2026-08-12)
+
+Generated `Measure_X(value, depth)` statics size a contract by pure arithmetic - constant
+tag lengths folded to literals, `MeasureRawVarint32/64` for scalars, `MeasureRawString`
+(prefix + GetByteCount) for strings - and a native message member becomes exact-prefix +
+direct call: `WriteRawTag; WriteRawVarint32((uint)Measure_T(tmp, state.RawDepthBudget));
+RawWrite_T(ref state, tmp)`. The interface Write proxies to the RawWrite_ static exactly
+as Read proxies to RawRead_. Repeated message elements take the same shape per element.
+
+Decisions worth keeping:
+- **Eligibility is a fixed point, unlike the read side**: there is no legacy-mode arm
+  inside arithmetic, so one unmeasurable member takes the contract's Measure_ out, and a
+  dropped target drops its referrers' measures (their raw scalar statements stay). Blocked
+  at shape level: surrogates, hierarchies, extensibles, group-framed contracts, and
+  before-serialize callbacks (measure runs before the pipeline would fire one, so a
+  mutating callback would falsify the prefix). Blocked at member level: maps, wrapping,
+  non-default formats, BCL kinds, parseable (ToString would also run twice), bytes-struct
+  storage, inbuilt/hand-written serializer targets, nullable-struct messages (parked, not
+  hard).
+- **Only the measure recursion carries the depth budget** (`RawDepthBudget`, honouring
+  TypeModel.MaxDepth): the write recursion that follows traverses the graph the measure
+  just proved finite, so a cycle throws in measure before a byte is written.
+- **Recompute-always, deliberately**: a parent's Measure_ walks the child, then the write
+  re-measures it for the prefix - O(depth^2) on deep trees, the hazard the `??=`
+  lengthCache exists to fix. Correctness shipped first; the memoization race benchmarks
+  against this baseline.
+- **The descriptor tree gets ZERO measure-first benefit today**: every descriptor DTO is
+  IExtensible, so the whole tree is shape-blocked. Since that is both the benchmark corpus
+  and protogen's hot path, extensible measure (the extension blob has a knowable length -
+  it needs a public veneer, not new arithmetic) is the highest-value next increment, ahead
+  of the memoization race which would otherwise measure a corpus the feature cannot touch.
+- `ThrowNullRepeatedContents` became STATIC (unshipped API, changed in place) so Measure_
+  bodies - pure arithmetic, no state - can raise the identical null-element failure at the
+  identical point: the measure runs first, so it owns that throw now.
+
 ## Cut 2 landed: unpacked repeated runs (2026-08-12)
 
 The unpacked default needs NO measure infrastructure - per-element tag+value, nothing for

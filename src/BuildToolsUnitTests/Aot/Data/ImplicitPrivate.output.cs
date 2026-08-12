@@ -30,10 +30,22 @@ partial class ImplicitPrivateModel
             => RawRead_AotFixtures_ImplicitPrivate_Explicit(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
+            => RawWrite_AotFixtures_ImplicitPrivate_Explicit(ref state, value);
+
+        public static void RawWrite_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static int Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _value
+            return len;
         }
 
         private static global::AotFixtures.ImplicitPrivate.Explicit RawRead_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
@@ -75,6 +87,9 @@ partial class ImplicitPrivateModel
             => RawRead_AotFixtures_ImplicitPrivate_Private(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Private value)
+            => RawWrite_AotFixtures_ImplicitPrivate_Private(ref state, value);
+
+        public static void RawWrite_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Private value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Public;
@@ -87,6 +102,22 @@ partial class ImplicitPrivateModel
             }
             var tmp3 = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static int Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Public;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Public
+            var tmp2 = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // _apple
+            }
+            var tmp3 = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // _zebra
+            return len;
         }
 
         private static global::AotFixtures.ImplicitPrivate.Private RawRead_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)

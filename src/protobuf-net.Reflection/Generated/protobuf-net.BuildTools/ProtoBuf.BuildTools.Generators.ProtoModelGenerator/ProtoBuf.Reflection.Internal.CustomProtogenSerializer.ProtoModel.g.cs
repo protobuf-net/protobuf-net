@@ -129,7 +129,7 @@ partial class CustomProtogenSerializer
             {
                 foreach (var item10 in tmp10)
                 {
-                    if (item10 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((10 << 3) | 2);  // ReservedNames
                     state.WriteRawString(item10);
                 }
@@ -427,7 +427,7 @@ partial class CustomProtogenSerializer
             {
                 foreach (var item5 in tmp5)
                 {
-                    if (item5 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((5 << 3) | 2);  // ReservedNames
                     state.WriteRawString(item5);
                 }
@@ -1185,7 +1185,7 @@ partial class CustomProtogenSerializer
             {
                 foreach (var item3 in tmp3)
                 {
-                    if (item3 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((3 << 3) | 2);  // Dependencies
                     state.WriteRawString(item3);
                 }
@@ -2443,7 +2443,7 @@ partial class CustomProtogenSerializer
             {
                 foreach (var item6 in tmp6)
                 {
-                    if (item6 is null) state.ThrowNullRepeatedContents<string>();
+                    if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<string>();
                     state.WriteRawTag((6 << 3) | 2);  // LeadingDetachedComments
                     state.WriteRawString(item6);
                 }

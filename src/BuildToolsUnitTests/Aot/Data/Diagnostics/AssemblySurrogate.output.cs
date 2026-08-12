@@ -78,6 +78,9 @@ partial class AssemblySurrogateModel
             => RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+            => RawWrite_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
@@ -86,6 +89,18 @@ partial class AssemblySurrogateModel
                 state.WriteRawTag((1 << 3) | 2);  // Value
                 state.WriteRawString(tmp1);
             }
+        }
+
+        public static int Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+            }
+            return len;
         }
 
         private static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
