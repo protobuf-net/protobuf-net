@@ -142,6 +142,21 @@ Stream/ROS State.Create entries, TypeModel call sites of State.Create + SolidSta
 callers, SubTypeState.Create, DeserializeRootFallback(WithModel) + TryDeserializeAuxiliaryType
 touchpoints (aux path likely ports verbatim - it consumes State surface).
 
+## Class-side finds (partial - the last pre-write reads)
+
+- **SolidState is load-bearing for the iterator paths**: `ExtensibleUtil.GetExtendedValues`'s
+  reflective arm does `State.Create(stream...).Solidify()` and iterates via
+  `TryDeserializeAuxiliaryType` (an iterator cannot hold a ref struct), and `TypeModel.cs:1196`
+  re-solidifies after a liquid pass. The ReaderSnapshot bridge covers both: SolidState becomes
+  snapshot + model extras, Liquify reconstructs. Note ExtensibleUtil's other arm already uses
+  the real State directly.
+- `EagerAllocationLimit` = 32 * 1024 - align nano's scratch initial rent (spike used 64K).
+- `MaxRemaining` is abstract per backend; nano computes it from `_remaining` (+ unknowable=-1).
+- `InternStrings` also lives as a settable property on the ProtoReader class (bridge).
+- Still to grep at write time: SetTag (field-0 + end-group handling), Hint impl body, Intern
+  impl (the custom interner), IncrDepth/MaxDepth wiring, the Stream/ROS `State.Create` bodies
+  (recycling/pooling to delete), `SubTypeState.Create(ProtoReader, value)` usage of the reader.
+
 ## Discovered so far
 
 - `GetReader()` has exactly two call sites in Core (BclHelpers.cs + State.cs itself).
