@@ -53,14 +53,11 @@ public ref partial struct ReaderState
     /// Legacy look-ahead: consume the next header only if it is <paramref name="field"/> (any wire
     /// type except end-group) - the repeated-field run loop of legacy generated code. The raw path
     /// has no equivalent member by design (the tag-local loop condition does this job with no
-    /// re-decode). The reader is forward-only, so the implementation is a hybrid split on whether
-    /// the decode is provably local: with 5+ bytes in the segment (a tag's maximum width) no
-    /// refill can occur and restore-on-miss is legal; nearer the tail the decode may cross a
-    /// refill that nothing can rewind - a Stream cannot be un-read, and a sequence walk may have
-    /// discarded the segment a saved offset pointed into (single-byte segments are the
-    /// pathological case) - so the tag is read FORWARD and a miss parks it in the pending slot
-    /// for the next header read. Either way the veneer pays for its own statefulness; the raw
-    /// path is untouched.
+    /// re-decode). Forward-only, unconditionally: the tag is decoded once and a miss parks it in
+    /// the pending slot for the next header read. A save/restore-on-miss arm was built and then
+    /// removed (Marc's observation): once the pending slot exists - and it must, because nothing
+    /// can rewind a Stream or a walked-past sequence segment - restoring merely guarantees the
+    /// same bytes get parsed twice, for the identical store count on the miss path.
     /// </summary>
     public bool TryReadFieldHeader(int field)
     {
@@ -76,20 +73,6 @@ public ref partial struct ReaderState
             }
             return false; // stays pending
         }
-        if (_count - _offset >= 5) // decode provably local: restore-on-miss is legal
-        {
-            var offset = _offset;
-            tag = ReadRawTag();
-            if (tag != 0 && (int)(tag >> 3) == field && (tag & 7) != 4)
-            {
-                _fieldNumber = field;
-                _wireType = (WireType)(tag & 7);
-                return true;
-            }
-            _offset = offset; // miss (including a group sentinel): unread, for the next header
-            return false;
-        }
-        // segment tail: forward-only decode; a miss is handed to the next header read
         tag = ReadRawTag();
         if (tag != 0 && (int)(tag >> 3) == field && (tag & 7) != 4)
         {

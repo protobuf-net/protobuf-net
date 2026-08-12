@@ -35,14 +35,15 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), x86-64-v4
 4. **Allocations identical** across all three parsers (the strings + Child instances; net472's
    +2 B is measurement rounding). The veneer row runs consumer code *identical* to LegacyReal,
    including the do-while on the new `TryReadFieldHeader` veneer.
-5. **The veneer is a forward-only hybrid, and its correctness cost is measured.** Restore-on-miss
-   is only legal when the decode provably stays in the current segment (5+ local bytes); nearer
-   the tail the tag is decoded forward and a miss parks in the `_pendingTag` slot for the next
-   header read - because nothing can rewind a Stream or a walked-past sequence segment (see
-   docs/nano-core.md, "the reader is forward-only"). Re-measured after the change: the veneer
-   pays +0.2-0.5 ns/element (net10) / +2-2.6 ns (net472) for the pending-drain branch and the
-   locality guard, and the raw rows are unchanged to the second decimal - the control that the
-   raw path is untouched.
+5. **The veneer is forward-only, unconditionally - and that ended up FASTER than rewinding.**
+   The design moved in three measured steps: save/restore-on-miss (broken under any future
+   refill: nothing can rewind a Stream or a walked-past sequence segment), then a hybrid with a
+   provably-local fast arm, then Marc's observation that once the `_pendingTag` hand-forward
+   slot exists, restore only guarantees the missed tag is parsed twice. Veneer interleaved
+   (miss per element), net10: 17.04 ns (rewind) / 17.49 (hybrid) / **16.79 (forward-only)** -
+   the correct design beats the original because the miss double-decode was the original's
+   hidden tax. Raw rows unchanged throughout: the control that the raw path is untouched (it
+   has no Try member at all; see docs/nano-core.md, "the reader is forward-only").
 
 ## Milestone relevance
 

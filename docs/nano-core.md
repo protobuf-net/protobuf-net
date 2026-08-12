@@ -180,7 +180,12 @@ caller states the encoding, and the tag flows through parameters.**
   natively (the missed tag rides a caller local into dispatch); the `TryReadFieldHeader` veneer
   mirrors it one level down with a single `_pendingTag` slot beside `_fieldNumber`/`_wireType`,
   drained by the next header read — veneer-owned state for a veneer-only need, never touched by
-  the raw path. This rule also constrains the refill design itself: `GetNextBuffer` owes its
+  the raw path. **And once a hand-forward slot exists, restore is not merely unnecessary but
+  strictly worse** (Marc's follow-up): the drain check is already paid unconditionally, a miss
+  stores one field either way (`_pendingTag` vs `_offset`), and only the restore variant parses
+  the same bytes twice — so the veneer is forward-only *unconditionally*, and the provably-local
+  guard survives only as the rule for any future speculative read that lacks somewhere to hand
+  its result. This rule also constrains the refill design itself: `GetNextBuffer` owes its
   callers nothing about bytes before the current offset, which is what keeps a Stream refill a
   simple shift-and-top-up.
 - **One exception, forced by an immovable signature: termination scope is a state slot.** The
