@@ -385,7 +385,19 @@ Decisions from the first human read of the document-scale emitted shape (2026-08
    subsume becomes a veneer. This list is additive API, so it also lands in `PublicAPI.Unshipped`
    when it reaches Core — the API tracking makes the new surface reviewable as such.
 5. **The niche fence** — enumerate which `State` members are hot-path and which sit on the boring
-   implementation; this list is the real design review.
+   implementation; this list is the real design review. **The fallback mechanism is decided
+   (Marc, at the extension-data scoping): niche scenarios fall back to the utility methods
+   against the generated model's `Instance`**, at CONTRACT granularity — which the nano
+   eligibility fixpoint already implements on the read side: an ineligible contract keeps its
+   legacy-emitted body, an eligible one gets the nano body, both on the same services type, and
+   `Instance` is the join point (the same accessor the migration fixer leans on, doing double
+   duty). This composes safely because nano readers and legacy veneers share one `ReaderState` -
+   same scope slot, same position - so crossing between them AT MESSAGE BOUNDARIES (via
+   `ISerializer<T>` dispatch) keeps the wire coherent; what is not safe is mixing the two APIs
+   within one field loop (pending-tag and header state go stale across raw reads). Per-member
+   interleaving is therefore a later refinement for contracts where one niche member drags an
+   otherwise-hot contract onto the slow path - and even then at message boundaries, never
+   intra-loop.
 6. **Swap-in** — the new implementation becomes the internals of the real `State` types. The
    differential suite (`src/AotDifferential`) is the correctness gate: byte-for-byte agreement over
    ~3,000 contracts, both directions. Resurrect the Nano benchmarks as the performance gate.
