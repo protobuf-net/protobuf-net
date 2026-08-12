@@ -63,7 +63,7 @@ partial class SkipCtorModel
             state.WriteString(2, tmp2);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

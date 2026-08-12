@@ -65,7 +65,7 @@ partial class TupleLevelsModel
             global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

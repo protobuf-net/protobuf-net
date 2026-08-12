@@ -126,16 +126,16 @@ partial class ExternalSerializerModel
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Stamp> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Stamp>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>();
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Thing> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Thing>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>();
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Ticket> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Ticket>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>();
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }
 }

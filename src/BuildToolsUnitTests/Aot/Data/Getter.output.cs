@@ -321,7 +321,7 @@ partial class GetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Numbers>k__BackingField")]
         private static extern ref global::System.Collections.Generic.List<int> Field_AotFixtures_Getter_Getters_Numbers(global::AotFixtures.Getter.Getters target);

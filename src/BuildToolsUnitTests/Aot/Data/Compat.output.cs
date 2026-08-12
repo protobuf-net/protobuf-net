@@ -202,27 +202,38 @@ partial class CompatModel
         }
 
         global::AotFixtures.Compat.InheritsLevel global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.InheritsLevel>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.InheritsLevel> value)
+            => RawReadSub_AotFixtures_Compat_InheritsLevel(ref state, value);
+
+        public static global::AotFixtures.Compat.InheritsLevel RawReadSub_AotFixtures_Compat_InheritsLevel(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.InheritsLevel> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    // raw read pass: legacy-mode - member Id: kind Guid
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Id, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
                     {
-                        var obj = value.Value;
-                        obj.Id = global::ProtoBuf.BclHelpers.ReadGuidString(ref state);
+                        state.StashTag(tag);
+                        value.Value.Id = global::ProtoBuf.BclHelpers.ReadGuidString(ref state);
                         break;
                     }
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTagOrPending();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Legacy>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -626,30 +637,42 @@ partial class CompatModel
         }
 
         global::AotFixtures.Compat.LevelledBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.LevelledBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.LevelledBase> value)
+            => RawReadSub_AotFixtures_Compat_LevelledBase(ref state, value);
+
+        public static global::AotFixtures.Compat.LevelledBase RawReadSub_AotFixtures_Compat_LevelledBase(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Compat.LevelledBase> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    case (100 << 3) | 2:  // sub-type global::AotFixtures.Compat.InheritsLevel, field 100
+                    case (100 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.Compat.InheritsLevel>(ref state, s_default);
+                        break;
+                    case (1 << 3) | 2:  // When, field 1, length-prefixed
+                        value.Value.When = state.ReadRawTimestamp();
+                        break;
+                    case (1 << 3) | 1:  // When, field 1, fixed64 ticks
+                    case (1 << 3) | 3:  // When, field 1, group
                     {
-                        var obj = value.Value;
-                        obj.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        state.StashTag(tag);
+                        value.Value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
                         break;
                     }
-                    case 100:
-                        value.ReadSubType<global::AotFixtures.Compat.InheritsLevel>(ref state, this);
-                        break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 100;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

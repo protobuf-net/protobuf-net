@@ -25,6 +25,8 @@ partial class ExtensibleModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.BaseExt>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -53,30 +55,41 @@ partial class ExtensibleModel
         }
 
         global::AotFixtures.Extensible.BaseExt global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt> value)
+            => RawReadSub_AotFixtures_Extensible_BaseExt(ref state, value);
+
+        public static global::AotFixtures.Extensible.BaseExt RawReadSub_AotFixtures_Extensible_BaseExt(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                    {
-                        var obj = value.Value;
-                        obj.Shared = state.ReadInt32();
+                    case (100 << 3) | 2:  // sub-type global::AotFixtures.Extensible.DerivedExt, field 100
+                    case (100 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.Extensible.DerivedExt>(ref state, s_default);
                         break;
-                    }
-                    case 100:
-                        value.ReadSubType<global::AotFixtures.Extensible.DerivedExt>(ref state, this);
+                    case (1 << 3) | 0:  // Shared, field 1, varint
+                        value.Value.Shared = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Shared, field 1, fixed32
+                        value.Value.Shared = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Shared, field 1, fixed64
+                        value.Value.Shared = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
                     default:
-                        state.AppendExtensionData(value.Value, typeof(global::AotFixtures.Extensible.BaseExt));
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.AppendExtensionData(tag, value.Value, typeof(global::AotFixtures.Extensible.BaseExt));
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 100;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -140,27 +153,36 @@ partial class ExtensibleModel
         }
 
         global::AotFixtures.Extensible.DerivedExt global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.DerivedExt>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.DerivedExt> value)
+            => RawReadSub_AotFixtures_Extensible_DerivedExt(ref state, value);
+
+        public static global::AotFixtures.Extensible.DerivedExt RawReadSub_AotFixtures_Extensible_DerivedExt(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.DerivedExt> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                    {
-                        var obj = value.Value;
-                        obj.Extra = state.ReadInt32();
+                    case (1 << 3) | 0:  // Extra, field 1, varint
+                        value.Value.Extra = unchecked((int)state.ReadRawVarint32());
                         break;
-                    }
+                    case (1 << 3) | 5:  // Extra, field 1, fixed32
+                        value.Value.Extra = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Extra, field 1, fixed64
+                        value.Value.Extra = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     default:
-                        state.AppendExtensionData(value.Value, typeof(global::AotFixtures.Extensible.DerivedExt));
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.AppendExtensionData(tag, value.Value, typeof(global::AotFixtures.Extensible.DerivedExt));
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

@@ -102,7 +102,7 @@ partial class NonPublicCtorModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -143,7 +143,7 @@ partial class NonPublicCtorModel
             state.WriteString(2, tmp2);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -176,7 +176,7 @@ partial class NonPublicCtorModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Constructor)]
         private static extern global::AotFixtures.NonPublicCtor.InternalCtor Create_AotFixtures_NonPublicCtor_InternalCtor();

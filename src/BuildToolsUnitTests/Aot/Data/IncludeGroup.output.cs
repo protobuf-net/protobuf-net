@@ -24,6 +24,8 @@ partial class IncludeGroupModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Base>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -62,40 +64,52 @@ partial class IncludeGroupModel
         }
 
         global::AotFixtures.IncludeGroup.Base global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)
+            => RawReadSub_AotFixtures_IncludeGroup_Base(ref state, value);
+
+        public static global::AotFixtures.IncludeGroup.Base RawReadSub_AotFixtures_IncludeGroup_Base(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    case (3 << 3) | 2:  // sub-type global::AotFixtures.IncludeGroup.Grouped, field 3
+                    case (3 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.IncludeGroup.Grouped>(ref state, s_default);
+                        break;
+                    case (4 << 3) | 2:  // sub-type global::AotFixtures.IncludeGroup.Plain, field 4
+                    case (4 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.IncludeGroup.Plain>(ref state, s_default);
+                        break;
+                    case (1 << 3) | 0:  // Success, field 1, varint
+                        value.Value.Success = state.ReadRawVarint32() != 0;
+                        break;
+                    case (1 << 3) | 5:  // Success, field 1, fixed32
+                        value.Value.Success = state.ReadRawFixed32() != 0;
+                        break;
+                    case (1 << 3) | 1:  // Success, field 1, fixed64
+                        value.Value.Success = state.ReadRawFixed64() != 0;
+                        break;
+                    case (2 << 3) | 2:  // Error, field 2, length-prefixed
                     {
-                        var obj = value.Value;
-                        obj.Success = state.ReadBoolean();
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Value.Error = tmp2;
                         break;
                     }
-                    case 2:
-                    {
-                        var obj = value.Value;
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) obj.Error = tmp2;
-                        break;
-                    }
-                    case 3:
-                        value.ReadSubType<global::AotFixtures.IncludeGroup.Grouped>(ref state, this);
-                        break;
-                    case 4:
-                        value.ReadSubType<global::AotFixtures.IncludeGroup.Plain>(ref state, this);
-                        break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Grouped>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -114,27 +128,36 @@ partial class IncludeGroupModel
         }
 
         global::AotFixtures.IncludeGroup.Grouped global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Grouped>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
+            => RawReadSub_AotFixtures_IncludeGroup_Grouped(ref state, value);
+
+        public static global::AotFixtures.IncludeGroup.Grouped RawReadSub_AotFixtures_IncludeGroup_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                    {
-                        var obj = value.Value;
-                        obj.Extra = state.ReadInt32();
+                    case (1 << 3) | 0:  // Extra, field 1, varint
+                        value.Value.Extra = unchecked((int)state.ReadRawVarint32());
                         break;
-                    }
+                    case (1 << 3) | 5:  // Extra, field 1, fixed32
+                        value.Value.Extra = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Extra, field 1, fixed64
+                        value.Value.Extra = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -153,26 +176,35 @@ partial class IncludeGroupModel
         }
 
         global::AotFixtures.IncludeGroup.Plain global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)
+            => RawReadSub_AotFixtures_IncludeGroup_Plain(ref state, value);
+
+        public static global::AotFixtures.IncludeGroup.Plain RawReadSub_AotFixtures_IncludeGroup_Plain(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                    {
-                        var obj = value.Value;
-                        obj.Extra = state.ReadInt32();
+                    case (1 << 3) | 0:  // Extra, field 1, varint
+                        value.Value.Extra = unchecked((int)state.ReadRawVarint32());
                         break;
-                    }
+                    case (1 << 3) | 5:  // Extra, field 1, fixed32
+                        value.Value.Extra = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Extra, field 1, fixed64
+                        value.Value.Extra = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
     }
 }

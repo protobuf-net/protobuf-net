@@ -133,6 +133,6 @@ partial class StructsModel
             state.WriteString(2, tmp2);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }
 }

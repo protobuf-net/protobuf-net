@@ -145,6 +145,6 @@ partial class AssemblySurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }
 }

@@ -32,6 +32,8 @@ partial class GenericHierarchyModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Crate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -89,29 +91,35 @@ partial class GenericHierarchyModel
         }
 
         global::AotFixtures.GenericHierarchy.CrateHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
+            => RawReadSub_AotFixtures_GenericHierarchy_CrateHolder(ref state, value);
+
+        public static global::AotFixtures.GenericHierarchy.CrateHolder RawReadSub_AotFixtures_GenericHierarchy_CrateHolder(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    case (1 << 3) | 2:  // Value, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Value, field 1, group
                     {
-                        var obj = value.Value;
-                        var tmp1 = obj.Value;
-                        tmp1 = state.ReadMessage<global::AotFixtures.GenericHierarchy.Crate>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) obj.Value = tmp1;
+                        var scope = state.PushScope(tag);
+                        value.Value.Value = RawRead_AotFixtures_GenericHierarchy_Crate(ref state, value.Value.Value);
+                        state.PopScope(scope);
                         break;
                     }
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -138,24 +146,32 @@ partial class GenericHierarchyModel
         }
 
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>> value)
+            => RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(ref state, value);
+
+        public static global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                        value.ReadSubType<global::AotFixtures.GenericHierarchy.CrateHolder>(ref state, this);
+                    case (1 << 3) | 2:  // sub-type global::AotFixtures.GenericHierarchy.CrateHolder, field 1
+                    case (1 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.GenericHierarchy.CrateHolder>(ref state, s_default);
                         break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -182,24 +198,32 @@ partial class GenericHierarchyModel
         }
 
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>> value)
+            => RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(ref state, value);
+
+        public static global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> RawReadSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                        value.ReadSubType<global::AotFixtures.GenericHierarchy.ShipHolder>(ref state, this);
+                    case (1 << 3) | 2:  // sub-type global::AotFixtures.GenericHierarchy.ShipHolder, field 1
+                    case (1 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.GenericHierarchy.ShipHolder>(ref state, s_default);
                         break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Node>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -234,30 +258,42 @@ partial class GenericHierarchyModel
         }
 
         global::AotFixtures.GenericHierarchy.Node global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node> value)
+            => RawReadSub_AotFixtures_GenericHierarchy_Node(ref state, value);
+
+        public static global::AotFixtures.GenericHierarchy.Node RawReadSub_AotFixtures_GenericHierarchy_Node(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                        value.ReadSubType<global::AotFixtures.GenericHierarchy.PlainNode>(ref state, this);
+                    case (1 << 3) | 2:  // sub-type global::AotFixtures.GenericHierarchy.PlainNode, field 1
+                    case (1 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.GenericHierarchy.PlainNode>(ref state, s_default);
                         break;
-                    case 3:
-                        value.ReadSubType<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>(ref state, this);
+                    case (3 << 3) | 2:  // sub-type global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>, field 3
+                    case (3 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>(ref state, s_default);
                         break;
-                    case 4:
-                        value.ReadSubType<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>(ref state, this);
+                    case (4 << 3) | 2:  // sub-type global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>, field 4
+                    case (4 << 3) | 3:
+                        state.StashTag(tag);
+                        value.ReadSubType<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>(ref state, s_default);
                         break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 3 or 4;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.PlainNode>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -276,27 +312,36 @@ partial class GenericHierarchyModel
         }
 
         global::AotFixtures.GenericHierarchy.PlainNode global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.PlainNode>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
+            => RawReadSub_AotFixtures_GenericHierarchy_PlainNode(ref state, value);
+
+        public static global::AotFixtures.GenericHierarchy.PlainNode RawReadSub_AotFixtures_GenericHierarchy_PlainNode(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
-                    {
-                        var obj = value.Value;
-                        obj.N = state.ReadInt32();
+                    case (1 << 3) | 0:  // N, field 1, varint
+                        value.Value.N = unchecked((int)state.ReadRawVarint32());
                         break;
-                    }
+                    case (1 << 3) | 5:  // N, field 1, fixed32
+                        value.Value.N = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // N, field 1, fixed64
+                        value.Value.N = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Ship>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -358,28 +403,34 @@ partial class GenericHierarchyModel
         }
 
         global::AotFixtures.GenericHierarchy.ShipHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)
+            => RawReadSub_AotFixtures_GenericHierarchy_ShipHolder(ref state, value);
+
+        public static global::AotFixtures.GenericHierarchy.ShipHolder RawReadSub_AotFixtures_GenericHierarchy_ShipHolder(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)
         {
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag)
                 {
-                    case 1:
+                    case (1 << 3) | 2:  // Value, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Value, field 1, group
                     {
-                        var obj = value.Value;
-                        var tmp1 = obj.Value;
-                        tmp1 = state.ReadMessage<global::AotFixtures.GenericHierarchy.Ship>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) obj.Value = tmp1;
+                        var scope = state.PushScope(tag);
+                        value.Value.Value = RawRead_AotFixtures_GenericHierarchy_Ship(ref state, value.Value.Value);
+                        state.PopScope(scope);
                         break;
                     }
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return value.Value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value.Value;
-        }
 
-        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
     }
 }
