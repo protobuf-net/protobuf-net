@@ -1524,11 +1524,12 @@ namespace Google.Protobuf.Reflection
 
         private class OptionHive
         {
-            public OptionHive(string name, bool isExtension, Token token)
+            public OptionHive(string name, bool isExtension, Token token, int? repeatIndex = null)
             {
                 Name = name;
                 IsExtension = isExtension;
                 Token = token;
+                RepeatIndex = repeatIndex;
             }
             public override string ToString()
             {
@@ -1555,6 +1556,7 @@ namespace Google.Protobuf.Reflection
             }
             public bool IsExtension { get; }
             public string Name { get; }
+            public int? RepeatIndex { get; }
             public Token Token { get; }
             public List<UninterpretedOption> Options { get; } = new List<UninterpretedOption>();
             public List<OptionHive> Children { get; } = new List<OptionHive>();
@@ -1571,10 +1573,11 @@ namespace Google.Protobuf.Reflection
                     OptionHive nextLevel = null;
                     foreach (var name in option.Names)
                     {
-                        nextLevel = level.Children.Find(x => x.Name == name.name_part && x.IsExtension == name.IsExtension);
+                        nextLevel = level.Children.Find(x => x.Name == name.name_part
+                            && x.IsExtension == name.IsExtension && x.RepeatIndex == name.RepeatIndex);
                         if (nextLevel == null)
                         {
-                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token);
+                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token, name.RepeatIndex);
                             level.Children.Add(nextLevel);
                         }
                         level = nextLevel;
@@ -2562,6 +2565,14 @@ namespace Google.Protobuf.Reflection
             /// <inheritdoc/>
             public override string ToString() => IsExtension ? ("(" + name_part + ")") : name_part;
             internal Token Token { get; set; }
+
+            /// <summary>
+            /// Position of this element within an explicit list value (`foo: [a, b]`), or
+            /// null when the name did not come from a list. Elements of a list are separate
+            /// values of a repeated field, so they must not be merged together the way
+            /// same-named parts otherwise are.
+            /// </summary>
+            internal int? RepeatIndex { get; set; }
         }
         internal bool Applied { get; set; }
         internal Token Token { get; set; }
@@ -3118,6 +3129,52 @@ namespace ProtoBuf.Reflection
                     obj.UninterpretedOptions.Add(newOption);
                 }
             }
+            else if (tokens.ConsumeIf(TokenType.Symbol, "["))
+            {
+                // a list value, i.e. the repeated form `foo: [a, b]`, or `foo: [{..}, {..}]`
+                // for a repeated message field. Each element is tagged with its position so
+                // that the option hive keeps the elements apart rather than merging them by name.
+                obj ??= new T();
+                int repeatIndex = 0;
+                while (!tokens.ConsumeIf(TokenType.Symbol, "]"))
+                {
+                    var elementParts = WithRepeatIndex(nameParts, repeatIndex++);
+                    if (tokens.ConsumeIf(TokenType.Symbol, "{"))
+                    {
+                        bool anyElement = false;
+                        while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
+                        {
+                            ReadOption(ref obj, parent, elementParts);
+                            anyElement = true;
+
+                            // comma between elements is optional; semicolons work too
+                            if (!tokens.ConsumeIf(TokenType.Symbol, ","))
+                            {
+                                tokens.ConsumeIf(TokenType.Symbol, ";");
+                            }
+                        }
+                        if (!anyElement)
+                        {
+                            var emptyOption = new UninterpretedOption();
+                            emptyOption.Names.AddRange(elementParts);
+                            obj.UninterpretedOptions.Add(emptyOption);
+                        }
+                    }
+                    else
+                    {
+                        var scalarOption = new UninterpretedOption
+                        {
+                            AggregateValue = tokens.ConsumeString(true),
+                            Token = tokens.Previous
+                        };
+                        scalarOption.Names.AddRange(elementParts);
+                        obj.UninterpretedOptions.Add(scalarOption);
+                    }
+
+                    // comma between elements is optional
+                    tokens.ConsumeIf(TokenType.Symbol, ",");
+                }
+            }
             else
             {
                 var field = parent as FieldDescriptorProto;
@@ -3157,6 +3214,29 @@ namespace ProtoBuf.Reflection
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Clones the given name parts, marking the final part with its position within a
+        /// list value. Only the final part is marked: it names the repeated field whose
+        /// elements need to stay separate.
+        /// </summary>
+        private static List<UninterpretedOption.NamePart> WithRepeatIndex(
+            List<UninterpretedOption.NamePart> nameParts, int repeatIndex)
+        {
+            var clone = new List<UninterpretedOption.NamePart>(nameParts);
+            if (clone.Count != 0)
+            {
+                var last = clone[clone.Count - 1];
+                clone[clone.Count - 1] = new UninterpretedOption.NamePart
+                {
+                    IsExtension = last.IsExtension,
+                    name_part = last.name_part,
+                    Token = last.Token,
+                    RepeatIndex = repeatIndex,
+                };
+            }
+            return clone;
         }
 
         private void ParseDefault(Token token, FieldDescriptorProto.Type type, ref string defaultValue)
