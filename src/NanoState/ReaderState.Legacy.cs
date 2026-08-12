@@ -12,11 +12,15 @@ public ref partial struct ReaderState
     /// Legacy header read: the raw tag, decomposed into the field number (returned) and the wire
     /// type (state) - the shift/mask the raw path never does. Also pays the group-sentinel check
     /// on every field, which the raw path keeps in the switch default: the stateful API cannot
-    /// know its caller's constants, so end-of-group must look like end-of-message here.
+    /// know its caller's constants, so end-of-group must look like end-of-message here. Drains
+    /// the pending slot first - a TryReadFieldHeader miss that could not restore hands its
+    /// already-decoded tag here.
     /// </summary>
     public int ReadFieldHeader()
     {
-        var tag = ReadRawTag();
+        var tag = _pendingTag;
+        if (tag != 0) _pendingTag = 0;
+        else tag = ReadRawTag();
         if (tag == 0 || IsScopeEnd(tag))
         {
             _fieldNumber = 0;
@@ -53,22 +57,51 @@ public ref partial struct ReaderState
     /// Legacy look-ahead: consume the next header only if it is <paramref name="field"/> (any wire
     /// type except end-group) - the repeated-field run loop of legacy generated code. The raw path
     /// has no equivalent member by design (the tag-local loop condition does this job with no
-    /// re-decode); here a miss restores the offset and the next ReadFieldHeader re-decodes, which
-    /// is the veneer paying for its own statefulness, exactly like legacy's peek-without-moving.
-    /// Single-segment v1: the offset save/restore cannot straddle a refill; revisit with
-    /// GetNextBuffer.
+    /// re-decode). The reader is forward-only, so the implementation is a hybrid split on whether
+    /// the decode is provably local: with 5+ bytes in the segment (a tag's maximum width) no
+    /// refill can occur and restore-on-miss is legal; nearer the tail the decode may cross a
+    /// refill that nothing can rewind - a Stream cannot be un-read, and a sequence walk may have
+    /// discarded the segment a saved offset pointed into (single-byte segments are the
+    /// pathological case) - so the tag is read FORWARD and a miss parks it in the pending slot
+    /// for the next header read. Either way the veneer pays for its own statefulness; the raw
+    /// path is untouched.
     /// </summary>
     public bool TryReadFieldHeader(int field)
     {
-        var offset = _offset;
-        var tag = ReadRawTag();
+        uint tag = _pendingTag;
+        if (tag != 0) // a prior miss already decoded the next tag
+        {
+            if ((int)(tag >> 3) == field && (tag & 7) != 4)
+            {
+                _pendingTag = 0;
+                _fieldNumber = field;
+                _wireType = (WireType)(tag & 7);
+                return true;
+            }
+            return false; // stays pending
+        }
+        if (_count - _offset >= 5) // decode provably local: restore-on-miss is legal
+        {
+            var offset = _offset;
+            tag = ReadRawTag();
+            if (tag != 0 && (int)(tag >> 3) == field && (tag & 7) != 4)
+            {
+                _fieldNumber = field;
+                _wireType = (WireType)(tag & 7);
+                return true;
+            }
+            _offset = offset; // miss (including a group sentinel): unread, for the next header
+            return false;
+        }
+        // segment tail: forward-only decode; a miss is handed to the next header read
+        tag = ReadRawTag();
         if (tag != 0 && (int)(tag >> 3) == field && (tag & 7) != 4)
         {
             _fieldNumber = field;
             _wireType = (WireType)(tag & 7);
             return true;
         }
-        _offset = offset; // miss (including a group sentinel): leave it for the next header read
+        _pendingTag = tag; // 0 at a length-scope end = slot stays empty, correctly
         return false;
     }
 

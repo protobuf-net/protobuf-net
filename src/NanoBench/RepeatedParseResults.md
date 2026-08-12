@@ -34,8 +34,15 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), x86-64-v4
    interleaved data, and roughly ties (26.4 vs 24.9) on run-shaped.
 4. **Allocations identical** across all three parsers (the strings + Child instances; net472's
    +2 B is measurement rounding). The veneer row runs consumer code *identical* to LegacyReal,
-   including the do-while on the new `TryReadFieldHeader` veneer (save-offset/read/restore —
-   the miss re-decode is a veneer-only cost, matching legacy's peek-without-moving).
+   including the do-while on the new `TryReadFieldHeader` veneer.
+5. **The veneer is a forward-only hybrid, and its correctness cost is measured.** Restore-on-miss
+   is only legal when the decode provably stays in the current segment (5+ local bytes); nearer
+   the tail the tag is decoded forward and a miss parks in the `_pendingTag` slot for the next
+   header read - because nothing can rewind a Stream or a walked-past sequence segment (see
+   docs/nano-core.md, "the reader is forward-only"). Re-measured after the change: the veneer
+   pays +0.2-0.5 ns/element (net10) / +2-2.6 ns (net472) for the pending-drain branch and the
+   locality guard, and the raw rows are unchanged to the second decimal - the control that the
+   raw path is untouched.
 
 ## Milestone relevance
 

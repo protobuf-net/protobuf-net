@@ -167,8 +167,22 @@ caller states the encoding, and the tag flows through parameters.**
   which already handles both. The same argument disposes of the fields-in-order speculation API —
   with the tag in a local, speculation is a compare against the next field's constant plus a
   `goto case`, no `Try` member needed. Decided: no `TryReadRawTag`; the legacy
-  `TryReadFieldHeader(field)` becomes a save-offset/read/restore-on-miss veneer (the miss
-  re-decodes — a veneer-only cost, matching legacy's peek-without-moving).
+  `TryReadFieldHeader(field)` is a veneer (see the forward-only rule below for its shape).
+- **The reader is forward-only: rewind is illegal, everywhere, permanently.** Nothing can
+  un-consume source bytes — a `Stream` cannot be rewound by definition, and a sequence walk may
+  have discarded (or returned the lease on) the very segment a saved offset pointed into, with a
+  `ReadOnlySequence<byte>` of single-byte segments as the pathological case. So "save position,
+  decode, restore on miss" is legal **only when the decode provably cannot leave the current
+  segment**, and every speculative read must switch on that up front: with 5+ local bytes (a
+  tag's maximum width) no refill can occur and restore is fine; nearer the segment tail the
+  decode must run *forward* — crossing refills exactly as ordinary reads do — and a miss hands
+  the already-decoded result onward instead of pushing bytes back. The raw path obeys this
+  natively (the missed tag rides a caller local into dispatch); the `TryReadFieldHeader` veneer
+  mirrors it one level down with a single `_pendingTag` slot beside `_fieldNumber`/`_wireType`,
+  drained by the next header read — veneer-owned state for a veneer-only need, never touched by
+  the raw path. This rule also constrains the refill design itself: `GetNextBuffer` owes its
+  callers nothing about bytes before the current offset, which is what keeps a Stream refill a
+  simple shift-and-top-up.
 - **One exception, forced by an immovable signature: termination scope is a state slot.** The
   end-group tag cannot be a parameter, because `ISerializer<T>.Read(ref State, T value)` cannot
   change — and since the slot must exist for that path, it is the *only* mechanism (direct calls

@@ -109,6 +109,17 @@ public ref partial struct ReaderState
     private WireType _wireType; // init to WireType.None (-1) in every constructor
 
     /// <summary>
+    /// A tag decoded by a TryReadFieldHeader miss that could not be un-consumed (0 = none; a real
+    /// tag is never 0). The reader is FORWARD-ONLY - nothing can rewind a Stream, and a sequence
+    /// walk may have discarded (or un-leased) the segment a saved offset pointed into - so a
+    /// speculative decode that was not provably local hands its result to the next header read
+    /// instead of pushing bytes back. Veneer state, exactly like the two fields above: written
+    /// and drained only by the header veneers, never touched by the raw path (whose callers hold
+    /// the tag in a local and hand a miss forward via dispatch - the same rule, one level down).
+    /// </summary>
+    private uint _pendingTag;
+
+    /// <summary>
     /// Sub-item nesting depth, capped exactly as legacy TypeModel.MaxDepth is (default 512) -
     /// nano's direct child calls recurse per wire nesting level, so without the cap a malicious
     /// deeply-nested payload is a stack overflow. Reference-tracking recursion detection is
