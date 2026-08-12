@@ -64,6 +64,84 @@ snapshot bridge for the class API, and the backend deletions.
 
 1. does it compile; 2. `AotDifferential` corpus on bytes; 3. the entire compat suite.
 
+## ReadString(StringMap): retained, and newly viable (Marc, during the port)
+
+The map parameter never went anywhere under the runtime model; codegen changes that. The intent
+- "read strings, pre-armed with a corpus of expected common values" - becomes real because the
+call site is compile-time (a PER-MEMBER map is expressible: `ReadRawString(s_statusNames)`),
+the generator can sometimes author the corpus from schema knowledge (enum-name spellings,
+[DefaultValue] strings, reserved names), and the nano resident path can probe the raw UTF-8
+bytes in place against pre-encoded entries before materializing - hit = zero allocation, miss =
+one bytes-hash on top of the GetString it was doing anyway. Port the parameter as-is
+(accepted-and-ignored today); the pre-armed design is a future brick, composing with the
+interning lever parked in StringParseResults.md.
+
+## The complete member map (ReadMethods.cs fully read)
+
+Substitution glossary for the verbatim ports: `_reader.WireType` get -> `_wireType`; set ->
+same field (internal); `_reader._fieldNumber` -> `_fieldNumber`; `_reader._longPosition`/
+`GetPosition()` -> nano `Position`; `_reader._model`/`Model` -> `_model` field;
+`_reader._depth`/`IncrDepth/DecrDepth` -> nano `_depth` vs model MaxDepth (configured, not the
+spike's constant 512); `_reader.blockEnd64` -> nano `_scope` (length mode);
+`_reader.ImplReadUInt32Fixed/UInt64Fixed(ref this)` -> `ReadRawFixed32/64()`;
+`ImplReadBytes(ref this, span)` -> new primitive `ReadRawBytesInto(Span<byte>)` (FillFrom with
+span dest); `ImplSkipBytes` -> `Advance`; `ImplReadString(len)` -> nano string tail (resident
+fast/straddle slow); `ImplTryReadUInt32VarintWithoutMoving(FieldHeader)` -> the forward-only
+veneer patterns already built (pending-tag slot); `ReadUInt32Varint(mode)`/`ReadUInt64Varint`
+-> `ReadRawVarint32/64` (Signed mode = 64-tolerant truncation: nano's tolerant read IS this).
+
+Wire-switch primitives (ReadUInt32/Int32/Int64/UInt64/Double/Single + narrowing
+UInt16/Int16/Byte/SByte checked casts, IntPtr/UIntPtr): bodies as-is with glossary; float via
+safe reinterpret (nano style) not unsafe pointers. Zag statics: keep.
+
+State-machine semantics that MUST be reproduced (divergences found between veneer and legacy):
+- several ops set `WireType = None` after consuming: bytes reads, ReadBytes(span),
+  StartSubItem(group arm), EndSubItem(group arm), SkipGroup exit. Reproduce exactly - Assert/
+  Hint/HasSubValue flows depend on it.
+- legacy SubItemToken: String arm = PRIOR blockEnd (matches nano prior-scope); Group arm =
+  -fieldNumber IDENTITY (not prior scope!) with EndSubItem validating WireType==EndGroup &&
+  matching field, then WireType=None. Port EndSubItem faithfully; nano scope slot carries the
+  group sentinel already - the token becomes identity for groups, prior _scope for strings, and
+  PopScope-style restore happens from the token (strings) or is a no-op unbounding (groups,
+  which never bounded position).
+- ReadFieldHeader end conditions: blockEnd both arms via nano EndOfScope; the EndGroup arm:
+  encountering the group sentinel sets _wireType=EndGroup + _fieldNumber=group field WITHOUT
+  releasing (returns 0); EndSubItem releases via None. CURRENT VENEER HOLE to fix in the port:
+  a NON-matching end-group tag must throw (legacy SetTag errors), not decompose as a field.
+- SkipField(None/EndGroup) throws; SkipGroup = loop-headers implementation preserving the
+  above state machine (exit checks EndGroup + same field, sets None).
+- TryReadFieldHeader: forward-only pending-tag design stands (it subsumes legacy's
+  peek-without-moving), respecting the same end-conditions gate.
+- AssertPlausibleLength/CanAllocate/ReadBytesOversized/ReadStringOversized: legacy's
+  EagerAllocationLimit policy; nano guards subsume but keep the entry points delegating to the
+  nano remaining-calculation (GetMaxRemaining = min(source remaining, scope remaining), -1
+  unknowable).
+- AppendBytesImpl: len; WireType=None; converter.Expand(Context, ref value, len) then fill the
+  chunk span (CanAllocate ? direct : oversized-buffered). Uses Context. APPEND semantics live
+  in the converter - the veneer keeps them by construction.
+- AppendExtensionData(instance) legacy signatures: replace the ProtoWriter-based re-encode
+  with the nano capture (byte-preserving, allocation-free) using the tag reconstructed from
+  _fieldNumber/_wireType, then WireType=None. The byte-identity oracle already proved bag
+  compatibility; nano preserves overlong varints where legacy canonicalized - strictly more
+  faithful.
+- Error helpers: AddErrorData decorates with "protoSource" = tag/wire-type/offset/depth; keep
+  the static's shape (ProtoReader source param may become nullable/ignored).
+- ThrowTooDeep quotes TypeModel.MaxDepth and current depth.
+- InternStrings: State property has a SETTER; becomes a State field + lazy interner map.
+- ReadType -> TypeModel.DeserializeType(_model, ReadString()).
+- ReadBaseType: `SubTypeState<TBaseType>.Create<T>(_reader, value)` captures the READER
+  INSTANCE - re-point at the serialization-context holder (check SubTypeState.Create's actual
+  use of it during the write).
+- Composites confirmed verbatim: ReadMessage family (StartSubItem/serializer.Read/EndSubItem),
+  ReadAny (category switch + HintIfNeeded), ReadWrapped (field-one loop + NonTrivialDefault),
+  DeserializeRoot/ReadAsRoot/DeserializeRootImpl, FillBuffer engine, GetSerializer.
+
+Still unread before writing: ProtoReader.cs class internals (SetTag, Hint impl, Intern,
+IncrDepth/MaxDepth wiring, MaxRemaining, DeserializeType, Model set, Create/recycle),
+Stream/ROS State.Create entries, TypeModel call sites of State.Create + SolidState/Solidify
+callers, SubTypeState.Create, DeserializeRootFallback(WithModel) + TryDeserializeAuxiliaryType
+touchpoints (aux path likely ports verbatim - it consumes State surface).
+
 ## Discovered so far
 
 - `GetReader()` has exactly two call sites in Core (BclHelpers.cs + State.cs itself).
