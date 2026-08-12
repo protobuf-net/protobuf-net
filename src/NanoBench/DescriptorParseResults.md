@@ -75,3 +75,19 @@ Readings:
 Both halves of the gate are now done: the full-job runs above, and the human top-to-bottom read
 of `DescriptorNano.cs` — whose feedback also produced the forward-only rule for the reader (see
 docs/nano-core.md) and the deferred-construction design note for the inheritance brick.
+
+## The generator closes the loop (post-review)
+
+The nano pass now emits everything `DescriptorNano.cs` hand-writes — sub-messages as framing
+pairs over `PushScope` with direct static calls, tag-local run loops, the packed `List<int>`
+helper with tolerance siblings, enums, nullable scalars, double/bytes, per-label comments, and
+an eligibility FIXPOINT (a skipped target cascades to its referrers, and every skip says why in
+the emitted output itself). The proof is structural: BuildTools runs as a real analyzer inside
+NanoBench over the attributed DTOs, and the **generator-emitted reader is census-gated against
+the hand-written one on the real payload** — which turns `DescriptorNano.cs` from "the
+implementation" into what it was written to be: the reviewed specification the generator is held
+to at document scale, with the goldens holding it at snippet scale.
+
+Measured (ShortRun): NanoGenerated 8.65 µs vs NanoRaw 8.51 (net10, within error), 15.59 vs
+15.30 (net472), allocations byte-identical. The machine writes what the hand wrote, at the same
+speed.
