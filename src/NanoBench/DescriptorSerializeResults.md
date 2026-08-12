@@ -1,5 +1,19 @@
 # Descriptor serialize composite (docs/nano-writer.md)
 
+## net472 leg (2026-08-12, cut 5 in place)
+
+The down-level forms - plain foreach (no CollectionsMarshal.AsSpan), loop-counted varint
+measures (no lzcnt) - with every setup gate passing:
+
+| row | mean | vs LegacyReal |
+| --- | ---: | ---: |
+| LegacyReal | 36.40 us | baseline |
+| GeneratedProtogen | 26.69 us | -27% |
+| NanoGenerated | 24.58 us | **-32%, and 13% ahead of Google** |
+| NanoGeneratedMeasure | 7.94 us | - |
+| GoogleProtobuf | 28.26 us | -22% |
+
+
 ## The memoization race: lengthCache wins (net10.0, 2026-08-12, cut 5)
 
 Same rig, same machine, `??=` lengthCache in place (per-writer Dictionary keyed by
