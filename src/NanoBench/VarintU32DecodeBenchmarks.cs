@@ -1,3 +1,4 @@
+#if NET7_0_OR_GREATER // BitOperations/Bmi2; the strategy study is a modern-TFM concern
 using BenchmarkDotNet.Attributes;
 using System;
 using System.Numerics;
@@ -384,3 +385,5 @@ public class VarintU32DecodeBenchmarks
         return sum;
     }
 }
+
+#endif

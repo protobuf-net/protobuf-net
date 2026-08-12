@@ -82,7 +82,7 @@ public ref partial struct ReaderState
     public uint ReadRawFixed32()
     {
         if (_count - _offset < 4) ThrowEndOfData();
-        var value = Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref _segment, _offset));
+        var value = Unsafe.ReadUnaligned<uint>(ref At(_offset));
         _offset += 4;
         return value; // little-endian assumed; see docs/nano-core.md
     }
@@ -91,7 +91,7 @@ public ref partial struct ReaderState
     public ulong ReadRawFixed64()
     {
         if (_count - _offset < 8) ThrowEndOfData();
-        var value = Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref _segment, _offset));
+        var value = Unsafe.ReadUnaligned<ulong>(ref At(_offset));
         _offset += 8;
         return value;
     }

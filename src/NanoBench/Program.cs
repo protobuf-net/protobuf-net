@@ -1,3 +1,3 @@
 using BenchmarkDotNet.Running;
 
-BenchmarkSwitcher.FromAssembly(typeof(ProtoBuf.Nano.Bench.VarintU32DecodeBenchmarks).Assembly).Run(args);
+BenchmarkSwitcher.FromAssembly(typeof(ProtoBuf.Nano.Bench.FieldParseBenchmarks).Assembly).Run(args);

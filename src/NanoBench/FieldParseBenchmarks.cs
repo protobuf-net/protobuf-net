@@ -40,7 +40,7 @@ public class FieldParseBenchmarks
         {
             uint v = Distribution == "small"
                 ? (uint)rng.Next(0, 128)
-                : (uint)rng.NextInt64(0, uint.MaxValue);
+                : (uint)(rng.NextDouble() * uint.MaxValue);
             unchecked { _expectedSum += v; }
             _expectedLast = unchecked((int)v);
             payload.WriteByte(0x08); // field 1, varint

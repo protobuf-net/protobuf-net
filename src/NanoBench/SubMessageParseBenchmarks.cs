@@ -51,7 +51,7 @@ public class SubMessageParseBenchmarks
         {
             uint v = Distribution == "small"
                 ? (uint)rng.Next(0, 128)
-                : (uint)rng.NextInt64(0, uint.MaxValue);
+                : (uint)(rng.NextDouble() * uint.MaxValue);
             unchecked { _expectedSum += v; }
             _expectedLast = unchecked((int)v);
 

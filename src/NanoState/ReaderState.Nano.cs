@@ -19,11 +19,32 @@ public ref partial struct ReaderState
     // That normalization is what lets the per-TFM Current accessor be uniform - ref byte via a
     // C# 11 ref field here; arr[index] behind the same inlined accessor down-level.
 
+#if NET7_0_OR_GREATER
     /// <summary>Start of the current segment; may point mid-array (a sequence segment).</summary>
     private ref byte _segment;
+#else
+    /// <summary>Start of the current segment as an index into <see cref="_buffer"/> - no ref
+    /// fields down-level, so the root is arr[index] behind the same inlined accessor.</summary>
+    private int _segmentStart;
+#endif
 
-    /// <summary>The backing for <see cref="_segment"/> - the user's array or a leased one.</summary>
+    /// <summary>The backing for the segment - the user's array or a leased one.</summary>
     private byte[] _buffer;
+
+    /// <summary>
+    /// The per-TFM accessor: the ONE place the layouts differ. net7+ applies the offset to a ref
+    /// field (no bounds checks); down-level indexes the array (bounds-checked, slower - the
+    /// down-level path pays, and modern TFMs are the optimization target).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ref byte At(int offset)
+    {
+#if NET7_0_OR_GREATER
+        return ref Unsafe.Add(ref _segment, offset);
+#else
+        return ref _buffer[_segmentStart + offset];
+#endif
+    }
 
     /// <summary>Position within the current segment.</summary>
     private int _offset;
@@ -102,8 +123,11 @@ public ref partial struct ReaderState
     public ReaderState(byte[] buffer, int offset, int count)
     {
         _buffer = buffer;
-        _segment = ref MemoryMarshal.GetArrayDataReference(buffer);
-        _segment = ref Unsafe.Add(ref _segment, offset);
+#if NET7_0_OR_GREATER
+        _segment = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(buffer), offset);
+#else
+        _segmentStart = offset;
+#endif
         _offset = 0;
         _count = count;
         _effectiveEnd = count;
@@ -121,15 +145,22 @@ public ref partial struct ReaderState
         if (MemoryMarshal.TryGetArray(value, out var array))
         {
             _buffer = array.Array!;
-            _segment = ref MemoryMarshal.GetArrayDataReference(_buffer);
-            _segment = ref Unsafe.Add(ref _segment, array.Offset);
+#if NET7_0_OR_GREATER
+            _segment = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_buffer), array.Offset);
+#else
+            _segmentStart = array.Offset;
+#endif
             _leased = false;
         }
         else
         {
             _buffer = ArrayPool<byte>.Shared.Rent(value.Length);
             value.Span.CopyTo(_buffer);
+#if NET7_0_OR_GREATER
             _segment = ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
+            _segmentStart = 0;
+#endif
             _leased = true;
         }
         _offset = 0;
@@ -162,7 +193,11 @@ public ref partial struct ReaderState
     {
         var buffer = _buffer;
         _buffer = null!;
+#if NET7_0_OR_GREATER
         _segment = ref Unsafe.NullRef<byte>();
+#else
+        _segmentStart = 0;
+#endif
         if (_leased)
         {
             _leased = false;
@@ -282,7 +317,7 @@ public ref partial struct ReaderState
         var offset = _offset;
         if (offset >= _effectiveEnd) return 0;
         // the dominant case - fields 1-15 - is a single byte
-        uint b0 = Unsafe.Add(ref _segment, offset);
+        uint b0 = At(offset);
         if ((b0 & 0x80) == 0)
         {
             _offset = offset + 1;
@@ -301,7 +336,7 @@ public ref partial struct ReaderState
         for (int i = 1; i < 5; i++)
         {
             if (offset + i >= _count) ThrowEndOfData();
-            uint b = Unsafe.Add(ref _segment, offset + i);
+            uint b = At(offset + i);
             value |= (b & 0x7F) << shift;
             if ((b & 0x80) == 0)
             {
@@ -376,7 +411,7 @@ public ref partial struct ReaderState
         var offset = _offset;
         if (_count - offset >= 10)
         {
-            ref byte src = ref Unsafe.Add(ref _segment, offset);
+            ref byte src = ref At(offset);
             uint b0 = src;
             if ((b0 & 0x80) == 0) { _offset = offset + 1; return b0; }
             uint value = b0 & 0x7F;
@@ -406,7 +441,7 @@ public ref partial struct ReaderState
     {
         for (int i = 0; i < 5; i++)
         {
-            if ((Unsafe.Add(ref _segment, offset + i) & 0x80) == 0)
+            if ((At(offset + i) & 0x80) == 0)
             {
                 _offset = offset + i + 1;
                 return value;
@@ -423,7 +458,7 @@ public ref partial struct ReaderState
         var offset = _offset;
         if (_count - offset >= 10)
         {
-            ref byte src = ref Unsafe.Add(ref _segment, offset);
+            ref byte src = ref At(offset);
             uint b0 = src;
             if ((b0 & 0x80) == 0) { _offset = offset + 1; return b0; }
             ulong value = b0 & 0x7Fu;
@@ -448,7 +483,7 @@ public ref partial struct ReaderState
         for (int i = 0; i < 10; i++)
         {
             if (_offset >= _count) ThrowEndOfData();
-            ulong b = Unsafe.Add(ref _segment, _offset++);
+            ulong b = At(_offset++);
             value |= (b & 0x7F) << shift;
             if ((b & 0x80) == 0) return value;
             shift += 7;
