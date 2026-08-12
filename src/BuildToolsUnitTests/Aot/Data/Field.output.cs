@@ -61,6 +61,39 @@ partial class FieldModel
             state.WriteString(2, tmp2);
         }
 
+        public static global::AotFixtures.Field.DataFields NanoRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
+        {
+            value ??= new global::AotFixtures.Field.DataFields();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // First, field 1, varint
+                        value.First = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // First, field 1, fixed32
+                        value.First = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // First, field 1, fixed64
+                        value.First = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Second, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Second = tmp2;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -89,6 +122,8 @@ partial class FieldModel
             var tmp1 = value.Number;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -175,6 +210,8 @@ partial class FieldModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
+        // nano pass: skipped - member Zig: non-default DataFormat
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -204,6 +241,33 @@ partial class FieldModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.Field.Nested NanoRead_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)
+        {
+            value ??= new global::AotFixtures.Field.Nested();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

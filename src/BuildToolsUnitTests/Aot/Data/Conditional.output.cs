@@ -87,5 +87,7 @@ partial class ConditionalModel
                 state.WriteString(4, tmp4);
             }
         }
+
+        // nano pass: skipped - member Value: conditional serialization
     }
 }

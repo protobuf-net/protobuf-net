@@ -55,6 +55,8 @@ partial class NonPublicCtorModel
             state.WriteMessage<global::AotFixtures.NonPublicCtor.PrivateCtor>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
+        // nano pass: skipped - member Child: target global::AotFixtures.NonPublicCtor.PrivateCtor is not nano-eligible (cascade)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -85,6 +87,8 @@ partial class NonPublicCtorModel
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -125,6 +129,8 @@ partial class NonPublicCtorModel
             state.WriteString(2, tmp2);
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -155,6 +161,8 @@ partial class NonPublicCtorModel
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Constructor)]
         private static extern global::AotFixtures.NonPublicCtor.InternalCtor Create_AotFixtures_NonPublicCtor_InternalCtor();

@@ -174,13 +174,13 @@ namespace ProtoBuf.BuildTools.Generators
                     // both the opt-out and the way to keep `new` working
                     emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
                     isSealed: model.IsSealed,
-                    // the nano pass is symbol-gated on the experimental reader being visible AND
-                    // ACCESSIBLE: on the nano-swap branch the type lives internal in Core, so a
-                    // bare existence probe would emit calls that fail accessibility in every
-                    // consumer's build - only IVT'd rigs (and in-compilation stubs, which are the
-                    // test harnesses) pass this gate. The real merge makes it public and this
-                    // reduces to the existence check.
-                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.Nano.ReaderState") is { } nanoType
+                    // the nano pass is symbol-gated on the raw surface being present: post-swap
+                    // the reader IS ProtoReader.State (nested metadata name), and the gate probes
+                    // for a RAW member rather than the type - State always exists, but only a
+                    // Core with the nano surface can satisfy emitted calls. Accessibility-checked
+                    // so a future internal surface fails closed rather than emitting broken code.
+                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } nanoType
+                        && nanoType.GetMembers("ReadRawTag").Length != 0
                         && compilation.IsSymbolAccessibleWithin(nanoType, compilation.Assembly));
             }
 

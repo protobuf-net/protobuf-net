@@ -188,5 +188,7 @@ partial class EnumsModel
                 state.WriteUInt16(val14);
             }
         }
+
+        // nano pass: skipped - member SByteEnum: kind SByte
     }
 }

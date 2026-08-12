@@ -54,6 +54,8 @@ partial class AssemblySurrogateModel
             state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
+        // nano pass: skipped - member Version: target global::System.Version is not nano-eligible (cascade)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -84,6 +86,30 @@ partial class AssemblySurrogateModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             state.WriteString(1, tmp1);
+        }
+
+        public static global::AotFixtures.AssemblySurrogate.VersionSurrogate NanoRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+        {
+            value ??= new global::AotFixtures.AssemblySurrogate.VersionSurrogate();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Value, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Value = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Features
@@ -120,5 +146,7 @@ partial class AssemblySurrogateModel
             var tmp1 = surrogate.Value;
             state.WriteString(1, tmp1);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

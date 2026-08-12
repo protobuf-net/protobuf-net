@@ -135,6 +135,8 @@ partial class CompatModel
             }
         }
 
+        // nano pass: skipped - member FixedWhen: non-default DataFormat
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.InheritsLevel>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -175,6 +177,8 @@ partial class CompatModel
             }
             return value.Value;
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Legacy>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -265,6 +269,8 @@ partial class CompatModel
             }
         }
 
+        // nano pass: skipped - member When: kind DateTime
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -299,6 +305,8 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp1);
             }
         }
+
+        // nano pass: skipped - member Id: non-default DataFormat
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -364,6 +372,8 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp4);
             }
         }
+
+        // nano pass: skipped - member When: kind DateTime
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -441,6 +451,8 @@ partial class CompatModel
             }
         }
 
+        // nano pass: skipped - member When: kind DateTime
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LevelledBase>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -492,6 +504,8 @@ partial class CompatModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -542,6 +556,8 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp3);
             }
         }
+
+        // nano pass: skipped - member Inherited: kind DateTime
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -596,5 +612,7 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp3);
             }
         }
+
+        // nano pass: skipped - member When: non-default DataFormat
     }
 }

@@ -76,6 +76,8 @@ partial class ExtensibleModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -106,6 +108,33 @@ partial class ExtensibleModel
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             state.AppendExtensionData(value);
+        }
+
+        public static global::AotFixtures.Extensible.ByHand NanoRead_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
+        {
+            value ??= new global::AotFixtures.Extensible.ByHand();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.AppendExtensionData(tag, value);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.DerivedExt>.Features
@@ -146,6 +175,8 @@ partial class ExtensibleModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -178,6 +209,33 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
+        public static global::AotFixtures.Extensible.FromBase NanoRead_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
+        {
+            value ??= new global::AotFixtures.Extensible.FromBase();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.AppendExtensionData(tag, value);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -208,6 +266,33 @@ partial class ExtensibleModel
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
+        }
+
+        public static global::AotFixtures.Extensible.TypedOnly NanoRead_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)
+        {
+            value ??= new global::AotFixtures.Extensible.TypedOnly();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.AppendExtensionData(tag, value, typeof(global::AotFixtures.Extensible.TypedOnly));
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

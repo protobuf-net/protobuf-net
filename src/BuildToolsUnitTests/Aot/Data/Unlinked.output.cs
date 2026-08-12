@@ -57,6 +57,33 @@ partial class UnlinkedModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
+        public static global::AotFixtures.Unlinked.Derived NanoRead_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
+        {
+            value ??= new global::AotFixtures.Unlinked.Derived();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (2 << 3) | 0:  // FromDerived, field 2, varint
+                        value.FromDerived = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // FromDerived, field 2, fixed32
+                        value.FromDerived = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // FromDerived, field 2, fixed64
+                        value.FromDerived = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.ForkedBase>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -107,6 +134,8 @@ partial class UnlinkedModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -139,6 +168,30 @@ partial class UnlinkedModel
             state.WriteString(1, tmp1);
         }
 
+        public static global::AotFixtures.Unlinked.FromPlain NanoRead_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
+        {
+            value ??= new global::AotFixtures.Unlinked.FromPlain();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Name, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Name = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -168,6 +221,33 @@ partial class UnlinkedModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Mine;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.Unlinked.Reuses NanoRead_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
+        {
+            value ??= new global::AotFixtures.Unlinked.Reuses();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Mine, field 1, varint
+                        value.Mine = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Mine, field 1, fixed32
+                        value.Mine = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Mine, field 1, fixed64
+                        value.Mine = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Sibling>.Features
@@ -207,6 +287,8 @@ partial class UnlinkedModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -236,6 +318,33 @@ partial class UnlinkedModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.NotLinked;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+        }
+
+        public static global::AotFixtures.Unlinked.Unlinked NanoRead_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)
+        {
+            value ??= new global::AotFixtures.Unlinked.Unlinked();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (3 << 3) | 0:  // NotLinked, field 3, varint
+                        value.NotLinked = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 5:  // NotLinked, field 3, fixed32
+                        value.NotLinked = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 1:  // NotLinked, field 3, fixed64
+                        value.NotLinked = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

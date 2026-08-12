@@ -70,6 +70,8 @@ partial class InterfaceMembersModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -145,6 +147,8 @@ partial class InterfaceMembersModel
             }
         }
 
+        // nano pass: skipped - member ByIndex: map
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.IBox<int>>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -186,6 +190,8 @@ partial class InterfaceMembersModel
             }
             return value.Value;
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.IMiddle>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -229,6 +235,8 @@ partial class InterfaceMembersModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.INameable>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -270,6 +278,8 @@ partial class InterfaceMembersModel
             }
             return value.Value;
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.IRoot>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -313,6 +323,8 @@ partial class InterfaceMembersModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Leaf>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -349,6 +361,8 @@ partial class InterfaceMembersModel
             }
             return value.Value;
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Named>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -387,5 +401,7 @@ partial class InterfaceMembersModel
             }
             return value.Value;
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

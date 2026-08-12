@@ -327,5 +327,7 @@ partial class ExoticModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().WriteRepeated(ref state, 25, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp25);
             }
         }
+
+        // nano pass: skipped - member Interface: collection shape CreateEnumerable
     }
 }

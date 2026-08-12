@@ -51,6 +51,8 @@ partial class InheritUnsupportedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -80,6 +82,33 @@ partial class InheritUnsupportedModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Extra;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static global::AotFixtures.InheritUnsupported.Unlinked NanoRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
+        {
+            value ??= new global::AotFixtures.InheritUnsupported.Unlinked();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (2 << 3) | 0:  // Extra, field 2, varint
+                        value.Extra = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Extra, field 2, fixed32
+                        value.Extra = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Extra, field 2, fixed64
+                        value.Extra = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

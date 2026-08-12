@@ -135,5 +135,7 @@ partial class NativeScalarsModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<nint>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
             }
         }
+
+        // nano pass: skipped - member Handle: kind IntPtr
     }
 }

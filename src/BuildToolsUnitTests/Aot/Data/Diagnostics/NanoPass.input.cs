@@ -1,39 +1,9 @@
 // Not a diagnostics fixture: it lives here because this folder is golden-only (excluded from
-// AotRefGen and AotConformanceTests), and this fixture's stub ReaderState must not leak into the
-// linked fixture assemblies - the nano pass is symbol-gated, and this stub is the symbol. The
-// golden output is the point: it shows the second emission pass, side by side with the first.
+// AotRefGen and AotConformanceTests). Post-swap the nano pass gates on the REAL
+// ProtoReader.State raw surface (present in the compiled-in Core sources), so no stub is
+// needed; the golden output shows the second emission pass, side by side with the first.
 using ProtoBuf;
 using System.Collections.Generic;
-
-namespace ProtoBuf.Nano
-{
-    // the experimental raw reader, stubbed: the generator gates the nano pass on this type being
-    // visible, and matches it by full metadata name
-    public ref struct ReaderState
-    {
-        public uint ReadRawTag() => throw new System.NotImplementedException();
-        public void SkipTag(uint tag) => throw new System.NotImplementedException();
-        public uint ReadRawVarint32() => throw new System.NotImplementedException();
-        public ulong ReadRawVarint64() => throw new System.NotImplementedException();
-        public uint ReadRawFixed32() => throw new System.NotImplementedException();
-        public ulong ReadRawFixed64() => throw new System.NotImplementedException();
-        public string ReadRawString() => throw new System.NotImplementedException();
-        public double ReadRawDouble() => throw new System.NotImplementedException();
-        public byte[] ReadRawBytes() => throw new System.NotImplementedException();
-        public ReadScope PushScope(uint tag) => throw new System.NotImplementedException();
-        public ReadScope PushLengthPrefix() => throw new System.NotImplementedException();
-        public void PopScope(in ReadScope prior) => throw new System.NotImplementedException();
-        public bool IsScopeEnd(uint tag) => throw new System.NotImplementedException();
-        public bool AtScopeEnd => throw new System.NotImplementedException();
-        public void ReadPackedVarint32(List<int> values) => throw new System.NotImplementedException();
-        public void AppendExtensionData(uint tag, global::ProtoBuf.IExtensible instance) => throw new System.NotImplementedException();
-        public void AppendExtensionData(uint tag, global::ProtoBuf.ITypedExtensible instance, System.Type type) => throw new System.NotImplementedException();
-    }
-
-    public readonly struct ReadScope
-    {
-    }
-}
 
 namespace AotFixtures.NanoPass
 {

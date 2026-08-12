@@ -90,6 +90,8 @@ partial class GroupedElementsModel
             state.WriteGroup<global::AotFixtures.GroupedElements.Item>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
         }
 
+        // nano pass: skipped - member Items: non-default DataFormat
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -162,6 +164,8 @@ partial class GroupedElementsModel
             }
         }
 
+        // nano pass: skipped - member ByIndex: map
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -199,6 +203,39 @@ partial class GroupedElementsModel
             state.WriteString(1, tmp1);
             var tmp2 = value.Count;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+        }
+
+        public static global::AotFixtures.GroupedElements.Item NanoRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
+        {
+            value ??= new global::AotFixtures.GroupedElements.Item();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Name, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Name = tmp1;
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Count, field 2, varint
+                        value.Count = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Count, field 2, fixed32
+                        value.Count = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Count, field 2, fixed64
+                        value.Count = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

@@ -63,6 +63,8 @@ partial class TupleLevelsModel
             global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -106,5 +108,7 @@ partial class TupleLevelsModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(global::System.Guid, decimal)>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
             }
         }
+
+        // nano pass: skipped - member One: target (global::System.Guid, decimal) is not nano-eligible (cascade)
     }
 }

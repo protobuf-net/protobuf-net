@@ -109,5 +109,7 @@ partial class BytesModel
             state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
             state.WriteBytes(tmp6);
         }
+
+        // nano pass: skipped - member Single: kind Byte
     }
 }

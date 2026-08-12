@@ -61,6 +61,8 @@ partial class MapUnsupportedModel
             }
         }
 
+        // nano pass: skipped - member Value: map
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -96,6 +98,8 @@ partial class MapUnsupportedModel
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
+
+        // nano pass: skipped - member Value: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -133,6 +137,8 @@ partial class MapUnsupportedModel
             }
         }
 
+        // nano pass: skipped - member Value: map
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -168,6 +174,8 @@ partial class MapUnsupportedModel
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Collections.Generic.List<int>>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
+
+        // nano pass: skipped - member Value: map
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.MapUnsupported.Shade>();

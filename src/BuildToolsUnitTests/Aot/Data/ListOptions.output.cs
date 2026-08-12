@@ -104,6 +104,57 @@ partial class ListOptionsModel
             }
         }
 
+        public static global::AotFixtures.ListOptions.NotACollection NanoRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
+        {
+            value ??= new global::AotFixtures.ListOptions.NotACollection();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // PackedScalar, field 1, varint
+                        value.PackedScalar = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // PackedScalar, field 1, fixed32
+                        value.PackedScalar = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // PackedScalar, field 1, fixed64
+                        value.PackedScalar = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 0:  // OverwriteScalar, field 2, varint
+                        value.OverwriteScalar = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // OverwriteScalar, field 2, fixed32
+                        value.OverwriteScalar = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // OverwriteScalar, field 2, fixed64
+                        value.OverwriteScalar = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 2:  // BothOnString, field 3, length-prefixed
+                    {
+                        var tmp3 = state.ReadRawString();
+                        if (tmp3 != null) value.BothOnString = tmp3;
+                        break;
+                    }
+                    case (4 << 3) | 2:  // AppendedBytes, field 4, length-prefixed
+                        value.AppendedBytes = state.ReadRawBytes();
+                        break;
+                    case (5 << 3) | 2:  // OverwrittenBytes, field 5, length-prefixed
+                        value.OverwrittenBytes = state.ReadRawBytes();
+                        break;
+                    case (6 << 3) | 2:  // PackedBytes, field 6, length-prefixed
+                        value.PackedBytes = state.ReadRawBytes();
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -199,5 +250,7 @@ partial class ListOptionsModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp6);
             }
         }
+
+        // nano pass: skipped - member Default: collection shape CreateVector
     }
 }

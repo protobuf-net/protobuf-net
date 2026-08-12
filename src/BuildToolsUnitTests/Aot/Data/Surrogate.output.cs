@@ -59,6 +59,8 @@ partial class SurrogateModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -88,6 +90,33 @@ partial class SurrogateModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.Surrogate.CodeSurrogate NanoRead_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
+        {
+            value ??= new global::AotFixtures.Surrogate.CodeSurrogate();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Holder>.Features
@@ -163,6 +192,8 @@ partial class SurrogateModel
             }
         }
 
+        // nano pass: skipped - member Tags: map
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Money>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -201,6 +232,8 @@ partial class SurrogateModel
             }
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -234,6 +267,33 @@ partial class SurrogateModel
                 state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
                 state.WriteInt64(tmp1);
             }
+        }
+
+        public static global::AotFixtures.Surrogate.MoneySurrogate NanoRead_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
+        {
+            value ??= new global::AotFixtures.Surrogate.MoneySurrogate();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Units, field 1, varint
+                        value.Units = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (1 << 3) | 1:  // Units, field 1, fixed64
+                        value.Units = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (1 << 3) | 5:  // Units, field 1, fixed32
+                        value.Units = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Tag>.Features
@@ -271,6 +331,8 @@ partial class SurrogateModel
             state.WriteString(1, tmp1);
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -301,6 +363,30 @@ partial class SurrogateModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Text;
             state.WriteString(1, tmp1);
+        }
+
+        public static global::AotFixtures.Surrogate.TagSurrogate NanoRead_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)
+        {
+            value ??= new global::AotFixtures.Surrogate.TagSurrogate();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Text, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Text = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Amounts>k__BackingField")]

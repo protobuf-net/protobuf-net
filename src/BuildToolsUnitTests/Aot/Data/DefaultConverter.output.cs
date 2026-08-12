@@ -100,5 +100,7 @@ partial class DefaultConverterModel
             var tmp7 = value.Plain;
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
         }
+
+        // nano pass: skipped - member Number: [DefaultValue]
     }
 }

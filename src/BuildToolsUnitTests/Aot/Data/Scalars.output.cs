@@ -159,5 +159,7 @@ partial class ScalarsModel
                 state.WriteDouble(tmp11);
             }
         }
+
+        // nano pass: skipped - member SByte: kind SByte
     }
 }

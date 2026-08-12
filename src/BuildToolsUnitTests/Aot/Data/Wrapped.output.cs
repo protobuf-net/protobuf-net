@@ -53,6 +53,33 @@ partial class WrappedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        public static global::AotFixtures.Wrapped.Nested NanoRead_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
+        {
+            value ??= new global::AotFixtures.Wrapped.Nested();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -265,6 +292,8 @@ partial class WrappedModel
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().WriteMap(ref state, 17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
             }
         }
+
+        // nano pass: skipped - member Value: null-wrapped
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Wrapped.Shade>();

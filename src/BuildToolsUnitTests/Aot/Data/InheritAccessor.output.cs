@@ -103,6 +103,8 @@ partial class InheritAccessorModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Derived>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -141,6 +143,8 @@ partial class InheritAccessorModel
             return value.Value;
         }
 
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -169,6 +173,8 @@ partial class InheritAccessorModel
             var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "_count")]
         private static extern ref int Field_AotFixtures_InheritAccessor_Base__count(global::AotFixtures.InheritAccessor.Base target);

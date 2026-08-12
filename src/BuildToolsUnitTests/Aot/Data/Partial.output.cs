@@ -60,6 +60,42 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
+        public static global::AotFixtures.Partial.Contested NanoRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
+        {
+            value ??= new global::AotFixtures.Partial.Contested();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Pinned, field 1, varint
+                        value.Pinned = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Pinned, field 1, fixed32
+                        value.Pinned = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Pinned, field 1, fixed64
+                        value.Pinned = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 0:  // FromPartial, field 2, varint
+                        value.FromPartial = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // FromPartial, field 2, fixed32
+                        value.FromPartial = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // FromPartial, field 2, fixed64
+                        value.FromPartial = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Described>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -141,6 +177,8 @@ partial class PartialModel
             }
         }
 
+        // nano pass: skipped - member Fixed: non-default DataFormat
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -170,6 +208,33 @@ partial class PartialModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Kept;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.Partial.Excluded NanoRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
+        {
+            value ??= new global::AotFixtures.Partial.Excluded();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Kept, field 1, varint
+                        value.Kept = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Kept, field 1, fixed32
+                        value.Kept = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Kept, field 1, fixed64
+                        value.Kept = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Features
@@ -208,6 +273,42 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
             var tmp7 = value.Both;
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+        }
+
+        public static global::AotFixtures.Partial.Mixed NanoRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
+        {
+            value ??= new global::AotFixtures.Partial.Mixed();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (2 << 3) | 0:  // OrderOnly, field 2, varint
+                        value.OrderOnly = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // OrderOnly, field 2, fixed32
+                        value.OrderOnly = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // OrderOnly, field 2, fixed64
+                        value.OrderOnly = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // Both, field 7, varint
+                        value.Both = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (7 << 3) | 5:  // Both, field 7, fixed32
+                        value.Both = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 1:  // Both, field 7, fixed64
+                        value.Both = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

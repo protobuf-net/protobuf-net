@@ -77,6 +77,8 @@ partial class NonPublicSetterModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
+        // nano pass: skipped - member Value: accessor-reached setter
+
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Value>k__BackingField")]
         private static extern ref int Field_AotFixtures_NonPublicSetter_Guarded_Value(global::AotFixtures.NonPublicSetter.Guarded target);
 

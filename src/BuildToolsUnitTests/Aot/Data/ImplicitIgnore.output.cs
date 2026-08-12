@@ -65,6 +65,51 @@ partial class ImplicitIgnoreModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
+        public static global::AotFixtures.ImplicitIgnore.Excluded NanoRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
+        {
+            value ??= new global::AotFixtures.ImplicitIgnore.Excluded();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Pinned, field 1, varint
+                        value.Pinned = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Pinned, field 1, fixed32
+                        value.Pinned = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Pinned, field 1, fixed64
+                        value.Pinned = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (4 << 3) | 0:  // ImplicitField, field 4, varint
+                        value.ImplicitField = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (4 << 3) | 5:  // ImplicitField, field 4, fixed32
+                        value.ImplicitField = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (4 << 3) | 1:  // ImplicitField, field 4, fixed64
+                        value.ImplicitField = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (5 << 3) | 0:  // ImplicitProperty, field 5, varint
+                        value.ImplicitProperty = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (5 << 3) | 5:  // ImplicitProperty, field 5, fixed32
+                        value.ImplicitProperty = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (5 << 3) | 1:  // ImplicitProperty, field 5, fixed64
+                        value.ImplicitProperty = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -108,6 +153,51 @@ partial class ImplicitIgnoreModel
             if (tmp10 != 0) state.WriteInt32Varint(10, tmp10);
             var tmp11 = value.Gamma;
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+        }
+
+        public static global::AotFixtures.ImplicitIgnore.PartiallyPinned NanoRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
+        {
+            value ??= new global::AotFixtures.ImplicitIgnore.PartiallyPinned();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (2 << 3) | 0:  // Beta, field 2, varint
+                        value.Beta = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Beta, field 2, fixed32
+                        value.Beta = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Beta, field 2, fixed64
+                        value.Beta = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (10 << 3) | 0:  // Alpha, field 10, varint
+                        value.Alpha = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (10 << 3) | 5:  // Alpha, field 10, fixed32
+                        value.Alpha = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (10 << 3) | 1:  // Alpha, field 10, fixed64
+                        value.Alpha = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (11 << 3) | 0:  // Gamma, field 11, varint
+                        value.Gamma = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (11 << 3) | 5:  // Gamma, field 11, fixed32
+                        value.Gamma = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (11 << 3) | 1:  // Gamma, field 11, fixed64
+                        value.Gamma = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
         }
     }
 }

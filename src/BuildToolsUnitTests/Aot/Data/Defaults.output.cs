@@ -102,6 +102,8 @@ partial class DefaultsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
+        // nano pass: skipped - member Number: [DefaultValue]
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -180,5 +182,7 @@ partial class DefaultsModel
                 state.WriteUInt16((ushort)tmp5);
             }
         }
+
+        // nano pass: skipped - member ByName: [DefaultValue]
     }
 }

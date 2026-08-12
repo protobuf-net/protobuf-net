@@ -60,7 +60,30 @@ window helpers, header machinery) - everything above them is self-hosted on Stat
 surface and ports verbatim with `_reader.WireType = x` pokes becoming `_wireType = x`. Plus the
 snapshot bridge for the class API, and the backend deletions.
 
-## Cut status (live)
+## FINAL STATUS: ALL GATES GREEN (2026-08-12)
+
+Gate 1 (compiles): the whole solution. Gate 2 (bytes): 3,021 corpus contracts, 100% match,
+zero asymmetric throws. Gate 3 (compat): protobuf-net.Test 1046/1046 on both TFMs (one
+non-reproducing net472 flake, cleared twice), AotConformanceTests 655/655, BuildToolsUnitTests
+green with the nano pass now live across ALL fixtures (the real State is always present, so
+every golden gained its nano emission - the emit-gate flip to opt-in remains a merge item),
+Reflection.Test 556/556 both TFMs, Examples green both TFMs. NanoBench battery over the
+swapped core: census, generated-vs-hand equivalence, extension byte-identity oracle,
+7,669-split sweep, stream and scalar gates - all green.
+
+The one systematic failure of the entire port was the one member fabricated from memory
+instead of read text (DeserializeRootFallback); everything ported from READ text survived
+untouched. Exception fidelity restored post-sweep: EoF = EndOfStreamException, varint
+exhaustion = OverflowException, protoSource decoration on every raw throw.
+
+Post-green backlog (the merge-phase ceremony, in no particular order): PublicAPI.Unshipped
+entries for the raw surface + ReadScope; [Experimental] ceremony; the emit-gate flip to
+explicit opt-in; the classic-emit escape-hatch flag (task, wording recorded in nano-core.md);
+field-0 tags throw IOE where legacy said ProtoException (no test distinguishes); NanoState
+spike project retirement; benchmark re-verification on the swapped tree (numbers should be
+the spike numbers - same code, new home); delete this file when the swap merges.
+
+## Cut status (historical)
 
 DONE: NanoCore retargeted (cut 1); snapshot machinery real (cut 2); shell + full ReadMethods
 rewrite over the nano core (cut 3, commit 0a870e7c) - including SetTag's end-group spoof, the

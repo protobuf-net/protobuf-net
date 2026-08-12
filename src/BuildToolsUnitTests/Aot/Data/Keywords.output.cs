@@ -52,6 +52,33 @@ partial class KeywordsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        public static global::AotFixtures.Keywords.Inner NanoRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
+        {
+            value ??= new global::AotFixtures.Keywords.Inner();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // int, field 1, varint
+                        value.@int = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // int, field 1, fixed32
+                        value.@int = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // int, field 1, fixed64
+                        value.@int = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -128,6 +155,8 @@ partial class KeywordsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
+        // nano pass: skipped - member lock: target global::AotFixtures.Keywords.Pair is not nano-eligible (cascade)
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -172,5 +201,7 @@ partial class KeywordsModel
             var tmp2 = value.@else;
             state.WriteString(2, tmp2);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

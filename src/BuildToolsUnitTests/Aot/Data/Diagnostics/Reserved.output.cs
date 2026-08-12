@@ -57,5 +57,38 @@ partial class ReservedModel
             var tmp2 = value.B;
             state.WriteString(2, tmp2);
         }
+
+        public static global::AotFixtures.Reserved.ReservedButClear NanoRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
+        {
+            value ??= new global::AotFixtures.Reserved.ReservedButClear();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // A, field 1, varint
+                        value.A = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // A, field 1, fixed32
+                        value.A = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // A, field 1, fixed64
+                        value.A = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // B, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.B = tmp2;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
     }
 }

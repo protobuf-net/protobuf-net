@@ -55,6 +55,8 @@ partial class DroppedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        // nano pass: skipped - serialization callbacks
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -98,6 +100,37 @@ partial class DroppedModel
             }
         }
 
+        public static global::AotFixtures.Dropped.HasUnsupportedMember NanoRead_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
+        {
+            value ??= new global::AotFixtures.Dropped.HasUnsupportedMember();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Tags, field 2, length-prefixed run
+                        do { value.Tags.Add(state.ReadRawString()); }
+                        while ((tag = state.ReadRawTag()) == ((2 << 3) | 2));
+                        continue;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -131,6 +164,32 @@ partial class DroppedModel
             state.WriteMessage<global::AotFixtures.Dropped.HasUnsupportedMember>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
+        public static global::AotFixtures.Dropped.ReferencesDropped NanoRead_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
+        {
+            value ??= new global::AotFixtures.Dropped.ReferencesDropped();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Child, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Child, field 1, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Child = NanoRead_AotFixtures_Dropped_HasUnsupportedMember(ref state, value.Child);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -162,6 +221,8 @@ partial class DroppedModel
             if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
         }
 
+        // nano pass: skipped - member Value: [DefaultValue]
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -192,5 +253,7 @@ partial class DroppedModel
             var tmp1 = value.Value;
             state.WriteInt32Varint(1, tmp1);
         }
+
+        // nano pass: skipped - member Value: IsRequired
     }
 }

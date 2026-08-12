@@ -52,6 +52,30 @@ partial class DerivedModel
             state.WriteString(1, tmp1);
         }
 
+        public static global::AotFixtures.Derived.Ambiguous NanoRead_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
+        {
+            value ??= new global::AotFixtures.Derived.Ambiguous();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Label, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Label = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -120,5 +144,7 @@ partial class DerivedModel
             var tmp4 = value.Ambiguous;
             state.WriteMessage<global::AotFixtures.Derived.Ambiguous>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
         }
+
+        // nano pass: skipped - member Set: collection shape CreateEnumerable
     }
 }

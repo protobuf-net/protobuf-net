@@ -70,6 +70,8 @@ partial class StructsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
+        // nano pass: skipped - member MaybeLocation: unusable message shape
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -106,5 +108,7 @@ partial class StructsModel
             var tmp2 = value.Label;
             state.WriteString(2, tmp2);
         }
+
+        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

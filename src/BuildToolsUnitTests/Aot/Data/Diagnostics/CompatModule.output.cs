@@ -74,6 +74,8 @@ partial class CompatModuleModel
             }
         }
 
+        // nano pass: skipped - member When: kind DateTime
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -116,5 +118,7 @@ partial class CompatModuleModel
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp2);
             }
         }
+
+        // nano pass: skipped - member When: kind DateTime
     }
 }

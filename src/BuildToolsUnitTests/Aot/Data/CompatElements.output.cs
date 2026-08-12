@@ -130,6 +130,8 @@ partial class CompatElementsModel
             }
         }
 
+        // nano pass: skipped - member ViaMember: map
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -214,6 +216,8 @@ partial class CompatElementsModel
             }
         }
 
+        // nano pass: skipped - member Guids: kind Guid
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Map>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -261,6 +265,8 @@ partial class CompatElementsModel
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::System.Guid, int>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.Default));
             }
         }
+
+        // nano pass: skipped - member ByIndex: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.WellKnownLists>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -321,5 +327,7 @@ partial class CompatElementsModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.DateTime>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
             }
         }
+
+        // nano pass: skipped - member Dates: non-default DataFormat
     }
 }

@@ -57,6 +57,8 @@ partial class MemberTypeAdviceModel
             }
         }
 
+        // nano pass: skipped - member ByShade: map
+
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.MemberTypeAdvice.Shade>();
 
