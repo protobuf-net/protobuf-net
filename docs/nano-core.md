@@ -528,3 +528,20 @@ specifically: "if people don''t trust one, they shouldn''t trust the other". Tod
 vacuously true (writes are classic regardless); the requirement it places on the writer arc
 is that the raw write emission keys off the SAME plan gate the read pass does - one flag,
 both directions, no partial-trust configuration.
+
+## The writer arc is simpler than the read arc was (Marc, 2026-08-14)
+
+"We''re in control - we don''t need to deal with alternative formats so much." The read side''s
+subtlety was all tolerance of OTHER writers: wire-type tolerance labels, per-wire decode
+variants, framing off the header, overlong varints, the forward-only pending slot,
+known-field/invalid-wire detection. On write, each inverts into a single choice: one canonical
+wire form per member, framing we pick, minimal varints, no speculation. The write body is a
+straight-line sequence of guarded emits - no dispatch loop at all.
+
+The write side''s OWN hard part: length prefixes need sizes before content - the measure-pass
+design, which is also where v4 said the treasure is (measure as pure arithmetic was the
+10-12x outlier; write-into-presized-region is the 3-4x serialize). Design surface: the
+measure/write pairing shape, output buffer strategy, and how measured sizes flow to nested
+prefixes (memoize vs recompute vs patch-back). Per-member legacy-mode fallback transfers
+directly and is MORE natural on writes (classic write bodies are already per-member
+statements); ClassicEmit already gates both directions by prior agreement.

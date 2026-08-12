@@ -27,24 +27,36 @@ namespace ProtoBuf.Internal
 
         public KeyValuePair<TKey, TValue> Read(ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
         {
+            // the raw tag loop, with StashTag feeding each side's wire-type-aware ReadAny - the
+            // mixed shape the generated legacy-mode arms use, so tolerance and error behaviour
+            // are the stateful path's exactly. The reads DRAIN THE PENDING SLOT: a repeated
+            // value (a dictionary value may itself be a collection) consumes its run through
+            // TryReadFieldHeader, which parks the terminating header there. The wire-4 guards
+            // matter for group-framed entries whose member field is 1 or 2: the end-group tag
+            // must reach IsScopeEnd (and its legacy-frame fallback), not ReadAny.
             TKey key = pair.Key;
             TValue value = pair.Value;
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
             {
-                switch (field)
+                switch (tag >> 3)
                 {
-                    case 1:
+                    case 1 when (tag & 7) != 4:
+                        state.StashTag(tag);
                         key = state.ReadAny(_keyFeatures, key, _keySerializer);
                         break;
-                    case 2:
+                    case 2 when (tag & 7) != 4:
+                        state.StashTag(tag);
                         value = state.ReadAny(_valueFeatures, value, _valueSerializer);
                         break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) goto done;
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTagOrPending();
             }
+            done:
             if (TypeHelper<TKey>.IsReferenceType && TypeHelper<TKey>.ValueChecker.IsNull(key))
                 key = CreateDefault<TKey>(state.Context, _keySerializer, _keyFeatures);
             if (TypeHelper<TValue>.IsReferenceType && TypeHelper<TValue>.ValueChecker.IsNull(value))
