@@ -672,15 +672,29 @@ public ref partial struct State
         return At(_offset++);
     }
 
+    /// <summary>
+    /// A field-0 tag is invalid protobuf, and LEGACY's SetTag reported it as a ProtoException
+    /// ("Invalid field in source data: 0") - retained deliberately: ProtoException is the
+    /// contract callers catch on corrupt input, so the raw path must not downgrade it to a
+    /// plain InvalidOperationException, and a bare zero byte must not read as a false
+    /// end-of-message.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ThrowInvalidFieldZero()
+        => throw AddErrorData(new ProtoException("Invalid field in source data: 0"), ref this);
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private uint ReadRawTagTail(uint value, int offset)
     {
         // values 0-7 land here too (field 0, any wire type): invalid, exactly as legacy's SetTag
-        // throws "Invalid field in source data"
-        if ((value & 0x80) == 0) ThrowMalformed();
+        // throws "Invalid field in source data" - same exception TYPE deliberately, see the helper
+        if ((value & 0x80) == 0) ThrowInvalidFieldZero();
         // continuation beyond byte 0: rarer, consumed byte-wise so a tag straddling a refill
-        // needs no special-casing (ByteUnrolled shape - see VarintU32DecodeResults.md). Any
-        // multi-byte tag has field >= 16, so no further field-0 check is needed.
+        // needs no special-casing (ByteUnrolled shape - see VarintU32DecodeResults.md). A
+        // MINIMALLY-encoded multi-byte tag has field >= 16, but an OVERLONG encoding can still
+        // deliver a field-0 tag (0x80 0x00 decodes to 0 - a false end-of-message; 0x82 0x00 to
+        // field 0, wire 2), so the decoded value is checked once at the exit of this cold path;
+        // the single-byte fast path needs nothing, its range test already excludes 0-7.
         _offset = offset + 1; // commit the first byte; the rest cross refills as they come
         value &= 0x7F;
         int shift = 7;
@@ -688,7 +702,11 @@ public ref partial struct State
         {
             uint b = ReadRawByte();
             value |= (b & 0x7F) << shift;
-            if ((b & 0x80) == 0) return value;
+            if ((b & 0x80) == 0)
+            {
+                if (value < 8) ThrowInvalidFieldZero();
+                return value;
+            }
             shift += 7;
         }
         ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
