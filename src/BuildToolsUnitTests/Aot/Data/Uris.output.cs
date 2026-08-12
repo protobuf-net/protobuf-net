@@ -128,7 +128,7 @@ partial class UrisModel
                         if (tmp5 != null) value.More = tmp5;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ById: map
+                    // raw read pass: legacy-mode - member ById: map value kind Uri
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // ById, field 6

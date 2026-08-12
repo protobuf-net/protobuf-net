@@ -178,7 +178,7 @@ partial class RawPassModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Lookup: map
+                    // raw read pass: legacy-mode - member Lookup: map without a plain setter
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // Lookup, field 1

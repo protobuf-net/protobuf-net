@@ -63,7 +63,7 @@ partial class MapNestedModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Lists: map
+                    // raw read pass: legacy-mode - member Lists: map with repeated value
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // Lists, field 1
@@ -76,7 +76,7 @@ partial class MapNestedModel
                         if (tmp1 != null) value.Lists = tmp1;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Arrays: map
+                    // raw read pass: legacy-mode - member Arrays: map with repeated value
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // Arrays, field 2
@@ -89,7 +89,7 @@ partial class MapNestedModel
                         if (tmp2 != null) value.Arrays = tmp2;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Maps: map
+                    // raw read pass: legacy-mode - member Maps: map with repeated value
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // Maps, field 3
@@ -102,7 +102,7 @@ partial class MapNestedModel
                         if (tmp3 != null) value.Maps = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member FloatKeyed: map
+                    // raw read pass: legacy-mode - member FloatKeyed: map with repeated value
                     case (4 << 3) | 0:
                     case (4 << 3) | 1:
                     case (4 << 3) | 2:  // FloatKeyed, field 4

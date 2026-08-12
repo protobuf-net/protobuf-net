@@ -324,6 +324,77 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 3, "}");
                     continue;
                 }
+                if (member.Map.Factory is not null && !fallback.ContainsKey(member.Name))
+                {
+                    // a NATIVE map: a run of length-prefixed {1: key, 2: value} entries, each
+                    // read in its own scope with per-side wire forms; insert semantics follow
+                    // MapSerializer exactly - a valid protobuf map overwrites (SetValues is the
+                    // indexer), an invalid shape or DisableMap adds (AddRange throws on a
+                    // duplicate). Entry seeds match TypeHelper<T>.Default: "" for a string side,
+                    // default otherwise - an entry may omit either field.
+                    var map = member.Map;
+                    var keySeed = map.KeyKind == ProtoMemberKind.String ? "\"\"" : "default";
+                    var valueSeed = map.ValueKind == ProtoMemberKind.String ? "\"\"" : "default";
+                    var kForms = RawScalarForms(map.KeyKind, map.KeyEnumTypeName);
+                    var insert = map.IsValidProtobufMap && !member.DisableMap
+                        ? $"{instance}.{name}[k{n}] = v{n};"
+                        : $"{instance}.{name}.Add(k{n}, v{n});";
+                    Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, map entry run");
+                    Line(sb, indent + 3, "{");
+                    Line(sb, indent + 4, $"{instance}.{name} ??= new {member.DeclaredTypeName}();");
+                    Line(sb, indent + 4, "var last = tag;");
+                    Line(sb, indent + 4, "do");
+                    Line(sb, indent + 4, "{");
+                    Line(sb, indent + 5, "var scope = state.PushScope(last);");
+                    Line(sb, indent + 5, $"{map.KeyTypeName} k{n} = {keySeed};");
+                    Line(sb, indent + 5, $"{map.ValueTypeName} v{n} = {valueSeed};");
+                    Line(sb, indent + 5, $"uint etag{n} = state.ReadRawTag();");
+                    Line(sb, indent + 5, $"while (etag{n} != 0)");
+                    Line(sb, indent + 5, "{");
+                    Line(sb, indent + 6, $"switch (etag{n})");
+                    Line(sb, indent + 6, "{");
+                    foreach (var (wire, read) in kForms)
+                    {
+                        Line(sb, indent + 7, $"case (1 << 3) | {wire}:  // key, {WireName(wire)}");
+                        Line(sb, indent + 8, $"k{n} = {read};");
+                        Line(sb, indent + 8, "break;");
+                    }
+                    if (map.ValueKind == ProtoMemberKind.Message)
+                    {
+                        Line(sb, indent + 7, "case (2 << 3) | 2:  // value, length-prefixed");
+                        Line(sb, indent + 7, "case (2 << 3) | 3:  // value, group");
+                        Line(sb, indent + 7, "{");
+                        Line(sb, indent + 8, $"var vscope = state.PushScope(etag{n});");
+                        Line(sb, indent + 8, $"v{n} = RawRead_{Sanitise(map.ValueTypeName!)}(ref state, v{n});");
+                        Line(sb, indent + 8, "state.PopScope(vscope);");
+                        Line(sb, indent + 8, "break;");
+                        Line(sb, indent + 7, "}");
+                    }
+                    else
+                    {
+                        foreach (var (wire, read) in RawScalarForms(map.ValueKind, map.ValueEnumTypeName))
+                        {
+                            Line(sb, indent + 7, $"case (2 << 3) | {wire}:  // value, {WireName(wire)}");
+                            Line(sb, indent + 8, $"v{n} = {read};");
+                            Line(sb, indent + 8, "break;");
+                        }
+                    }
+                    Line(sb, indent + 7, "default:");
+                    Line(sb, indent + 8, $"if (state.IsScopeEnd(etag{n})) goto entryDone{n};");
+                    Line(sb, indent + 8, $"if ((etag{n} >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag{n});");
+                    Line(sb, indent + 8, $"state.SkipTag(etag{n});");
+                    Line(sb, indent + 8, "break;");
+                    Line(sb, indent + 6, "}");
+                    Line(sb, indent + 6, $"etag{n} = state.ReadRawTag();");
+                    Line(sb, indent + 5, "}");
+                    Line(sb, indent + 5, $"entryDone{n}:");
+                    Line(sb, indent + 5, "state.PopScope(scope);");
+                    Line(sb, indent + 5, insert);
+                    Line(sb, indent + 4, $"}} while ((tag = state.ReadRawTag()) == last);");
+                    Line(sb, indent + 4, "continue;");
+                    Line(sb, indent + 3, "}");
+                    continue;
+                }
                 if (member.Repeated.Factory == "CreateVector")
                 {
                     // an ARRAY member: a run is collected into a scratch list, then append-merged
@@ -710,6 +781,10 @@ namespace ProtoBuf.BuildTools.Generators
                 // double is fixed64-only: the fixed32 float promotion needs Int32BitsToSingle,
                 // which netfx lacks - the one deliberate tolerance exception
                 ProtoMemberKind.Double => [(1, "state.ReadRawDouble()")],
+                // strings only reach the forms table from map sides: the single-member and
+                // repeated arms have dedicated shapes (null guard, run consumption); a map side
+                // is a plain read into the entry local, seeded "" for the absent-field case
+                ProtoMemberKind.String => [(2, "state.ReadRawString()")],
                 // bytes: replace. Only reached for OverwriteList members - a PLAIN bytes member
                 // is special-cased at the emit site to state.AppendBytes (legacy concatenation),
                 // because the generated model must merge identically to RuntimeTypeModel. The
@@ -784,7 +859,35 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static string? RawMemberFallbackReason(ProtoMemberPlan member, HashSet<string> rawSet)
         {
-            if (member.Map.Factory is not null) return "map";
+            if (member.Map.Factory is not null)
+            {
+                if (member.WrappedValue || member.WrappedCollection) return "null-wrapped map";
+                var map = member.Map;
+                // native v1 is the exact Dictionary<K,V> shape; derived/immutable/interface
+                // dictionaries have their own construction and insert semantics
+                if (map.Factory != "CreateDictionary" || map.TakesCollectionType) return $"map shape {map.Factory}";
+                if (member.DataFormat != ProtoDataFormat.Default) return "map with non-default DataFormat";
+                if (member.MapKeyFormat != ProtoDataFormat.Default
+                    || member.MapValueFormat != ProtoDataFormat.Default) return "map with per-side format";
+                if (member.OverwriteList) return "OverwriteList map";
+                if (member.IsReadOnly || member.UsesAccessor) return "map without a plain setter";
+                if (map.ValueSerializerFactory is not null) return "map with repeated value";
+                if (map.KeyKind == ProtoMemberKind.Message) return "map with message key";
+                if (!NativeScalarKind(map.KeyKind) || map.KeyKind is ProtoMemberKind.Double
+                    or ProtoMemberKind.Bytes) return $"map key kind {map.KeyKind}";
+                if (map.ValueKind == ProtoMemberKind.Message)
+                {
+                    if (map.ValueTypeName is null || !rawSet.Contains(map.ValueTypeName))
+                        return "map value type not raw-eligible";
+                }
+                else if (!NativeScalarKind(map.ValueKind) || map.ValueKind == ProtoMemberKind.Bytes)
+                {
+                    // bytes values excluded: the classic entry read APPENDS a duplicated value
+                    // field within one entry, where the raw form would replace
+                    return $"map value kind {map.ValueKind}";
+                }
+                return null;
+            }
             if (member.WrappedValue || member.WrappedCollection) return "null-wrapped";
             if (RawFormatReason(member) is { } badFormat) return badFormat;
             if (member.AccessorReads) return "accessor-reached member";

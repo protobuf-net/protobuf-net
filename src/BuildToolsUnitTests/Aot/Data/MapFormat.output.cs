@@ -106,33 +106,99 @@ partial class MapFormatModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Plain: map
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Plain, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Plain, field 1, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.Plain;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.Plain = tmp1;
-                        break;
+                        value.Plain ??= new global::System.Collections.Generic.Dictionary<int, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k1 = default;
+                            int v1 = default;
+                            uint etag1 = state.ReadRawTag();
+                            while (etag1 != 0)
+                            {
+                                switch (etag1)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k1 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k1 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k1 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v1 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v1 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v1 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag1)) goto entryDone1;
+                                        if ((etag1 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag1);
+                                        state.SkipTag(etag1);
+                                        break;
+                                }
+                                etag1 = state.ReadRawTag();
+                            }
+                            entryDone1:
+                            state.PopScope(scope);
+                            value.Plain[k1] = v1;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
-                    // raw read pass: legacy-mode - member Bare: map
-                    case (2 << 3) | 0:
-                    case (2 << 3) | 1:
-                    case (2 << 3) | 2:  // Bare, field 2
-                    case (2 << 3) | 3:
-                    case (2 << 3) | 5:
+                    case (2 << 3) | 2:  // Bare, field 2, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp2 = value.Bare;
-                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp2 != null) value.Bare = tmp2;
-                        break;
+                        value.Bare ??= new global::System.Collections.Generic.Dictionary<int, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k2 = default;
+                            int v2 = default;
+                            uint etag2 = state.ReadRawTag();
+                            while (etag2 != 0)
+                            {
+                                switch (etag2)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k2 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k2 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k2 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v2 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v2 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v2 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag2)) goto entryDone2;
+                                        if ((etag2 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag2);
+                                        state.SkipTag(etag2);
+                                        break;
+                                }
+                                etag2 = state.ReadRawTag();
+                            }
+                            entryDone2:
+                            state.PopScope(scope);
+                            value.Bare[k2] = v2;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
-                    // raw read pass: legacy-mode - member FixedKey: map
+                    // raw read pass: legacy-mode - member FixedKey: map with per-side format
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // FixedKey, field 3
@@ -145,7 +211,7 @@ partial class MapFormatModel
                         if (tmp3 != null) value.FixedKey = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedValue: map
+                    // raw read pass: legacy-mode - member FixedValue: map with per-side format
                     case (4 << 3) | 0:
                     case (4 << 3) | 1:
                     case (4 << 3) | 2:  // FixedValue, field 4
@@ -158,7 +224,7 @@ partial class MapFormatModel
                         if (tmp4 != null) value.FixedValue = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedBoth: map
+                    // raw read pass: legacy-mode - member FixedBoth: map with per-side format
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // FixedBoth, field 5
@@ -171,7 +237,7 @@ partial class MapFormatModel
                         if (tmp5 != null) value.FixedBoth = tmp5;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ZigZagKey: map
+                    // raw read pass: legacy-mode - member ZigZagKey: map with per-side format
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // ZigZagKey, field 6
@@ -184,7 +250,7 @@ partial class MapFormatModel
                         if (tmp6 != null) value.ZigZagKey = tmp6;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ZigZagValue: map
+                    // raw read pass: legacy-mode - member ZigZagValue: map with per-side format
                     case (7 << 3) | 0:
                     case (7 << 3) | 1:
                     case (7 << 3) | 2:  // ZigZagValue, field 7
@@ -197,7 +263,7 @@ partial class MapFormatModel
                         if (tmp7 != null) value.ZigZagValue = tmp7;
                         break;
                     }
-                    // raw read pass: legacy-mode - member FixedWide: map
+                    // raw read pass: legacy-mode - member FixedWide: map with per-side format
                     case (8 << 3) | 0:
                     case (8 << 3) | 1:
                     case (8 << 3) | 2:  // FixedWide, field 8
@@ -210,7 +276,7 @@ partial class MapFormatModel
                         if (tmp8 != null) value.FixedWide = tmp8;
                         break;
                     }
-                    // raw read pass: legacy-mode - member StringKey: map
+                    // raw read pass: legacy-mode - member StringKey: map with per-side format
                     case (9 << 3) | 0:
                     case (9 << 3) | 1:
                     case (9 << 3) | 2:  // StringKey, field 9
@@ -223,7 +289,7 @@ partial class MapFormatModel
                         if (tmp9 != null) value.StringKey = tmp9;
                         break;
                     }
-                    // raw read pass: legacy-mode - member GroupValue: map
+                    // raw read pass: legacy-mode - member GroupValue: map with per-side format
                     case (10 << 3) | 0:
                     case (10 << 3) | 1:
                     case (10 << 3) | 2:  // GroupValue, field 10
@@ -236,33 +302,98 @@ partial class MapFormatModel
                         if (tmp10 != null) value.GroupValue = tmp10;
                         break;
                     }
-                    // raw read pass: legacy-mode - member NoMap: map
-                    case (11 << 3) | 0:
-                    case (11 << 3) | 1:
-                    case (11 << 3) | 2:  // NoMap, field 11
-                    case (11 << 3) | 3:
-                    case (11 << 3) | 5:
+                    case (11 << 3) | 2:  // NoMap, field 11, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp11 = value.NoMap;
-                        tmp11 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp11 != null) value.NoMap = tmp11;
-                        break;
+                        value.NoMap ??= new global::System.Collections.Generic.Dictionary<int, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k11 = default;
+                            int v11 = default;
+                            uint etag11 = state.ReadRawTag();
+                            while (etag11 != 0)
+                            {
+                                switch (etag11)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k11 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k11 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k11 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v11 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v11 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v11 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag11)) goto entryDone11;
+                                        if ((etag11 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag11);
+                                        state.SkipTag(etag11);
+                                        break;
+                                }
+                                etag11 = state.ReadRawTag();
+                            }
+                            entryDone11:
+                            state.PopScope(scope);
+                            value.NoMap.Add(k11, v11);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
-                    // raw read pass: legacy-mode - member NoMapMessage: map
-                    case (12 << 3) | 0:
-                    case (12 << 3) | 1:
-                    case (12 << 3) | 2:  // NoMapMessage, field 12
-                    case (12 << 3) | 3:
-                    case (12 << 3) | 5:
+                    case (12 << 3) | 2:  // NoMapMessage, field 12, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp12 = value.NoMapMessage;
-                        tmp12 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapFormat.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, s_default);
-                        if (tmp12 != null) value.NoMapMessage = tmp12;
-                        break;
+                        value.NoMapMessage ??= new global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapFormat.Nested>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k12 = default;
+                            global::AotFixtures.MapFormat.Nested v12 = default;
+                            uint etag12 = state.ReadRawTag();
+                            while (etag12 != 0)
+                            {
+                                switch (etag12)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k12 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k12 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k12 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 2:  // value, length-prefixed
+                                    case (2 << 3) | 3:  // value, group
+                                    {
+                                        var vscope = state.PushScope(etag12);
+                                        v12 = RawRead_AotFixtures_MapFormat_Nested(ref state, v12);
+                                        state.PopScope(vscope);
+                                        break;
+                                    }
+                                    default:
+                                        if (state.IsScopeEnd(etag12)) goto entryDone12;
+                                        if ((etag12 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag12);
+                                        state.SkipTag(etag12);
+                                        break;
+                                }
+                                etag12 = state.ReadRawTag();
+                            }
+                            entryDone12:
+                            state.PopScope(scope);
+                            value.NoMapMessage.Add(k12, v12);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
-                    // raw read pass: legacy-mode - member Overwrite: map
+                    // raw read pass: legacy-mode - member Overwrite: map with per-side format
                     case (13 << 3) | 0:
                     case (13 << 3) | 1:
                     case (13 << 3) | 2:  // Overwrite, field 13

@@ -66,20 +66,53 @@ partial class MapKeyModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Bool: map
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Bool, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Bool, field 1, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.Bool;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<bool, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.Bool = tmp1;
-                        break;
+                        value.Bool ??= new global::System.Collections.Generic.Dictionary<bool, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            bool k1 = default;
+                            int v1 = default;
+                            uint etag1 = state.ReadRawTag();
+                            while (etag1 != 0)
+                            {
+                                switch (etag1)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k1 = state.ReadRawVarint32() != 0;
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k1 = state.ReadRawFixed32() != 0;
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k1 = state.ReadRawFixed64() != 0;
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v1 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v1 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v1 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag1)) goto entryDone1;
+                                        if ((etag1 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag1);
+                                        state.SkipTag(etag1);
+                                        break;
+                                }
+                                etag1 = state.ReadRawTag();
+                            }
+                            entryDone1:
+                            state.PopScope(scope);
+                            value.Bool.Add(k1, v1);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
-                    // raw read pass: legacy-mode - member Double: map
+                    // raw read pass: legacy-mode - member Double: map key kind Double
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // Double, field 2
@@ -92,7 +125,7 @@ partial class MapKeyModel
                         if (tmp2 != null) value.Double = tmp2;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Char: map
+                    // raw read pass: legacy-mode - member Char: map key kind Char
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // Char, field 3
@@ -105,7 +138,7 @@ partial class MapKeyModel
                         if (tmp3 != null) value.Char = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Message: map
+                    // raw read pass: legacy-mode - member Message: map with message key
                     case (4 << 3) | 0:
                     case (4 << 3) | 1:
                     case (4 << 3) | 2:  // Message, field 4
@@ -118,7 +151,7 @@ partial class MapKeyModel
                         if (tmp4 != null) value.Message = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member BothMessages: map
+                    // raw read pass: legacy-mode - member BothMessages: map with message key
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // BothMessages, field 5

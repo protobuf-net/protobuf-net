@@ -104,7 +104,7 @@ partial class GetterModel
                         Field_AotFixtures_Getter_Getters_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
                         value.Numbers.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
                         break;
-                    // raw read pass: legacy-mode - member Map: map
+                    // raw read pass: legacy-mode - member Map: map without a plain setter
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // Map, field 2

@@ -191,7 +191,7 @@ partial class SurrogateModel
                         if (tmp4 != null) Field_AotFixtures_Surrogate_Holder_Amounts(value) = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Tags: map
+                    // raw read pass: legacy-mode - member Tags: map without a plain setter
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // Tags, field 5

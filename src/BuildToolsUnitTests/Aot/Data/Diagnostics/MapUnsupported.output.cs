@@ -46,23 +46,56 @@ partial class MapUnsupportedModel
         public static global::AotFixtures.MapUnsupported.EnumKey RawRead_AotFixtures_MapUnsupported_EnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
         {
             value ??= new global::AotFixtures.MapUnsupported.EnumKey();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Value: map
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Value, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Value, field 1, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
+                        value.Value ??= new global::System.Collections.Generic.Dictionary<global::AotFixtures.MapUnsupported.Shade, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            global::AotFixtures.MapUnsupported.Shade k1 = default;
+                            int v1 = default;
+                            uint etag1 = state.ReadRawTag();
+                            while (etag1 != 0)
+                            {
+                                switch (etag1)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k1 = (global::AotFixtures.MapUnsupported.Shade)(unchecked((int)state.ReadRawVarint32()));
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k1 = (global::AotFixtures.MapUnsupported.Shade)(unchecked((int)state.ReadRawFixed32()));
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k1 = (global::AotFixtures.MapUnsupported.Shade)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v1 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v1 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v1 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag1)) goto entryDone1;
+                                        if ((etag1 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag1);
+                                        state.SkipTag(etag1);
+                                        break;
+                                }
+                                etag1 = state.ReadRawTag();
+                            }
+                            entryDone1:
+                            state.PopScope(scope);
+                            value.Value[k1] = v1;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
@@ -70,7 +103,7 @@ partial class MapUnsupportedModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
@@ -96,23 +129,56 @@ partial class MapUnsupportedModel
         public static global::AotFixtures.MapUnsupported.EnumValue RawRead_AotFixtures_MapUnsupported_EnumValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
         {
             value ??= new global::AotFixtures.MapUnsupported.EnumValue();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Value: map
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // Value, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // Value, field 1, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
+                        value.Value ??= new global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapUnsupported.Shade>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k1 = default;
+                            global::AotFixtures.MapUnsupported.Shade v1 = default;
+                            uint etag1 = state.ReadRawTag();
+                            while (etag1 != 0)
+                            {
+                                switch (etag1)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k1 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k1 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k1 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v1 = (global::AotFixtures.MapUnsupported.Shade)(unchecked((int)state.ReadRawVarint32()));
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v1 = (global::AotFixtures.MapUnsupported.Shade)(unchecked((int)state.ReadRawFixed32()));
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v1 = (global::AotFixtures.MapUnsupported.Shade)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag1)) goto entryDone1;
+                                        if ((etag1 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag1);
+                                        state.SkipTag(etag1);
+                                        break;
+                                }
+                                etag1 = state.ReadRawTag();
+                            }
+                            entryDone1:
+                            state.PopScope(scope);
+                            value.Value[k1] = v1;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
@@ -120,7 +186,7 @@ partial class MapUnsupportedModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 
@@ -151,7 +217,7 @@ partial class MapUnsupportedModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Value: map
+                    // raw read pass: legacy-mode - member Value: map with per-side format
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // Value, field 1
@@ -201,7 +267,7 @@ partial class MapUnsupportedModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member Value: map
+                    // raw read pass: legacy-mode - member Value: map with repeated value
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // Value, field 1

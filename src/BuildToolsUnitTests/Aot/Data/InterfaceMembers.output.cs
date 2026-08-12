@@ -157,7 +157,7 @@ partial class InterfaceMembersModel
                         if (tmp3 != null) value.Boxed = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ByIndex: map
+                    // raw read pass: legacy-mode - member ByIndex: map value type not raw-eligible
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // ByIndex, field 6
@@ -170,7 +170,7 @@ partial class InterfaceMembersModel
                         if (tmp6 != null) value.ByIndex = tmp6;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ByName: map
+                    // raw read pass: legacy-mode - member ByName: map with message key
                     case (7 << 3) | 0:
                     case (7 << 3) | 1:
                     case (7 << 3) | 2:  // ByName, field 7

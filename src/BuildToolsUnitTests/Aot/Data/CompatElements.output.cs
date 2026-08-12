@@ -78,7 +78,7 @@ partial class CompatElementsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member ViaMember: map
+                    // raw read pass: legacy-mode - member ViaMember: map with non-default DataFormat
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // ViaMember, field 1
@@ -91,7 +91,7 @@ partial class CompatElementsModel
                         if (tmp1 != null) value.ViaMember = tmp1;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ViaMap: map
+                    // raw read pass: legacy-mode - member ViaMap: map with per-side format
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // ViaMap, field 2
@@ -104,7 +104,7 @@ partial class CompatElementsModel
                         if (tmp2 != null) value.ViaMap = tmp2;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Plain: map
+                    // raw read pass: legacy-mode - member Plain: map value kind DateTime
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // Plain, field 3
@@ -117,7 +117,7 @@ partial class CompatElementsModel
                         if (tmp3 != null) value.Plain = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member BothSides: map
+                    // raw read pass: legacy-mode - member BothSides: map with non-default DataFormat
                     case (4 << 3) | 0:
                     case (4 << 3) | 1:
                     case (4 << 3) | 2:  // BothSides, field 4
@@ -130,7 +130,7 @@ partial class CompatElementsModel
                         if (tmp4 != null) value.BothSides = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member SpansViaMember: map
+                    // raw read pass: legacy-mode - member SpansViaMember: map with non-default DataFormat
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // SpansViaMember, field 5
@@ -143,7 +143,7 @@ partial class CompatElementsModel
                         if (tmp5 != null) value.SpansViaMember = tmp5;
                         break;
                     }
-                    // raw read pass: legacy-mode - member SpansViaMap: map
+                    // raw read pass: legacy-mode - member SpansViaMap: map with per-side format
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // SpansViaMap, field 6
@@ -156,7 +156,7 @@ partial class CompatElementsModel
                         if (tmp6 != null) value.SpansViaMap = tmp6;
                         break;
                     }
-                    // raw read pass: legacy-mode - member SpansBothSides: map
+                    // raw read pass: legacy-mode - member SpansBothSides: map with non-default DataFormat
                     case (7 << 3) | 0:
                     case (7 << 3) | 1:
                     case (7 << 3) | 2:  // SpansBothSides, field 7
@@ -333,7 +333,7 @@ partial class CompatElementsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member ByIndex: map
+                    // raw read pass: legacy-mode - member ByIndex: map value kind Guid
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // ByIndex, field 1
@@ -346,7 +346,7 @@ partial class CompatElementsModel
                         if (tmp1 != null) value.ByIndex = tmp1;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ByGuid: map
+                    // raw read pass: legacy-mode - member ByGuid: map key kind Guid
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // ByGuid, field 2

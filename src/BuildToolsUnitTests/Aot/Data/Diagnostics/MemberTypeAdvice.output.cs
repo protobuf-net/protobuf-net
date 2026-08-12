@@ -21,8 +21,6 @@ partial class MemberTypeAdviceModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade?>
     {
-        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
-
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -42,23 +40,56 @@ partial class MemberTypeAdviceModel
         public static global::AotFixtures.MemberTypeAdvice.MapWithEnumKey RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
         {
             value ??= new global::AotFixtures.MemberTypeAdvice.MapWithEnumKey();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member ByShade: map
-                    case (1 << 3) | 0:
-                    case (1 << 3) | 1:
-                    case (1 << 3) | 2:  // ByShade, field 1
-                    case (1 << 3) | 3:
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 2:  // ByShade, field 1, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp1 = value.ByShade;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp1 != null) value.ByShade = tmp1;
-                        break;
+                        value.ByShade ??= new global::System.Collections.Generic.Dictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            global::AotFixtures.MemberTypeAdvice.Shade k1 = default;
+                            int v1 = default;
+                            uint etag1 = state.ReadRawTag();
+                            while (etag1 != 0)
+                            {
+                                switch (etag1)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k1 = (global::AotFixtures.MemberTypeAdvice.Shade)(unchecked((int)state.ReadRawVarint32()));
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k1 = (global::AotFixtures.MemberTypeAdvice.Shade)(unchecked((int)state.ReadRawFixed32()));
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k1 = (global::AotFixtures.MemberTypeAdvice.Shade)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v1 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v1 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v1 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag1)) goto entryDone1;
+                                        if ((etag1 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag1);
+                                        state.SkipTag(etag1);
+                                        break;
+                                }
+                                etag1 = state.ReadRawTag();
+                            }
+                            entryDone1:
+                            state.PopScope(scope);
+                            value.ByShade[k1] = v1;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
@@ -66,7 +97,7 @@ partial class MemberTypeAdviceModel
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 

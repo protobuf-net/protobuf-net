@@ -177,7 +177,7 @@ partial class GroupedElementsModel
             {
                 switch (tag)
                 {
-                    // raw read pass: legacy-mode - member ByIndex: map
+                    // raw read pass: legacy-mode - member ByIndex: map with non-default DataFormat
                     case (1 << 3) | 0:
                     case (1 << 3) | 1:
                     case (1 << 3) | 2:  // ByIndex, field 1
@@ -190,7 +190,7 @@ partial class GroupedElementsModel
                         if (tmp1 != null) value.ByIndex = tmp1;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Scalars: map
+                    // raw read pass: legacy-mode - member Scalars: map with non-default DataFormat
                     case (2 << 3) | 0:
                     case (2 << 3) | 1:
                     case (2 << 3) | 2:  // Scalars, field 2
@@ -203,7 +203,7 @@ partial class GroupedElementsModel
                         if (tmp2 != null) value.Scalars = tmp2;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ViaMap: map
+                    // raw read pass: legacy-mode - member ViaMap: map with per-side format
                     case (3 << 3) | 0:
                     case (3 << 3) | 1:
                     case (3 << 3) | 2:  // ViaMap, field 3
@@ -216,18 +216,50 @@ partial class GroupedElementsModel
                         if (tmp3 != null) value.ViaMap = tmp3;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Plain: map
-                    case (4 << 3) | 0:
-                    case (4 << 3) | 1:
-                    case (4 << 3) | 2:  // Plain, field 4
-                    case (4 << 3) | 3:
-                    case (4 << 3) | 5:
+                    case (4 << 3) | 2:  // Plain, field 4, map entry run
                     {
-                        state.StashTag(tag);
-                        var tmp4 = value.Plain;
-                        tmp4 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.GroupedElements.Item>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, s_default);
-                        if (tmp4 != null) value.Plain = tmp4;
-                        break;
+                        value.Plain ??= new global::System.Collections.Generic.Dictionary<int, global::AotFixtures.GroupedElements.Item>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k4 = default;
+                            global::AotFixtures.GroupedElements.Item v4 = default;
+                            uint etag4 = state.ReadRawTag();
+                            while (etag4 != 0)
+                            {
+                                switch (etag4)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k4 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k4 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k4 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 2:  // value, length-prefixed
+                                    case (2 << 3) | 3:  // value, group
+                                    {
+                                        var vscope = state.PushScope(etag4);
+                                        v4 = RawRead_AotFixtures_GroupedElements_Item(ref state, v4);
+                                        state.PopScope(vscope);
+                                        break;
+                                    }
+                                    default:
+                                        if (state.IsScopeEnd(etag4)) goto entryDone4;
+                                        if ((etag4 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag4);
+                                        state.SkipTag(etag4);
+                                        break;
+                                }
+                                etag4 = state.ReadRawTag();
+                            }
+                            entryDone4:
+                            state.PopScope(scope);
+                            value.Plain[k4] = v4;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;

@@ -211,7 +211,7 @@ partial class WrappedElementsModel
                         if (tmp5 != null) value.Names = tmp5;
                         break;
                     }
-                    // raw read pass: legacy-mode - member ById: map
+                    // raw read pass: legacy-mode - member ById: null-wrapped map
                     case (6 << 3) | 0:
                     case (6 << 3) | 1:
                     case (6 << 3) | 2:  // ById, field 6
@@ -297,7 +297,7 @@ partial class WrappedElementsModel
                         if (tmp11 != null) value.Amounts = tmp11;
                         break;
                     }
-                    // raw read pass: legacy-mode - member Ids: map
+                    // raw read pass: legacy-mode - member Ids: map value kind Guid
                     case (12 << 3) | 0:
                     case (12 << 3) | 1:
                     case (12 << 3) | 2:  // Ids, field 12
