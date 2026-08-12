@@ -60,6 +60,36 @@ window helpers, header machinery) - everything above them is self-hosted on Stat
 surface and ports verbatim with `_reader.WireType = x` pokes becoming `_wireType = x`. Plus the
 snapshot bridge for the class API, and the backend deletions.
 
+## Cut status (live)
+
+DONE: NanoCore retargeted (cut 1); snapshot machinery real (cut 2); shell + full ReadMethods
+rewrite over the nano core (cut 3, commit 0a870e7c) - including SetTag's end-group spoof, the
+legacy sub-item state machine, the repeated engine, roots, plausibility, AppendBytes over
+ReadRawBytesInto, extension veneers over the nano capture, error helpers, and the StateContext
+shim class.
+
+FIRST COMPILE: exactly 6 errors, all CS0111 duplicate `State.Create` - the old backend statics
+in ProtoReader.Stream.cs / ProtoReader.ReadOnlySequence.cs vs the relocated shell ones. The
+next wave is fully characterized:
+
+1. **ProtoReader.cs bridge rewrite** (the last big artifact): delete the Impl* abstracts and
+   the class fields State now owns (SetTag/Hint/Intern already copied); the class holds a
+   `ReaderSnapshot` + becomes concrete-or-bridge (`SnapshotProtoReader`); the ~40 museum
+   `DefaultState().X()` instance methods become liquify/operate/re-solidify (temporaries stop
+   carrying state); keep TO_EOF, EagerAllocationLimit, UTF8, Read32VarintMode, PreferStateAPI
+   messages, ISerializationContext implementation over the snapshot's model/userState.
+2. **Slim ProtoReader.Stream.cs** to: museum `ProtoReader.Create(Stream,...)` statics (bridge-
+   based) + `TryConsumeSegmentRespectingPosition` (kept verbatim - the WRITER's extension-blit
+   uses it, sole external caller). **Delete ProtoReader.ReadOnlySequence.cs entirely** (its
+   ToString/TryParseUInt32Varint helpers have no external callers).
+3. Compile loop ripples expected: SubTypeState.Create(Context,...) signature (speculatively
+   changed from reader to ISerializationContext - adjust SubTypeState), BclHelpers.GetReader
+   caller, ISerializationContext member names on the StateContext shim, TypeModel Solidify
+   call sites, `Unsafe.AsRef(in _segment)` in Snapshot() (readonly-context ref-field access),
+   PublicAPI.Unshipped entries for the new public raw surface + ReadScope, emit/probe rename
+   (ProtoBuf.Nano.ReaderState -> ProtoBuf.ProtoReader+State) + NanoPass fixture de-stubbing +
+   NanoBench signature updates + NanoState project retirement from the build.
+
 ## Gates, in order (Marc)
 
 1. does it compile; 2. `AotDifferential` corpus on bytes; 3. the entire compat suite.
