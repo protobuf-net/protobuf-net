@@ -41,14 +41,24 @@ ReadPackedScalar's List<T> capacity boost + MAX_GROW=8192 carries over), ReadMes
 ReadAny, ReadWrapped, ReadBaseType, CreateInstance, GetSerializer, Model/Context (fields now),
 HasSubValue.
 
-**D - netcache / reference tracking** (State gains a lazily-allocated class-typed holder; State
-travels by ref so mutations flow; copies share the object):
-GetKeyedObject/SetKeyedObject/TrapNextObject/NoteObject, DeserializeType, InternStrings +
-StringMap (ReadString(map)).
+**D - COLLAPSED**: the keyed-object/reference-tracking surface (GetKeyedObject/SetKeyedObject/
+TrapNextObject/NoteObject, SetRootObject in ReadAsRoot) is entirely inside `#if
+FEAT_DYNAMIC_REF`, which the shipped build never defines - it is not in the product assembly.
+What remains: DeserializeType (a model call) and InternStrings + StringMap (ReadString(map)).
 
-**E - root machinery** (still to be read before porting):
-DeserializeRoot/ReadAsRoot/DeserializeRootImpl/DeserializeRootFallback(WithModel),
-ReadTypedObject/ReadObject, SolidState/Solidify/Liquify callers (bridge via ReaderSnapshot).
+**E - root machinery: READ, ports verbatim** - DeserializeRoot/ReadAsRoot/DeserializeRootImpl
+are written against State's own surface (ReadFieldHeader/ReadAny/CreateInstance/
+CheckFullyConsumed); the CategoryMessageWrappedAtRoot/Scalar arms use the field-one loop.
+Still to read: DeserializeRootFallback(WithModel), ReadTypedObject/ReadObject (aux path),
+SolidState/Solidify/Liquify callers (bridge via ReaderSnapshot), AppendBytes internals,
+ReadString(map) internals.
+
+## Revised scope after the survey
+
+The true rewrite surface is the ~25 PRIMITIVE members (scalar reads over _reader.Impl*, the
+window helpers, header machinery) - everything above them is self-hosted on State's public
+surface and ports verbatim with `_reader.WireType = x` pokes becoming `_wireType = x`. Plus the
+snapshot bridge for the class API, and the backend deletions.
 
 ## Gates, in order (Marc)
 
