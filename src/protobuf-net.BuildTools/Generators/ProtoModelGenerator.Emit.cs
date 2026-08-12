@@ -155,6 +155,31 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, $"private static readonly {ServicesTypeName} s_default = new {ServicesTypeName}();");
                     sb.AppendLine();
                 }
+                if (plan.Contracts.Any(c => rawSet.Contains(c.TypeName)
+                    && c.Members.Any(m => m.Repeated.Factory == "CreateVector"
+                        && RawMemberFallbackReason(m, rawSet) is null)))
+                {
+                    // append-merge for ARRAY members: a new array per field occurrence, existing
+                    // content first - ref-emit's vector semantics, which the merge gate holds us to
+                    Line(sb, indent + 2, "private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)");
+                    Line(sb, indent + 2, "{");
+                    Line(sb, indent + 3, "if (value is null || value.Length == 0) return extra.ToArray();");
+                    Line(sb, indent + 3, "var result = new T[value.Length + extra.Count];");
+                    Line(sb, indent + 3, "value.CopyTo(result, 0);");
+                    Line(sb, indent + 3, "extra.CopyTo(result, value.Length);");
+                    Line(sb, indent + 3, "return result;");
+                    Line(sb, indent + 2, "}");
+                    sb.AppendLine();
+                    Line(sb, indent + 2, "private static T[] ArrayAppend<T>(T[] value, T extra)");
+                    Line(sb, indent + 2, "{");
+                    Line(sb, indent + 3, "var offset = value?.Length ?? 0;");
+                    Line(sb, indent + 3, "var result = new T[offset + 1];");
+                    Line(sb, indent + 3, "value?.CopyTo(result, 0);");
+                    Line(sb, indent + 3, "result[offset] = extra;");
+                    Line(sb, indent + 3, "return result;");
+                    Line(sb, indent + 2, "}");
+                    sb.AppendLine();
+                }
             }
 
             var first = true;
@@ -255,6 +280,73 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 3, "}");
                     continue;
                 }
+                if (member.Repeated.Factory == "CreateVector")
+                {
+                    // an ARRAY member: a run is collected into a scratch list, then append-merged
+                    // into a NEW array and assigned back - ref-emit's vector semantics, held to
+                    // byte-and-merge identity by the differential suite. Eligibility guaranteed a
+                    // plain setter, so the assignment is direct.
+                    var element = member.ElementTypeName!;
+                    var buffer = $"new global::System.Collections.Generic.List<{element}>()";
+                    switch (member.Kind)
+                    {
+                        case ProtoMemberKind.String:
+                            Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed run");
+                            Line(sb, indent + 3, "{");
+                            Line(sb, indent + 4, $"var buf{n} = {buffer};");
+                            Line(sb, indent + 4, $"do {{ buf{n}.Add(state.ReadRawString()); }}");
+                            Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | 2));");
+                            Line(sb, indent + 4, $"value.{name} = ArrayAppend(value.{name}, buf{n});");
+                            Line(sb, indent + 4, "continue;");
+                            Line(sb, indent + 3, "}");
+                            break;
+                        case ProtoMemberKind.Message:
+                            Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
+                            Line(sb, indent + 3, $"case ({n} << 3) | 3:  // {member.Name}, field {n}, group");
+                            Line(sb, indent + 3, "{");
+                            Line(sb, indent + 4, $"var buf{n} = {buffer};");
+                            Line(sb, indent + 4, "var last = tag;");
+                            Line(sb, indent + 4, "do");
+                            Line(sb, indent + 4, "{");
+                            Line(sb, indent + 5, "var scope = state.PushScope(last);");
+                            Line(sb, indent + 5, $"buf{n}.Add(RawRead_{Sanitise(member.TypeName!)}(ref state, null));");
+                            Line(sb, indent + 5, "state.PopScope(scope);");
+                            Line(sb, indent + 4, "} while ((tag = state.ReadRawTag()) == last);");
+                            Line(sb, indent + 4, $"value.{name} = ArrayAppend(value.{name}, buf{n});");
+                            Line(sb, indent + 4, "continue;");
+                            Line(sb, indent + 3, "}");
+                            break;
+                        default: // varint-kind scalar or enum element
+                        {
+                            var forms = RawScalarForms(member.Kind, member.EnumTypeName, member.DataFormat);
+                            Line(sb, indent + 3, $"case ({n} << 3) | {forms[0].Wire}:  // {member.Name}, field {n}, unpacked run ({WireName(forms[0].Wire)})");
+                            Line(sb, indent + 3, "{");
+                            Line(sb, indent + 4, $"var buf{n} = {buffer};");
+                            Line(sb, indent + 4, $"do {{ buf{n}.Add({forms[0].Read}); }}");
+                            Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | {forms[0].Wire}));");
+                            Line(sb, indent + 4, $"value.{name} = ArrayAppend(value.{name}, buf{n});");
+                            Line(sb, indent + 4, "continue;");
+                            Line(sb, indent + 3, "}");
+                            Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, packed");
+                            Line(sb, indent + 3, "{");
+                            Line(sb, indent + 4, $"var buf{n}p = {buffer};");
+                            Line(sb, indent + 4, "var scope = state.PushLengthPrefix();");
+                            Line(sb, indent + 4, $"while (!state.AtScopeEnd) buf{n}p.Add({forms[0].Read});");
+                            Line(sb, indent + 4, "state.PopScope(scope);");
+                            Line(sb, indent + 4, $"value.{name} = ArrayAppend(value.{name}, buf{n}p);");
+                            Line(sb, indent + 4, "break;");
+                            Line(sb, indent + 3, "}");
+                            for (int i = 1; i < forms.Length; i++)
+                            {
+                                Line(sb, indent + 3, $"case ({n} << 3) | {forms[i].Wire}:  // {member.Name}, field {n}, {WireName(forms[i].Wire)}");
+                                Line(sb, indent + 4, $"value.{name} = ArrayAppend(value.{name}, {forms[i].Read});");
+                                Line(sb, indent + 4, "break;");
+                            }
+                            break;
+                        }
+                    }
+                    continue;
+                }
                 if (member.Repeated.Factory is not null)
                 {
                     // construct-on-first-presence, matching the classic read (ReadRepeated creates
@@ -303,10 +395,10 @@ namespace ProtoBuf.BuildTools.Generators
                         default: // varint-kind scalar or enum element
                         {
                             var forms = RawScalarForms(member.Kind, member.EnumTypeName, member.DataFormat);
-                            Line(sb, indent + 3, $"case ({n} << 3) | 0:  // {member.Name}, field {n}, unpacked run");
+                            Line(sb, indent + 3, $"case ({n} << 3) | {forms[0].Wire}:  // {member.Name}, field {n}, unpacked run ({WireName(forms[0].Wire)})");
                             if (ensure is not null) Line(sb, indent + 4, ensure);
                             Line(sb, indent + 4, $"do {{ value.{name}.Add({forms[0].Read}); }}");
-                            Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | 0));");
+                            Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | {forms[0].Wire}));");
                             Line(sb, indent + 4, "continue;");
                             Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, packed");
                             // a nullable element (List<int?>) takes every OTHER form unchanged -
@@ -617,8 +709,19 @@ namespace ProtoBuf.BuildTools.Generators
             if (member.SubSerializer is not (null or "this")) return "hand-written serializer";
             if (member.Repeated.Factory is not null)
             {
-                // native repeated is List<T>-shaped only: Add is the read mechanism
-                if (member.Repeated.Factory != "CreateList") return $"collection shape {member.Repeated.Factory}";
+                // native repeated is List<T>-shaped (Add is the read mechanism) or an ARRAY
+                // (collected into a scratch list per run, then append-merged into a new array
+                // and assigned - ref-emit's vector semantics exactly)
+                if (member.Repeated.Factory is not ("CreateList" or "CreateVector"))
+                    return $"collection shape {member.Repeated.Factory}";
+                if (member.Repeated.Factory == "CreateVector"
+                    && (member.IsReadOnly || member.UsesAccessor))
+                {
+                    // the merge builds a NEW array, so the member must be plainly settable;
+                    // a list mutates in place and tolerates a getter-only property, an array
+                    // cannot
+                    return "array without a plain setter";
+                }
                 if (member.OverwriteList) return "OverwriteList collection";
                 // note: no nullable-element gate. AsRepeated erases element nullability from
                 // the plan (IsNullable is always false here), and none is needed: a nullable

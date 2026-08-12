@@ -459,7 +459,7 @@ partial class GenericModel
             {
                 switch (tag)
                 {
-                    case (1 << 3) | 0:  // Value, field 1, unpacked run
+                    case (1 << 3) | 0:  // Value, field 1, unpacked run (varint)
                         value.Value ??= new global::System.Collections.Generic.List<int>();
                         do { value.Value.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));

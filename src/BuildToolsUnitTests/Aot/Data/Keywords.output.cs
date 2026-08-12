@@ -119,7 +119,7 @@ partial class KeywordsModel
                         if (tmp2 != null) value.@event = tmp2;
                         break;
                     }
-                    case (3 << 3) | 0:  // params, field 3, unpacked run
+                    case (3 << 3) | 0:  // params, field 3, unpacked run (varint)
                         value.@params ??= new global::System.Collections.Generic.List<int>();
                         do { value.@params.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));

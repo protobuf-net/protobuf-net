@@ -74,7 +74,7 @@ partial class NonPublicSetterModel
                         if (tmp2 != null) Field_AotFixtures_NonPublicSetter_Guarded_Text(value) = tmp2;
                         break;
                     }
-                    case (3 << 3) | 0:  // Numbers, field 3, unpacked run
+                    case (3 << 3) | 0:  // Numbers, field 3, unpacked run (varint)
                         Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
                         do { value.Numbers.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));

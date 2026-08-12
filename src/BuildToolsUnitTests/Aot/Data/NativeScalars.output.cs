@@ -168,7 +168,7 @@ partial class NativeScalarsModel
                         if (tmp7 != null) value.Handles = tmp7;
                         break;
                     }
-                    // raw read pass: legacy-mode - member More: collection shape CreateVector
+                    // raw read pass: legacy-mode - member More: element kind IntPtr
                     case (8 << 3) | 0:
                     case (8 << 3) | 1:
                     case (8 << 3) | 2:  // More, field 8

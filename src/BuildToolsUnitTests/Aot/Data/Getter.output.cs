@@ -87,7 +87,7 @@ partial class GetterModel
             {
                 switch (tag)
                 {
-                    case (1 << 3) | 0:  // Numbers, field 1, unpacked run
+                    case (1 << 3) | 0:  // Numbers, field 1, unpacked run (varint)
                         Field_AotFixtures_Getter_Getters_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
                         do { value.Numbers.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
@@ -199,7 +199,7 @@ partial class GetterModel
                         Field_AotFixtures_Getter_Getters_When(value) = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
                         break;
                     }
-                    // raw read pass: legacy-mode - member Array: collection shape CreateVector
+                    // raw read pass: legacy-mode - member Array: array without a plain setter
                     case (10 << 3) | 0:
                     case (10 << 3) | 1:
                     case (10 << 3) | 2:  // Array, field 10

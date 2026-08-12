@@ -241,7 +241,7 @@ partial class WrappedElementsModel
                         if (tmp7 != null) value.Grouped = tmp7;
                         break;
                     }
-                    case (8 << 3) | 0:  // BareShades, field 8, unpacked run
+                    case (8 << 3) | 0:  // BareShades, field 8, unpacked run (varint)
                         value.BareShades ??= new global::System.Collections.Generic.List<global::AotFixtures.WrappedElements.Shade?>();
                         do { value.BareShades.Add((global::AotFixtures.WrappedElements.Shade)(unchecked((int)state.ReadRawVarint32()))); }
                         while ((tag = state.ReadRawTag()) == ((8 << 3) | 0));

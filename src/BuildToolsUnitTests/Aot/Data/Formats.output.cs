@@ -20,7 +20,23 @@ partial class FormatsModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>
     {
-        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+        private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
+        {
+            if (value is null || value.Length == 0) return extra.ToArray();
+            var result = new T[value.Length + extra.Count];
+            value.CopyTo(result, 0);
+            extra.CopyTo(result, value.Length);
+            return result;
+        }
+
+        private static T[] ArrayAppend<T>(T[] value, T extra)
+        {
+            var offset = value?.Length ?? 0;
+            var result = new T[offset + 1];
+            value?.CopyTo(result, 0);
+            result[offset] = extra;
+            return result;
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -80,7 +96,7 @@ partial class FormatsModel
         public static global::AotFixtures.Formats.Formatted RawRead_AotFixtures_Formats_Formatted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Formatted value)
         {
             value ??= new global::AotFixtures.Formats.Formatted();
-            uint tag = state.ReadRawTagOrPending();
+            uint tag = state.ReadRawTag();
             while (tag != 0)
             {
                 switch (tag)
@@ -161,39 +177,59 @@ partial class FormatsModel
                         state.PopScope(scope);
                         break;
                     }
-                    // raw read pass: legacy-mode - member ZigZagArray: collection shape CreateVector
-                    case (10 << 3) | 0:
-                    case (10 << 3) | 1:
-                    case (10 << 3) | 2:  // ZigZagArray, field 10
-                    case (10 << 3) | 3:
-                    case (10 << 3) | 5:
+                    case (10 << 3) | 0:  // ZigZagArray, field 10, unpacked run (varint)
                     {
-                        state.StashTag(tag);
-                        var tmp10 = value.ZigZagArray;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeSignedVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
-                        if (tmp10 != null) value.ZigZagArray = tmp10;
+                        var buf10 = new global::System.Collections.Generic.List<int>();
+                        do { buf10.Add(state.ReadRawZigZag32()); }
+                        while ((tag = state.ReadRawTag()) == ((10 << 3) | 0));
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, buf10);
+                        continue;
+                    }
+                    case (10 << 3) | 2:  // ZigZagArray, field 10, packed
+                    {
+                        var buf10p = new global::System.Collections.Generic.List<int>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) buf10p.Add(state.ReadRawZigZag32());
+                        state.PopScope(scope);
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, buf10p);
                         break;
                     }
-                    // raw read pass: legacy-mode - member PackedFixed: collection shape CreateVector
-                    case (11 << 3) | 0:
-                    case (11 << 3) | 1:
-                    case (11 << 3) | 2:  // PackedFixed, field 11
-                    case (11 << 3) | 3:
-                    case (11 << 3) | 5:
+                    case (10 << 3) | 5:  // ZigZagArray, field 10, fixed32
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (10 << 3) | 1:  // ZigZagArray, field 10, fixed64
+                        value.ZigZagArray = ArrayAppend(value.ZigZagArray, checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (11 << 3) | 1:  // PackedFixed, field 11, unpacked run (fixed64)
                     {
-                        state.StashTag(tag);
-                        var tmp11 = value.PackedFixed;
-                        tmp11 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<long>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp11);
-                        if (tmp11 != null) value.PackedFixed = tmp11;
+                        var buf11 = new global::System.Collections.Generic.List<long>();
+                        do { buf11.Add(unchecked((long)state.ReadRawFixed64())); }
+                        while ((tag = state.ReadRawTag()) == ((11 << 3) | 1));
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, buf11);
+                        continue;
+                    }
+                    case (11 << 3) | 2:  // PackedFixed, field 11, packed
+                    {
+                        var buf11p = new global::System.Collections.Generic.List<long>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) buf11p.Add(unchecked((long)state.ReadRawFixed64()));
+                        state.PopScope(scope);
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, buf11p);
                         break;
                     }
+                    case (11 << 3) | 0:  // PackedFixed, field 11, varint
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, unchecked((long)state.ReadRawVarint64()));
+                        break;
+                    case (11 << 3) | 5:  // PackedFixed, field 11, fixed32
+                        value.PackedFixed = ArrayAppend(value.PackedFixed, (long)unchecked((int)state.ReadRawFixed32()));
+                        break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
-                tag = state.ReadRawTagOrPending();
+                tag = state.ReadRawTag();
             }
             return value;
 

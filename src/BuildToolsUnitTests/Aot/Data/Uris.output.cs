@@ -115,7 +115,7 @@ partial class UrisModel
                         if (tmp4 != null) value.All = tmp4;
                         break;
                     }
-                    // raw read pass: legacy-mode - member More: collection shape CreateVector
+                    // raw read pass: legacy-mode - member More: element kind Uri
                     case (5 << 3) | 0:
                     case (5 << 3) | 1:
                     case (5 << 3) | 2:  // More, field 5

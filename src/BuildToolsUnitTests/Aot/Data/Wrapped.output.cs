@@ -342,7 +342,7 @@ partial class WrappedModel
                         if (tmp14 != null) Field_AotFixtures_Wrapped_Wrapped_Scalars(value) = tmp14;
                         break;
                     }
-                    case (15 << 3) | 0:  // Bare, field 15, unpacked run
+                    case (15 << 3) | 0:  // Bare, field 15, unpacked run (varint)
                         Field_AotFixtures_Wrapped_Wrapped_Bare(value) ??= new global::System.Collections.Generic.List<int?>();
                         do { value.Bare.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((15 << 3) | 0));

@@ -348,7 +348,7 @@ partial class RawPassModel
                         do { value.Tags.Add(state.ReadRawString()); }
                         while ((tag = state.ReadRawTag()) == ((7 << 3) | 2));
                         continue;
-                    case (8 << 3) | 0:  // Codes, field 8, unpacked run
+                    case (8 << 3) | 0:  // Codes, field 8, unpacked run (varint)
                         Field_AotFixtures_RawPass_Order_Codes(value) ??= new global::System.Collections.Generic.List<int>();
                         do { value.Codes.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((8 << 3) | 0));
