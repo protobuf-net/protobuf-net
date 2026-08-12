@@ -1593,9 +1593,16 @@ namespace ProtoBuf.BuildTools.Generators
                         EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
                         Line(sb, indent, "}");
                         break;
-                    case ProtoMemberKind.String when member.DefaultLiteral is { } declared:
+                    case ProtoMemberKind.String when member.DefaultLiteral is { } declared
+                        && !member.IsRequired && member.WriteCondition is null:
                         // the null test has to be explicit here: WriteString skips nulls itself, but
-                        // we must not compare a null against the declared default
+                        // we must not compare a null against the declared default. A ShouldSerialize
+                        // condition (or IsRequired) REPLACES this guard rather than nesting it - the
+                        // scalar paths already did that, and this case missing the same treatment
+                        // silently dropped a present-but-default string (FieldDescriptorProto's
+                        // default_value = "" under ShouldSerializeDefaultValue, found by SchemaTests
+                        // the moment the descriptor model was regenerated) - so those shapes fall
+                        // through to the plain unguarded WriteString below.
                         Line(sb, indent, $"if (tmp{number} != null && tmp{number} != {declared})");
                         Line(sb, indent, "{");
                         Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");

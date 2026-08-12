@@ -48,6 +48,11 @@ partial class ConditionalModel
                 var tmp4 = value.Named;
                 state.WriteString(4, tmp4);
             }
+            if (value.ShouldSerializePresence())
+            {
+                var tmp5 = value.Presence;
+                state.WriteString(5, tmp5);
+            }
         }
 
         public static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
@@ -95,6 +100,12 @@ partial class ConditionalModel
                         value.NamedSpecified = true;
                         break;
                     }
+                    case (5 << 3) | 2:  // Presence, field 5, length-prefixed
+                    {
+                        var tmp5 = state.ReadRawString();
+                        if (tmp5 != null) value.Presence = tmp5;
+                        break;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -105,7 +116,7 @@ partial class ConditionalModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
         }
     }
 }
