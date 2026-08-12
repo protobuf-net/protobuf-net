@@ -1,3 +1,4 @@
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
@@ -85,14 +86,14 @@ namespace ProtoBuf
                 int bytesRead = 1, shift = 7;
                 while (bytesRead < 9)
                 {
-                    if ((uint)offset >= (uint)span.Length) ThrowHelper.ThrowEndOfStreamException();
+                    if ((uint)offset >= (uint)span.Length) throw new EndOfStreamException();
                     ulong chunk = span[offset++];
                     value |= (chunk & 0x7F) << shift;
                     shift += 7;
                     bytesRead++;
                     if ((chunk & 0x80) == 0) return bytesRead;
                 }
-                if ((uint)offset >= (uint)span.Length) ThrowHelper.ThrowEndOfStreamException();
+                if ((uint)offset >= (uint)span.Length) throw new EndOfStreamException();
                 ulong last = span[offset];
                 value |= last << 63; // only 1 bit fits from the last byte
                 if ((last & ~(ulong)0x01) != 0) ThrowHelper.ThrowOverflowException();

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Model = ProtoBuf.Nano.Bench.DescriptorModel; // 'Nano' would be shadowed by the ProtoBuf.Nano namespace
+using ReaderState = ProtoBuf.ProtoReader.State;  // the nano-swap: the reader IS State now
 using Pbn = Google.Protobuf.Reflection;          // protobuf-net.Reflection's DTOs (legacy row)
 using Gpb = gpb::Google.Protobuf.Reflection;     // the Google.Protobuf package (home-turf row)
 
