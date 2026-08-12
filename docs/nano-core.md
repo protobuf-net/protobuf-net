@@ -197,10 +197,15 @@ by the tiebreaker rule: benchmark it only if a decision actually hinges on it.
 protobuf-net 3.3.8, duplicated-field-in-payload and merge-across-parses both): `string` is
 last-one-wins **replace** in both implementations; `bytes` **replaces in Google but APPENDS in
 protobuf-net** — `AppendBytes` is literal, and it is a real cross-implementation divergence, not a
-doc artifact. Nano's default must append (the differential gates on protobuf-net parity, and the
-behaviour is long-shipped); `OverwriteList` on a bytes member is the existing opt-in for replace,
-which the generator maps. Flipping the default to match Google is a major-version question, out of
-scope here.
+doc artifact. **Decided: the nano/generated path defaults to replace** — the simpler logic, and
+Google-aligned — with `[ProtoModel(LegacyAppendBytes = true)]` as the opt-in for the historical
+behaviour (the `AllowParseableTypes` pattern). Consequences: the differential runs bytes parity
+*with the flag set* (a duplicated bytes field is a known divergence class under the default, since
+the differential manufactures repeated fields by concatenation), and the replace default gets
+directed tests of its own; `OverwriteList` on a bytes member becomes a no-op under the default and
+stays the per-member replace escape under the flag; the *veneer* surface is unaffected either way
+— `AppendBytes` keeps its legacy name and semantics for old API callers, the flag governs what the
+generator emits.
 
 **Safeguard parity, and the elision lever.** The reader carries legacy's safeguards: field-0
 rejection (folded into the single-byte tag range check — `8..127` is one compare, the same cost as
