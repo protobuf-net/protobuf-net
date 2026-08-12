@@ -520,3 +520,11 @@ shuffled streams (0.68-0.90x), which real payloads are not. Decision: keep the f
 switch; the known-field/invalid-wire detection stays in the default arm's IsKnownField
 (cold by construction). Full table and the end-group field-space caveat for any future
 revisit: `src/NanoBench/DispatchResults.md`.
+
+## ClassicEmit gates the whole emission (Marc, 2026-08-14)
+
+[ProtoModel(ClassicEmit = true)] suppresses the OPTIMIZED EMIT AS A WHOLE, not the read pass
+specifically: "if people don''t trust one, they shouldn''t trust the other". Today that is
+vacuously true (writes are classic regardless); the requirement it places on the writer arc
+is that the raw write emission keys off the SAME plan gate the read pass does - one flag,
+both directions, no partial-trust configuration.
