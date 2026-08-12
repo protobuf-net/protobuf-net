@@ -211,6 +211,28 @@ niche fence — the places where the callee genuinely is not known until runtime
    differential suite (`src/AotDifferential`) is the correctness gate: byte-for-byte agreement over
    ~3,000 contracts, both directions. Resurrect the Nano benchmarks as the performance gate.
 
+## Landing strategy: side-by-side, with the v4 lesson as the guardrail
+
+Incremental (build the nano reader alongside the incumbent, migrate logic, swap at the end) beats
+big-bang (gut the existing storage and brute-force every member at once) — decided, not just
+preferred, because side-by-side is the only option where the gates work: equivalence needs both
+implementations alive (the differential can run the generator against the nano reader behind an
+emit flag while ref-emit stays on the incumbent — wire-level A/B over the whole corpus, per
+commit), and performance needs an incumbent to beat. A big-bang's real cost is diagnosis: every
+intermediate state is broken, so a wrong byte and a slow path look identical mid-flight.
+
+Side-by-side has a known failure mode, and it is sitting on the `v4` branch: the parallel
+implementation that never merges. The guardrails:
+
+- **the swap gate is defined by capability, now**: (i) the differential runs the whole corpus
+  through the nano path, byte-identical in both directions; (ii) the hot-path benchmark tables
+  exist. Not "when it feels done";
+- **the incumbent is frozen** for the duration — no feature work lands on the old reader, so the
+  target does not move;
+- the swap itself is mechanical, because the veneer design *is* the swap plan: raw surface plus
+  veneers reproduce the old API, so the final step is replacing `State`'s storage and re-pointing
+  the legacy members — with the shape clone as the checklist.
+
 Rules of the road, inherited from the AOT work: derive rather than guess (the shape files are
 generated; the perf tables are measured), and nothing merges on "should be faster" — the
 differential decides correctness, and correctness is only the entry ticket: BenchmarkDotNet tables,
