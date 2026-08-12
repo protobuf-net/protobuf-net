@@ -21,38 +21,18 @@ namespace ProtoBuf.Internal
 
         internal static Duration ReadDuration(ref ProtoReader.State state, Duration value)
         {
-            if (state.WireType == WireType.String && state.RemainingInCurrent >= 20)
+            if (state.WireType == WireType.String)
             {
-                if (TryReadDurationFast(ref state, ref value)) return value;
+                // the resident fast path lives on State now (nano-swap): peek the canonical
+                // two-varint shape, commit only on a complete match
+                long seconds = value.Seconds;
+                int nanos = value.Nanoseconds;
+                if (state.TryReadWellKnownPairFast(ref seconds, ref nanos))
+                {
+                    return new Duration(seconds, nanos);
+                }
             }
             return ReadDurationFallback(ref state, value);
-        }
-
-        private static bool TryReadDurationFast(ref ProtoReader.State state, ref Duration value)
-        {
-            int offset = state.OffsetInCurrent;
-            var span = state.Span;
-            int prefixLength = state.ParseVarintUInt32(span, offset, out var len);
-            offset += prefixLength;
-            if (len == 0) return true;
-
-            if ((prefixLength + len) > state.RemainingInCurrent) return false; // don't have entire submessage
-
-            if (span[offset] != (1 << 3)) return false; // expected field 1
-            var msgOffset = 1 + ProtoReader.State.TryParseUInt64Varint(span, 1 + offset, out var seconds);
-            var nanos = value.Nanoseconds;
-            if (msgOffset < len)
-            {
-                if (span[msgOffset++ + offset] != (2 << 3)) return false; // expected field 2
-                msgOffset += ProtoReader.State.TryParseUInt64Varint(span, msgOffset + offset, out var tmp);
-                nanos = (int)(long)tmp;
-            }
-            if (msgOffset != len) return false; // expected no more fields
-            state.Skip(prefixLength + (int)len);
-            state.Advance(prefixLength + len);
-
-            value = new Duration((long)seconds, nanos);
-            return true;
         }
 
         private static Duration ReadDurationFallback(ref ProtoReader.State state, Duration value)

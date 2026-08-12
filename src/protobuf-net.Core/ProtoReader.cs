@@ -256,7 +256,6 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public int ReadFieldHeader() { var s__ = Liquify(); try { return s__.ReadFieldHeader(); } finally { Resolidify(ref s__); } }
 
-        [MethodImpl(HotPath)]
 
         /// <summary>
         /// Looks ahead to see whether the next field in the stream is what we expect

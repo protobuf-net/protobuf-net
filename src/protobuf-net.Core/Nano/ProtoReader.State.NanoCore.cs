@@ -250,11 +250,11 @@ public ref partial struct State
     /// sequence (one allocation) is walked via a SequencePosition cursor, per-window
     /// TryGetArray-else-lease. The root scope is the sequence's known length.
     /// </summary>
-    public State(in ReadOnlySequence<byte> value)
+    public State(scoped in ReadOnlySequence<byte> value)
     {
         if (value.IsSingleSegment)
         {
-            this = new ReaderState(value.First);
+            this = new State(value.First);
             return;
         }
         _buffer = [];
@@ -286,7 +286,7 @@ public ref partial struct State
             && ms.TryGetBuffer(out var segment))
         {
             int position = checked((int)ms.Position);
-            this = new ReaderState(segment.Array!, segment.Offset + position, segment.Count - position);
+            this = new State(segment.Array!, segment.Offset + position, segment.Count - position);
             return;
         }
         _buffer = ArrayPool<byte>.Shared.Rent(16 * 1024);
@@ -554,7 +554,7 @@ public ref partial struct State
             _model, _userState, _internStrings, _stringInterner);
 
     /// <summary>Reconstitutes a reader from a snapshot.</summary>
-    internal State(in ReaderSnapshot snapshot)
+    internal State(scoped in ReaderSnapshot snapshot)
     {
         _buffer = snapshot.Buffer;
 #if NET7_0_OR_GREATER
@@ -724,7 +724,7 @@ public ref partial struct State
         _depth--;
     }
 
-    private void Advance(int bytes)
+    internal void Advance(int bytes)
     {
         if (bytes < 0) ThrowEndOfData();
         while (true)
@@ -1090,6 +1090,71 @@ public ref partial struct State
             bytes -= take;
         }
     }
+
+    /// <summary>Reads 4 bytes little-endian. The big-endian branch folds away at JIT time on
+    /// every little-endian platform (IsLittleEndian is a JIT constant), so correctness on BE
+    /// costs nothing - and legacy is BE-correct via BinaryPrimitives, so anything less would be
+    /// a platform regression.</summary>
+    public uint ReadRawFixed32()
+    {
+        if (_count - _offset < 4) return ReadRawFixed32Straddle();
+        var value = Unsafe.ReadUnaligned<uint>(ref At(_offset));
+        if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+        _offset += 4;
+        return value;
+    }
+
+    // byte-wise LE assembly: endian-free by construction, and crosses refills like every straddle
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private uint ReadRawFixed32Straddle()
+        => ReadRawByte()
+        | ((uint)ReadRawByte() << 8)
+        | ((uint)ReadRawByte() << 16)
+        | ((uint)ReadRawByte() << 24);
+
+    /// <summary>Reads 8 bytes little-endian; same folded BE handling as <see cref="ReadRawFixed32"/>.</summary>
+    public ulong ReadRawFixed64()
+    {
+        if (_count - _offset < 8) return ReadRawFixed64Straddle();
+        var value = Unsafe.ReadUnaligned<ulong>(ref At(_offset));
+        if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
+        _offset += 8;
+        return value;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ulong ReadRawFixed64Straddle()
+        => ReadRawFixed32Straddle() | ((ulong)ReadRawFixed32Straddle() << 32);
+
+    /// <summary>
+    /// Reads a varint as u32, STRICT: overflow beyond 32 bits throws rather than truncating -
+    /// the legacy Unsigned mode, used for lengths, where a lying 10-byte form must not quietly
+    /// become a garbage length.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint ReadRawVarint32Strict()
+    {
+        uint value = ReadRawByte();
+        if ((value & 0x80) == 0) return value;
+        value &= 0x7F;
+        int shift = 7;
+        for (int i = 1; i < 5; i++)
+        {
+            uint b = ReadRawByte();
+            value |= (b & 0x7F) << shift;
+            if ((b & 0x80) == 0)
+            {
+                if (i == 4 && (b & 0xF0) != 0) ThrowOverflowError(); // only 4 bits fit from byte 5
+                return value;
+            }
+            shift += 7;
+        }
+        ThrowOverflowError();
+        return 0;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void ThrowOverflowError() => throw new OverflowException();
 
     // ------------------------------------------------------------ packed fast paths
     //
