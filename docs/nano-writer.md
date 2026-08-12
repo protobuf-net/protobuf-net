@@ -118,3 +118,27 @@ already exists at the API level; the prototype shows it need not exist per-messa
 - **Buffer storage reworks like the read side**: per-TFM accessor (ref byte root + offset
   on net7+, arr[index] down-level behind one inlined accessor), presized-region fast path,
   flush boundary as the refill problem mirrored.
+
+## The `??=` formulation wins the design (Marc, 2026-08-14)
+
+Sub-object lengths become `+ (lengthCache[obj] ??= Measure(obj))` plus constant tag+prefix
+sizes. This subsumes the ordered queue and flips the recommendation, for two reasons:
+
+1. **Order-independence.** The queue required measure and write to traverse identically,
+   which breaks down for contracts mixing native and LEGACY-MODE members (legacy writes go
+   through the stateful machinery, not the generated traversal). A keyed cache does not
+   care; and shared references measure ONCE - a win no other entrant has.
+2. **It composes with the mixed-contract measure answer**: a native parent needs its
+   legacy-mode child's size, and the child's only size story is the classic
+   discover-and-patch write. The unification is a COUNTING MODE on the raw writer (stores
+   are no-ops, position advances), so any classic write body doubles as its own measure -
+   morally v3's Measure/MeasureState design (the "length lookup used in some contexts"),
+   reborn on the raw core. One population rule: native members via pure-arithmetic
+   Measure_ statics, legacy-mode members via their classic body against the counting
+   writer, both landing in lengthCache[obj].
+
+Caveats, recorded: struct sub-messages have no identity (recompute; cheap leaves); the
+cache is a pooled dictionary with reference-equality (RuntimeHelpers.GetHashCode, dodging
+user overrides) on the writer, cleared per root; and it still RACES recompute-always on
+the descriptor set per the tiebreaker rule - a hash per node is not free at shallow depth -
+but enters as the favorite, being the only entrant that also answers mixed contracts.
