@@ -390,13 +390,11 @@ public ref partial struct ReaderState
         return 0;
     }
 
-    /// <summary>
-    /// Consumes the next tag only if it is exactly <paramref name="tag"/> - the fields-in-order
-    /// fast path: a serializer that just read field n speculates that field n+1 comes next and
-    /// skips the dispatch entirely when it is right.
-    /// </summary>
-    public bool TryReadRawTag(uint tag)
-        => throw new NotImplementedException();
+    // There is deliberately NO TryReadRawTag: with the tag in a caller local, run consumption for
+    // repeated fields is the tag read as the do-while condition (miss falls back to dispatch via
+    // continue), and fields-in-order speculation is a compare + goto case - both decode each tag
+    // exactly once with zero stored state. A Try form would have to decode-and-discard or stash;
+    // see docs/nano-core.md, "Run consumption needs no API at all".
 
     /// <summary>
     /// Skips the field whose raw tag was just read - the untyped counterpart of the legacy

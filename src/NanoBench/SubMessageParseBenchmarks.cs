@@ -12,12 +12,10 @@ namespace ProtoBuf.Nano.Bench;
 /// 64K records (a repeated message field merges into the existing value), so the loop measures
 /// parsing rather than allocation.
 ///
-/// Two-way only, recorded honestly: the veneer row cannot participate yet, because legacy
-/// consumer code frames sub-messages via StartSubItem/EndSubItem returning SubItemToken - whose
-/// constructor is internal to Core, so the spike cannot mint one. That evaporates when nano lands
-/// inside Core; noted in the results file as an integration point for the swap plan.
+/// Three-way: the veneer row arrived with the IVT grant (StartSubItem mints a real SubItemToken,
+/// which is literally the same sign-discriminated long that ReadScope is).
 ///
-/// GlobalSetup is the correctness gate: both parsers must agree on (count, sum, last) against
+/// GlobalSetup is the correctness gate: all parsers must agree on (count, sum, last) against
 /// expected before any measurement.
 /// </summary>
 public class SubMessageParseBenchmarks

@@ -1,0 +1,1204 @@
+// Validating benchmarks:
+// ***** BenchmarkRunner: Start   *****
+// ***** Found 12 benchmark(s) in total *****
+// ***** Building 1 exe(s) in Parallel: Start   *****
+// start dotnet  restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1/" /p:OutDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0/" /p:OutputPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0/" /p:PublishDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\publish/" in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1
+// command took 1.23 sec and exited with 0
+// start dotnet  build -c Release --no-restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1/" /p:OutDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0/" /p:OutputPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0/" /p:PublishDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\publish/" --output "C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0/" in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1
+// command took 5.22 sec and exited with 0
+// ***** Done, took 00:00:06 (6.58 sec)   *****
+// ***** Building 1 exe(s) in Sequential: Start   *****
+// start dotnet  restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2/" /p:OutDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472/" /p:OutputPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472/" /p:PublishDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\publish/" in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2
+// command took 1.15 sec and exited with 0
+// start dotnet  build -c Release --no-restore --nodeReuse:false /p:UseSharedCompilation=false /p:Deterministic=true /p:Optimize=true /p:ArtifactsPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2/" /p:OutDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472/" /p:OutputPath="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472/" /p:PublishDir="C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\publish/" --output "C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472/" in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2
+// command took 4.01 sec and exited with 0
+// ***** Done, took 00:00:05 (5.25 sec)   *****
+// Found 12 benchmarks:
+//   RepeatedParseBenchmarks.LegacyReal: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+//   RepeatedParseBenchmarks.NanoViaLegacyApi: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+//   RepeatedParseBenchmarks.NanoRaw: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+//   RepeatedParseBenchmarks.LegacyReal: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+//   RepeatedParseBenchmarks.NanoViaLegacyApi: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+//   RepeatedParseBenchmarks.NanoRaw: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+//   RepeatedParseBenchmarks.LegacyReal: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+//   RepeatedParseBenchmarks.NanoViaLegacyApi: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+//   RepeatedParseBenchmarks.NanoRaw: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+//   RepeatedParseBenchmarks.LegacyReal: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+//   RepeatedParseBenchmarks.NanoViaLegacyApi: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+//   RepeatedParseBenchmarks.NanoRaw: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.LegacyReal: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet "NanoBench-.NET 10.0-1.dll" --anonymousPipes 3944 3936 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.LegacyReal(RunLength: 1)" --job ".NET 10.0" --benchmarkId 0 in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 BITALG+VBMI2+VNNI+VPOPCNTDQ,AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 10.0(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 166200.00 ns, 2.5360 ns/op
+WorkloadJitting  1: 65536 op, 4843000.00 ns, 73.8983 ns/op
+
+OverheadJitting  2: 1048576 op, 325600.00 ns, 0.3105 ns/op
+WorkloadJitting  2: 1048576 op, 88529500.00 ns, 84.4283 ns/op
+
+WorkloadPilot    1: 1048576 op, 73523300.00 ns, 70.1173 ns/op
+WorkloadPilot    2: 2097152 op, 144411900.00 ns, 68.8610 ns/op
+WorkloadPilot    3: 4194304 op, 242702000.00 ns, 57.8647 ns/op
+WorkloadPilot    4: 8388608 op, 224022100.00 ns, 26.7055 ns/op
+WorkloadPilot    5: 16777216 op, 462737800.00 ns, 27.5813 ns/op
+WorkloadPilot    6: 33554432 op, 961303800.00 ns, 28.6491 ns/op
+
+OverheadWarmup   1: 33554432 op, 2300.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   7: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  19: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  20: 33554432 op, 900.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 983242100.00 ns, 29.3029 ns/op
+WorkloadWarmup   2: 33554432 op, 972859600.00 ns, 28.9935 ns/op
+WorkloadWarmup   3: 33554432 op, 953797700.00 ns, 28.4254 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 959623900.00 ns, 28.5990 ns/op
+WorkloadActual   2: 33554432 op, 966230800.00 ns, 28.7959 ns/op
+WorkloadActual   3: 33554432 op, 979802500.00 ns, 29.2004 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 959623000.00 ns, 28.5990 ns/op
+WorkloadResult   2: 33554432 op, 966229900.00 ns, 28.7959 ns/op
+WorkloadResult   3: 33554432 op, 979801600.00 ns, 29.2004 ns/op
+// GC:  63 40 0 1068154880 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 42256 has exited with code 0.
+
+Mean = 28.865 ns, StdErr = 0.177 ns (0.61%), N = 3, StdDev = 0.307 ns
+Min = 28.599 ns, Q1 = 28.697 ns, Median = 28.796 ns, Q3 = 28.998 ns, Max = 29.200 ns
+IQR = 0.301 ns, LowerFence = 28.246 ns, UpperFence = 29.449 ns
+ConfidenceInterval = [23.272 ns; 34.459 ns] (CI 99.9%), Margin = 5.593 ns (19.38% of Mean)
+Skewness = 0.21, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 11 (91.7%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoViaLegacyApi: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet "NanoBench-.NET 10.0-1.dll" --anonymousPipes 3920 3976 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoViaLegacyApi(RunLength: 1)" --job ".NET 10.0" --benchmarkId 1 in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 BITALG+VBMI2+VNNI+VPOPCNTDQ,AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 10.0(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 157100.00 ns, 2.3972 ns/op
+WorkloadJitting  1: 65536 op, 1310500.00 ns, 19.9966 ns/op
+
+OverheadJitting  2: 1048576 op, 231900.00 ns, 0.2212 ns/op
+WorkloadJitting  2: 1048576 op, 25731800.00 ns, 24.5398 ns/op
+
+WorkloadPilot    1: 1048576 op, 19826600.00 ns, 18.9081 ns/op
+WorkloadPilot    2: 2097152 op, 36033400.00 ns, 17.1821 ns/op
+WorkloadPilot    3: 4194304 op, 73210000.00 ns, 17.4546 ns/op
+WorkloadPilot    4: 8388608 op, 182079800.00 ns, 21.7056 ns/op
+WorkloadPilot    5: 16777216 op, 266756300.00 ns, 15.8999 ns/op
+WorkloadPilot    6: 33554432 op, 570189100.00 ns, 16.9930 ns/op
+
+OverheadWarmup   1: 33554432 op, 2200.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 900.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  19: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  20: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 580175200.00 ns, 17.2906 ns/op
+WorkloadWarmup   2: 33554432 op, 582921500.00 ns, 17.3724 ns/op
+WorkloadWarmup   3: 33554432 op, 583044500.00 ns, 17.3761 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 573592900.00 ns, 17.0944 ns/op
+WorkloadActual   2: 33554432 op, 568312400.00 ns, 16.9370 ns/op
+WorkloadActual   3: 33554432 op, 573628600.00 ns, 17.0955 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 573591900.00 ns, 17.0944 ns/op
+WorkloadResult   2: 33554432 op, 568311400.00 ns, 16.9370 ns/op
+WorkloadResult   3: 33554432 op, 573627600.00 ns, 17.0954 ns/op
+// GC:  63 40 0 1068154880 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 9220 has exited with code 0.
+
+Mean = 17.042 ns, StdErr = 0.053 ns (0.31%), N = 3, StdDev = 0.091 ns
+Min = 16.937 ns, Q1 = 17.016 ns, Median = 17.094 ns, Q3 = 17.095 ns, Max = 17.095 ns
+IQR = 0.079 ns, LowerFence = 16.897 ns, UpperFence = 17.214 ns
+ConfidenceInterval = [15.379 ns; 18.705 ns] (CI 99.9%), Margin = 1.663 ns (9.76% of Mean)
+Skewness = -0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 10 (83.3%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoRaw: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet "NanoBench-.NET 10.0-1.dll" --anonymousPipes 3944 3936 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoRaw(RunLength: 1)" --job ".NET 10.0" --benchmarkId 2 in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 BITALG+VBMI2+VNNI+VPOPCNTDQ,AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 10.0(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 158100.00 ns, 2.4124 ns/op
+WorkloadJitting  1: 65536 op, 1089500.00 ns, 16.6245 ns/op
+
+OverheadJitting  2: 1048576 op, 238500.00 ns, 0.2275 ns/op
+WorkloadJitting  2: 1048576 op, 20001200.00 ns, 19.0746 ns/op
+
+WorkloadPilot    1: 1048576 op, 18792200.00 ns, 17.9216 ns/op
+WorkloadPilot    2: 2097152 op, 31583800.00 ns, 15.0603 ns/op
+WorkloadPilot    3: 4194304 op, 62433200.00 ns, 14.8852 ns/op
+WorkloadPilot    4: 8388608 op, 150942900.00 ns, 17.9938 ns/op
+WorkloadPilot    5: 16777216 op, 249268800.00 ns, 14.8576 ns/op
+WorkloadPilot    6: 33554432 op, 509026400.00 ns, 15.1702 ns/op
+
+OverheadWarmup   1: 33554432 op, 2600.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   7: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   8: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 1400.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 514108600.00 ns, 15.3216 ns/op
+WorkloadWarmup   2: 33554432 op, 519028000.00 ns, 15.4682 ns/op
+WorkloadWarmup   3: 33554432 op, 505789700.00 ns, 15.0737 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 508303300.00 ns, 15.1486 ns/op
+WorkloadActual   2: 33554432 op, 509146200.00 ns, 15.1737 ns/op
+WorkloadActual   3: 33554432 op, 505704600.00 ns, 15.0712 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 508302300.00 ns, 15.1486 ns/op
+WorkloadResult   2: 33554432 op, 509145200.00 ns, 15.1737 ns/op
+WorkloadResult   3: 33554432 op, 505703600.00 ns, 15.0711 ns/op
+// GC:  63 40 0 1068154880 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 36520 has exited with code 0.
+
+Mean = 15.131 ns, StdErr = 0.031 ns (0.20%), N = 3, StdDev = 0.053 ns
+Min = 15.071 ns, Q1 = 15.110 ns, Median = 15.149 ns, Q3 = 15.161 ns, Max = 15.174 ns
+IQR = 0.051 ns, LowerFence = 15.033 ns, UpperFence = 15.238 ns
+ConfidenceInterval = [14.156 ns; 16.106 ns] (CI 99.9%), Margin = 0.975 ns (6.45% of Mean)
+Skewness = -0.29, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 9 (75.0%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 1m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.LegacyReal: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472\NanoBench-.NET Framework 4.7.2-2.exe --anonymousPipes 4000 3988 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.LegacyReal(RunLength: 1)" --job ".NET Framework 4.7.2" --benchmarkId 0 in 
+// BeforeAnythingElse
+
+// Wrong assembly binding redirects for System.Numerics.Vectors, loading it from disk anyway.
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+// GC=Concurrent Workstation
+// HardwareIntrinsics= VectorSize=256
+// Job: .NET Framework 4.7.2(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 210900.00 ns, 3.2181 ns/op
+WorkloadJitting  1: 65536 op, 3590500.00 ns, 54.7867 ns/op
+
+OverheadJitting  2: 1048576 op, 349700.00 ns, 0.3335 ns/op
+WorkloadJitting  2: 1048576 op, 63580500.00 ns, 60.6351 ns/op
+
+WorkloadPilot    1: 1048576 op, 61906200.00 ns, 59.0384 ns/op
+WorkloadPilot    2: 2097152 op, 123642400.00 ns, 58.9573 ns/op
+WorkloadPilot    3: 4194304 op, 250652100.00 ns, 59.7601 ns/op
+WorkloadPilot    4: 8388608 op, 509293300.00 ns, 60.7125 ns/op
+
+OverheadWarmup   1: 8388608 op, 1400.00 ns, 0.0002 ns/op
+OverheadWarmup   2: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 8388608 op, 200.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 8388608 op, 500.00 ns, 0.0001 ns/op
+OverheadActual   2: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual   3: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual   4: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual   5: 8388608 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   6: 8388608 op, 200.00 ns, 0.0000 ns/op
+OverheadActual   7: 8388608 op, 200.00 ns, 0.0000 ns/op
+OverheadActual   8: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual   9: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  10: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  11: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  12: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  13: 8388608 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  14: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  15: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  16: 8388608 op, 300.00 ns, 0.0000 ns/op
+OverheadActual  17: 8388608 op, 200.00 ns, 0.0000 ns/op
+OverheadActual  18: 8388608 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  19: 8388608 op, 200.00 ns, 0.0000 ns/op
+OverheadActual  20: 8388608 op, 400.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 8388608 op, 494746400.00 ns, 58.9784 ns/op
+WorkloadWarmup   2: 8388608 op, 498380900.00 ns, 59.4116 ns/op
+WorkloadWarmup   3: 8388608 op, 492326000.00 ns, 58.6898 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 8388608 op, 497152300.00 ns, 59.2652 ns/op
+WorkloadActual   2: 8388608 op, 496110900.00 ns, 59.1410 ns/op
+WorkloadActual   3: 8388608 op, 495659900.00 ns, 59.0873 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 8388608 op, 497152000.00 ns, 59.2651 ns/op
+WorkloadResult   2: 8388608 op, 496110600.00 ns, 59.1410 ns/op
+WorkloadResult   3: 8388608 op, 495659600.00 ns, 59.0872 ns/op
+// GC:  45 22 0 283618000 8388608
+// Threading:  0 0 8388608
+
+// AfterAll
+// Benchmark Process 37104 has exited with code 0.
+
+Mean = 59.164 ns, StdErr = 0.053 ns (0.09%), N = 3, StdDev = 0.091 ns
+Min = 59.087 ns, Q1 = 59.114 ns, Median = 59.141 ns, Q3 = 59.203 ns, Max = 59.265 ns
+IQR = 0.089 ns, LowerFence = 58.981 ns, UpperFence = 59.336 ns
+ConfidenceInterval = [57.500 ns; 60.829 ns] (CI 99.9%), Margin = 1.665 ns (2.81% of Mean)
+Skewness = 0.24, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 8 (66.7%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoViaLegacyApi: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472\NanoBench-.NET Framework 4.7.2-2.exe --anonymousPipes 4012 4004 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoViaLegacyApi(RunLength: 1)" --job ".NET Framework 4.7.2" --benchmarkId 1 in 
+// BeforeAnythingElse
+
+// Wrong assembly binding redirects for System.Numerics.Vectors, loading it from disk anyway.
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+// GC=Concurrent Workstation
+// HardwareIntrinsics= VectorSize=256
+// Job: .NET Framework 4.7.2(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 167400.00 ns, 2.5543 ns/op
+WorkloadJitting  1: 65536 op, 1716500.00 ns, 26.1917 ns/op
+
+OverheadJitting  2: 1048576 op, 366000.00 ns, 0.3490 ns/op
+WorkloadJitting  2: 1048576 op, 33170600.00 ns, 31.6339 ns/op
+
+WorkloadPilot    1: 1048576 op, 31845500.00 ns, 30.3702 ns/op
+WorkloadPilot    2: 2097152 op, 64381500.00 ns, 30.6995 ns/op
+WorkloadPilot    3: 4194304 op, 130882700.00 ns, 31.2049 ns/op
+WorkloadPilot    4: 8388608 op, 263502100.00 ns, 31.4119 ns/op
+WorkloadPilot    5: 16777216 op, 521953600.00 ns, 31.1109 ns/op
+
+OverheadWarmup   1: 16777216 op, 1400.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 16777216 op, 500.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   2: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   3: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   4: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   5: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   6: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   7: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   8: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   9: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  10: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  11: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  12: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  13: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  14: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  15: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  16: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  17: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  18: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  19: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  20: 16777216 op, 700.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 16777216 op, 516624800.00 ns, 30.7932 ns/op
+WorkloadWarmup   2: 16777216 op, 517589900.00 ns, 30.8508 ns/op
+WorkloadWarmup   3: 16777216 op, 514615500.00 ns, 30.6735 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 16777216 op, 514597200.00 ns, 30.6724 ns/op
+WorkloadActual   2: 16777216 op, 517438500.00 ns, 30.8417 ns/op
+WorkloadActual   3: 16777216 op, 514927900.00 ns, 30.6921 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 16777216 op, 514596750.00 ns, 30.6724 ns/op
+WorkloadResult   2: 16777216 op, 517438050.00 ns, 30.8417 ns/op
+WorkloadResult   3: 16777216 op, 514927450.00 ns, 30.6921 ns/op
+// GC:  90 43 0 567219832 16777216
+// Threading:  0 0 16777216
+
+// AfterAll
+// Benchmark Process 33952 has exited with code 0.
+
+Mean = 30.735 ns, StdErr = 0.053 ns (0.17%), N = 3, StdDev = 0.093 ns
+Min = 30.672 ns, Q1 = 30.682 ns, Median = 30.692 ns, Q3 = 30.767 ns, Max = 30.842 ns
+IQR = 0.085 ns, LowerFence = 30.555 ns, UpperFence = 30.894 ns
+ConfidenceInterval = [29.046 ns; 32.425 ns] (CI 99.9%), Margin = 1.690 ns (5.50% of Mean)
+Skewness = 0.37, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 7 (58.3%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoRaw: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472\NanoBench-.NET Framework 4.7.2-2.exe --anonymousPipes 2260 2216 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoRaw(RunLength: 1)" --job ".NET Framework 4.7.2" --benchmarkId 2 in 
+// BeforeAnythingElse
+
+// Wrong assembly binding redirects for System.Numerics.Vectors, loading it from disk anyway.
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+// GC=Concurrent Workstation
+// HardwareIntrinsics= VectorSize=256
+// Job: .NET Framework 4.7.2(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 171900.00 ns, 2.6230 ns/op
+WorkloadJitting  1: 65536 op, 1421500.00 ns, 21.6904 ns/op
+
+OverheadJitting  2: 1048576 op, 344300.00 ns, 0.3284 ns/op
+WorkloadJitting  2: 1048576 op, 33183600.00 ns, 31.6463 ns/op
+
+WorkloadPilot    1: 1048576 op, 27492900.00 ns, 26.2193 ns/op
+WorkloadPilot    2: 2097152 op, 67111400.00 ns, 32.0012 ns/op
+WorkloadPilot    3: 4194304 op, 114158100.00 ns, 27.2174 ns/op
+WorkloadPilot    4: 8388608 op, 225978600.00 ns, 26.9387 ns/op
+WorkloadPilot    5: 16777216 op, 453290500.00 ns, 27.0182 ns/op
+WorkloadPilot    6: 33554432 op, 906053300.00 ns, 27.0025 ns/op
+
+OverheadWarmup   1: 33554432 op, 1800.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   7: 33554432 op, 600.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  19: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  20: 33554432 op, 700.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 897756500.00 ns, 26.7552 ns/op
+WorkloadWarmup   2: 33554432 op, 912101100.00 ns, 27.1827 ns/op
+WorkloadWarmup   3: 33554432 op, 915968800.00 ns, 27.2980 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 908043000.00 ns, 27.0618 ns/op
+WorkloadActual   2: 33554432 op, 907931600.00 ns, 27.0585 ns/op
+WorkloadActual   3: 33554432 op, 904881600.00 ns, 26.9676 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 908042400.00 ns, 27.0618 ns/op
+WorkloadResult   2: 33554432 op, 907931000.00 ns, 27.0585 ns/op
+WorkloadResult   3: 33554432 op, 904881000.00 ns, 26.9676 ns/op
+// GC:  180 87 0 1134439592 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 41376 has exited with code 0.
+
+Mean = 27.029 ns, StdErr = 0.031 ns (0.11%), N = 3, StdDev = 0.053 ns
+Min = 26.968 ns, Q1 = 27.013 ns, Median = 27.058 ns, Q3 = 27.060 ns, Max = 27.062 ns
+IQR = 0.047 ns, LowerFence = 26.942 ns, UpperFence = 27.131 ns
+ConfidenceInterval = [26.054 ns; 28.005 ns] (CI 99.9%), Margin = 0.975 ns (3.61% of Mean)
+Skewness = -0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 6 (50.0%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.LegacyReal: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet "NanoBench-.NET 10.0-1.dll" --anonymousPipes 2260 2216 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.LegacyReal(RunLength: 8)" --job ".NET 10.0" --benchmarkId 3 in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 BITALG+VBMI2+VNNI+VPOPCNTDQ,AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 10.0(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 172100.00 ns, 2.6260 ns/op
+WorkloadJitting  1: 65536 op, 4419400.00 ns, 67.4347 ns/op
+
+OverheadJitting  2: 1048576 op, 243700.00 ns, 0.2324 ns/op
+WorkloadJitting  2: 1048576 op, 73556000.00 ns, 70.1485 ns/op
+
+WorkloadPilot    1: 1048576 op, 70144500.00 ns, 66.8950 ns/op
+WorkloadPilot    2: 2097152 op, 140856400.00 ns, 67.1656 ns/op
+WorkloadPilot    3: 4194304 op, 212385900.00 ns, 50.6367 ns/op
+WorkloadPilot    4: 8388608 op, 206790300.00 ns, 24.6513 ns/op
+WorkloadPilot    5: 16777216 op, 401857300.00 ns, 23.9526 ns/op
+WorkloadPilot    6: 33554432 op, 828892000.00 ns, 24.7029 ns/op
+
+OverheadWarmup   1: 33554432 op, 2200.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 1200.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 839568800.00 ns, 25.0211 ns/op
+WorkloadWarmup   2: 33554432 op, 831947800.00 ns, 24.7940 ns/op
+WorkloadWarmup   3: 33554432 op, 836174400.00 ns, 24.9199 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 848020400.00 ns, 25.2730 ns/op
+WorkloadActual   2: 33554432 op, 831758700.00 ns, 24.7883 ns/op
+WorkloadActual   3: 33554432 op, 825081000.00 ns, 24.5893 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 848019400.00 ns, 25.2729 ns/op
+WorkloadResult   2: 33554432 op, 831757700.00 ns, 24.7883 ns/op
+WorkloadResult   3: 33554432 op, 825080000.00 ns, 24.5893 ns/op
+// GC:  63 40 0 1068060672 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 42396 has exited with code 0.
+
+Mean = 24.884 ns, StdErr = 0.203 ns (0.82%), N = 3, StdDev = 0.352 ns
+Min = 24.589 ns, Q1 = 24.689 ns, Median = 24.788 ns, Q3 = 25.031 ns, Max = 25.273 ns
+IQR = 0.342 ns, LowerFence = 24.176 ns, UpperFence = 25.543 ns
+ConfidenceInterval = [18.469 ns; 31.299 ns] (CI 99.9%), Margin = 6.415 ns (25.78% of Mean)
+Skewness = 0.25, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 5 (41.7%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoViaLegacyApi: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet "NanoBench-.NET 10.0-1.dll" --anonymousPipes 1736 2468 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoViaLegacyApi(RunLength: 8)" --job ".NET 10.0" --benchmarkId 4 in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 BITALG+VBMI2+VNNI+VPOPCNTDQ,AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 10.0(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 172200.00 ns, 2.6276 ns/op
+WorkloadJitting  1: 65536 op, 1156900.00 ns, 17.6529 ns/op
+
+OverheadJitting  2: 1048576 op, 238300.00 ns, 0.2273 ns/op
+WorkloadJitting  2: 1048576 op, 21051700.00 ns, 20.0765 ns/op
+
+WorkloadPilot    1: 1048576 op, 18199100.00 ns, 17.3560 ns/op
+WorkloadPilot    2: 2097152 op, 33106100.00 ns, 15.7862 ns/op
+WorkloadPilot    3: 4194304 op, 67319500.00 ns, 16.0502 ns/op
+WorkloadPilot    4: 8388608 op, 166931800.00 ns, 19.8998 ns/op
+WorkloadPilot    5: 16777216 op, 257154100.00 ns, 15.3276 ns/op
+WorkloadPilot    6: 33554432 op, 533298000.00 ns, 15.8935 ns/op
+
+OverheadWarmup   1: 33554432 op, 2300.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 1100.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  19: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 550131000.00 ns, 16.3952 ns/op
+WorkloadWarmup   2: 33554432 op, 534390700.00 ns, 15.9261 ns/op
+WorkloadWarmup   3: 33554432 op, 529478300.00 ns, 15.7797 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 537094100.00 ns, 16.0067 ns/op
+WorkloadActual   2: 33554432 op, 534498800.00 ns, 15.9293 ns/op
+WorkloadActual   3: 33554432 op, 530424300.00 ns, 15.8079 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 537093100.00 ns, 16.0066 ns/op
+WorkloadResult   2: 33554432 op, 534497800.00 ns, 15.9293 ns/op
+WorkloadResult   3: 33554432 op, 530423300.00 ns, 15.8078 ns/op
+// GC:  63 40 0 1068060672 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 40656 has exited with code 0.
+
+Mean = 15.915 ns, StdErr = 0.058 ns (0.36%), N = 3, StdDev = 0.100 ns
+Min = 15.808 ns, Q1 = 15.869 ns, Median = 15.929 ns, Q3 = 15.968 ns, Max = 16.007 ns
+IQR = 0.099 ns, LowerFence = 15.719 ns, UpperFence = 16.117 ns
+ConfidenceInterval = [14.087 ns; 17.743 ns] (CI 99.9%), Margin = 1.828 ns (11.49% of Mean)
+Skewness = -0.14, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 4 (33.3%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoRaw: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: dotnet "NanoBench-.NET 10.0-1.dll" --anonymousPipes 3316 4036 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoRaw(RunLength: 8)" --job ".NET 10.0" --benchmarkId 5 in C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET 10.0-1\bin\Release\net10.0
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+// GC=Concurrent Workstation
+// HardwareIntrinsics=AVX512 BITALG+VBMI2+VNNI+VPOPCNTDQ,AVX512 IFMA+VBMI,AVX512 F+BW+CD+DQ+VL,AVX2+BMI1+BMI2+F16C+FMA+LZCNT+MOVBE,AVX,SSE3+SSSE3+SSE4.1+SSE4.2+POPCNT,X86Base+SSE+SSE2,AES+PCLMUL VectorSize=256
+// Job: .NET 10.0(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 155700.00 ns, 2.3758 ns/op
+WorkloadJitting  1: 65536 op, 1081100.00 ns, 16.4963 ns/op
+
+OverheadJitting  2: 1048576 op, 233700.00 ns, 0.2229 ns/op
+WorkloadJitting  2: 1048576 op, 19602100.00 ns, 18.6940 ns/op
+
+WorkloadPilot    1: 1048576 op, 17310300.00 ns, 16.5084 ns/op
+WorkloadPilot    2: 2097152 op, 30892400.00 ns, 14.7306 ns/op
+WorkloadPilot    3: 4194304 op, 61955900.00 ns, 14.7714 ns/op
+WorkloadPilot    4: 8388608 op, 152090900.00 ns, 18.1306 ns/op
+WorkloadPilot    5: 16777216 op, 249248300.00 ns, 14.8564 ns/op
+WorkloadPilot    6: 33554432 op, 502416600.00 ns, 14.9732 ns/op
+
+OverheadWarmup   1: 33554432 op, 2400.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 1400.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadWarmup   7: 33554432 op, 900.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 900.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 1000.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 1000.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 494117400.00 ns, 14.7258 ns/op
+WorkloadWarmup   2: 33554432 op, 498395300.00 ns, 14.8533 ns/op
+WorkloadWarmup   3: 33554432 op, 489593100.00 ns, 14.5910 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 492216000.00 ns, 14.6692 ns/op
+WorkloadActual   2: 33554432 op, 495986100.00 ns, 14.7815 ns/op
+WorkloadActual   3: 33554432 op, 491276600.00 ns, 14.6412 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 492215000.00 ns, 14.6692 ns/op
+WorkloadResult   2: 33554432 op, 495985100.00 ns, 14.7815 ns/op
+WorkloadResult   3: 33554432 op, 491275600.00 ns, 14.6412 ns/op
+// GC:  63 40 0 1068060672 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 35056 has exited with code 0.
+
+Mean = 14.697 ns, StdErr = 0.043 ns (0.29%), N = 3, StdDev = 0.074 ns
+Min = 14.641 ns, Q1 = 14.655 ns, Median = 14.669 ns, Q3 = 14.725 ns, Max = 14.782 ns
+IQR = 0.070 ns, LowerFence = 14.550 ns, UpperFence = 14.831 ns
+ConfidenceInterval = [13.342 ns; 16.052 ns] (CI 99.9%), Margin = 1.355 ns (9.22% of Mean)
+Skewness = 0.32, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 3 (25.0%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.LegacyReal: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472\NanoBench-.NET Framework 4.7.2-2.exe --anonymousPipes 4032 3404 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.LegacyReal(RunLength: 8)" --job ".NET Framework 4.7.2" --benchmarkId 3 in 
+// BeforeAnythingElse
+
+// Wrong assembly binding redirects for System.Numerics.Vectors, loading it from disk anyway.
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+// GC=Concurrent Workstation
+// HardwareIntrinsics= VectorSize=256
+// Job: .NET Framework 4.7.2(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 170800.00 ns, 2.6062 ns/op
+WorkloadJitting  1: 65536 op, 2945200.00 ns, 44.9402 ns/op
+
+OverheadJitting  2: 1048576 op, 377300.00 ns, 0.3598 ns/op
+WorkloadJitting  2: 1048576 op, 53044000.00 ns, 50.5867 ns/op
+
+WorkloadPilot    1: 1048576 op, 52605000.00 ns, 50.1680 ns/op
+WorkloadPilot    2: 2097152 op, 104195800.00 ns, 49.6844 ns/op
+WorkloadPilot    3: 4194304 op, 210043900.00 ns, 50.0784 ns/op
+WorkloadPilot    4: 8388608 op, 429609800.00 ns, 51.2135 ns/op
+WorkloadPilot    5: 16777216 op, 833297500.00 ns, 49.6684 ns/op
+
+OverheadWarmup   1: 16777216 op, 1400.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 16777216 op, 300.00 ns, 0.0000 ns/op
+OverheadWarmup   7: 16777216 op, 400.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   2: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   3: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   4: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   5: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual   6: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   7: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   8: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual   9: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  10: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  11: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  12: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  13: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  14: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  15: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  16: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  17: 16777216 op, 400.00 ns, 0.0000 ns/op
+OverheadActual  18: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  19: 16777216 op, 500.00 ns, 0.0000 ns/op
+OverheadActual  20: 16777216 op, 500.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 16777216 op, 831328200.00 ns, 49.5510 ns/op
+WorkloadWarmup   2: 16777216 op, 839079400.00 ns, 50.0130 ns/op
+WorkloadWarmup   3: 16777216 op, 835610300.00 ns, 49.8063 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 16777216 op, 848568400.00 ns, 50.5786 ns/op
+WorkloadActual   2: 16777216 op, 842244800.00 ns, 50.2017 ns/op
+WorkloadActual   3: 16777216 op, 831862800.00 ns, 49.5829 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 16777216 op, 848568000.00 ns, 50.5786 ns/op
+WorkloadResult   2: 16777216 op, 842244400.00 ns, 50.2017 ns/op
+WorkloadResult   3: 16777216 op, 831862400.00 ns, 49.5829 ns/op
+// GC:  90 43 0 567113096 16777216
+// Threading:  0 0 16777216
+
+// AfterAll
+// Benchmark Process 12016 has exited with code 0.
+
+Mean = 50.121 ns, StdErr = 0.290 ns (0.58%), N = 3, StdDev = 0.503 ns
+Min = 49.583 ns, Q1 = 49.892 ns, Median = 50.202 ns, Q3 = 50.390 ns, Max = 50.579 ns
+IQR = 0.498 ns, LowerFence = 49.145 ns, UpperFence = 51.137 ns
+ConfidenceInterval = [40.949 ns; 59.293 ns] (CI 99.9%), Margin = 9.172 ns (18.30% of Mean)
+Skewness = -0.16, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 2 (16.7%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoViaLegacyApi: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472\NanoBench-.NET Framework 4.7.2-2.exe --anonymousPipes 1736 1816 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoViaLegacyApi(RunLength: 8)" --job ".NET Framework 4.7.2" --benchmarkId 4 in 
+// BeforeAnythingElse
+
+// Wrong assembly binding redirects for System.Numerics.Vectors, loading it from disk anyway.
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+// GC=Concurrent Workstation
+// HardwareIntrinsics= VectorSize=256
+// Job: .NET Framework 4.7.2(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 169800.00 ns, 2.5909 ns/op
+WorkloadJitting  1: 65536 op, 1550300.00 ns, 23.6557 ns/op
+
+OverheadJitting  2: 1048576 op, 343000.00 ns, 0.3271 ns/op
+WorkloadJitting  2: 1048576 op, 31371500.00 ns, 29.9182 ns/op
+
+WorkloadPilot    1: 1048576 op, 30048300.00 ns, 28.6563 ns/op
+WorkloadPilot    2: 2097152 op, 60375900.00 ns, 28.7895 ns/op
+WorkloadPilot    3: 4194304 op, 124326000.00 ns, 29.6416 ns/op
+WorkloadPilot    4: 8388608 op, 247520200.00 ns, 29.5067 ns/op
+WorkloadPilot    5: 16777216 op, 493633200.00 ns, 29.4228 ns/op
+WorkloadPilot    6: 33554432 op, 992931500.00 ns, 29.5917 ns/op
+
+OverheadWarmup   1: 33554432 op, 1700.00 ns, 0.0001 ns/op
+OverheadWarmup   2: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 1300.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   7: 33554432 op, 600.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  19: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  20: 33554432 op, 700.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 983903000.00 ns, 29.3226 ns/op
+WorkloadWarmup   2: 33554432 op, 986455400.00 ns, 29.3987 ns/op
+WorkloadWarmup   3: 33554432 op, 986480600.00 ns, 29.3994 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 989676200.00 ns, 29.4946 ns/op
+WorkloadActual   2: 33554432 op, 1001797700.00 ns, 29.8559 ns/op
+WorkloadActual   3: 33554432 op, 979806400.00 ns, 29.2005 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 989675500.00 ns, 29.4946 ns/op
+WorkloadResult   2: 33554432 op, 1001797000.00 ns, 29.8559 ns/op
+WorkloadResult   3: 33554432 op, 979805700.00 ns, 29.2005 ns/op
+// GC:  180 86 0 1134185496 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 39484 has exited with code 0.
+
+Mean = 29.517 ns, StdErr = 0.190 ns (0.64%), N = 3, StdDev = 0.328 ns
+Min = 29.200 ns, Q1 = 29.348 ns, Median = 29.495 ns, Q3 = 29.675 ns, Max = 29.856 ns
+IQR = 0.328 ns, LowerFence = 28.856 ns, UpperFence = 30.167 ns
+ConfidenceInterval = [23.528 ns; 35.506 ns] (CI 99.9%), Margin = 5.989 ns (20.29% of Mean)
+Skewness = 0.07, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 1 (8.3%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Setup power plan (GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c FriendlyName: High performance)
+// **************************
+// Benchmark: RepeatedParseBenchmarks.NanoRaw: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+// *** Execute ***
+// Launch: 1 / 1
+// Execute: C:\Code\protobuf-net\src\NanoBench\bin\Release\net10.0\NanoBench-.NET Framework 4.7.2-2\bin\Release\net472\NanoBench-.NET Framework 4.7.2-2.exe --anonymousPipes 4040 4056 --benchmarkName "ProtoBuf.Nano.Bench.RepeatedParseBenchmarks.NanoRaw(RunLength: 8)" --job ".NET Framework 4.7.2" --benchmarkId 5 in 
+// BeforeAnythingElse
+
+// Wrong assembly binding redirects for System.Numerics.Vectors, loading it from disk anyway.
+// Benchmark Process Environment Information:
+// BenchmarkDotNet v0.15.8
+// Runtime=.NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+// GC=Concurrent Workstation
+// HardwareIntrinsics= VectorSize=256
+// Job: .NET Framework 4.7.2(IterationCount=3, LaunchCount=1, WarmupCount=3)
+
+OverheadJitting  1: 65536 op, 173400.00 ns, 2.6459 ns/op
+WorkloadJitting  1: 65536 op, 1415600.00 ns, 21.6003 ns/op
+
+OverheadJitting  2: 1048576 op, 349500.00 ns, 0.3333 ns/op
+WorkloadJitting  2: 1048576 op, 28204400.00 ns, 26.8978 ns/op
+
+WorkloadPilot    1: 1048576 op, 26865400.00 ns, 25.6208 ns/op
+WorkloadPilot    2: 2097152 op, 56341500.00 ns, 26.8657 ns/op
+WorkloadPilot    3: 4194304 op, 111511100.00 ns, 26.5863 ns/op
+WorkloadPilot    4: 8388608 op, 220565900.00 ns, 26.2935 ns/op
+WorkloadPilot    5: 16777216 op, 438536700.00 ns, 26.1388 ns/op
+WorkloadPilot    6: 33554432 op, 898168500.00 ns, 26.7675 ns/op
+
+OverheadWarmup   1: 33554432 op, 1400.00 ns, 0.0000 ns/op
+OverheadWarmup   2: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadWarmup   3: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadWarmup   4: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   5: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadWarmup   6: 33554432 op, 700.00 ns, 0.0000 ns/op
+
+OverheadActual   1: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   2: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   3: 33554432 op, 800.00 ns, 0.0000 ns/op
+OverheadActual   4: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   5: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   6: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   7: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual   8: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual   9: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  10: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  11: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  12: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  13: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  14: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  15: 33554432 op, 600.00 ns, 0.0000 ns/op
+OverheadActual  16: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  17: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  18: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  19: 33554432 op, 700.00 ns, 0.0000 ns/op
+OverheadActual  20: 33554432 op, 700.00 ns, 0.0000 ns/op
+
+WorkloadWarmup   1: 33554432 op, 886207900.00 ns, 26.4111 ns/op
+WorkloadWarmup   2: 33554432 op, 879445900.00 ns, 26.2095 ns/op
+WorkloadWarmup   3: 33554432 op, 886630100.00 ns, 26.4236 ns/op
+
+// BeforeActualRun
+WorkloadActual   1: 33554432 op, 880686100.00 ns, 26.2465 ns/op
+WorkloadActual   2: 33554432 op, 889391700.00 ns, 26.5059 ns/op
+WorkloadActual   3: 33554432 op, 888718700.00 ns, 26.4859 ns/op
+
+// AfterActualRun
+WorkloadResult   1: 33554432 op, 880685400.00 ns, 26.2465 ns/op
+WorkloadResult   2: 33554432 op, 889391000.00 ns, 26.5059 ns/op
+WorkloadResult   3: 33554432 op, 888718000.00 ns, 26.4859 ns/op
+// GC:  180 86 0 1134185488 33554432
+// Threading:  0 0 33554432
+
+// AfterAll
+// Benchmark Process 35644 has exited with code 0.
+
+Mean = 26.413 ns, StdErr = 0.083 ns (0.32%), N = 3, StdDev = 0.144 ns
+Min = 26.246 ns, Q1 = 26.366 ns, Median = 26.486 ns, Q3 = 26.496 ns, Max = 26.506 ns
+IQR = 0.130 ns, LowerFence = 26.172 ns, UpperFence = 26.690 ns
+ConfidenceInterval = [23.779 ns; 29.046 ns] (CI 99.9%), Margin = 2.633 ns (9.97% of Mean)
+Skewness = -0.38, Kurtosis = 0.67, MValue = 2
+
+// ** Remained 0 (0.0%) benchmark(s) to run. Estimated finish 2026-08-12 9:29 (0h 0m from now) **
+Successfully reverted power plan (GUID: 381b4222-f694-41f0-9685-ff5bb260df2e FriendlyName: Balanced)
+Run time: 00:01:22 (82.79 sec), executed benchmarks: 12
+
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  bench-repeated\results\ProtoBuf.Nano.Bench.RepeatedParseBenchmarks-report.csv
+  bench-repeated\results\ProtoBuf.Nano.Bench.RepeatedParseBenchmarks-report-github.md
+  bench-repeated\results\ProtoBuf.Nano.Bench.RepeatedParseBenchmarks-report.html
+
+// * Detailed results *
+RepeatedParseBenchmarks.LegacyReal: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+Runtime = .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 28.865 ns, StdErr = 0.177 ns (0.61%), N = 3, StdDev = 0.307 ns
+Min = 28.599 ns, Q1 = 28.697 ns, Median = 28.796 ns, Q3 = 28.998 ns, Max = 29.200 ns
+IQR = 0.301 ns, LowerFence = 28.246 ns, UpperFence = 29.449 ns
+ConfidenceInterval = [23.272 ns; 34.459 ns] (CI 99.9%), Margin = 5.593 ns (19.38% of Mean)
+Skewness = 0.21, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[28.410 ns ; 29.480 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoViaLegacyApi: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+Runtime = .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 17.042 ns, StdErr = 0.053 ns (0.31%), N = 3, StdDev = 0.091 ns
+Min = 16.937 ns, Q1 = 17.016 ns, Median = 17.094 ns, Q3 = 17.095 ns, Max = 17.095 ns
+IQR = 0.079 ns, LowerFence = 16.897 ns, UpperFence = 17.214 ns
+ConfidenceInterval = [15.379 ns; 18.705 ns] (CI 99.9%), Margin = 1.663 ns (9.76% of Mean)
+Skewness = -0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[16.933 ns ; 17.099 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoRaw: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+Runtime = .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 15.131 ns, StdErr = 0.031 ns (0.20%), N = 3, StdDev = 0.053 ns
+Min = 15.071 ns, Q1 = 15.110 ns, Median = 15.149 ns, Q3 = 15.161 ns, Max = 15.174 ns
+IQR = 0.051 ns, LowerFence = 15.033 ns, UpperFence = 15.238 ns
+ConfidenceInterval = [14.156 ns; 16.106 ns] (CI 99.9%), Margin = 0.975 ns (6.45% of Mean)
+Skewness = -0.29, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[15.022 ns ; 15.223 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.LegacyReal: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+Runtime = .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256; GC = Concurrent Workstation
+Mean = 59.164 ns, StdErr = 0.053 ns (0.09%), N = 3, StdDev = 0.091 ns
+Min = 59.087 ns, Q1 = 59.114 ns, Median = 59.141 ns, Q3 = 59.203 ns, Max = 59.265 ns
+IQR = 0.089 ns, LowerFence = 58.981 ns, UpperFence = 59.336 ns
+ConfidenceInterval = [57.500 ns; 60.829 ns] (CI 99.9%), Margin = 1.665 ns (2.81% of Mean)
+Skewness = 0.24, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[59.004 ns ; 59.348 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoViaLegacyApi: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+Runtime = .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256; GC = Concurrent Workstation
+Mean = 30.735 ns, StdErr = 0.053 ns (0.17%), N = 3, StdDev = 0.093 ns
+Min = 30.672 ns, Q1 = 30.682 ns, Median = 30.692 ns, Q3 = 30.767 ns, Max = 30.842 ns
+IQR = 0.085 ns, LowerFence = 30.555 ns, UpperFence = 30.894 ns
+ConfidenceInterval = [29.046 ns; 32.425 ns] (CI 99.9%), Margin = 1.690 ns (5.50% of Mean)
+Skewness = 0.37, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[30.588 ns ; 30.926 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoRaw: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=1]
+Runtime = .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256; GC = Concurrent Workstation
+Mean = 27.029 ns, StdErr = 0.031 ns (0.11%), N = 3, StdDev = 0.053 ns
+Min = 26.968 ns, Q1 = 27.013 ns, Median = 27.058 ns, Q3 = 27.060 ns, Max = 27.062 ns
+IQR = 0.047 ns, LowerFence = 26.942 ns, UpperFence = 27.131 ns
+ConfidenceInterval = [26.054 ns; 28.005 ns] (CI 99.9%), Margin = 0.975 ns (3.61% of Mean)
+Skewness = -0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[26.966 ns ; 27.063 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.LegacyReal: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+Runtime = .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 24.884 ns, StdErr = 0.203 ns (0.82%), N = 3, StdDev = 0.352 ns
+Min = 24.589 ns, Q1 = 24.689 ns, Median = 24.788 ns, Q3 = 25.031 ns, Max = 25.273 ns
+IQR = 0.342 ns, LowerFence = 24.176 ns, UpperFence = 25.543 ns
+ConfidenceInterval = [18.469 ns; 31.299 ns] (CI 99.9%), Margin = 6.415 ns (25.78% of Mean)
+Skewness = 0.25, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[24.369 ns ; 25.009 ns) | @@
+[25.009 ns ; 25.593 ns) | @
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoViaLegacyApi: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+Runtime = .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 15.915 ns, StdErr = 0.058 ns (0.36%), N = 3, StdDev = 0.100 ns
+Min = 15.808 ns, Q1 = 15.869 ns, Median = 15.929 ns, Q3 = 15.968 ns, Max = 16.007 ns
+IQR = 0.099 ns, LowerFence = 15.719 ns, UpperFence = 16.117 ns
+ConfidenceInterval = [14.087 ns; 17.743 ns] (CI 99.9%), Margin = 1.828 ns (11.49% of Mean)
+Skewness = -0.14, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[15.717 ns ; 16.098 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoRaw: .NET 10.0(Runtime=.NET 10.0, Toolchain=net10.0, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+Runtime = .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4; GC = Concurrent Workstation
+Mean = 14.697 ns, StdErr = 0.043 ns (0.29%), N = 3, StdDev = 0.074 ns
+Min = 14.641 ns, Q1 = 14.655 ns, Median = 14.669 ns, Q3 = 14.725 ns, Max = 14.782 ns
+IQR = 0.070 ns, LowerFence = 14.550 ns, UpperFence = 14.831 ns
+ConfidenceInterval = [13.342 ns; 16.052 ns] (CI 99.9%), Margin = 1.355 ns (9.22% of Mean)
+Skewness = 0.32, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[14.574 ns ; 14.849 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.LegacyReal: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+Runtime = .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256; GC = Concurrent Workstation
+Mean = 50.121 ns, StdErr = 0.290 ns (0.58%), N = 3, StdDev = 0.503 ns
+Min = 49.583 ns, Q1 = 49.892 ns, Median = 50.202 ns, Q3 = 50.390 ns, Max = 50.579 ns
+IQR = 0.498 ns, LowerFence = 49.145 ns, UpperFence = 51.137 ns
+ConfidenceInterval = [40.949 ns; 59.293 ns] (CI 99.9%), Margin = 9.172 ns (18.30% of Mean)
+Skewness = -0.16, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[49.125 ns ; 50.894 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoViaLegacyApi: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+Runtime = .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256; GC = Concurrent Workstation
+Mean = 29.517 ns, StdErr = 0.190 ns (0.64%), N = 3, StdDev = 0.328 ns
+Min = 29.200 ns, Q1 = 29.348 ns, Median = 29.495 ns, Q3 = 29.675 ns, Max = 29.856 ns
+IQR = 0.328 ns, LowerFence = 28.856 ns, UpperFence = 30.167 ns
+ConfidenceInterval = [23.528 ns; 35.506 ns] (CI 99.9%), Margin = 5.989 ns (20.29% of Mean)
+Skewness = 0.07, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[29.049 ns ; 30.155 ns) | @@@
+---------------------------------------------------
+
+RepeatedParseBenchmarks.NanoRaw: .NET Framework 4.7.2(Runtime=.NET Framework 4.7.2, Toolchain=net472, IterationCount=3, LaunchCount=1, WarmupCount=3) [RunLength=8]
+Runtime = .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256; GC = Concurrent Workstation
+Mean = 26.413 ns, StdErr = 0.083 ns (0.32%), N = 3, StdDev = 0.144 ns
+Min = 26.246 ns, Q1 = 26.366 ns, Median = 26.486 ns, Q3 = 26.496 ns, Max = 26.506 ns
+IQR = 0.130 ns, LowerFence = 26.172 ns, UpperFence = 26.690 ns
+ConfidenceInterval = [23.779 ns; 29.046 ns] (CI 99.9%), Margin = 2.633 ns (9.97% of Mean)
+Skewness = -0.38, Kurtosis = 0.67, MValue = 2
+-------------------- Histogram --------------------
+[26.245 ns ; 26.508 ns) | @@@
+---------------------------------------------------
+
+// * Summary *
+
+BenchmarkDotNet v0.15.8, Windows 11 (10.0.26300.9032)
+AMD Ryzen 9 7900X 4.70GHz, 1 CPU, 24 logical and 12 physical cores
+.NET SDK 10.0.302
+  [Host]               : .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+  .NET 10.0            : .NET 10.0.10 (10.0.10, 10.0.1026.32716), X64 RyuJIT x86-64-v4
+  .NET Framework 4.7.2 : .NET Framework 4.8.1 (4.8.9337.0), X64 RyuJIT VectorSize=256
+
+IterationCount=3  LaunchCount=1  WarmupCount=3  
+
+| Method           | Job                  | Runtime              | RunLength | Mean     | Error    | StdDev   | Ratio | RatioSD | Gen0   | Gen1   | Allocated | Alloc Ratio |
+|----------------- |--------------------- |--------------------- |---------- |---------:|---------:|---------:|------:|--------:|-------:|-------:|----------:|------------:|
+| LegacyReal       | .NET 10.0            | .NET 10.0            | 1         | 28.87 ns | 5.593 ns | 0.307 ns |  1.00 |    0.01 | 0.0019 | 0.0012 |      32 B |        1.00 |
+| NanoViaLegacyApi | .NET 10.0            | .NET 10.0            | 1         | 17.04 ns | 1.663 ns | 0.091 ns |  0.59 |    0.01 | 0.0019 | 0.0012 |      32 B |        1.00 |
+| NanoRaw          | .NET 10.0            | .NET 10.0            | 1         | 15.13 ns | 0.975 ns | 0.053 ns |  0.52 |    0.01 | 0.0019 | 0.0012 |      32 B |        1.00 |
+| LegacyReal       | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 1         | 59.16 ns | 1.665 ns | 0.091 ns |  2.05 |    0.02 | 0.0054 | 0.0026 |      34 B |        1.06 |
+| NanoViaLegacyApi | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 1         | 30.74 ns | 1.690 ns | 0.093 ns |  1.06 |    0.01 | 0.0054 | 0.0026 |      34 B |        1.06 |
+| NanoRaw          | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 1         | 27.03 ns | 0.975 ns | 0.053 ns |  0.94 |    0.01 | 0.0054 | 0.0026 |      34 B |        1.06 |
+|                  |                      |                      |           |          |          |          |       |         |        |        |           |             |
+| LegacyReal       | .NET 10.0            | .NET 10.0            | 8         | 24.88 ns | 6.415 ns | 0.352 ns |  1.00 |    0.02 | 0.0019 | 0.0012 |      32 B |        1.00 |
+| NanoViaLegacyApi | .NET 10.0            | .NET 10.0            | 8         | 15.91 ns | 1.828 ns | 0.100 ns |  0.64 |    0.01 | 0.0019 | 0.0012 |      32 B |        1.00 |
+| NanoRaw          | .NET 10.0            | .NET 10.0            | 8         | 14.70 ns | 1.355 ns | 0.074 ns |  0.59 |    0.01 | 0.0019 | 0.0012 |      32 B |        1.00 |
+| LegacyReal       | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 8         | 50.12 ns | 9.172 ns | 0.503 ns |  2.01 |    0.03 | 0.0054 | 0.0026 |      34 B |        1.06 |
+| NanoViaLegacyApi | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 8         | 29.52 ns | 5.989 ns | 0.328 ns |  1.19 |    0.02 | 0.0054 | 0.0026 |      34 B |        1.06 |
+| NanoRaw          | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 8         | 26.41 ns | 2.633 ns | 0.144 ns |  1.06 |    0.01 | 0.0054 | 0.0026 |      34 B |        1.06 |
+
+// * Legends *
+  RunLength   : Value of the 'RunLength' parameter
+  Mean        : Arithmetic mean of all measurements
+  Error       : Half of 99.9% confidence interval
+  StdDev      : Standard deviation of all measurements
+  Ratio       : Mean of the ratio distribution ([Current]/[Baseline])
+  RatioSD     : Standard deviation of the ratio distribution ([Current]/[Baseline])
+  Gen0        : GC Generation 0 collects per 1000 operations
+  Gen1        : GC Generation 1 collects per 1000 operations
+  Allocated   : Allocated memory per single operation (managed only, inclusive, 1KB = 1024B)
+  Alloc Ratio : Allocated memory ratio distribution ([Current]/[Baseline])
+  1 ns        : 1 Nanosecond (0.000000001 sec)
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+Global total time: 00:01:35 (95.74 sec), executed benchmarks: 12
+// * Artifacts cleanup *
+Artifacts cleanup is finished

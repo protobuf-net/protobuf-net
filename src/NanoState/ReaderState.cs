@@ -173,7 +173,6 @@ public ref partial struct ReaderState
         => throw new NotImplementedException();
     internal static int TryParseUInt64Varint(global::System.ReadOnlySpan<byte> span, int offset, out ulong value)
         => throw new NotImplementedException();
-    public bool TryReadFieldHeader(int field)
-        => throw new NotImplementedException();
+    // TryReadFieldHeader: graduated - implemented in ReaderState.Nano.cs
 }
 

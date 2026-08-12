@@ -79,7 +79,7 @@ function IsAccessible([Type]$t) {
 
 # members that have graduated to hand-written partials; regeneration must not resurrect them
 $graduated = @{
-    'ReaderState' = @('Dispose', 'FieldNumber', 'WireType', 'ReadFieldHeader', 'ReadInt32', 'StartSubItem', 'EndSubItem', 'SkipField', 'ThrowTooDeep', 'ReadString')
+    'ReaderState' = @('Dispose', 'FieldNumber', 'WireType', 'ReadFieldHeader', 'TryReadFieldHeader', 'ReadInt32', 'StartSubItem', 'EndSubItem', 'SkipField', 'ThrowTooDeep', 'ReadString')
     'WriterState' = @()
 }
 

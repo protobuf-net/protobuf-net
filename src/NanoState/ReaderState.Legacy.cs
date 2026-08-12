@@ -49,6 +49,29 @@ public ref partial struct ReaderState
     public void EndSubItem(SubItemToken token)
         => PopScope(new ReadScope(token.value64));
 
+    /// <summary>
+    /// Legacy look-ahead: consume the next header only if it is <paramref name="field"/> (any wire
+    /// type except end-group) - the repeated-field run loop of legacy generated code. The raw path
+    /// has no equivalent member by design (the tag-local loop condition does this job with no
+    /// re-decode); here a miss restores the offset and the next ReadFieldHeader re-decodes, which
+    /// is the veneer paying for its own statefulness, exactly like legacy's peek-without-moving.
+    /// Single-segment v1: the offset save/restore cannot straddle a refill; revisit with
+    /// GetNextBuffer.
+    /// </summary>
+    public bool TryReadFieldHeader(int field)
+    {
+        var offset = _offset;
+        var tag = ReadRawTag();
+        if (tag != 0 && (int)(tag >> 3) == field && (tag & 7) != 4)
+        {
+            _fieldNumber = field;
+            _wireType = (WireType)(tag & 7);
+            return true;
+        }
+        _offset = offset; // miss (including a group sentinel): leave it for the next header read
+        return false;
+    }
+
     /// <summary>Legacy skip: reconstructs the tag from state - the join the raw path never splits.</summary>
     public void SkipField()
         => SkipTag((uint)((_fieldNumber << 3) | (int)_wireType));

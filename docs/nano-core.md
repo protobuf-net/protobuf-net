@@ -124,8 +124,7 @@ existing API reimplemented over them for compatibility. The archetype is the fie
 - the new primitive returns **the raw units**: `ReadTag() → uint`, the tag varint as-is. Generated
   code switches on compile-time constants — `case (2 << 3) | (int)WireType.String:` — one read, no
   decomposition, no state writes, and the switch is a jump table over exactly what came off the
-  wire. `TryReadTag(expectedTag)` is its companion for the fields-in-order fast path, and the old
-  `ReadFieldHeader()`/`WireType` pair becomes a shift-and-mask veneer over it.
+  wire; the old `ReadFieldHeader()`/`WireType` pair becomes a shift-and-mask veneer over it.
 
 The same pattern recurs across the surface: raw-run append for repeated fields, measure primitives
 that are pure statics, wire-type-carrying write methods that skip the features indirection. New
@@ -148,6 +147,28 @@ caller states the encoding, and the tag flows through parameters.**
   hottest loop in the library, and the generated code already holds the tag in a local everywhere
   it could be needed — so `SkipTag(tag)`, `AppendExtensionData(tag, …)` and the throw helpers take
   it as a parameter (v4's shape exactly).
+- **Run consumption needs no API at all — the caller-held tag makes it a loop condition.** A
+  `TryReadRawTag(expected)` was sketched and then killed on Marc's observation that it re-imports
+  state-holding thinking: on a miss it must either decode-and-discard (the main loop then decodes
+  the same tag again) or stash the decoded tag somewhere (the store the convention exists to
+  avoid). Instead the repeated case makes the tag read its own loop condition and hands a miss
+  straight back to dispatch:
+
+  ```csharp
+  case (2 << 3) | 2:
+      do { value.Names.Add(state.ReadRawString()); }
+      while ((tag = state.ReadRawTag()) == ((2 << 3) | 2));
+      continue;   // tag already populated — back to dispatch, skipping the bottom read
+  ```
+
+  (The `continue` is the structured spelling of "goto the line after the original header read,
+  value already populated".) Every tag decodes exactly once, `ReadRawTag` stays single-shape, and
+  scope termination is free: a 0 or a group sentinel fails the run compare and falls to dispatch,
+  which already handles both. The same argument disposes of the fields-in-order speculation API —
+  with the tag in a local, speculation is a compare against the next field's constant plus a
+  `goto case`, no `Try` member needed. Decided: no `TryReadRawTag`; the legacy
+  `TryReadFieldHeader(field)` becomes a save-offset/read/restore-on-miss veneer (the miss
+  re-decodes — a veneer-only cost, matching legacy's peek-without-moving).
 - **One exception, forced by an immovable signature: termination scope is a state slot.** The
   end-group tag cannot be a parameter, because `ISerializer<T>.Read(ref State, T value)` cannot
   change — and since the slot must exist for that path, it is the *only* mechanism (direct calls
@@ -257,8 +278,9 @@ gate: benchmarks reviewed, and the emitted code read top-to-bottom by a human.
    sequence/stream input feeds the refill. Write it down before writing code.
 3. **Scalar hot paths** — varint read/write/measure with the intrinsic variants from the v4 tables,
    re-measured on net8/net10; fixed32/64; string materialization (see `StringMaterialization.cs`).
-4. **The new-surface API set** — the raw-tag loop (`ReadTag`/`TryReadTag`), same-tag run appends,
-   static measure primitives; the generator emits against these, and each existing member that they
+4. **The new-surface API set** — the raw-tag loop (`ReadRawTag` plus the tag-local run-consumption
+   shape; no `Try` member, see the Raw convention), static measure primitives; the generator emits
+   against these, and each existing member that they
    subsume becomes a veneer. This list is additive API, so it also lands in `PublicAPI.Unshipped`
    when it reaches Core — the API tracking makes the new surface reviewable as such.
 5. **The niche fence** — enumerate which `State` members are hot-path and which sit on the boring
