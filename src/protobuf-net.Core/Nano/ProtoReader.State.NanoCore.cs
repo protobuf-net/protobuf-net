@@ -5,11 +5,14 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ProtoBuf.Nano;
+namespace ProtoBuf
+{
+    partial class ProtoReader
+    {
 
 // The NEW surface - hand-written, beside the generated compatibility floor. The existing API is
 // reimplemented over these primitives; the generator emits against them directly.
-internal ref partial struct ReaderState
+public ref partial struct State
 {
     // ---------------------------------------------------------------- state
     //
@@ -131,7 +134,56 @@ internal ref partial struct ReaderState
     /// deliberately NOT reproduced: the depth cap is the fair trade, decided.
     /// </summary>
     private int _depth;
-    private const int MaxDepth = 512; // = TypeModel.DefaultMaxDepth; configurable when this lands in Core
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IncrDepthExceeded()
+        => ++_depth >= (_model is null ? global::ProtoBuf.Meta.TypeModel.DefaultMaxDepth : _model.MaxDepth);
+
+    // ---------------------------------------------------------------- state extras (the swap)
+    //
+    // What the class reader used to hold: the model, user state, the lazy serialization-context
+    // shim, and the lazy string interner. Class-typed or value fields only; State travels by
+    // ref, so mutations flow, and struct copies share the class-typed instances.
+
+    internal global::ProtoBuf.Meta.TypeModel _model;
+    internal object _userState;
+    internal bool _internStrings;
+    private System.Collections.Generic.Dictionary<string, string> _stringInterner;
+
+    internal string Intern(string value)
+    {
+        if (value is null) return null;
+        if (value.Length == 0) return "";
+        if (_stringInterner is null)
+        {
+            _stringInterner = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal) { { value, value } };
+        }
+        else if (_stringInterner.TryGetValue(value, out var found))
+        {
+            value = found;
+        }
+        else
+        {
+            _stringInterner.Add(value, value);
+        }
+        return value;
+    }
+
+    /// <summary>Fills the span exactly, crossing refills - the Span counterpart of FillFrom.</summary>
+    internal void ReadRawBytesInto(Span<byte> destination)
+    {
+        while (!destination.IsEmpty)
+        {
+            if (_offset >= _count && !GetNextBuffer()) ThrowEndOfData();
+            int take = Math.Min(destination.Length, _count - _offset);
+#if NET7_0_OR_GREATER
+            MemoryMarshal.CreateReadOnlySpan(ref At(_offset), take).CopyTo(destination);
+#else
+            new ReadOnlySpan<byte>(_buffer, _segmentStart + _offset, take).CopyTo(destination);
+#endif
+            _offset += take;
+            destination = destination.Slice(take);
+        }
+    }
 
     /// <summary>The field number of the last header read via the legacy API.</summary>
     public int FieldNumber => _fieldNumber;
@@ -394,7 +446,7 @@ internal ref partial struct ReaderState
         // plausibility where totals are known (Memory/sequence/hinted stream); a bare stream
         // cannot verify up front and is validated by consumption/EOF instead
         if (length < 0 || (_remaining >= 0 && end - _positionBase > (long)_count + _remaining)) ThrowEndOfData();
-        if (++_depth >= MaxDepth) ThrowTooDeep();
+        if (IncrDepthExceeded()) ThrowTooDeep();
         _scope = end;
         _effectiveEnd = (int)Math.Max(0, Math.Min(_count, end - _positionBase));
         return new ReadScope(prior);
@@ -437,7 +489,7 @@ internal ref partial struct ReaderState
     public ReadScope PushGroup(uint endGroupTag)
     {
         if ((endGroupTag & 7) != 4) ThrowMalformed();
-        if (++_depth >= MaxDepth) ThrowTooDeep();
+        if (IncrDepthExceeded()) ThrowTooDeep();
         var prior = _scope;
         _scope = -(long)(endGroupTag >> 3);
         _effectiveEnd = _count;
@@ -462,7 +514,7 @@ internal ref partial struct ReaderState
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal void ThrowTooDeep() // graduated: matches the legacy shape's member
-        => throw new InvalidOperationException($"maximum depth {MaxDepth} exceeded");
+        => throw new InvalidOperationException("Maximum model depth exceeded (see " + nameof(global::ProtoBuf.Meta.TypeModel) + "." + nameof(global::ProtoBuf.Meta.TypeModel.MaxDepth) + "): " + _depth.ToString());
 
     /// <summary>
     /// Whether <paramref name="tag"/> is the current group's end sentinel - the switch-default
@@ -630,7 +682,7 @@ internal ref partial struct ReaderState
     /// </summary>
     private void SkipGroup(uint startTag)
     {
-        if (++_depth >= MaxDepth) ThrowTooDeep();
+        if (IncrDepthExceeded()) ThrowTooDeep();
         uint endTag = startTag + 1; // only the low 3 bits differ: 3 becomes 4
         while (true)
         {
@@ -840,7 +892,7 @@ internal ref partial struct ReaderState
             FillFrom(scratch, 0, len);
             return scratch;
         }
-        var grow = ArrayPool<byte>.Shared.Rent(Math.Min(len, 64 * 1024));
+        var grow = ArrayPool<byte>.Shared.Rent(Math.Min(len, EagerAllocationLimit));
         int filled = 0;
         while (filled < len)
         {
@@ -944,7 +996,7 @@ internal ref partial struct ReaderState
             }
             case 3: // group: recursive capture to the matching sentinel (start tag + 1)
             {
-                if (++_depth >= MaxDepth) ThrowTooDeep();
+                if (IncrDepthExceeded()) ThrowTooDeep();
                 uint endTag = tag + 1;
                 while (true)
                 {
@@ -1184,4 +1236,7 @@ internal readonly struct ReaderSnapshot
 {
     // buffer + segment-start index + offset/count + positionBase + remaining + source + scope;
     // shape only for now - members arrive with the implementation
+}
+
+    }
 }
