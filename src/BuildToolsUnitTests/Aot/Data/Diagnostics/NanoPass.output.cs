@@ -55,7 +55,7 @@ partial class NanoPassModel
             state.AppendExtensionData(value);
         }
 
-        public static global::AotFixtures.NanoPass.Bag NanoRead_AotFixtures_NanoPass_Bag(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Bag value)
+        public static global::AotFixtures.NanoPass.Bag NanoRead_AotFixtures_NanoPass_Bag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NanoPass.Bag value)
         {
             value ??= new global::AotFixtures.NanoPass.Bag();
             uint tag = state.ReadRawTag();
@@ -148,7 +148,7 @@ partial class NanoPassModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.NanoPass.Child NanoRead_AotFixtures_NanoPass_Child(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Child value)
+        public static global::AotFixtures.NanoPass.Child NanoRead_AotFixtures_NanoPass_Child(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NanoPass.Child value)
         {
             value ??= new global::AotFixtures.NanoPass.Child();
             uint tag = state.ReadRawTag();
@@ -361,7 +361,7 @@ partial class NanoPassModel
             }
         }
 
-        public static global::AotFixtures.NanoPass.Order NanoRead_AotFixtures_NanoPass_Order(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Order value)
+        public static global::AotFixtures.NanoPass.Order NanoRead_AotFixtures_NanoPass_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NanoPass.Order value)
         {
             value ??= new global::AotFixtures.NanoPass.Order();
             uint tag = state.ReadRawTag();
