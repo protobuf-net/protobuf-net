@@ -70,9 +70,20 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
+            => RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value);
+
+        public static void RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             state.AppendExtensionData(value);
+        }
+
+        public static int Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
+            return len;
         }
 
         private static global::AotFixtures.SchemaOnly.EmptyExtensible RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)

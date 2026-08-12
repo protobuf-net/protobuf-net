@@ -99,11 +99,24 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_ByHand(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value)
+            => RawWrite_AotFixtures_Extensible_ByHand(ref state, value);
+
+        public static void RawWrite_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             state.AppendExtensionData(value);
+        }
+
+        public static int Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
+            return len;
         }
 
         private static global::AotFixtures.Extensible.ByHand RawRead_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
@@ -192,11 +205,24 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_FromBase(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value)
+            => RawWrite_AotFixtures_Extensible_FromBase(ref state, value);
+
+        public static void RawWrite_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             state.AppendExtensionData(value);
+        }
+
+        public static int Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
+            return len;
         }
 
         private static global::AotFixtures.Extensible.FromBase RawRead_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
@@ -236,11 +262,24 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_TypedOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value)
+            => RawWrite_AotFixtures_Extensible_TypedOnly(ref state, value);
+
+        public static void RawWrite_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
+        }
+
+        public static int Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
+            return len;
         }
 
         private static global::AotFixtures.Extensible.TypedOnly RawRead_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)

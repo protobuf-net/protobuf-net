@@ -160,6 +160,18 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## Cut 4 landed: extensible contracts measure (2026-08-12)
+
+The extension blob carries its own field headers, so its size is its LENGTH -
+`MeasureRawExtensionData` (untyped and typed-bag overloads) reads it off the extension
+object's query stream (`Length - Position`; must be seekable, which every buffer-backed
+extension is - a custom forward-only IExtension throws with ClassicEmit named as the
+escape hatch). That one veneer flipped the entire descriptor tree measurable: 29 Measure_
+statics in the protogen model where cut 3 produced zero, with SchemaTests (556 x both
+TFMs, real schemas, real extension bags) as the parity gate. Note the recompute cost now
+includes double BeginQuery/EndQuery per extensible node (measure + write) - one more
+entrant for the memoization race, which the descriptor corpus can now actually exercise.
+
 ## Cut 3 landed: measure-first sub-messages, recompute-always (2026-08-12)
 
 Generated `Measure_X(value, depth)` statics size a contract by pure arithmetic - constant

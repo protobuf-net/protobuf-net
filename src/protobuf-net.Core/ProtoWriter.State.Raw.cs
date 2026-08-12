@@ -208,6 +208,40 @@ namespace ProtoBuf
             public static void ThrowRawTooDeep()
                 => throw new InvalidOperationException("Maximum model depth exceeded (see "
                     + nameof(Meta.TypeModel) + "." + nameof(Meta.TypeModel.MaxDepth) + ") while measuring");
+
+            /// <summary>
+            /// Raw-convention measure of an instance's extension blob: the stored bytes carry
+            /// their own field headers, so the size is simply the blob's length. The query
+            /// stream must be seekable - every <see cref="Extensible"/>/buffer-backed extension
+            /// is - since the measure must not consume what the write is about to copy.
+            /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static int MeasureRawExtensionData(IExtensible instance)
+                => MeasureRawExtensionDataImpl(instance.GetExtensionObject(false));
+
+            /// <summary>The typed-bag form of <see cref="MeasureRawExtensionData(IExtensible)"/>,
+            /// keyed per hierarchy layer exactly as the write is.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static int MeasureRawExtensionData(ITypedExtensible instance, Type type)
+                => MeasureRawExtensionDataImpl(instance.GetExtensionObject(type, false));
+
+            private static int MeasureRawExtensionDataImpl(IExtension extn)
+            {
+                if (extn is null) return 0;
+                var source = extn.BeginQuery();
+                try
+                {
+                    if (!source.CanSeek)
+                    {
+                        // a custom IExtension yielding a forward-only query stream cannot be
+                        // measured without consuming it; ClassicEmit is the escape hatch
+                        Internal.ThrowHelper.ThrowNotSupportedException(
+                            "Extension data cannot be measured over a non-seekable query stream; consider [ProtoModel(ClassicEmit = true)]");
+                    }
+                    return checked((int)(source.Length - source.Position));
+                }
+                finally { extn.EndQuery(source); }
+            }
         }
     }
 }

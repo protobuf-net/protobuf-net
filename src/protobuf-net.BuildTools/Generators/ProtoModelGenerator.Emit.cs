@@ -2663,17 +2663,18 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>
         /// The contract-shape half of measure eligibility: no surrogate (either direction), no
-        /// hierarchy, no extension data (its blob length has no arithmetic form here yet), not
-        /// group-framed (a group member is framed by markers, not a length prefix), and no
-        /// before-serialize callback - measure runs before the write pipeline would fire it, so
-        /// a callback that mutates state would falsify the already-computed prefix.
+        /// hierarchy, not group-framed (a group member is framed by markers, not a length
+        /// prefix), and no before-serialize callback - measure runs before the write pipeline
+        /// would fire it, so a callback that mutates state would falsify the already-computed
+        /// prefix. Extension data is measurable: the blob carries its own headers, so its size
+        /// is its length (MeasureRawExtensionData) - which is what lets the .proto-generated DTO
+        /// trees, IExtensible throughout, take the measure-first shape at all.
         /// </summary>
         private static bool RawMeasurableShape(ProtoContractPlan contract)
             => contract.ExternalSerializerTypeName is null
             && contract.SurrogateTypeName is null
             && contract.SurrogateSerializer is null
             && contract.RootTypeName is null && contract.SubTypes.Count == 0
-            && contract.Extensible == ProtoExtensibleKind.None
             && !contract.IsGroup
             && !HasCallback(contract, ProtoCallbackKind.BeforeSerialize);
 
@@ -2922,6 +2923,13 @@ namespace ProtoBuf.BuildTools.Generators
 
             measured:
                 if (condition is not null) Line(sb, baseIndent, "}");
+            }
+
+            // the kept-but-unrecognised fields go out after every declared member, and carry
+            // their own headers - so their size is simply the blob's length
+            if (contract.Extensible != ProtoExtensibleKind.None)
+            {
+                Line(sb, baseIndent, $"len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value{ExtensionType(contract)});");
             }
         }
 

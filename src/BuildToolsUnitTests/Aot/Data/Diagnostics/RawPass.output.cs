@@ -33,11 +33,24 @@ partial class RawPassModel
             => RawRead_AotFixtures_RawPass_Bag(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Bag value)
+            => RawWrite_AotFixtures_RawPass_Bag(ref state, value);
+
+        public static void RawWrite_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Bag value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             state.AppendExtensionData(value);
+        }
+
+        public static int Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            int len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
+            return len;
         }
 
         private static global::AotFixtures.RawPass.Bag RawRead_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Bag value)
