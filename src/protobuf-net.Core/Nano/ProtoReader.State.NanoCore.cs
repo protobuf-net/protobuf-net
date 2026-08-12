@@ -145,6 +145,7 @@ public ref partial struct State
     // ref, so mutations flow, and struct copies share the class-typed instances.
 
     internal global::ProtoBuf.Meta.TypeModel _model;
+    internal ISerializationContext _contextShim;
     internal object _userState;
     internal bool _internStrings;
     private System.Collections.Generic.Dictionary<string, string> _stringInterner;
@@ -184,12 +185,6 @@ public ref partial struct State
             destination = destination.Slice(take);
         }
     }
-
-    /// <summary>The field number of the last header read via the legacy API.</summary>
-    public int FieldNumber => _fieldNumber;
-
-    /// <summary>The wire type of the last header read via the legacy API, including hints.</summary>
-    public WireType WireType => _wireType;
 
     /// <summary>Absolute position of the reader.</summary>
     public long Position => _positionBase + _offset;
