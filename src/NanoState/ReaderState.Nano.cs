@@ -108,6 +108,15 @@ public ref partial struct ReaderState
     private int _fieldNumber;
     private WireType _wireType; // init to WireType.None (-1) in every constructor
 
+    /// <summary>
+    /// Sub-item nesting depth, capped exactly as legacy TypeModel.MaxDepth is (default 512) -
+    /// nano's direct child calls recurse per wire nesting level, so without the cap a malicious
+    /// deeply-nested payload is a stack overflow. Reference-tracking recursion detection is
+    /// deliberately NOT reproduced: the depth cap is the fair trade, decided.
+    /// </summary>
+    private int _depth;
+    private const int MaxDepth = 512; // = TypeModel.DefaultMaxDepth; configurable when this lands in Core
+
     /// <summary>The field number of the last header read via the legacy API.</summary>
     public int FieldNumber => _fieldNumber;
 
@@ -237,6 +246,7 @@ public ref partial struct ReaderState
         long end = Position + length;
         // single-segment v1: the whole limit must land inside the data we have
         if (length < 0 || end - _positionBase > _count) ThrowEndOfData();
+        if (++_depth >= MaxDepth) ThrowTooDeep();
         _scope = end;
         _effectiveEnd = (int)(end - _positionBase);
         return new ReadScope(prior);
@@ -259,21 +269,35 @@ public ref partial struct ReaderState
     public ReadScope PushGroup(uint endGroupTag)
     {
         if ((endGroupTag & 7) != 4) ThrowMalformed();
+        if (++_depth >= MaxDepth) ThrowTooDeep();
         var prior = _scope;
         _scope = -(long)(endGroupTag >> 3);
         _effectiveEnd = _count;
         return new ReadScope(prior);
     }
 
-    /// <summary>Restores the enclosing scope captured by a push.</summary>
+    /// <summary>
+    /// Restores the enclosing scope captured by a push. A length scope must have been consumed
+    /// exactly - a short sub-message is corrupt input, matching legacy's EndSubItem validation;
+    /// group scopes were validated by their sentinel (and truncation throws in ReadRawTag).
+    /// </summary>
     public void PopScope(in ReadScope prior)
     {
+        // consumption check as an int compare: for a length scope, _effectiveEnd IS the scope end
+        // clamped into this segment (single-segment v1), so offset-vs-effectiveEnd says exactly
+        // what long Position-vs-scope math would, cheaper
+        if (_scope >= 0 && _offset != _effectiveEnd) ThrowMalformed(); // not fully consumed
+        _depth--;
         var value = prior.Value;
         _scope = value;
         _effectiveEnd = value >= 0
             ? (int)Math.Min(_count, value - _positionBase)
             : _count;
     }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    internal void ThrowTooDeep() // graduated: matches the legacy shape's member
+        => throw new InvalidOperationException($"maximum depth {MaxDepth} exceeded");
 
     /// <summary>
     /// Whether <paramref name="tag"/> is the current group's end sentinel - the switch-default
@@ -315,10 +339,12 @@ public ref partial struct ReaderState
     public uint ReadRawTag()
     {
         var offset = _offset;
-        if (offset >= _effectiveEnd) return 0;
-        // the dominant case - fields 1-15 - is a single byte
+        if (offset >= _effectiveEnd) return EndOfScope();
+        // the dominant case - fields 1-15 - is a single byte; the range check is one compare,
+        // same cost as the bare MSB test, and additionally rejects field 0 (values 0-7): a zero
+        // byte where a tag belongs must throw, not read as a false end-of-message
         uint b0 = At(offset);
-        if ((b0 & 0x80) == 0)
+        if (b0 - 8 <= 119) // 8..127: single-byte tag, field >= 1
         {
             _offset = offset + 1;
             return b0;
@@ -326,11 +352,26 @@ public ref partial struct ReaderState
         return ReadRawTagTail(b0, offset);
     }
 
+    /// <summary>
+    /// The end path, once per message: in group mode, running out of data means the end-group
+    /// sentinel never arrived - corrupt input, matching legacy's EndSubItem validation.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private uint EndOfScope()
+    {
+        if (_scope < 0) ThrowEndOfData(); // truncated group
+        return 0;
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private uint ReadRawTagTail(uint value, int offset)
     {
+        // values 0-7 land here too (field 0, any wire type): invalid, exactly as legacy's SetTag
+        // throws "Invalid field in source data"
+        if ((value & 0x80) == 0) ThrowMalformed();
         // continuation beyond byte 0: rarer, and bounds-guarded per byte so the buffer tail
-        // needs no special-casing (ByteUnrolled shape - see VarintU32DecodeResults.md)
+        // needs no special-casing (ByteUnrolled shape - see VarintU32DecodeResults.md). Any
+        // multi-byte tag has field >= 16, so no further field-0 check is needed.
         value &= 0x7F;
         int shift = 7;
         for (int i = 1; i < 5; i++)

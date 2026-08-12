@@ -169,8 +169,7 @@ public ref partial struct ReaderState
         => throw new NotImplementedException();
     internal void ThrowProtoException(string message)
         => throw new NotImplementedException();
-    internal void ThrowTooDeep()
-        => throw new NotImplementedException();
+    // ThrowTooDeep: graduated - implemented in ReaderState.Nano.cs
     internal void ThrowWireTypeException()
         => throw new NotImplementedException();
     internal static int TryParseUInt64Varint(global::System.ReadOnlySpan<byte> span, int offset, out ulong value)

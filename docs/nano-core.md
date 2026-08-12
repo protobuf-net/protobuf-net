@@ -193,6 +193,24 @@ body serves both the direct-call path and the interface/veneer bridge. A `ref` o
 path (which already yields a `ref`), and in-place merge over `CollectionsMarshal.AsSpan` — gated
 by the tiebreaker rule: benchmark it only if a decision actually hinges on it.
 
+**Safeguard parity, and the elision lever.** The reader carries legacy's safeguards: field-0
+rejection (folded into the single-byte tag range check — `8..127` is one compare, the same cost as
+the bare MSB test), max depth (the `TypeModel.MaxDepth` cap, default 512 — nano's direct child
+calls recurse per wire nesting level, so the cap is also the stack-overflow defence),
+exact-consumption validation on length-scope pop, and truncated-group detection on the end path.
+Reference-tracking recursion detection is deliberately *not* reproduced: the depth cap is the fair
+trade, decided. The measured cost lands on the dive-heavy paths (per-record push/pop), which opens
+a lever unique to the closed world: **the generator can prove whether a model can recurse at
+all** — if a dive's child contract reaches no type cycle, nesting is bounded by a compile-time
+constant and the depth check is provably dead, so the generator can select an unchecked push for
+that site, retaining checks only for genuinely self-repeating trees. Two caveats pin the boundary:
+the *skip* path keeps its guard unconditionally (unknown fields can nest groups arbitrarily
+regardless of the model - the wire decides, not the schema), and the open-world paths (veneers,
+`ISerializer<T>` dispatch) always check, because they cannot see the caller's model. This is not
+unfairness to legacy, which checks because it cannot know: eliding provably-dead checks is the
+compile-time-knowledge thesis itself. Trigger: measured need after full-job runs, per the
+tiebreaker rule.
+
 **Generated code calls generated code directly — `this`-as-`ISerializer<T>` becomes the exception.**
 Today the generated model passes itself as the serializer into
 `state.WriteMessage<T>(field, value, this)`: interface dispatch on a generic method for a callee the
