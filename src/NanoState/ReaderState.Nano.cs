@@ -309,6 +309,18 @@ public ref partial struct ReaderState
     public bool IsScopeEnd(uint tag)
         => (tag & 7) == 4 && (long)(tag >> 3) == -_scope;
 
+    /// <summary>
+    /// Whether the current LENGTH scope is exhausted - the loop test for packed elements, which
+    /// carry no tags to hand to <see cref="ReadRawTag"/>: push the length prefix, read elements
+    /// while this is false, pop. Meaningless in group mode (packed data is always
+    /// length-prefixed), where it reports end-of-segment instead.
+    /// </summary>
+    public bool AtScopeEnd
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _offset >= _effectiveEnd;
+    }
+
     // ---------------------------------------------------------------- snapshot
 
     /// <summary>
@@ -551,6 +563,27 @@ public ref partial struct ReaderState
         // the buffer+index layout is the natural netfx fast path here
         return System.Text.Encoding.UTF8.GetString(_buffer, _segmentStart + offset, len);
 #endif
+    }
+
+    /// <summary>
+    /// Reads a length-prefixed bytes field as a fresh array - REPLACE semantics, the decided
+    /// default (docs/nano-core.md, merge semantics): the caller assigns, nothing is appended.
+    /// Same plausible-length guard as <see cref="ReadRawString"/>.
+    /// </summary>
+    public byte[] ReadRawBytes()
+    {
+        int len = checked((int)ReadRawVarint32());
+        if (len == 0) return [];
+        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        var offset = _offset;
+        _offset = offset + len;
+        var result = new byte[len];
+#if NET7_0_OR_GREATER
+        MemoryMarshal.CreateReadOnlySpan(ref At(offset), len).CopyTo(result);
+#else
+        Buffer.BlockCopy(_buffer, _segmentStart + offset, result, 0, len);
+#endif
+        return result;
     }
 }
 
