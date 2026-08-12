@@ -94,7 +94,7 @@ partial class MapNestedModel
             }
         }
 
-        // nano pass: skipped - member Lists: map
+        // raw read pass: skipped - member Lists: map
 
         global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.Dictionary<string, string>> global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.Dictionary<string, string>>.Serializer
             => global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>();

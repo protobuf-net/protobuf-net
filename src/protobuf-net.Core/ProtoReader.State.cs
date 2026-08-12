@@ -20,7 +20,7 @@ namespace ProtoBuf
         [StructLayout(LayoutKind.Auto)]
         public ref partial struct State
         {
-            // the storage lives in Nano/ProtoReader.State.NanoCore.cs: this shell holds the
+            // the storage lives in ProtoReader.State.Raw.cs: this shell holds the
             // construction entry points and the solid/liquid plumbing. The old class-backend
             // window (Span/OffsetInCurrent/Consume and friends) is GONE - see PORTING.md.
 

@@ -129,7 +129,7 @@ public ref partial struct State
 
     /// <summary>
     /// Sub-item nesting depth, capped exactly as legacy TypeModel.MaxDepth is (default 512) -
-    /// nano's direct child calls recurse per wire nesting level, so without the cap a malicious
+    /// the generated direct child calls recurse per wire nesting level, so without the cap a malicious
     /// deeply-nested payload is a stack overflow. Reference-tracking recursion detection is
     /// deliberately NOT reproduced: the depth cap is the fair trade, decided.
     /// </summary>
@@ -519,7 +519,36 @@ public ref partial struct State
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsScopeEnd(uint tag)
-        => (tag & 7) == 4 && (long)(tag >> 3) == -_scope;
+    {
+        if ((tag & 7) != 4) return false;
+        if ((long)(tag >> 3) == -_scope) return true;
+        return LegacyGroupEnd(tag);
+    }
+
+    /// <summary>
+    /// A generated raw read can be invoked THROUGH the legacy framing: a classic serializer (or
+    /// <c>ReadMessage</c> on a group-formatted member) calls <c>StartSubItem</c>, whose group arm
+    /// mints a token and increments depth WITHOUT pushing a raw scope - so the end-group tag
+    /// belongs to a frame this scope slot knows nothing about. Stash it exactly as
+    /// <c>ReadFieldHeader</c>'s end-group spoof would (<c>_wireType</c>/<c>_fieldNumber</c>), so
+    /// the caller's <c>EndSubItem</c> verifies the right group ended. Guarded to legacy frames
+    /// only (<c>_scope</c> not group-encoded): inside a RAW group scope a mismatched end tag
+    /// stays false, falls to <c>SkipTag</c>, and throws. The two remaining stray-tag routes are
+    /// both caught downstream - under a raw length scope by <c>PopScope</c>'s exact-consumption
+    /// check, under a legacy length frame by <c>EndSubItem</c>'s "terminated via end-group"
+    /// check - and at the root (<c>_depth == 0</c>) there is no frame, so it stays false.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private bool LegacyGroupEnd(uint tag)
+    {
+        if (_depth > 0 && _scope >= 0)
+        {
+            _wireType = WireType.EndGroup;
+            _fieldNumber = (int)(tag >> 3);
+            return true;
+        }
+        return false;
+    }
 
     /// <summary>
     /// Whether the current LENGTH scope is exhausted - the loop test for packed elements, which

@@ -189,6 +189,6 @@ partial class EnumsModel
             }
         }
 
-        // nano pass: skipped - member SByteEnum: kind SByte
+        // raw read pass: skipped - member SByteEnum: kind SByte
     }
 }

@@ -1,11 +1,11 @@
 // Not a diagnostics fixture: it lives here because this folder is golden-only (excluded from
-// AotRefGen and AotConformanceTests). Post-swap the nano pass gates on the REAL
+// AotRefGen and AotConformanceTests). Post-swap the raw read pass gates on the REAL
 // ProtoReader.State raw surface (present in the compiled-in Core sources), so no stub is
 // needed; the golden output shows the second emission pass, side by side with the first.
 using ProtoBuf;
 using System.Collections.Generic;
 
-namespace AotFixtures.NanoPass
+namespace AotFixtures.RawPass
 {
     public enum Status
     {
@@ -37,9 +37,9 @@ namespace AotFixtures.NanoPass
         [ProtoMember(1)] public int Value { get; set; }
     }
 
-    // ineligible for the nano pass (map member), and the CASCADE is the point: Chain references
-    // it through a message member, so Chain falls out of the nano set too even though Chain is
-    // eligible alone - emitting a call to a NanoRead_ method that does not exist would be a
+    // ineligible for the raw read pass (map member), and the CASCADE is the point: Chain references
+    // it through a message member, so Chain falls out of the raw-read set too even though Chain
+    // is eligible alone - emitting a call to a RawRead_ method that does not exist would be a
     // compile error in the consumer's build
     [ProtoContract]
     public class Holder
@@ -65,7 +65,7 @@ namespace AotFixtures.NanoPass
     [ProtoSerializable(typeof(Holder))]
     [ProtoSerializable(typeof(Chain))]
     [ProtoSerializable(typeof(Bag))]
-    public partial class NanoPassModel : ProtoBuf.Meta.TypeModel
+    public partial class RawPassModel : ProtoBuf.Meta.TypeModel
     {
     }
 }

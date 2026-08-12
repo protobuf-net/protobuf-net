@@ -262,31 +262,13 @@ partial class MapModel
             }
         }
 
-        // nano pass: skipped - member Scalars: map
+        // raw read pass: skipped - member Scalars: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Payload>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Map.Payload global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Payload>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Payload value)
-        {
-            value ??= new global::AotFixtures.Map.Payload();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Map_Payload(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Payload>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Map.Payload value)
         {
@@ -295,7 +277,7 @@ partial class MapModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Map.Payload NanoRead_AotFixtures_Map_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Payload value)
+        public static global::AotFixtures.Map.Payload RawRead_AotFixtures_Map_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Map.Payload value)
         {
             value ??= new global::AotFixtures.Map.Payload();
             uint tag = state.ReadRawTag();

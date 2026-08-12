@@ -24,12 +24,12 @@ partial class DynamicCategoryModel
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Label> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.DynamicCategory.Label>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>();
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Measure> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.DynamicCategory.Measure>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>();
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Reading>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -104,6 +104,6 @@ partial class DynamicCategoryModel
             }
         }
 
-        // nano pass: skipped - member Scalar: hand-written serializer
+        // raw read pass: skipped - member Scalar: hand-written serializer
     }
 }

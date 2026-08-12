@@ -160,6 +160,6 @@ partial class ScalarsModel
             }
         }
 
-        // nano pass: skipped - member SByte: kind SByte
+        // raw read pass: skipped - member SByte: kind SByte
     }
 }

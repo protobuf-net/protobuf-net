@@ -233,8 +233,11 @@ caller states the encoding, and the tag flows through parameters.**
   only if measurement shows tolerance labels cost on realistic sparse switches) governs scalar
   wire interchange ONLY; the spec pairs stay unconditional.
 
-**The read signature is value-in, value-out** — `static T NanoRead_X(ref ReaderState, T value)`,
-with `??=` construction inside and merge by mutation. The alternatives were weighed: v4's
+**The read signature is value-in, value-out** — `static T RawRead_X(ref ProtoReader.State, T value)`
+(the emitted name; "nano" survives only in the planning docs), with `??=` construction inside and
+merge by mutation. Since the swap, `ISerializer<T>.Read` *proxies to this static* for every
+eligible contract — the optimized emit is the live read path, exercised by the conformance and
+differential suites through the model, not a parallel artifact awaiting a caller. The alternatives were weighed: v4's
 `void Merge(ref T? value, …)` saves the return shuffle, but a `ref` argument binds only to
 fields, locals and array/span elements — never to properties or fresh collection slots — and the
 generated targets are overwhelmingly properties, so the general path would spill through a local

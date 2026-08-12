@@ -21,8 +21,8 @@ namespace ProtoBuf
 
         ref partial struct State
         {
-            // The nano-swap edition: every member here runs over the nano core (see
-            // Nano/ProtoReader.State.NanoCore.cs and Nano/PORTING.md). The stateful semantics -
+            // The rewritten edition: every member here runs over the raw core (see
+            // ProtoReader.State.Raw.cs and PORTING.md). The stateful semantics -
             // the WireType=None release choreography, the two SubItemToken encodings, SetTag's
             // end-group spoof - are ported faithfully from the class-backend implementation this
             // file replaces; the composites are the original bodies with the substitution
@@ -572,42 +572,75 @@ namespace ProtoBuf
             public TStorage AppendBytes<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter = null)
                 => AppendBytesImpl(value, converter ?? DefaultMemoryConverter<byte>.GetFor<TStorage>(Model));
 
+            /// <summary>
+            /// Raw-convention append: reads a length-prefixed byte chunk (the tag already consumed
+            /// by the caller, per the raw convention) and concatenates it onto an existing
+            /// byte-sequence (which may be null) - the legacy merge semantics for a plain bytes
+            /// member, which the generated raw read must reproduce. Unlike <see cref="AppendBytes(byte[])"/>
+            /// this does not consult the stateful wire type, so it is callable mid-raw-read.
+            /// </summary>
+            [MethodImpl(ProtoReader.HotPath)]
+            public byte[] AppendRawBytes(byte[] value)
+                => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <inheritdoc cref="AppendRawBytes(byte[])"/>
+            [MethodImpl(ProtoReader.HotPath)]
+            public ReadOnlyMemory<byte> AppendRawBytes(ReadOnlyMemory<byte> value)
+                => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <inheritdoc cref="AppendRawBytes(byte[])"/>
+            [MethodImpl(ProtoReader.HotPath)]
+            public Memory<byte> AppendRawBytes(Memory<byte> value)
+                => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
+
+            /// <inheritdoc cref="AppendRawBytes(byte[])"/>
+            [MethodImpl(ProtoReader.HotPath)]
+            public ArraySegment<byte> AppendRawBytes(ArraySegment<byte> value)
+                => AppendRawBytesCore(value, DefaultMemoryConverter<byte>.Instance);
+
             private TStorage AppendBytesImpl<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
             {
                 switch (_wireType)
                 {
                     case WireType.String:
-                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                        // the length read does not consult _wireType, so releasing first is safe
+                        // and lets the raw core carry the whole read
                         _wireType = WireType.None;
-                        if (len == 0) return converter.NonNull(value);
-                        if (len < 0) ThrowInvalidLength(len);
-
-                        byte[] oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
-                        try
-                        {
-#if DEBUG
-                            var oldLength = converter.GetLength(value);
-#endif
-                            var newChunk = converter.Expand(Context, ref value, len);
-#if DEBUG
-                            if (converter.GetLength(value) != (oldLength + len))
-                                ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
-                            if (newChunk.Length != len)
-                                ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
-#endif
-                            if (oversized is null) ReadRawBytesInto(newChunk.Span);
-                            else new ReadOnlySpan<byte>(oversized, 0, len).CopyTo(newChunk.Span);
-                        }
-                        finally
-                        {
-                            if (oversized is not null) ArrayPool<byte>.Shared.Return(oversized);
-                        }
-
-                        return value;
+                        return AppendRawBytesCore(value, converter);
                     default:
                         ThrowWireTypeException();
                         return default;
                 }
+            }
+
+            private TStorage AppendRawBytesCore<TStorage>(TStorage value, IMemoryConverter<TStorage, byte> converter)
+            {
+                int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
+                if (len == 0) return converter.NonNull(value);
+                if (len < 0) ThrowInvalidLength(len);
+
+                byte[] oversized = CanAllocate(len) ? null : ReadBytesOversized(len);
+                try
+                {
+#if DEBUG
+                    var oldLength = converter.GetLength(value);
+#endif
+                    var newChunk = converter.Expand(Context, ref value, len);
+#if DEBUG
+                    if (converter.GetLength(value) != (oldLength + len))
+                        ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the updated value; expected {oldLength + len}, got {converter.GetLength(value)}");
+                    if (newChunk.Length != len)
+                        ThrowHelper.ThrowInvalidOperationException($"The memory converter ({converter.GetType().NormalizeName()}) got the lengths wrong for the returned chunk; expected {len}, got {newChunk.Length}");
+#endif
+                    if (oversized is null) ReadRawBytesInto(newChunk.Span);
+                    else new ReadOnlySpan<byte>(oversized, 0, len).CopyTo(newChunk.Span);
+                }
+                finally
+                {
+                    if (oversized is not null) ArrayPool<byte>.Shared.Return(oversized);
+                }
+
+                return value;
             }
 
             /// <summary>
@@ -937,7 +970,7 @@ namespace ProtoBuf
             {
                 if (instance is null) ThrowHelper.ThrowArgumentNullException(nameof(instance));
                 // reconstruct the tag from state (the join the raw path never splits), then the
-                // nano capture: byte-preserving, allocation-free - replacing the legacy
+                // raw capture: byte-preserving, allocation-free - replacing the legacy
                 // ProtoWriter-based re-encode outright
                 AppendExtensionData((uint)((_fieldNumber << 3) | ((int)_wireType & 7)), instance);
                 _wireType = WireType.None;

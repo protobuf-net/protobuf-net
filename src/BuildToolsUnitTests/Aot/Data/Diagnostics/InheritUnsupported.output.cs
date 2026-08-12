@@ -51,31 +51,13 @@ partial class InheritUnsupportedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.InheritUnsupported.Unlinked global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
-        {
-            value ??= new global::AotFixtures.InheritUnsupported.Unlinked();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 2:
-                    {
-                        value.Extra = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {
@@ -84,7 +66,7 @@ partial class InheritUnsupportedModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.InheritUnsupported.Unlinked NanoRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
+        public static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {
             value ??= new global::AotFixtures.InheritUnsupported.Unlinked();
             uint tag = state.ReadRawTag();

@@ -71,7 +71,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        // nano pass: skipped - member OffsetMinutes: kind Int16
+        // raw read pass: skipped - member OffsetMinutes: kind Int16
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -122,7 +122,7 @@ partial class ModelSurrogateModel
             state.WriteMessage<global::System.DateTimeOffset>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
         }
 
-        // nano pass: skipped - member Release: target global::System.Version is not nano-eligible (cascade)
+        // raw read pass: skipped - member Release: target global::System.Version is not raw-read-eligible (cascade)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -162,31 +162,13 @@ partial class ModelSurrogateModel
             }
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ModelSurrogate.TicksSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
-        {
-            value ??= new global::AotFixtures.ModelSurrogate.TicksSurrogate();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt64();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
         {
@@ -199,7 +181,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static global::AotFixtures.ModelSurrogate.TicksSurrogate NanoRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
+        public static global::AotFixtures.ModelSurrogate.TicksSurrogate RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
         {
             value ??= new global::AotFixtures.ModelSurrogate.TicksSurrogate();
             uint tag = state.ReadRawTag();
@@ -230,26 +212,7 @@ partial class ModelSurrogateModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ModelSurrogate.VersionSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
-        {
-            value ??= new global::AotFixtures.ModelSurrogate.VersionSurrogate();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {
@@ -258,7 +221,7 @@ partial class ModelSurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.ModelSurrogate.VersionSurrogate NanoRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
+        public static global::AotFixtures.ModelSurrogate.VersionSurrogate RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {
             value ??= new global::AotFixtures.ModelSurrogate.VersionSurrogate();
             uint tag = state.ReadRawTag();
@@ -331,7 +294,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -368,6 +331,6 @@ partial class ModelSurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

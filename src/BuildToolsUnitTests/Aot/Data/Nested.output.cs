@@ -25,26 +25,7 @@ partial class NestedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Nested.Address global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
-        {
-            value ??= new global::AotFixtures.Nested.Address();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.City = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Nested_Address(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Address value)
         {
@@ -53,7 +34,7 @@ partial class NestedModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Nested.Address NanoRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
+        public static global::AotFixtures.Nested.Address RawRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
         {
             value ??= new global::AotFixtures.Nested.Address();
             uint tag = state.ReadRawTag();
@@ -81,32 +62,7 @@ partial class NestedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Nested.Customer global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
-        {
-            value ??= new global::AotFixtures.Nested.Customer();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Address;
-                        tmp2 = state.ReadMessage<global::AotFixtures.Nested.Address>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.Address = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Nested_Customer(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value)
         {
@@ -117,7 +73,7 @@ partial class NestedModel
             state.WriteMessage<global::AotFixtures.Nested.Address>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
         }
 
-        public static global::AotFixtures.Nested.Customer NanoRead_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
+        public static global::AotFixtures.Nested.Customer RawRead_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
         {
             value ??= new global::AotFixtures.Nested.Customer();
             uint tag = state.ReadRawTag();
@@ -138,7 +94,7 @@ partial class NestedModel
                     case (2 << 3) | 3:  // Address, field 2, group
                     {
                         var scope = state.PushScope(tag);
-                        value.Address = NanoRead_AotFixtures_Nested_Address(ref state, value.Address);
+                        value.Address = RawRead_AotFixtures_Nested_Address(ref state, value.Address);
                         state.PopScope(scope);
                         break;
                     }
@@ -156,39 +112,7 @@ partial class NestedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Nested.Invoice global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
-        {
-            value ??= new global::AotFixtures.Nested.Invoice();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Number = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Customer;
-                        tmp2 = state.ReadMessage<global::AotFixtures.Nested.Customer>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.Customer = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.ShipTo;
-                        tmp3 = state.ReadMessage<global::AotFixtures.Nested.Address>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) value.ShipTo = tmp3;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Nested_Invoice(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value)
         {
@@ -201,7 +125,7 @@ partial class NestedModel
             state.WriteMessage<global::AotFixtures.Nested.Address>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
         }
 
-        public static global::AotFixtures.Nested.Invoice NanoRead_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
+        public static global::AotFixtures.Nested.Invoice RawRead_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
         {
             value ??= new global::AotFixtures.Nested.Invoice();
             uint tag = state.ReadRawTag();
@@ -222,7 +146,7 @@ partial class NestedModel
                     case (2 << 3) | 3:  // Customer, field 2, group
                     {
                         var scope = state.PushScope(tag);
-                        value.Customer = NanoRead_AotFixtures_Nested_Customer(ref state, value.Customer);
+                        value.Customer = RawRead_AotFixtures_Nested_Customer(ref state, value.Customer);
                         state.PopScope(scope);
                         break;
                     }
@@ -230,7 +154,7 @@ partial class NestedModel
                     case (3 << 3) | 3:  // ShipTo, field 3, group
                     {
                         var scope = state.PushScope(tag);
-                        value.ShipTo = NanoRead_AotFixtures_Nested_Address(ref state, value.ShipTo);
+                        value.ShipTo = RawRead_AotFixtures_Nested_Address(ref state, value.ShipTo);
                         state.PopScope(scope);
                         break;
                     }

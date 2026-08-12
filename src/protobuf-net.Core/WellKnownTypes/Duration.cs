@@ -23,7 +23,7 @@ namespace ProtoBuf.Internal
         {
             if (state.WireType == WireType.String)
             {
-                // the resident fast path lives on State now (nano-swap): peek the canonical
+                // the resident fast path lives on State now: peek the canonical
                 // two-varint shape, commit only on a complete match
                 long seconds = value.Seconds;
                 int nanos = value.Nanoseconds;

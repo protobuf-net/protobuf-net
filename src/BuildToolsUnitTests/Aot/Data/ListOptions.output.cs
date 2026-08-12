@@ -24,56 +24,7 @@ partial class ListOptionsModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ListOptions.NotACollection global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
-        {
-            value ??= new global::AotFixtures.ListOptions.NotACollection();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.PackedScalar = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.OverwriteScalar = state.ReadInt32();
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = state.ReadString();
-                        if (tmp3 != null) value.BothOnString = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.AppendedBytes;
-                        tmp4 = state.AppendBytes(tmp4);
-                        if (tmp4 != null) value.AppendedBytes = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = state.AppendBytes(default(byte[]));
-                        if (tmp5 != null) value.OverwrittenBytes = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.PackedBytes;
-                        tmp6 = state.AppendBytes(tmp6);
-                        if (tmp6 != null) value.PackedBytes = tmp6;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ListOptions_NotACollection(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
@@ -104,7 +55,7 @@ partial class ListOptionsModel
             }
         }
 
-        public static global::AotFixtures.ListOptions.NotACollection NanoRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
+        public static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
             value ??= new global::AotFixtures.ListOptions.NotACollection();
             uint tag = state.ReadRawTag();
@@ -137,13 +88,13 @@ partial class ListOptionsModel
                         break;
                     }
                     case (4 << 3) | 2:  // AppendedBytes, field 4, length-prefixed
-                        value.AppendedBytes = state.ReadRawBytes();
+                        value.AppendedBytes = state.AppendRawBytes(value.AppendedBytes);
                         break;
                     case (5 << 3) | 2:  // OverwrittenBytes, field 5, length-prefixed
                         value.OverwrittenBytes = state.ReadRawBytes();
                         break;
                     case (6 << 3) | 2:  // PackedBytes, field 6, length-prefixed
-                        value.PackedBytes = state.ReadRawBytes();
+                        value.PackedBytes = state.AppendRawBytes(value.PackedBytes);
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
@@ -251,6 +202,6 @@ partial class ListOptionsModel
             }
         }
 
-        // nano pass: skipped - member Default: collection shape CreateVector
+        // raw read pass: skipped - member Default: collection shape CreateVector
     }
 }

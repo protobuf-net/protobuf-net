@@ -88,6 +88,6 @@ partial class ConditionalModel
             }
         }
 
-        // nano pass: skipped - member Value: conditional serialization
+        // raw read pass: skipped - member Value: conditional serialization
     }
 }

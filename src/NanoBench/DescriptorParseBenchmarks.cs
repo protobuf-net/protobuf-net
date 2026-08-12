@@ -191,7 +191,7 @@ public class DescriptorParseBenchmarks
             foreach (var method in nested.GetMethods(
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
             {
-                if (method.Name.StartsWith("NanoRead_", StringComparison.Ordinal)
+                if (method.Name.StartsWith("RawRead_", StringComparison.Ordinal)
                     && method.ReturnType == contractType)
                 {
                     return method.CreateDelegate(delegateType);

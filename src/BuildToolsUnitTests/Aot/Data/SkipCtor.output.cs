@@ -63,31 +63,13 @@ partial class SkipCtorModel
             state.WriteString(2, tmp2);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.SkipCtor.Constructed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
-        {
-            value ??= new global::AotFixtures.SkipCtor.Constructed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_SkipCtor_Constructed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value)
         {
@@ -96,7 +78,7 @@ partial class SkipCtorModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.SkipCtor.Constructed NanoRead_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
+        public static global::AotFixtures.SkipCtor.Constructed RawRead_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
         {
             value ??= new global::AotFixtures.SkipCtor.Constructed();
             uint tag = state.ReadRawTag();

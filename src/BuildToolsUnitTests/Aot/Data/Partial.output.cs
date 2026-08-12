@@ -26,30 +26,7 @@ partial class PartialModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Contested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
-        {
-            value ??= new global::AotFixtures.Partial.Contested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Pinned = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.FromPartial = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Contested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value)
         {
@@ -60,7 +37,7 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.Partial.Contested NanoRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
+        public static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
         {
             value ??= new global::AotFixtures.Partial.Contested();
             uint tag = state.ReadRawTag();
@@ -177,31 +154,13 @@ partial class PartialModel
             }
         }
 
-        // nano pass: skipped - member Fixed: non-default DataFormat
+        // raw read pass: skipped - member Fixed: non-default DataFormat
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Excluded global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
-        {
-            value ??= new global::AotFixtures.Partial.Excluded();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Kept = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value)
         {
@@ -210,7 +169,7 @@ partial class PartialModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Partial.Excluded NanoRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
+        public static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
         {
             value ??= new global::AotFixtures.Partial.Excluded();
             uint tag = state.ReadRawTag();
@@ -241,30 +200,7 @@ partial class PartialModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Partial.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
-        {
-            value ??= new global::AotFixtures.Partial.Mixed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 2:
-                    {
-                        value.OrderOnly = state.ReadInt32();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.Both = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Partial_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value)
         {
@@ -275,7 +211,7 @@ partial class PartialModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static global::AotFixtures.Partial.Mixed NanoRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
+        public static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
         {
             value ??= new global::AotFixtures.Partial.Mixed();
             uint tag = state.ReadRawTag();

@@ -122,6 +122,6 @@ partial class NullablesModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        // nano pass: skipped - member IntWithDefault: [DefaultValue]
+        // raw read pass: skipped - member IntWithDefault: [DefaultValue]
     }
 }

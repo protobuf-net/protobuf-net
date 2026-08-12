@@ -117,31 +117,13 @@ partial class GenericModel
             }
         }
 
-        // nano pass: skipped - member Pair: target global::AotFixtures.Generic.Pair<int, string> is not nano-eligible (cascade)
+        // raw read pass: skipped - member Pair: target global::AotFixtures.Generic.Pair<int, string> is not raw-read-eligible (cascade)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Nested value)
-        {
-            value ??= new global::AotFixtures.Generic.Nested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Nested value)
         {
@@ -150,7 +132,7 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Generic.Nested NanoRead_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Nested value)
+        public static global::AotFixtures.Generic.Nested RawRead_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Nested value)
         {
             value ??= new global::AotFixtures.Generic.Nested();
             uint tag = state.ReadRawTag();
@@ -214,31 +196,13 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<int>>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Standalone<int> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<int>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<int> value)
-        {
-            value ??= new global::AotFixtures.Generic.Standalone<int>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Item = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Standalone_int_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<int>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<int> value)
         {
@@ -247,7 +211,7 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Generic.Standalone<int> NanoRead_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<int> value)
+        public static global::AotFixtures.Generic.Standalone<int> RawRead_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<int> value)
         {
             value ??= new global::AotFixtures.Generic.Standalone<int>();
             uint tag = state.ReadRawTag();
@@ -278,26 +242,7 @@ partial class GenericModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Standalone<string> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<string>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<string> value)
-        {
-            value ??= new global::AotFixtures.Generic.Standalone<string>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Item = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Standalone_string_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<string> value)
         {
@@ -306,7 +251,7 @@ partial class GenericModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Generic.Standalone<string> NanoRead_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<string> value)
+        public static global::AotFixtures.Generic.Standalone<string> RawRead_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<string> value)
         {
             value ??= new global::AotFixtures.Generic.Standalone<string>();
             uint tag = state.ReadRawTag();
@@ -334,33 +279,7 @@ partial class GenericModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
-        {
-            value ??= new global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Value;
-                        tmp1 = state.ReadMessage<global::AotFixtures.Generic.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
         {
@@ -371,7 +290,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> NanoRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
+        public static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>();
             uint tag = state.ReadRawTag();
@@ -383,7 +302,7 @@ partial class GenericModel
                     case (1 << 3) | 3:  // Value, field 1, group
                     {
                         var scope = state.PushScope(tag);
-                        value.Value = NanoRead_AotFixtures_Generic_Nested(ref state, value.Value);
+                        value.Value = RawRead_AotFixtures_Generic_Nested(ref state, value.Value);
                         state.PopScope(scope);
                         break;
                     }
@@ -407,33 +326,7 @@ partial class GenericModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
-        {
-            value ??= new global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Value;
-                        tmp1 = state.ReadMessage<global::AotFixtures.Generic.Wrapper<int>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
         {
@@ -444,7 +337,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> NanoRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
+        public static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>();
             uint tag = state.ReadRawTag();
@@ -456,7 +349,7 @@ partial class GenericModel
                     case (1 << 3) | 3:  // Value, field 1, group
                     {
                         var scope = state.PushScope(tag);
-                        value.Value = NanoRead_AotFixtures_Generic_Wrapper_int_(ref state, value.Value);
+                        value.Value = RawRead_AotFixtures_Generic_Wrapper_int_(ref state, value.Value);
                         state.PopScope(scope);
                         break;
                     }
@@ -480,33 +373,7 @@ partial class GenericModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
-        {
-            value ??= new global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Value;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
         {
@@ -520,7 +387,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> NanoRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
+        public static global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>();
             uint tag = state.ReadRawTag();
@@ -529,16 +396,20 @@ partial class GenericModel
                 switch (tag)
                 {
                     case (1 << 3) | 0:  // Value, field 1, unpacked run
+                        value.Value ??= new global::System.Collections.Generic.List<int>();
                         do { value.Value.Add(unchecked((int)state.ReadRawVarint32())); }
                         while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
                         continue;
                     case (1 << 3) | 2:  // Value, field 1, packed
+                        value.Value ??= new global::System.Collections.Generic.List<int>();
                         state.ReadPackedVarint32(value.Value);
                         break;
                     case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value ??= new global::System.Collections.Generic.List<int>();
                         value.Value.Add(unchecked((int)state.ReadRawFixed32()));
                         break;
                     case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value ??= new global::System.Collections.Generic.List<int>();
                         value.Value.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
                         break;
                     case (2 << 3) | 2:  // Label, field 2, length-prefixed
@@ -561,31 +432,7 @@ partial class GenericModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Wrapper<int> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<int>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<int> value)
-        {
-            value ??= new global::AotFixtures.Generic.Wrapper<int>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Wrapper_int_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<int>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<int> value)
         {
@@ -596,7 +443,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<int> NanoRead_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<int> value)
+        public static global::AotFixtures.Generic.Wrapper<int> RawRead_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<int> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<int>();
             uint tag = state.ReadRawTag();
@@ -633,32 +480,7 @@ partial class GenericModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Wrapper<string> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<string>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<string> value)
-        {
-            value ??= new global::AotFixtures.Generic.Wrapper<string>();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Wrapper_string_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<string> value)
         {
@@ -669,7 +491,7 @@ partial class GenericModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Generic.Wrapper<string> NanoRead_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<string> value)
+        public static global::AotFixtures.Generic.Wrapper<string> RawRead_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<string> value)
         {
             value ??= new global::AotFixtures.Generic.Wrapper<string>();
             uint tag = state.ReadRawTag();

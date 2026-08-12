@@ -328,6 +328,6 @@ partial class ExoticModel
             }
         }
 
-        // nano pass: skipped - member Interface: collection shape CreateEnumerable
+        // raw read pass: skipped - member Interface: collection shape CreateEnumerable
     }
 }

@@ -7,7 +7,7 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
-        // The stream BACKEND is gone (nano-swap): State reads streams natively via its own
+        // The stream BACKEND is gone: State reads streams natively via its own
         // shift-and-top-up core. What survives here is the museum Create overload and the
         // MemoryStream unwrap helper - which also serves the WRITER's extension-blit, its one
         // other caller.

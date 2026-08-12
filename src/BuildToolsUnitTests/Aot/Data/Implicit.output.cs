@@ -68,42 +68,13 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        // nano pass: skipped - member <Ignored>k__BackingField: accessor-reached
+        // raw read pass: skipped - member <Ignored>k__BackingField: accessor-reached
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllPublic>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Implicit.AllPublic global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllPublic>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllPublic value)
-        {
-            value ??= new global::AotFixtures.Implicit.AllPublic();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Apple = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Mango = state.ReadInt32();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Zebra = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Implicit_AllPublic(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllPublic>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllPublic value)
         {
@@ -116,7 +87,7 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static global::AotFixtures.Implicit.AllPublic NanoRead_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllPublic value)
+        public static global::AotFixtures.Implicit.AllPublic RawRead_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllPublic value)
         {
             value ??= new global::AotFixtures.Implicit.AllPublic();
             uint tag = state.ReadRawTag();
@@ -162,30 +133,7 @@ partial class ImplicitModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Implicit.FirstTag global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.FirstTag>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.FirstTag value)
-        {
-            value ??= new global::AotFixtures.Implicit.FirstTag();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 10:
-                    {
-                        value.Alpha = state.ReadInt32();
-                        break;
-                    }
-                    case 11:
-                    {
-                        value.Beta = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Implicit_FirstTag(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.FirstTag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.FirstTag value)
         {
@@ -196,7 +144,7 @@ partial class ImplicitModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static global::AotFixtures.Implicit.FirstTag NanoRead_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.FirstTag value)
+        public static global::AotFixtures.Implicit.FirstTag RawRead_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.FirstTag value)
         {
             value ??= new global::AotFixtures.Implicit.FirstTag();
             uint tag = state.ReadRawTag();
@@ -236,25 +184,7 @@ partial class ImplicitModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Implicit.Ignoring global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Ignoring>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Ignoring value)
-        {
-            value ??= new global::AotFixtures.Implicit.Ignoring();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Kept = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Implicit_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Ignoring value)
         {
@@ -263,7 +193,7 @@ partial class ImplicitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Implicit.Ignoring NanoRead_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Ignoring value)
+        public static global::AotFixtures.Implicit.Ignoring RawRead_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Ignoring value)
         {
             value ??= new global::AotFixtures.Implicit.Ignoring();
             uint tag = state.ReadRawTag();
@@ -294,35 +224,7 @@ partial class ImplicitModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Implicit.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Mixed value)
-        {
-            value ??= new global::AotFixtures.Implicit.Mixed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Alpha = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Zulu = state.ReadInt32();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Pinned = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Implicit_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Mixed value)
         {
@@ -335,7 +237,7 @@ partial class ImplicitModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static global::AotFixtures.Implicit.Mixed NanoRead_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Mixed value)
+        public static global::AotFixtures.Implicit.Mixed RawRead_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Mixed value)
         {
             value ??= new global::AotFixtures.Implicit.Mixed();
             uint tag = state.ReadRawTag();

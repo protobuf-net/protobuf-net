@@ -26,25 +26,7 @@ partial class WrappedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Wrapped.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
-        {
-            value ??= new global::AotFixtures.Wrapped.Nested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Wrapped_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Nested value)
         {
@@ -53,7 +35,7 @@ partial class WrappedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Wrapped.Nested NanoRead_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
+        public static global::AotFixtures.Wrapped.Nested RawRead_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
         {
             value ??= new global::AotFixtures.Wrapped.Nested();
             uint tag = state.ReadRawTag();
@@ -293,7 +275,7 @@ partial class WrappedModel
             }
         }
 
-        // nano pass: skipped - member Value: null-wrapped
+        // raw read pass: skipped - member Value: null-wrapped
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Wrapped.Shade>();

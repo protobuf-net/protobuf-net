@@ -71,7 +71,7 @@ partial class TrivialGetterModel
             }
         }
 
-        // nano pass: skipped - member Value: accessor-reached setter
+        // raw read pass: skipped - member Value: accessor-reached setter
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -104,7 +104,7 @@ partial class TrivialGetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // nano pass: skipped - member Doubled: getter-only (a scalar/message needs assignment)
+        // raw read pass: skipped - member Doubled: getter-only (a scalar/message needs assignment)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "_value")]
         private static extern ref int Field_AotFixtures_TrivialGetter_Backed_Value(global::AotFixtures.TrivialGetter.Backed target);

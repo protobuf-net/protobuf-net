@@ -130,7 +130,7 @@ partial class CompatElementsModel
             }
         }
 
-        // nano pass: skipped - member ViaMember: map
+        // raw read pass: skipped - member ViaMember: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -216,7 +216,7 @@ partial class CompatElementsModel
             }
         }
 
-        // nano pass: skipped - member Guids: kind Guid
+        // raw read pass: skipped - member Guids: kind Guid
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Map>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -266,7 +266,7 @@ partial class CompatElementsModel
             }
         }
 
-        // nano pass: skipped - member ByIndex: map
+        // raw read pass: skipped - member ByIndex: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.WellKnownLists>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -328,6 +328,6 @@ partial class CompatElementsModel
             }
         }
 
-        // nano pass: skipped - member Dates: non-default DataFormat
+        // raw read pass: skipped - member Dates: non-default DataFormat
     }
 }

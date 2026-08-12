@@ -54,32 +54,13 @@ partial class AssemblySurrogateModel
             state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        // nano pass: skipped - member Version: target global::System.Version is not nano-eligible (cascade)
+        // raw read pass: skipped - member Version: target global::System.Version is not raw-read-eligible (cascade)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.AssemblySurrogate.VersionSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
-        {
-            value ??= new global::AotFixtures.AssemblySurrogate.VersionSurrogate();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {
@@ -88,7 +69,7 @@ partial class AssemblySurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.AssemblySurrogate.VersionSurrogate NanoRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+        public static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {
             value ??= new global::AotFixtures.AssemblySurrogate.VersionSurrogate();
             uint tag = state.ReadRawTag();
@@ -147,6 +128,6 @@ partial class AssemblySurrogateModel
             state.WriteString(1, tmp1);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

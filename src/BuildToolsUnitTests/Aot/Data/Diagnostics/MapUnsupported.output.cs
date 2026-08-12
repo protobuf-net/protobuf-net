@@ -61,7 +61,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        // nano pass: skipped - member Value: map
+        // raw read pass: skipped - member Value: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -99,7 +99,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        // nano pass: skipped - member Value: map
+        // raw read pass: skipped - member Value: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -137,7 +137,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        // nano pass: skipped - member Value: map
+        // raw read pass: skipped - member Value: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -175,7 +175,7 @@ partial class MapUnsupportedModel
             }
         }
 
-        // nano pass: skipped - member Value: map
+        // raw read pass: skipped - member Value: map
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.MapUnsupported.Shade>();

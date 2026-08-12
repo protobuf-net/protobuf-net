@@ -25,25 +25,7 @@ partial class KeywordsModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Keywords.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
-        {
-            value ??= new global::AotFixtures.Keywords.Inner();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.@int = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Keywords_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Inner value)
         {
@@ -52,7 +34,7 @@ partial class KeywordsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Keywords.Inner NanoRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
+        public static global::AotFixtures.Keywords.Inner RawRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
         {
             value ??= new global::AotFixtures.Keywords.Inner();
             uint tag = state.ReadRawTag();
@@ -155,7 +137,7 @@ partial class KeywordsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        // nano pass: skipped - member lock: target global::AotFixtures.Keywords.Pair is not nano-eligible (cascade)
+        // raw read pass: skipped - member lock: target global::AotFixtures.Keywords.Pair is not raw-read-eligible (cascade)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -202,6 +184,6 @@ partial class KeywordsModel
             state.WriteString(2, tmp2);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
     }
 }

@@ -50,7 +50,7 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Inits>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -107,7 +107,7 @@ partial class InitModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        // nano pass: skipped - member Number: accessor-reached setter
+        // raw read pass: skipped - member Number: accessor-reached setter
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -140,7 +140,7 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // nano pass: skipped - member Id: accessor-reached setter
+        // raw read pass: skipped - member Id: accessor-reached setter
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Number>k__BackingField")]
         private static extern ref int Field_AotFixtures_Init_InitStruct_Number(ref global::AotFixtures.Init.InitStruct target);

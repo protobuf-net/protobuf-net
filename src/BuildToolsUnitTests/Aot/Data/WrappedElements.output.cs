@@ -26,25 +26,7 @@ partial class WrappedElementsModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.WrappedElements.Payload global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
-        {
-            value ??= new global::AotFixtures.WrappedElements.Payload();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_WrappedElements_Payload(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrappedElements.Payload value)
         {
@@ -53,7 +35,7 @@ partial class WrappedElementsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.WrappedElements.Payload NanoRead_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
+        public static global::AotFixtures.WrappedElements.Payload RawRead_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
         {
             value ??= new global::AotFixtures.WrappedElements.Payload();
             uint tag = state.ReadRawTag();
@@ -248,7 +230,7 @@ partial class WrappedElementsModel
             }
         }
 
-        // nano pass: skipped - member Messages: null-wrapped
+        // raw read pass: skipped - member Messages: null-wrapped
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrappedElements.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.WrappedElements.Shade>();

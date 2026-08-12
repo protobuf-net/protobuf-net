@@ -28,31 +28,7 @@ partial class ListsModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Lists.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
-        {
-            value ??= new global::AotFixtures.Lists.Inner();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Lists_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value)
         {
@@ -63,7 +39,7 @@ partial class ListsModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Lists.Inner NanoRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
+        public static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
         {
             value ??= new global::AotFixtures.Lists.Inner();
             uint tag = state.ReadRawTag();
@@ -266,7 +242,7 @@ partial class ListsModel
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
         }
 
-        // nano pass: skipped - member Int32Array: collection shape CreateVector
+        // raw read pass: skipped - member Int32Array: collection shape CreateVector
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Colour> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Lists.Colour>();

@@ -200,31 +200,13 @@ partial class MapFormatModel
             }
         }
 
-        // nano pass: skipped - member Plain: map
+        // raw read pass: skipped - member Plain: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapFormat.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.MapFormat.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapFormat.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapFormat.Nested value)
-        {
-            value ??= new global::AotFixtures.MapFormat.Nested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_MapFormat_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapFormat.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapFormat.Nested value)
         {
@@ -233,7 +215,7 @@ partial class MapFormatModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.MapFormat.Nested NanoRead_AotFixtures_MapFormat_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapFormat.Nested value)
+        public static global::AotFixtures.MapFormat.Nested RawRead_AotFixtures_MapFormat_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapFormat.Nested value)
         {
             value ??= new global::AotFixtures.MapFormat.Nested();
             uint tag = state.ReadRawTag();

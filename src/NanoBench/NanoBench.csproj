@@ -20,14 +20,13 @@
     <!-- aliased: protobuf-net.Reflection's DTOs share the Google.Protobuf.Reflection namespace,
          so the package must be reached via gpb:: (the extern-alias situation AGENTS.md documents) -->
     <PackageReference Include="Google.Protobuf" Aliases="gpb" />
-    <!-- nano-swap: ReaderState now lives in Core (internal, IVT'd to this rig); the NanoState
-         spike project is retired from the reference graph to avoid duplicate types -->
+    <!-- the raw reader core lives in Core (internal, IVT'd to this rig) -->
     <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
     <!-- referenced as an analyzer, so the generator runs for real during this project's build:
-         the descriptor DTOs carry [ProtoContract], and the nano pass (symbol-gated on the
-         NanoState reference) emits NanoRead_ methods that the equivalence gate compares against
+         the descriptor DTOs carry [ProtoContract], and the raw read pass (symbol-gated on the
+         raw surface) emits RawRead_ methods that the equivalence gate compares against
          the hand-written readers -->
     <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />

@@ -75,7 +75,7 @@ partial class ParseableModel
             }
         }
 
-        // nano pass: skipped - member Address: kind Parseable
+        // raw read pass: skipped - member Address: kind Parseable
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -118,31 +118,13 @@ partial class ParseableModel
             state.WriteMessage<global::AotFixtures.Parseable.NotParseable>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
         }
 
-        // nano pass: skipped - member Ratio: kind Parseable
+        // raw read pass: skipped - member Ratio: kind Parseable
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Parseable.NotParseable global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.NotParseable value)
-        {
-            value ??= new global::AotFixtures.Parseable.NotParseable();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Parseable_NotParseable(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.NotParseable value)
         {
@@ -151,7 +133,7 @@ partial class ParseableModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Parseable.NotParseable NanoRead_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.NotParseable value)
+        public static global::AotFixtures.Parseable.NotParseable RawRead_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.NotParseable value)
         {
             value ??= new global::AotFixtures.Parseable.NotParseable();
             uint tag = state.ReadRawTag();

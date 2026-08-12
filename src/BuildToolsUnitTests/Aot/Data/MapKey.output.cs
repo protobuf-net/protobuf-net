@@ -104,31 +104,13 @@ partial class MapKeyModel
             }
         }
 
-        // nano pass: skipped - member Bool: map
+        // raw read pass: skipped - member Bool: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.MapKey.Payload global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
-        {
-            value ??= new global::AotFixtures.MapKey.Payload();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_MapKey_Payload(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapKey.Payload value)
         {
@@ -137,7 +119,7 @@ partial class MapKeyModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.MapKey.Payload NanoRead_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
+        public static global::AotFixtures.MapKey.Payload RawRead_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
         {
             value ??= new global::AotFixtures.MapKey.Payload();
             uint tag = state.ReadRawTag();

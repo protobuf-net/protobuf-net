@@ -27,22 +27,14 @@ partial class SchemaOnlyModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.SchemaOnly.Empty global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Empty>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
-        {
-            value ??= new global::AotFixtures.SchemaOnly.Empty();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                state.SkipField();
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_SchemaOnly_Empty(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Empty>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
         }
 
-        public static global::AotFixtures.SchemaOnly.Empty NanoRead_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
+        public static global::AotFixtures.SchemaOnly.Empty RawRead_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
         {
             value ??= new global::AotFixtures.SchemaOnly.Empty();
             uint tag = state.ReadRawTag();
@@ -64,15 +56,7 @@ partial class SchemaOnlyModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.SchemaOnly.EmptyExtensible global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
-        {
-            value ??= new global::AotFixtures.SchemaOnly.EmptyExtensible();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                state.AppendExtensionData(value);
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
         {
@@ -80,7 +64,7 @@ partial class SchemaOnlyModel
             state.AppendExtensionData(value);
         }
 
-        public static global::AotFixtures.SchemaOnly.EmptyExtensible NanoRead_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
+        public static global::AotFixtures.SchemaOnly.EmptyExtensible RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
         {
             value ??= new global::AotFixtures.SchemaOnly.EmptyExtensible();
             uint tag = state.ReadRawTag();
@@ -102,31 +86,7 @@ partial class SchemaOnlyModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.SchemaOnly.Ignoring global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Ignoring>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
-        {
-            value ??= new global::AotFixtures.SchemaOnly.Ignoring();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_SchemaOnly_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value)
         {
@@ -137,7 +97,7 @@ partial class SchemaOnlyModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.SchemaOnly.Ignoring NanoRead_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
+        public static global::AotFixtures.SchemaOnly.Ignoring RawRead_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
         {
             value ??= new global::AotFixtures.SchemaOnly.Ignoring();
             uint tag = state.ReadRawTag();
@@ -174,31 +134,7 @@ partial class SchemaOnlyModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.SchemaOnly.Plain global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Plain>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
-        {
-            value ??= new global::AotFixtures.SchemaOnly.Plain();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_SchemaOnly_Plain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Plain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value)
         {
@@ -209,7 +145,7 @@ partial class SchemaOnlyModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.SchemaOnly.Plain NanoRead_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
+        public static global::AotFixtures.SchemaOnly.Plain RawRead_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
         {
             value ??= new global::AotFixtures.SchemaOnly.Plain();
             uint tag = state.ReadRawTag();
@@ -246,31 +182,7 @@ partial class SchemaOnlyModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.SchemaOnly.SchemaOnly global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.SchemaOnly>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
-        {
-            value ??= new global::AotFixtures.SchemaOnly.SchemaOnly();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.SchemaOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
         {
@@ -281,7 +193,7 @@ partial class SchemaOnlyModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.SchemaOnly.SchemaOnly NanoRead_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
+        public static global::AotFixtures.SchemaOnly.SchemaOnly RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
         {
             value ??= new global::AotFixtures.SchemaOnly.SchemaOnly();
             uint tag = state.ReadRawTag();

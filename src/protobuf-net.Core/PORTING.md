@@ -77,11 +77,33 @@ untouched. Exception fidelity restored post-sweep: EoF = EndOfStreamException, v
 exhaustion = OverflowException, protoSource decoration on every raw throw.
 
 Post-green backlog (the merge-phase ceremony, in no particular order): PublicAPI.Unshipped
-entries for the raw surface + ReadScope; [Experimental] ceremony; the emit-gate flip to
-explicit opt-in; the classic-emit escape-hatch flag (task, wording recorded in nano-core.md);
-field-0 tags throw IOE where legacy said ProtoException (no test distinguishes); NanoState
-spike project retirement; benchmark re-verification on the swapped tree (numbers should be
-the spike numbers - same code, new home); delete this file when the swap merges.
+entries for the raw surface + ReadScope; [Experimental] ceremony; the classic-emit
+escape-hatch flag (task, wording recorded in nano-core.md); field-0 tags throw IOE where
+legacy said ProtoException (no test distinguishes); benchmark re-verification on the swapped
+tree (numbers should be the spike numbers - same code, new home); delete this file when the
+swap merges.
+
+Done since: ISerializer.Read now PROXIES to the RawRead_ static for eligible contracts (the
+question the emit-gate item was really asking - the optimized emit is the live read path,
+and the conformance suite exercises it for real); the NanoState spike is deleted; "nano"
+naming is purged from code (files: ProtoReader.State.Raw.cs / .WellKnown.cs; generated
+surface: RawRead_ + "raw read pass" breadcrumbs; the term survives only in planning docs
+and the NanoBench rig's project name).
+
+Routing immediately caught four latent divergences that compiled and passed everything
+while the statics sat unrouted - the strongest argument the proxy was worth it:
+- plain-bytes merge is APPEND in legacy; the raw form replaced. AppendRawBytes (raw-convention,
+  no _wireType consultation) now carries both: the emit uses it, and AppendBytes' String arm
+  delegates to it. OverwriteList bytes stay on replace.
+- a classic caller reading a GROUP-framed value (StartSubItem mints a token, pushes no raw
+  scope) left the proxied raw read blind to the end-group tag. IsScopeEnd now has a legacy
+  fallback: inside a legacy frame it stashes _wireType/_fieldNumber exactly as ReadFieldHeader's
+  spoof would, and EndSubItem's existing verification takes it from there.
+- repeated arms assumed the collection existed (bench DTOs initialize inline); a settable null
+  List member NRE'd. Each arm now opens with construct-on-first-presence (??= new), guarded to
+  members with an ordinary setter (IsReadOnly / UsesAccessor emit nothing - CS0200 otherwise).
+- the packed List<int> fast path is typed to the non-nullable list; a List<int?> member now
+  falls to the inline drain (every other form already converts implicitly).
 
 ## Cut status (historical)
 

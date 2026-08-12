@@ -120,7 +120,7 @@ partial class UrisModel
             }
         }
 
-        // nano pass: skipped - member Home: kind Uri
+        // raw read pass: skipped - member Home: kind Uri
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Fixed>k__BackingField")]
         private static extern ref global::System.Uri Field_AotFixtures_Uris_Links_Fixed(global::AotFixtures.Uris.Links target);

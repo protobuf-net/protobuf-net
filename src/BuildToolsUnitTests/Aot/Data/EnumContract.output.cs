@@ -74,7 +74,7 @@ partial class EnumContractModel
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);
         }
 
-        // nano pass: skipped - member Size: kind Byte
+        // raw read pass: skipped - member Size: kind Byte
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Options> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Options>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.EnumContract.Options>();

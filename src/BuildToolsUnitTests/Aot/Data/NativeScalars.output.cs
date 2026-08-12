@@ -136,6 +136,6 @@ partial class NativeScalarsModel
             }
         }
 
-        // nano pass: skipped - member Handle: kind IntPtr
+        // raw read pass: skipped - member Handle: kind IntPtr
     }
 }

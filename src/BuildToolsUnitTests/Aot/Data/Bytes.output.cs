@@ -110,6 +110,6 @@ partial class BytesModel
             state.WriteBytes(tmp6);
         }
 
-        // nano pass: skipped - member Single: kind Byte
+        // raw read pass: skipped - member Single: kind Byte
     }
 }

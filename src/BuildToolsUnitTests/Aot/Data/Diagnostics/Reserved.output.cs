@@ -23,31 +23,7 @@ partial class ReservedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Reserved.ReservedButClear global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
-        {
-            value ??= new global::AotFixtures.Reserved.ReservedButClear();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.A = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.B = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Reserved_ReservedButClear(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Reserved.ReservedButClear value)
         {
@@ -58,7 +34,7 @@ partial class ReservedModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Reserved.ReservedButClear NanoRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
+        public static global::AotFixtures.Reserved.ReservedButClear RawRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
         {
             value ??= new global::AotFixtures.Reserved.ReservedButClear();
             uint tag = state.ReadRawTag();

@@ -28,30 +28,7 @@ partial class OrderingModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Ordering.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
-        {
-            value ??= new global::AotFixtures.Ordering.Mixed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 2:
-                    {
-                        value.OnlyDataMember = state.ReadInt32();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Both = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Ordering_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Mixed value)
         {
@@ -62,7 +39,7 @@ partial class OrderingModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static global::AotFixtures.Ordering.Mixed NanoRead_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
+        public static global::AotFixtures.Ordering.Mixed RawRead_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
         {
             value ??= new global::AotFixtures.Ordering.Mixed();
             uint tag = state.ReadRawTag();
@@ -102,25 +79,7 @@ partial class OrderingModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Ordering.OffsetIgnoredByXml global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
-        {
-            value ??= new global::AotFixtures.Ordering.OffsetIgnoredByXml();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.First = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
         {
@@ -129,7 +88,7 @@ partial class OrderingModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Ordering.OffsetIgnoredByXml NanoRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
+        public static global::AotFixtures.Ordering.OffsetIgnoredByXml RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
         {
             value ??= new global::AotFixtures.Ordering.OffsetIgnoredByXml();
             uint tag = state.ReadRawTag();
@@ -160,41 +119,7 @@ partial class OrderingModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Ordering.Referencing global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
-        {
-            value ??= new global::AotFixtures.Ordering.Referencing();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.FromDataContract;
-                        tmp1 = state.ReadMessage<global::AotFixtures.Ordering.ViaDataMember>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.FromDataContract = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.FromXmlType;
-                        tmp2 = state.ReadMessage<global::AotFixtures.Ordering.ViaXmlElement>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.FromXmlType = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Several;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Ordering.ViaDataMember>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3, this);
-                        if (tmp3 != null) value.Several = tmp3;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Ordering_Referencing(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Referencing value)
         {
@@ -210,7 +135,7 @@ partial class OrderingModel
             }
         }
 
-        public static global::AotFixtures.Ordering.Referencing NanoRead_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
+        public static global::AotFixtures.Ordering.Referencing RawRead_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
         {
             value ??= new global::AotFixtures.Ordering.Referencing();
             uint tag = state.ReadRawTag();
@@ -222,7 +147,7 @@ partial class OrderingModel
                     case (1 << 3) | 3:  // FromDataContract, field 1, group
                     {
                         var scope = state.PushScope(tag);
-                        value.FromDataContract = NanoRead_AotFixtures_Ordering_ViaDataMember(ref state, value.FromDataContract);
+                        value.FromDataContract = RawRead_AotFixtures_Ordering_ViaDataMember(ref state, value.FromDataContract);
                         state.PopScope(scope);
                         break;
                     }
@@ -230,18 +155,19 @@ partial class OrderingModel
                     case (2 << 3) | 3:  // FromXmlType, field 2, group
                     {
                         var scope = state.PushScope(tag);
-                        value.FromXmlType = NanoRead_AotFixtures_Ordering_ViaXmlElement(ref state, value.FromXmlType);
+                        value.FromXmlType = RawRead_AotFixtures_Ordering_ViaXmlElement(ref state, value.FromXmlType);
                         state.PopScope(scope);
                         break;
                     }
                     case (3 << 3) | 2:  // Several, field 3, length-prefixed
                     case (3 << 3) | 3:  // Several, field 3, group
                     {
+                        value.Several ??= new global::System.Collections.Generic.List<global::AotFixtures.Ordering.ViaDataMember>();
                         var last = tag;
                         do
                         {
                             var scope = state.PushScope(last);
-                            value.Several.Add(NanoRead_AotFixtures_Ordering_ViaDataMember(ref state, null));
+                            value.Several.Add(RawRead_AotFixtures_Ordering_ViaDataMember(ref state, null));
                             state.PopScope(scope);
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
@@ -260,31 +186,7 @@ partial class OrderingModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Ordering.ViaDataMember global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
-        {
-            value ??= new global::AotFixtures.Ordering.ViaDataMember();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.First = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Second = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Ordering_ViaDataMember(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMember value)
         {
@@ -295,7 +197,7 @@ partial class OrderingModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Ordering.ViaDataMember NanoRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
+        public static global::AotFixtures.Ordering.ViaDataMember RawRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
         {
             value ??= new global::AotFixtures.Ordering.ViaDataMember();
             uint tag = state.ReadRawTag();
@@ -332,31 +234,7 @@ partial class OrderingModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Ordering.ViaDataMemberOffset global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
-        {
-            value ??= new global::AotFixtures.Ordering.ViaDataMemberOffset();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 11:
-                    {
-                        value.First = state.ReadInt32();
-                        break;
-                    }
-                    case 12:
-                    {
-                        var tmp12 = state.ReadString();
-                        if (tmp12 != null) value.Second = tmp12;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
         {
@@ -367,7 +245,7 @@ partial class OrderingModel
             state.WriteString(12, tmp12);
         }
 
-        public static global::AotFixtures.Ordering.ViaDataMemberOffset NanoRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
+        public static global::AotFixtures.Ordering.ViaDataMemberOffset RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
         {
             value ??= new global::AotFixtures.Ordering.ViaDataMemberOffset();
             uint tag = state.ReadRawTag();
@@ -404,31 +282,7 @@ partial class OrderingModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Ordering.ViaXmlElement global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
-        {
-            value ??= new global::AotFixtures.Ordering.ViaXmlElement();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.First = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Second = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Ordering_ViaXmlElement(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaXmlElement value)
         {
@@ -439,7 +293,7 @@ partial class OrderingModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Ordering.ViaXmlElement NanoRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
+        public static global::AotFixtures.Ordering.ViaXmlElement RawRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
         {
             value ??= new global::AotFixtures.Ordering.ViaXmlElement();
             uint tag = state.ReadRawTag();

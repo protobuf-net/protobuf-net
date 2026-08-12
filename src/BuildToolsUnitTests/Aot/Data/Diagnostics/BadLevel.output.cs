@@ -23,25 +23,7 @@ partial class BadLevelModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.BadLevel.GoodLevel global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BadLevel.GoodLevel>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
-        {
-            value ??= new global::AotFixtures.BadLevel.GoodLevel();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_BadLevel_GoodLevel(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BadLevel.GoodLevel>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value)
         {
@@ -50,7 +32,7 @@ partial class BadLevelModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.BadLevel.GoodLevel NanoRead_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
+        public static global::AotFixtures.BadLevel.GoodLevel RawRead_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
         {
             value ??= new global::AotFixtures.BadLevel.GoodLevel();
             uint tag = state.ReadRawTag();

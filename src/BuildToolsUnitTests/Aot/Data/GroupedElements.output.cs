@@ -90,7 +90,7 @@ partial class GroupedElementsModel
             state.WriteGroup<global::AotFixtures.GroupedElements.Item>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
         }
 
-        // nano pass: skipped - member Items: non-default DataFormat
+        // raw read pass: skipped - member Items: non-default DataFormat
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -164,37 +164,13 @@ partial class GroupedElementsModel
             }
         }
 
-        // nano pass: skipped - member ByIndex: map
+        // raw read pass: skipped - member ByIndex: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.GroupedElements.Item global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
-        {
-            value ??= new global::AotFixtures.GroupedElements.Item();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Name = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Count = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_GroupedElements_Item(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Item value)
         {
@@ -205,7 +181,7 @@ partial class GroupedElementsModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.GroupedElements.Item NanoRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
+        public static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
         {
             value ??= new global::AotFixtures.GroupedElements.Item();
             uint tag = state.ReadRawTag();

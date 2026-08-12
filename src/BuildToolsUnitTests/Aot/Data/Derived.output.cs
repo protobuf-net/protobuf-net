@@ -24,26 +24,7 @@ partial class DerivedModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Derived.Ambiguous global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
-        {
-            value ??= new global::AotFixtures.Derived.Ambiguous();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Label = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Derived_Ambiguous(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
         {
@@ -52,7 +33,7 @@ partial class DerivedModel
             state.WriteString(1, tmp1);
         }
 
-        public static global::AotFixtures.Derived.Ambiguous NanoRead_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
+        public static global::AotFixtures.Derived.Ambiguous RawRead_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
         {
             value ??= new global::AotFixtures.Derived.Ambiguous();
             uint tag = state.ReadRawTag();
@@ -145,6 +126,6 @@ partial class DerivedModel
             state.WriteMessage<global::AotFixtures.Derived.Ambiguous>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
         }
 
-        // nano pass: skipped - member Set: collection shape CreateEnumerable
+        // raw read pass: skipped - member Set: collection shape CreateEnumerable
     }
 }

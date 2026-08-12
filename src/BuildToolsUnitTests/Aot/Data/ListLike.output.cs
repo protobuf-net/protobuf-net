@@ -24,32 +24,7 @@ partial class ListLikeModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ListLike.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
-        {
-            value ??= new global::AotFixtures.ListLike.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.NotAList;
-                        tmp1 = state.ReadMessage<global::AotFixtures.ListLike.NotAList>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.NotAList = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Other = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ListLike_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value)
         {
@@ -60,7 +35,7 @@ partial class ListLikeModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.ListLike.Holder NanoRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
+        public static global::AotFixtures.ListLike.Holder RawRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
         {
             value ??= new global::AotFixtures.ListLike.Holder();
             uint tag = state.ReadRawTag();
@@ -72,7 +47,7 @@ partial class ListLikeModel
                     case (1 << 3) | 3:  // NotAList, field 1, group
                     {
                         var scope = state.PushScope(tag);
-                        value.NotAList = NanoRead_AotFixtures_ListLike_NotAList(ref state, value.NotAList);
+                        value.NotAList = RawRead_AotFixtures_ListLike_NotAList(ref state, value.NotAList);
                         state.PopScope(scope);
                         break;
                     }
@@ -99,31 +74,7 @@ partial class ListLikeModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ListLike.NotAList global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
-        {
-            value ??= new global::AotFixtures.ListLike.NotAList();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1 != null) value.Label = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Count2 = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ListLike_NotAList(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value)
         {
@@ -134,7 +85,7 @@ partial class ListLikeModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static global::AotFixtures.ListLike.NotAList NanoRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
+        public static global::AotFixtures.ListLike.NotAList RawRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
         {
             value ??= new global::AotFixtures.ListLike.NotAList();
             uint tag = state.ReadRawTag();

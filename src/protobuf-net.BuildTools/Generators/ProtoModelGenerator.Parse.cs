@@ -174,14 +174,14 @@ namespace ProtoBuf.BuildTools.Generators
                     // both the opt-out and the way to keep `new` working
                     emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
                     isSealed: model.IsSealed,
-                    // the nano pass is symbol-gated on the raw surface being present: post-swap
-                    // the reader IS ProtoReader.State (nested metadata name), and the gate probes
+                    // the raw read pass is symbol-gated on the raw surface being present: the
+                    // reader IS ProtoReader.State (nested metadata name), and the gate probes
                     // for a RAW member rather than the type - State always exists, but only a
-                    // Core with the nano surface can satisfy emitted calls. Accessibility-checked
+                    // Core with the raw surface can satisfy emitted calls. Accessibility-checked
                     // so a future internal surface fails closed rather than emitting broken code.
-                    nanoReader: compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } nanoType
-                        && nanoType.GetMembers("ReadRawTag").Length != 0
-                        && compilation.IsSymbolAccessibleWithin(nanoType, compilation.Assembly));
+                    rawReader: compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } rawType
+                        && rawType.GetMembers("ReadRawTag").Length != 0
+                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));

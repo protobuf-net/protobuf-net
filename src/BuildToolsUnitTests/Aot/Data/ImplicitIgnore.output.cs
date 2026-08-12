@@ -24,35 +24,7 @@ partial class ImplicitIgnoreModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ImplicitIgnore.Excluded global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.Excluded>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
-        {
-            value ??= new global::AotFixtures.ImplicitIgnore.Excluded();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Pinned = state.ReadInt32();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.ImplicitField = state.ReadInt32();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.ImplicitProperty = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ImplicitIgnore_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
         {
@@ -65,7 +37,7 @@ partial class ImplicitIgnoreModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static global::AotFixtures.ImplicitIgnore.Excluded NanoRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
+        public static global::AotFixtures.ImplicitIgnore.Excluded RawRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
         {
             value ??= new global::AotFixtures.ImplicitIgnore.Excluded();
             uint tag = state.ReadRawTag();
@@ -114,35 +86,7 @@ partial class ImplicitIgnoreModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ImplicitIgnore.PartiallyPinned global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
-        {
-            value ??= new global::AotFixtures.ImplicitIgnore.PartiallyPinned();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 2:
-                    {
-                        value.Beta = state.ReadInt32();
-                        break;
-                    }
-                    case 10:
-                    {
-                        value.Alpha = state.ReadInt32();
-                        break;
-                    }
-                    case 11:
-                    {
-                        value.Gamma = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
         {
@@ -155,7 +99,7 @@ partial class ImplicitIgnoreModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static global::AotFixtures.ImplicitIgnore.PartiallyPinned NanoRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
+        public static global::AotFixtures.ImplicitIgnore.PartiallyPinned RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
         {
             value ??= new global::AotFixtures.ImplicitIgnore.PartiallyPinned();
             uint tag = state.ReadRawTag();

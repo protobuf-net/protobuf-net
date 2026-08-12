@@ -154,31 +154,13 @@ partial class FormatsModel
             }
         }
 
-        // nano pass: skipped - member ZigZagInt: non-default DataFormat
+        // raw read pass: skipped - member ZigZagInt: non-default DataFormat
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Formats.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
-        {
-            value ??= new global::AotFixtures.Formats.Inner();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Formats_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
         {
@@ -187,7 +169,7 @@ partial class FormatsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Formats.Inner NanoRead_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
+        public static global::AotFixtures.Formats.Inner RawRead_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
         {
             value ??= new global::AotFixtures.Formats.Inner();
             uint tag = state.ReadRawTag();

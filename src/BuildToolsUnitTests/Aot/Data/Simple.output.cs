@@ -23,31 +23,7 @@ partial class SimpleModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Simple.Order global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
-        {
-            value ??= new global::AotFixtures.Simple.Order();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Name = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Simple_Order(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value)
         {
@@ -58,7 +34,7 @@ partial class SimpleModel
             state.WriteString(2, tmp2);
         }
 
-        public static global::AotFixtures.Simple.Order NanoRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
+        public static global::AotFixtures.Simple.Order RawRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
         {
             value ??= new global::AotFixtures.Simple.Order();
             uint tag = state.ReadRawTag();

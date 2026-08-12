@@ -163,31 +163,13 @@ partial class GetterModel
             }
         }
 
-        // nano pass: skipped - member Map: map
+        // raw read pass: skipped - member Map: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Getter.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
-        {
-            value ??= new global::AotFixtures.Getter.Nested();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Id = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Getter_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
         {
@@ -196,7 +178,7 @@ partial class GetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static global::AotFixtures.Getter.Nested NanoRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
+        public static global::AotFixtures.Getter.Nested RawRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
         {
             value ??= new global::AotFixtures.Getter.Nested();
             uint tag = state.ReadRawTag();
@@ -252,7 +234,7 @@ partial class GetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // nano pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
+        // raw read pass: skipped - contract shape (value type, tuple, hierarchy, surrogate or external serializer)
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Numbers>k__BackingField")]
         private static extern ref global::System.Collections.Generic.List<int> Field_AotFixtures_Getter_Getters_Numbers(global::AotFixtures.Getter.Getters target);
