@@ -9,8 +9,8 @@ inherits it without change.
 
 ## Where the prior art lives
 
-The `v4` branch (still on the remote, last touched 2023-02) contains the prototype, under the
-working name "Nano". The parts that matter, all at `origin/v4`:
+The `v4-prototype-2023` branch (last touched 2023-02; formerly named `v4`, renamed when v4 became the release feature branch) contains the prototype, under the
+working name "Nano". The parts that matter, all at `origin/v4-prototype-2023`:
 
 | path | what |
 | --- | --- |
