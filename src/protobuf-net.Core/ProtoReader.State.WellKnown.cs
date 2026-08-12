@@ -18,6 +18,7 @@ namespace ProtoBuf
             // generated code, so these only ever see wire 2.
 
             /// <summary>Raw-convention read of a bcl.TimeSpan (compatibility level 200).</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public TimeSpan ReadRawTimeSpanBcl()
             {
                 var scope = PushLengthPrefix();
@@ -27,6 +28,7 @@ namespace ProtoBuf
             }
 
             /// <summary>Raw-convention read of a bcl.DateTime (compatibility level 200).</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public DateTime ReadRawDateTimeBcl()
             {
                 var scope = PushLengthPrefix();
@@ -36,6 +38,7 @@ namespace ProtoBuf
             }
 
             /// <summary>Raw-convention read of a google.protobuf.Duration (level 240+).</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public TimeSpan ReadRawDuration()
             {
                 long seconds = 0;
@@ -51,6 +54,7 @@ namespace ProtoBuf
             }
 
             /// <summary>Raw-convention read of a google.protobuf.Timestamp (level 240+).</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public DateTime ReadRawTimestamp()
             {
                 long seconds = 0;
@@ -67,6 +71,7 @@ namespace ProtoBuf
             }
 
             /// <summary>Raw-convention read of a bcl.Guid (compatibility levels 200/240).</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public Guid ReadRawGuidBcl()
             {
                 var scope = PushLengthPrefix();
@@ -76,6 +81,7 @@ namespace ProtoBuf
             }
 
             /// <summary>Raw-convention read of a bcl.Decimal (compatibility levels 200/240).</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public decimal ReadRawDecimalBcl()
             {
                 var scope = PushLengthPrefix();

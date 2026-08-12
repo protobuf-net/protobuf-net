@@ -51,6 +51,10 @@ namespace ProtoBuf.BuildTools.Generators
 
             sb.AppendLine("#nullable disable")
               .AppendLine("#pragma warning disable CS1591")
+              // the raw reader surface is [Experimental("PBN9002")] while the writer arc may
+              // still reshape it; generated code is the intended caller, so it carries its own
+              // suppression rather than asking every consumer to
+              .AppendLine("#pragma warning disable PBN9002")
               .AppendLine();
 
             const int indent = 0;

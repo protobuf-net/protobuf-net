@@ -1,46 +1,46 @@
 [PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
 [PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.set -> void
-ProtoBuf.ProtoReader.ReadScope
-ProtoBuf.ProtoReader.ReadScope.ReadScope() -> void
-ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.IExtensible instance) -> void
-ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.ITypedExtensible instance, System.Type type) -> void
-ProtoBuf.ProtoReader.State.AppendRawBytes(byte[] value) -> byte[]
-ProtoBuf.ProtoReader.State.AppendRawBytes(System.ArraySegment<byte> value) -> System.ArraySegment<byte>
-ProtoBuf.ProtoReader.State.AppendRawBytes(System.Memory<byte> value) -> System.Memory<byte>
-ProtoBuf.ProtoReader.State.AppendRawBytes(System.ReadOnlyMemory<byte> value) -> System.ReadOnlyMemory<byte>
-ProtoBuf.ProtoReader.State.AtScopeEnd.get -> bool
-ProtoBuf.ProtoReader.State.IsScopeEnd(uint tag) -> bool
-ProtoBuf.ProtoReader.State.PopScope(in ProtoBuf.ProtoReader.ReadScope prior) -> void
-ProtoBuf.ProtoReader.State.Position.get -> long
-ProtoBuf.ProtoReader.State.PushGroup(uint endGroupTag) -> ProtoBuf.ProtoReader.ReadScope
-ProtoBuf.ProtoReader.State.PushLengthPrefix() -> ProtoBuf.ProtoReader.ReadScope
-ProtoBuf.ProtoReader.State.PushLimit(long length) -> ProtoBuf.ProtoReader.ReadScope
-ProtoBuf.ProtoReader.State.PushScope(uint tag) -> ProtoBuf.ProtoReader.ReadScope
-ProtoBuf.ProtoReader.State.ReadPackedFixed32(System.Collections.Generic.List<int> values) -> void
-ProtoBuf.ProtoReader.State.ReadPackedVarint32(System.Collections.Generic.List<int> values) -> void
-ProtoBuf.ProtoReader.State.ReadRawBytes() -> byte[]
-ProtoBuf.ProtoReader.State.ReadRawDateTimeBcl() -> System.DateTime
-ProtoBuf.ProtoReader.State.ReadRawDecimalBcl() -> decimal
-ProtoBuf.ProtoReader.State.ReadRawDouble() -> double
-ProtoBuf.ProtoReader.State.ReadRawDuration() -> System.TimeSpan
-ProtoBuf.ProtoReader.State.ReadRawFixed32() -> uint
-ProtoBuf.ProtoReader.State.ReadRawFixed64() -> ulong
-ProtoBuf.ProtoReader.State.ReadRawGuidBcl() -> System.Guid
-ProtoBuf.ProtoReader.State.ReadRawSingle() -> float
-ProtoBuf.ProtoReader.State.ReadRawString() -> string
-ProtoBuf.ProtoReader.State.ReadRawTag() -> uint
-ProtoBuf.ProtoReader.State.ReadRawTagOrPending() -> uint
-ProtoBuf.ProtoReader.State.ReadRawTimeSpanBcl() -> System.TimeSpan
-ProtoBuf.ProtoReader.State.ReadRawTimestamp() -> System.DateTime
-ProtoBuf.ProtoReader.State.ReadRawVarint32() -> uint
-ProtoBuf.ProtoReader.State.ReadRawVarint32Strict() -> uint
-ProtoBuf.ProtoReader.State.ReadRawVarint64() -> ulong
-ProtoBuf.ProtoReader.State.ReadRawZigZag32() -> int
-ProtoBuf.ProtoReader.State.ReadRawZigZag64() -> long
-ProtoBuf.ProtoReader.State.SkipTag(uint tag) -> void
-ProtoBuf.ProtoReader.State.StashTag(uint tag) -> void
-ProtoBuf.ProtoReader.State.State(byte[] buffer, int offset, int count) -> void
-ProtoBuf.ProtoReader.State.State(scoped in System.Buffers.ReadOnlySequence<byte> value) -> void
-ProtoBuf.ProtoReader.State.State(System.IO.Stream source, long lengthHint = -1) -> void
-ProtoBuf.ProtoReader.State.State(System.ReadOnlyMemory<byte> value) -> void
-ProtoBuf.ProtoReader.State.ThrowUnexpectedWireType(uint tag) -> void
+[PBN9002]ProtoBuf.ProtoReader.ReadScope
+[PBN9002]ProtoBuf.ProtoReader.ReadScope.ReadScope() -> void
+[PBN9002]ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.IExtensible instance) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.ITypedExtensible instance, System.Type type) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.AppendRawBytes(byte[] value) -> byte[]
+[PBN9002]ProtoBuf.ProtoReader.State.AppendRawBytes(System.ArraySegment<byte> value) -> System.ArraySegment<byte>
+[PBN9002]ProtoBuf.ProtoReader.State.AppendRawBytes(System.Memory<byte> value) -> System.Memory<byte>
+[PBN9002]ProtoBuf.ProtoReader.State.AppendRawBytes(System.ReadOnlyMemory<byte> value) -> System.ReadOnlyMemory<byte>
+[PBN9002]ProtoBuf.ProtoReader.State.AtScopeEnd.get -> bool
+[PBN9002]ProtoBuf.ProtoReader.State.IsScopeEnd(uint tag) -> bool
+[PBN9002]ProtoBuf.ProtoReader.State.PopScope(in ProtoBuf.ProtoReader.ReadScope prior) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.Position.get -> long
+[PBN9002]ProtoBuf.ProtoReader.State.PushGroup(uint endGroupTag) -> ProtoBuf.ProtoReader.ReadScope
+[PBN9002]ProtoBuf.ProtoReader.State.PushLengthPrefix() -> ProtoBuf.ProtoReader.ReadScope
+[PBN9002]ProtoBuf.ProtoReader.State.PushLimit(long length) -> ProtoBuf.ProtoReader.ReadScope
+[PBN9002]ProtoBuf.ProtoReader.State.PushScope(uint tag) -> ProtoBuf.ProtoReader.ReadScope
+[PBN9002]ProtoBuf.ProtoReader.State.ReadPackedFixed32(System.Collections.Generic.List<int> values) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.ReadPackedVarint32(System.Collections.Generic.List<int> values) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawBytes() -> byte[]
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawDateTimeBcl() -> System.DateTime
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawDecimalBcl() -> decimal
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawDouble() -> double
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawDuration() -> System.TimeSpan
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawFixed32() -> uint
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawFixed64() -> ulong
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawGuidBcl() -> System.Guid
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawSingle() -> float
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawString() -> string
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawTag() -> uint
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawTagOrPending() -> uint
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawTimeSpanBcl() -> System.TimeSpan
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawTimestamp() -> System.DateTime
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawVarint32() -> uint
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawVarint32Strict() -> uint
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawVarint64() -> ulong
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawZigZag32() -> int
+[PBN9002]ProtoBuf.ProtoReader.State.ReadRawZigZag64() -> long
+[PBN9002]ProtoBuf.ProtoReader.State.SkipTag(uint tag) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.StashTag(uint tag) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.State(byte[] buffer, int offset, int count) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.State(scoped in System.Buffers.ReadOnlySequence<byte> value) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.State(System.IO.Stream source, long lengthHint = -1) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.State(System.ReadOnlyMemory<byte> value) -> void
+[PBN9002]ProtoBuf.ProtoReader.State.ThrowUnexpectedWireType(uint tag) -> void

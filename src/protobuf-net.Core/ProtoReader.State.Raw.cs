@@ -187,11 +187,13 @@ public ref partial struct State
     }
 
     /// <summary>Absolute position of the reader.</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public readonly long Position => _positionBase + _offset;
 
     // ---------------------------------------------------------------- construction
 
     /// <summary>Single array: the trivial single-segment case; nothing leased, no source.</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public State(byte[] buffer, int offset, int count)
     {
         _buffer = buffer;
@@ -212,6 +214,7 @@ public ref partial struct State
     }
 
     /// <summary>Memory: used in place when array-backed, else leased-and-copied once.</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public State(ReadOnlyMemory<byte> value)
     {
         if (MemoryMarshal.TryGetArray(value, out var array))
@@ -250,6 +253,7 @@ public ref partial struct State
     /// sequence (one allocation) is walked via a SequencePosition cursor, per-window
     /// TryGetArray-else-lease. The root scope is the sequence's known length.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public State(scoped in ReadOnlySequence<byte> value)
     {
         if (value.IsSingleSegment)
@@ -280,6 +284,7 @@ public ref partial struct State
     /// caller knows - a length-prefixed network frame) seeds _remaining and bounds the root
     /// scope; without it the root is unbounded and EOF is the clean end of the document.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public State(Stream source, long lengthHint = -1)
     {
         if (source is MemoryStream ms && ms.GetType() == typeof(MemoryStream) && ms.CanSeek
@@ -434,6 +439,7 @@ public ref partial struct State
     /// comes back via <see cref="PopScope"/>: the nesting stack lives in the callers, state holds
     /// only the innermost.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public ReadScope PushLimit(long length)
     {
         var prior = _scope;
@@ -453,6 +459,7 @@ public ref partial struct State
     /// for a length-prefixed sub-message (and the StartSubItem veneer will use it too).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public ReadScope PushLengthPrefix()
         => PushLimit(ReadRawVarint32());
 
@@ -464,6 +471,7 @@ public ref partial struct State
     /// differ (3 becomes 4).
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public ReadScope PushScope(uint tag)
         => (tag & 7) switch
         {
@@ -481,6 +489,7 @@ public ref partial struct State
     /// <see cref="IsScopeEnd"/> - matched fields never test it). Position becomes unbounded, which
     /// is legacy semantics exactly - see the recorded trade on <see cref="_scope"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public ReadScope PushGroup(uint endGroupTag)
     {
         if ((endGroupTag & 7) != 4) ThrowMalformed();
@@ -496,6 +505,7 @@ public ref partial struct State
     /// exactly - a short sub-message is corrupt input, matching legacy's EndSubItem validation;
     /// group scopes were validated by their sentinel (and truncation throws in ReadRawTag).
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public void PopScope(in ReadScope prior)
     {
         // exact-consumption check: Position-based, so it holds across refills (a length scope
@@ -518,6 +528,7 @@ public ref partial struct State
     /// should go to <see cref="SkipTag"/>, which throws.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public bool IsScopeEnd(uint tag)
     {
         if ((tag & 7) != 4) return false;
@@ -556,6 +567,7 @@ public ref partial struct State
     /// while this is false, pop. Meaningless in group mode (packed data is always
     /// length-prefixed), where it reports end-of-segment instead.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public bool AtScopeEnd
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -624,6 +636,7 @@ public ref partial struct State
     /// shift-and-mask veneer over this. Strict-5: tags never take the sign-extended form.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public uint ReadRawTag()
     {
         var offset = _offset;
@@ -725,6 +738,7 @@ public ref partial struct State
     /// A wiretype-4 tag (end-group) reaching here is by definition not the current sentinel, so
     /// it throws - the mismatched-end-group check, for free.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public void SkipTag(uint tag)
     {
         switch (tag & 7)
@@ -801,6 +815,7 @@ public ref partial struct State
     /// per-byte guarded slow path.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public uint ReadRawVarint32()
     {
         var offset = _offset;
@@ -850,6 +865,7 @@ public ref partial struct State
     /// compile time by the generator where legacy needed the Hint dance. Tolerant of the 64-bit
     /// form, as ReadRawVarint32 is.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public int ReadRawZigZag32()
     {
         uint value = ReadRawVarint32();
@@ -858,6 +874,7 @@ public ref partial struct State
 
     /// <summary>Reads a zigzag-encoded varint as i64.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public long ReadRawZigZag64()
     {
         ulong value = ReadRawVarint64();
@@ -867,6 +884,7 @@ public ref partial struct State
     /// <summary>Reads a fixed32-framed float. The netfx arm reinterprets via Unsafe:
     /// Int32BitsToSingle does not exist down-level, and the bit pattern is the value.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public float ReadRawSingle()
     {
         uint bits = ReadRawFixed32();
@@ -879,11 +897,13 @@ public ref partial struct State
 
     /// <summary>Reads a fixed64-framed double.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public double ReadRawDouble()
         => BitConverter.Int64BitsToDouble(unchecked((long)ReadRawFixed64()));
 
     /// <summary>Reads a varint as u64; ByteUnrolled, same tail discipline as u32.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public ulong ReadRawVarint64()
     {
         var offset = _offset;
@@ -928,6 +948,7 @@ public ref partial struct State
     /// data we actually have (single-segment v1 makes this the strong form of legacy's
     /// EagerAllocationLimit check), so a hostile prefix cannot drive allocation.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public string ReadRawString()
     {
         int len = checked((int)ReadRawVarint32());
@@ -1029,11 +1050,13 @@ public ref partial struct State
 
     /// <summary>Captures the unknown field whose tag was just read into the instance's untyped
     /// extension bag (<see cref="IExtensible"/>).</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public void AppendExtensionData(uint tag, IExtensible instance)
         => AppendExtensionDataCore(tag, instance.GetExtensionObject(createIfMissing: true));
 
     /// <summary>Captures into the per-type bag of an <see cref="ITypedExtensible"/> - each layer
     /// of a hierarchy keys its own, exactly as the legacy typed overload does.</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public void AppendExtensionData(uint tag, ITypedExtensible instance, Type type)
         => AppendExtensionDataCore(tag, instance.GetExtensionObject(type, createIfMissing: true));
 
@@ -1142,6 +1165,7 @@ public ref partial struct State
     /// every little-endian platform (IsLittleEndian is a JIT constant), so correctness on BE
     /// costs nothing - and legacy is BE-correct via BinaryPrimitives, so anything less would be
     /// a platform regression.</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public uint ReadRawFixed32()
     {
         if (_count - _offset < 4) return ReadRawFixed32Straddle();
@@ -1160,6 +1184,7 @@ public ref partial struct State
         | ((uint)ReadRawByte() << 24);
 
     /// <summary>Reads 8 bytes little-endian; same folded BE handling as <see cref="ReadRawFixed32"/>.</summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public ulong ReadRawFixed64()
     {
         if (_count - _offset < 8) return ReadRawFixed64Straddle();
@@ -1179,6 +1204,7 @@ public ref partial struct State
     /// become a garbage length.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public uint ReadRawVarint32Strict()
     {
         uint value = ReadRawByte();
@@ -1232,6 +1258,7 @@ public ref partial struct State
     /// span fill; whether that beats the plain Add loop is measured, not assumed
     /// (PackedParseResults.md). A truncated trailing varint fails the exact-consumption check.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public void ReadPackedVarint32(List<int> values)
     {
         int len = checked((int)ReadRawVarint32());
@@ -1278,6 +1305,7 @@ public ref partial struct State
     /// the big-endian branch (per-element, endian-corrected by ReadRawFixed32) folds away at JIT
     /// time on every little-endian platform.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public void ReadPackedFixed32(List<int> values)
     {
         int len = checked((int)ReadRawVarint32());
@@ -1322,6 +1350,7 @@ public ref partial struct State
     /// default (docs/nano-core.md, merge semantics): the caller assigns, nothing is appended.
     /// Same plausible-length guard as <see cref="ReadRawString"/>.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public byte[] ReadRawBytes()
     {
         int len = checked((int)ReadRawVarint32());
@@ -1362,6 +1391,7 @@ public ref partial struct State
 /// way out. One sign-discriminated long (see ReaderState._scope) - which is also exactly what
 /// legacy SubItemToken is, making the StartSubItem/EndSubItem veneer mechanical.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
 public readonly struct ReadScope
 {
     private readonly long _value;
