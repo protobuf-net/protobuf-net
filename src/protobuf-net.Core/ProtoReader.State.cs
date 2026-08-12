@@ -68,6 +68,36 @@ namespace ProtoBuf
             }
 
             internal readonly SolidState Solidify() => new SolidState(Snapshot());
+
+            /// <summary>Pure span utility (no reader state): parse a varint at an offset,
+            /// returning bytes consumed (0 = no data). Retained for external frame parsers
+            /// (protobuf-net.MessagePipes).</summary>
+            internal static int TryParseUInt64Varint(ReadOnlySpan<byte> span, int offset, out ulong value)
+            {
+                if ((uint)offset >= (uint)span.Length)
+                {
+                    value = 0;
+                    return 0;
+                }
+                value = span[offset++];
+                if ((value & 0x80) == 0) return 1;
+                value &= 0x7F;
+                int bytesRead = 1, shift = 7;
+                while (bytesRead < 9)
+                {
+                    if ((uint)offset >= (uint)span.Length) ThrowHelper.ThrowEndOfStreamException();
+                    ulong chunk = span[offset++];
+                    value |= (chunk & 0x7F) << shift;
+                    shift += 7;
+                    bytesRead++;
+                    if ((chunk & 0x80) == 0) return bytesRead;
+                }
+                if ((uint)offset >= (uint)span.Length) ThrowHelper.ThrowEndOfStreamException();
+                ulong last = span[offset];
+                value |= last << 63; // only 1 bit fits from the last byte
+                if ((last & ~(ulong)0x01) != 0) ThrowHelper.ThrowOverflowException();
+                return ++bytesRead;
+            }
         }
 
         [StructLayout(LayoutKind.Auto)]

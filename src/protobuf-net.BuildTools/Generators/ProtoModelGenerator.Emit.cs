@@ -205,7 +205,7 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitNanoRead(StringBuilder sb, int indent, ProtoContractPlan contract)
         {
             sb.AppendLine();
-            Line(sb, indent, $"public static {contract.TypeName} NanoRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.Nano.ReaderState state, {contract.TypeName} value)");
+            Line(sb, indent, $"public static {contract.TypeName} NanoRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
             Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
             // the tag lives in a local and the loop reads at the BOTTOM, so a repeated-field run
