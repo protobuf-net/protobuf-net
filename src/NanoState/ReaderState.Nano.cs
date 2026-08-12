@@ -208,6 +208,15 @@ public ref partial struct ReaderState
     }
 
     /// <summary>
+    /// Reads the length prefix AND enters its scope, one call: the length is meaningless except
+    /// as a limit, so the dive site never needs to see it. This is the form generated code uses
+    /// for a length-prefixed sub-message (and the StartSubItem veneer will use it too).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadScope PushLengthPrefix()
+        => PushLimit(ReadRawVarint32());
+
+    /// <summary>
     /// Enters a group scope: sets the end-group sentinel (checked in the switch default case via
     /// <see cref="IsScopeEnd"/> - matched fields never test it). Position becomes unbounded, which
     /// is legacy semantics exactly - see the recorded trade on <see cref="_scope"/>.

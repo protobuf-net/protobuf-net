@@ -154,7 +154,7 @@ public class SubMessageParseBenchmarks
                 {
                     case (1 << 3) | 2: // length-prefixed child
                     {
-                        var scope = state.PushLimit(state.ReadRawVarint32());
+                        var scope = state.PushLengthPrefix();
                         NanoReadChild(ref state, child);
                         state.PopScope(scope);
                         unchecked { sum += (uint)child.Value; }
