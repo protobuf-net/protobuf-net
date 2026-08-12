@@ -55,13 +55,24 @@ public ref partial struct ReaderState
     private object? _source;
 
     /// <summary>
-    /// The end-group sentinel for the innermost group scope, 0 when in length/EOF mode. A state
-    /// slot rather than a parameter, because the ISerializer&lt;T&gt;.Read signature is immovable -
-    /// and since the slot must exist for that path, it is the ONLY mechanism (direct calls use it
-    /// too; one approach, and a slightly smaller frame). Routine fields never read it: the check
-    /// lives in the switch default case.
+    /// The innermost termination scope, sign-discriminated as legacy SubItemToken always was:
+    /// positive/zero = absolute end position (length mode; long.MaxValue = unbounded), negative =
+    /// group mode holding -(long)fieldNumber - the sentinel's wire type is always 4, so the 29-bit
+    /// field number is the whole identity and the bottom three bits need no storage. A state slot
+    /// rather than a parameter, because the ISerializer&lt;T&gt;.Read signature is immovable - and
+    /// since the slot must exist for that path, it is the ONLY mechanism (direct calls use it too;
+    /// one approach, one long per dive in the caller). Routine fields never read it: the hot
+    /// length check is the derived <see cref="_effectiveEnd"/> compare, and the group check is the
+    /// switch default case - (tag &amp; 7) == 4 &amp;&amp; (long)(tag &gt;&gt; 3) == -_scope, the
+    /// wiretype test doubling as the mismatched-end-group throw gate.
+    ///
+    /// Known trade, recorded deliberately: entering a group REPLACES the visible positional bound,
+    /// so a malformed stream missing its end-group inside a length-prefixed parent overruns the
+    /// parent limit until mismatch/EOF. That is exactly legacy semantics (the legacy reader
+    /// unbounds position inside groups too): no regression, unobservable on valid input, and the
+    /// match makes the SubItemToken veneer mechanical.
     /// </summary>
-    private uint _stopTag;
+    private long _scope;
 
     /// <summary>Absolute position of the reader.</summary>
     public long Position => _positionBase + _offset;
@@ -224,12 +235,15 @@ public ref partial struct ReaderState
 }
 
 /// <summary>
-/// The prior termination scope - the innermost length limit and group sentinel together - held in
-/// a generated-code local across a dive and restored on the way out.
+/// The prior termination scope, held in a generated-code local across a dive and restored on the
+/// way out. One sign-discriminated long (see ReaderState._scope) - which is also exactly what
+/// legacy SubItemToken is, making the StartSubItem/EndSubItem veneer mechanical.
 /// </summary>
 public readonly struct ReadScope
 {
-    // prior absolute limit + prior stopTag; shape only for now
+    private readonly long _value;
+    internal ReadScope(long value) => _value = value;
+    internal long Value => _value;
 }
 
 /// <summary>
