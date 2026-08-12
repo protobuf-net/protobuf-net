@@ -139,14 +139,15 @@ public class DescriptorParseBenchmarks
         }
     }
 
-    private delegate Model.FileDescriptorSet GeneratedRead(ref ReaderState state, Model.FileDescriptorSet value);
+    internal delegate Model.FileDescriptorSet GeneratedRead(ref ReaderState state, Model.FileDescriptorSet value);
     internal delegate Model.NarrowFileDescriptorSet NarrowRead(ref ReaderState state, Model.NarrowFileDescriptorSet value);
 
     // resolved once by reflection (the generated services type is private inside the model),
     // then invoked as cached delegates - full speed on the measured path; matched by RETURN
     // TYPE, which is exact where a name suffix would be ambiguous (FileDescriptorSet is a
-    // suffix of NarrowFileDescriptorSet)
-    private static readonly GeneratedRead s_generatedRead
+    // suffix of NarrowFileDescriptorSet). Internal: the serialize benchmarks materialize
+    // their object graph through the same read.
+    internal static readonly GeneratedRead s_generatedRead
         = (GeneratedRead)ResolveGeneratedRead(typeof(Model.FileDescriptorSet), typeof(GeneratedRead));
     internal static readonly NarrowRead s_narrowRead
         = (NarrowRead)ResolveGeneratedRead(typeof(Model.NarrowFileDescriptorSet), typeof(NarrowRead));

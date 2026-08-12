@@ -160,6 +160,19 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## First serialize numbers (2026-08-12, cuts 1-4 in place)
+
+`src/NanoBench/DescriptorSerializeResults.md`: on the self-describing descriptor payload,
+the shipped generated model serializes the SAME object graph 34% faster than the legacy
+engine (13.56 us vs 20.64 us), within ~4% of Google.Protobuf on its home turf - with the
+surface-first veneers (every raw op still a virtual Impl* call), no presized buffer core,
+and recompute-always measure. One full-tree Measure_ traversal is 2.23 us; recompute pays
+it once per nesting level during the write, which bounds the lengthCache's recoverable
+share at several microseconds on this tree (~20% of the write row) and gives the
+memoization race its stakes. The setup gates double as correctness evidence: the generated
+protogen row is byte-identical to legacy, the bench-DTO row happens to be byte-identical
+too, and Measure_ agrees with the written length exactly.
+
 ## Cut 4 landed: extensible contracts measure (2026-08-12)
 
 The extension blob carries its own field headers, so its size is its LENGTH -
