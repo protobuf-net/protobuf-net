@@ -288,6 +288,56 @@ where a callback shape is genuinely needed (repeated runs). The interface implem
 but they retreat to the boundaries: model-level resolution, proxies, surrogate hand-offs, and the
 niche fence — the places where the callee genuinely is not known until runtime.
 
+## The buffer model: designed before built, as step 2 always demanded
+
+Everything is normalized to "a `byte[]` window, maybe leased"; the three sources differ only in
+how the next window arrives. The constraints were all written before this design — forward-only
+(nothing un-consumes), residency (bulk arms need local bytes), and the refill contract
+(`GetNextBuffer` owes callers nothing before the current offset) — and they compose into the
+load-bearing simplification: **a refill never preserves or carries anything.** Every straddle is
+handled by byte-wise consumption into locals or scratch (the per-byte slow paths already cross
+refills naturally; the bulk arms are gated on residency and never straddle), so there is no
+partial-primitive state to hand across a boundary, ever.
+
+- **Array / `ReadOnlyMemory`**: the degenerate single segment; today's whole implementation.
+- **`Stream`**: one leased buffer for the reader's lifetime. Refill = shift the unconsumed tail
+  `[_offset, _count)` to the front, top up from the stream (looping reads to fill — maximizing
+  residency is the refill's "legal courtesy", since resident is the common case worth designing
+  for), bump `_positionBase` by the bytes shifted out. `lengthHint` seeds `_remaining` when the
+  caller knows (a length-prefixed network frame). **The MemoryStream unwrap is product parity,
+  not an optimization we invented**: legacy (`ProtoReader.Stream.cs`) special-cases exact-type
+  `MemoryStream` + `CanSeek`, reaching the private buffer by reflection when `TryGetBuffer`
+  declines, and collapses to the span path - nano's Stream constructor must do the same unwrap
+  into the array case, and **benchmarks must deliberately defeat it** (a non-MemoryStream
+  chunk-feeding wrapper) or the "stream" rows measure the span path on both stacks.
+- **`ReadOnlySequence`**: walk the segment list; `TryGetArray` uses the segment in place (the
+  fast-path window is per-segment, so the guarded-tail rule already protects against overread),
+  else lease-and-copy (returning any prior lease first). `_remaining` tracks the known tail.
+- **`_effectiveEnd` recomputation** is part of every refill: `min(_count, scopeEnd -
+  _positionBase)` in length mode, `_count` otherwise — `PopScope` already computes exactly this,
+  so the multi-segment form is the code that exists.
+- **The plausible-length guard splits into three**, because "length exceeds available" stops
+  proving corruption once more data can arrive: resident → bulk arm (common case); non-resident
+  but within a known `_remaining` → verifiable, assemble byte-wise; unknown remaining (bare
+  stream) → **allocation is bounded by bytes actually read, never by the claimed length** - the
+  scratch for a straddling string/bytes grows as real data arrives (pooled, doubling), so a
+  hostile length prefix costs at most the real payload, the eager-allocation problem dissolved
+  rather than capped.
+- **Snapshot/resume** (`ReaderSnapshot`): plain fields, the ref recovered as an index; the
+  unconsumed tail `[_offset, _count)` is copied into the snapshot (typically small at await
+  points), because a leased buffer cannot outlive the reader and streams cannot re-seek. Design
+  note; built when the async story lands.
+- **Group skip rides along** (`SkipTag` wire-type 3): read-and-skip until the matching sentinel,
+  nesting via its own counter, depth-guarded unconditionally — unknown fields nest arbitrarily
+  regardless of the model; the wire decides, not the schema.
+
+Correctness gates for this brick, cheap and brutal: the descriptor payload parsed as a
+two-segment sequence **split at every byte offset** (7,670 splits × ~8µs — every straddle case
+for every wire construct, gated on the census); the all-single-byte-segments sequence (the
+pathological case); and a 1-byte-chunk feeding stream. Benchmarks: nano-Stream vs legacy's real
+Stream backend through the unwrap-defeating wrapper, chunk size as an axis, with the Memory rows
+as the control for what refill machinery costs when it never fires.
+
 ## The north star: descriptor.proto, "the good way"
 
 The working goal that sequences everything below: enough reader + emission to handle the
