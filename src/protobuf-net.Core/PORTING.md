@@ -1,5 +1,36 @@
 # nano-swap step 2: porting notes (transient - delete when the swap completes)
 
+## raw-natives branch: the BCL slice plan (next up; design settled with Marc)
+
+DateTime/TimeSpan/Guid/Decimal go native by converting the EXISTING bodies to the raw API
+rather than writing parallel readers - "part of our fix here is to change BclHelpers to use
+the raw API" (Marc). The AppendBytes pattern, again:
+
+- the PrimaryTypeProvider loop bodies (ScaledTicks in PrimaryTypeProvider.TimeSpan.cs,
+  decimal in .Decimal.cs, Guid in .Guid.cs, ReadDurationFallback in WellKnownTypes/Duration.cs)
+  become raw tag loops on State (they run inside ReadMessage framing, which the proxy work
+  proved sound - including group frames via the IsScopeEnd legacy fallback). BclHelpers keeps
+  its signatures; the classic emit and runtime model get faster for free.
+- State grows self-framing wrappers for the generated arms: ReadRawDateTimeBcl /
+  ReadRawTimeSpanBcl (PushLengthPrefix + ScaledTicks body + convert), ReadRawTimestamp /
+  ReadRawDuration (TryReadWellKnownPairFast + fallback body), ReadRawGuidBcl,
+  ReadRawDecimalBcl, ReadRawDecimalString / ReadRawGuidString (len + ReadRawBytesInto +
+  Utf8Parser / GuidHelper - check GuidHelper for a span core to reuse).
+- wire fidelity per field, from the stateful reads they replace: ScaledTicks.value is
+  Assert(SignedVarint) - zigzag wire-0 ONLY, no fixed tolerance; scale/kind and the
+  decimal/Duration fields are ReadInt32/64-tolerant (varint/fixed32/fixed64); Guid lo/hi are
+  ReadUInt64-tolerant. Port the per-field label sets accordingly.
+- generator: RawScalarForms rows keyed on kind + EFFECTIVE CompatibilityLevel (DateTime/
+  TimeSpan: <=200 bcl, >=240 timestamp/duration; Guid: <=240 bcl, 300 string; Decimal:
+  <=240 bcl, 300 string). WellKnown format = level promotion for these kinds, so those
+  census rows (WellKnown on DateTime/TimeSpan) fold in as natives, not gates. The wire-2
+  label is the native arm; |1 and |3 tolerance arms go StashTag + classic scalar body
+  (BclHelpers is wire-aware there), preserving legacy acceptance of fixed64/group framing.
+- census after the first four slices (callbacks, Specified, DataFormat, arrays): 1127 raw
+  contracts, 204 whole-contract fallbacks (shape ONLY now - callbacks cleared), 246
+  legacy-mode members; the BCL tail is DateTime 18 + Decimal 14 + TimeSpan 7 + Guid 6 plus
+  the format-on-BCL pairings (~13).
+
 The working scaffold for rewriting `ProtoReader.State` over the nano core. Design decisions live
 in docs/nano-core.md; this file is the mechanical state of the port.
 
