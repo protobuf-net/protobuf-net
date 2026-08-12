@@ -222,6 +222,26 @@ niche fence — the places where the callee genuinely is not known until runtime
    differential suite (`src/AotDifferential`) is the correctness gate: byte-for-byte agreement over
    ~3,000 contracts, both directions. Resurrect the Nano benchmarks as the performance gate.
 
+## The move into Core, and how the emit gate flips
+
+Nano never ships as a separate assembly: the spike (`src/NanoState`) is scaffolding, and the
+destination is inside protobuf-net.Core — which is also what dissolves the internal-access edges
+the spike keeps hitting (`SubItemToken`, `ProtoReader.SolidState`). The move is deliberately *not*
+yet: the spike's iteration speed (no Core rebuild, no PublicAPI churn, no `[Experimental]`
+ceremony per member) is worth keeping while the reader's shape is moving. It lands in one hop when
+the shape stabilises: types into Core under `[Experimental]`, the new surface into
+`PublicAPI.Unshipped` (reviewable as API), the veneers gaining the real
+`StartSubItem`/`EndSubItem`/`SubItemToken` integration — and the emit gate flips, because
+"symbol visible" stops meaning opt-in the moment everyone can see the symbol:
+
+- **opt-in becomes explicit**: a `[ProtoModel]` flag (the `AllowParseableTypes` pattern —
+  per-model, plan-equatable, already under the `PBN9001` experimental umbrella);
+- **the symbol probe stays as the safety check**, not the trigger: new BuildTools against an older
+  Core has no nano types, and emitting calls to absent types is a build break in code the consumer
+  never wrote. Emit iff opted-in AND symbol present; opted-in without the symbol gets a clean
+  "needs protobuf-net.Core ≥ X" diagnostic — the same probe-the-reference discipline as
+  `UnsafeAccessorAttribute` and `ReadDateOnly`.
+
 ## Landing strategy: side-by-side, with the v4 lesson as the guardrail
 
 Incremental (build the nano reader alongside the incumbent, migrate logic, swap at the end) beats
