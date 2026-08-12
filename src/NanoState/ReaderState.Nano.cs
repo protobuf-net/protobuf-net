@@ -885,6 +885,130 @@ public ref partial struct ReaderState
         _offset += bytes;
     }
 
+    // ------------------------------------------------------------ extension data
+    //
+    // Unknown-field retention for extensible contracts: the field is CAPTURED into the
+    // instance's extension bag instead of skipped, in wire format, so the write side can blit it
+    // back out. Two byte-fidelity rules, both deliberate: the TAG is re-encoded canonically -
+    // its original bytes are behind the offset, unreachable under forward-only, and the caller's
+    // parameter supplies the value (the raw convention solving its own constraint); legacy
+    // re-encodes headers through ProtoWriter too, so this matches. The PAYLOAD is teed
+    // byte-preserving (original varint encodings kept), resident block-writes where possible,
+    // byte-wise across refills otherwise. Group-framed unknowns capture recursively with
+    // re-encoded markers, depth-guarded unconditionally - the wire decides nesting, not the
+    // schema.
+
+    /// <summary>Captures the unknown field whose tag was just read into the instance's untyped
+    /// extension bag (<see cref="IExtensible"/>).</summary>
+    public void AppendExtensionData(uint tag, IExtensible instance)
+        => AppendExtensionDataCore(tag, instance.GetExtensionObject(createIfMissing: true));
+
+    /// <summary>Captures into the per-type bag of an <see cref="ITypedExtensible"/> - each layer
+    /// of a hierarchy keys its own, exactly as the legacy typed overload does.</summary>
+    public void AppendExtensionData(uint tag, ITypedExtensible instance, Type type)
+        => AppendExtensionDataCore(tag, instance.GetExtensionObject(type, createIfMissing: true));
+
+    private void AppendExtensionDataCore(uint tag, IExtension extension)
+    {
+        var dest = extension.BeginAppend();
+        try
+        {
+            CaptureField(tag, dest);
+            extension.EndAppend(dest, commit: true);
+        }
+        catch
+        {
+            extension.EndAppend(dest, commit: false);
+            throw;
+        }
+    }
+
+    private void CaptureField(uint tag, Stream dest)
+    {
+        WriteVarintTo(dest, tag);
+        switch (tag & 7)
+        {
+            case 0: // varint: byte-preserving tee
+                CaptureVarint(dest);
+                break;
+            case 1: // fixed64
+                CaptureBytes(dest, 8);
+                break;
+            case 2: // length-prefixed
+            {
+                int len = checked((int)ReadRawVarint32());
+                WriteVarintTo(dest, (uint)len);
+                if (_remaining >= 0 && (long)len > (long)(_count - _offset) + _remaining) ThrowEndOfData();
+                CaptureBytes(dest, len);
+                break;
+            }
+            case 3: // group: recursive capture to the matching sentinel (start tag + 1)
+            {
+                if (++_depth >= MaxDepth) ThrowTooDeep();
+                uint endTag = tag + 1;
+                while (true)
+                {
+                    uint inner = ReadRawTag();
+                    if (inner == 0) ThrowMalformed(); // scope/data ended before the end-group
+                    if (inner == endTag)
+                    {
+                        WriteVarintTo(dest, inner);
+                        break;
+                    }
+                    CaptureField(inner, dest);
+                }
+                _depth--;
+                break;
+            }
+            case 5: // fixed32
+                CaptureBytes(dest, 4);
+                break;
+            default: // 4 = end-group nothing expected; 6/7 are not wire types
+                ThrowMalformed();
+                break;
+        }
+    }
+
+    private static void WriteVarintTo(Stream dest, uint value)
+    {
+        while (value >= 0x80)
+        {
+            dest.WriteByte((byte)(value | 0x80));
+            value >>= 7;
+        }
+        dest.WriteByte((byte)value);
+    }
+
+    /// <summary>Tees one varint byte-for-byte - the original encoding is preserved, overlong or
+    /// not, because the bag's promise is fidelity.</summary>
+    private void CaptureVarint(Stream dest)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            byte b = ReadRawByte();
+            dest.WriteByte(b);
+            if ((b & 0x80) == 0) return;
+        }
+        ThrowMalformed();
+    }
+
+    private void CaptureBytes(Stream dest, int bytes)
+    {
+        if (bytes < 0) ThrowEndOfData();
+        while (bytes > 0)
+        {
+            if (_offset >= _count && !GetNextBuffer()) ThrowEndOfData();
+            int take = Math.Min(bytes, _count - _offset);
+#if NET7_0_OR_GREATER
+            dest.Write(MemoryMarshal.CreateReadOnlySpan(ref At(_offset), take));
+#else
+            dest.Write(_buffer, _segmentStart + _offset, take);
+#endif
+            _offset += take;
+            bytes -= take;
+        }
+    }
+
     // ------------------------------------------------------------ packed fast paths
     //
     // Packed reads are one-line helper calls from generated code, and the platform fork lives

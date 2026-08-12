@@ -189,8 +189,9 @@ public class StreamParseBenchmarks
     // ---------------------------------------------------------------- plumbing
 
     /// <summary>Non-seekable read-only stream returning at most maxChunk bytes per Read - the
-    /// unwrap-defeating wrapper: it is deliberately NOT a MemoryStream.</summary>
-    private sealed class ChunkedStream : Stream
+    /// unwrap-defeating wrapper: it is deliberately NOT a MemoryStream. Internal: the
+    /// extension-data gate borrows it for straddle coverage.</summary>
+    internal sealed class ChunkedStream : Stream
     {
         private readonly byte[] _data;
         private readonly int _maxChunk;

@@ -77,6 +77,16 @@ public class DescriptorParseBenchmarks
             throw new InvalidOperationException(
                 $"generated-vs-hand disagreement:\ngenerated {generated}\nhand      {nano}");
         }
+
+        // extension retention, with LEGACY as the referee: parse as the narrowed EMPTY
+        // extensible contract (everything is unknown, so each file's whole body lands in the
+        // extension bag), read a value back through legacy's Extensible.GetValue to prove
+        // cross-stack bag compatibility, then re-serialize through legacy's writer - which
+        // honors extension data - and require BYTE IDENTITY with the original payload
+        ExtensionGate(new ReaderState(_data, 0, _data.Length), "memory");
+        // and through 1-byte chunks: the capture's straddle paths (byte-wise tee, refilling
+        // mid-field) get the same referee
+        ExtensionGate(new ReaderState(new StreamParseBenchmarks.ChunkedStream(_data, 1)), "1-byte chunks");
         Console.WriteLine($"// payload {_data.Length} bytes; census {nano}");
     }
 
@@ -129,12 +139,50 @@ public class DescriptorParseBenchmarks
     }
 
     private delegate Model.FileDescriptorSet GeneratedRead(ref ReaderState state, Model.FileDescriptorSet value);
+    internal delegate Model.NarrowFileDescriptorSet NarrowRead(ref ReaderState state, Model.NarrowFileDescriptorSet value);
 
     // resolved once by reflection (the generated services type is private inside the model),
-    // then invoked as a cached delegate - full speed on the measured path
-    private static readonly GeneratedRead s_generatedRead = ResolveGeneratedRead();
+    // then invoked as cached delegates - full speed on the measured path; matched by RETURN
+    // TYPE, which is exact where a name suffix would be ambiguous (FileDescriptorSet is a
+    // suffix of NarrowFileDescriptorSet)
+    private static readonly GeneratedRead s_generatedRead
+        = (GeneratedRead)ResolveGeneratedRead(typeof(Model.FileDescriptorSet), typeof(GeneratedRead));
+    internal static readonly NarrowRead s_narrowRead
+        = (NarrowRead)ResolveGeneratedRead(typeof(Model.NarrowFileDescriptorSet), typeof(NarrowRead));
 
-    private static GeneratedRead ResolveGeneratedRead()
+    private void ExtensionGate(ReaderState state, string name)
+    {
+        Model.NarrowFileDescriptorSet narrow;
+        try
+        {
+            narrow = s_narrowRead(ref state, null);
+        }
+        finally
+        {
+            state.Dispose();
+        }
+        // cross-stack bag read: LEGACY's Extensible.GetValue deserializes what NANO stored
+        var firstName = Extensible.GetValue<string>(narrow.Files[0], 1);
+        if (firstName != "google/protobuf/descriptor.proto")
+        {
+            throw new InvalidOperationException($"extension gate ({name}): GetValue read '{firstName}'");
+        }
+        // round-trip fidelity with the incumbent as referee: legacy's writer emits declared
+        // members (none) then the extension blob verbatim - byte identity or bust
+        byte[] echoed;
+        using (var ms = new MemoryStream())
+        {
+            Serializer.Serialize(ms, narrow);
+            echoed = ms.ToArray();
+        }
+        if (!System.Linq.Enumerable.SequenceEqual(echoed, _data))
+        {
+            throw new InvalidOperationException(
+                $"extension gate ({name}): round-trip not byte-identical ({echoed.Length} vs {_data.Length} bytes)");
+        }
+    }
+
+    private static Delegate ResolveGeneratedRead(Type contractType, Type delegateType)
     {
         foreach (var nested in typeof(Model.NanoDescriptorModel).GetNestedTypes(
             System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic))
@@ -143,14 +191,14 @@ public class DescriptorParseBenchmarks
                 System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
             {
                 if (method.Name.StartsWith("NanoRead_", StringComparison.Ordinal)
-                    && method.Name.EndsWith("FileDescriptorSet", StringComparison.Ordinal))
+                    && method.ReturnType == contractType)
                 {
-                    return (GeneratedRead)method.CreateDelegate(typeof(GeneratedRead));
+                    return method.CreateDelegate(delegateType);
                 }
             }
         }
         throw new InvalidOperationException(
-            "generated NanoRead for FileDescriptorSet not found - did the nano pass emit?");
+            $"generated NanoRead for {contractType.Name} not found - did the nano pass emit?");
     }
 
     // ---------------------------------------------------------------- census

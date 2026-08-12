@@ -17,11 +17,71 @@ partial class NanoPassModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>
+        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Bag>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Child>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Order>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Bag>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.NanoPass.Bag global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Bag>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NanoPass.Bag value)
+        {
+            value ??= new global::AotFixtures.NanoPass.Bag();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.Id = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.AppendExtensionData(value);
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Bag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NanoPass.Bag value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Id;
+            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            state.AppendExtensionData(value);
+        }
+
+        public static global::AotFixtures.NanoPass.Bag NanoRead_AotFixtures_NanoPass_Bag(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Bag value)
+        {
+            value ??= new global::AotFixtures.NanoPass.Bag();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.AppendExtensionData(tag, value);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 

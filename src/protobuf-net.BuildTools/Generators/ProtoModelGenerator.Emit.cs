@@ -321,7 +321,11 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent + 3, "default:");
             Line(sb, indent + 4, "if (state.IsScopeEnd(tag)) return value;");
-            Line(sb, indent + 4, "state.SkipTag(tag);");
+            // an extensible contract CAPTURES the unknown field instead of skipping it - the tag
+            // rides the parameter, per the raw convention
+            Line(sb, indent + 4, contract.Extensible == ProtoExtensibleKind.None
+                ? "state.SkipTag(tag);"
+                : $"state.AppendExtensionData(tag, value{ExtensionType(contract)});");
             Line(sb, indent + 4, "break;");
             Line(sb, indent + 2, "}");
             Line(sb, indent + 2, "tag = state.ReadRawTag();");
@@ -397,11 +401,10 @@ namespace ProtoBuf.BuildTools.Generators
             if (contract.IsValueType || contract.IsTuple || contract.IsAbstract || contract.IsGroup
                 || contract.SkipConstructor || contract.UsesConstructorAccessor
                 || contract.RootTypeName is not null || contract.SubTypes.Count != 0
-                || contract.Extensible != ProtoExtensibleKind.None
                 || contract.SurrogateTypeName is not null
                 || contract.ExternalSerializerTypeName is not null)
             {
-                reason = "contract shape (value type, tuple, hierarchy, extensible, surrogate or external serializer)";
+                reason = "contract shape (value type, tuple, hierarchy, surrogate or external serializer)";
                 return false;
             }
             // Callbacks is always a fixed 4-slot array indexed by kind; null MethodName = none

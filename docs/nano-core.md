@@ -258,6 +258,22 @@ stays the per-member replace escape under the flag; the *veneer* surface is unaf
 — `AppendBytes` keeps its legacy name and semantics for old API callers, the flag governs what the
 generator emits.
 
+**Extension data: capture, not skip, with two byte-fidelity rules.** An extensible contract's
+unknown fields are captured into the instance's `IExtension` bag in wire format, so the write
+side can blit them back out. The TAG is re-encoded canonically — its original bytes are behind
+the offset, unreachable under forward-only, and the caller's parameter supplies the value: the
+raw convention solving its own constraint (legacy re-encodes headers through ProtoWriter too, so
+this is parity, not divergence). The PAYLOAD is teed byte-preserving — original varint encodings
+kept, overlong or not — resident block-writes where possible, byte-wise across refills
+otherwise; group-framed unknowns capture recursively with re-encoded markers, depth-guarded
+unconditionally. The emit side mirrors legacy's resolved `ProtoExtensibleKind` (untyped/typed
+per the `UseTypedExtensible` table), with the capture in the switch `default:` after the
+sentinel test. The gate uses LEGACY as the referee, twice over: an empty-extensible narrowed
+descriptor contract (everything unknown, so each file's whole body lands in the bag in original
+order), read back via legacy's `Extensible.GetValue` (cross-stack bag compatibility) and
+re-serialized via legacy's writer, which must reproduce the original payload BYTE-IDENTICAL —
+including through a 1-byte-chunk stream, so the straddle tee faces the same referee.
+
 **Safeguard parity, and the elision lever.** The reader carries legacy's safeguards: field-0
 rejection (folded into the single-byte tag range check — `8..127` is one compare, the same cost as
 the bare MSB test), max depth (the `TypeModel.MaxDepth` cap, default 512 — nano's direct child

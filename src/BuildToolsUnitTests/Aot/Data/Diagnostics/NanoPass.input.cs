@@ -26,6 +26,8 @@ namespace ProtoBuf.Nano
         public bool IsScopeEnd(uint tag) => throw new System.NotImplementedException();
         public bool AtScopeEnd => throw new System.NotImplementedException();
         public void ReadPackedVarint32(List<int> values) => throw new System.NotImplementedException();
+        public void AppendExtensionData(uint tag, global::ProtoBuf.IExtensible instance) => throw new System.NotImplementedException();
+        public void AppendExtensionData(uint tag, global::ProtoBuf.ITypedExtensible instance, System.Type type) => throw new System.NotImplementedException();
     }
 
     public readonly struct ReadScope
@@ -81,10 +83,18 @@ namespace AotFixtures.NanoPass
         [ProtoMember(1)] public Holder Inner { get; set; }
     }
 
+    // extensible: the default case CAPTURES unknown fields instead of skipping them
+    [ProtoContract]
+    public class Bag : Extensible
+    {
+        [ProtoMember(1)] public int Id { get; set; }
+    }
+
     [ProtoModel]
     [ProtoSerializable(typeof(Order))]
     [ProtoSerializable(typeof(Holder))]
     [ProtoSerializable(typeof(Chain))]
+    [ProtoSerializable(typeof(Bag))]
     public partial class NanoPassModel : ProtoBuf.Meta.TypeModel
     {
     }
