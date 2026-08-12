@@ -17,9 +17,104 @@ partial class NanoPassModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Holder>
+        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Child>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Order>
     {
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.NanoPass.Chain global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NanoPass.Chain value)
+        {
+            value ??= new global::AotFixtures.NanoPass.Chain();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        var tmp1 = value.Inner;
+                        tmp1 = state.ReadMessage<global::AotFixtures.NanoPass.Holder>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+                        if (tmp1 != null) value.Inner = tmp1;
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Chain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NanoPass.Chain value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Inner;
+            state.WriteMessage<global::AotFixtures.NanoPass.Holder>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+        }
+
+        // nano pass: skipped - member Inner: target global::AotFixtures.NanoPass.Holder is not nano-eligible (cascade)
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Child>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.NanoPass.Child global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Child>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NanoPass.Child value)
+        {
+            value ??= new global::AotFixtures.NanoPass.Child();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.Value = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Child>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NanoPass.Child value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+        }
+
+        public static global::AotFixtures.NanoPass.Child NanoRead_AotFixtures_NanoPass_Child(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Child value)
+        {
+            value ??= new global::AotFixtures.NanoPass.Child();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -33,9 +128,9 @@ partial class NanoPassModel
                 {
                     case 1:
                     {
-                        var tmp1 = value.Inner;
-                        tmp1 = state.ReadMessage<global::AotFixtures.NanoPass.Order>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Inner = tmp1;
+                        var tmp1 = value.Lookup;
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp1 != null) Field_AotFixtures_NanoPass_Holder_Lookup(value) = tmp1;
                         break;
                     }
                     default:
@@ -49,9 +144,14 @@ partial class NanoPassModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NanoPass.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var tmp1 = value.Inner;
-            state.WriteMessage<global::AotFixtures.NanoPass.Order>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            var tmp1 = value.Lookup;
+            if (tmp1 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+            }
         }
+
+        // nano pass: skipped - member Lookup: map
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NanoPass.Order>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -85,6 +185,44 @@ partial class NanoPassModel
                         value.Total = state.ReadInt64();
                         break;
                     }
+                    case 5:
+                    {
+                        value.Status = (global::AotFixtures.NanoPass.Status)state.ReadInt32();
+                        break;
+                    }
+                    case 6:
+                    {
+                        value.Priority = state.ReadInt32();
+                        break;
+                    }
+                    case 7:
+                    {
+                        var tmp7 = value.Tags;
+                        tmp7 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+                        if (tmp7 != null) Field_AotFixtures_NanoPass_Order_Tags(value) = tmp7;
+                        break;
+                    }
+                    case 8:
+                    {
+                        var tmp8 = value.Codes;
+                        tmp8 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+                        if (tmp8 != null) Field_AotFixtures_NanoPass_Order_Codes(value) = tmp8;
+                        break;
+                    }
+                    case 9:
+                    {
+                        var tmp9 = value.Items;
+                        tmp9 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.NanoPass.Child>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, this);
+                        if (tmp9 != null) Field_AotFixtures_NanoPass_Order_Items(value) = tmp9;
+                        break;
+                    }
+                    case 10:
+                    {
+                        var tmp10 = value.Favourite;
+                        tmp10 = state.ReadMessage<global::AotFixtures.NanoPass.Child>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp10, this);
+                        if (tmp10 != null) value.Favourite = tmp10;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -112,55 +250,149 @@ partial class NanoPassModel
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
                 state.WriteInt64(tmp4);
             }
+            var tmp5 = value.Status;
+            if (tmp5 != default(global::AotFixtures.NanoPass.Status)) state.WriteInt32Varint(5, (int)tmp5);
+            var tmp6 = value.Priority;
+            if (tmp6.HasValue)
+            {
+                var val6 = tmp6.GetValueOrDefault();
+                state.WriteInt32Varint(6, val6);
+            }
+            var tmp7 = value.Tags;
+            if (tmp7 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+            }
+            var tmp8 = value.Codes;
+            if (tmp8 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+            }
+            var tmp9 = value.Items;
+            if (tmp9 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.NanoPass.Child>().WriteRepeated(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, this);
+            }
+            var tmp10 = value.Favourite;
+            state.WriteMessage<global::AotFixtures.NanoPass.Child>(10, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp10, this);
         }
 
         public static global::AotFixtures.NanoPass.Order NanoRead_AotFixtures_NanoPass_Order(ref global::ProtoBuf.Nano.ReaderState state, global::AotFixtures.NanoPass.Order value)
         {
             value ??= new global::AotFixtures.NanoPass.Order();
-            uint tag;
-            while ((tag = state.ReadRawTag()) != 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
                 switch (tag)
                 {
-                    case (1 << 3) | 0:
+                    case (1 << 3) | 0:  // Id, field 1, varint
                         value.Id = unchecked((int)state.ReadRawVarint32());
                         break;
-                    case (1 << 3) | 5:
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
                         value.Id = unchecked((int)state.ReadRawFixed32());
                         break;
-                    case (1 << 3) | 1:
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
                         value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
-                    case (2 << 3) | 2:
+                    case (2 << 3) | 2:  // Name, field 2, length-prefixed
                     {
                         var tmp2 = state.ReadRawString();
                         if (tmp2 != null) value.Name = tmp2;
                         break;
                     }
-                    case (3 << 3) | 0:
+                    case (3 << 3) | 0:  // Active, field 3, varint
                         value.Active = state.ReadRawVarint32() != 0;
                         break;
-                    case (3 << 3) | 5:
+                    case (3 << 3) | 5:  // Active, field 3, fixed32
                         value.Active = state.ReadRawFixed32() != 0;
                         break;
-                    case (3 << 3) | 1:
+                    case (3 << 3) | 1:  // Active, field 3, fixed64
                         value.Active = state.ReadRawFixed64() != 0;
                         break;
-                    case (4 << 3) | 0:
+                    case (4 << 3) | 0:  // Total, field 4, varint
                         value.Total = unchecked((long)state.ReadRawVarint64());
                         break;
-                    case (4 << 3) | 1:
+                    case (4 << 3) | 1:  // Total, field 4, fixed64
                         value.Total = unchecked((long)state.ReadRawFixed64());
                         break;
-                    case (4 << 3) | 5:
+                    case (4 << 3) | 5:  // Total, field 4, fixed32
                         value.Total = (long)unchecked((int)state.ReadRawFixed32());
                         break;
+                    case (5 << 3) | 0:  // Status, field 5, varint
+                        value.Status = (global::AotFixtures.NanoPass.Status)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (5 << 3) | 5:  // Status, field 5, fixed32
+                        value.Status = (global::AotFixtures.NanoPass.Status)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (5 << 3) | 1:  // Status, field 5, fixed64
+                        value.Status = (global::AotFixtures.NanoPass.Status)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (6 << 3) | 0:  // Priority, field 6, varint
+                        value.Priority = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // Priority, field 6, fixed32
+                        value.Priority = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // Priority, field 6, fixed64
+                        value.Priority = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 2:  // Tags, field 7, length-prefixed run
+                        do { value.Tags.Add(state.ReadRawString()); }
+                        while ((tag = state.ReadRawTag()) == ((7 << 3) | 2));
+                        continue;
+                    case (8 << 3) | 0:  // Codes, field 8, unpacked run
+                        do { value.Codes.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((8 << 3) | 0));
+                        continue;
+                    case (8 << 3) | 2:  // Codes, field 8, packed
+                        state.ReadPackedVarint32(value.Codes);
+                        break;
+                    case (8 << 3) | 5:  // Codes, field 8, fixed32
+                        value.Codes.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (8 << 3) | 1:  // Codes, field 8, fixed64
+                        value.Codes.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (9 << 3) | 2:  // Items, field 9, length-prefixed
+                    case (9 << 3) | 3:  // Items, field 9, group
+                    {
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            value.Items.Add(NanoRead_AotFixtures_NanoPass_Child(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    case (10 << 3) | 2:  // Favourite, field 10, length-prefixed
+                    case (10 << 3) | 3:  // Favourite, field 10, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Favourite = NanoRead_AotFixtures_NanoPass_Child(ref state, value.Favourite);
+                        state.PopScope(scope);
+                        break;
+                    }
                     default:
+                        if (state.IsScopeEnd(tag)) return value;
                         state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return value;
         }
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Lookup>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.Dictionary<int, string> Field_AotFixtures_NanoPass_Holder_Lookup(global::AotFixtures.NanoPass.Holder target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Tags>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.List<string> Field_AotFixtures_NanoPass_Order_Tags(global::AotFixtures.NanoPass.Order target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Codes>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.List<int> Field_AotFixtures_NanoPass_Order_Codes(global::AotFixtures.NanoPass.Order target);
+
+        [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Items>k__BackingField")]
+        private static extern ref global::System.Collections.Generic.List<global::AotFixtures.NanoPass.Child> Field_AotFixtures_NanoPass_Order_Items(global::AotFixtures.NanoPass.Order target);
     }
 }
