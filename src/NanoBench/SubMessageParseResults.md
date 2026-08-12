@@ -10,10 +10,18 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), .NET 10.0.10, x86
 
 | ns/record | LegacyReal | NanoRaw |
 | --- | ---: | ---: |
-| prefixed / small | 12.74 | 2.71 (4.7×) |
-| prefixed / mixed | 14.35 | 3.68 (3.9×) |
-| group / small | 11.50 | 2.36 (4.9×) |
-| group / mixed | 13.14 | 3.34 (3.9×) |
+| prefixed / small | 12.98 | 2.86 (4.5×) |
+| prefixed / mixed | 14.20 | 3.80 (3.7×) |
+| group / small | 11.52 | 2.46 (4.7×) |
+| group / mixed | 13.11 | 3.45 (3.8×) |
+
+(Re-measured after correcting the child reader to the exact emitted shape - value-in/value-out with
+`??=` construction and assign-back at the call site, rather than a void mutate-in-place that
+drifted from what the generator emits; the correction cost ~0.1 ns/record. The return-vs-`ref`
+design question this surfaced is settled in docs/nano-core.md: return is canonical - `ref` binds
+only to fields/locals/elements, never properties, and return matches the interface veneer - with a
+`ref` overload as a targeted future specialization for structs, accessor fields and in-place
+collection merge.)
 
 ## What this proved beyond the numbers
 

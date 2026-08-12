@@ -182,6 +182,17 @@ caller states the encoding, and the tag flows through parameters.**
   divergence (fixtures read and write the same format), so a deliberate cross-format test lands
   with the change.
 
+**The read signature is value-in, value-out** — `static T NanoRead_X(ref ReaderState, T value)`,
+with `??=` construction inside and merge by mutation. The alternatives were weighed: v4's
+`void Merge(ref T? value, …)` saves the return shuffle, but a `ref` argument binds only to
+fields, locals and array/span elements — never to properties or fresh collection slots — and the
+generated targets are overwhelmingly properties, so the general path would spill through a local
+and assign back regardless. The return form also matches `ISerializer<T>.Read`, so one emitted
+body serves both the direct-call path and the interface/veneer bridge. A `ref` overload remains a
+*targeted* future specialization — struct contracts (return = copy), the `[UnsafeAccessor]` field
+path (which already yields a `ref`), and in-place merge over `CollectionsMarshal.AsSpan` — gated
+by the tiebreaker rule: benchmark it only if a decision actually hinges on it.
+
 **Generated code calls generated code directly — `this`-as-`ISerializer<T>` becomes the exception.**
 Today the generated model passes itself as the serializer into
 `state.WriteMessage<T>(field, value, this)`: interface dispatch on a generic method for a callee the

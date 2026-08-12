@@ -155,7 +155,7 @@ public class SubMessageParseBenchmarks
                     case (1 << 3) | 2: // length-prefixed child
                     {
                         var scope = state.PushLengthPrefix();
-                        NanoReadChild(ref state, child);
+                        child = NanoReadChild(ref state, child);
                         state.PopScope(scope);
                         unchecked { sum += (uint)child.Value; }
                         count++;
@@ -164,7 +164,7 @@ public class SubMessageParseBenchmarks
                     case (1 << 3) | 3: // group child; the end tag is a compile-time constant here
                     {
                         var scope = state.PushGroup((1 << 3) | 4);
-                        NanoReadChild(ref state, child);
+                        child = NanoReadChild(ref state, child);
                         state.PopScope(scope);
                         unchecked { sum += (uint)child.Value; }
                         count++;
@@ -183,10 +183,12 @@ public class SubMessageParseBenchmarks
         }
     }
 
-    // the shape the generator's nano pass will emit for a sub-message: direct static call, merge
-    // into the supplied instance, sentinel checked only in the default case
-    private static void NanoReadChild(ref ReaderState state, Child value)
+    // the exact shape the generator's nano pass emits (see NanoPass.output.cs): value in, value
+    // returned, ??= construction inside, merge by mutation, sentinel checked only in the default
+    // case - and the call site assigns back, as generated code would
+    private static Child NanoReadChild(ref ReaderState state, Child value)
     {
+        value ??= new Child();
         uint tag;
         while ((tag = state.ReadRawTag()) != 0)
         {
@@ -196,10 +198,11 @@ public class SubMessageParseBenchmarks
                     value.Value = unchecked((int)state.ReadRawVarint32());
                     break;
                 default:
-                    if (state.IsScopeEnd(tag)) return;
+                    if (state.IsScopeEnd(tag)) return value;
                     state.SkipTag(tag);
                     break;
             }
         }
+        return value;
     }
 }
