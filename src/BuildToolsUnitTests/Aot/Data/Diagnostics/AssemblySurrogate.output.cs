@@ -81,7 +81,11 @@ partial class AssemblySurrogateModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Value
+                state.WriteRawString(tmp1);
+            }
         }
 
         private static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
@@ -143,7 +147,11 @@ partial class AssemblySurrogateModel
             var surrogate = (global::AotFixtures.AssemblySurrogate.VersionSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Value;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Value
+                state.WriteRawString(tmp1);
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

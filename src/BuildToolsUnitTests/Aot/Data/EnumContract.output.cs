@@ -42,8 +42,8 @@ partial class EnumContractModel
             var tmp2 = value.Size;
             if (tmp2 != default(global::AotFixtures.EnumContract.Size))
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteByte((byte)tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // Size
+                state.WriteRawVarint32((byte)tmp2);
             }
             var tmp3 = value.Options;
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);

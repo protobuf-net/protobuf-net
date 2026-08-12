@@ -55,24 +55,28 @@ partial class ListOptionsModel
             var tmp2 = value.OverwriteScalar;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
             var tmp3 = value.BothOnString;
-            state.WriteString(3, tmp3);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // BothOnString
+                state.WriteRawString(tmp3);
+            }
             var tmp4 = value.AppendedBytes;
             if (tmp4 != null)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp4);
+                state.WriteRawTag((4 << 3) | 2);  // AppendedBytes
+                state.WriteRawBytes(tmp4);
             }
             var tmp5 = value.OverwrittenBytes;
             if (tmp5 != null)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp5);
+                state.WriteRawTag((5 << 3) | 2);  // OverwrittenBytes
+                state.WriteRawBytes(tmp5);
             }
             var tmp6 = value.PackedBytes;
             if (tmp6 != null)
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp6);
+                state.WriteRawTag((6 << 3) | 2);  // PackedBytes
+                state.WriteRawBytes(tmp6);
             }
         }
 

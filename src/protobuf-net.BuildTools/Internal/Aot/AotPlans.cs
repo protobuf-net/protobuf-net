@@ -887,7 +887,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
             EquatableArray<string> aliases = default, bool emitInstance = true,
-            bool emitConstructor = false, bool isSealed = false, bool rawReader = false)
+            bool emitConstructor = false, bool isSealed = false, bool rawReader = false, bool rawWriter = false)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -899,6 +899,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             EmitConstructor = emitConstructor;
             IsSealed = isSealed;
             RawReader = rawReader;
+            RawWriter = rawWriter;
         }
 
         /// <summary>
@@ -908,6 +909,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// older Core keeps the classic emission with no knob to set.
         /// </summary>
         public bool RawReader { get; }
+
+        /// <summary>
+        /// Whether the raw writer surface (<c>ProtoWriter.State.WriteRawTag</c> and friends) is
+        /// visible to the compilation, enabling the optimized write emission (see
+        /// <c>docs/nano-writer.md</c>); gated exactly as <see cref="RawReader"/> is, and by the
+        /// same ClassicEmit escape hatch - one flag, both directions.
+        /// </summary>
+        public bool RawWriter { get; }
 
         /// <summary>
         /// Every <c>extern alias</c> declared on a reference in the consumer's compilation.
@@ -995,13 +1004,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
                 && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
-                && IsSealed == other.IsSealed && RawReader == other.RawReader;
+                && IsSealed == other.IsSealed && RawReader == other.RawReader
+                && RawWriter == other.RawWriter;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 
         public override int GetHashCode()
             => ((Namespace?.GetHashCode() ?? 0) * 397) ^ (TypeName.GetHashCode() * 31)
                 ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7)
-                ^ (RawReader ? 8191 : 0);
+                ^ (RawReader ? 8191 : 0) ^ (RawWriter ? 16381 : 0);
     }
 }

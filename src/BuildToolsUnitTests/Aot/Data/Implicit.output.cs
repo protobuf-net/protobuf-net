@@ -103,7 +103,11 @@ partial class ImplicitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Apple;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Apple
+                state.WriteRawString(tmp1);
+            }
             var tmp2 = value.Mango;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
             var tmp3 = value.Zebra;

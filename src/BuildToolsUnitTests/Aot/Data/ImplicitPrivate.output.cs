@@ -80,7 +80,11 @@ partial class ImplicitPrivateModel
             var tmp1 = value.Public;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // _apple
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }

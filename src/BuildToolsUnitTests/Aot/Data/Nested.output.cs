@@ -32,7 +32,11 @@ partial class NestedModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.City;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // City
+                state.WriteRawString(tmp1);
+            }
         }
 
         private static global::AotFixtures.Nested.Address RawRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)

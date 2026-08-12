@@ -200,7 +200,13 @@ namespace ProtoBuf.BuildTools.Generators
                         && rawType.GetMembers("ReadRawTag").Length != 0
                         && rawType.GetMembers("StashTag").Length != 0
                         && rawType.GetMembers("ReadRawTimestamp").Length != 0 // the BCL wrappers wave
-                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly));
+                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly),
+                    // the write side, gated identically (docs/nano-writer.md) - and by the SAME
+                    // ClassicEmit flag, per the whole-emission agreement: one flag, both directions
+                    rawWriter: !classicEmit
+                        && compilation.GetTypeByMetadataName("ProtoBuf.ProtoWriter+State") is { } rawWriteType
+                        && rawWriteType.GetMembers("WriteRawTag").Length != 0
+                        && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly));
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));

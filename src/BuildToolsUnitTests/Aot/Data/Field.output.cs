@@ -35,7 +35,11 @@ partial class FieldModel
             var tmp1 = value.First;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Second;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Second
+                state.WriteRawString(tmp2);
+            }
         }
 
         private static global::AotFixtures.Field.DataFields RawRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
@@ -117,7 +121,11 @@ partial class FieldModel
             var tmp1 = value.Number;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Text;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Text
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Message;
             state.WriteMessage<global::AotFixtures.Field.Nested>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
             var tmp4 = value.Zig;
@@ -132,7 +140,8 @@ partial class FieldModel
             if (tmp6.HasValue)
             {
                 var val6 = tmp6.GetValueOrDefault();
-                state.WriteInt32Varint(6, val6);
+                state.WriteRawTag((6 << 3) | 0);  // Nullable
+                state.WriteRawVarint64(unchecked((ulong)(long)val6));
             }
             var tmp7 = value.Property;
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);

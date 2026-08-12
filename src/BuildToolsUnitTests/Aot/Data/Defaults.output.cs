@@ -37,25 +37,26 @@ partial class DefaultsModel
             var tmp2 = value.Text;
             if (tmp2 != null && tmp2 != "abc")
             {
-                state.WriteString(2, tmp2);
+                state.WriteRawTag((2 << 3) | 2);  // Text
+                state.WriteRawString(tmp2);
             }
             var tmp3 = value.Flag;
             if (tmp3 != true)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Flag
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp4 = value.Ratio;
             if (tmp4 != 2.5D)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Fixed64);
-                state.WriteDouble(tmp4);
+                state.WriteRawTag((4 << 3) | 1);  // Ratio
+                state.WriteRawDouble(tmp4);
             }
             var tmp5 = value.Big;
             if (tmp5 != 7L)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // Big
+                state.WriteRawVarint64(unchecked((ulong)tmp5));
             }
             var tmp6 = value.Plain;
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
@@ -139,32 +140,32 @@ partial class DefaultsModel
             var tmp1 = value.ByName;
             if (tmp1 != (global::AotFixtures.Defaults.Shade)(2))
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // ByName
+                state.WriteRawVarint32((ushort)tmp1);
             }
             var tmp2 = value.ByValue;
             if (tmp2 != (global::AotFixtures.Defaults.Shade)(4))
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // ByValue
+                state.WriteRawVarint32((ushort)tmp2);
             }
             var tmp3 = value.Letter;
             if (tmp3 != 'x')
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Letter
+                state.WriteRawVarint32(tmp3);
             }
             var tmp4 = value.DirectChar;
             if (tmp4 != 'y')
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // DirectChar
+                state.WriteRawVarint32(tmp4);
             }
             var tmp5 = value.ByConverter;
             if (tmp5 != (global::AotFixtures.Defaults.Shade)(1))
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // ByConverter
+                state.WriteRawVarint32((ushort)tmp5);
             }
         }
 

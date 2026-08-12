@@ -34,46 +34,46 @@ partial class EnumsModel
             var tmp1 = value.SByteEnum;
             if (tmp1 != default(global::AotFixtures.Enums.AsSByte))
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteSByte((sbyte)tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // SByteEnum
+                state.WriteRawVarint64(unchecked((ulong)(long)(sbyte)tmp1));
             }
             var tmp2 = value.ByteEnum;
             if (tmp2 != default(global::AotFixtures.Enums.AsByte))
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteByte((byte)tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // ByteEnum
+                state.WriteRawVarint32((byte)tmp2);
             }
             var tmp3 = value.Int16Enum;
             if (tmp3 != default(global::AotFixtures.Enums.AsInt16))
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteInt16((short)tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Int16Enum
+                state.WriteRawVarint64(unchecked((ulong)(long)(short)tmp3));
             }
             var tmp4 = value.UInt16Enum;
             if (tmp4 != default(global::AotFixtures.Enums.AsUInt16))
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // UInt16Enum
+                state.WriteRawVarint32((ushort)tmp4);
             }
             var tmp5 = value.Int32Enum;
             if (tmp5 != default(global::AotFixtures.Enums.AsInt32)) state.WriteInt32Varint(5, (int)tmp5);
             var tmp6 = value.UInt32Enum;
             if (tmp6 != default(global::AotFixtures.Enums.AsUInt32))
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt32((uint)tmp6);
+                state.WriteRawTag((6 << 3) | 0);  // UInt32Enum
+                state.WriteRawVarint32((uint)tmp6);
             }
             var tmp7 = value.Int64Enum;
             if (tmp7 != default(global::AotFixtures.Enums.AsInt64))
             {
-                state.WriteFieldHeader(7, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64((long)tmp7);
+                state.WriteRawTag((7 << 3) | 0);  // Int64Enum
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
             }
             var tmp8 = value.UInt64Enum;
             if (tmp8 != default(global::AotFixtures.Enums.AsUInt64))
             {
-                state.WriteFieldHeader(8, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt64((ulong)tmp8);
+                state.WriteRawTag((8 << 3) | 0);  // UInt64Enum
+                state.WriteRawVarint64((ulong)tmp8);
             }
             var tmp9 = value.Flags;
             if (tmp9 != default(global::AotFixtures.Enums.Flagged)) state.WriteInt32Varint(9, (int)tmp9);
@@ -81,7 +81,8 @@ partial class EnumsModel
             if (tmp10.HasValue)
             {
                 var val10 = tmp10.GetValueOrDefault();
-                state.WriteInt32Varint(10, (int)val10);
+                state.WriteRawTag((10 << 3) | 0);  // MaybeEnum
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)val10));
             }
             var tmp11 = value.EnumWithDefault;
             if (tmp11 != (global::AotFixtures.Enums.AsInt32)(-70000)) state.WriteInt32Varint(11, (int)tmp11);
@@ -91,21 +92,22 @@ partial class EnumsModel
                 var val12 = tmp12.GetValueOrDefault();
                 if (val12 != (global::AotFixtures.Enums.Flagged)(3))
                 {
-                    state.WriteInt32Varint(12, (int)val12);
+                    state.WriteRawTag((12 << 3) | 0);  // MaybeFlagsWithDefault
+                    state.WriteRawVarint64(unchecked((ulong)(long)(int)val12));
                 }
             }
             var tmp13 = value.Character;
             if (tmp13 != 0)
             {
-                state.WriteFieldHeader(13, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(tmp13);
+                state.WriteRawTag((13 << 3) | 0);  // Character
+                state.WriteRawVarint32(tmp13);
             }
             var tmp14 = value.MaybeCharacter;
             if (tmp14.HasValue)
             {
                 var val14 = tmp14.GetValueOrDefault();
-                state.WriteFieldHeader(14, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(val14);
+                state.WriteRawTag((14 << 3) | 0);  // MaybeCharacter
+                state.WriteRawVarint32(val14);
             }
         }
 

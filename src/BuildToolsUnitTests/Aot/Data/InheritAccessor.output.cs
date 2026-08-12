@@ -51,7 +51,11 @@ partial class InheritAccessorModel
             var tmp1 = Field_AotFixtures_InheritAccessor_Base__count(value);
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Label;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Label
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Ordinal;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
             var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
@@ -149,7 +153,11 @@ partial class InheritAccessorModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp5 = Field_AotFixtures_InheritAccessor_Derived__extra(value);
-            state.WriteString(5, tmp5);
+            if (tmp5 != null)
+            {
+                state.WriteRawTag((5 << 3) | 2);  // _extra
+                state.WriteRawString(tmp5);
+            }
         }
 
         global::AotFixtures.InheritAccessor.Derived global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Derived>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Derived> value)

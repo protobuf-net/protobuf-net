@@ -57,11 +57,15 @@ partial class IncludeGroupModel
             var tmp1 = value.Success;
             if (tmp1)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Success
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             var tmp2 = value.Error;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Error
+                state.WriteRawString(tmp2);
+            }
         }
 
         global::AotFixtures.IncludeGroup.Base global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)

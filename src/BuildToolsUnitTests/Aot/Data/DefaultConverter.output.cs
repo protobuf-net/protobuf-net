@@ -34,25 +34,26 @@ partial class DefaultConverterModel
             var tmp2 = value.Text;
             if (tmp2 != null && tmp2 != "abc")
             {
-                state.WriteString(2, tmp2);
+                state.WriteRawTag((2 << 3) | 2);  // Text
+                state.WriteRawString(tmp2);
             }
             var tmp3 = value.Flag;
             if (tmp3 != true)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Flag
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp5 = value.Ratio;
             if (tmp5 != 2.25D)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Fixed64);
-                state.WriteDouble(tmp5);
+                state.WriteRawTag((5 << 3) | 1);  // Ratio
+                state.WriteRawDouble(tmp5);
             }
             var tmp6 = value.Big;
             if (tmp6 != -7L)
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp6);
+                state.WriteRawTag((6 << 3) | 0);  // Big
+                state.WriteRawVarint64(unchecked((ulong)tmp6));
             }
             var tmp7 = value.Plain;
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);

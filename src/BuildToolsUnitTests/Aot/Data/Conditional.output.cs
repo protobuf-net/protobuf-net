@@ -37,7 +37,11 @@ partial class ConditionalModel
             if (value.ShouldSerializeText())
             {
                 var tmp2 = value.Text;
-                state.WriteString(2, tmp2);
+                if (tmp2 != null)
+                {
+                    state.WriteRawTag((2 << 3) | 2);  // Text
+                    state.WriteRawString(tmp2);
+                }
             }
             if (value.BothSpecified)
             {
@@ -47,12 +51,20 @@ partial class ConditionalModel
             if (value.NamedSpecified)
             {
                 var tmp4 = value.Named;
-                state.WriteString(4, tmp4);
+                if (tmp4 != null)
+                {
+                    state.WriteRawTag((4 << 3) | 2);  // Named
+                    state.WriteRawString(tmp4);
+                }
             }
             if (value.ShouldSerializePresence())
             {
                 var tmp5 = value.Presence;
-                state.WriteString(5, tmp5);
+                if (tmp5 != null)
+                {
+                    state.WriteRawTag((5 << 3) | 2);  // Presence
+                    state.WriteRawString(tmp5);
+                }
             }
         }
 

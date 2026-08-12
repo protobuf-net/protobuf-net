@@ -204,7 +204,11 @@ partial class OrderingModel
             var tmp1 = value.First;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Second;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Second
+                state.WriteRawString(tmp2);
+            }
         }
 
         private static global::AotFixtures.Ordering.ViaDataMember RawRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
@@ -255,7 +259,11 @@ partial class OrderingModel
             var tmp11 = value.First;
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
             var tmp12 = value.Second;
-            state.WriteString(12, tmp12);
+            if (tmp12 != null)
+            {
+                state.WriteRawTag((12 << 3) | 2);  // Second
+                state.WriteRawString(tmp12);
+            }
         }
 
         private static global::AotFixtures.Ordering.ViaDataMemberOffset RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
@@ -306,7 +314,11 @@ partial class OrderingModel
             var tmp1 = value.First;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Second;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Second
+                state.WriteRawString(tmp2);
+            }
         }
 
         private static global::AotFixtures.Ordering.ViaXmlElement RawRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)

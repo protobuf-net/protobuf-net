@@ -48,18 +48,23 @@ partial class GetterModel
             var tmp4 = value.Value;
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
             var tmp5 = value.Text;
-            state.WriteString(5, tmp5);
+            if (tmp5 != null)
+            {
+                state.WriteRawTag((5 << 3) | 2);  // Text
+                state.WriteRawString(tmp5);
+            }
             var tmp6 = value.Blob;
             if (tmp6 != null)
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp6);
+                state.WriteRawTag((6 << 3) | 2);  // Blob
+                state.WriteRawBytes(tmp6);
             }
             var tmp7 = value.Maybe;
             if (tmp7.HasValue)
             {
                 var val7 = tmp7.GetValueOrDefault();
-                state.WriteInt32Varint(7, val7);
+                state.WriteRawTag((7 << 3) | 0);  // Maybe
+                state.WriteRawVarint64(unchecked((ulong)(long)val7));
             }
             var tmp8 = value.Colour;
             if (tmp8 != default(global::AotFixtures.Getter.Shade)) state.WriteInt32Varint(8, (int)tmp8);

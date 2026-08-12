@@ -251,8 +251,8 @@ partial class SurrogateModel
             var tmp1 = surrogate.Units;
             if (tmp1 != 0)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Units
+                state.WriteRawVarint64(unchecked((ulong)tmp1));
             }
         }
 
@@ -270,8 +270,8 @@ partial class SurrogateModel
             var tmp1 = value.Units;
             if (tmp1 != 0)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Units
+                state.WriteRawVarint64(unchecked((ulong)tmp1));
             }
         }
 
@@ -337,7 +337,11 @@ partial class SurrogateModel
             var surrogate = (global::AotFixtures.Surrogate.TagSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Text;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Text
+                state.WriteRawString(tmp1);
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -352,7 +356,11 @@ partial class SurrogateModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Text;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Text
+                state.WriteRawString(tmp1);
+            }
         }
 
         private static global::AotFixtures.Surrogate.TagSurrogate RawRead_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)

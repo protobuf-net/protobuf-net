@@ -45,7 +45,11 @@ partial class GenericHierarchyModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Bar;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Bar
+                state.WriteRawString(tmp1);
+            }
         }
 
         private static global::AotFixtures.GenericHierarchy.Crate RawRead_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)

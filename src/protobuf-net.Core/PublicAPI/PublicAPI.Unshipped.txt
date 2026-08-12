@@ -44,3 +44,14 @@
 [PBN9002]ProtoBuf.ProtoReader.State.State(System.IO.Stream source, long lengthHint = -1) -> void
 [PBN9002]ProtoBuf.ProtoReader.State.State(System.ReadOnlyMemory<byte> value) -> void
 [PBN9002]ProtoBuf.ProtoReader.State.ThrowUnexpectedWireType(uint tag) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawTag(uint tag) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawVarint32(uint value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawVarint64(ulong value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawZigZag32(int value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawZigZag64(long value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawFixed32(uint value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawFixed64(ulong value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawSingle(float value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawDouble(double value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawString(string value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawBytes(System.ReadOnlySpan<byte> value) -> void

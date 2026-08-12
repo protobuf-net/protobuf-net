@@ -35,7 +35,11 @@ partial class AbstractLeafModel
             var tmp1 = value.Value;
             state.WriteMessage<global::AotFixtures.AbstractLeaf.Shape>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
             var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Name
+                state.WriteRawString(tmp2);
+            }
         }
 
         private static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)

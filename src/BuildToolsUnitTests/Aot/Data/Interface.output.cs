@@ -45,12 +45,16 @@ partial class InterfaceModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Name;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
+            }
             var tmp3 = value.Aloof;
             if (tmp3)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Aloof
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
         }
 
@@ -105,7 +109,11 @@ partial class InterfaceModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Name;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
+            }
             var tmp2 = value.Fetches;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
@@ -232,7 +240,11 @@ partial class InterfaceModel
                 }
             }
             var tmp1 = value.Label;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Label
+                state.WriteRawString(tmp1);
+            }
         }
 
         global::AotFixtures.Interface.INamed global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.INamed>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.INamed> value)
@@ -282,7 +294,11 @@ partial class InterfaceModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Label
+                state.WriteRawString(tmp1);
+            }
             var tmp2 = value.Order;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }

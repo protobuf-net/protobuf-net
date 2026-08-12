@@ -217,18 +217,22 @@ partial class RawPassModel
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Name
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Active;
             if (tmp3)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Active
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp4 = value.Total;
             if (tmp4 != 0)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // Total
+                state.WriteRawVarint64(unchecked((ulong)tmp4));
             }
             var tmp5 = value.Status;
             if (tmp5 != default(global::AotFixtures.RawPass.Status)) state.WriteInt32Varint(5, (int)tmp5);
@@ -236,7 +240,8 @@ partial class RawPassModel
             if (tmp6.HasValue)
             {
                 var val6 = tmp6.GetValueOrDefault();
-                state.WriteInt32Varint(6, val6);
+                state.WriteRawTag((6 << 3) | 0);  // Priority
+                state.WriteRawVarint64(unchecked((ulong)(long)val6));
             }
             var tmp7 = value.Tags;
             if (tmp7 != null)
@@ -258,14 +263,14 @@ partial class RawPassModel
             var tmp11 = value.Score;
             if (tmp11 != 0d)
             {
-                state.WriteFieldHeader(11, global::ProtoBuf.WireType.Fixed64);
-                state.WriteDouble(tmp11);
+                state.WriteRawTag((11 << 3) | 1);  // Score
+                state.WriteRawDouble(tmp11);
             }
             var tmp12 = value.Blob;
             if (tmp12 != null)
             {
-                state.WriteFieldHeader(12, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp12);
+                state.WriteRawTag((12 << 3) | 2);  // Blob
+                state.WriteRawBytes(tmp12);
             }
         }
 

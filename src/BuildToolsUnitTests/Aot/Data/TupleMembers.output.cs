@@ -62,7 +62,8 @@ partial class TupleMembersModel
         void global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value)
         {
             var tmp1 = value.Item1;
-            state.WriteInt32Varint(1, tmp1);
+            state.WriteRawTag((1 << 3) | 0);  // Item1
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Item2;
             state.WriteMessage<(int, string)>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
         }
@@ -106,9 +107,14 @@ partial class TupleMembersModel
         void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
         {
             var tmp1 = value.Item1;
-            state.WriteInt32Varint(1, tmp1);
+            state.WriteRawTag((1 << 3) | 0);  // Item1
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Item2;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Item2
+                state.WriteRawString(tmp2);
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -266,9 +272,14 @@ partial class TupleMembersModel
         void global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
         {
             var tmp1 = value.Key;
-            state.WriteInt32Varint(1, tmp1);
+            state.WriteRawTag((1 << 3) | 0);  // Key
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Value;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Value
+                state.WriteRawString(tmp2);
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

@@ -40,7 +40,11 @@ partial class ParseableModel
                 state.WriteString(tmp1.ToString());
             }
             var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Name
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Ip;
             if (tmp3 != null)
             {

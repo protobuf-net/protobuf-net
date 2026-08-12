@@ -79,7 +79,11 @@ partial class KeywordsModel
             var tmp1 = value.@case;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.@event;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // event
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.@params;
             if (tmp3 != null)
             {
@@ -216,9 +220,14 @@ partial class KeywordsModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value)
         {
             var tmp1 = value.@if;
-            state.WriteInt32Varint(1, tmp1);
+            state.WriteRawTag((1 << 3) | 0);  // if
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.@else;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // else
+                state.WriteRawString(tmp2);
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)

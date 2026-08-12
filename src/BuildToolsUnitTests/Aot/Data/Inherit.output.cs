@@ -58,7 +58,11 @@ partial class InheritModel
                 }
             }
             var tmp1 = value.Name;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
+            }
         }
 
         global::AotFixtures.Inherit.Animal global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal> value)
@@ -114,8 +118,8 @@ partial class InheritModel
             var tmp1 = value.Purrs;
             if (tmp1)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Purrs
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
         }
 

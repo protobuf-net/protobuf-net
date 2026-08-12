@@ -81,7 +81,11 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             var tmp2 = value.Fields;
             if (tmp2 != null)
@@ -395,7 +399,11 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             var tmp2 = value.Values;
             if (tmp2 != null)
@@ -553,14 +561,14 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeAllowAlias())
             {
                 var tmp2 = value.AllowAlias;
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // AllowAlias
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp3 = value.Deprecated;
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -633,7 +641,11 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             if (value.ShouldSerializeNumber())
             {
@@ -701,8 +713,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp1 = value.Deprecated;
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -816,12 +828,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             if (value.ShouldSerializeExtendee())
             {
                 var tmp2 = value.Extendee;
-                state.WriteString(2, tmp2);
+                if (tmp2 != null)
+                {
+                    state.WriteRawTag((2 << 3) | 2);  // Extendee
+                    state.WriteRawString(tmp2);
+                }
             }
             if (value.ShouldSerializeNumber())
             {
@@ -841,12 +861,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeTypeName())
             {
                 var tmp6 = value.TypeName;
-                state.WriteString(6, tmp6);
+                if (tmp6 != null)
+                {
+                    state.WriteRawTag((6 << 3) | 2);  // TypeName
+                    state.WriteRawString(tmp6);
+                }
             }
             if (value.ShouldSerializeDefaultValue())
             {
                 var tmp7 = value.DefaultValue;
-                state.WriteString(7, tmp7);
+                if (tmp7 != null)
+                {
+                    state.WriteRawTag((7 << 3) | 2);  // DefaultValue
+                    state.WriteRawString(tmp7);
+                }
             }
             var tmp8 = value.Options;
             state.WriteMessage<global::Google.Protobuf.Reflection.FieldOptions>(8, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, this);
@@ -858,13 +886,17 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeJsonName())
             {
                 var tmp10 = value.JsonName;
-                state.WriteString(10, tmp10);
+                if (tmp10 != null)
+                {
+                    state.WriteRawTag((10 << 3) | 2);  // JsonName
+                    state.WriteRawString(tmp10);
+                }
             }
             if (value.ShouldSerializeProto3Optional())
             {
                 var tmp17 = value.Proto3Optional;
-                state.WriteFieldHeader(17, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp17);
+                state.WriteRawTag((17 << 3) | 0);  // Proto3Optional
+                state.WriteRawVarint32(tmp17 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }
@@ -990,20 +1022,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializePacked())
             {
                 var tmp2 = value.Packed;
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // Packed
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp3 = value.Deprecated;
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             if (value.ShouldSerializeLazy())
             {
                 var tmp5 = value.Lazy;
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // Lazy
+                state.WriteRawVarint32(tmp5 ? 1u : 0u);
             }
             if (value.ShouldSerializeJstype())
             {
@@ -1013,8 +1045,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeWeak())
             {
                 var tmp10 = value.Weak;
-                state.WriteFieldHeader(10, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp10);
+                state.WriteRawTag((10 << 3) | 0);  // Weak
+                state.WriteRawVarint32(tmp10 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1123,12 +1155,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             if (value.ShouldSerializePackage())
             {
                 var tmp2 = value.Package;
-                state.WriteString(2, tmp2);
+                if (tmp2 != null)
+                {
+                    state.WriteRawTag((2 << 3) | 2);  // Package
+                    state.WriteRawString(tmp2);
+                }
             }
             var tmp3 = value.Dependencies;
             if (tmp3 != null)
@@ -1172,7 +1212,11 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeSyntax())
             {
                 var tmp12 = value.Syntax;
-                state.WriteString(12, tmp12);
+                if (tmp12 != null)
+                {
+                    state.WriteRawTag((12 << 3) | 2);  // Syntax
+                    state.WriteRawString(tmp12);
+                }
             }
             state.AppendExtensionData(value);
         }
@@ -1392,12 +1436,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeJavaPackage())
             {
                 var tmp1 = value.JavaPackage;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // JavaPackage
+                    state.WriteRawString(tmp1);
+                }
             }
             if (value.ShouldSerializeJavaOuterClassname())
             {
                 var tmp8 = value.JavaOuterClassname;
-                state.WriteString(8, tmp8);
+                if (tmp8 != null)
+                {
+                    state.WriteRawTag((8 << 3) | 2);  // JavaOuterClassname
+                    state.WriteRawString(tmp8);
+                }
             }
             if (value.ShouldSerializeOptimizeFor())
             {
@@ -1407,96 +1459,128 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeJavaMultipleFiles())
             {
                 var tmp10 = value.JavaMultipleFiles;
-                state.WriteFieldHeader(10, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp10);
+                state.WriteRawTag((10 << 3) | 0);  // JavaMultipleFiles
+                state.WriteRawVarint32(tmp10 ? 1u : 0u);
             }
             if (value.ShouldSerializeGoPackage())
             {
                 var tmp11 = value.GoPackage;
-                state.WriteString(11, tmp11);
+                if (tmp11 != null)
+                {
+                    state.WriteRawTag((11 << 3) | 2);  // GoPackage
+                    state.WriteRawString(tmp11);
+                }
             }
             if (value.ShouldSerializeCcGenericServices())
             {
                 var tmp16 = value.CcGenericServices;
-                state.WriteFieldHeader(16, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp16);
+                state.WriteRawTag((16 << 3) | 0);  // CcGenericServices
+                state.WriteRawVarint32(tmp16 ? 1u : 0u);
             }
             if (value.ShouldSerializeJavaGenericServices())
             {
                 var tmp17 = value.JavaGenericServices;
-                state.WriteFieldHeader(17, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp17);
+                state.WriteRawTag((17 << 3) | 0);  // JavaGenericServices
+                state.WriteRawVarint32(tmp17 ? 1u : 0u);
             }
             if (value.ShouldSerializePyGenericServices())
             {
                 var tmp18 = value.PyGenericServices;
-                state.WriteFieldHeader(18, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp18);
+                state.WriteRawTag((18 << 3) | 0);  // PyGenericServices
+                state.WriteRawVarint32(tmp18 ? 1u : 0u);
             }
             if (value.ShouldSerializeJavaGenerateEqualsAndHash())
             {
                 var tmp20 = value.JavaGenerateEqualsAndHash;
-                state.WriteFieldHeader(20, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp20);
+                state.WriteRawTag((20 << 3) | 0);  // JavaGenerateEqualsAndHash
+                state.WriteRawVarint32(tmp20 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp23 = value.Deprecated;
-                state.WriteFieldHeader(23, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp23);
+                state.WriteRawTag((23 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp23 ? 1u : 0u);
             }
             if (value.ShouldSerializeJavaStringCheckUtf8())
             {
                 var tmp27 = value.JavaStringCheckUtf8;
-                state.WriteFieldHeader(27, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp27);
+                state.WriteRawTag((27 << 3) | 0);  // JavaStringCheckUtf8
+                state.WriteRawVarint32(tmp27 ? 1u : 0u);
             }
             if (value.ShouldSerializeCcEnableArenas())
             {
                 var tmp31 = value.CcEnableArenas;
-                state.WriteFieldHeader(31, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp31);
+                state.WriteRawTag((31 << 3) | 0);  // CcEnableArenas
+                state.WriteRawVarint32(tmp31 ? 1u : 0u);
             }
             if (value.ShouldSerializeObjcClassPrefix())
             {
                 var tmp36 = value.ObjcClassPrefix;
-                state.WriteString(36, tmp36);
+                if (tmp36 != null)
+                {
+                    state.WriteRawTag((36 << 3) | 2);  // ObjcClassPrefix
+                    state.WriteRawString(tmp36);
+                }
             }
             if (value.ShouldSerializeCsharpNamespace())
             {
                 var tmp37 = value.CsharpNamespace;
-                state.WriteString(37, tmp37);
+                if (tmp37 != null)
+                {
+                    state.WriteRawTag((37 << 3) | 2);  // CsharpNamespace
+                    state.WriteRawString(tmp37);
+                }
             }
             if (value.ShouldSerializeSwiftPrefix())
             {
                 var tmp39 = value.SwiftPrefix;
-                state.WriteString(39, tmp39);
+                if (tmp39 != null)
+                {
+                    state.WriteRawTag((39 << 3) | 2);  // SwiftPrefix
+                    state.WriteRawString(tmp39);
+                }
             }
             if (value.ShouldSerializePhpClassPrefix())
             {
                 var tmp40 = value.PhpClassPrefix;
-                state.WriteString(40, tmp40);
+                if (tmp40 != null)
+                {
+                    state.WriteRawTag((40 << 3) | 2);  // PhpClassPrefix
+                    state.WriteRawString(tmp40);
+                }
             }
             if (value.ShouldSerializePhpNamespace())
             {
                 var tmp41 = value.PhpNamespace;
-                state.WriteString(41, tmp41);
+                if (tmp41 != null)
+                {
+                    state.WriteRawTag((41 << 3) | 2);  // PhpNamespace
+                    state.WriteRawString(tmp41);
+                }
             }
             if (value.ShouldSerializePhpGenericServices())
             {
                 var tmp42 = value.PhpGenericServices;
-                state.WriteFieldHeader(42, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp42);
+                state.WriteRawTag((42 << 3) | 0);  // PhpGenericServices
+                state.WriteRawVarint32(tmp42 ? 1u : 0u);
             }
             if (value.ShouldSerializePhpMetadataNamespace())
             {
                 var tmp44 = value.PhpMetadataNamespace;
-                state.WriteString(44, tmp44);
+                if (tmp44 != null)
+                {
+                    state.WriteRawTag((44 << 3) | 2);  // PhpMetadataNamespace
+                    state.WriteRawString(tmp44);
+                }
             }
             if (value.ShouldSerializeRubyPackage())
             {
                 var tmp45 = value.RubyPackage;
-                state.WriteString(45, tmp45);
+                if (tmp45 != null)
+                {
+                    state.WriteRawTag((45 << 3) | 2);  // RubyPackage
+                    state.WriteRawString(tmp45);
+                }
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1701,26 +1785,26 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeMessageSetWireFormat())
             {
                 var tmp1 = value.MessageSetWireFormat;
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // MessageSetWireFormat
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             if (value.ShouldSerializeNoStandardDescriptorAccessor())
             {
                 var tmp2 = value.NoStandardDescriptorAccessor;
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // NoStandardDescriptorAccessor
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp3 = value.Deprecated;
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             if (value.ShouldSerializeMapEntry())
             {
                 var tmp7 = value.MapEntry;
-                state.WriteFieldHeader(7, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp7);
+                state.WriteRawTag((7 << 3) | 0);  // MapEntry
+                state.WriteRawVarint32(tmp7 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1811,31 +1895,43 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             if (value.ShouldSerializeInputType())
             {
                 var tmp2 = value.InputType;
-                state.WriteString(2, tmp2);
+                if (tmp2 != null)
+                {
+                    state.WriteRawTag((2 << 3) | 2);  // InputType
+                    state.WriteRawString(tmp2);
+                }
             }
             if (value.ShouldSerializeOutputType())
             {
                 var tmp3 = value.OutputType;
-                state.WriteString(3, tmp3);
+                if (tmp3 != null)
+                {
+                    state.WriteRawTag((3 << 3) | 2);  // OutputType
+                    state.WriteRawString(tmp3);
+                }
             }
             var tmp4 = value.Options;
             state.WriteMessage<global::Google.Protobuf.Reflection.MethodOptions>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
             if (value.ShouldSerializeClientStreaming())
             {
                 var tmp5 = value.ClientStreaming;
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // ClientStreaming
+                state.WriteRawVarint32(tmp5 ? 1u : 0u);
             }
             if (value.ShouldSerializeServerStreaming())
             {
                 var tmp6 = value.ServerStreaming;
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp6);
+                state.WriteRawTag((6 << 3) | 0);  // ServerStreaming
+                state.WriteRawVarint32(tmp6 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }
@@ -1917,8 +2013,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp33 = value.Deprecated;
-                state.WriteFieldHeader(33, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp33);
+                state.WriteRawTag((33 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp33 ? 1u : 0u);
             }
             if (value.ShouldSerializeidempotency_level())
             {
@@ -1996,7 +2092,11 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             var tmp2 = value.Options;
             state.WriteMessage<global::Google.Protobuf.Reflection.OneofOptions>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
@@ -2100,7 +2200,11 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
-                state.WriteString(1, tmp1);
+                if (tmp1 != null)
+                {
+                    state.WriteRawTag((1 << 3) | 2);  // Name
+                    state.WriteRawString(tmp1);
+                }
             }
             var tmp2 = value.Methods;
             if (tmp2 != null)
@@ -2171,8 +2275,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp33 = value.Deprecated;
-                state.WriteFieldHeader(33, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp33);
+                state.WriteRawTag((33 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp33 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -2296,12 +2400,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeLeadingComments())
             {
                 var tmp3 = value.LeadingComments;
-                state.WriteString(3, tmp3);
+                if (tmp3 != null)
+                {
+                    state.WriteRawTag((3 << 3) | 2);  // LeadingComments
+                    state.WriteRawString(tmp3);
+                }
             }
             if (value.ShouldSerializeTrailingComments())
             {
                 var tmp4 = value.TrailingComments;
-                state.WriteString(4, tmp4);
+                if (tmp4 != null)
+                {
+                    state.WriteRawTag((4 << 3) | 2);  // TrailingComments
+                    state.WriteRawString(tmp4);
+                }
             }
             var tmp6 = value.LeadingDetachedComments;
             if (tmp6 != null)
@@ -2411,39 +2523,47 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeIdentifierValue())
             {
                 var tmp3 = value.IdentifierValue;
-                state.WriteString(3, tmp3);
+                if (tmp3 != null)
+                {
+                    state.WriteRawTag((3 << 3) | 2);  // IdentifierValue
+                    state.WriteRawString(tmp3);
+                }
             }
             if (value.ShouldSerializePositiveIntValue())
             {
                 var tmp4 = value.PositiveIntValue;
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt64(tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // PositiveIntValue
+                state.WriteRawVarint64(tmp4);
             }
             if (value.ShouldSerializeNegativeIntValue())
             {
                 var tmp5 = value.NegativeIntValue;
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // NegativeIntValue
+                state.WriteRawVarint64(unchecked((ulong)tmp5));
             }
             if (value.ShouldSerializeDoubleValue())
             {
                 var tmp6 = value.DoubleValue;
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.Fixed64);
-                state.WriteDouble(tmp6);
+                state.WriteRawTag((6 << 3) | 1);  // DoubleValue
+                state.WriteRawDouble(tmp6);
             }
             if (value.ShouldSerializeStringValue())
             {
                 var tmp7 = value.StringValue;
                 if (tmp7 != null)
                 {
-                    state.WriteFieldHeader(7, global::ProtoBuf.WireType.String);
-                    state.WriteBytes(tmp7);
+                    state.WriteRawTag((7 << 3) | 2);  // StringValue
+                    state.WriteRawBytes(tmp7);
                 }
             }
             if (value.ShouldSerializeAggregateValue())
             {
                 var tmp8 = value.AggregateValue;
-                state.WriteString(8, tmp8);
+                if (tmp8 != null)
+                {
+                    state.WriteRawTag((8 << 3) | 2);  // AggregateValue
+                    state.WriteRawString(tmp8);
+                }
             }
             state.AppendExtensionData(value);
         }
@@ -2527,10 +2647,14 @@ partial class CustomProtogenSerializer
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.name_part;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // name_part
+                state.WriteRawString(tmp1);
+            }
             var tmp2 = value.IsExtension;
-            state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-            state.WriteBoolean(tmp2);
+            state.WriteRawTag((2 << 3) | 0);  // IsExtension
+            state.WriteRawVarint32(tmp2 ? 1u : 0u);
             state.AppendExtensionData(value);
         }
 
@@ -2582,14 +2706,16 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
             if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
             var tmp3 = value.Namespace;
             if (tmp3 != null && tmp3 != "")
             {
-                state.WriteString(3, tmp3);
+                state.WriteRawTag((3 << 3) | 2);  // Namespace
+                state.WriteRawString(tmp3);
             }
             state.AppendExtensionData(value);
         }
@@ -2648,7 +2774,8 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             state.AppendExtensionData(value);
         }
@@ -2692,21 +2819,22 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
             if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
             var tmp3 = value.AsReference;
             if (tmp3)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // AsReference
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp4 = value.DynamicType;
             if (tmp4)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // DynamicType
+                state.WriteRawVarint32(tmp4 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }
@@ -2777,36 +2905,40 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Namespace;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Namespace
+                state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
             if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
             var tmp3 = value.ExtensionTypeName;
             if (tmp3 != null && tmp3 != "")
             {
-                state.WriteString(3, tmp3);
+                state.WriteRawTag((3 << 3) | 2);  // ExtensionTypeName
+                state.WriteRawString(tmp3);
             }
             var tmp4 = value.CSharpLanguageVersion;
             if (tmp4 != null && tmp4 != "")
             {
-                state.WriteString(4, tmp4);
+                state.WriteRawTag((4 << 3) | 2);  // CSharpLanguageVersion
+                state.WriteRawString(tmp4);
             }
             var tmp5 = value.EmitRequiredDefaults;
             if (tmp5)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // EmitRequiredDefaults
+                state.WriteRawVarint32(tmp5 ? 1u : 0u);
             }
             var tmp6 = value.EmitOneOfEnum;
             if (tmp6)
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp6);
+                state.WriteRawTag((6 << 3) | 0);  // EmitOneOfEnum
+                state.WriteRawVarint32(tmp6 ? 1u : 0u);
             }
             var tmp7 = value.VisualBasicLanguageVersion;
             if (tmp7 != null && tmp7 != "")
             {
-                state.WriteString(7, tmp7);
+                state.WriteRawTag((7 << 3) | 2);  // VisualBasicLanguageVersion
+                state.WriteRawString(tmp7);
             }
             state.AppendExtensionData(value);
         }
@@ -2895,19 +3027,22 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
             if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
             var tmp3 = value.ExtensionTypeName;
             if (tmp3 != null && tmp3 != "")
             {
-                state.WriteString(3, tmp3);
+                state.WriteRawTag((3 << 3) | 2);  // ExtensionTypeName
+                state.WriteRawString(tmp3);
             }
             var tmp4 = value.Namespace;
             if (tmp4 != null && tmp4 != "")
             {
-                state.WriteString(4, tmp4);
+                state.WriteRawTag((4 << 3) | 2);  // Namespace
+                state.WriteRawString(tmp4);
             }
             var tmp5 = value.MessageKind;
             if (tmp5 != (global::ProtoBuf.Reflection.MessageKind)(0)) state.WriteInt32Varint(5, (int)tmp5);
@@ -2983,7 +3118,8 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             state.AppendExtensionData(value);
         }
@@ -3027,13 +3163,14 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             var tmp2 = value.IsSubType;
             if (tmp2)
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // IsSubType
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }
@@ -3086,7 +3223,8 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Name;
             if (tmp1 != null && tmp1 != "")
             {
-                state.WriteString(1, tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
             if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);

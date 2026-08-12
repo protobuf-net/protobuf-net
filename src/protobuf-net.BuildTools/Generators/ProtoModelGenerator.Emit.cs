@@ -206,7 +206,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!first) sb.AppendLine();
                 first = false;
                 var raw = rawSet.Contains(contract.TypeName);
-                EmitContract(sb, indent + 2, contract, raw);
+                EmitContract(sb, indent + 2, contract, raw, plan.RawWriter);
                 if (raw)
                 {
                     EmitRawRead(sb, indent + 2, contract, rawCallable);
@@ -1016,7 +1016,7 @@ namespace ProtoBuf.BuildTools.Generators
             return $"non-default DataFormat ({format} on {kind})";
         }
 
-        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false)
+        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false, bool rawWrite = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
 
@@ -1043,7 +1043,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (contract.RootTypeName is { } root)
             {
-                EmitSubTypeContract(sb, indent, contract, root, raw);
+                EmitSubTypeContract(sb, indent, contract, root, raw, rawWrite);
                 return;
             }
 
@@ -1161,7 +1161,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeSerialize);
-            EmitWriteMembers(sb, indent + 1, contract, instance);
+            EmitWriteMembers(sb, indent + 1, contract, instance, raw: rawWrite);
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
             Line(sb, indent, "}");
         }
@@ -1459,7 +1459,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
         private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
-            string instance = "value")
+            string instance = "value", bool raw = false)
         {
             foreach (var member in contract.Members)
             {
@@ -1530,12 +1530,12 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
                         Line(sb, indent + 1, "{");
-                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}", raw: raw);
                         Line(sb, indent + 1, "}");
                     }
                     else
                     {
-                        EmitScalarWrite(sb, indent + 1, member, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"val{number}", raw: raw);
                     }
                     Line(sb, indent, "}");
                     goto written;
@@ -1546,7 +1546,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (contract.IsTuple && member.Kind is not (ProtoMemberKind.String
                     or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
                 {
-                    EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                    EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                     goto written;
                 }
 
@@ -1558,7 +1558,7 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.DateTime:
                     case ProtoMemberKind.DateOnly:
                     case ProtoMemberKind.TimeOnly:
-                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                         break;
 
                     // int32 has a convenience overload that writes its own field header; everything
@@ -1589,12 +1589,12 @@ namespace ProtoBuf.BuildTools.Generators
                         // IsRequired means field presence, so there is no test to emit at all
                         if (member.IsRequired || member.WriteCondition is not null)
                         {
-                            EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                            EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                             break;
                         }
                         Line(sb, indent, $"if ({ScalarGuard(member, $"tmp{number}")})");
                         Line(sb, indent, "{");
-                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}", raw: raw);
                         Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.String when member.DefaultLiteral is { } declared
@@ -1609,7 +1609,24 @@ namespace ProtoBuf.BuildTools.Generators
                         // through to the plain unguarded WriteString below.
                         Line(sb, indent, $"if (tmp{number} != null && tmp{number} != {declared})");
                         Line(sb, indent, "{");
-                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
+                        if (raw)
+                        {
+                            Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                            Line(sb, indent + 1, $"state.WriteRawString(tmp{number});");
+                        }
+                        else
+                        {
+                            Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
+                        }
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.String when raw:
+                        // the raw form needs the null test the stateful WriteString(int, string)
+                        // performed internally; the bytes are identical
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                        Line(sb, indent + 1, $"state.WriteRawString(tmp{number});");
                         Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.String:
@@ -1622,19 +1639,27 @@ namespace ProtoBuf.BuildTools.Generators
                         // field-number one does
                         Line(sb, indent, $"if (tmp{number} != null)");
                         Line(sb, indent, "{");
-                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}", raw: raw);
                         Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.Parseable:
                         // a value type is never null, and has no trivial value to compare against
-                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                         break;
                     case ProtoMemberKind.Uri:
                         // the null test is explicit, unlike a plain string: WriteString(int, string)
                         // would skip a null itself, but OriginalString would already have thrown
                         Line(sb, indent, $"if (tmp{number} != null)");
                         Line(sb, indent, "{");
-                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number}.OriginalString);");
+                        if (raw)
+                        {
+                            Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                            Line(sb, indent + 1, $"state.WriteRawString(tmp{number}.OriginalString);");
+                        }
+                        else
+                        {
+                            Line(sb, indent + 1, $"state.WriteString({number}, tmp{number}.OriginalString);");
+                        }
                         Line(sb, indent, "}");
                         break;
                     // the struct shapes - ArraySegment<byte>, Memory<byte>, ReadOnlyMemory<byte> -
@@ -1643,6 +1668,15 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Bytes when member.MemberIsValueType:
                         Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
                         Line(sb, indent, $"state.WriteBytes(tmp{number});");
+                        break;
+                    case ProtoMemberKind.Bytes when raw && !member.MemberIsValueType:
+                        // byte[] only: the struct storage shapes (Memory and friends) keep the
+                        // classic overload resolution below
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                        Line(sb, indent + 1, $"state.WriteRawBytes(tmp{number});");
+                        Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.Bytes:
                         // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its
@@ -1695,7 +1729,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// members this layer declares.
         /// </remarks>
         private static void EmitSubTypeContract(StringBuilder sb, int indent, ProtoContractPlan contract, string root,
-            bool raw = false)
+            bool raw = false, bool rawWrite = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
             var sub = $"{Serializers}.ISubTypeSerializer<{contract.TypeName}>";
@@ -1754,7 +1788,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
-            EmitWriteMembers(sb, indent + 1, contract);
+            EmitWriteMembers(sb, indent + 1, contract, raw: rawWrite);
             Line(sb, indent, "}");
             sb.AppendLine();
 
@@ -2379,9 +2413,22 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>
         /// The unguarded write for a scalar: the caller owns whatever test precedes it.
         /// </summary>
-        private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local)
+        private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local,
+            bool raw = false)
         {
             var expression = ScalarValue(member, local);
+            // the raw write forms (docs/nano-writer.md): the tag is a compile-time constant and
+            // the value write names its own encoding, skipping the WireType handshake entirely.
+            // Guards and structure are untouched - only the statement form changes - so this is
+            // safe for EVERY contract shape; writes need no eligibility. Default format only:
+            // formats keep the classic statements for now. Note the signed kinds sign-extend
+            // through 64 bits (a negative int32 is the 10-byte form on the wire).
+            if (raw && member.DataFormat == ProtoDataFormat.Default && RawScalarWrite(member, expression) is { } rawWrite)
+            {
+                Line(sb, indent, $"state.WriteRawTag(({member.FieldNumber} << 3) | {RawScalarWireBits(member.Kind)});  // {member.Name}");
+                Line(sb, indent, rawWrite);
+                return;
+            }
             if (member.Kind == ProtoMemberKind.Parseable)
             {
                 Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
@@ -2403,6 +2450,31 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, $"state.{ScalarSuffix(member.Kind, "Write")}({expression});");
             }
         }
+
+        /// <summary>The raw write statement for a scalar kind, or null where the classic
+        /// statement stays (BCL kinds, Parseable, and anything not listed).</summary>
+        private static string? RawScalarWrite(ProtoMemberPlan member, string expression) => member.Kind switch
+        {
+            ProtoMemberKind.Bool => $"state.WriteRawVarint32({expression} ? 1u : 0u);",
+            // signed kinds sign-extend through 64 bits: a negative value is the 10-byte form
+            ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
+                => $"state.WriteRawVarint64(unchecked((ulong)(long){expression}));",
+            ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16 or ProtoMemberKind.Char
+                => $"state.WriteRawVarint32({expression});",
+            ProtoMemberKind.Int64 => $"state.WriteRawVarint64(unchecked((ulong){expression}));",
+            ProtoMemberKind.UInt64 => $"state.WriteRawVarint64({expression});",
+            ProtoMemberKind.Single => $"state.WriteRawSingle({expression});",
+            ProtoMemberKind.Double => $"state.WriteRawDouble({expression});",
+            _ => null,
+        };
+
+        /// <summary>The wire-type bits for a raw scalar write's constant tag.</summary>
+        private static int RawScalarWireBits(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Single => 5,
+            ProtoMemberKind.Double => 1,
+            _ => 0,
+        };
 
         /// <summary>
         /// The value handed to the write method: an enum needs casting down to its underlying type,

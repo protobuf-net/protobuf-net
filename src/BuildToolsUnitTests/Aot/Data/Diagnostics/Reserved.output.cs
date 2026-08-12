@@ -32,7 +32,11 @@ partial class ReservedModel
             var tmp1 = value.A;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.B;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // B
+                state.WriteRawString(tmp2);
+            }
         }
 
         private static global::AotFixtures.Reserved.ReservedButClear RawRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)

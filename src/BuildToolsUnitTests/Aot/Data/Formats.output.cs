@@ -77,7 +77,11 @@ partial class FormatsModel
             var tmp6 = value.RequiredInt;
             state.WriteInt32Varint(6, tmp6);
             var tmp7 = value.RequiredString;
-            state.WriteString(7, tmp7);
+            if (tmp7 != null)
+            {
+                state.WriteRawTag((7 << 3) | 2);  // RequiredString
+                state.WriteRawString(tmp7);
+            }
             var tmp8 = value.Grouped;
             state.WriteGroup<global::AotFixtures.Formats.Inner>(8, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, this);
             var tmp9 = value.Plain;

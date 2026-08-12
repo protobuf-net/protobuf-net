@@ -109,7 +109,11 @@ partial class PartialModel
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Name
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Fixed;
             if (tmp3 != 0)
             {

@@ -142,3 +142,20 @@ cache is a pooled dictionary with reference-equality (RuntimeHelpers.GetHashCode
 user overrides) on the writer, cleared per root; and it still RACES recompute-always on
 the descriptor set per the tiebreaker rule - a hash per node is not free at shallow depth -
 but enters as the favorite, being the only entrant that also answers mixed contracts.
+
+## Aggressive-optimization checklist for the repeated-write cut (Marc, 2026-08-14)
+
+- **CollectionsMarshal.AsSpan(list)** for enumerating `List<T>` on write (net8+,
+  library-owned #if): per-element raw ops over a span beat the enumerator and the indexer
+  both, for packed and unpacked runs alike.
+- **Packed fixed-size elements are one block**: measure = `count * width` (pure
+  arithmetic), write = prefix + MemoryMarshal.Cast copy (little-endian fast path with the
+  folded BitConverter.IsLittleEndian guard) - the exact mirror of the read side's
+  SetCount/Cast bulk arm.
+- **Packed varint elements**: measure via a span walk summing MeasureVarint32 (lzcnt per
+  element); the length prefix is then exact, and the write is a second span walk of
+  unrolled varint stores. Same two-pass shape the read side's terminator-scan used, in
+  reverse.
+- Arrays: the span IS the array; strings-in-collections: GetByteCount per element measures,
+  the write reuses nothing (no double GetByteCount - the lengthCache question applies to
+  string elements too, worth including in the memoization race).
