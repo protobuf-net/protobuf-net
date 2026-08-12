@@ -135,7 +135,12 @@ partial class WrappedModel
             var tmp15 = value.Bare;
             if (tmp15 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 15, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15);
+                foreach (var item15 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp15))
+                {
+                    if (item15 is null) state.ThrowNullRepeatedContents<int?>();
+                    state.WriteRawTag((15 << 3) | 0);  // Bare
+                    state.WriteRawVarint64(unchecked((ulong)(long)item15.GetValueOrDefault()));
+                }
             }
             var tmp16 = value.WrappedMap;
             if (tmp16 != null)

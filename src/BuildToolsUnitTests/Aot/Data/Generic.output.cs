@@ -438,7 +438,11 @@ partial class GenericModel
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                {
+                    state.WriteRawTag((1 << 3) | 0);  // Value
+                    state.WriteRawVarint64(unchecked((ulong)(long)item1));
+                }
             }
             var tmp2 = value.Label;
             if (tmp2 != null)

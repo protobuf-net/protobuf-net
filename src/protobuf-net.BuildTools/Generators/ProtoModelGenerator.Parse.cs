@@ -206,7 +206,17 @@ namespace ProtoBuf.BuildTools.Generators
                     rawWriter: !classicEmit
                         && compilation.GetTypeByMetadataName("ProtoBuf.ProtoWriter+State") is { } rawWriteType
                         && rawWriteType.GetMembers("WriteRawTag").Length != 0
-                        && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly));
+                        // ALWAYS gate on the newest member this pass emits calls to, so a newer
+                        // BuildTools against an older Core falls back to classic emission rather
+                        // than emitting calls that do not compile - the identical rule (and the
+                        // identical stale-corpus failure) the read side's gate records above
+                        && rawWriteType.GetMembers("ThrowNullRepeatedContents").Length != 0 // the repeated wave
+                        && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly),
+                    // net5+ framework capability, probed per compilation like UnsafeAccessor: the
+                    // raw repeated write enumerates a List<T> as a span where it can
+                    listAsSpan: compilation.GetTypeByMetadataName("System.Runtime.InteropServices.CollectionsMarshal")
+                        is { } collectionsMarshal
+                        && collectionsMarshal.GetMembers("AsSpan").Length != 0);
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));

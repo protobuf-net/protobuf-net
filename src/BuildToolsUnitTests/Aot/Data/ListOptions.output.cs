@@ -146,7 +146,11 @@ partial class ListOptionsModel
             var tmp1 = value.Default;
             if (tmp1 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                foreach (var item1 in tmp1)
+                {
+                    state.WriteRawTag((1 << 3) | 0);  // Default
+                    state.WriteRawVarint64(unchecked((ulong)(long)item1));
+                }
             }
             var tmp2 = value.Packed;
             if (tmp2 != null)
@@ -156,7 +160,11 @@ partial class ListOptionsModel
             var tmp3 = value.Overwrite;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp3);
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    state.WriteRawTag((3 << 3) | 0);  // Overwrite
+                    state.WriteRawVarint64(unchecked((ulong)(long)item3));
+                }
             }
             var tmp4 = value.PackedOverwrite;
             if (tmp4 != null)
@@ -166,7 +174,11 @@ partial class ListOptionsModel
             var tmp5 = value.NotPacked;
             if (tmp5 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                foreach (var item5 in tmp5)
+                {
+                    state.WriteRawTag((5 << 3) | 0);  // NotPacked
+                    state.WriteRawVarint64(unchecked((ulong)(long)item5));
+                }
             }
             var tmp6 = value.PackedDouble;
             if (tmp6 != null)

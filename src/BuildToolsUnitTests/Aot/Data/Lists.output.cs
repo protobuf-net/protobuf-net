@@ -112,37 +112,67 @@ partial class ListsModel
             var tmp1 = value.Int32Array;
             if (tmp1 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                foreach (var item1 in tmp1)
+                {
+                    state.WriteRawTag((1 << 3) | 0);  // Int32Array
+                    state.WriteRawVarint64(unchecked((ulong)(long)item1));
+                }
             }
             var tmp2 = value.Int32List;
             if (tmp2 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    state.WriteRawTag((2 << 3) | 0);  // Int32List
+                    state.WriteRawVarint64(unchecked((ulong)(long)item2));
+                }
             }
             var tmp3 = value.DoubleArray;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64 | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                foreach (var item3 in tmp3)
+                {
+                    state.WriteRawTag((3 << 3) | 1);  // DoubleArray
+                    state.WriteRawDouble(item3);
+                }
             }
             var tmp4 = value.SingleArray;
             if (tmp4 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<float>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32 | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                foreach (var item4 in tmp4)
+                {
+                    state.WriteRawTag((4 << 3) | 5);  // SingleArray
+                    state.WriteRawSingle(item4);
+                }
             }
             var tmp5 = value.BoolList;
             if (tmp5 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<bool>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp5))
+                {
+                    state.WriteRawTag((5 << 3) | 0);  // BoolList
+                    state.WriteRawVarint32(item5 ? 1u : 0u);
+                }
             }
             var tmp6 = value.StringArray;
             if (tmp6 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<string>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
+                foreach (var item6 in tmp6)
+                {
+                    if (item6 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((6 << 3) | 2);  // StringArray
+                    state.WriteRawString(item6);
+                }
             }
             var tmp7 = value.StringList;
             if (tmp7 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                {
+                    if (item7 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((7 << 3) | 2);  // StringList
+                    state.WriteRawString(item7);
+                }
             }
             var tmp9 = value.Messages;
             if (tmp9 != null)
@@ -159,12 +189,20 @@ partial class ListsModel
             var tmp12 = value.Colours;
             if (tmp12 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Lists.Colour>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
+                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
+                {
+                    state.WriteRawTag((12 << 3) | 0);  // Colours
+                    state.WriteRawVarint64(unchecked((ulong)(long)(int)item12));
+                }
             }
             var tmp13 = value.Smalls;
             if (tmp13 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Small>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
+                foreach (var item13 in tmp13)
+                {
+                    state.WriteRawTag((13 << 3) | 0);  // Smalls
+                    state.WriteRawVarint32((byte)item13);
+                }
             }
             var tmp14 = value.SingleColour;
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);

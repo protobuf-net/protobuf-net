@@ -87,7 +87,11 @@ partial class KeywordsModel
             var tmp3 = value.@params;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    state.WriteRawTag((3 << 3) | 0);  // params
+                    state.WriteRawVarint64(unchecked((ulong)(long)item3));
+                }
             }
             var tmp4 = value.@class;
             state.WriteMessage<global::AotFixtures.Keywords.Inner>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);

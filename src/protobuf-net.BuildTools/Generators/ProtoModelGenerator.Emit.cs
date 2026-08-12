@@ -206,7 +206,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!first) sb.AppendLine();
                 first = false;
                 var raw = rawSet.Contains(contract.TypeName);
-                EmitContract(sb, indent + 2, contract, raw, plan.RawWriter);
+                EmitContract(sb, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan);
                 if (raw)
                 {
                     EmitRawRead(sb, indent + 2, contract, rawCallable);
@@ -1016,7 +1016,8 @@ namespace ProtoBuf.BuildTools.Generators
             return $"non-default DataFormat ({format} on {kind})";
         }
 
-        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false, bool rawWrite = false)
+        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false, bool rawWrite = false,
+            bool listAsSpan = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
 
@@ -1043,7 +1044,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (contract.RootTypeName is { } root)
             {
-                EmitSubTypeContract(sb, indent, contract, root, raw, rawWrite);
+                EmitSubTypeContract(sb, indent, contract, root, raw, rawWrite, listAsSpan);
                 return;
             }
 
@@ -1161,7 +1162,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeSerialize);
-            EmitWriteMembers(sb, indent + 1, contract, instance, raw: rawWrite);
+            EmitWriteMembers(sb, indent + 1, contract, instance, raw: rawWrite, listAsSpan: listAsSpan);
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
             Line(sb, indent, "}");
         }
@@ -1459,7 +1460,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
         private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
-            string instance = "value", bool raw = false)
+            string instance = "value", bool raw = false, bool listAsSpan = false)
         {
             foreach (var member in contract.Members)
             {
@@ -1495,6 +1496,16 @@ namespace ProtoBuf.BuildTools.Generators
 
                 if (member.Repeated.Factory is not null)
                 {
+                    if (raw && RawRepeatedWritable(member))
+                    {
+                        // both eligible shapes (List<T> and T[]) are reference types, so the
+                        // null guard is unconditional; empty falls out of the loop itself
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        EmitRawRepeatedWrite(sb, indent + 1, member, number, listAsSpan);
+                        Line(sb, indent, "}");
+                        goto written;
+                    }
                     var writeRepeated = $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});";
                     if (member.Repeated.IsValueType)
                     {
@@ -1729,7 +1740,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// members this layer declares.
         /// </remarks>
         private static void EmitSubTypeContract(StringBuilder sb, int indent, ProtoContractPlan contract, string root,
-            bool raw = false, bool rawWrite = false)
+            bool raw = false, bool rawWrite = false, bool listAsSpan = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
             var sub = $"{Serializers}.ISubTypeSerializer<{contract.TypeName}>";
@@ -1788,7 +1799,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
-            EmitWriteMembers(sb, indent + 1, contract, raw: rawWrite);
+            EmitWriteMembers(sb, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan);
             Line(sb, indent, "}");
             sb.AppendLine();
 
@@ -2475,6 +2486,73 @@ namespace ProtoBuf.BuildTools.Generators
             ProtoMemberKind.Double => 1,
             _ => 0,
         };
+
+        /// <summary>
+        /// Whether a repeated member's write takes the native loop rather than the stateful
+        /// WriteRepeated. Unlike the scalar raw writes - which are unconditionally safe because
+        /// only the statement form changes - a repeated write replaces the ENGINE, so it is
+        /// gated to the shapes whose bytes are provably the classic unpacked default: per-element
+        /// constant tag plus value, nothing for empty, throw on a null element.
+        /// </summary>
+        private static bool RawRepeatedWritable(ProtoMemberPlan member)
+        {
+            // List<T> and T[] exactly; a derived-declared list is out because foreach binds to
+            // the DECLARED type's GetEnumerator, which could be a hiding redeclaration
+            if (member.Repeated.Factory is not ("CreateList" or "CreateVector")
+                || member.Repeated.TakesCollectionType) return false;
+            // packed changes the framing entirely, and needs measure (plus the zero-length
+            // header rules); wrapping moves every element into a presence message
+            if (member.IsPacked || member.WrappedValue || member.WrappedCollection) return false;
+            if (member.DataFormat != ProtoDataFormat.Default) return false;
+            // message elements wait on the measure cut; a hand-written or deferred-category
+            // element serializer frames itself and cannot be second-guessed here
+            if (member.SubSerializer is not null || member.SubSerializerIsScalar
+                || member.SubSerializerDynamic) return false;
+            return member.Kind is ProtoMemberKind.Bool
+                or ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
+                or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16
+                or ProtoMemberKind.Char or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64
+                or ProtoMemberKind.Single or ProtoMemberKind.Double or ProtoMemberKind.String;
+        }
+
+        /// <summary>
+        /// The native write loop for an eligible repeated member (see
+        /// <see cref="RawRepeatedWritable"/>): byte-identical to the stateful unpacked default.
+        /// A List&lt;T&gt; enumerates as a span where the framework offers it (net5+, probed) -
+        /// no enumerator, no per-step version check; serialization already demands the
+        /// collection not mutate mid-write, which is the same contract that check polices.
+        /// An array's plain foreach is already an indexed loop.
+        /// </summary>
+        private static void EmitRawRepeatedWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
+            bool listAsSpan)
+        {
+            var wire = member.Kind == ProtoMemberKind.String ? 2 : RawScalarWireBits(member.Kind);
+            var source = listAsSpan && member.Repeated.Factory == "CreateList"
+                ? $"global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp{number})"
+                : $"tmp{number}";
+            var item = $"item{number}";
+            Line(sb, indent, $"foreach (var {item} in {source})");
+            Line(sb, indent, "{");
+            // AsRepeated erases element nullability from the plan (it is an ordinary element on
+            // the wire), so nullability is read off the element type's own spelling, exactly as
+            // the packed read fast path does
+            var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
+            if (member.Kind == ProtoMemberKind.String || nullableElement)
+            {
+                Line(sb, indent + 1, $"if ({item} is null) state.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
+            }
+            Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | {wire});  // {member.Name}");
+            if (member.Kind == ProtoMemberKind.String)
+            {
+                Line(sb, indent + 1, $"state.WriteRawString({item});");
+            }
+            else
+            {
+                var local = nullableElement ? $"{item}.GetValueOrDefault()" : item;
+                Line(sb, indent + 1, RawScalarWrite(member, ScalarValue(member, local))!);
+            }
+            Line(sb, indent, "}");
+        }
 
         /// <summary>
         /// The value handed to the write method: an enum needs casting down to its underlying type,

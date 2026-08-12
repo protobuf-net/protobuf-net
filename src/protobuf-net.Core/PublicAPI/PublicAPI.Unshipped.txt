@@ -55,3 +55,4 @@
 [PBN9002]ProtoBuf.ProtoWriter.State.WriteRawDouble(double value) -> void
 [PBN9002]ProtoBuf.ProtoWriter.State.WriteRawString(string value) -> void
 [PBN9002]ProtoBuf.ProtoWriter.State.WriteRawBytes(System.ReadOnlySpan<byte> value) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<T>() -> void

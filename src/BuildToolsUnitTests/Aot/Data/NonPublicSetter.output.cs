@@ -42,7 +42,11 @@ partial class NonPublicSetterModel
             var tmp3 = value.Numbers;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    state.WriteRawTag((3 << 3) | 0);  // Numbers
+                    state.WriteRawVarint64(unchecked((ulong)(long)item3));
+                }
             }
             var tmp4 = value.Once;
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);

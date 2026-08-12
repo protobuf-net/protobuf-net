@@ -61,7 +61,11 @@ partial class InheritAccessorModel
             var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
             if (tmp4 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                {
+                    state.WriteRawTag((4 << 3) | 0);  // _values
+                    state.WriteRawVarint64(unchecked((ulong)(long)item4));
+                }
             }
         }
 

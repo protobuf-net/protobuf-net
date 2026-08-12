@@ -142,6 +142,16 @@ namespace ProtoBuf
                 writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)value.Length) + value.Length);
                 if (value.Length != 0) writer.ImplWriteBytes(ref this, value);
             }
+
+            /// <summary>
+            /// Throws for a null element inside a collection, matching the stateful repeated
+            /// write; generated raw loops call this so the failure is the same exception with
+            /// the same message, rather than a bare NullReferenceException from the write.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public void ThrowNullRepeatedContents<T>()
+                => Internal.ThrowHelper.ThrowNullRepeatedContents<T>();
         }
     }
 }

@@ -127,7 +127,12 @@ partial class CustomProtogenSerializer
             var tmp10 = value.ReservedNames;
             if (tmp10 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                foreach (var item10 in tmp10)
+                {
+                    if (item10 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((10 << 3) | 2);  // ReservedNames
+                    state.WriteRawString(item10);
+                }
             }
             state.AppendExtensionData(value);
         }
@@ -420,7 +425,12 @@ partial class CustomProtogenSerializer
             var tmp5 = value.ReservedNames;
             if (tmp5 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                foreach (var item5 in tmp5)
+                {
+                    if (item5 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((5 << 3) | 2);  // ReservedNames
+                    state.WriteRawString(item5);
+                }
             }
             state.AppendExtensionData(value);
         }
@@ -1173,7 +1183,12 @@ partial class CustomProtogenSerializer
             var tmp3 = value.Dependencies;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                foreach (var item3 in tmp3)
+                {
+                    if (item3 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((3 << 3) | 2);  // Dependencies
+                    state.WriteRawString(item3);
+                }
             }
             var tmp4 = value.MessageTypes;
             if (tmp4 != null)
@@ -1202,12 +1217,20 @@ partial class CustomProtogenSerializer
             var tmp10 = value.PublicDependencies;
             if (tmp10 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                foreach (var item10 in tmp10)
+                {
+                    state.WriteRawTag((10 << 3) | 0);  // PublicDependencies
+                    state.WriteRawVarint64(unchecked((ulong)(long)item10));
+                }
             }
             var tmp11 = value.WeakDependencies;
             if (tmp11 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp11);
+                foreach (var item11 in tmp11)
+                {
+                    state.WriteRawTag((11 << 3) | 0);  // WeakDependencies
+                    state.WriteRawVarint64(unchecked((ulong)(long)item11));
+                }
             }
             if (value.ShouldSerializeSyntax())
             {
@@ -2418,7 +2441,12 @@ partial class CustomProtogenSerializer
             var tmp6 = value.LeadingDetachedComments;
             if (tmp6 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
+                foreach (var item6 in tmp6)
+                {
+                    if (item6 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((6 << 3) | 2);  // LeadingDetachedComments
+                    state.WriteRawString(item6);
+                }
             }
             state.AppendExtensionData(value);
         }

@@ -115,7 +115,12 @@ partial class WrappedElementsModel
             var tmp8 = value.BareShades;
             if (tmp8 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrappedElements.Shade?>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+                foreach (var item8 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp8))
+                {
+                    if (item8 is null) state.ThrowNullRepeatedContents<global::AotFixtures.WrappedElements.Shade?>();
+                    state.WriteRawTag((8 << 3) | 0);  // BareShades
+                    state.WriteRawVarint64(unchecked((ulong)(long)(int)item8.GetValueOrDefault()));
+                }
             }
             var tmp9 = value.BareDates;
             if (tmp9 != null)

@@ -159,3 +159,19 @@ but enters as the favorite, being the only entrant that also answers mixed contr
 - Arrays: the span IS the array; strings-in-collections: GetByteCount per element measures,
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
+
+## Cut 2 landed: unpacked repeated runs (2026-08-12)
+
+The unpacked default needs NO measure infrastructure - per-element tag+value, nothing for
+empty, so it shipped ahead of the measure cut. `RawRepeatedWritable` gates it (unlike the
+scalar raw writes, which are unconditionally safe, this replaces the ENGINE): exact
+`List<T>`/`T[]` only (a derived-declared list's foreach could bind to a hiding
+GetEnumerator), unpacked, unwrapped, default format, scalar/enum/string elements.
+`CollectionsMarshal.AsSpan` is probed per compilation (net5+; a `ListAsSpan` plan flag,
+not a TFM guess) - the golden harness shows the span form, the net462/netstandard2.0
+consumers the plain foreach. Null elements throw through a new
+`State.ThrowNullRepeatedContents<T>` veneer, same exception and message as the stateful
+engine. Still classic, deliberately: packed (framing + the zero-length-header model
+option, wants measure), message elements (want lengthCache), bytes/BCL/Uri/parseable
+elements, maps (every entry is a length-prefixed sub-message - the measure cut's first
+customer).

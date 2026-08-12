@@ -53,3 +53,4 @@
 [PBN9002]ProtoBuf.ProtoWriter.State.WriteRawDouble(double value) -> void (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoWriter.State.WriteRawString(string value) -> void (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoWriter.State.WriteRawBytes(System.ReadOnlySpan<byte> value) -> void (forwarded, contained in protobuf-net.Core)
+[PBN9002]ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<T>() -> void (forwarded, contained in protobuf-net.Core)

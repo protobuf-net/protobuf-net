@@ -36,7 +36,11 @@ partial class GetterModel
             var tmp1 = value.Numbers;
             if (tmp1 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                {
+                    state.WriteRawTag((1 << 3) | 0);  // Numbers
+                    state.WriteRawVarint64(unchecked((ulong)(long)item1));
+                }
             }
             var tmp2 = value.Map;
             if (tmp2 != null)
@@ -74,7 +78,11 @@ partial class GetterModel
             var tmp10 = value.Array;
             if (tmp10 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                foreach (var item10 in tmp10)
+                {
+                    state.WriteRawTag((10 << 3) | 0);  // Array
+                    state.WriteRawVarint64(unchecked((ulong)(long)item10));
+                }
             }
             var tmp11 = value.Where;
             state.WriteMessage<global::AotFixtures.Getter.Point>(11, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);

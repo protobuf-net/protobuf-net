@@ -130,7 +130,11 @@ partial class PartialModel
             var tmp6 = value.Replaced;
             if (tmp6 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp6);
+                foreach (var item6 in tmp6)
+                {
+                    state.WriteRawTag((6 << 3) | 0);  // Replaced
+                    state.WriteRawVarint64(unchecked((ulong)(long)item6));
+                }
             }
         }
 

@@ -246,12 +246,21 @@ partial class RawPassModel
             var tmp7 = value.Tags;
             if (tmp7 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                {
+                    if (item7 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((7 << 3) | 2);  // Tags
+                    state.WriteRawString(item7);
+                }
             }
             var tmp8 = value.Codes;
             if (tmp8 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+                foreach (var item8 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp8))
+                {
+                    state.WriteRawTag((8 << 3) | 0);  // Codes
+                    state.WriteRawVarint64(unchecked((ulong)(long)item8));
+                }
             }
             var tmp9 = value.Items;
             if (tmp9 != null)

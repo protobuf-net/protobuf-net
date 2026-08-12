@@ -83,7 +83,12 @@ partial class DroppedModel
             var tmp2 = value.Tags;
             if (tmp2 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    if (item2 is null) state.ThrowNullRepeatedContents<string>();
+                    state.WriteRawTag((2 << 3) | 2);  // Tags
+                    state.WriteRawString(item2);
+                }
             }
         }
 
