@@ -1,4 +1,4 @@
-﻿
+
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
@@ -21,41 +21,17 @@ namespace ProtoBuf
         internal const string PreferStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version",
             PreferReadMessage = "If possible, please use the ReadMessage API; this API may not work correctly with all readers";
 
-        private protected abstract int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value);
-        private protected abstract uint ImplReadUInt32Fixed(ref State state);
-        private protected abstract ulong ImplReadUInt64Fixed(ref State state);
-        private protected abstract string ImplReadString(ref State state, int bytes);
-        private protected abstract void ImplSkipBytes(ref State state, long count);
-        private protected abstract int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value);
-        private protected abstract void ImplReadBytes(ref State state, Span<byte> target);
-        private protected virtual void ImplReadBytes(ref State state, ReadOnlySequence<byte> target)
-        {
-            if (target.IsSingleSegment)
-            {
-                ImplReadBytes(ref state, MemoryMarshal.AsMemory(target.First).Span);
-            }
-            else
-            {
-                foreach (var segment in target)
-                {
-                    ImplReadBytes(ref state, MemoryMarshal.AsMemory(segment).Span);
-                }
-            }
-        }
+        // ---- the museum bridge (nano-swap): the class holds the SOLID form; every instance-API
+        // call liquifies, operates, and re-solidifies. Museum API, museum prices - see
+        // Nano/PORTING.md. State no longer references the class at all, and the old backends
+        // (StreamProtoReader / ReadOnlySequenceProtoReader) are gone.
+        private protected ReaderSnapshot _snapshot;
 
-        private protected abstract bool IsFullyConsumed(ref State state);
+        [MethodImpl(HotPath)]
+        private protected State Liquify() => new State(in _snapshot);
 
-        private TypeModel _model;
-        private int _fieldNumber, _depth;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IncrDepth() => ++_depth >= (_model is null ? TypeModel.DefaultMaxDepth : _model.MaxDepth);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void DecrDepth() => _depth--;
-
-        private long blockEnd64;
-        private readonly NetObjectCache netCache = new NetObjectCache();
+        [MethodImpl(HotPath)]
+        private protected void Resolidify(ref State state) => _snapshot = state.Snapshot();
 
         /// <summary>
         /// Gets the number of the field being processed.
@@ -63,7 +39,7 @@ namespace ProtoBuf
         public int FieldNumber
         {
             [MethodImpl(HotPath)]
-            get => _fieldNumber;
+            get => _snapshot.FieldNumber;
         }
 
         /// <summary>
@@ -72,8 +48,7 @@ namespace ProtoBuf
         public WireType WireType
         {
             [MethodImpl(HotPath)]
-            get;
-            private protected set;
+            get => _snapshot.WireTypeValue;
         }
 
         internal const long TO_EOF = -1;
@@ -88,18 +63,16 @@ namespace ProtoBuf
         internal const int EagerAllocationLimit = 32 * 1024;
 
         /// <summary>
-        /// The maximum number of bytes that this source could still supply, or a negative value if
-        /// that cannot be determined cheaply (i.e. a stream of unknown length).
-        /// </summary>
-        private protected abstract long MaxRemaining { get; }
-
-        /// <summary>
         /// Gets / sets a flag indicating whether strings should be checked for repetition; if
         /// true, any repeated UTF-8 byte sequence will result in the same String instance, rather
         /// than a second instance of the same string. Disabled by default. Note that this uses
         /// a <i>custom</i> interner - the system-wide string interner is not used.
         /// </summary>
-        public bool InternStrings { get; set; }
+        public bool InternStrings
+        {
+            get => _snapshot.InternStringsValue;
+            set { var s__ = Liquify(); s__.InternStrings = value; Resolidify(ref s__); }
+        }
 
         private protected ProtoReader() { }
 
@@ -120,21 +93,12 @@ namespace ProtoBuf
         partial void OnInit();
 
         /// <summary>
-        /// Initialize the reader
+        /// Initialize the reader from a solidified state
         /// </summary>
-        internal void Init(TypeModel model, object userState)
+        internal void Init(in ReaderSnapshot snapshot)
         {
             OnInit();
-            _model = model;
-
-            if (userState is SerializationContext context) context.Freeze();
-            UserState = userState;
-            _longPosition = 0;
-            _depth = _fieldNumber = 0;
-
-            blockEnd64 = long.MaxValue;
-            InternStrings = model.HasOption(TypeModel.TypeModelOptions.InternStrings);
-            WireType = WireType.None;
+            _snapshot = snapshot;
 #if FEAT_DYNAMIC_REF
             trapCount = 1;
 #endif
@@ -143,7 +107,7 @@ namespace ProtoBuf
         /// <summary>
         /// Addition information about this deserialization operation.
         /// </summary>
-        public object UserState { get; private set; }
+        public object UserState => _snapshot.UserState;
 
         /// <summary>
         /// Addition information about this deserialization operation.
@@ -161,14 +125,9 @@ namespace ProtoBuf
 #pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
         {
             OnDispose();
-            _model = null;
-            if (stringInterner is not null)
-            {
-                stringInterner.Clear();
-                stringInterner = null;
-            }
-            netCache.Clear();
-            UserState = null;
+            var state = Liquify(); // returns any lease
+            state.Dispose();
+            _snapshot = default;
         }
 
         private protected enum Read32VarintMode
@@ -185,7 +144,7 @@ namespace ProtoBuf
         public int Position
         {
             [MethodImpl(HotPath)]
-            get { return checked((int)_longPosition); }
+            get { return checked((int)LongPosition); }
         }
 
 
@@ -196,79 +155,51 @@ namespace ProtoBuf
         public long LongPosition
         {
             [MethodImpl(HotPath)]
-            get => _longPosition;
+            get => _snapshot.PositionBase + _snapshot.Offset;
         }
-
-        private long _longPosition;
-
-        [MethodImpl(HotPath)]
-        internal void Advance(long count) => _longPosition += count;
 
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         [MethodImpl(HotPath)]
-        public short ReadInt16() => DefaultState().ReadInt16();
+        public short ReadInt16() { var s__ = Liquify(); try { return s__.ReadInt16(); } finally { Resolidify(ref s__); } }
 
 
         /// <summary>
         /// Reads an unsigned 16-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
-        public ushort ReadUInt16() => DefaultState().ReadUInt16();
+        public ushort ReadUInt16() { var s__ = Liquify(); try { return s__.ReadUInt16(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads an unsigned 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
-        public byte ReadByte() => DefaultState().ReadByte();
+        public byte ReadByte() { var s__ = Liquify(); try { return s__.ReadByte(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads a signed 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         [MethodImpl(HotPath)]
-        public sbyte ReadSByte() => DefaultState().ReadSByte();
+        public sbyte ReadSByte() { var s__ = Liquify(); try { return s__.ReadSByte(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads an unsigned 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         [MethodImpl(HotPath)]
-        public uint ReadUInt32() => DefaultState().ReadUInt32();
+        public uint ReadUInt32() { var s__ = Liquify(); try { return s__.ReadUInt32(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads a signed 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         [MethodImpl(HotPath)]
-        public int ReadInt32() => DefaultState().ReadInt32();
+        public int ReadInt32() { var s__ = Liquify(); try { return s__.ReadInt32(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads a signed 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         [MethodImpl(HotPath)]
-        public long ReadInt64() => DefaultState().ReadInt64();
-
-        private Dictionary<string, string> stringInterner;
-        private protected string Intern(string value)
-        {
-            if (value is null) return null;
-            if (value.Length == 0) return "";
-            if (stringInterner is null)
-            {
-                stringInterner = new Dictionary<string, string>(StringComparer.Ordinal)
-                {
-                    { value, value }
-                };
-            }
-            else if (stringInterner.TryGetValue(value, out string found))
-            {
-                value = found;
-            }
-            else
-            {
-                stringInterner.Add(value, value);
-            }
-            return value;
-        }
+        public long ReadInt64() { var s__ = Liquify(); try { return s__.ReadInt64(); } finally { Resolidify(ref s__); } }
 
         private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
 
@@ -276,20 +207,20 @@ namespace ProtoBuf
         /// Reads a string from the stream (using UTF8); supported wire-types: String
         /// </summary>
         [MethodImpl(HotPath)]
-        public string ReadString() => DefaultState().ReadString();
+        public string ReadString() { var s__ = Liquify(); try { return s__.ReadString(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Throws an exception indication that the given value cannot be mapped to an enum.
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public void ThrowEnumException(Type type, int value) => DefaultState().ThrowEnumException(type, value);
+        public void ThrowEnumException(Type type, int value) { var s__ = Liquify(); try { s__.ThrowEnumException(type, value); } finally { Resolidify(ref s__); } }
 
 
         /// <summary>
         /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
-        public double ReadDouble() => DefaultState().ReadDouble();
+        public double ReadDouble() { var s__ = Liquify(); try { return s__.ReadDouble(); } finally { Resolidify(ref s__); } }
 
 
 
@@ -299,7 +230,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(HotPath)]
         public static object ReadObject(object value, [DynamicallyAccessedMembers(DynamicAccess.ContractType)] Type type, ProtoReader reader)
-            => reader.DefaultState().ReadObject(value, type);
+            { var s__ = reader.Liquify(); try { return s__.ReadObject(value, type); } finally { reader.Resolidify(ref s__); } }
 
         /// <summary>
         /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup
@@ -308,7 +239,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(HotPath)]
         public static void EndSubItem(SubItemToken token, ProtoReader reader)
-            => reader.DefaultState().EndSubItem(token);
+            { var s__ = reader.Liquify(); try { s__.EndSubItem(token); } finally { reader.Resolidify(ref s__); } }
 
         /// <summary>
         /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
@@ -316,45 +247,30 @@ namespace ProtoBuf
         /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
         [MethodImpl(HotPath)]
         public static SubItemToken StartSubItem(ProtoReader reader)
-            => reader.DefaultState().StartSubItem();
+            { var s__ = reader.Liquify(); try { return s__.StartSubItem(); } finally { reader.Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads a field header from the stream, setting the wire-type and retuning the field number. If no
         /// more fields are available, then 0 is returned. This methods respects sub-messages.
         /// </summary>
         [MethodImpl(HotPath)]
-        public int ReadFieldHeader() => DefaultState().ReadFieldHeader();
+        public int ReadFieldHeader() { var s__ = Liquify(); try { return s__.ReadFieldHeader(); } finally { Resolidify(ref s__); } }
 
         [MethodImpl(HotPath)]
-        private int SetTag(uint tag)
-        {
-            if ((_fieldNumber = (int)(tag >> 3)) < 1) ThrowInvalidField(_fieldNumber);
-            if ((WireType = (WireType)(tag & 7)) == WireType.EndGroup)
-            {
-                if (_depth > 0) return 0; // spoof an end, but note we still set the field-number
-                ThrowUnexpectedEndGroup();
-            }
-            return _fieldNumber;
-        }
-        private static void ThrowInvalidField(int fieldNumber)
-            => ThrowHelper.ThrowProtoException("Invalid field in source data: " + fieldNumber.ToString());
-        private static void ThrowUnexpectedEndGroup()
-            => ThrowHelper.ThrowProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
 
         /// <summary>
         /// Looks ahead to see whether the next field in the stream is what we expect
         /// (typically; what we've just finished reading - for example ot read successive list items)
         /// </summary>
         [MethodImpl(HotPath)]
-        public bool TryReadFieldHeader(int field) => DefaultState().TryReadFieldHeader(field);
+        public bool TryReadFieldHeader(int field) { var s__ = Liquify(); try { return s__.TryReadFieldHeader(field); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Get the TypeModel associated with this reader
         /// </summary>
         public TypeModel Model
         {
-            get => _model;
-            internal set => _model = value;
+            get => _snapshot.Model;
         }
 
         /// <summary>
@@ -364,12 +280,9 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         public void Hint(WireType wireType)
         {
-            if (WireType == wireType) { }  // fine; everything as we expect
-            else if (((int)wireType & 7) == (int)this.WireType)
-            {   // the underling type is a match; we're customising it with an extension
-                WireType = wireType;
-            }
-            // note no error here; we're OK about using alternative data
+            var s__ = Liquify();
+            s__.Hint(wireType);
+            Resolidify(ref s__);
         }
 
         /// <summary>
@@ -377,31 +290,31 @@ namespace ProtoBuf
         /// SignedVariant) - in which case the current wire-type is updated. Otherwise an exception is thrown.
         /// </summary>
         [MethodImpl(HotPath)]
-        public void Assert(WireType wireType) => DefaultState().Assert(wireType);
+        public void Assert(WireType wireType) { var s__ = Liquify(); try { s__.Assert(wireType); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Discards the data for the current field.
         /// </summary>
         [MethodImpl(HotPath)]
-        public void SkipField() => DefaultState().SkipField();
+        public void SkipField() { var s__ = Liquify(); try { s__.SkipField(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads an unsigned 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
-        public ulong ReadUInt64() => DefaultState().ReadUInt64();
+        public ulong ReadUInt64() { var s__ = Liquify(); try { return s__.ReadUInt64(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads a single-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
-        public float ReadSingle() => DefaultState().ReadSingle();
+        public float ReadSingle() { var s__ = Liquify(); try { return s__.ReadSingle(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         [MethodImpl(HotPath)]
-        public bool ReadBoolean() => DefaultState().ReadBoolean();
+        public bool ReadBoolean() { var s__ = Liquify(); try { return s__.ReadBoolean(); } finally { Resolidify(ref s__); } }
 
         internal static readonly byte[] EmptyBlob = Array.Empty<byte>();
 
@@ -410,7 +323,7 @@ namespace ProtoBuf
         /// </summary>
         [MethodImpl(HotPath)]
         public static byte[] AppendBytes(byte[] value, ProtoReader reader)
-            => reader.DefaultState().AppendBytes(value);
+            { var s__ = reader.Liquify(); try { return s__.AppendBytes(value); } finally { reader.Resolidify(ref s__); } }
 
         //static byte[] ReadBytes(Stream stream, int length)
         //{
@@ -681,7 +594,7 @@ namespace ProtoBuf
         /// Copies the current field into the instance as extension data
         /// </summary>
         [MethodImpl(HotPath)]
-        public void AppendExtensionData(IExtensible instance) => DefaultState().AppendExtensionData(instance);
+        public void AppendExtensionData(IExtensible instance) { var s__ = Liquify(); try { s__.AppendExtensionData(instance); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Indicates whether the reader still has data remaining in the current sub-item,
@@ -691,15 +604,20 @@ namespace ProtoBuf
         public static bool HasSubValue(ProtoBuf.WireType wireType, ProtoReader source)
         {
             if (source is null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-            // check for virtual end of stream
-            if (source.blockEnd64 <= source._longPosition || wireType == WireType.EndGroup) { return false; }
-            source.WireType = wireType;
-            return true;
+            var s__ = source.Liquify();
+            try
+            {
+                return s__.HasSubValue(wireType);
+            }
+            finally
+            {
+                source.Resolidify(ref s__);
+            }
         }
 
         internal Type DeserializeType(string value)
         {
-            return TypeModel.DeserializeType(_model, value);
+            return TypeModel.DeserializeType(Model, value);
         }
 
 #if FEAT_DYNAMIC_REF
@@ -746,12 +664,13 @@ namespace ProtoBuf
         // to just trapping the root object
         // note: objects are trapped (the ref and key mapped) via NoteObject
         private uint trapCount; // uint is so we can use beq/bne more efficiently than bgt
+        private readonly NetObjectCache netCache = new NetObjectCache();
 #endif
 
         /// <summary>
         /// Reads a Type from the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
         /// </summary>
-        public Type ReadType() => DefaultState().ReadType();
+        public Type ReadType() { var s__ = Liquify(); try { return s__.ReadType(); } finally { Resolidify(ref s__); } }
 
         /// <summary>
         /// Merge two objects using the details from the current reader; this is used to change the type
@@ -777,5 +696,32 @@ namespace ProtoBuf
             using var state = ProtoReader.State.Create(ms, model, userState);
             return state.DeserializeRootFallback(to, type: null);
         }
+
+        /// <summary>
+        /// The one concrete reader: a snapshot holder. The museum instance API operates through
+        /// Liquify/Resolidify on the base; DefaultState hands out a liquid COPY (one-shot - the
+        /// bridged methods are what persist mutations).
+        /// </summary>
+        internal sealed class SnapshotProtoReader : ProtoReader
+        {
+            internal SnapshotProtoReader(in ReaderSnapshot snapshot) => Init(in snapshot);
+            protected internal override State DefaultState() => Liquify();
+        }
+
+        /// <summary>
+        /// Creates a new reader against a stream
+        /// </summary>
+        /// <param name="source">The source stream</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+        /// <param name="userState">Additional context about this serialization operation</param>
+        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        public static ProtoReader Create(Stream source, TypeModel model, object userState = null, long length = TO_EOF)
+            => new SnapshotProtoReader(State.Create(source, model, userState, length).Snapshot());
+
+        /// <summary>
+        /// Creates a new reader against the supplied buffer
+        /// </summary>
+        public static ProtoReader Create(ReadOnlyMemory<byte> source, TypeModel model, object userState = null)
+            => new SnapshotProtoReader(State.Create(source, model, userState).Snapshot());
     }
 }

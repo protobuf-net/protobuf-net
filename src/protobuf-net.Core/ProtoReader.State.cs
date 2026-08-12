@@ -51,10 +51,20 @@ namespace ProtoBuf
             /// </summary>
             public static State Create(Stream source, TypeModel model, object userState = null, long length = ProtoReader.TO_EOF)
             {
-                var state = new State(source, length);
-                state._model = model;
-                state._userState = userState;
-                return state;
+                // the MemoryStream unwrap, with full legacy parity: reflection fallback for
+                // non-exposable buffers, position respected, length cap applied, and the source
+                // SEEKED past the consumed data
+                if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
+                {
+                    var state = new State(segment.Array, segment.Offset, segment.Count);
+                    state._model = model;
+                    state._userState = userState;
+                    return state;
+                }
+                var streamState = new State(source, length);
+                streamState._model = model;
+                streamState._userState = userState;
+                return streamState;
             }
 
             internal readonly SolidState Solidify() => new SolidState(Snapshot());
