@@ -77,6 +77,12 @@ function IsAccessible([Type]$t) {
     return $t.IsPublic
 }
 
+# members that have graduated to hand-written partials; regeneration must not resurrect them
+$graduated = @{
+    'ReaderState' = @('Dispose')
+    'WriterState' = @()
+}
+
 function Emit([Type]$state, [string]$structName, [string]$file) {
     $flags = [System.Reflection.BindingFlags]"Public,NonPublic,Instance,Static,DeclaredOnly"
     $sb = [System.Text.StringBuilder]::new()
@@ -105,6 +111,10 @@ public ref partial struct $structName
             -and $_.Name -notmatch '[<>|]' # compiler-lifted local functions have unspeakable names
     } | Sort-Object Name, { $_.GetParameters().Count }
     foreach ($m in $methods) {
+        if ($graduated[$structName] -contains $m.Name) {
+            [void]$sb.AppendLine("    // $($m.Name): graduated - implemented in $structName.Nano.cs")
+            continue
+        }
         $access = if ($m.IsPublic) { 'public' } elseif ($m.IsAssembly -or $m.IsFamilyOrAssembly) { 'internal' } else { continue }
         $static = if ($m.IsStatic) { 'static ' } else { '' }
         $generics = ''

@@ -67,8 +67,7 @@ public ref partial struct ReaderState
         => throw new NotImplementedException();
     internal global::System.Type DeserializeType(string typeName)
         => throw new NotImplementedException();
-    public void Dispose()
-        => throw new NotImplementedException();
+    // Dispose: graduated - implemented in ReaderState.Nano.cs
     public void EndSubItem(global::ProtoBuf.SubItemToken token)
         => throw new NotImplementedException();
     // INTERNAL-TYPE SIGNATURE (kept for the shape; cannot compile outside Core):
