@@ -160,6 +160,34 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## Native validation (2026-08-12, cuts 1-5)
+
+A clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first - a second run
+reports nothing) with the whole writer arc in place: **19 IL warnings, exactly the
+recorded baseline**, and the native executable PASSES - 559 bytes serialized through the
+generated measure-first writer including the descriptor-set member, round-tripped and
+verified. The writer arc adds no native regression. (The vswhere-on-PATH trap struck
+again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
+
+## Where this stands / what's next
+
+Cuts 1-5 are pushed and green on every gate. The remaining lever, in priority order:
+
+1. **The presized buffer core** - every raw op is still a virtual Impl* call; the read
+   arc's step-2 equivalent (span+position in State, flush as the mirrored refill
+   boundary, per-TFM byte accessor) is the big remaining win on the ~12.6us write row.
+   Deep surgery on shared writer internals: start it with a fresh context, gates per
+   commit as usual.
+2. Counting mode for mixed contracts (legacy-mode members measured via the classic body
+   against the Null writer, landing in the same lengthCache) - widens measure-first
+   eligibility beyond all-native contracts.
+3. Packed repeated writes (IsPacked support arrived on the read side; the write needs the
+   zero-length-header model option and per-element measure - the MemoryMarshal block
+   trick for fixed widths is recorded in the checklist above).
+4. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
+   for the native kinds).
+5. net472 serialize benchmark leg (numbers recorded are net10 only).
+
 ## Cut 5 landed: the ??= lengthCache, and it wins the race (2026-08-12)
 
 The design as sketched: a per-writer `Dictionary<object, int>` keyed by REFERENCE identity
