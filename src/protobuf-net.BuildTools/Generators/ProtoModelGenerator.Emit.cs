@@ -130,12 +130,58 @@ namespace ProtoBuf.BuildTools.Generators
 
             EmitExternalCategoryAsserts(sb, indent + 2, plan);
 
+            // nano eligibility is a FIXPOINT, not a per-contract predicate: a message member
+            // emits a direct static call to the target's NanoRead_ method, so a contract whose
+            // target fell out must fall out too - the same cascade DropUnsatisfiable performs for
+            // the legacy pass, for the same reason (emitting a call to a method that does not
+            // exist is a compile error in the consumer's build, the worst failure mode)
+            var nanoSet = new HashSet<string>();
+            var nanoReasons = new Dictionary<string, string>();
+            if (plan.NanoReader)
+            {
+                foreach (var contract in plan.Contracts)
+                {
+                    if (NanoEligible(contract, out var reason)) nanoSet.Add(contract.TypeName);
+                    else nanoReasons[contract.TypeName] = reason!;
+                }
+                bool changed = true;
+                while (changed)
+                {
+                    changed = false;
+                    foreach (var contract in plan.Contracts)
+                    {
+                        if (!nanoSet.Contains(contract.TypeName)) continue;
+                        foreach (var member in contract.Members)
+                        {
+                            if (member.Kind == ProtoMemberKind.Message && !nanoSet.Contains(member.TypeName!))
+                            {
+                                nanoSet.Remove(contract.TypeName);
+                                nanoReasons[contract.TypeName] = $"member {member.Name}: target {member.TypeName} is not nano-eligible (cascade)";
+                                changed = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
             var first = true;
             foreach (var contract in plan.Contracts)
             {
                 if (!first) sb.AppendLine();
                 first = false;
                 EmitContract(sb, indent + 2, contract);
+                if (nanoSet.Contains(contract.TypeName))
+                {
+                    EmitNanoRead(sb, indent + 2, contract);
+                }
+                else if (plan.NanoReader && nanoReasons.TryGetValue(contract.TypeName, out var why))
+                {
+                    // say WHY in the output itself: an absence and an oversight look identical
+                    // otherwise, which this branch has been burned by before
+                    sb.AppendLine();
+                    Line(sb, indent + 2, $"// nano pass: skipped - {why}");
+                }
             }
 
             EmitEnumProxies(sb, indent + 2, plan);
@@ -145,6 +191,292 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, "}");
             Line(sb, indent, "}");
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// The nano pass: a second, parallel emission against the experimental raw reader (see
+        /// docs/nano-core.md). Symbol-gated on ProtoBuf.Nano.ReaderState being visible - today
+        /// that is nobody outside this repo's own rigs - and dormant even then: nothing routes
+        /// here, invocation is manual. public static deliberately: static IS the direct-call
+        /// design. v1 eligibility is a strict subset (plain reference-type messages of varint
+        /// scalars and strings at default format); an ineligible contract simply gets no nano
+        /// method, which cascades nowhere because nothing depends on these yet.
+        /// </summary>
+        private static void EmitNanoRead(StringBuilder sb, int indent, ProtoContractPlan contract)
+        {
+            sb.AppendLine();
+            Line(sb, indent, $"public static {contract.TypeName} NanoRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.Nano.ReaderState state, {contract.TypeName} value)");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, $"value ??= new {contract.TypeName}();");
+            // the tag lives in a local and the loop reads at the BOTTOM, so a repeated-field run
+            // can make the tag read its own do-while condition and hand a miss straight back to
+            // dispatch via continue - the run-consumption shape, see docs/nano-core.md
+            Line(sb, indent + 1, "uint tag = state.ReadRawTag();");
+            Line(sb, indent + 1, "while (tag != 0)");
+            Line(sb, indent + 1, "{");
+            Line(sb, indent + 2, "switch (tag)");
+            Line(sb, indent + 2, "{");
+            foreach (var member in contract.Members)
+            {
+                var name = Escape(member.Name);
+                var n = member.FieldNumber;
+                if (member.Repeated.Factory is not null)
+                {
+                    switch (member.Kind)
+                    {
+                        case ProtoMemberKind.String:
+                            Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed run");
+                            Line(sb, indent + 4, $"do {{ value.{name}.Add(state.ReadRawString()); }}");
+                            Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | 2));");
+                            Line(sb, indent + 4, "continue;");
+                            break;
+                        case ProtoMemberKind.Message:
+                            Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
+                            Line(sb, indent + 3, $"case ({n} << 3) | 3:  // {member.Name}, field {n}, group");
+                            Line(sb, indent + 3, "{");
+                            Line(sb, indent + 4, "var last = tag;");
+                            Line(sb, indent + 4, "do");
+                            Line(sb, indent + 4, "{");
+                            Line(sb, indent + 5, "var scope = state.PushScope(last);");
+                            Line(sb, indent + 5, $"value.{name}.Add(NanoRead_{Sanitise(member.TypeName!)}(ref state, null));");
+                            Line(sb, indent + 5, "state.PopScope(scope);");
+                            Line(sb, indent + 4, "} while ((tag = state.ReadRawTag()) == last);");
+                            Line(sb, indent + 4, "continue;");
+                            Line(sb, indent + 3, "}");
+                            break;
+                        default: // varint-kind scalar or enum element
+                        {
+                            var forms = NanoScalarForms(member.Kind, member.EnumTypeName);
+                            Line(sb, indent + 3, $"case ({n} << 3) | 0:  // {member.Name}, field {n}, unpacked run");
+                            Line(sb, indent + 4, $"do {{ value.{name}.Add({forms[0].Read}); }}");
+                            Line(sb, indent + 4, $"while ((tag = state.ReadRawTag()) == (({n} << 3) | 0));");
+                            Line(sb, indent + 4, "continue;");
+                            Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, packed");
+                            if (member.Kind == ProtoMemberKind.Int32 && member.EnumTypeName is null
+                                && !member.Repeated.TakesCollectionType)
+                            {
+                                // plain List<int>: the library fast path (bulk arms, residency-switched)
+                                Line(sb, indent + 4, $"state.ReadPackedVarint32(value.{name});");
+                                Line(sb, indent + 4, "break;");
+                            }
+                            else
+                            {
+                                Line(sb, indent + 3, "{");
+                                Line(sb, indent + 4, "var scope = state.PushLengthPrefix();");
+                                Line(sb, indent + 4, $"while (!state.AtScopeEnd) value.{name}.Add({forms[0].Read});");
+                                Line(sb, indent + 4, "state.PopScope(scope);");
+                                Line(sb, indent + 4, "break;");
+                                Line(sb, indent + 3, "}");
+                            }
+                            for (int i = 1; i < forms.Length; i++)
+                            {
+                                Line(sb, indent + 3, $"case ({n} << 3) | {forms[i].Wire}:  // {member.Name}, field {n}, {WireName(forms[i].Wire)}");
+                                Line(sb, indent + 4, $"value.{name}.Add({forms[i].Read});");
+                                Line(sb, indent + 4, "break;");
+                            }
+                            break;
+                        }
+                    }
+                    continue;
+                }
+                switch (member.Kind)
+                {
+                    case ProtoMemberKind.Message:
+                        Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
+                        Line(sb, indent + 3, $"case ({n} << 3) | 3:  // {member.Name}, field {n}, group");
+                        Line(sb, indent + 3, "{");
+                        Line(sb, indent + 4, "var scope = state.PushScope(tag);");
+                        Line(sb, indent + 4, $"value.{name} = NanoRead_{Sanitise(member.TypeName!)}(ref state, value.{name});");
+                        Line(sb, indent + 4, "state.PopScope(scope);");
+                        Line(sb, indent + 4, "break;");
+                        Line(sb, indent + 3, "}");
+                        break;
+                    case ProtoMemberKind.String:
+                        // same semantics as the legacy read: a null string does not overwrite
+                        Line(sb, indent + 3, $"case ({n} << 3) | 2:  // {member.Name}, field {n}, length-prefixed");
+                        Line(sb, indent + 3, "{");
+                        Line(sb, indent + 4, $"var tmp{n} = state.ReadRawString();");
+                        Line(sb, indent + 4, $"if (tmp{n} != null) value.{name} = tmp{n};");
+                        Line(sb, indent + 4, "break;");
+                        Line(sb, indent + 3, "}");
+                        break;
+                    default:
+                    {
+                        // wire-type tolerance by case labels, not state: the legacy reader accepts
+                        // any suitable wire form for an integer (and protobuf-net itself writes
+                        // fixed under DataFormat.FixedSize), so each label dispatches to the
+                        // correctly-named raw read and the jump table absorbs the extra labels.
+                        // Conversions mirror the legacy ReadInt32/ReadInt64 wire switch; an enum
+                        // is its underlying scalar plus a cast the JIT erases; a nullable member
+                        // takes the same assignment.
+                        foreach (var (wire, read) in NanoScalarForms(member.Kind, member.EnumTypeName))
+                        {
+                            Line(sb, indent + 3, $"case ({n} << 3) | {wire}:  // {member.Name}, field {n}, {WireName(wire)}");
+                            Line(sb, indent + 4, $"value.{name} = {read};");
+                            Line(sb, indent + 4, "break;");
+                        }
+                        break;
+                    }
+                }
+            }
+            Line(sb, indent + 3, "default:");
+            Line(sb, indent + 4, "if (state.IsScopeEnd(tag)) return value;");
+            // an extensible contract CAPTURES the unknown field instead of skipping it - the tag
+            // rides the parameter, per the raw convention
+            Line(sb, indent + 4, contract.Extensible == ProtoExtensibleKind.None
+                ? "state.SkipTag(tag);"
+                : $"state.AppendExtensionData(tag, value{ExtensionType(contract)});");
+            Line(sb, indent + 4, "break;");
+            Line(sb, indent + 2, "}");
+            Line(sb, indent + 2, "tag = state.ReadRawTag();");
+            Line(sb, indent + 1, "}");
+            Line(sb, indent + 1, "return value;");
+            Line(sb, indent, "}");
+        }
+
+        private static string WireName(int wire) => wire switch
+        {
+            0 => "varint",
+            1 => "fixed64",
+            2 => "length-prefixed",
+            3 => "group",
+            5 => "fixed32",
+            _ => "?",
+        };
+
+        private static (int Wire, string Read)[] NanoScalarForms(ProtoMemberKind kind, string? enumTypeName)
+        {
+            (int Wire, string Read)[] forms = kind switch
+            {
+                ProtoMemberKind.Bool =>
+                [
+                    (0, "state.ReadRawVarint32() != 0"),
+                    (5, "state.ReadRawFixed32() != 0"),
+                    (1, "state.ReadRawFixed64() != 0"),
+                ],
+                ProtoMemberKind.Int32 =>
+                [
+                    (0, "unchecked((int)state.ReadRawVarint32())"),
+                    (5, "unchecked((int)state.ReadRawFixed32())"),
+                    (1, "checked((int)unchecked((long)state.ReadRawFixed64()))"),
+                ],
+                ProtoMemberKind.UInt32 =>
+                [
+                    (0, "state.ReadRawVarint32()"),
+                    (5, "state.ReadRawFixed32()"),
+                    (1, "checked((uint)state.ReadRawFixed64())"),
+                ],
+                ProtoMemberKind.Int64 =>
+                [
+                    (0, "unchecked((long)state.ReadRawVarint64())"),
+                    (1, "unchecked((long)state.ReadRawFixed64())"),
+                    (5, "(long)unchecked((int)state.ReadRawFixed32())"),
+                ],
+                ProtoMemberKind.UInt64 =>
+                [
+                    (0, "state.ReadRawVarint64()"),
+                    (1, "state.ReadRawFixed64()"),
+                    (5, "(ulong)state.ReadRawFixed32()"),
+                ],
+                // double is fixed64-only: the fixed32 float promotion needs Int32BitsToSingle,
+                // which netfx lacks - the one deliberate tolerance exception
+                ProtoMemberKind.Double => [(1, "state.ReadRawDouble()")],
+                // bytes: REPLACE semantics, the decided default (LegacyAppendBytes is the opt-in
+                // for the historical append, not yet emitted)
+                ProtoMemberKind.Bytes => [(2, "state.ReadRawBytes()")],
+                _ => [], // unreachable: NanoEligible already filtered
+            };
+            if (enumTypeName is not null)
+            {
+                for (int i = 0; i < forms.Length; i++)
+                {
+                    forms[i] = (forms[i].Wire, $"({enumTypeName})({forms[i].Read})");
+                }
+            }
+            return forms;
+        }
+
+        private static bool NanoEligible(ProtoContractPlan contract, out string? reason)
+        {
+            if (contract.IsValueType || contract.IsTuple || contract.IsAbstract || contract.IsGroup
+                || contract.SkipConstructor || contract.UsesConstructorAccessor
+                || contract.RootTypeName is not null || contract.SubTypes.Count != 0
+                || contract.SurrogateTypeName is not null
+                || contract.ExternalSerializerTypeName is not null)
+            {
+                reason = "contract shape (value type, tuple, hierarchy, surrogate or external serializer)";
+                return false;
+            }
+            // Callbacks is always a fixed 4-slot array indexed by kind; null MethodName = none
+            for (int i = 0; i < contract.Callbacks.Count; i++)
+            {
+                if (contract.Callbacks[i].MethodName is not null)
+                {
+                    reason = "serialization callbacks";
+                    return false;
+                }
+            }
+            foreach (var member in contract.Members)
+            {
+                reason = $"member {member.Name}";
+                if (member.Map.Factory is not null) { reason += ": map"; return false; }
+                if (member.WrappedValue || member.WrappedCollection) { reason += ": null-wrapped"; return false; }
+                if (member.DataFormat != ProtoDataFormat.Default) { reason += ": non-default DataFormat"; return false; }
+                if (member.IsRequired) { reason += ": IsRequired"; return false; }
+                // UsesAccessor is a SETTER-side fact (legacy assigns getter-only collections
+                // through their backing field); nano never assigns a collection - Add through the
+                // public getter is the whole mechanism - so for repeated members only an
+                // unreadable getter disqualifies. Known divergence, accepted: a getter-only
+                // collection left null NREs here where legacy constructs via the accessor;
+                // protogen-style DTOs always initialize.
+                if (member.AccessorReads) { reason += ": accessor-reached"; return false; }
+                if (member.UsesAccessor && member.Repeated.Factory is null) { reason += ": accessor-reached setter"; return false; }
+                if (member.WriteCondition is not null || member.SpecifiedMember is not null) { reason += ": conditional serialization"; return false; }
+                if (member.DefaultLiteral is not null) { reason += ": [DefaultValue]"; return false; }
+                // "this" is just the normal message-member plumbing (the nano pass replaces it
+                // with a direct static call); anything ELSE is a hand-written serializer whose
+                // framing the nano pass has not derived
+                if (member.SubSerializer is not (null or "this")) { reason += ": hand-written serializer"; return false; }
+                if (member.Repeated.Factory is not null)
+                {
+                    // List<T>-shaped only: Add is the read mechanism, which is also why a
+                    // getter-only list property is fine here where a getter-only scalar is not
+                    if (member.Repeated.Factory != "CreateList") { reason += $": collection shape {member.Repeated.Factory}"; return false; }
+                    if (member.OverwriteList) { reason += ": OverwriteList"; return false; }
+                    if (member.IsNullable) { reason += ": nullable collection element"; return false; }
+                    // Double/Bytes are single-member kinds only for now (no packed-double or
+                    // repeated-bytes emission yet)
+                    if (member.Kind is ProtoMemberKind.Double or ProtoMemberKind.Bytes) { reason += $": repeated {member.Kind}"; return false; }
+                }
+                else if (member.IsReadOnly)
+                {
+                    reason += ": getter-only (a scalar/message needs assignment)";
+                    return false;
+                }
+                if (member.Kind == ProtoMemberKind.Message)
+                {
+                    // the TARGET's eligibility is the fixpoint's job, not this predicate's
+                    if (member.TypeName is null || member.IsNullable) { reason += ": unusable message shape"; return false; }
+                    continue;
+                }
+                switch (member.Kind)
+                {
+                    case ProtoMemberKind.Bool:
+                    case ProtoMemberKind.Int32:
+                    case ProtoMemberKind.UInt32:
+                    case ProtoMemberKind.Int64:
+                    case ProtoMemberKind.UInt64:
+                    case ProtoMemberKind.String:
+                    case ProtoMemberKind.Double:
+                    case ProtoMemberKind.Bytes:
+                        break;
+                    default:
+                        reason += $": kind {member.Kind}";
+                        return false;
+                }
+            }
+            reason = null;
+            return true;
         }
 
         private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract)
