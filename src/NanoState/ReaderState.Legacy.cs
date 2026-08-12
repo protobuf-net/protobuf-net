@@ -126,20 +126,32 @@ public ref partial struct ReaderState
     /// anything less would be a platform regression.</summary>
     public uint ReadRawFixed32()
     {
-        if (_count - _offset < 4) ThrowEndOfData();
+        if (_count - _offset < 4) return ReadRawFixed32Straddle();
         var value = Unsafe.ReadUnaligned<uint>(ref At(_offset));
         if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
         _offset += 4;
         return value;
     }
 
+    // byte-wise LE assembly: endian-free by construction, and crosses refills like every straddle
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private uint ReadRawFixed32Straddle()
+        => ReadRawByte()
+        | ((uint)ReadRawByte() << 8)
+        | ((uint)ReadRawByte() << 16)
+        | ((uint)ReadRawByte() << 24);
+
     /// <summary>Reads 8 bytes little-endian; same folded BE handling as <see cref="ReadRawFixed32"/>.</summary>
     public ulong ReadRawFixed64()
     {
-        if (_count - _offset < 8) ThrowEndOfData();
+        if (_count - _offset < 8) return ReadRawFixed64Straddle();
         var value = Unsafe.ReadUnaligned<ulong>(ref At(_offset));
         if (!BitConverter.IsLittleEndian) value = System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(value);
         _offset += 8;
         return value;
     }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private ulong ReadRawFixed64Straddle()
+        => ReadRawFixed32Straddle() | ((ulong)ReadRawFixed32Straddle() << 32);
 }

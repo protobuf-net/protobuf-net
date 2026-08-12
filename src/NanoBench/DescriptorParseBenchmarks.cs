@@ -29,8 +29,8 @@ public class DescriptorParseBenchmarks
 {
     private byte[] _data = [];
 
-    [GlobalSetup]
-    public void Setup()
+    /// <summary>The self-describing payload, shared with the stream/sequence benchmarks.</summary>
+    internal static byte[] BuildPayload()
     {
         var set = new Pbn.FileDescriptorSet();
         if (!set.Add("google/protobuf/descriptor.proto", includeInOutput: true))
@@ -44,12 +44,20 @@ public class DescriptorParseBenchmarks
             throw new InvalidOperationException("parse errors: "
                 + string.Join("; ", errors.Where(e => e.IsError).Select(e => e.Message)));
         }
+        byte[] data;
         using (var ms = new MemoryStream())
         {
             Serializer.Serialize(ms, set);
-            _data = ms.ToArray();
+            data = ms.ToArray();
         }
-        if (_data.Length < 1024) throw new InvalidOperationException($"implausibly small payload: {_data.Length} bytes");
+        if (data.Length < 1024) throw new InvalidOperationException($"implausibly small payload: {data.Length} bytes");
+        return data;
+    }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        _data = BuildPayload();
 
         var legacy = CensusLegacy(ParseLegacyReal());
         var google = CensusGoogle(ParseGoogleProtobuf());
@@ -100,7 +108,7 @@ public class DescriptorParseBenchmarks
     // stack so each stack walks its own. Counter meanings are fixed by the Census type; any
     // divergence in structure, names, numbers, paths or comments shifts at least one counter.
 
-    private sealed class Census
+    internal sealed class Census
     {
         public long Files, StrChars, Messages, Fields, FieldNumberSum, Enums, EnumValues,
             EnumValueNumberSum, Oneofs, Services, Methods, RangeSum, OptionsObjects, BoolTrues,
@@ -116,7 +124,7 @@ public class DescriptorParseBenchmarks
         public static void Chars(Census c, string s) => c.StrChars += s?.Length ?? 0;
     }
 
-    private static string CensusNano(Model.FileDescriptorSet set)
+    internal static string CensusNano(Model.FileDescriptorSet set)
     {
         var c = new Census();
         foreach (var f in set.Files)
@@ -250,7 +258,7 @@ public class DescriptorParseBenchmarks
         }
     }
 
-    private static string CensusLegacy(Pbn.FileDescriptorSet set)
+    internal static string CensusLegacy(Pbn.FileDescriptorSet set)
     {
         var c = new Census();
         foreach (var f in set.Files)

@@ -71,10 +71,14 @@ public ref partial struct ReaderState
     private long _remaining;
 
     /// <summary>
-    /// Where the next segment comes from: a <see cref="Stream"/>, the next
-    /// <see cref="ReadOnlySequenceSegment{T}"/>, or null when the current segment is the last.
+    /// Where the next segment comes from: a <see cref="Stream"/>, a boxed
+    /// <see cref="ReadOnlySequence{T}"/> (one allocation per multi-segment reader, walked via
+    /// <see cref="_nextPosition"/>), or null when the current segment is the last.
     /// </summary>
     private object? _source;
+
+    /// <summary>The walk cursor within a multi-segment sequence.</summary>
+    private SequencePosition _nextPosition;
 
     /// <summary>
     /// The innermost termination scope, sign-discriminated as legacy SubItemToken always was:
@@ -195,19 +199,66 @@ public ref partial struct ReaderState
     }
 
     /// <summary>
-    /// Sequence: the first segment loads as for Memory; _source holds the next segment node and
-    /// _remaining the known tail, so fetch-next is a linked-list walk with per-segment
-    /// TryGetArray-else-lease.
+    /// Sequence: a single-segment sequence collapses to the Memory case; otherwise the boxed
+    /// sequence (one allocation) is walked via a SequencePosition cursor, per-window
+    /// TryGetArray-else-lease. The root scope is the sequence's known length.
     /// </summary>
     public ReaderState(in ReadOnlySequence<byte> value)
-        => throw new NotImplementedException();
+    {
+        if (value.IsSingleSegment)
+        {
+            this = new ReaderState(value.First);
+            return;
+        }
+        _buffer = [];
+        _offset = 0;
+        _count = 0;
+        _effectiveEnd = 0;
+        _leased = false;
+        _positionBase = 0;
+        _remaining = value.Length;
+        _scope = value.Length; // root scope: length mode over the whole sequence
+        _source = value; // boxed: the one allocation this reader makes
+        _nextPosition = value.Start;
+        _wireType = WireType.None;
+        AdvanceSequence(); // load the first non-empty window
+    }
 
     /// <summary>
-    /// Stream: lease one buffer, reused for every refill; lengthHint (when the caller knows, e.g.
-    /// a length-prefixed network frame) seeds _remaining, else -1.
+    /// Stream: one leased buffer for the reader's lifetime, shift-and-top-up on refill. A
+    /// seekable exact-type MemoryStream with an exposable buffer collapses to the single-segment
+    /// case - PRODUCT PARITY, not an invention: legacy does the same unwrap (including reaching
+    /// the private buffer by reflection, which the spike skips; see ProtoReader.Stream.cs), so
+    /// benchmarks must deliberately defeat it to measure streaming at all. lengthHint (when the
+    /// caller knows - a length-prefixed network frame) seeds _remaining and bounds the root
+    /// scope; without it the root is unbounded and EOF is the clean end of the document.
     /// </summary>
     public ReaderState(Stream source, long lengthHint = -1)
-        => throw new NotImplementedException();
+    {
+        if (source is MemoryStream ms && ms.GetType() == typeof(MemoryStream) && ms.CanSeek
+            && ms.TryGetBuffer(out var segment))
+        {
+            int position = checked((int)ms.Position);
+            this = new ReaderState(segment.Array!, segment.Offset + position, segment.Count - position);
+            return;
+        }
+        _buffer = ArrayPool<byte>.Shared.Rent(16 * 1024);
+#if NET7_0_OR_GREATER
+        _segment = ref MemoryMarshal.GetArrayDataReference(_buffer);
+#else
+        _segmentStart = 0;
+#endif
+        _offset = 0;
+        _count = 0;
+        _effectiveEnd = 0;
+        _leased = true;
+        _positionBase = 0;
+        _remaining = lengthHint;
+        _scope = lengthHint >= 0 ? lengthHint : long.MaxValue; // unbounded root without a hint
+        _source = source;
+        _wireType = WireType.None;
+        FillFromStream(source); // initial fill
+    }
 
     /// <summary>Returns the leased buffer, if any; the reader is dead afterwards.</summary>
     public void Dispose()
@@ -229,14 +280,98 @@ public ref partial struct ReaderState
     // ---------------------------------------------------------------- segments
 
     /// <summary>
-    /// Advances to the next segment: for a Stream, shift the unconsumed tail to the front of the
-    /// leased buffer and top up; for a sequence, walk to the next node (TryGetArray in place, else
-    /// lease+copy - note a lease here must first return any prior lease); false at end of data.
-    /// Updates _positionBase/_remaining/_effectiveEnd; recomputing the clamped limit is part of
-    /// this, which is what keeps the per-field check an int compare.
+    /// Advances to the next window: for a Stream, shift the unconsumed tail to the front of the
+    /// leased buffer and top up; for a sequence, walk to the next node (TryGetArray in place,
+    /// else lease+copy, returning any prior lease first); false at end of data. The contract
+    /// (docs/nano-core.md): owes callers NOTHING before the current offset, and never needs to -
+    /// every straddle is byte-wise consumption, so there is no partial-primitive state to carry.
+    /// Recomputing the clamped limit is part of this, which is what keeps the per-field check an
+    /// int compare.
     /// </summary>
     private bool GetNextBuffer()
-        => throw new NotImplementedException();
+        => _source switch
+        {
+            Stream stream => FillFromStream(stream),
+            ReadOnlySequence<byte> => AdvanceSequence(),
+            _ => false,
+        };
+
+    private bool FillFromStream(Stream stream)
+    {
+        // shift the unconsumed tail to the front (stream windows always start at array index 0)
+        int tail = _count - _offset;
+        if (tail > 0 && _offset != 0)
+        {
+            Buffer.BlockCopy(_buffer, _offset, _buffer, 0, tail);
+        }
+        _positionBase += _offset;
+        _offset = 0;
+        _count = tail;
+        // top up as far as the buffer and any length hint allow: maximizing residency is the
+        // refill's legal courtesy, since resident is the common case the bulk arms exploit
+        int added = 0;
+        while (true)
+        {
+            int space = _buffer.Length - _count;
+            if (_remaining >= 0) space = (int)Math.Min(space, _remaining);
+            if (space <= 0) break;
+            int got = stream.Read(_buffer, _count, space);
+            if (got <= 0) break;
+            _count += got;
+            added += got;
+            if (_remaining >= 0) _remaining -= got;
+        }
+        RecomputeEffectiveEnd();
+        return added > 0;
+    }
+
+    private bool AdvanceSequence()
+    {
+        // only ever called with the current window exhausted (byte-wise consumption): the prior
+        // window contributes exactly _count to the absolute position
+        var seq = (ReadOnlySequence<byte>)_source!;
+        while (seq.TryGet(ref _nextPosition, out var mem, advance: true))
+        {
+            if (mem.IsEmpty) continue;
+            _positionBase += _count;
+            var old = _buffer;
+            var wasLeased = _leased;
+            if (MemoryMarshal.TryGetArray(mem, out var segment))
+            {
+                _buffer = segment.Array!;
+#if NET7_0_OR_GREATER
+                _segment = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(_buffer), segment.Offset);
+#else
+                _segmentStart = segment.Offset;
+#endif
+                _leased = false;
+            }
+            else
+            {
+                var rented = ArrayPool<byte>.Shared.Rent(mem.Length);
+                mem.Span.CopyTo(rented);
+                _buffer = rented;
+#if NET7_0_OR_GREATER
+                _segment = ref MemoryMarshal.GetArrayDataReference(rented);
+#else
+                _segmentStart = 0;
+#endif
+                _leased = true;
+            }
+            if (wasLeased) ArrayPool<byte>.Shared.Return(old);
+            _offset = 0;
+            _count = mem.Length;
+            if (_remaining >= 0) _remaining -= mem.Length;
+            RecomputeEffectiveEnd();
+            return true;
+        }
+        return false;
+    }
+
+    private void RecomputeEffectiveEnd()
+        => _effectiveEnd = _scope >= 0
+            ? (int)Math.Max(0, Math.Min(_count, _scope - _positionBase))
+            : _count;
 
     // The fast-path window: unguarded 8-byte loads require _offset + 8 <= _count. The final <=8
     // bytes of ANY segment take the bounds-checked slow path - a sequence may hand us the user's
@@ -256,11 +391,12 @@ public ref partial struct ReaderState
     {
         var prior = _scope;
         long end = Position + length;
-        // single-segment v1: the whole limit must land inside the data we have
-        if (length < 0 || end - _positionBase > _count) ThrowEndOfData();
+        // plausibility where totals are known (Memory/sequence/hinted stream); a bare stream
+        // cannot verify up front and is validated by consumption/EOF instead
+        if (length < 0 || (_remaining >= 0 && end - _positionBase > (long)_count + _remaining)) ThrowEndOfData();
         if (++_depth >= MaxDepth) ThrowTooDeep();
         _scope = end;
-        _effectiveEnd = (int)(end - _positionBase);
+        _effectiveEnd = (int)Math.Max(0, Math.Min(_count, end - _positionBase));
         return new ReadScope(prior);
     }
 
@@ -315,16 +451,13 @@ public ref partial struct ReaderState
     /// </summary>
     public void PopScope(in ReadScope prior)
     {
-        // consumption check as an int compare: for a length scope, _effectiveEnd IS the scope end
-        // clamped into this segment (single-segment v1), so offset-vs-effectiveEnd says exactly
-        // what long Position-vs-scope math would, cheaper
-        if (_scope >= 0 && _offset != _effectiveEnd) ThrowMalformed(); // not fully consumed
+        // exact-consumption check: Position-based, so it holds across refills (a length scope
+        // may span many windows)
+        if (_scope >= 0 && _positionBase + _offset != _scope) ThrowMalformed(); // not fully consumed
         _depth--;
         var value = prior.Value;
         _scope = value;
-        _effectiveEnd = value >= 0
-            ? (int)Math.Min(_count, value - _positionBase)
-            : _count;
+        RecomputeEffectiveEnd();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -397,14 +530,35 @@ public ref partial struct ReaderState
     }
 
     /// <summary>
-    /// The end path, once per message: in group mode, running out of data means the end-group
-    /// sentinel never arrived - corrupt input, matching legacy's EndSubItem validation.
+    /// The end path: EITHER the scope is genuinely finished (return 0), OR the current segment
+    /// is merely exhausted mid-scope and a refill continues - the distinction the clamped
+    /// <see cref="_effectiveEnd"/> deliberately erases on the hot path lives here, cold. In
+    /// group mode (or a length scope extending past EOF), running out of data is corrupt input,
+    /// matching legacy's EndSubItem validation; an UNBOUNDED root (a bare Stream with no length
+    /// hint, _scope == long.MaxValue) treats EOF as the clean end of the document.
     /// </summary>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private uint EndOfScope()
     {
-        if (_scope < 0) ThrowEndOfData(); // truncated group
-        return 0;
+        while (true)
+        {
+            if (_scope >= 0 && _positionBase + _offset >= _scope) return 0; // genuine scope end
+            if (!GetNextBuffer())
+            {
+                if (_scope == long.MaxValue) return 0; // unbounded root: clean EOF
+                ThrowEndOfData(); // truncated group, or a length scope the data never delivered
+            }
+            if (_offset < _effectiveEnd) return ReadRawTag(); // refreshed window: go again
+        }
+    }
+
+    /// <summary>One byte, crossing refills - the universal straddle primitive: forward-only
+    /// consumption means every slow path can cross a segment boundary byte-wise with no state
+    /// to carry.</summary>
+    private byte ReadRawByte()
+    {
+        if (_offset >= _count && !GetNextBuffer()) ThrowEndOfData();
+        return At(_offset++);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -413,21 +567,17 @@ public ref partial struct ReaderState
         // values 0-7 land here too (field 0, any wire type): invalid, exactly as legacy's SetTag
         // throws "Invalid field in source data"
         if ((value & 0x80) == 0) ThrowMalformed();
-        // continuation beyond byte 0: rarer, and bounds-guarded per byte so the buffer tail
+        // continuation beyond byte 0: rarer, consumed byte-wise so a tag straddling a refill
         // needs no special-casing (ByteUnrolled shape - see VarintU32DecodeResults.md). Any
         // multi-byte tag has field >= 16, so no further field-0 check is needed.
+        _offset = offset + 1; // commit the first byte; the rest cross refills as they come
         value &= 0x7F;
         int shift = 7;
         for (int i = 1; i < 5; i++)
         {
-            if (offset + i >= _count) ThrowEndOfData();
-            uint b = At(offset + i);
+            uint b = ReadRawByte();
             value |= (b & 0x7F) << shift;
-            if ((b & 0x80) == 0)
-            {
-                _offset = offset + i + 1;
-                return value;
-            }
+            if ((b & 0x80) == 0) return value;
             shift += 7;
         }
         ThrowMalformed();
@@ -462,18 +612,51 @@ public ref partial struct ReaderState
             case 5: // fixed32
                 Advance(4);
                 break;
-            case 3: // start-group: v1 does not skip groups yet
-                throw new NotImplementedException("group skip");
+            case 3: // start-group
+                SkipGroup(tag);
+                break;
             default: // 4 = end-group that nothing expected; 6/7 are not wire types
                 ThrowMalformed();
                 break;
         }
     }
 
+    /// <summary>
+    /// Skips an unknown group-framed field: read-and-skip until the matching end sentinel (the
+    /// start tag plus one). Depth-guarded UNCONDITIONALLY, elision lever or not: unknown fields
+    /// nest arbitrarily regardless of the model - the wire decides, not the schema. A nested
+    /// group recurses through <see cref="SkipTag"/>; any other wiretype-4 tag (a mismatched
+    /// end-group) throws there.
+    /// </summary>
+    private void SkipGroup(uint startTag)
+    {
+        if (++_depth >= MaxDepth) ThrowTooDeep();
+        uint endTag = startTag + 1; // only the low 3 bits differ: 3 becomes 4
+        while (true)
+        {
+            uint tag = ReadRawTag();
+            if (tag == 0) ThrowMalformed(); // scope/data ended before the end-group arrived
+            if (tag == endTag) break;
+            SkipTag(tag);
+        }
+        _depth--;
+    }
+
     private void Advance(int bytes)
     {
-        if (bytes < 0 || _count - _offset < bytes) ThrowEndOfData();
-        _offset += bytes;
+        if (bytes < 0) ThrowEndOfData();
+        while (true)
+        {
+            int local = _count - _offset;
+            if (bytes <= local)
+            {
+                _offset += bytes;
+                return;
+            }
+            _offset = _count;
+            bytes -= local;
+            if (!GetNextBuffer()) ThrowEndOfData();
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -565,8 +748,7 @@ public ref partial struct ReaderState
         int shift = 0;
         for (int i = 0; i < 10; i++)
         {
-            if (_offset >= _count) ThrowEndOfData();
-            ulong b = At(_offset++);
+            ulong b = ReadRawByte(); // byte-wise: crosses refills with no state to carry
             value |= (b & 0x7F) << shift;
             if ((b & 0x80) == 0) return value;
             shift += 7;
@@ -585,7 +767,7 @@ public ref partial struct ReaderState
     {
         int len = checked((int)ReadRawVarint32());
         if (len == 0) return "";
-        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        if ((uint)len > (uint)(_count - _offset)) return ReadRawStringSlow(len); // straddles: assemble
         var offset = _offset;
         _offset = offset + len;
 #if NET7_0_OR_GREATER
@@ -595,6 +777,76 @@ public ref partial struct ReaderState
         // the buffer+index layout is the natural netfx fast path here
         return System.Text.Encoding.UTF8.GetString(_buffer, _segmentStart + offset, len);
 #endif
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private string ReadRawStringSlow(int len)
+    {
+        var scratch = FillScratch(len);
+        var result = System.Text.Encoding.UTF8.GetString(scratch, 0, len);
+        ArrayPool<byte>.Shared.Return(scratch);
+        return result;
+    }
+
+    /// <summary>
+    /// Assembles <paramref name="len"/> straddling bytes into a rented scratch. The allocation
+    /// policy (docs/nano-core.md): where the total is known (Memory/sequence/hinted stream) the
+    /// claim is verified up front and rented once; where it is not (a bare stream), the scratch
+    /// GROWS AS REAL BYTES ARRIVE - a hostile length prefix costs at most the actual payload,
+    /// the eager-allocation problem dissolved rather than capped.
+    /// </summary>
+    private byte[] FillScratch(int len)
+    {
+        if (_remaining >= 0)
+        {
+            if ((long)len > (long)(_count - _offset) + _remaining) ThrowEndOfData();
+            var scratch = ArrayPool<byte>.Shared.Rent(len);
+            FillFrom(scratch, 0, len);
+            return scratch;
+        }
+        var grow = ArrayPool<byte>.Shared.Rent(Math.Min(len, 64 * 1024));
+        int filled = 0;
+        while (filled < len)
+        {
+            if (_offset >= _count && !GetNextBuffer()) ThrowEndOfData();
+            int take = Math.Min(len - filled, _count - _offset);
+            if (filled + take > grow.Length)
+            {
+                var bigger = ArrayPool<byte>.Shared.Rent(Math.Min(len, Math.Max(grow.Length * 2, filled + take)));
+                Buffer.BlockCopy(grow, 0, bigger, 0, filled);
+                ArrayPool<byte>.Shared.Return(grow);
+                grow = bigger;
+                take = Math.Min(take, grow.Length - filled);
+            }
+            CopyWindowTo(grow, filled, take);
+            filled += take;
+        }
+        return grow;
+    }
+
+    /// <summary>Copies exactly <paramref name="bytes"/> into <paramref name="dest"/>, crossing
+    /// refills; the caller has already verified plausibility.</summary>
+    private void FillFrom(byte[] dest, int destOffset, int bytes)
+    {
+        while (bytes > 0)
+        {
+            if (_offset >= _count && !GetNextBuffer()) ThrowEndOfData();
+            int take = Math.Min(bytes, _count - _offset);
+            CopyWindowTo(dest, destOffset, take);
+            destOffset += take;
+            bytes -= take;
+        }
+    }
+
+    private void CopyWindowTo(byte[] dest, int destOffset, int bytes)
+    {
+#if NET7_0_OR_GREATER
+        MemoryMarshal.CreateReadOnlySpan(ref At(_offset), bytes)
+            .CopyTo(dest.AsSpan(destOffset, bytes));
+#else
+        Buffer.BlockCopy(_buffer, _segmentStart + _offset, dest, destOffset, bytes);
+#endif
+        _offset += bytes;
     }
 
     // ------------------------------------------------------------ packed fast paths
@@ -630,7 +882,11 @@ public ref partial struct ReaderState
     {
         int len = checked((int)ReadRawVarint32());
         if (len == 0) return;
-        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        if ((uint)len > (uint)(_count - _offset)) // the residency switch, exactly as designed
+        {
+            ReadPackedVarint32Straddle(len, values);
+            return;
+        }
         int end = _offset + len;
 #if NET8_0_OR_GREATER
         int count = 0;
@@ -651,6 +907,17 @@ public ref partial struct ReaderState
 #endif
     }
 
+    /// <summary>The non-resident arm: per-element forward reads crossing refills - correct and
+    /// unspectacular, for the rare run that straddles or exceeds the buffer.</summary>
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ReadPackedVarint32Straddle(int len, List<int> values)
+    {
+        long end = Position + len;
+        if (_remaining >= 0 && end - _positionBase > (long)_count + _remaining) ThrowEndOfData();
+        while (Position < end) values.Add(unchecked((int)ReadRawVarint32()));
+        if (Position != end) ThrowMalformed(); // the final varint overran the declared length
+    }
+
     /// <summary>
     /// Reads a packed fixed32 run into <paramref name="values"/> (appending). The count is exact
     /// by construction (length / 4), and on net8+ little-endian the fill is a single block copy;
@@ -662,7 +929,11 @@ public ref partial struct ReaderState
         int len = checked((int)ReadRawVarint32());
         if (len == 0) return;
         if ((len & 3) != 0) ThrowMalformed();
-        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        if ((uint)len > (uint)(_count - _offset)) // the residency switch
+        {
+            ReadPackedFixed32Straddle(len, values);
+            return;
+        }
         int count = len >> 2;
 #if NET8_0_OR_GREATER
         int oldCount = values.Count;
@@ -683,6 +954,15 @@ public ref partial struct ReaderState
 #endif
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void ReadPackedFixed32Straddle(int len, List<int> values)
+    {
+        long end = Position + len;
+        if (_remaining >= 0 && end - _positionBase > (long)_count + _remaining) ThrowEndOfData();
+        int count = len >> 2;
+        for (int i = 0; i < count; i++) values.Add(unchecked((int)ReadRawFixed32()));
+    }
+
     /// <summary>
     /// Reads a length-prefixed bytes field as a fresh array - REPLACE semantics, the decided
     /// default (docs/nano-core.md, merge semantics): the caller assigns, nothing is appended.
@@ -692,7 +972,7 @@ public ref partial struct ReaderState
     {
         int len = checked((int)ReadRawVarint32());
         if (len == 0) return [];
-        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        if ((uint)len > (uint)(_count - _offset)) return ReadRawBytesSlow(len); // straddles
         var offset = _offset;
         _offset = offset + len;
         var result = new byte[len];
@@ -702,6 +982,24 @@ public ref partial struct ReaderState
         Buffer.BlockCopy(_buffer, _segmentStart + offset, result, 0, len);
 #endif
         return result;
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private byte[] ReadRawBytesSlow(int len)
+    {
+        if (_remaining >= 0)
+        {
+            // verified claim: fill the exact result directly, no scratch at all
+            if ((long)len > (long)(_count - _offset) + _remaining) ThrowEndOfData();
+            var result = new byte[len];
+            FillFrom(result, 0, len);
+            return result;
+        }
+        var scratch = FillScratch(len); // unknown total: grown by real bytes
+        var exact = new byte[len];
+        Buffer.BlockCopy(scratch, 0, exact, 0, len);
+        ArrayPool<byte>.Shared.Return(scratch);
+        return exact;
     }
 }
 
