@@ -197,7 +197,7 @@ public ref partial struct State
     // ---------------------------------------------------------------- construction
 
     /// <summary>Single array: the trivial single-segment case; nothing leased, no source.</summary>
-    public ReaderState(byte[] buffer, int offset, int count)
+    public State(byte[] buffer, int offset, int count)
     {
         _buffer = buffer;
 #if NET7_0_OR_GREATER
@@ -217,7 +217,7 @@ public ref partial struct State
     }
 
     /// <summary>Memory: used in place when array-backed, else leased-and-copied once.</summary>
-    public ReaderState(ReadOnlyMemory<byte> value)
+    public State(ReadOnlyMemory<byte> value)
     {
         if (MemoryMarshal.TryGetArray(value, out var array))
         {
@@ -255,7 +255,7 @@ public ref partial struct State
     /// sequence (one allocation) is walked via a SequencePosition cursor, per-window
     /// TryGetArray-else-lease. The root scope is the sequence's known length.
     /// </summary>
-    public ReaderState(in ReadOnlySequence<byte> value)
+    public State(in ReadOnlySequence<byte> value)
     {
         if (value.IsSingleSegment)
         {
@@ -285,7 +285,7 @@ public ref partial struct State
     /// caller knows - a length-prefixed network frame) seeds _remaining and bounds the root
     /// scope; without it the root is unbounded and EOF is the clean end of the document.
     /// </summary>
-    public ReaderState(Stream source, long lengthHint = -1)
+    public State(Stream source, long lengthHint = -1)
     {
         if (source is MemoryStream ms && ms.GetType() == typeof(MemoryStream) && ms.CanSeek
             && ms.TryGetBuffer(out var segment))
@@ -541,17 +541,52 @@ public ref partial struct State
     // ---------------------------------------------------------------- snapshot
 
     /// <summary>
-    /// The storable (non-ref-struct) form, for async resume at refill boundaries - the reader
-    /// itself stays sync. The ref field needs no slot: the segment-start index is recovered via
-    /// Unsafe.ByteOffset against the array root at snapshot time, and the ref is re-derived on
-    /// restore.
+    /// The storable (non-ref-struct) form: the class-API bridge and the iterator paths (which
+    /// cannot hold a ref struct) live on this. Verbatim fields; the ref needs no slot - the
+    /// segment-start index is recovered via ByteOffset at snapshot time and the ref re-derived
+    /// on restore. The leased buffer is held DIRECTLY (in-process ownership; see PORTING.md).
     /// </summary>
-    public ReaderSnapshot Snapshot()
-        => throw new NotImplementedException();
+    internal readonly ReaderSnapshot Snapshot()
+        => new ReaderSnapshot(
+            _buffer,
+#if NET7_0_OR_GREATER
+            _buffer is null ? 0 : (int)Unsafe.ByteOffset(ref MemoryMarshal.GetArrayDataReference(_buffer), ref Unsafe.AsRef(in _segment)),
+#else
+            _segmentStart,
+#endif
+            _offset, _count, _effectiveEnd, _leased, _positionBase, _remaining, _scope,
+            _source, _nextPosition, _depth, _fieldNumber, _wireType, _pendingTag,
+            _model, _userState, _internStrings, _stringInterner);
 
     /// <summary>Reconstitutes a reader from a snapshot.</summary>
-    public ReaderState(in ReaderSnapshot snapshot)
-        => throw new NotImplementedException();
+    internal State(in ReaderSnapshot snapshot)
+    {
+        _buffer = snapshot.Buffer;
+#if NET7_0_OR_GREATER
+        _segment = ref snapshot.Buffer is null
+            ? ref Unsafe.NullRef<byte>()
+            : ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(snapshot.Buffer), snapshot.SegmentStart);
+#else
+        _segmentStart = snapshot.SegmentStart;
+#endif
+        _offset = snapshot.Offset;
+        _count = snapshot.Count;
+        _effectiveEnd = snapshot.EffectiveEnd;
+        _leased = snapshot.Leased;
+        _positionBase = snapshot.PositionBase;
+        _remaining = snapshot.Remaining;
+        _scope = snapshot.Scope;
+        _source = snapshot.Source;
+        _nextPosition = snapshot.NextPosition;
+        _depth = snapshot.Depth;
+        _fieldNumber = snapshot.FieldNumber;
+        _wireType = snapshot.WireTypeValue;
+        _pendingTag = snapshot.PendingTag;
+        _model = snapshot.Model;
+        _userState = snapshot.UserState;
+        _internStrings = snapshot.InternStringsValue;
+        _stringInterner = snapshot.Interner;
+    }
 
     // ---------------------------------------------------------------- raw reads
 
@@ -1220,7 +1255,7 @@ public ref partial struct State
 /// way out. One sign-discriminated long (see ReaderState._scope) - which is also exactly what
 /// legacy SubItemToken is, making the StartSubItem/EndSubItem veneer mechanical.
 /// </summary>
-internal readonly struct ReadScope
+public readonly struct ReadScope
 {
     private readonly long _value;
     internal ReadScope(long value) => _value = value;
@@ -1228,14 +1263,40 @@ internal readonly struct ReadScope
 }
 
 /// <summary>
-/// The storable (non-ref-struct) snapshot of a <see cref="ReaderState"/>: the async/resume story
-/// (what <c>ProtoReader.SolidState</c> is to the legacy reader). Plain fields only - the ref
-/// field is represented as the segment-start index within the buffer.
+/// The storable (non-ref-struct) snapshot of a <see cref="ProtoReader.State"/>: plain fields
+/// only, the ref field represented as a segment-start index. The class-API bridge and the
+/// iterator paths live on this.
 /// </summary>
 internal readonly struct ReaderSnapshot
 {
-    // buffer + segment-start index + offset/count + positionBase + remaining + source + scope;
-    // shape only for now - members arrive with the implementation
+    internal readonly byte[] Buffer;
+    internal readonly int SegmentStart, Offset, Count, EffectiveEnd;
+    internal readonly bool Leased;
+    internal readonly long PositionBase, Remaining, Scope;
+    internal readonly object Source;
+    internal readonly System.SequencePosition NextPosition;
+    internal readonly int Depth, FieldNumber;
+    internal readonly WireType WireTypeValue;
+    internal readonly uint PendingTag;
+    internal readonly global::ProtoBuf.Meta.TypeModel Model;
+    internal readonly object UserState;
+    internal readonly bool InternStringsValue;
+    internal readonly System.Collections.Generic.Dictionary<string, string> Interner;
+
+    internal ReaderSnapshot(byte[] buffer, int segmentStart, int offset, int count,
+        int effectiveEnd, bool leased, long positionBase, long remaining, long scope,
+        object source, System.SequencePosition nextPosition, int depth, int fieldNumber,
+        WireType wireType, uint pendingTag, global::ProtoBuf.Meta.TypeModel model,
+        object userState, bool internStrings,
+        System.Collections.Generic.Dictionary<string, string> interner)
+    {
+        Buffer = buffer; SegmentStart = segmentStart; Offset = offset; Count = count;
+        EffectiveEnd = effectiveEnd; Leased = leased; PositionBase = positionBase;
+        Remaining = remaining; Scope = scope; Source = source; NextPosition = nextPosition;
+        Depth = depth; FieldNumber = fieldNumber; WireTypeValue = wireType;
+        PendingTag = pendingTag; Model = model; UserState = userState;
+        InternStringsValue = internStrings; Interner = interner;
+    }
 }
 
     }
