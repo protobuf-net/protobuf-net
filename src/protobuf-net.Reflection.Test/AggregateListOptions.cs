@@ -1,6 +1,7 @@
 using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.IO;
 using Xunit;
 
@@ -234,6 +235,58 @@ message Subject {
     string id = 1;
 }", msg => msg.Options);
             Assert.Equal(new[] { "mA", "mB" }, meta.Rules.ConvertAll(x => x.Name));
+        }
+        [Fact]
+        public void SeparateListStatementsAppendRatherThanCollide()
+        {
+            var meta = ParseFieldMeta(@"
+message Subject {
+    string id = 1 [(rtest.field_meta) = {
+        rules: [ { name: ""a"" } ]
+        rules: [ { name: ""b"", expr: ""e2"" } ]
+    }];
+}");
+            // Each element gets its own index for the whole parse, so the second statement
+            // appends instead of merging into the first element.
+            Assert.Equal(new[] { "a", "b" }, meta.Rules.ConvertAll(x => x.Name));
+            Assert.Equal("e2", meta.Rules[1].Expr);
+        }
+
+        [Fact]
+        public void SeparateScalarListStatementsKeepTheirWrittenOrder()
+        {
+            var meta = ParseFieldMeta(@"
+message Subject {
+    string id = 1 [(rtest.field_meta) = {
+        tags: [ ""a"", ""b"" ]
+        tags: [ ""c"" ]
+    }];
+}");
+            Assert.Equal(new[] { "a", "b", "c" }, meta.Tags);
+        }
+
+        [Fact]
+        public void LongListsKeepTheirWrittenOrder()
+        {
+            // Every element is a same-field-number sibling, so the sub-field sort has 20 ties
+            // to resolve. List<T>.Sort only behaves stably below its insertion-sort cutoff of
+            // 16, so a shorter list would not catch a reordering here.
+            const int count = 20;
+            var body = new StringBuilder("\nmessage Subject {\n    string id = 1 [(rtest.field_meta) = {\n        rules: [\n");
+            for (int i = 0; i < count; i++)
+            {
+                body.Append("            { name: \"r").Append(i).Append("\" }");
+                body.Append(i == count - 1 ? "\n" : ",\n");
+            }
+            body.Append("        ]\n    }];\n}");
+
+            var meta = ParseFieldMeta(body.ToString());
+            var expected = new List<string>();
+            for (int i = 0; i < count; i++)
+            {
+                expected.Add("r" + i);
+            }
+            Assert.Equal(expected, meta.Rules.ConvertAll(x => x.Name));
         }
     }
 }

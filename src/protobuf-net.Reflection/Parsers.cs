@@ -1524,11 +1524,12 @@ namespace Google.Protobuf.Reflection
 
         private class OptionHive
         {
-            public OptionHive(string name, bool isExtension, Token token, int? repeatIndex = null)
+            public OptionHive(string name, bool isExtension, Token token, int ordinal, int? repeatIndex = null)
             {
                 Name = name;
                 IsExtension = isExtension;
                 Token = token;
+                Ordinal = ordinal;
                 RepeatIndex = repeatIndex;
             }
             public override string ToString()
@@ -1556,6 +1557,13 @@ namespace Google.Protobuf.Reflection
             }
             public bool IsExtension { get; }
             public string Name { get; }
+            /// <summary>
+            /// Position of this node among its siblings, in the order they were encountered.
+            /// Used to break ties when sorting sub-fields by field number: the elements of a
+            /// list value are same-named siblings of the same field, and <see cref="List{T}.Sort"/>
+            /// is not stable.
+            /// </summary>
+            public int Ordinal { get; }
             public int? RepeatIndex { get; }
             public Token Token { get; }
             public List<UninterpretedOption> Options { get; } = new List<UninterpretedOption>();
@@ -1566,7 +1574,7 @@ namespace Google.Protobuf.Reflection
             {
                 if (options == null || options.Count == 0) return null;
 
-                var root = new OptionHive(null, false, default);
+                var root = new OptionHive(null, false, default, 0);
                 foreach (var option in options)
                 {
                     var level = root;
@@ -1577,7 +1585,8 @@ namespace Google.Protobuf.Reflection
                             && x.IsExtension == name.IsExtension && x.RepeatIndex == name.RepeatIndex);
                         if (nextLevel == null)
                         {
-                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token, name.RepeatIndex);
+                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token,
+                                level.Children.Count, name.RepeatIndex);
                             level.Children.Add(nextLevel);
                         }
                         level = nextLevel;
@@ -1594,8 +1603,14 @@ namespace Google.Protobuf.Reflection
 
             if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
             {
-                // ascending field order
-                options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
+                // ascending field order, falling back to encounter order so that same-number
+                // siblings - the elements of a list value - keep the order they were written
+                // in; List<T>.Sort is not stable.
+                options.Sort((x, y) =>
+                {
+                    int byNumber = (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0);
+                    return byNumber != 0 ? byNumber : x.Ordinal.CompareTo(y.Ordinal);
+                });
             }
         }
         private static void AppendOption(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
@@ -3016,6 +3031,12 @@ namespace ProtoBuf.Reflection
     internal class ParserContext : IDisposable
     {
         public AbortState AbortState { get; set; }
+
+        /// <summary>
+        /// Supplies <see cref="UninterpretedOption.NamePart.RepeatIndex"/> values. Unique per
+        /// list element for the whole parse, so elements never collide across statements.
+        /// </summary>
+        private int nextRepeatIndex;
         private void ReadOne<T>(T obj) where T : class, ISchemaObject
         {
             AbortState oldState = AbortState;
@@ -3135,10 +3156,13 @@ namespace ProtoBuf.Reflection
                 // for a repeated message field. Each element is tagged with its position so
                 // that the option hive keeps the elements apart rather than merging them by name.
                 obj ??= new T();
-                int repeatIndex = 0;
                 while (!tokens.ConsumeIf(TokenType.Symbol, "]"))
                 {
-                    var elementParts = WithRepeatIndex(nameParts, repeatIndex++);
+                    // Indexes come from a parse-wide counter rather than restarting per
+                    // statement, so that two list statements for the same field append to it
+                    // instead of colliding. Statements *inside* one element share an index,
+                    // which is what lets the hive merge them into a single value.
+                    var elementParts = WithRepeatIndex(nameParts, nextRepeatIndex++);
                     if (tokens.ConsumeIf(TokenType.Symbol, "{"))
                     {
                         bool anyElement = false;
