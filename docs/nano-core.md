@@ -438,7 +438,12 @@ the shape stabilises: types into Core under `[Experimental]`, the new surface in
   "needs protobuf-net.Core ≥ X" diagnostic — the same probe-the-reference discipline as
   `UnsafeAccessorAttribute` and `ReadDateOnly`.
 - **classic emission stays available as an opt-out, disabled by default** (Marc's call, at the
-  swap): a model flag forcing the stateful-API-shaped codegen even for nano-eligible contracts.
+  swap; confirmed as a committed post-green work item during gate 3): a model flag forcing the
+  stateful-API-shaped codegen even for nano-eligible contracts. The intellisense wording is part
+  of the design (paraphrase to polish, keep the intent): *"Only for use if you experience
+  problems with the default optimized emit; if enabling this fixes a symptom, that symptom is a
+  bug in the optimized path - please report it as an issue."* Self-triaging by construction:
+  every use of the flag becomes a field report rather than a silent divergence.
   Near-free, because the `Instance` fallback keeps the classic pass maintained regardless — and
   post-swap it is NOT "the old reader back": both shapes run over the nano internals (classic =
   the veneer path, the measured `NanoViaLegacyApi` configuration). Its value is bisection — flip

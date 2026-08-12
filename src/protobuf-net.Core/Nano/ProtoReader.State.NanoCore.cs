@@ -662,7 +662,7 @@ public ref partial struct State
             if ((b & 0x80) == 0) return value;
             shift += 7;
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
         return 0;
     }
 
@@ -742,10 +742,10 @@ public ref partial struct State
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowEndOfData() => throw new InvalidOperationException("unexpected end of data");
+    private void ThrowEndOfData() => throw AddErrorData(new EndOfStreamException(), ref this);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowMalformed() => throw new InvalidOperationException("malformed data");
+    private void ThrowMalformed() => throw AddErrorData(new InvalidOperationException("malformed data"), ref this);
 
     /// <summary>
     /// Reads a varint as u32, tolerant of the 10-byte sign-extended form a negative int32 arrives
@@ -795,7 +795,7 @@ public ref partial struct State
                 return value;
             }
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
         return 0;
     }
 
@@ -852,7 +852,7 @@ public ref partial struct State
                 ulong b = Unsafe.Add(ref src, i);
                 value |= (b & 0x7F) << shift;
                 if ((b & 0x80) == 0) { _offset = offset + i + 1; return value; }
-                if (++i == 10) { ThrowMalformed(); return 0; }
+                if (++i == 10) { ThrowOverflowError(); return 0; }
                 shift += 7;
             }
         }
@@ -871,7 +871,7 @@ public ref partial struct State
             if ((b & 0x80) == 0) return value;
             shift += 7;
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
         return 0;
     }
 
@@ -1071,7 +1071,7 @@ public ref partial struct State
             dest.WriteByte(b);
             if ((b & 0x80) == 0) return;
         }
-        ThrowMalformed();
+        ThrowOverflowError(); // varint exhaustion = OverflowException, as legacy
     }
 
     private void CaptureBytes(Stream dest, int bytes)
@@ -1154,7 +1154,7 @@ public ref partial struct State
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ThrowOverflowError() => throw new OverflowException();
+    private void ThrowOverflowError() => throw AddErrorData(new OverflowException(), ref this);
 
     // ------------------------------------------------------------ packed fast paths
     //
