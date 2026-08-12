@@ -79,7 +79,7 @@ function IsAccessible([Type]$t) {
 
 # members that have graduated to hand-written partials; regeneration must not resurrect them
 $graduated = @{
-    'ReaderState' = @('Dispose', 'FieldNumber', 'WireType', 'ReadFieldHeader', 'ReadInt32', 'StartSubItem', 'EndSubItem', 'SkipField', 'ThrowTooDeep')
+    'ReaderState' = @('Dispose', 'FieldNumber', 'WireType', 'ReadFieldHeader', 'ReadInt32', 'StartSubItem', 'EndSubItem', 'SkipField', 'ThrowTooDeep', 'ReadString')
     'WriterState' = @()
 }
 
@@ -145,6 +145,7 @@ public ref partial struct $structName
 
 Emit $asm.GetType("ProtoBuf.ProtoReader+State") "ReaderState" "ReaderState.cs"
 Emit $asm.GetType("ProtoBuf.ProtoWriter+State") "WriterState" "WriterState.cs"
+
 
 
 

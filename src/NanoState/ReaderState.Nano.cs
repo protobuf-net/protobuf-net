@@ -533,9 +533,27 @@ public ref partial struct ReaderState
         return 0;
     }
 
-    /// <summary>Reads a length-prefixed UTF-8 string.</summary>
+    /// <summary>
+    /// Reads a length-prefixed UTF-8 string; zero length is the empty-string singleton. The
+    /// plausible-length guard lives here at its natural home: the claimed length must fit the
+    /// data we actually have (single-segment v1 makes this the strong form of legacy's
+    /// EagerAllocationLimit check), so a hostile prefix cannot drive allocation.
+    /// </summary>
     public string ReadRawString()
-        => throw new NotImplementedException();
+    {
+        int len = checked((int)ReadRawVarint32());
+        if (len == 0) return "";
+        if ((uint)len > (uint)(_count - _offset)) ThrowEndOfData();
+        var offset = _offset;
+        _offset = offset + len;
+#if NET7_0_OR_GREATER
+        return System.Text.Encoding.UTF8.GetString(
+            MemoryMarshal.CreateReadOnlySpan(ref At(offset), len));
+#else
+        // the buffer+index layout is the natural netfx fast path here
+        return System.Text.Encoding.UTF8.GetString(_buffer, _segmentStart + offset, len);
+#endif
+    }
 }
 
 /// <summary>

@@ -125,8 +125,7 @@ public ref partial struct ReaderState
         => throw new NotImplementedException();
     public float ReadSingle()
         => throw new NotImplementedException();
-    public string ReadString(global::ProtoBuf.StringMap map = default)
-        => throw new NotImplementedException();
+    // ReadString: graduated - implemented in ReaderState.Nano.cs
     internal string ReadStringOversized(int bytes)
         => throw new NotImplementedException();
     public global::System.Type ReadType()

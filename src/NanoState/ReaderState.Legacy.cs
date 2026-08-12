@@ -53,6 +53,13 @@ public ref partial struct ReaderState
     public void SkipField()
         => SkipTag((uint)((_fieldNumber << 3) | (int)_wireType));
 
+    /// <summary>Legacy string read: wire type from state, then the raw read.</summary>
+    public string ReadString()
+    {
+        if (_wireType != WireType.String) ThrowWireType<string>();
+        return ReadRawString();
+    }
+
     /// <summary>
     /// Legacy typed read: consults the wire type from state - including the zigzag hint, which is
     /// exactly the runtime dispatch the raw API turns into a compile-time decision.

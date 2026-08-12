@@ -237,6 +237,19 @@ where a callback shape is genuinely needed (repeated runs). The interface implem
 but they retreat to the boundaries: model-level resolution, proxies, surrogate hand-offs, and the
 niche fence — the places where the callee genuinely is not known until runtime.
 
+## The north star: descriptor.proto, "the good way"
+
+The working goal that sequences everything below: enough reader + emission to handle the
+**FileDescriptorSet object model**, measured on real data (descriptor.proto's own descriptor —
+the payload describes itself), three-way against legacy *and* Google.Protobuf, which parses
+descriptors on home turf. It exercises, in landing order: strings (everywhere), repeated messages
+and repeated strings (the tree is lists all the way down), enums, bytes (UninterpretedOption),
+deep nesting with a **genuinely recursive** model (DescriptorProto contains itself - the depth
+checks earn their keep and the elision analysis meets a case it must NOT elide), and getter-only
+collection properties. Extension retention stays out of scope for the milestone: the payload
+contains no unknown fields for its own schema, so SkipTag-as-default is honest. The milestone
+gate: benchmarks reviewed, and the emitted code read top-to-bottom by a human.
+
 ## Step plan
 
 1. **(done)** Shape clone in `src/NanoState/` — the surface, as compiling stubs.
