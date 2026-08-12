@@ -89,6 +89,11 @@ public class StreamParseBenchmarks
         Gate(DescriptorParseBenchmarks.CensusLegacy(ParseLegacyStream(new ChunkedStream(_data, 4096))),
             "legacy stream");
 
+        // the raw scalar family the descriptor schema never exercises: zigzag, float, double -
+        // checked resident AND through a 1-byte-chunk stream (the fixed straddle arms)
+        RawScalarGate(bytes => new ReaderState(bytes, 0, bytes.Length), "resident");
+        RawScalarGate(bytes => new ReaderState(new ChunkedStream(bytes, 1)), "1-byte chunks");
+
         Console.WriteLine($"// gates green over {_data.Length}-byte payload ({_data.Length - 1} splits); census {_census}");
 
         void Gate(string actual, string name)
@@ -136,6 +141,44 @@ public class StreamParseBenchmarks
         try
         {
             return Model.DescriptorNanoReader.ReadFileDescriptorSet(ref state, null);
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    private delegate ReaderState StateFactory(byte[] bytes);
+
+    private static void RawScalarGate(StateFactory factory, string name)
+    {
+        // zigzag(-1)=1, zigzag(1)=2, zigzag(int.MinValue)=0xFFFFFFFF; then 1.5f and -2.75
+        var payload = new System.IO.MemoryStream();
+        void Varint(ulong v)
+        {
+            while (v >= 0x80) { payload.WriteByte((byte)(v | 0x80)); v >>= 7; }
+            payload.WriteByte((byte)v);
+        }
+        Varint(1);            // zigzag32 -> -1
+        Varint(0xFFFFFFFFuL); // zigzag32 -> int.MinValue
+        Varint(2);            // zigzag64 -> 1
+        Varint(0xFFFFFFFFFFFFFFFFuL); // zigzag64 -> long.MinValue
+        payload.Write(BitConverter.GetBytes(1.5f), 0, 4);
+        payload.Write(BitConverter.GetBytes(-2.75d), 0, 8);
+        var bytes = payload.ToArray();
+
+        var state = factory(bytes);
+        try
+        {
+            if (state.ReadRawZigZag32() != -1
+                || state.ReadRawZigZag32() != int.MinValue
+                || state.ReadRawZigZag64() != 1
+                || state.ReadRawZigZag64() != long.MinValue
+                || state.ReadRawSingle() != 1.5f
+                || state.ReadRawDouble() != -2.75d)
+            {
+                throw new InvalidOperationException($"raw scalar gate failed ({name})");
+            }
         }
         finally
         {

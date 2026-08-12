@@ -717,6 +717,42 @@ public ref partial struct ReaderState
         return 0;
     }
 
+    /// <summary>Reads a zigzag-encoded varint as i32 - the DataFormat.ZigZag selection, made at
+    /// compile time by the generator where legacy needed the Hint dance. Tolerant of the 64-bit
+    /// form, as ReadRawVarint32 is.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int ReadRawZigZag32()
+    {
+        uint value = ReadRawVarint32();
+        return unchecked((int)((value >> 1) ^ (uint)-(int)(value & 1)));
+    }
+
+    /// <summary>Reads a zigzag-encoded varint as i64.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public long ReadRawZigZag64()
+    {
+        ulong value = ReadRawVarint64();
+        return unchecked((long)((value >> 1) ^ (ulong)-(long)(value & 1)));
+    }
+
+    /// <summary>Reads a fixed32-framed float. The netfx arm reinterprets via Unsafe:
+    /// Int32BitsToSingle does not exist down-level, and the bit pattern is the value.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float ReadRawSingle()
+    {
+        uint bits = ReadRawFixed32();
+#if NET7_0_OR_GREATER
+        return BitConverter.Int32BitsToSingle(unchecked((int)bits));
+#else
+        return Unsafe.As<uint, float>(ref bits);
+#endif
+    }
+
+    /// <summary>Reads a fixed64-framed double.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public double ReadRawDouble()
+        => BitConverter.Int64BitsToDouble(unchecked((long)ReadRawFixed64()));
+
     /// <summary>Reads a varint as u64; ByteUnrolled, same tail discipline as u32.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ulong ReadRawVarint64()

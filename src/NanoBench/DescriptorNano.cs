@@ -1569,7 +1569,7 @@ public static class DescriptorNanoReader
                     value.NegativeIntValue = unchecked((long)state.ReadRawFixed64());
                     break;
                 case (6 << 3) | 1:  // double_value, field 6, fixed64
-                    value.DoubleValue = BitConverter.Int64BitsToDouble(unchecked((long)state.ReadRawFixed64()));
+                    value.DoubleValue = state.ReadRawDouble();
                     break;
                 case (7 << 3) | 2:  // string_value, field 7, length-prefixed
                     value.StringValue = state.ReadRawBytes();
