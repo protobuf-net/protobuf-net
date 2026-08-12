@@ -68,8 +68,7 @@ public ref partial struct ReaderState
     internal global::System.Type DeserializeType(string typeName)
         => throw new NotImplementedException();
     // Dispose: graduated - implemented in ReaderState.Nano.cs
-    public void EndSubItem(global::ProtoBuf.SubItemToken token)
-        => throw new NotImplementedException();
+    // EndSubItem: graduated - implemented in ReaderState.Nano.cs
     // INTERNAL-TYPE SIGNATURE (kept for the shape; cannot compile outside Core):
     // internal global::ProtoBuf.Internal.ReadBuffer<T> FillBuffer<TSerializer, T>(global::ProtoBuf.Serializers.SerializerFeatures features, in TSerializer serializer, T initialValue) where TSerializer : global::ProtoBuf.Serializers.ISerializer<T>
     public long GetPosition()
@@ -150,12 +149,10 @@ public ref partial struct ReaderState
         => throw new NotImplementedException();
     internal void SkipAllFields()
         => throw new NotImplementedException();
-    public void SkipField()
-        => throw new NotImplementedException();
+    // SkipField: graduated - implemented in ReaderState.Nano.cs
     // INTERNAL-TYPE SIGNATURE (kept for the shape; cannot compile outside Core):
     // internal global::ProtoBuf.ProtoReader.SolidState Solidify()
-    public global::ProtoBuf.SubItemToken StartSubItem()
-        => throw new NotImplementedException();
+    // StartSubItem: graduated - implemented in ReaderState.Nano.cs
     internal void ThrowArgumentException(string message)
         => throw new NotImplementedException();
     public void ThrowEnumException(global::System.Type type, int value)

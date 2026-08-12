@@ -8,12 +8,16 @@ Correctness gate passed: both parsers agree on (count, sum, last) against expect
 BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), .NET 10.0.10, x86-64-v4
 ```
 
-| ns/record | LegacyReal | NanoRaw |
-| --- | ---: | ---: |
-| prefixed / small | 12.98 | 2.86 (4.5×) |
-| prefixed / mixed | 14.20 | 3.80 (3.7×) |
-| group / small | 11.52 | 2.46 (4.7×) |
-| group / mixed | 13.11 | 3.45 (3.8×) |
+| ns/record | LegacyReal | NanoViaLegacyApi | NanoRaw |
+| --- | ---: | ---: | ---: |
+| prefixed / small | 12.82 | 3.82 (3.4×) | 2.90 (4.4×) |
+| prefixed / mixed | 14.13 | 5.27 (2.7×) | 3.78 (3.7×) |
+| group / small | 11.61 | 3.70 (3.1×) | 2.45 (4.7×) |
+| group / mixed | 13.00 | 5.30 (2.5×) | 3.43 (3.8×) |
+
+The veneer row's consumer code is character-for-character identical to LegacyReal's - including
+`StartSubItem`/`EndSubItem` - so (a) → (b) is the purest internals-isolation this design allows:
+2.5–3.4× from the swap alone, with the raw surface adding a further ~1.3–1.5× on top.
 
 (Re-measured after correcting the child reader to the exact emitted shape - value-in/value-out with
 `??=` construction and assign-back at the call site, rather than a void mutate-in-place that
@@ -37,12 +41,14 @@ collection merge.)
 
 ## Integration note for the swap plan
 
-The veneer row is absent, deliberately: legacy consumer code frames sub-messages via
-`StartSubItem`/`EndSubItem` returning `SubItemToken`, whose constructor is **internal to Core** -
-the spike cannot mint one. When nano lands inside Core this evaporates (the veneer maps
-mechanically: String-wire → read length + `PushLimit`; StartGroup → `PushGroup`; `EndSubItem` →
-`PopScope`, with the token being exactly the sign-discriminated long `ReadScope` already is). Until
-then, veneer rows exist only for APIs the spike can express.
+The veneer row initially sat out - `SubItemToken`'s constructor is internal to Core - and was
+unblocked by an **IVT grant** (`InternalsVisibleTo("NanoState")` in Core's AssemblyInfo), the
+interim bridge until nano moves into Core. The discipline recorded with the grant: IVT serves the
+*veneers* reaching legacy internals, never the new raw surface, or the eventual move stops being
+mechanical. The satisfying confirmation en route: `SubItemToken` is *literally* the same
+sign-discriminated long that `ReadScope` is (its own ToString reads "Group -value64" for
+negatives), so the veneer is a cast in each direction - String-wire → `PushLengthPrefix`,
+StartGroup → `PushGroup`, `EndSubItem` → `PopScope`.
 
 ## Next rows
 

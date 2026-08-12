@@ -80,11 +80,12 @@ public class SubMessageParseBenchmarks
         _data = payload.ToArray();
 
         var legacy = ParseLegacyReal();
+        var shim = ParseNanoViaLegacyApi();
         var raw = ParseNanoRaw();
-        if (legacy != raw || legacy != (_expectedCount, _expectedSum, _expectedLast))
+        if (legacy != shim || shim != raw || legacy != (_expectedCount, _expectedSum, _expectedLast))
         {
             throw new InvalidOperationException(
-                $"disagreement: legacy {legacy}, raw {raw}, expected ({_expectedCount}, {_expectedSum}, {_expectedLast})");
+                $"disagreement: legacy {legacy}, shim {shim}, raw {raw}, expected ({_expectedCount}, {_expectedSum}, {_expectedLast})");
         }
     }
 
@@ -105,6 +106,57 @@ public class SubMessageParseBenchmarks
                 switch (field)
                 {
                     case 1: // both wire forms arrive here; StartSubItem handles either framing
+                        var token = state.StartSubItem();
+                        int innerField;
+                        while ((innerField = state.ReadFieldHeader()) > 0)
+                        {
+                            switch (innerField)
+                            {
+                                case 1:
+                                    child.Value = state.ReadInt32();
+                                    break;
+                                default:
+                                    state.SkipField();
+                                    break;
+                            }
+                        }
+                        state.EndSubItem(token);
+                        unchecked { sum += (uint)child.Value; }
+                        count++;
+                        break;
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return (count, sum, child.Value);
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    // the nano internals behind the legacy API - consumer code IDENTICAL to LegacyReal, made
+    // possible by the IVT grant: StartSubItem mints a real SubItemToken, which is literally the
+    // same sign-discriminated long that ReadScope is
+    [Benchmark(OperationsPerInvoke = Count)]
+    public (int, uint, int) NanoViaLegacyApi() => ParseNanoViaLegacyApi();
+
+    private (int, uint, int) ParseNanoViaLegacyApi()
+    {
+        var state = new ReaderState(_data, 0, _data.Length);
+        try
+        {
+            var child = new Child();
+            int count = 0;
+            uint sum = 0;
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
                         var token = state.StartSubItem();
                         int innerField;
                         while ((innerField = state.ReadFieldHeader()) > 0)
