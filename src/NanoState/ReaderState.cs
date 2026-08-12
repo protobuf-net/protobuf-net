@@ -11,13 +11,13 @@ namespace ProtoBuf.Nano;
 public ref partial struct ReaderState
 {
     public global::ProtoBuf.ISerializationContext Context { get => throw new NotImplementedException(); }
-    public int FieldNumber { get => throw new NotImplementedException(); }
+    // FieldNumber: graduated - implemented in ReaderState.Nano.cs
     public bool InternStrings { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     internal global::ProtoBuf.Meta.TypeModel Model { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     internal int OffsetInCurrent { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     internal int RemainingInCurrent { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
     internal global::System.ReadOnlySpan<byte> Span { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-    public global::ProtoBuf.WireType WireType { get => throw new NotImplementedException(); }
+    // WireType: graduated - implemented in ReaderState.Nano.cs
 
     internal static global::System.Exception AddErrorData(global::System.Exception exception, global::ProtoBuf.ProtoReader source, ref global::ProtoBuf.ProtoReader.State state)
         => throw new NotImplementedException();

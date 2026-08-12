@@ -79,7 +79,7 @@ function IsAccessible([Type]$t) {
 
 # members that have graduated to hand-written partials; regeneration must not resurrect them
 $graduated = @{
-    'ReaderState' = @('Dispose')
+    'ReaderState' = @('Dispose', 'FieldNumber', 'WireType')
     'WriterState' = @()
 }
 
@@ -101,6 +101,10 @@ public ref partial struct $structName
 {
 "@)
     foreach ($p in ($state.GetProperties($flags) | Sort-Object Name)) {
+        if ($graduated[$structName] -contains $p.Name) {
+            [void]$sb.AppendLine("    // $($p.Name): graduated - implemented in $structName.Nano.cs")
+            continue
+        }
         $access = if ($p.GetMethod -and $p.GetMethod.IsPublic) { 'public' } else { 'internal' }
         $setter = if ($p.SetMethod) { ' set => throw new NotImplementedException();' } else { '' }
         [void]$sb.AppendLine("    $access $(CSharpName $p.PropertyType) $($p.Name) { get => throw new NotImplementedException();$setter }")

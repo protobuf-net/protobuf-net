@@ -74,6 +74,25 @@ public ref partial struct ReaderState
     /// </summary>
     private long _scope;
 
+    // ---------------------------------------------------------------- legacy header state
+    //
+    // The old API's decomposed header: written by the ReadFieldHeader/Hint/Assert veneers, NEVER
+    // by the raw path - raw callers carry the tag in a local and these fields go stale, which is
+    // fine because the two APIs do not interleave within one consumer. They cannot be overlapped
+    // into a single raw-tag field: Hint stretches the wire type beyond 3 bits (SignedVarint =
+    // Varint | (1 << 3) = 8 - the zigzag hint is literally a fourth bit, verified in
+    // ProtoReader.Hint, which upgrades the stored value in place when the low 3 bits match), and
+    // WireType.None = -1 needs sign on top. Two ints, cold for raw consumers.
+
+    private int _fieldNumber;
+    private WireType _wireType; // init to WireType.None (-1) in every constructor
+
+    /// <summary>The field number of the last header read via the legacy API.</summary>
+    public int FieldNumber => _fieldNumber;
+
+    /// <summary>The wire type of the last header read via the legacy API, including hints.</summary>
+    public WireType WireType => _wireType;
+
     /// <summary>Absolute position of the reader.</summary>
     public long Position => _positionBase + _offset;
 
@@ -92,6 +111,7 @@ public ref partial struct ReaderState
         _positionBase = 0;
         _remaining = 0;
         _source = null;
+        _wireType = WireType.None;
     }
 
     /// <summary>Memory: used in place when array-backed, else leased-and-copied once.</summary>
@@ -117,6 +137,7 @@ public ref partial struct ReaderState
         _positionBase = 0;
         _remaining = 0;
         _source = null;
+        _wireType = WireType.None;
     }
 
     /// <summary>
