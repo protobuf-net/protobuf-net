@@ -1,0 +1,2 @@
+[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
+[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.set -> void

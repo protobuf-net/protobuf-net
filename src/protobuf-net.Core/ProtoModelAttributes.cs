@@ -30,6 +30,19 @@ namespace ProtoBuf
         /// member whose type qualifies, so it must be opted into on both sides or not at all.
         /// </remarks>
         public bool AllowParseableTypes { get; set; }
+
+        /// <summary>
+        /// Emits the classic (non-optimized) deserialization bodies instead of the default
+        /// optimized emit. This is only intended for use if you experience problems with the
+        /// default optimized emit; if enabling this fixes a symptom, please report that symptom
+        /// as an issue at https://github.com/protobuf-net/protobuf-net so the underlying
+        /// difference can be fixed.
+        /// </summary>
+        /// <remarks>
+        /// The two emissions read identical wire data to identical results; this switch exists
+        /// purely as a diagnostic escape hatch, and may be removed in a future version.
+        /// </remarks>
+        public bool ClassicEmit { get; set; }
     }
 
     /// <summary>
