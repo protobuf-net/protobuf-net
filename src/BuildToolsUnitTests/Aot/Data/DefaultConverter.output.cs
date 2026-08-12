@@ -23,51 +23,7 @@ partial class DefaultConverterModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.DefaultConverter.Converted global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
-        {
-            value ??= new global::AotFixtures.DefaultConverter.Converted();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Number = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Flag = state.ReadBoolean();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Ratio = state.ReadDouble();
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.Big = state.ReadInt64();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.Plain = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_DefaultConverter_Converted(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DefaultConverter.Converted value)
         {
@@ -101,6 +57,74 @@ partial class DefaultConverterModel
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
         }
 
-        // raw read pass: skipped - member Number: [DefaultValue]
+        public static global::AotFixtures.DefaultConverter.Converted RawRead_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
+        {
+            value ??= new global::AotFixtures.DefaultConverter.Converted();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Number, field 1, varint
+                        value.Number = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Number, field 1, fixed32
+                        value.Number = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Number, field 1, fixed64
+                        value.Number = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Text, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Text = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Flag, field 3, varint
+                        value.Flag = state.ReadRawVarint32() != 0;
+                        break;
+                    case (3 << 3) | 5:  // Flag, field 3, fixed32
+                        value.Flag = state.ReadRawFixed32() != 0;
+                        break;
+                    case (3 << 3) | 1:  // Flag, field 3, fixed64
+                        value.Flag = state.ReadRawFixed64() != 0;
+                        break;
+                    case (5 << 3) | 1:  // Ratio, field 5, fixed64
+                        value.Ratio = state.ReadRawDouble();
+                        break;
+                    case (6 << 3) | 0:  // Big, field 6, varint
+                        value.Big = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (6 << 3) | 1:  // Big, field 6, fixed64
+                        value.Big = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (6 << 3) | 5:  // Big, field 6, fixed32
+                        value.Big = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 0:  // Plain, field 7, varint
+                        value.Plain = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (7 << 3) | 5:  // Plain, field 7, fixed32
+                        value.Plain = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 1:  // Plain, field 7, fixed64
+                        value.Plain = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 5 or 6 or 7 => true,
+                _ => false,
+            };
+        }
     }
 }

@@ -69,12 +69,19 @@ partial class ContractOptionsModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 3 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Grouped>.Features
@@ -149,12 +156,19 @@ partial class ContractOptionsModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.LenientBase>.Features
@@ -277,12 +291,19 @@ partial class ContractOptionsModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                3 => true,
+                _ => false,
+            };
         }
     }
 }

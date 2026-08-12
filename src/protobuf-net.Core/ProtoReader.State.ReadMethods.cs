@@ -159,6 +159,54 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Raw-convention entry to the stateful surface: pushes an already-consumed tag into
+            /// the field-number and wire-type slots, so a generated raw read can hand ONE member
+            /// to the stateful read machinery - maps, the repeated engines, BCL kinds, anything
+            /// the raw pass has no native form for - and return to raw dispatch afterwards. The
+            /// tag was matched at a case label, so it is never 0 and never an end-group; no
+            /// validation is repeated here.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public void StashTag(uint tag)
+            {
+                _fieldNumber = (int)(tag >> 3);
+                _wireType = (WireType)(tag & 7);
+            }
+
+            /// <summary>
+            /// Raw-convention tag read that first drains the pending slot: the stateful
+            /// repeated/map engines consume field runs through <see cref="TryReadFieldHeader"/>,
+            /// which parks the first non-matching header there - so a raw dispatch loop that
+            /// mixes stateful members must pick that header up rather than read past it. A pure
+            /// raw loop never populates the slot, which is why <see cref="ReadRawTag"/> itself
+            /// does not pay for this branch.
+            /// </summary>
+            [MethodImpl(HotPath)]
+            public uint ReadRawTagOrPending()
+            {
+                var tag = _pendingTag;
+                if (tag != 0)
+                {
+                    _pendingTag = 0;
+                    return tag;
+                }
+                return ReadRawTag();
+            }
+
+            /// <summary>
+            /// Raw-convention wire-type failure: the dispatch matched a KNOWN field number but no
+            /// acceptable wire-type label. The stateful path reports that as a wire-type
+            /// exception; silently skipping it as if unknown would be an invalid-data detection
+            /// gap.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public void ThrowUnexpectedWireType(uint tag)
+            {
+                StashTag(tag);
+                ThrowWireTypeException();
+            }
+
+            /// <summary>
             /// Compares the streams current wire-type to the hinted wire-type, updating the reader if necessary; for example,
             /// a Variant may be updated to SignedVariant. If the hinted wire-type is unrelated then no change is made.
             /// </summary>

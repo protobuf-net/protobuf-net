@@ -19,64 +19,13 @@ partial class BytesModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Bytes.Blob global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Bytes.Blob value)
-        {
-            value ??= new global::AotFixtures.Bytes.Blob();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Payload;
-                        tmp1 = state.AppendBytes(tmp1);
-                        if (tmp1 != null) value.Payload = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Other;
-                        tmp2 = state.AppendBytes(tmp2);
-                        if (tmp2 != null) value.Other = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Single = state.ReadByte();
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Segment;
-                        tmp4 = state.AppendBytes(tmp4);
-                        value.Segment = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Memory;
-                        tmp5 = state.AppendBytes(tmp5);
-                        value.Memory = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.ReadOnly;
-                        tmp6 = state.AppendBytes(tmp6);
-                        value.ReadOnly = tmp6;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Bytes_Blob(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Bytes.Blob value)
         {
@@ -110,6 +59,55 @@ partial class BytesModel
             state.WriteBytes(tmp6);
         }
 
-        // raw read pass: skipped - member Single: kind Byte
+        public static global::AotFixtures.Bytes.Blob RawRead_AotFixtures_Bytes_Blob(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Bytes.Blob value)
+        {
+            value ??= new global::AotFixtures.Bytes.Blob();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Payload, field 1, length-prefixed
+                        value.Payload = state.AppendRawBytes(value.Payload);
+                        break;
+                    case (2 << 3) | 2:  // Other, field 2, length-prefixed
+                        value.Other = state.AppendRawBytes(value.Other);
+                        break;
+                    // raw read pass: legacy-mode - member Single: kind Byte
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Single, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Single = state.ReadByte();
+                        break;
+                    }
+                    case (4 << 3) | 2:  // Segment, field 4, length-prefixed
+                        value.Segment = state.AppendRawBytes(value.Segment);
+                        break;
+                    case (5 << 3) | 2:  // Memory, field 5, length-prefixed
+                        value.Memory = state.AppendRawBytes(value.Memory);
+                        break;
+                    case (6 << 3) | 2:  // ReadOnly, field 6, length-prefixed
+                        value.ReadOnly = state.AppendRawBytes(value.ReadOnly);
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
+        }
     }
 }

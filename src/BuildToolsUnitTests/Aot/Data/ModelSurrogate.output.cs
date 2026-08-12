@@ -25,34 +25,13 @@ partial class ModelSurrogateModel
         , global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>
         , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
-        {
-            value ??= new global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Ticks = state.ReadInt64();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.OffsetMinutes = state.ReadInt16();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
         {
@@ -71,45 +50,56 @@ partial class ModelSurrogateModel
             }
         }
 
-        // raw read pass: skipped - member OffsetMinutes: kind Int16
+        public static global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+        {
+            value ??= new global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Ticks, field 1, varint
+                        value.Ticks = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (1 << 3) | 1:  // Ticks, field 1, fixed64
+                        value.Ticks = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (1 << 3) | 5:  // Ticks, field 1, fixed32
+                        value.Ticks = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    // raw read pass: legacy-mode - member OffsetMinutes: kind Int16
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // OffsetMinutes, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.OffsetMinutes = state.ReadInt16();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ModelSurrogate.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Holder value)
-        {
-            value ??= new global::AotFixtures.ModelSurrogate.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Release;
-                        tmp1 = state.ReadMessage<global::System.Version>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Release = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Elapsed;
-                        value.Elapsed = state.ReadMessage<global::AotFixtures.ModelSurrogate.Ticks>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.When;
-                        value.When = state.ReadMessage<global::System.DateTimeOffset>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ModelSurrogate_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.Holder value)
         {
@@ -122,7 +112,67 @@ partial class ModelSurrogateModel
             state.WriteMessage<global::System.DateTimeOffset>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
         }
 
-        // raw read pass: skipped - member Release: target global::System.Version is not raw-read-eligible (cascade)
+        public static global::AotFixtures.ModelSurrogate.Holder RawRead_AotFixtures_ModelSurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Holder value)
+        {
+            value ??= new global::AotFixtures.ModelSurrogate.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Release: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Release, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Release;
+                        tmp1 = state.ReadMessage<global::System.Version>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Release = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Elapsed: message shape (nullable or struct)
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Elapsed, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Elapsed;
+                        value.Elapsed = state.ReadMessage<global::AotFixtures.ModelSurrogate.Ticks>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, s_default);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member When: message shape (nullable or struct)
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // When, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.When;
+                        value.When = state.ReadMessage<global::System.DateTimeOffset>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, s_default);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -200,12 +250,19 @@ partial class ModelSurrogateModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Features
@@ -237,12 +294,19 @@ partial class ModelSurrogateModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Features

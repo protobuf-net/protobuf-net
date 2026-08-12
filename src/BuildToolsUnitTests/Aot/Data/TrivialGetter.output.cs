@@ -20,42 +20,13 @@ partial class TrivialGetterModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.TrivialGetter.Backed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
-        {
-            value ??= new global::AotFixtures.TrivialGetter.Backed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        Field_AotFixtures_TrivialGetter_Backed_Value(value) = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) Field_AotFixtures_TrivialGetter_Backed_Text(value) = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Numbers;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) Field_AotFixtures_TrivialGetter_Backed_Numbers(value) = tmp3;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_TrivialGetter_Backed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
@@ -71,31 +42,76 @@ partial class TrivialGetterModel
             }
         }
 
-        // raw read pass: skipped - member Value: accessor-reached setter
+        public static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
+        {
+            value ??= new global::AotFixtures.TrivialGetter.Backed();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Value: accessor-reached setter
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_TrivialGetter_Backed_Value(value) = state.ReadInt32();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Text: accessor-reached setter
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Text, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) Field_AotFixtures_TrivialGetter_Backed_Text(value) = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Numbers, field 3, unpacked run
+                        Field_AotFixtures_TrivialGetter_Backed_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        do { value.Numbers.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));
+                        continue;
+                    case (3 << 3) | 2:  // Numbers, field 3, packed
+                        Field_AotFixtures_TrivialGetter_Backed_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        state.ReadPackedVarint32(value.Numbers);
+                        break;
+                    case (3 << 3) | 5:  // Numbers, field 3, fixed32
+                        Field_AotFixtures_TrivialGetter_Backed_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        value.Numbers.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (3 << 3) | 1:  // Numbers, field 3, fixed64
+                        Field_AotFixtures_TrivialGetter_Backed_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        value.Numbers.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.TrivialGetter.Computed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
-        {
-            value ??= new global::AotFixtures.TrivialGetter.Computed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_TrivialGetter_Computed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value)
         {
@@ -104,7 +120,41 @@ partial class TrivialGetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - member Doubled: getter-only (a scalar/message needs assignment)
+        public static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
+        {
+            value ??= new global::AotFixtures.TrivialGetter.Computed();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Doubled: getter-only scalar
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Doubled, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "_value")]
         private static extern ref int Field_AotFixtures_TrivialGetter_Backed_Value(global::AotFixtures.TrivialGetter.Backed target);

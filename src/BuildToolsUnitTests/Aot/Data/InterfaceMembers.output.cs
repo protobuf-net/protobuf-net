@@ -33,6 +33,8 @@ partial class InterfaceMembersModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Named>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.Named>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Box>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -76,55 +78,7 @@ partial class InterfaceMembersModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.InterfaceMembers.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InterfaceMembers.Holder value)
-        {
-            value ??= new global::AotFixtures.InterfaceMembers.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.ViaRoot;
-                        tmp1 = state.ReadMessage<global::AotFixtures.InterfaceMembers.IRoot>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.ViaRoot = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.ViaMiddle;
-                        tmp2 = state.ReadMessage<global::AotFixtures.InterfaceMembers.IMiddle>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.ViaMiddle = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Boxed;
-                        tmp3 = state.ReadMessage<global::AotFixtures.InterfaceMembers.IBox<int>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) value.Boxed = tmp3;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.ByIndex;
-                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.InterfaceMembers.INameable>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, this);
-                        if (tmp6 != null) value.ByIndex = tmp6;
-                        break;
-                    }
-                    case 7:
-                    {
-                        var tmp7 = value.ByName;
-                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.InterfaceMembers.INameable, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, this);
-                        if (tmp7 != null) value.ByName = tmp7;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_InterfaceMembers_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.Holder value)
         {
@@ -147,7 +101,95 @@ partial class InterfaceMembersModel
             }
         }
 
-        // raw read pass: skipped - member ByIndex: map
+        public static global::AotFixtures.InterfaceMembers.Holder RawRead_AotFixtures_InterfaceMembers_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InterfaceMembers.Holder value)
+        {
+            value ??= new global::AotFixtures.InterfaceMembers.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member ViaRoot: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // ViaRoot, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.ViaRoot;
+                        tmp1 = state.ReadMessage<global::AotFixtures.InterfaceMembers.IRoot>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.ViaRoot = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ViaMiddle: target type not raw-eligible
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // ViaMiddle, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.ViaMiddle;
+                        tmp2 = state.ReadMessage<global::AotFixtures.InterfaceMembers.IMiddle>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, s_default);
+                        if (tmp2 != null) value.ViaMiddle = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Boxed: target type not raw-eligible
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Boxed, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Boxed;
+                        tmp3 = state.ReadMessage<global::AotFixtures.InterfaceMembers.IBox<int>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, s_default);
+                        if (tmp3 != null) value.Boxed = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ByIndex: map
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // ByIndex, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.ByIndex;
+                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.InterfaceMembers.INameable>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, s_default);
+                        if (tmp6 != null) value.ByIndex = tmp6;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ByName: map
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // ByName, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp7 = value.ByName;
+                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.InterfaceMembers.INameable, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionFailOnDuplicateKey, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, s_default);
+                        if (tmp7 != null) value.ByName = tmp7;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 6 or 7 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.IBox<int>>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

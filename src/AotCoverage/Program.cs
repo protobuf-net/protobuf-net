@@ -150,6 +150,7 @@ internal static class Program
     {
         int emitted = 0;
         var reasons = new Dictionary<string, int>();
+        var legacyMembers = new Dictionary<string, int>();
         foreach (var result in driver.GetRunResult().Results)
         {
             foreach (var source in result.GeneratedSources)
@@ -167,6 +168,15 @@ internal static class Program
                     reasons.TryGetValue(category, out var n);
                     reasons[category] = n + 1;
                 }
+                // per-member gap tracking: a raw contract's stateful members, by category - the
+                // list of "what still reads through the legacy machinery", measured not guessed
+                foreach (System.Text.RegularExpressions.Match m in System.Text.RegularExpressions.Regex.Matches(
+                    text, @"// raw read pass: legacy-mode - member \w+: ([^\r\n]+)"))
+                {
+                    var category = m.Groups[1].Value.Trim();
+                    legacyMembers.TryGetValue(category, out var n);
+                    legacyMembers[category] = n + 1;
+                }
             }
         }
         Console.WriteLine();
@@ -174,11 +184,19 @@ internal static class Program
         Console.WriteLine();
         var skipped = reasons.Values.Sum();
         Console.WriteLine($"| optimized read emitted | {emitted} |");
-        Console.WriteLine($"| classic fallback | {skipped} |");
+        Console.WriteLine($"| classic fallback (whole contract) | {skipped} |");
+        Console.WriteLine($"| legacy-mode members inside raw contracts | {legacyMembers.Values.Sum()} |");
         Console.WriteLine();
-        Console.WriteLine("| fallback category | contracts |");
+        Console.WriteLine("| contract fallback category | contracts |");
         Console.WriteLine("| --- | ---: |");
         foreach (var pair in reasons.OrderByDescending(static p => p.Value))
+        {
+            Console.WriteLine($"| {pair.Key} | {pair.Value} |");
+        }
+        Console.WriteLine();
+        Console.WriteLine("| legacy-mode member category | members |");
+        Console.WriteLine("| --- | ---: |");
+        foreach (var pair in legacyMembers.OrderByDescending(static p => p.Value))
         {
             Console.WriteLine($"| {pair.Key} | {pair.Value} |");
         }

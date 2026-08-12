@@ -20,39 +20,13 @@ partial class CompatModuleModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.FromModule>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.FromModule>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.CompatModule.FromModule global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.FromModule>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.FromModule value)
-        {
-            value ??= new global::AotFixtures.CompatModule.FromModule();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuidString(ref state);
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimalString(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_CompatModule_FromModule(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.FromModule>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.CompatModule.FromModule value)
         {
@@ -74,36 +48,69 @@ partial class CompatModuleModel
             }
         }
 
-        // raw read pass: skipped - member When: kind DateTime
+        public static global::AotFixtures.CompatModule.FromModule RawRead_AotFixtures_CompatModule_FromModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.FromModule value)
+        {
+            value ??= new global::AotFixtures.CompatModule.FromModule();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member When: kind DateTime
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // When, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Id: kind Guid
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Id, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuidString(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Amount: kind Decimal
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Amount, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimalString(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.CompatModule.OverridesModule global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.OverridesModule value)
-        {
-            value ??= new global::AotFixtures.CompatModule.OverridesModule();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.When = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_CompatModule_OverridesModule(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.CompatModule.OverridesModule value)
         {
@@ -119,6 +126,51 @@ partial class CompatModuleModel
             }
         }
 
-        // raw read pass: skipped - member When: kind DateTime
+        public static global::AotFixtures.CompatModule.OverridesModule RawRead_AotFixtures_CompatModule_OverridesModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.OverridesModule value)
+        {
+            value ??= new global::AotFixtures.CompatModule.OverridesModule();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member When: kind DateTime
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // When, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.When = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Id: kind Guid
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Id, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
+        }
     }
 }

@@ -20,55 +20,13 @@ partial class DefaultsModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Defaults.Declared global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
-        {
-            value ??= new global::AotFixtures.Defaults.Declared();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Number = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Flag = state.ReadBoolean();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.Ratio = state.ReadDouble();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Big = state.ReadInt64();
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.Plain = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Defaults_Declared(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
         {
@@ -102,51 +60,81 @@ partial class DefaultsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        // raw read pass: skipped - member Number: [DefaultValue]
+        public static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
+        {
+            value ??= new global::AotFixtures.Defaults.Declared();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Number, field 1, varint
+                        value.Number = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Number, field 1, fixed32
+                        value.Number = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Number, field 1, fixed64
+                        value.Number = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Text, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Text = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Flag, field 3, varint
+                        value.Flag = state.ReadRawVarint32() != 0;
+                        break;
+                    case (3 << 3) | 5:  // Flag, field 3, fixed32
+                        value.Flag = state.ReadRawFixed32() != 0;
+                        break;
+                    case (3 << 3) | 1:  // Flag, field 3, fixed64
+                        value.Flag = state.ReadRawFixed64() != 0;
+                        break;
+                    case (4 << 3) | 1:  // Ratio, field 4, fixed64
+                        value.Ratio = state.ReadRawDouble();
+                        break;
+                    case (5 << 3) | 0:  // Big, field 5, varint
+                        value.Big = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (5 << 3) | 1:  // Big, field 5, fixed64
+                        value.Big = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (5 << 3) | 5:  // Big, field 5, fixed32
+                        value.Big = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 0:  // Plain, field 6, varint
+                        value.Plain = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // Plain, field 6, fixed32
+                        value.Plain = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // Plain, field 6, fixed64
+                        value.Plain = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Defaults.Parsed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
-        {
-            value ??= new global::AotFixtures.Defaults.Parsed();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.ByName = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.ByValue = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Letter = (char)state.ReadUInt16();
-                        break;
-                    }
-                    case 4:
-                    {
-                        value.DirectChar = (char)state.ReadUInt16();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.ByConverter = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Defaults_Parsed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
         {
@@ -183,6 +171,84 @@ partial class DefaultsModel
             }
         }
 
-        // raw read pass: skipped - member ByName: [DefaultValue]
+        public static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
+        {
+            value ??= new global::AotFixtures.Defaults.Parsed();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member ByName: kind UInt16
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // ByName, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.ByName = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ByValue: kind UInt16
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // ByValue, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.ByValue = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Letter: kind Char
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Letter, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Letter = (char)state.ReadUInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member DirectChar: kind Char
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // DirectChar, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.DirectChar = (char)state.ReadUInt16();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ByConverter: kind UInt16
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // ByConverter, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.ByConverter = (global::AotFixtures.Defaults.Shade)state.ReadUInt16();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 => true,
+                _ => false,
+            };
+        }
     }
 }

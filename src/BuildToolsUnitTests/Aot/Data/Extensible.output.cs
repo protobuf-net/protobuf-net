@@ -111,12 +111,19 @@ partial class ExtensibleModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.AppendExtensionData(tag, value);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.DerivedExt>.Features
@@ -192,12 +199,19 @@ partial class ExtensibleModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.AppendExtensionData(tag, value);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Features
@@ -233,12 +247,19 @@ partial class ExtensibleModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.AppendExtensionData(tag, value, typeof(global::AotFixtures.Extensible.TypedOnly));
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
     }
 }

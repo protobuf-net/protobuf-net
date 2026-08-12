@@ -22,6 +22,8 @@ partial class WrappedModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade?>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -54,151 +56,26 @@ partial class WrappedModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Wrapped.Wrapped global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Wrapped value)
-        {
-            value ??= new global::AotFixtures.Wrapped.Wrapped();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Value;
-                        tmp1 = state.ReadAny<int?>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp1);
-                        value.Value = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Grouped;
-                        tmp2 = state.ReadAny<int?>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp2);
-                        value.Grouped = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Text;
-                        tmp3 = state.ReadAny<string>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp3);
-                        if (tmp3 != null) value.Text = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Ids;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp4);
-                        if (tmp4 != null) Field_AotFixtures_Wrapped_Wrapped_Ids(value) = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Items;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp5, this);
-                        if (tmp5 != null) Field_AotFixtures_Wrapped_Wrapped_Items(value) = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.GroupedItems;
-                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp6, this);
-                        if (tmp6 != null) Field_AotFixtures_Wrapped_Wrapped_GroupedItems(value) = tmp6;
-                        break;
-                    }
-                    case 7:
-                    {
-                        var tmp7 = value.Keyed;
-                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
-                        if (tmp7 != null) Field_AotFixtures_Wrapped_Wrapped_Keyed(value) = tmp7;
-                        break;
-                    }
-                    case 8:
-                    {
-                        var tmp8 = value.Numbers;
-                        tmp8 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp8);
-                        if (tmp8 != null) value.Numbers = tmp8;
-                        break;
-                    }
-                    case 9:
-                    {
-                        var tmp9 = value.GroupedNumbers;
-                        tmp9 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup, tmp9);
-                        if (tmp9 != null) value.GroupedNumbers = tmp9;
-                        break;
-                    }
-                    case 10:
-                    {
-                        var tmp10 = value.Both;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp10, this);
-                        if (tmp10 != null) value.Both = tmp10;
-                        break;
-                    }
-                    case 11:
-                    {
-                        var tmp11 = value.Blob;
-                        tmp11 = state.ReadAny<byte[]>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp11);
-                        if (tmp11 != null) value.Blob = tmp11;
-                        break;
-                    }
-                    case 12:
-                    {
-                        var tmp12 = value.Colour;
-                        tmp12 = state.ReadAny<global::AotFixtures.Wrapped.Shade?>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp12);
-                        value.Colour = tmp12;
-                        break;
-                    }
-                    case 13:
-                    {
-                        var tmp13 = value.GroupedKeyed;
-                        tmp13 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, null, this);
-                        if (tmp13 != null) Field_AotFixtures_Wrapped_Wrapped_GroupedKeyed(value) = tmp13;
-                        break;
-                    }
-                    case 14:
-                    {
-                        var tmp14 = value.Scalars;
-                        tmp14 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
-                        if (tmp14 != null) Field_AotFixtures_Wrapped_Wrapped_Scalars(value) = tmp14;
-                        break;
-                    }
-                    case 15:
-                    {
-                        var tmp15 = value.Bare;
-                        tmp15 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15);
-                        if (tmp15 != null) Field_AotFixtures_Wrapped_Wrapped_Bare(value) = tmp15;
-                        break;
-                    }
-                    case 16:
-                    {
-                        var tmp16 = value.WrappedMap;
-                        tmp16 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
-                        if (tmp16 != null) value.WrappedMap = tmp16;
-                        break;
-                    }
-                    case 17:
-                    {
-                        var tmp17 = value.MapBoth;
-                        tmp17 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, this);
-                        if (tmp17 != null) value.MapBoth = tmp17;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Wrapped_Wrapped(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Wrapped value)
         {
@@ -275,7 +152,259 @@ partial class WrappedModel
             }
         }
 
-        // raw read pass: skipped - member Value: null-wrapped
+        public static global::AotFixtures.Wrapped.Wrapped RawRead_AotFixtures_Wrapped_Wrapped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Wrapped value)
+        {
+            value ??= new global::AotFixtures.Wrapped.Wrapped();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Value: null-wrapped
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Value;
+                        tmp1 = state.ReadAny<int?>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp1);
+                        value.Value = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Grouped: null-wrapped
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Grouped, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Grouped;
+                        tmp2 = state.ReadAny<int?>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, tmp2);
+                        value.Grouped = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Text: null-wrapped
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Text, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Text;
+                        tmp3 = state.ReadAny<string>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp3);
+                        if (tmp3 != null) value.Text = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Ids: null-wrapped
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Ids, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.Ids;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp4);
+                        if (tmp4 != null) Field_AotFixtures_Wrapped_Wrapped_Ids(value) = tmp4;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Items: null-wrapped
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Items, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Items;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp5, s_default);
+                        if (tmp5 != null) Field_AotFixtures_Wrapped_Wrapped_Items(value) = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedItems: null-wrapped
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // GroupedItems, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.GroupedItems;
+                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp6, s_default);
+                        if (tmp6 != null) Field_AotFixtures_Wrapped_Wrapped_GroupedItems(value) = tmp6;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Keyed: map
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // Keyed, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp7 = value.Keyed;
+                        tmp7 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, s_default);
+                        if (tmp7 != null) Field_AotFixtures_Wrapped_Wrapped_Keyed(value) = tmp7;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Numbers: null-wrapped
+                    case (8 << 3) | 0:
+                    case (8 << 3) | 1:
+                    case (8 << 3) | 2:  // Numbers, field 8
+                    case (8 << 3) | 3:
+                    case (8 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp8 = value.Numbers;
+                        tmp8 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp8);
+                        if (tmp8 != null) value.Numbers = tmp8;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedNumbers: null-wrapped
+                    case (9 << 3) | 0:
+                    case (9 << 3) | 1:
+                    case (9 << 3) | 2:  // GroupedNumbers, field 9
+                    case (9 << 3) | 3:
+                    case (9 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp9 = value.GroupedNumbers;
+                        tmp9 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollectionGroup, tmp9);
+                        if (tmp9 != null) value.GroupedNumbers = tmp9;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Both: null-wrapped
+                    case (10 << 3) | 0:
+                    case (10 << 3) | 1:
+                    case (10 << 3) | 2:  // Both, field 10
+                    case (10 << 3) | 3:
+                    case (10 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp10 = value.Both;
+                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Wrapped.Nested>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp10, s_default);
+                        if (tmp10 != null) value.Both = tmp10;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Blob: null-wrapped
+                    case (11 << 3) | 0:
+                    case (11 << 3) | 1:
+                    case (11 << 3) | 2:  // Blob, field 11
+                    case (11 << 3) | 3:
+                    case (11 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp11 = value.Blob;
+                        tmp11 = state.ReadAny<byte[]>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp11);
+                        if (tmp11 != null) value.Blob = tmp11;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Colour: null-wrapped
+                    case (12 << 3) | 0:
+                    case (12 << 3) | 1:
+                    case (12 << 3) | 2:  // Colour, field 12
+                    case (12 << 3) | 3:
+                    case (12 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp12 = value.Colour;
+                        tmp12 = state.ReadAny<global::AotFixtures.Wrapped.Shade?>(global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp12);
+                        value.Colour = tmp12;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedKeyed: map
+                    case (13 << 3) | 0:
+                    case (13 << 3) | 1:
+                    case (13 << 3) | 2:  // GroupedKeyed, field 13
+                    case (13 << 3) | 3:
+                    case (13 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp13 = value.GroupedKeyed;
+                        tmp13 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup, null, s_default);
+                        if (tmp13 != null) Field_AotFixtures_Wrapped_Wrapped_GroupedKeyed(value) = tmp13;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Scalars: map
+                    case (14 << 3) | 0:
+                    case (14 << 3) | 1:
+                    case (14 << 3) | 2:  // Scalars, field 14
+                    case (14 << 3) | 3:
+                    case (14 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp14 = value.Scalars;
+                        tmp14 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp14, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
+                        if (tmp14 != null) Field_AotFixtures_Wrapped_Wrapped_Scalars(value) = tmp14;
+                        break;
+                    }
+                    case (15 << 3) | 0:  // Bare, field 15, unpacked run
+                        Field_AotFixtures_Wrapped_Wrapped_Bare(value) ??= new global::System.Collections.Generic.List<int?>();
+                        do { value.Bare.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((15 << 3) | 0));
+                        continue;
+                    case (15 << 3) | 2:  // Bare, field 15, packed
+                    {
+                        Field_AotFixtures_Wrapped_Wrapped_Bare(value) ??= new global::System.Collections.Generic.List<int?>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) value.Bare.Add(unchecked((int)state.ReadRawVarint32()));
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (15 << 3) | 5:  // Bare, field 15, fixed32
+                        Field_AotFixtures_Wrapped_Wrapped_Bare(value) ??= new global::System.Collections.Generic.List<int?>();
+                        value.Bare.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (15 << 3) | 1:  // Bare, field 15, fixed64
+                        Field_AotFixtures_Wrapped_Wrapped_Bare(value) ??= new global::System.Collections.Generic.List<int?>();
+                        value.Bare.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member WrappedMap: map
+                    case (16 << 3) | 0:
+                    case (16 << 3) | 1:
+                    case (16 << 3) | 2:  // WrappedMap, field 16
+                    case (16 << 3) | 3:
+                    case (16 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp16 = value.WrappedMap;
+                        tmp16 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp16, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+                        if (tmp16 != null) value.WrappedMap = tmp16;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member MapBoth: map
+                    case (17 << 3) | 0:
+                    case (17 << 3) | 1:
+                    case (17 << 3) | 2:  // MapBoth, field 17
+                    case (17 << 3) | 3:
+                    case (17 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp17 = value.MapBoth;
+                        tmp17 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Wrapped.Nested>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp17, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, null, s_default);
+                        if (tmp17 != null) value.MapBoth = tmp17;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 or 15 or 16 or 17 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Wrapped.Shade>();

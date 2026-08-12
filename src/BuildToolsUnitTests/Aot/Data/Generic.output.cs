@@ -28,72 +28,13 @@ partial class GenericModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<int>>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<string>>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Generic.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Holder value)
-        {
-            value ??= new global::AotFixtures.Generic.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Number;
-                        tmp1 = state.ReadMessage<global::AotFixtures.Generic.Wrapper<int>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Number = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Text;
-                        tmp2 = state.ReadMessage<global::AotFixtures.Generic.Wrapper<string>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Message;
-                        tmp3 = state.ReadMessage<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) value.Message = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Deep;
-                        tmp4 = state.ReadMessage<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
-                        if (tmp4 != null) value.Deep = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Many;
-                        tmp5 = state.ReadMessage<global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
-                        if (tmp5 != null) value.Many = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.Pair;
-                        value.Pair = state.ReadMessage<global::AotFixtures.Generic.Pair<int, string>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp6, this);
-                        break;
-                    }
-                    case 7:
-                    {
-                        var tmp7 = value.Wrappers;
-                        tmp7 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Generic.Wrapper<int>>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, this);
-                        if (tmp7 != null) value.Wrappers = tmp7;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Generic_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Holder value)
         {
@@ -117,7 +58,95 @@ partial class GenericModel
             }
         }
 
-        // raw read pass: skipped - member Pair: target global::AotFixtures.Generic.Pair<int, string> is not raw-read-eligible (cascade)
+        public static global::AotFixtures.Generic.Holder RawRead_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Holder value)
+        {
+            value ??= new global::AotFixtures.Generic.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Number, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Number, field 1, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Number = RawRead_AotFixtures_Generic_Wrapper_int_(ref state, value.Number);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (2 << 3) | 2:  // Text, field 2, length-prefixed
+                    case (2 << 3) | 3:  // Text, field 2, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Text = RawRead_AotFixtures_Generic_Wrapper_string_(ref state, value.Text);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (3 << 3) | 2:  // Message, field 3, length-prefixed
+                    case (3 << 3) | 3:  // Message, field 3, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Message = RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, value.Message);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (4 << 3) | 2:  // Deep, field 4, length-prefixed
+                    case (4 << 3) | 3:  // Deep, field 4, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Deep = RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, value.Deep);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (5 << 3) | 2:  // Many, field 5, length-prefixed
+                    case (5 << 3) | 3:  // Many, field 5, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Many = RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, value.Many);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Pair: message shape (nullable or struct)
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // Pair, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.Pair;
+                        value.Pair = state.ReadMessage<global::AotFixtures.Generic.Pair<int, string>>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp6, s_default);
+                        break;
+                    }
+                    case (7 << 3) | 2:  // Wrappers, field 7, length-prefixed
+                    case (7 << 3) | 3:  // Wrappers, field 7, group
+                    {
+                        value.Wrappers ??= new global::System.Collections.Generic.List<global::AotFixtures.Generic.Wrapper<int>>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            value.Wrappers.Add(RawRead_AotFixtures_Generic_Wrapper_int_(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -151,12 +180,19 @@ partial class GenericModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Pair<int, string>>.Features
@@ -230,12 +266,19 @@ partial class GenericModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<string>>.Features
@@ -267,12 +310,19 @@ partial class GenericModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>>.Features
@@ -314,12 +364,19 @@ partial class GenericModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>>.Features
@@ -361,12 +418,19 @@ partial class GenericModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>>.Features
@@ -420,12 +484,19 @@ partial class GenericModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<int>>.Features
@@ -468,12 +539,19 @@ partial class GenericModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<string>>.Features
@@ -513,12 +591,19 @@ partial class GenericModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
     }
 }

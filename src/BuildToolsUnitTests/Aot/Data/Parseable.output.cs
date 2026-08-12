@@ -21,40 +21,13 @@ partial class ParseableModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Endpoint>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Parseable.Endpoint global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Endpoint>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.Endpoint value)
-        {
-            value ??= new global::AotFixtures.Parseable.Endpoint();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Address = global::AotFixtures.Parseable.Moniker.Parse(state.ReadString());
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Name = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Ip = global::System.Net.IPAddress.Parse(state.ReadString());
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Parseable_Endpoint(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Endpoint>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.Endpoint value)
         {
@@ -75,38 +48,64 @@ partial class ParseableModel
             }
         }
 
-        // raw read pass: skipped - member Address: kind Parseable
+        public static global::AotFixtures.Parseable.Endpoint RawRead_AotFixtures_Parseable_Endpoint(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.Endpoint value)
+        {
+            value ??= new global::AotFixtures.Parseable.Endpoint();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Address: kind Parseable
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Address, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Address = global::AotFixtures.Parseable.Moniker.Parse(state.ReadString());
+                        break;
+                    }
+                    case (2 << 3) | 2:  // Name, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Name = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Ip: kind Parseable
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Ip, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Ip = global::System.Net.IPAddress.Parse(state.ReadString());
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Parseable.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.Holder value)
-        {
-            value ??= new global::AotFixtures.Parseable.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Ratio = global::AotFixtures.Parseable.Fraction.Parse(state.ReadString());
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Child;
-                        tmp2 = state.ReadMessage<global::AotFixtures.Parseable.NotParseable>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.Child = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Parseable_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.Holder value)
         {
@@ -118,7 +117,49 @@ partial class ParseableModel
             state.WriteMessage<global::AotFixtures.Parseable.NotParseable>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
         }
 
-        // raw read pass: skipped - member Ratio: kind Parseable
+        public static global::AotFixtures.Parseable.Holder RawRead_AotFixtures_Parseable_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.Holder value)
+        {
+            value ??= new global::AotFixtures.Parseable.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Ratio: kind Parseable
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Ratio, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        value.Ratio = global::AotFixtures.Parseable.Fraction.Parse(state.ReadString());
+                        break;
+                    }
+                    case (2 << 3) | 2:  // Child, field 2, length-prefixed
+                    case (2 << 3) | 3:  // Child, field 2, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Child = RawRead_AotFixtures_Parseable_NotParseable(ref state, value.Child);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -152,12 +193,19 @@ partial class ParseableModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
     }
 }

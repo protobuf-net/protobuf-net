@@ -507,3 +507,13 @@ Rules of the road, inherited from the AOT work: derive rather than guess (the sh
 generated; the perf tables are measured), and nothing merges on "should be faster" — the
 differential decides correctness, and correctness is only the entry ticket: BenchmarkDotNet tables,
 committed beside the benchmarks, decide the rest.
+
+## Backlog: dispatch-shape benchmark (Marc, 2026-08-12)
+
+Is `switch (tag)` over full-tag constants (sparse: field << 3 spreads by 8, plus tolerance
+labels multiply them) faster or slower than `switch (tag >> 3)` over dense field numbers
+(jump-table friendly) with the wire type tested inside each arm (`when` or an inner switch on
+`tag & 7`)? Note the synergy with legacy-mode member arms: under the `>> 3` shape they need no
+wire labels at all - StashTag takes the wire type off the tag and the classic read validates
+it - so the generous five-label emission collapses to one case. Benchmark before choosing; the
+answer may differ between low/consecutive fields (descriptor.proto-like) and sparse ones.

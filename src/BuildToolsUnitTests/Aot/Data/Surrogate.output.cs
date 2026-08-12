@@ -25,6 +25,8 @@ partial class SurrogateModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Tag>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Code>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -93,65 +95,26 @@ partial class SurrogateModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Surrogate.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.Holder value)
-        {
-            value ??= new global::AotFixtures.Surrogate.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Amount;
-                        value.Amount = state.ReadMessage<global::AotFixtures.Surrogate.Money>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Label;
-                        tmp2 = state.ReadMessage<global::AotFixtures.Surrogate.Tag>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
-                        if (tmp2 != null) value.Label = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Code;
-                        value.Code = state.ReadMessage<global::AotFixtures.Surrogate.Code>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Amounts;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Surrogate.Money>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, this);
-                        if (tmp4 != null) Field_AotFixtures_Surrogate_Holder_Amounts(value) = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Tags;
-                        tmp5 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Surrogate.Tag>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, this);
-                        if (tmp5 != null) Field_AotFixtures_Surrogate_Holder_Tags(value) = tmp5;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Surrogate_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.Holder value)
         {
@@ -174,7 +137,93 @@ partial class SurrogateModel
             }
         }
 
-        // raw read pass: skipped - member Tags: map
+        public static global::AotFixtures.Surrogate.Holder RawRead_AotFixtures_Surrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.Holder value)
+        {
+            value ??= new global::AotFixtures.Surrogate.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Amount: message shape (nullable or struct)
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Amount, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Amount;
+                        value.Amount = state.ReadMessage<global::AotFixtures.Surrogate.Money>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Label: target type not raw-eligible
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Label, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Label;
+                        tmp2 = state.ReadMessage<global::AotFixtures.Surrogate.Tag>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, s_default);
+                        if (tmp2 != null) value.Label = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Code: message shape (nullable or struct)
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Code, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Code;
+                        value.Code = state.ReadMessage<global::AotFixtures.Surrogate.Code>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, s_default);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Amounts: element type not raw-eligible
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Amounts, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.Amounts;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Surrogate.Money>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, s_default);
+                        if (tmp4 != null) Field_AotFixtures_Surrogate_Holder_Amounts(value) = tmp4;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Tags: map
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Tags, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Tags;
+                        tmp5 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.Surrogate.Tag>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, s_default);
+                        if (tmp5 != null) Field_AotFixtures_Surrogate_Holder_Tags(value) = tmp5;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Money>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -252,12 +301,19 @@ partial class SurrogateModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Tag>.Features
@@ -326,12 +382,19 @@ partial class SurrogateModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Amounts>k__BackingField")]

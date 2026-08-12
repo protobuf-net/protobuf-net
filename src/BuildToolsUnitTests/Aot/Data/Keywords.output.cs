@@ -21,6 +21,8 @@ partial class KeywordsModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -53,69 +55,26 @@ partial class KeywordsModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Keywords.Keywords global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
-        {
-            value ??= new global::AotFixtures.Keywords.Keywords();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.@case = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.@event = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.@params;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) value.@params = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.@class;
-                        tmp4 = state.ReadMessage<global::AotFixtures.Keywords.Inner>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
-                        if (tmp4 != null) value.@class = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.@lock;
-                        tmp5 = state.ReadMessage<global::AotFixtures.Keywords.Pair>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, this);
-                        if (tmp5 != null) value.@lock = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.value = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Keywords_Keywords(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Keywords value)
         {
@@ -137,7 +96,92 @@ partial class KeywordsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        // raw read pass: skipped - member lock: target global::AotFixtures.Keywords.Pair is not raw-read-eligible (cascade)
+        public static global::AotFixtures.Keywords.Keywords RawRead_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
+        {
+            value ??= new global::AotFixtures.Keywords.Keywords();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // case, field 1, varint
+                        value.@case = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // case, field 1, fixed32
+                        value.@case = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // case, field 1, fixed64
+                        value.@case = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // event, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.@event = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 0:  // params, field 3, unpacked run
+                        value.@params ??= new global::System.Collections.Generic.List<int>();
+                        do { value.@params.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));
+                        continue;
+                    case (3 << 3) | 2:  // params, field 3, packed
+                        value.@params ??= new global::System.Collections.Generic.List<int>();
+                        state.ReadPackedVarint32(value.@params);
+                        break;
+                    case (3 << 3) | 5:  // params, field 3, fixed32
+                        value.@params ??= new global::System.Collections.Generic.List<int>();
+                        value.@params.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (3 << 3) | 1:  // params, field 3, fixed64
+                        value.@params ??= new global::System.Collections.Generic.List<int>();
+                        value.@params.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    case (4 << 3) | 2:  // class, field 4, length-prefixed
+                    case (4 << 3) | 3:  // class, field 4, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.@class = RawRead_AotFixtures_Keywords_Inner(ref state, value.@class);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member lock: target type not raw-eligible
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // lock, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.@lock;
+                        tmp5 = state.ReadMessage<global::AotFixtures.Keywords.Pair>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5, s_default);
+                        if (tmp5 != null) value.@lock = tmp5;
+                        break;
+                    }
+                    case (6 << 3) | 0:  // value, field 6, varint
+                        value.value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // value, field 6, fixed32
+                        value.value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // value, field 6, fixed64
+                        value.value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

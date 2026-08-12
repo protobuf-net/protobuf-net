@@ -23,6 +23,8 @@ partial class RawPassModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -56,39 +58,26 @@ partial class RawPassModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.AppendExtensionData(tag, value);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.RawPass.Chain global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Chain value)
-        {
-            value ??= new global::AotFixtures.RawPass.Chain();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Inner;
-                        tmp1 = state.ReadMessage<global::AotFixtures.RawPass.Holder>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Inner = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_RawPass_Chain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Chain value)
         {
@@ -97,7 +86,38 @@ partial class RawPassModel
             state.WriteMessage<global::AotFixtures.RawPass.Holder>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
         }
 
-        // raw read pass: skipped - member Inner: target global::AotFixtures.RawPass.Holder is not raw-read-eligible (cascade)
+        public static global::AotFixtures.RawPass.Chain RawRead_AotFixtures_RawPass_Chain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Chain value)
+        {
+            value ??= new global::AotFixtures.RawPass.Chain();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Inner, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Inner, field 1, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Inner = RawRead_AotFixtures_RawPass_Holder(ref state, value.Inner);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -131,39 +151,26 @@ partial class RawPassModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.RawPass.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Holder value)
-        {
-            value ??= new global::AotFixtures.RawPass.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Lookup;
-                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
-                        if (tmp1 != null) Field_AotFixtures_RawPass_Holder_Lookup(value) = tmp1;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_RawPass_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Holder value)
         {
@@ -175,7 +182,43 @@ partial class RawPassModel
             }
         }
 
-        // raw read pass: skipped - member Lookup: map
+        public static global::AotFixtures.RawPass.Holder RawRead_AotFixtures_RawPass_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Holder value)
+        {
+            value ??= new global::AotFixtures.RawPass.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Lookup: map
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Lookup, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Lookup;
+                        tmp1 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp1 != null) Field_AotFixtures_RawPass_Holder_Lookup(value) = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -351,12 +394,19 @@ partial class RawPassModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 => true,
+                _ => false,
+            };
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Lookup>k__BackingField")]

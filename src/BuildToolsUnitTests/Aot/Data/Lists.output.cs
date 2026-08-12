@@ -24,6 +24,8 @@ partial class ListsModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small?>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -64,119 +66,26 @@ partial class ListsModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Lists.Repeated global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
-        {
-            value ??= new global::AotFixtures.Lists.Repeated();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Int32Array;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) value.Int32Array = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Int32List;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
-                        if (tmp2 != null) value.Int32List = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.DoubleArray;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64 | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) value.DoubleArray = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.SingleArray;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<float>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32 | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
-                        if (tmp4 != null) value.SingleArray = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.BoolList;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<bool>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
-                        if (tmp5 != null) value.BoolList = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.StringArray;
-                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
-                        if (tmp6 != null) value.StringArray = tmp6;
-                        break;
-                    }
-                    case 7:
-                    {
-                        var tmp7 = value.StringList;
-                        tmp7 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
-                        if (tmp7 != null) value.StringList = tmp7;
-                        break;
-                    }
-                    case 9:
-                    {
-                        var tmp9 = value.Messages;
-                        tmp9 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Lists.Inner>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, this);
-                        if (tmp9 != null) value.Messages = tmp9;
-                        break;
-                    }
-                    case 10:
-                    {
-                        var tmp10 = value.MessageArray;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Inner>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10, this);
-                        if (tmp10 != null) value.MessageArray = tmp10;
-                        break;
-                    }
-                    case 11:
-                    {
-                        value.Scalar = state.ReadInt32();
-                        break;
-                    }
-                    case 12:
-                    {
-                        var tmp12 = value.Colours;
-                        tmp12 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Lists.Colour>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp12);
-                        if (tmp12 != null) value.Colours = tmp12;
-                        break;
-                    }
-                    case 13:
-                    {
-                        var tmp13 = value.Smalls;
-                        tmp13 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Small>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
-                        if (tmp13 != null) value.Smalls = tmp13;
-                        break;
-                    }
-                    case 14:
-                    {
-                        value.SingleColour = (global::AotFixtures.Lists.Colour)state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Lists_Repeated(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value)
         {
@@ -242,7 +151,203 @@ partial class ListsModel
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
         }
 
-        // raw read pass: skipped - member Int32Array: collection shape CreateVector
+        public static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
+        {
+            value ??= new global::AotFixtures.Lists.Repeated();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Int32Array: collection shape CreateVector
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Int32Array, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Int32Array;
+                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                        if (tmp1 != null) value.Int32Array = tmp1;
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Int32List, field 2, unpacked run
+                        value.Int32List ??= new global::System.Collections.Generic.List<int>();
+                        do { value.Int32List.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((2 << 3) | 0));
+                        continue;
+                    case (2 << 3) | 2:  // Int32List, field 2, packed
+                        value.Int32List ??= new global::System.Collections.Generic.List<int>();
+                        state.ReadPackedVarint32(value.Int32List);
+                        break;
+                    case (2 << 3) | 5:  // Int32List, field 2, fixed32
+                        value.Int32List ??= new global::System.Collections.Generic.List<int>();
+                        value.Int32List.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (2 << 3) | 1:  // Int32List, field 2, fixed64
+                        value.Int32List ??= new global::System.Collections.Generic.List<int>();
+                        value.Int32List.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member DoubleArray: collection shape CreateVector
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // DoubleArray, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.DoubleArray;
+                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64 | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                        if (tmp3 != null) value.DoubleArray = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member SingleArray: collection shape CreateVector
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // SingleArray, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.SingleArray;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<float>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed32 | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                        if (tmp4 != null) value.SingleArray = tmp4;
+                        break;
+                    }
+                    case (5 << 3) | 0:  // BoolList, field 5, unpacked run
+                        value.BoolList ??= new global::System.Collections.Generic.List<bool>();
+                        do { value.BoolList.Add(state.ReadRawVarint32() != 0); }
+                        while ((tag = state.ReadRawTag()) == ((5 << 3) | 0));
+                        continue;
+                    case (5 << 3) | 2:  // BoolList, field 5, packed
+                    {
+                        value.BoolList ??= new global::System.Collections.Generic.List<bool>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) value.BoolList.Add(state.ReadRawVarint32() != 0);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (5 << 3) | 5:  // BoolList, field 5, fixed32
+                        value.BoolList ??= new global::System.Collections.Generic.List<bool>();
+                        value.BoolList.Add(state.ReadRawFixed32() != 0);
+                        break;
+                    case (5 << 3) | 1:  // BoolList, field 5, fixed64
+                        value.BoolList ??= new global::System.Collections.Generic.List<bool>();
+                        value.BoolList.Add(state.ReadRawFixed64() != 0);
+                        break;
+                    // raw read pass: legacy-mode - member StringArray: collection shape CreateVector
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // StringArray, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.StringArray;
+                        tmp6 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<string>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6);
+                        if (tmp6 != null) value.StringArray = tmp6;
+                        break;
+                    }
+                    case (7 << 3) | 2:  // StringList, field 7, length-prefixed run
+                        value.StringList ??= new global::System.Collections.Generic.List<string>();
+                        do { value.StringList.Add(state.ReadRawString()); }
+                        while ((tag = state.ReadRawTag()) == ((7 << 3) | 2));
+                        continue;
+                    case (9 << 3) | 2:  // Messages, field 9, length-prefixed
+                    case (9 << 3) | 3:  // Messages, field 9, group
+                    {
+                        value.Messages ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Inner>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            value.Messages.Add(RawRead_AotFixtures_Lists_Inner(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    // raw read pass: legacy-mode - member MessageArray: collection shape CreateVector
+                    case (10 << 3) | 0:
+                    case (10 << 3) | 1:
+                    case (10 << 3) | 2:  // MessageArray, field 10
+                    case (10 << 3) | 3:
+                    case (10 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp10 = value.MessageArray;
+                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Inner>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10, s_default);
+                        if (tmp10 != null) value.MessageArray = tmp10;
+                        break;
+                    }
+                    case (11 << 3) | 0:  // Scalar, field 11, varint
+                        value.Scalar = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (11 << 3) | 5:  // Scalar, field 11, fixed32
+                        value.Scalar = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (11 << 3) | 1:  // Scalar, field 11, fixed64
+                        value.Scalar = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (12 << 3) | 0:  // Colours, field 12, unpacked run
+                        value.Colours ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour>();
+                        do { value.Colours.Add((global::AotFixtures.Lists.Colour)(unchecked((int)state.ReadRawVarint32()))); }
+                        while ((tag = state.ReadRawTag()) == ((12 << 3) | 0));
+                        continue;
+                    case (12 << 3) | 2:  // Colours, field 12, packed
+                    {
+                        value.Colours ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour>();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) value.Colours.Add((global::AotFixtures.Lists.Colour)(unchecked((int)state.ReadRawVarint32())));
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (12 << 3) | 5:  // Colours, field 12, fixed32
+                        value.Colours ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour>();
+                        value.Colours.Add((global::AotFixtures.Lists.Colour)(unchecked((int)state.ReadRawFixed32())));
+                        break;
+                    case (12 << 3) | 1:  // Colours, field 12, fixed64
+                        value.Colours ??= new global::System.Collections.Generic.List<global::AotFixtures.Lists.Colour>();
+                        value.Colours.Add((global::AotFixtures.Lists.Colour)(checked((int)unchecked((long)state.ReadRawFixed64()))));
+                        break;
+                    // raw read pass: legacy-mode - member Smalls: collection shape CreateVector
+                    case (13 << 3) | 0:
+                    case (13 << 3) | 1:
+                    case (13 << 3) | 2:  // Smalls, field 13
+                    case (13 << 3) | 3:
+                    case (13 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp13 = value.Smalls;
+                        tmp13 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::AotFixtures.Lists.Small>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp13);
+                        if (tmp13 != null) value.Smalls = tmp13;
+                        break;
+                    }
+                    case (14 << 3) | 0:  // SingleColour, field 14, varint
+                        value.SingleColour = (global::AotFixtures.Lists.Colour)(unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (14 << 3) | 5:  // SingleColour, field 14, fixed32
+                        value.SingleColour = (global::AotFixtures.Lists.Colour)(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (14 << 3) | 1:  // SingleColour, field 14, fixed64
+                        value.SingleColour = (global::AotFixtures.Lists.Colour)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 9 or 10 or 11 or 12 or 13 or 14 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Colour> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour>.Serializer
             => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.Lists.Colour>();

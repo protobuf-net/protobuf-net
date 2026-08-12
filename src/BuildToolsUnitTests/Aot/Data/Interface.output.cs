@@ -29,6 +29,8 @@ partial class InterfaceModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Tagged>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Cat>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -285,48 +287,7 @@ partial class InterfaceModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Interface.Zoo global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Interface.Zoo value)
-        {
-            value ??= new global::AotFixtures.Interface.Zoo();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Star;
-                        tmp1 = state.ReadMessage<global::AotFixtures.Interface.IAnimal>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Star = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.All;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Interface.IAnimal>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
-                        if (tmp2 != null) value.All = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Tag;
-                        tmp3 = state.ReadMessage<global::AotFixtures.Interface.INamed>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) value.Tag = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Backup;
-                        tmp4 = state.ReadMessage<global::AotFixtures.Interface.IAnimal>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
-                        if (tmp4 != null) value.Backup = tmp4;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Interface_Zoo(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Zoo value)
         {
@@ -344,6 +305,81 @@ partial class InterfaceModel
             state.WriteMessage<global::AotFixtures.Interface.IAnimal>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
         }
 
-        // raw read pass: skipped - member Star: target global::AotFixtures.Interface.IAnimal is not raw-read-eligible (cascade)
+        public static global::AotFixtures.Interface.Zoo RawRead_AotFixtures_Interface_Zoo(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Interface.Zoo value)
+        {
+            value ??= new global::AotFixtures.Interface.Zoo();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Star: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Star, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Star;
+                        tmp1 = state.ReadMessage<global::AotFixtures.Interface.IAnimal>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Star = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member All: element type not raw-eligible
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // All, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.All;
+                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Interface.IAnimal>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, s_default);
+                        if (tmp2 != null) value.All = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Tag: target type not raw-eligible
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Tag, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Tag;
+                        tmp3 = state.ReadMessage<global::AotFixtures.Interface.INamed>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, s_default);
+                        if (tmp3 != null) value.Tag = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Backup: target type not raw-eligible
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Backup, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.Backup;
+                        tmp4 = state.ReadMessage<global::AotFixtures.Interface.IAnimal>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, s_default);
+                        if (tmp4 != null) value.Backup = tmp4;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
+        }
     }
 }

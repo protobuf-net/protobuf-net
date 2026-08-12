@@ -19,69 +19,13 @@ partial class UrisModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Uris.Links>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Uris.Links>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Uris.Links global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Uris.Links>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Uris.Links value)
-        {
-            value ??= new global::AotFixtures.Uris.Links();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = state.ReadString();
-                        if (tmp1.Length != 0) value.Home = new global::System.Uri(tmp1, global::System.UriKind.RelativeOrAbsolute);
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Name = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = state.ReadString();
-                        if (tmp3.Length != 0) value.Relative = new global::System.Uri(tmp3, global::System.UriKind.RelativeOrAbsolute);
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.All;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Uri>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
-                        if (tmp4 != null) value.All = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.More;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::System.Uri>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
-                        if (tmp5 != null) value.More = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.ById;
-                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Uri>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
-                        if (tmp6 != null) value.ById = tmp6;
-                        break;
-                    }
-                    case 7:
-                    {
-                        var tmp7 = state.ReadString();
-                        if (tmp7.Length != 0) Field_AotFixtures_Uris_Links_Fixed(value) = new global::System.Uri(tmp7, global::System.UriKind.RelativeOrAbsolute);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Uris_Links(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Uris.Links>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Uris.Links value)
         {
@@ -120,7 +64,111 @@ partial class UrisModel
             }
         }
 
-        // raw read pass: skipped - member Home: kind Uri
+        public static global::AotFixtures.Uris.Links RawRead_AotFixtures_Uris_Links(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Uris.Links value)
+        {
+            value ??= new global::AotFixtures.Uris.Links();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Home: kind Uri
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Home, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = state.ReadString();
+                        if (tmp1.Length != 0) value.Home = new global::System.Uri(tmp1, global::System.UriKind.RelativeOrAbsolute);
+                        break;
+                    }
+                    case (2 << 3) | 2:  // Name, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Name = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Relative: kind Uri
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Relative, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = state.ReadString();
+                        if (tmp3.Length != 0) value.Relative = new global::System.Uri(tmp3, global::System.UriKind.RelativeOrAbsolute);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member All: element kind Uri
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // All, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.All;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Uri>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                        if (tmp4 != null) value.All = tmp4;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member More: collection shape CreateVector
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // More, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.More;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<global::System.Uri>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                        if (tmp5 != null) value.More = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member ById: map
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // ById, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.ById;
+                        tmp6 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Uri>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp6 != null) value.ById = tmp6;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Fixed: accessor-reached setter
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // Fixed, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp7 = state.ReadString();
+                        if (tmp7.Length != 0) Field_AotFixtures_Uris_Links_Fixed(value) = new global::System.Uri(tmp7, global::System.UriKind.RelativeOrAbsolute);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
+                _ => false,
+            };
+        }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Fixed>k__BackingField")]
         private static extern ref global::System.Uri Field_AotFixtures_Uris_Links_Fixed(global::AotFixtures.Uris.Links target);

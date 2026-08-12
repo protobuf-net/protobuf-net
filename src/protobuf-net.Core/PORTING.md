@@ -90,6 +90,20 @@ naming is purged from code (files: ProtoReader.State.Raw.cs / .WellKnown.cs; gen
 surface: RawRead_ + "raw read pass" breadcrumbs; the term survives only in planning docs
 and the NanoBench rig's project name).
 
+Per-member legacy-mode (Marc's design): eligibility is CONTRACT-level only, and a member the
+raw pass has no native form for takes a legacy-mode arm - StashTag pushes the consumed tag
+into _fieldNumber/_wireType and the classic member body runs verbatim (EmitClassicMemberBody,
+shared with the classic loop so the two cannot drift; s_default stands in for `this` in the
+static). ReadRawTagOrPending drains the pending slot the stateful engines park run headers
+in; IsKnownField (a per-contract static local) closes a live invalid-data gap in the default
+arm - a known field on an unmatched wire type now throws as legacy does, instead of being
+skipped as unknown. The generator's probe gates on StashTag (the newest emitted member), so
+a newer BuildTools against an older raw-surface Core falls back to classic emission instead
+of emitting calls that do not compile. Census after: 1123 raw contracts (was 938), 208
+whole-contract fallbacks (contract shape 204 + callbacks 4 - the member cascade is gone),
+274 legacy-mode members itemized by category (map 53, DataFormat 35, null-wrapped 27,
+vector 18, DateTime 15, ...). Differential: 3021 contracts, 100% match, mixed bodies live.
+
 Routing immediately caught four latent divergences that compiled and passed everything
 while the statics sat unrouted - the strongest argument the proxy was worth it:
 - plain-bytes merge is APPEND in legacy; the raw form replaced. AppendRawBytes (raw-convention,

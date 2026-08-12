@@ -20,29 +20,13 @@ partial class ImplicitPrivateModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ImplicitPrivate.Explicit global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
-        {
-            value ??= new global::AotFixtures.ImplicitPrivate.Explicit();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        Field_AotFixtures_ImplicitPrivate_Explicit__value(value) = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ImplicitPrivate_Explicit(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
         {
@@ -51,42 +35,47 @@ partial class ImplicitPrivateModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        // raw read pass: skipped - member _value: accessor-reached
+        public static global::AotFixtures.ImplicitPrivate.Explicit RawRead_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
+        {
+            value ??= new global::AotFixtures.ImplicitPrivate.Explicit();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member _value: accessor-reached member
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // _value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_ImplicitPrivate_Explicit__value(value) = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.ImplicitPrivate.Private global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)
-        {
-            value ??= new global::AotFixtures.ImplicitPrivate.Private();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Public = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) Field_AotFixtures_ImplicitPrivate_Private__apple(value) = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        Field_AotFixtures_ImplicitPrivate_Private__zebra(value) = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_ImplicitPrivate_Private(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Private value)
         {
@@ -99,7 +88,62 @@ partial class ImplicitPrivateModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        // raw read pass: skipped - member _apple: accessor-reached
+        public static global::AotFixtures.ImplicitPrivate.Private RawRead_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)
+        {
+            value ??= new global::AotFixtures.ImplicitPrivate.Private();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Public, field 1, varint
+                        value.Public = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Public, field 1, fixed32
+                        value.Public = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Public, field 1, fixed64
+                        value.Public = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    // raw read pass: legacy-mode - member _apple: accessor-reached member
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // _apple, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) Field_AotFixtures_ImplicitPrivate_Private__apple(value) = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member _zebra: accessor-reached member
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // _zebra, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_ImplicitPrivate_Private__zebra(value) = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "_value")]
         private static extern ref int Field_AotFixtures_ImplicitPrivate_Explicit__value(global::AotFixtures.ImplicitPrivate.Explicit target);

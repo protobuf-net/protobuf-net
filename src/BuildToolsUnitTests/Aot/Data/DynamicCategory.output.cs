@@ -21,6 +21,8 @@ partial class DynamicCategoryModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.DynamicCategory.Measure>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Reading>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Label> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.DynamicCategory.Label>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>();
 
@@ -35,53 +37,7 @@ partial class DynamicCategoryModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.DynamicCategory.Reading global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Reading>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DynamicCategory.Reading value)
-        {
-            value ??= new global::AotFixtures.DynamicCategory.Reading();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Scalar;
-                        tmp1 = state.ReadAny<global::AotFixtures.DynamicCategory.Measure>(default, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
-                        value.Scalar = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Message;
-                        tmp2 = state.ReadAny<global::AotFixtures.DynamicCategory.Label>(default, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
-                        value.Message = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Other = state.ReadInt32();
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Scalars;
-                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Measure>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
-                        if (tmp4 != null) value.Scalars = tmp4;
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = value.Messages;
-                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
-                        if (tmp5 != null) value.Messages = tmp5;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_DynamicCategory_Reading(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Reading>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DynamicCategory.Reading value)
         {
@@ -104,6 +60,90 @@ partial class DynamicCategoryModel
             }
         }
 
-        // raw read pass: skipped - member Scalar: hand-written serializer
+        public static global::AotFixtures.DynamicCategory.Reading RawRead_AotFixtures_DynamicCategory_Reading(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DynamicCategory.Reading value)
+        {
+            value ??= new global::AotFixtures.DynamicCategory.Reading();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Scalar: hand-written serializer
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Scalar, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Scalar;
+                        tmp1 = state.ReadAny<global::AotFixtures.DynamicCategory.Measure>(default, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                        value.Scalar = tmp1;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Message: hand-written serializer
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Message, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Message;
+                        tmp2 = state.ReadAny<global::AotFixtures.DynamicCategory.Label>(default, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+                        value.Message = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Other, field 3, varint
+                        value.Other = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 5:  // Other, field 3, fixed32
+                        value.Other = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 1:  // Other, field 3, fixed64
+                        value.Other = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    // raw read pass: legacy-mode - member Scalars: hand-written serializer
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Scalars, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp4 = value.Scalars;
+                        tmp4 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Measure>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                        if (tmp4 != null) value.Scalars = tmp4;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Messages: hand-written serializer
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Messages, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = value.Messages;
+                        tmp5 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+                        if (tmp5 != null) value.Messages = tmp5;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 => true,
+                _ => false,
+            };
+        }
     }
 }

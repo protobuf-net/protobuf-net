@@ -19,47 +19,13 @@ partial class NonPublicSetterModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicSetter.Guarded>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicSetter.Guarded>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.NonPublicSetter.Guarded global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicSetter.Guarded>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicSetter.Guarded value)
-        {
-            value ??= new global::AotFixtures.NonPublicSetter.Guarded();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        Field_AotFixtures_NonPublicSetter_Guarded_Value(value) = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) Field_AotFixtures_NonPublicSetter_Guarded_Text(value) = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Numbers;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        Field_AotFixtures_NonPublicSetter_Guarded_Once(value) = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_NonPublicSetter_Guarded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicSetter.Guarded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicSetter.Guarded value)
         {
@@ -77,7 +43,81 @@ partial class NonPublicSetterModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        // raw read pass: skipped - member Value: accessor-reached setter
+        public static global::AotFixtures.NonPublicSetter.Guarded RawRead_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicSetter.Guarded value)
+        {
+            value ??= new global::AotFixtures.NonPublicSetter.Guarded();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Value: accessor-reached setter
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_NonPublicSetter_Guarded_Value(value) = state.ReadInt32();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Text: accessor-reached setter
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Text, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = state.ReadString();
+                        if (tmp2 != null) Field_AotFixtures_NonPublicSetter_Guarded_Text(value) = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 0:  // Numbers, field 3, unpacked run
+                        Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        do { value.Numbers.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((3 << 3) | 0));
+                        continue;
+                    case (3 << 3) | 2:  // Numbers, field 3, packed
+                        Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        state.ReadPackedVarint32(value.Numbers);
+                        break;
+                    case (3 << 3) | 5:  // Numbers, field 3, fixed32
+                        Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        value.Numbers.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (3 << 3) | 1:  // Numbers, field 3, fixed64
+                        Field_AotFixtures_NonPublicSetter_Guarded_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        value.Numbers.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member Once: accessor-reached setter
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Once, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_NonPublicSetter_Guarded_Once(value) = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
+        }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Value>k__BackingField")]
         private static extern ref int Field_AotFixtures_NonPublicSetter_Guarded_Value(global::AotFixtures.NonPublicSetter.Guarded target);

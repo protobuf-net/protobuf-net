@@ -20,6 +20,8 @@ partial class DerivedModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -49,60 +51,26 @@ partial class DerivedModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Derived.Derives global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Derives value)
-        {
-            value ??= new global::AotFixtures.Derived.Derives();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.List;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Derived.MyList, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) value.List = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Set;
-                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::AotFixtures.Derived.MySet, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
-                        if (tmp2 != null) value.Set = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Queue;
-                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::AotFixtures.Derived.MyQueue, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
-                        if (tmp3 != null) value.Queue = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        var tmp4 = value.Ambiguous;
-                        tmp4 = state.ReadMessage<global::AotFixtures.Derived.Ambiguous>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
-                        if (tmp4 != null) value.Ambiguous = tmp4;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Derived_Derives(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Derives value)
         {
@@ -126,6 +94,84 @@ partial class DerivedModel
             state.WriteMessage<global::AotFixtures.Derived.Ambiguous>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
         }
 
-        // raw read pass: skipped - member Set: collection shape CreateEnumerable
+        public static global::AotFixtures.Derived.Derives RawRead_AotFixtures_Derived_Derives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Derives value)
+        {
+            value ??= new global::AotFixtures.Derived.Derives();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // List, field 1, unpacked run
+                        value.List ??= new global::AotFixtures.Derived.MyList();
+                        do { value.List.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
+                        continue;
+                    case (1 << 3) | 2:  // List, field 1, packed
+                    {
+                        value.List ??= new global::AotFixtures.Derived.MyList();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) value.List.Add(unchecked((int)state.ReadRawVarint32()));
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (1 << 3) | 5:  // List, field 1, fixed32
+                        value.List ??= new global::AotFixtures.Derived.MyList();
+                        value.List.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (1 << 3) | 1:  // List, field 1, fixed64
+                        value.List ??= new global::AotFixtures.Derived.MyList();
+                        value.List.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member Set: collection shape CreateEnumerable
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Set, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Set;
+                        tmp2 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::AotFixtures.Derived.MySet, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2);
+                        if (tmp2 != null) value.Set = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Queue: collection shape CreateQueue
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Queue, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Queue;
+                        tmp3 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateQueue<global::AotFixtures.Derived.MyQueue, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                        if (tmp3 != null) value.Queue = tmp3;
+                        break;
+                    }
+                    case (4 << 3) | 2:  // Ambiguous, field 4, length-prefixed
+                    case (4 << 3) | 3:  // Ambiguous, field 4, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Ambiguous = RawRead_AotFixtures_Derived_Ambiguous(ref state, value.Ambiguous);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 => true,
+                _ => false,
+            };
+        }
     }
 }

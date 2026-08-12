@@ -20,37 +20,13 @@ partial class AbstractLeafModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.AbstractLeaf.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
-        {
-            value ??= new global::AotFixtures.AbstractLeaf.Holder();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Value;
-                        tmp1 = state.ReadMessage<global::AotFixtures.AbstractLeaf.Shape>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
-                        if (tmp1 != null) value.Value = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Name = tmp2;
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_AbstractLeaf_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value)
         {
@@ -61,7 +37,49 @@ partial class AbstractLeafModel
             state.WriteString(2, tmp2);
         }
 
-        // raw read pass: skipped - member Value: target global::AotFixtures.AbstractLeaf.Shape is not raw-read-eligible (cascade)
+        public static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
+        {
+            value ??= new global::AotFixtures.AbstractLeaf.Holder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Value: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Value, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Value;
+                        tmp1 = state.ReadMessage<global::AotFixtures.AbstractLeaf.Shape>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Value = tmp1;
+                        break;
+                    }
+                    case (2 << 3) | 2:  // Name, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Name = tmp2;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;

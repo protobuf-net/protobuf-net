@@ -21,97 +21,13 @@ partial class GetterModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Getter.Getters global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Getters value)
-        {
-            value ??= new global::AotFixtures.Getter.Getters();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        var tmp1 = value.Numbers;
-                        tmp1 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
-                        if (tmp1 != null) Field_AotFixtures_Getter_Getters_Numbers(value) = tmp1;
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = value.Map;
-                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
-                        if (tmp2 != null) Field_AotFixtures_Getter_Getters_Map(value) = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Child;
-                        tmp3 = state.ReadMessage<global::AotFixtures.Getter.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) Field_AotFixtures_Getter_Getters_Child(value) = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        Field_AotFixtures_Getter_Getters_Value(value) = state.ReadInt32();
-                        break;
-                    }
-                    case 5:
-                    {
-                        var tmp5 = state.ReadString();
-                        if (tmp5 != null) Field_AotFixtures_Getter_Getters_Text(value) = tmp5;
-                        break;
-                    }
-                    case 6:
-                    {
-                        var tmp6 = value.Blob;
-                        tmp6 = state.AppendBytes(tmp6);
-                        if (tmp6 != null) Field_AotFixtures_Getter_Getters_Blob(value) = tmp6;
-                        break;
-                    }
-                    case 7:
-                    {
-                        Field_AotFixtures_Getter_Getters_Maybe(value) = state.ReadInt32();
-                        break;
-                    }
-                    case 8:
-                    {
-                        Field_AotFixtures_Getter_Getters_Colour(value) = (global::AotFixtures.Getter.Shade)state.ReadInt32();
-                        break;
-                    }
-                    case 9:
-                    {
-                        Field_AotFixtures_Getter_Getters_When(value) = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
-                        break;
-                    }
-                    case 10:
-                    {
-                        var tmp10 = value.Array;
-                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
-                        if (tmp10 != null) Field_AotFixtures_Getter_Getters_Array(value) = tmp10;
-                        break;
-                    }
-                    case 11:
-                    {
-                        var tmp11 = value.Where;
-                        Field_AotFixtures_Getter_Getters_Where(value) = state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
-                        break;
-                    }
-                    case 12:
-                    {
-                        var tmp12 = value.Maybe2.GetValueOrDefault();
-                        Field_AotFixtures_Getter_Getters_Maybe2(value) = state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12, this);
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Getter_Getters(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Getters value)
         {
@@ -163,7 +79,179 @@ partial class GetterModel
             }
         }
 
-        // raw read pass: skipped - member Map: map
+        public static global::AotFixtures.Getter.Getters RawRead_AotFixtures_Getter_Getters(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Getters value)
+        {
+            value ??= new global::AotFixtures.Getter.Getters();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Numbers, field 1, unpacked run
+                        Field_AotFixtures_Getter_Getters_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        do { value.Numbers.Add(unchecked((int)state.ReadRawVarint32())); }
+                        while ((tag = state.ReadRawTag()) == ((1 << 3) | 0));
+                        continue;
+                    case (1 << 3) | 2:  // Numbers, field 1, packed
+                        Field_AotFixtures_Getter_Getters_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        state.ReadPackedVarint32(value.Numbers);
+                        break;
+                    case (1 << 3) | 5:  // Numbers, field 1, fixed32
+                        Field_AotFixtures_Getter_Getters_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        value.Numbers.Add(unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (1 << 3) | 1:  // Numbers, field 1, fixed64
+                        Field_AotFixtures_Getter_Getters_Numbers(value) ??= new global::System.Collections.Generic.List<int>();
+                        value.Numbers.Add(checked((int)unchecked((long)state.ReadRawFixed64())));
+                        break;
+                    // raw read pass: legacy-mode - member Map: map
+                    case (2 << 3) | 0:
+                    case (2 << 3) | 1:
+                    case (2 << 3) | 2:  // Map, field 2
+                    case (2 << 3) | 3:
+                    case (2 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp2 = value.Map;
+                        tmp2 = global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().ReadMap(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
+                        if (tmp2 != null) Field_AotFixtures_Getter_Getters_Map(value) = tmp2;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Child: accessor-reached setter
+                    case (3 << 3) | 0:
+                    case (3 << 3) | 1:
+                    case (3 << 3) | 2:  // Child, field 3
+                    case (3 << 3) | 3:
+                    case (3 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp3 = value.Child;
+                        tmp3 = state.ReadMessage<global::AotFixtures.Getter.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, s_default);
+                        if (tmp3 != null) Field_AotFixtures_Getter_Getters_Child(value) = tmp3;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Value: accessor-reached setter
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Value, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Getter_Getters_Value(value) = state.ReadInt32();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Text: accessor-reached setter
+                    case (5 << 3) | 0:
+                    case (5 << 3) | 1:
+                    case (5 << 3) | 2:  // Text, field 5
+                    case (5 << 3) | 3:
+                    case (5 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp5 = state.ReadString();
+                        if (tmp5 != null) Field_AotFixtures_Getter_Getters_Text(value) = tmp5;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Blob: accessor-reached setter
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // Blob, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.Blob;
+                        tmp6 = state.AppendBytes(tmp6);
+                        if (tmp6 != null) Field_AotFixtures_Getter_Getters_Blob(value) = tmp6;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Maybe: accessor-reached setter
+                    case (7 << 3) | 0:
+                    case (7 << 3) | 1:
+                    case (7 << 3) | 2:  // Maybe, field 7
+                    case (7 << 3) | 3:
+                    case (7 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Getter_Getters_Maybe(value) = state.ReadInt32();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Colour: accessor-reached setter
+                    case (8 << 3) | 0:
+                    case (8 << 3) | 1:
+                    case (8 << 3) | 2:  // Colour, field 8
+                    case (8 << 3) | 3:
+                    case (8 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Getter_Getters_Colour(value) = (global::AotFixtures.Getter.Shade)state.ReadInt32();
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member When: accessor-reached setter
+                    case (9 << 3) | 0:
+                    case (9 << 3) | 1:
+                    case (9 << 3) | 2:  // When, field 9
+                    case (9 << 3) | 3:
+                    case (9 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Getter_Getters_When(value) = global::ProtoBuf.BclHelpers.ReadDateTime(ref state);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Array: collection shape CreateVector
+                    case (10 << 3) | 0:
+                    case (10 << 3) | 1:
+                    case (10 << 3) | 2:  // Array, field 10
+                    case (10 << 3) | 3:
+                    case (10 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp10 = value.Array;
+                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                        if (tmp10 != null) Field_AotFixtures_Getter_Getters_Array(value) = tmp10;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Where: accessor-reached setter
+                    case (11 << 3) | 0:
+                    case (11 << 3) | 1:
+                    case (11 << 3) | 2:  // Where, field 11
+                    case (11 << 3) | 3:
+                    case (11 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp11 = value.Where;
+                        Field_AotFixtures_Getter_Getters_Where(value) = state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, s_default);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Maybe2: accessor-reached setter
+                    case (12 << 3) | 0:
+                    case (12 << 3) | 1:
+                    case (12 << 3) | 2:  // Maybe2, field 12
+                    case (12 << 3) | 3:
+                    case (12 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp12 = value.Maybe2.GetValueOrDefault();
+                        Field_AotFixtures_Getter_Getters_Maybe2(value) = state.ReadMessage<global::AotFixtures.Getter.Point>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12, s_default);
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -197,12 +285,19 @@ partial class GetterModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Features

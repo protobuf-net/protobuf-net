@@ -22,6 +22,8 @@ partial class FieldModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -62,12 +64,19 @@ partial class FieldModel
                     }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Features
@@ -105,59 +114,7 @@ partial class FieldModel
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Field.Fields global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Fields value)
-        {
-            value ??= new global::AotFixtures.Field.Fields();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        value.Number = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        var tmp2 = state.ReadString();
-                        if (tmp2 != null) value.Text = tmp2;
-                        break;
-                    }
-                    case 3:
-                    {
-                        var tmp3 = value.Message;
-                        tmp3 = state.ReadMessage<global::AotFixtures.Field.Nested>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
-                        if (tmp3 != null) value.Message = tmp3;
-                        break;
-                    }
-                    case 4:
-                    {
-                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
-                        value.Zig = state.ReadInt32();
-                        break;
-                    }
-                    case 5:
-                    {
-                        value.Defaulted = state.ReadInt32();
-                        break;
-                    }
-                    case 6:
-                    {
-                        value.Nullable = state.ReadInt32();
-                        break;
-                    }
-                    case 7:
-                    {
-                        value.Property = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Field_Fields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Fields value)
         {
@@ -186,7 +143,92 @@ partial class FieldModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        // raw read pass: skipped - member Zig: non-default DataFormat
+        public static global::AotFixtures.Field.Fields RawRead_AotFixtures_Field_Fields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Fields value)
+        {
+            value ??= new global::AotFixtures.Field.Fields();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Number, field 1, varint
+                        value.Number = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Number, field 1, fixed32
+                        value.Number = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Number, field 1, fixed64
+                        value.Number = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 2:  // Text, field 2, length-prefixed
+                    {
+                        var tmp2 = state.ReadRawString();
+                        if (tmp2 != null) value.Text = tmp2;
+                        break;
+                    }
+                    case (3 << 3) | 2:  // Message, field 3, length-prefixed
+                    case (3 << 3) | 3:  // Message, field 3, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Message = RawRead_AotFixtures_Field_Nested(ref state, value.Message);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Zig: non-default DataFormat
+                    case (4 << 3) | 0:
+                    case (4 << 3) | 1:
+                    case (4 << 3) | 2:  // Zig, field 4
+                    case (4 << 3) | 3:
+                    case (4 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        state.Hint(global::ProtoBuf.WireType.SignedVarint);
+                        value.Zig = state.ReadInt32();
+                        break;
+                    }
+                    case (5 << 3) | 0:  // Defaulted, field 5, varint
+                        value.Defaulted = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (5 << 3) | 5:  // Defaulted, field 5, fixed32
+                        value.Defaulted = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (5 << 3) | 1:  // Defaulted, field 5, fixed64
+                        value.Defaulted = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (6 << 3) | 0:  // Nullable, field 6, varint
+                        value.Nullable = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (6 << 3) | 5:  // Nullable, field 6, fixed32
+                        value.Nullable = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // Nullable, field 6, fixed64
+                        value.Nullable = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // Property, field 7, varint
+                        value.Property = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (7 << 3) | 5:  // Property, field 7, fixed32
+                        value.Property = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 1:  // Property, field 7, fixed64
+                        value.Property = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 or 4 or 5 or 6 or 7 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -220,12 +262,19 @@ partial class FieldModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
     }
 }

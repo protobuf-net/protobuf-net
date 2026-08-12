@@ -23,39 +23,13 @@ partial class ImplicitModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Ignoring>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Mixed>
     {
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllFields>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
         global::AotFixtures.Implicit.AllFields global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllFields>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllFields value)
-        {
-            value ??= new global::AotFixtures.Implicit.AllFields();
-            int field;
-            while ((field = state.ReadFieldHeader()) > 0)
-            {
-                switch (field)
-                {
-                    case 1:
-                    {
-                        Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value) = state.ReadInt32();
-                        break;
-                    }
-                    case 2:
-                    {
-                        value.Apple = state.ReadInt32();
-                        break;
-                    }
-                    case 3:
-                    {
-                        value.Zebra = state.ReadInt32();
-                        break;
-                    }
-                    default:
-                        state.SkipField();
-                        break;
-                }
-            }
-            return value;
-        }
+            => RawRead_AotFixtures_Implicit_AllFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllFields value)
         {
@@ -68,7 +42,59 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        // raw read pass: skipped - member <Ignored>k__BackingField: accessor-reached
+        public static global::AotFixtures.Implicit.AllFields RawRead_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllFields value)
+        {
+            value ??= new global::AotFixtures.Implicit.AllFields();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member <Ignored>k__BackingField: accessor-reached member
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // <Ignored>k__BackingField, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value) = state.ReadInt32();
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Apple, field 2, varint
+                        value.Apple = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Apple, field 2, fixed32
+                        value.Apple = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Apple, field 2, fixed64
+                        value.Apple = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 0:  // Zebra, field 3, varint
+                        value.Zebra = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 5:  // Zebra, field 3, fixed32
+                        value.Zebra = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 1:  // Zebra, field 3, fixed64
+                        value.Zebra = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllPublic>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -121,12 +147,19 @@ partial class ImplicitModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 3 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.FirstTag>.Features
@@ -172,12 +205,19 @@ partial class ImplicitModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                10 or 11 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Ignoring>.Features
@@ -212,12 +252,19 @@ partial class ImplicitModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 => true,
+                _ => false,
+            };
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Mixed>.Features
@@ -274,12 +321,19 @@ partial class ImplicitModel
                         break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
                         state.SkipTag(tag);
                         break;
                 }
                 tag = state.ReadRawTag();
             }
             return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) switch
+            {
+                1 or 2 or 5 => true,
+                _ => false,
+            };
         }
 
         [global::System.Runtime.CompilerServices.UnsafeAccessor(global::System.Runtime.CompilerServices.UnsafeAccessorKind.Field, Name = "<Ignored>k__BackingField")]
