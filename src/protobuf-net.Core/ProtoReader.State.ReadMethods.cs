@@ -1166,11 +1166,9 @@ namespace ProtoBuf
             internal object DeserializeRootFallback(object value, Type type)
             {
                 bool autoCreate = TypeModel.PrepareDeserialize(value, ref type);
-                if (Model.TryDeserializeAuxiliaryType(ref this, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, autoCreate, false, null, isRoot: true))
-                {
-                    CheckFullyConsumed();
-                }
-                return value;
+                object obj = Model.DeserializeRootAny(ref this, type, value, autoCreate);
+                CheckFullyConsumed();
+                return obj;
             }
 
             internal T DeserializeRootImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(T value = default)
@@ -1206,7 +1204,7 @@ namespace ProtoBuf
             [MethodImpl(MethodImplOptions.NoInlining)]
             internal void ThrowWireTypeException()
             {
-                var message = $"Invalid wire-type ({_wireType}); this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354";
+                var message = $"Invalid wire-type ({_wireType}); this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354 (pos={Position}, scope={_scope}, depth={_depth}, field={_fieldNumber}, offset={_offset}, count={_count}, effEnd={_effectiveEnd})";
                 ThrowProtoException(message);
             }
 
