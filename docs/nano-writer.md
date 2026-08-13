@@ -260,6 +260,57 @@ is the *generated* path - it drives the classic engine only - so the raw-and-leg
 interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
 `AotConformanceTests` rather than a fixture here.
 
+## Measure-first is not a backend property, it is a SERIALIZER property (2026-08-13)
+
+Marc's question - how does measure-first land for runtime ref-emit and runtime-no-emit, i.e.
+everything not AOT - and the answer reframes the stream-backend work entirely.
+
+**First, a framing correction: measure-first was never an AOT thing.** The buffer-writer has
+always been measure-first for *every* model kind; `Measure<T>` simply calls `serializer.Write`
+against the null writer, whatever produced that serializer. So the callback doubling already
+affects runtime models today (the test that found it uses `RuntimeTypeModel.Create()`, not a
+generated model). The inversion is worth stating: **the AOT generator is the one path that is
+protected**, because cut 3 refuses arithmetic measure for contracts with before-serialize
+callbacks precisely so measure-then-write cannot fire them twice.
+
+**Second, the numbers.** A runtime model has no arithmetic measure at all -
+`IMeasuringSerializer` + `OptionTrySkipWritingWhenMeasuring` is implemented only by generated
+models - so measure-first there means a full null-writer traversal per sub-message.
+
+Calibrated with Google.Protobuf, which appears in both benchmark classes with its own engine
+untouched by our backends (13.10 us stream vs 12.56 us buffer-writer), so the DESTINATION is
+worth about -4%; anything beyond that is the engine:
+
+| model | stream (back-fill) | buffer-writer (measure-first) | engine effect |
+| --- | ---: | ---: | --- |
+| runtime ref-emit (`LegacyReal`) | 19.48 us | 42.37 us | **2.27x worse** |
+| generated, extensible DTOs (`GeneratedProtogen`) | 16.18 us | 18.62 us | **1.20x worse** |
+| generated, plain DTOs (`NanoGenerated`) | 15.57 us | 11.30 us | **1.32x better** |
+
+So **back-fill is not legacy baggage - it is the correct algorithm when a message cannot be
+priced cheaply**, and moving the stream backend wholesale to measure-first would roughly double
+the cost for every ref-emit and no-emit consumer, which is most of them.
+
+**The middle row is the one that breaks the easy answer.** Being arithmetically measurable is
+NOT sufficient: the protogen DTOs are all `IExtensible`, and cut 4 recorded the reason - an
+extensible node pays a `BeginQuery`/`EndQuery` round-trip per measure, so measure-then-write
+pays it twice. A gate of "measure-first iff `IMeasuringSerializer` with the skip flag" would
+therefore make that case ~20% *worse*. Right shape, wrong predicate.
+
+Treat the 2.27x as beyond argument and the 1.20x/1.32x as indicative - the cross-class
+comparison is only sound at all because Google calibrates the destination.
+
+### What has to be established before the stream backend is touched
+
+1. **Do measurability and callback-freedom coincide?** If cut 3's exclusion means every
+   measure-first-eligible contract is already callback-free, the doubling problem dissolves for
+   the stream move and the blocker becomes purely performance. Prove it; do not believe it.
+2. **Why is the extensible generated model slower under measure-first** - is it the extension
+   blob query, is that fixable (cache the length; it is already known), or must the gate exclude
+   extensible contracts as well?
+
+Only (2) determines whether the stream work is worth doing at all, so it goes first.
+
 ## The measure pass has no depth guard, and runs user callbacks (2026-08-13)
 
 Two shipped defects on the **measure-first** path, both found by trying to move the stream
