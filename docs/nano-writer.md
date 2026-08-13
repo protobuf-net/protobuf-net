@@ -326,11 +326,35 @@ the fallback rather than the cost of the strategy.
 Treat the 2.27x as beyond argument and the 1.20x/1.32x as indicative - the cross-class
 comparison is only sound at all because Google calibrates the destination.
 
+### Callbacks must not be an input to strategy selection (Marc, 2026-08-13)
+
+Back-fill versus measure-first is chosen **on its own merits** - can this message be priced
+cheaply - and callbacks are not part of that decision. They already have to tolerate both:
+today, the same model and the same value fires a callback ONCE to a stream and TWICE to a
+buffer-writer. That is the existing truth; `ProtoWriter.IsMeasuring` makes it discoverable and
+documenting it formalizes it. It is not a change to be decided on.
+
+Two measures, two different reasons, and conflating them is what made this look like a policy
+question:
+
+- **arithmetic measure + callbacks is INCORRECT, not merely noisy.** A `Measure_` static is
+  pure arithmetic with no serializer body, so a before-callback cannot run during the measure
+  but does run during the write: the prefix is computed from pre-callback state and the body
+  written from post-callback state. Wrong bytes. Cut 3's exclusion is a correctness necessity;
+- **traversal measure + callbacks is correct but doubles side-effects.** Both passes run the
+  real body, so they agree on the bytes; only the side-effect repeats. That is the consumer's
+  to handle, and is now askable.
+
+So callback-bearing contracts do land on back-fill - **because they are not in the cheap-measure
+set, not because anything routed them there**. Same outcome, honest reason. The earlier framing
+("the callback question gates the stream move") was wrong: there is nothing to decide.
+
 ### What has to be established before the stream backend is touched
 
-1. **Do measurability and callback-freedom coincide?** If cut 3's exclusion means every
-   measure-first-eligible contract is already callback-free, the doubling problem dissolves for
-   the stream move and the blocker becomes purely performance. Prove it; do not believe it.
+1. **Assert that no contract emits both a `Measure_` static and a serialization callback** -
+   not as a design prerequisite (see above: callbacks do not select strategy) but as a
+   CORRECTNESS check on cut 3's exclusion, since arithmetic measure plus a mutating callback
+   would produce wrong bytes. Testable over the corpus; prove it rather than believe it.
 2. ~~Why is the extensible generated model slower under measure-first~~ - **answered above:
    most of that model is not measurable, so it falls back to traversal on a backend that cannot
    back-fill. The gate fixes it rather than being defeated by it.**
