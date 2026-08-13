@@ -970,6 +970,21 @@ slow as its own stream figure). The remaining ladder, in priority order:
    multiplier on all of it. Whatever policy the length caches get should be applied once, to all
    of them - one mechanism, not five.
 
+1c. **`Pool<T>` and `BufferPool` want dedicated investigation (task #7)** - Marc's read is that
+   both are early code that never evolved, and a first look supports it. `Pool<T>` is the
+   multiplier under every other retention question: a **`[ThreadStatic]`** slot holds one
+   instance *per thread, forever* - so a thread that serialized once keeps a writer, its
+   `NetObjectCache` and both length caches for that thread's life - plus a `Queue<T>` capped at
+   a magic `POOL_SIZE = 20` under a plain lock, **never trimmed**. Any per-writer retention is
+   therefore *(threads + 20)* copies that nothing ever reclaims, which is the strongest argument
+   yet that the trim-on-gen2 mechanism belongs on the POOL rather than on each cache.
+   `BufferPool` is now a thin `ArrayPool<byte>.Shared` wrapper, where three things stand out:
+   `ArrayPool` does not pool arrays above 1 MB at all (allocates on rent, drops on return), so
+   the `ioBuffer`-grows-to-hold-the-payload case is pure churn above that, not pooling; `Return`
+   is called without `clearArray`, so buffers come back with stale bytes; and
+   `GetCachedBuffer(...) ?? new byte[...]` is a dead fallback, since `Rent` never returns null
+   and returns *at least* the requested size.
+
 2. **Task #4 - AOT coverage for callback context shapes.** Closes a gap created on this branch:
    `ISerializationContext` works on the runtime paths but the generator accepts only "no
    parameter" or `StreamingContext`, so it DROPS the contract - denying `ProtoWriter.IsMeasuring`
