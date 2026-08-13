@@ -14,6 +14,27 @@ measures (no lzcnt) - with every setup gate passing:
 | GoogleProtobuf | 28.26 us | -22% |
 
 
+## The measured path, priced (net10.0, 2026-08-13)
+
+`NanoGeneratedMeasured` uses `IMeasuredProtoOutput` - measure once, then write - which is the
+only route that knows the payload size before writing, and so the only one where a presized
+lease can fire. Added to price exactly that.
+
+| row | stream | buffer-writer |
+| --- | ---: | ---: |
+| NanoGenerated | 15.58 us / 22,392 B | 11.38 us / 22,392 B |
+| NanoGeneratedMeasured | 24.42 us / 44,784 B | 18.64 us / 44,784 B |
+
+**The measured path costs ~57-64% more and allocates exactly twice**, on both backends. The
+extra measure explains only part of it (the arithmetic measure alone is 3.6 us); the doubled
+allocation points at `NetObjectCache.InitializeFrom`, which COPIES the raw length cache into
+the target writer rather than handing it over.
+
+Consequence for the buffer core: the presized lease was built and then parked, because it is
+neutral in both directions (paired: 15.76 -> 15.58 unmeasured, 24.72 -> 24.42 where it fires)
+and the only path that could feed it is dominated by costs the lease cannot touch. See
+docs/nano-writer.md.
+
 ## The buffer-writer backend, measured at last (net10.0, 2026-08-13)
 
 `DescriptorSerializeBufferWriterBenchmarks`: the same five-way composite against

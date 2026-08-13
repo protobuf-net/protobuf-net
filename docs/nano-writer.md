@@ -243,8 +243,10 @@ level 1, so level 1 goes first.
 
 1. ~~**Invariant flip alone**~~ - **landed, see cut 8 below.**
 2. ~~**Span-direct raw ops**~~ - **landed, see cut 9 below.**
-3. **Presized lease + cap policy** - battery + benchmark, watching the MemoryDiagnoser
-   column (pool pressure is the failure mode the cap guards).
+3. ~~**Presized lease + cap policy**~~ - **built, measured, and PARKED; see below.** It is
+   neutral in both directions on every destination measured, and the only route that knows
+   the total up front is the one path where that knowledge is already paid for many times
+   over.
 4. Re-validate net472 and native (clean publish, warning baseline 19), re-record both
    benchmark legs.
 
@@ -257,6 +259,58 @@ shape. **Half paid by cut 8**: `WriterChunkBoundaryTests` is that harness, sweep
 is the *generated* path - it drives the classic engine only - so the raw-and-legacy
 interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
 `AotConformanceTests` rather than a fixture here.
+
+## The presized lease: built, measured, parked (2026-08-13)
+
+Step 3 of the buffer-core ladder, implemented as designed - `SetCapacityHint` feeding a
+`ClampedLease()` between `MinimumBufferSize` and a 64KiB cap (chosen to keep every presized
+lease under the LOH threshold and on an `ArrayPool` bucket), an `OnCapacityHint` hook so the
+stream backend sizes its own buffer once, and `MeasureState` supplying the total for free.
+Correct, green on the whole battery - and **reverted**, because paired measurement says it is
+worth nothing. Recorded here rather than in the git history alone, so nobody builds it twice.
+
+| net10.0, stream leg, paired | without step 3 | with step 3 |
+| --- | ---: | ---: |
+| NanoGenerated | 15.76 us | 15.58 us |
+| NanoGeneratedMeasured (the only row where the hint fires) | 24.72 us | 24.42 us |
+
+Both differences are inside the noise. The mechanism costs nothing and buys nothing.
+
+**Why, and it is worth understanding rather than just recording:** the lease size was never the
+bottleneck. A 7,670-byte payload at the default 1KiB block takes about eight `GetBuffer` calls,
+each a flush plus a `GetMemory` - a few hundred nanoseconds against a 15us write. And on any
+realistic destination (`ArrayBufferWriter`, a pipe, a pooled writer) the chunk handed back is
+already far larger than the hint, so the boundary was rare before presizing and rare after. The
+same fact retro-explains cut 9's size: the span-direct fast arm was *already* being taken
+almost every time, so there was little boundary cost left for a bigger lease to remove.
+
+### Asking the root for its length costs more than it looks
+
+The first attempt primed the hint in `SerializeRoot`, by asking a measurable root for its
+length. `Issue1232` failed immediately - it pins the exact `Measure` and `Write` call counts,
+and `writeCallCount` went 1 -> 3. The test is right and the design was wrong:
+`IMeasuringSerializer.Measure` is **user-visible API**. Consumers implement it, consumers count
+it, and an implementation is entitled to measure **by writing** - which is precisely what that
+fixture's does. `OptionTrySkipWritingWhenMeasuring` does not distinguish "cheap arithmetic"
+from "expensive traversal", so there is no predicate that makes this safe in general.
+
+That leaves a generator-emitted hint as the only honest route to the common path - the
+generator does know its `Measure_` is arithmetic. Given the table above, that is not worth
+building until something demonstrates the lease size matters at all.
+
+### The lead this did turn up: the measured path copies its length cache
+
+`NanoGeneratedMeasured` allocates **44,784 B against NanoGenerated's 22,392 B - exactly twice**,
+on both backends. `NetObjectCache.InitializeFrom` copies `_rawLengths` pair by pair into the
+target's dictionary rather than handing the instance over, so a tree with hundreds of
+sub-messages builds the whole cache twice and pays hundreds of hash inserts to do it. Against
+`NanoGenerated`'s 15.6us plus the 3.6us measure, roughly 5us of the measured path's 24.4us is
+unaccounted for, and this is the obvious candidate.
+
+A **swap** rather than a copy would be O(1) and allocation-free, and keeps single ownership
+(each cache still holds exactly one dictionary, so disposal semantics do not change) - unlike
+sharing the instance, which would alias two writers whose lifetimes only happen to nest today.
+Note `_rawLengths` is `readonly` under `#if NET` and would have to stop being.
 
 ## The lease hint is a HINT (Marc, 2026-08-13) - and this was already broken
 

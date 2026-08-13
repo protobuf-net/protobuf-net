@@ -172,6 +172,21 @@ public class DescriptorSerializeBufferWriterBenchmarks
         return _bw;
     }
 
+    /// <summary>
+    /// The measured path: measure once, then write. It is the only route that knows the total
+    /// before writing, so it is the only one where the presized lease fires today - which makes
+    /// this row the price of "exact buffer, one chunk" against NanoGenerated's default blocks.
+    /// </summary>
+    [Benchmark]
+    public object NanoGeneratedMeasured()
+    {
+        _bw.Reset();
+        var output = (IMeasuredProtoOutput<IBufferWriter<byte>>)Model.NanoDescriptorModel.Instance;
+        using var measured = output.Measure(_nanoSet);
+        output.Serialize(measured, _bw);
+        return _bw;
+    }
+
     [Benchmark]
     public object GoogleProtobuf()
     {

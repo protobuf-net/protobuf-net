@@ -634,6 +634,11 @@ namespace ProtoBuf
                 {
                     CheckClear();
                     serializer ??= TypeModel.GetSerializer<T>(Model);
+                    // NOTE: the root is deliberately NOT measured here to presize the buffer.
+                    // Measure() is user-visible - consumers implement it, Issue1232 pins the
+                    // exact call counts, and an implementation may measure BY WRITING - so
+                    // asking a root that nothing else was going to measure is neither free nor
+                    // invisible. docs/nano-writer.md, "the presized lease, and why it is parked".
                     long before = GetPosition();
 #if FEAT_DYNAMIC_REF
                     if (TypeHelper<T>.IsReferenceType && value is object)

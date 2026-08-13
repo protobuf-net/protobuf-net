@@ -164,6 +164,18 @@ public class DescriptorSerializeBenchmarks
         return s_generatedMeasure(_nanoSet, 512, _measureScratch);
     }
 
+    /// <summary>The measured path, i.e. the one where the presized lease fires; see the
+    /// buffer-writer sibling for the reasoning.</summary>
+    [Benchmark]
+    public object NanoGeneratedMeasured()
+    {
+        _ms.Position = 0;
+        var output = (IMeasuredProtoOutput<Stream>)Model.NanoDescriptorModel.Instance;
+        using var measured = output.Measure(_nanoSet);
+        output.Serialize(measured, _ms);
+        return _ms;
+    }
+
     [Benchmark]
     public object GoogleProtobuf()
     {
