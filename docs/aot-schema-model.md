@@ -1,6 +1,10 @@
-# A `.proto` schema as an AOT model, in one project
+﻿# A `.proto` schema as an AOT model, in one project
 
-**Status: design, with the load-bearing mechanism proved by test. No implementation yet.**
+**Status: design, with the mechanism AND the plan-building half proved by spike.**
+`SchemaSourcedModelProbeTests` establishes the mechanism; `SchemaSourcedModelSpikeTests` plus
+`Internal/SchemaPlanBuilder.cs` take a real schema all the way to a model that compiles against
+the generator-emitted DTOs. Nothing is wired into the generator yet, and no public API has been
+added - the switch below is still a recommendation, not a decision.
 
 ## The problem
 
@@ -168,6 +172,44 @@ And the deeper point stands: **most such diagnostics should not arise**. The gen
 contract it cannot handle - but on this path we also *emit* the contract, so a shape the plan
 cannot serialize is a shape protogen should not have emitted. Where the two genuinely disagree,
 pointing at the `.proto` line is the most useful thing that could happen.
+
+## What the spike established (2026-08-13)
+
+`SchemaPlanBuilder` + `SchemaSourcedModelSpikeTests` run the whole loop for a representative
+proto3 schema - scalars of every width, `bytes`, an enum member, and a nested message reference:
+
+1. `ProtoFileGenerator` emits the DTOs, exactly as a consumer's build would;
+2. the same schema is parsed again and projected into `ProtoContractPlan`s;
+3. `ProtoModelGenerator.Emit` turns them into a model;
+4. DTOs + model + the consumer's `partial class : TypeModel` compile together, **with zero
+   errors**, and the model really does carry `ISerializer<global::Spike.Thing>` and
+   `ISerializer<global::Spike.Inner>`.
+
+So the direction works, and the remaining work is breadth rather than risk.
+
+**The conventions the plan must match are now concrete rather than hypothetical.** Reading
+protogen's actual output for that schema, each of these is a decision the plan builder has to
+mirror, and each is marked `CONVENTION` in the source:
+
+- the package becomes the namespace via `NameNormalizer` (`spike` -> `Spike`);
+- **every** message is emitted `: IExtensible` with a private `__pbn__extensionData` field, so
+  the plan is `ProtoExtensibleKind.Untyped` throughout - not `None`;
+- a proto3 **string** member is emitted with `[DefaultValue("")]` *and* an `= ""` initialiser,
+  which moves the write guard from `!= null` to `!= ""`. This one is the sharpest: getting it
+  wrong is a silent **wire** difference, not a build break, so the compile gate would not catch
+  it and only the byte differential would;
+- `repeated` scalars become `T[]` with `IsPacked = true`, while `repeated` messages/strings
+  become a **getter-only** `List<T>` with an initialiser - two different shapes from one schema
+  construct, and the getter-only one needs the plan's existing accessor route;
+- a `map<k,v>` is not a distinct feature at descriptor level: it compiles to a **synthetic nested
+  entry message** plus a repeated field. So map support is gated on nested-type support rather
+  than being separate work, which the scope test pins.
+
+**The drift gate is real, and was verified able to fail** by perturbing the namespace convention
+in the builder: the spike test goes red with `CS0234`/`CS0246` rather than passing quietly. But
+note its limit, which is exactly the string-default case above - **a compile gate catches wrong
+NAMES and cannot catch wrong GUARDS.** That is the argument for putting the byte differential in
+early (step 3 below) rather than treating it as the finishing touch.
 
 ## Suggested order
 
