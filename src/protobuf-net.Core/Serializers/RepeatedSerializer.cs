@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections;
@@ -191,7 +191,8 @@ namespace ProtoBuf.Serializers
             {   // we only need to write these for exact v2 compatibility
                 state.WriteFieldHeader(fieldNumber, WireType.String);
                 var writer = state.GetWriter();
-                writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, 0UL));
+                writer.ImplWriteVarint64(ref state, 0UL);
+                writer.ResetWireType();
             }
         }
 
@@ -291,7 +292,8 @@ namespace ProtoBuf.Serializers
 
             state.WriteFieldHeader(fieldNumber, WireType.String);
             var writer = state.GetWriter();
-            writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)expectedLength));
+            writer.ImplWriteVarint64(ref state, (ulong)expectedLength);
+            writer.ResetWireType();
             long before = state.GetPosition();
             WritePacked(ref state, values, serializer, wireType);
             long actualLength = state.GetPosition() - before;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
@@ -22,8 +22,19 @@ namespace ProtoBuf
             // performs (WriteFieldHeader records state; the value write switches on it)
             // is skipped entirely - the tag is a compile-time constant argument and the
             // value write names its own encoding. Every op still leaves WireType = None
-            // (AdvanceAndReset), so raw and legacy-mode member writes interleave safely
-            // within one body, exactly as the read side's StashTag arms do.
+            // (ResetWireType), so raw and legacy-mode member writes interleave safely
+            // within one body, exactly as the read side's StashTag arms do. Position is NOT
+            // touched here: it is derived from the backend's uncommitted offset (see the
+            // position invariant on ProtoWriter), which the store itself maintains.
+
+            /// <summary>
+            /// The number of bytes written so far. Under the writer's deferred-position
+            /// invariant this is DERIVED - the bytes the backend has committed, plus whatever
+            /// it is still holding in its pending buffer - so that a write op does not have to
+            /// maintain a position alongside the buffer offset it is already advancing.
+            /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public readonly long Position64 => _writer.GetPosition(in this);
 
             /// <summary>
             /// Raw-convention field tag write: the tag is a compile-time constant from the
@@ -35,7 +46,8 @@ namespace ProtoBuf
             {
                 var writer = _writer;
                 writer._needFlush = true;
-                writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, tag));
+                writer.ImplWriteVarint32(ref this, tag);
+                writer.ResetWireType();
             }
 
             /// <summary>Raw-convention varint write (32-bit).</summary>
@@ -44,7 +56,8 @@ namespace ProtoBuf
             public void WriteRawVarint32(uint value)
             {
                 var writer = _writer;
-                writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, value));
+                writer.ImplWriteVarint32(ref this, value);
+                writer.ResetWireType();
             }
 
             /// <summary>Raw-convention varint write (64-bit); a negative int32/int64 arrives
@@ -54,7 +67,8 @@ namespace ProtoBuf
             public void WriteRawVarint64(ulong value)
             {
                 var writer = _writer;
-                writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, value));
+                writer.ImplWriteVarint64(ref this, value);
+                writer.ResetWireType();
             }
 
             /// <summary>Raw-convention zig-zag write (32-bit).</summary>
@@ -76,7 +90,7 @@ namespace ProtoBuf
             {
                 var writer = _writer;
                 writer.ImplWriteFixed32(ref this, value);
-                writer.AdvanceAndReset(4);
+                writer.ResetWireType();
             }
 
             /// <summary>Raw-convention fixed64 write.</summary>
@@ -86,7 +100,7 @@ namespace ProtoBuf
             {
                 var writer = _writer;
                 writer.ImplWriteFixed64(ref this, value);
-                writer.AdvanceAndReset(8);
+                writer.ResetWireType();
             }
 
             /// <summary>Raw-convention float write (fixed32 bits). The netfx arm reinterprets
@@ -121,12 +135,14 @@ namespace ProtoBuf
                 var writer = _writer;
                 if (value.Length == 0)
                 {
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, 0));
+                    writer.ImplWriteVarint32(ref this, 0);
+                    writer.ResetWireType();
                 }
                 else
                 {
                     var len = UTF8.GetByteCount(value);
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)len) + len);
+                    writer.ImplWriteVarint32(ref this, (uint)len);
+                    writer.ResetWireType();
                     writer.ImplWriteString(ref this, value, len);
                 }
             }
@@ -139,7 +155,8 @@ namespace ProtoBuf
             public void WriteRawBytes(ReadOnlySpan<byte> value)
             {
                 var writer = _writer;
-                writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)value.Length) + value.Length);
+                writer.ImplWriteVarint32(ref this, (uint)value.Length);
+                writer.ResetWireType();
                 if (value.Length != 0) writer.ImplWriteBytes(ref this, value);
             }
 

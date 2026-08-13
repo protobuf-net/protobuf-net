@@ -101,6 +101,8 @@ namespace ProtoBuf
 
             private void AdvanceSubMessage(ref State state, long length, PrefixStyle style)
             {
+                // note: the ImplWrite* arms below account for their own preamble (see the
+                // stores above), so only the arms that write nothing contribute here
                 long preamble;
                 switch (WireType)
                 {
@@ -116,7 +118,8 @@ namespace ProtoBuf
                                 preamble = 4;
                                 break;
                             case PrefixStyle.Base128:
-                                preamble = ImplWriteVarint64(ref state, (ulong)length);
+                                ImplWriteVarint64(ref state, (ulong)length);
+                                preamble = 0;
                                 break;
                             default:
                                 state.ThrowInvalidSerializationOperation();
@@ -126,7 +129,8 @@ namespace ProtoBuf
                         break;
                     case WireType.StartGroup:
                         // the start group is already written, so w just need to leave the end group
-                        preamble = ImplWriteVarint32(ref state, (uint)(fieldNumber << 3));
+                        ImplWriteVarint32(ref state, (uint)(fieldNumber << 3));
+                        preamble = 0;
                         break;
                     default:
                         state.ThrowInvalidSerializationOperation();
@@ -153,7 +157,7 @@ namespace ProtoBuf
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
             {
                 var len = _position64 - token.value64;
-                int bytes;
+                int bytes; // as above: only the arms that write nothing contribute here
                 switch(style)
                 {
                     case PrefixStyle.Fixed32BigEndian:
@@ -161,7 +165,8 @@ namespace ProtoBuf
                         bytes = 4;
                         break;
                     case PrefixStyle.Base128:
-                        bytes = ImplWriteVarint64(ref state, (ulong)len);
+                        ImplWriteVarint64(ref state, (ulong)len);
+                        bytes = 0;
                         break;
                     default:
                         state.ThrowInvalidSerializationOperation();
@@ -174,21 +179,40 @@ namespace ProtoBuf
                 CheckOversized(ref state);
             }
 
-            private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data) { }
+            // this writer has no pending buffer, so every store commits immediately: the
+            // stores ARE the measurement, and each accounts for itself rather than relying
+            // on the caller to advance (the deferred-position invariant, docs/nano-writer.md)
 
-            private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data)
+                => Advance(data.Length);
 
-            private protected override void ImplWriteFixed32(ref State state, uint value) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data)
+                => Advance(data.Length);
 
-            private protected override void ImplWriteFixed64(ref State state, ulong value) { }
+            private protected override void ImplWriteFixed32(ref State state, uint value)
+                => Advance(4);
 
-            private protected override void ImplWriteString(ref State state, string value, int expectedBytes) { }
+            private protected override void ImplWriteFixed64(ref State state, ulong value)
+                => Advance(8);
+
+            private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
+                => Advance(expectedBytes);
 
             [MethodImpl(ProtoReader.HotPath)]
-            private protected override int ImplWriteVarint32(ref State state, uint value) => MeasureUInt32(value);
+            private protected override int ImplWriteVarint32(ref State state, uint value)
+            {
+                var count = MeasureUInt32(value);
+                Advance(count);
+                return count;
+            }
 
             [MethodImpl(ProtoReader.HotPath)]
-            internal override int ImplWriteVarint64(ref State state, ulong value) => MeasureUInt64(value);
+            internal override int ImplWriteVarint64(ref State state, ulong value)
+            {
+                var count = MeasureUInt64(value);
+                Advance(count);
+                return count;
+            }
 
             private protected override bool TryFlush(ref State state) => true;
         }

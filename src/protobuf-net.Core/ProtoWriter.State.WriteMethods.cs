@@ -32,12 +32,14 @@ namespace ProtoBuf
                 var writer = _writer;
                 if (string.IsNullOrEmpty(value))
                 {
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, 0));
+                    writer.ImplWriteVarint32(ref this, 0);
+                    writer.ResetWireType();
                 }
                 else
                 {
                     var len = UTF8.GetByteCount(value);
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)len) + len);
+                    writer.ImplWriteVarint32(ref this, (uint)len);
+                    writer.ResetWireType();
                     writer.ImplWriteString(ref this, value, len);
                 }
             }
@@ -128,11 +130,13 @@ namespace ProtoBuf
                 var writer = _writer;
                 if (value >= 0)
                 {
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)value));
+                    writer.ImplWriteVarint32(ref this, (uint)value);
+                    writer.ResetWireType();
                 }
                 else
                 {
-                    writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, (ulong)(long)value));
+                    writer.ImplWriteVarint64(ref this, (ulong)(long)value);
+                    writer.ResetWireType();
                 }
             }
 
@@ -146,17 +150,18 @@ namespace ProtoBuf
                 {
                     case WireType.Fixed32:
                         writer.ImplWriteFixed32(ref this, (uint)value);
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed64:
                         writer.ImplWriteFixed64(ref this, (ulong)(long)value);
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     case WireType.Varint:
                         WriteInt32VarintImpl(value);
                         return;
                     case WireType.SignedVarint:
-                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, Zig(value)));
+                        writer.ImplWriteVarint32(ref this, Zig(value));
+                        writer.ResetWireType();
                         return;
                     default:
                         ThrowInvalidSerializationOperation();
@@ -211,15 +216,15 @@ namespace ProtoBuf
                 {
                     case WireType.Fixed32:
                         writer.ImplWriteFixed32(ref this, value);
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed64:
                         writer.ImplWriteFixed64(ref this, value);
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     case WireType.Varint:
-                        int bytes = writer.ImplWriteVarint32(ref this, value);
-                        writer.AdvanceAndReset(bytes);
+                        writer.ImplWriteVarint32(ref this, value);
+                        writer.ResetWireType();
                         return;
                     default:
                         ThrowInvalidSerializationOperation();
@@ -245,7 +250,7 @@ namespace ProtoBuf
                         return;
                     case WireType.Fixed64:
                         unsafe { writer.ImplWriteFixed64(ref this, *(ulong*)&value); }
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     default:
                         ThrowInvalidSerializationOperation();
@@ -263,7 +268,7 @@ namespace ProtoBuf
                 {
                     case WireType.Fixed32:
                         unsafe { writer.ImplWriteFixed32(ref this, *(uint*)&value); }
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed64:
                         WriteDouble(value);
@@ -284,17 +289,19 @@ namespace ProtoBuf
                 {
                     case WireType.Fixed64:
                         writer.ImplWriteFixed64(ref this, (ulong)value);
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     case WireType.Varint:
-                        writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, (ulong)value));
+                        writer.ImplWriteVarint64(ref this, (ulong)value);
+                        writer.ResetWireType();
                         return;
                     case WireType.SignedVarint:
-                        writer.AdvanceAndReset(writer.ImplWriteVarint64(ref this, Zig(value)));
+                        writer.ImplWriteVarint64(ref this, Zig(value));
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed32:
                         writer.ImplWriteFixed32(ref this, checked((uint)(int)value));
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     default:
                         ThrowInvalidSerializationOperation();
@@ -312,15 +319,15 @@ namespace ProtoBuf
                 {
                     case WireType.Fixed64:
                         writer.ImplWriteFixed64(ref this, value);
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     case WireType.Varint:
-                        int bytes = writer.ImplWriteVarint64(ref this, value);
-                        writer.AdvanceAndReset(bytes);
+                        writer.ImplWriteVarint64(ref this, value);
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed32:
                         writer.ImplWriteFixed32(ref this, checked((uint)value));
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     default:
                         ThrowInvalidSerializationOperation();
@@ -509,7 +516,7 @@ namespace ProtoBuf
                 private set => _writer.fieldNumber = value;
             }
 
-            internal readonly long GetPosition() => _writer._position64;
+            internal readonly long GetPosition() => Position64;
 
             internal readonly ProtoWriter GetWriter() => _writer;
 
@@ -530,15 +537,16 @@ namespace ProtoBuf
                     case WireType.Fixed32:
                         if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
                         writer.ImplWriteBytes(ref this, data);
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed64:
                         if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
                         writer.ImplWriteBytes(ref this, data);
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     case WireType.String:
-                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)length) + length);
+                        writer.ImplWriteVarint32(ref this, (uint)length);
+                        writer.ResetWireType();
                         if (length == 0) return;
                         writer.ImplWriteBytes(ref this, data);
                         break;
@@ -596,15 +604,16 @@ namespace ProtoBuf
                     case WireType.Fixed32:
                         if (length != 4) ThrowHelper.ThrowArgumentException(nameof(length));
                         writer.ImplWriteBytes(ref this, data);
-                        writer.AdvanceAndReset(4);
+                        writer.ResetWireType();
                         return;
                     case WireType.Fixed64:
                         if (length != 8) ThrowHelper.ThrowArgumentException(nameof(length));
                         writer.ImplWriteBytes(ref this, data);
-                        writer.AdvanceAndReset(8);
+                        writer.ResetWireType();
                         return;
                     case WireType.String:
-                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref this, (uint)length) + length);
+                        writer.ImplWriteVarint32(ref this, (uint)length);
+                        writer.ResetWireType();
                         if (length == 0) return;
                         writer.ImplWriteBytes(ref this, data);
                         break;
@@ -721,8 +730,8 @@ namespace ProtoBuf
                         bytes = default;
                         break;
                 };
-                int prefixLength = _writer.ImplWriteVarint64(ref this, bytes);
-                _writer.AdvanceAndReset(prefixLength);
+                _writer.ImplWriteVarint64(ref this, bytes);
+                _writer.ResetWireType();
             }
 
 #if FEAT_DYNAMIC_REF
@@ -805,8 +814,7 @@ namespace ProtoBuf
             {
                 uint header = (((uint)fieldNumber) << 3)
                     | (((uint)wireType) & 7);
-                int bytes = _writer.ImplWriteVarint32(ref this, header);
-                _writer.Advance(bytes);
+                _writer.ImplWriteVarint32(ref this, header);
             }
 
             /// <summary>
@@ -920,7 +928,6 @@ namespace ProtoBuf
                         if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
                         {
                             _writer.ImplWriteBytes(ref this, new ReadOnlySpan<byte>(data.Array, data.Offset, data.Count));
-                            _writer.Advance(data.Count);
                         }
                         else
                         {

@@ -186,6 +186,11 @@ namespace ProtoBuf
             internal readonly WireType WireType;
             internal readonly int FieldNumber;
         }
+        // note: every caller of this pair is a Measure* static taking a NullProtoWriter, so
+        // the position being snapshotted and zeroed here is always a Null writer's - which
+        // has no pending buffer, so committed IS the position and the zeroing is exact.
+        // (Audited when the deferred-position invariant landed; if a buffered backend ever
+        // needs this, it must zero the uncommitted offset too, not just the committed count.)
         internal WriteState ResetWriteState()
         {
             var state = new WriteState(_position64, fieldNumber, WireType);
@@ -300,7 +305,8 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.String:
-                    AdvanceAndReset(ImplWriteVarint32(ref state, 0));
+                    ImplWriteVarint32(ref state, 0);
+                    ResetWireType();
                     break;
                 case WireType.StartGroup:
                     state.WriteHeaderCore(state.FieldNumber, WireType.EndGroup);
@@ -340,22 +346,42 @@ namespace ProtoBuf
 
         private bool _needFlush;
 
+        // ---- the position invariant (docs/nano-writer.md, the buffer-core plan) ----
+        //
+        // _position64 counts COMMITTED bytes only - what has left the writer's pending
+        // buffer for the backend - and is advanced at the commit point, never per write
+        // op. The true position is DERIVED: committed + whatever the backend is still
+        // holding uncommitted, which every backend already tracks for its own purposes
+        // (the buffer-writer's state.OffsetInCurrent, the stream writer's ioIndex). That
+        // removes the second half of the per-op double bookkeeping - the span offset AND
+        // a writer-object position advance - which is what lets a raw op become a
+        // span-direct store touching the writer object not at all.
+        //
+        // The Null writer has no buffer, so it commits immediately: its Impl* stores
+        // (which are pure measurement) advance the position themselves, and its
+        // uncommitted count is always zero. The SAME formula answers correctly for it,
+        // so the accessor is uniform.
+
+        [MethodImpl(HotPath)]
+        internal long GetPosition(in State state) => _position64 + GetUncommitted(in state);
+
 #pragma warning disable RCS1163, IDE0060 // Remove unused parameter
-        internal long GetPosition(ref State state) => _position64;
+        /// <summary>
+        /// Bytes written into this backend's pending buffer that have not yet been committed
+        /// (and so are not yet counted by <c>_position64</c>).
+        /// </summary>
+        private protected virtual long GetUncommitted(in State state) => 0;
 #pragma warning restore RCS1163, IDE0060 // Remove unused parameter
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;
-        internal void AdvanceAndReset(int count)
-        {
-            _position64 += count;
-            WireType = WireType.None;
-        }
-        internal void AdvanceAndReset(long count)
-        {
-            _position64 += count;
-            WireType = WireType.None;
-        }
+
+        /// <summary>
+        /// Ends a write op under the stateful convention: the value has been written, so the
+        /// pending field header is discharged. Position is not touched - see the invariant above.
+        /// </summary>
+        [MethodImpl(HotPath)]
+        internal void ResetWireType() => WireType = WireType.None;
 
         /// <summary>
         /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
@@ -369,7 +395,7 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         internal void CheckClear(ref State state)
         {
-            if (_depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {_depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.GetPosition()})");
+            if (_depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {_depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.Position64})");
             _needFlush = false; // because we ^^^ *JUST DID*
         }
 

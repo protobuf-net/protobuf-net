@@ -72,6 +72,12 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
+            // the deferred-position invariant (docs/nano-writer.md): bytes written into the
+            // leased chunk are uncommitted until TryFlush hands them to the IBufferWriter, and
+            // state.OffsetInCurrent is exactly how many those are - so the per-op writer-object
+            // position advance is pure duplication of a count the span write already maintains
+            private protected override long GetUncommitted(in State state) => state.OffsetInCurrent;
+
             private protected override bool TryFlush(ref State state)
             {
                 if (state.IsActive)
@@ -82,6 +88,7 @@ namespace ProtoBuf
                     {
                         bytes = state.ConsiderWritten();
                         step = true;
+                        Advance(bytes); // uncommitted -> committed; position is unchanged across this
                         _writer.Advance(bytes);
                     }
                     catch (Exception ex)
@@ -254,13 +261,14 @@ namespace ProtoBuf
                         long calculatedLength = MeasureAny<T>(_nullWriter, TypeModel.ListItemTag, features, value, serializer);
 
                         // write length-prefix as varint
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
 
                         if (calculatedLength != 0)
                         {
-                            var oldPos = GetPosition(ref state);
+                            var oldPos = GetPosition(in state);
                             state.WriteAny(TypeModel.ListItemTag, features, value, serializer);
-                            var newPos = GetPosition(ref state);
+                            var newPos = GetPosition(in state);
 
                             var actualLength = (newPos - oldPos);
                             if (actualLength != calculatedLength)
@@ -290,13 +298,14 @@ namespace ProtoBuf
                         long calculatedLength = MeasureRepeated<TCollection, TItem>(_nullWriter, TypeModel.ListItemTag, features, values, serializer, valueSerializer);
 
                         // write length-prefix as varint
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
 
                         if (calculatedLength != 0)
                         {
-                            var oldPos = GetPosition(ref state);
+                            var oldPos = GetPosition(in state);
                             serializer.WriteRepeated(ref state, TypeModel.ListItemTag, features, values, valueSerializer);
-                            var newPos = GetPosition(ref state);
+                            var newPos = GetPosition(in state);
 
                             var actualLength = (newPos - oldPos);
                             if (actualLength != calculatedLength)
@@ -325,13 +334,14 @@ namespace ProtoBuf
                         long calculatedLength = MeasureMap<TCollection, TKey, TValue>(_nullWriter, TypeModel.ListItemTag, features, values, serializer, keyFeatures, valueFeatures, keySerializer, valueSerializer);
 
                         // write length-prefix as varint
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
 
                         if (calculatedLength != 0)
                         {
-                            var oldPos = GetPosition(ref state);
+                            var oldPos = GetPosition(in state);
                             serializer.WriteMap(ref state, TypeModel.ListItemTag, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
-                            var newPos = GetPosition(ref state);
+                            var newPos = GetPosition(in state);
 
                             var actualLength = (newPos - oldPos);
                             if (actualLength != calculatedLength)
@@ -377,14 +387,15 @@ namespace ProtoBuf
                     case PrefixStyle.None:
                         break;
                     case PrefixStyle.Base128:
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
                         break;
                     case PrefixStyle.Fixed32:
                     case PrefixStyle.Fixed32BigEndian:
                         ImplWriteFixed32(ref state, checked((uint)calculatedLength));
                         if (style == PrefixStyle.Fixed32BigEndian)
                             state.ReverseLast32();
-                        AdvanceAndReset(4);
+                        ResetWireType();
                         break;
                     default:
                         ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
@@ -393,9 +404,9 @@ namespace ProtoBuf
 
                 if (calculatedLength != 0) // don't bother serializing if nothing there
                 {
-                    var oldPos = GetPosition(ref state);
+                    var oldPos = GetPosition(in state);
                     serializer.Write(ref state, value);
-                    var newPos = GetPosition(ref state);
+                    var newPos = GetPosition(in state);
 
                     var actualLength = (newPos - oldPos);
                     if (actualLength != calculatedLength)
@@ -412,10 +423,11 @@ namespace ProtoBuf
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
                 
                 // we'll always use varint here
-                AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
-                var oldPos = GetPosition(ref state);
+                ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                ResetWireType();
+                var oldPos = GetPosition(in state);
                 serializer.WriteSubType(ref state, value);
-                var newPos = GetPosition(ref state);
+                var newPos = GetPosition(in state);
 
                 var actualLength = (newPos - oldPos);
                 if (actualLength != calculatedLength)
@@ -439,9 +451,9 @@ namespace ProtoBuf
                 {
                     if (state.RemainingInCurrent == 0) GetBuffer(ref state);
 
-                    int bytes = state.ReadFrom(source);
-                    if (bytes <= 0) break;
-                    Advance(bytes);
+                    // ReadFrom lands in the leased chunk, so it advances the uncommitted
+                    // offset itself; there is nothing to account for here
+                    if (state.ReadFrom(source) <= 0) break;
                 }
             }
         }

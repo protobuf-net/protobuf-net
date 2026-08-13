@@ -241,10 +241,7 @@ level 1, so level 1 goes first.
 
 ### Step ladder (gates per step, as always)
 
-1. **Invariant flip alone** - deferred position + accessor + full audit, no fast path
-   yet. The battery referees hard here: positions are load-bearing in the
-   length-mismatch checks, so any missed site fails loudly, and cut 6 widened where
-   those checks run.
+1. ~~**Invariant flip alone**~~ - **landed, see cut 8 below.**
 2. **Span-direct raw ops** (fast/slow split) - battery + serialize benchmark.
 3. **Presized lease + cap policy** - battery + benchmark, watching the MemoryDiagnoser
    column (pool pressure is the failure mode the cap guards).
@@ -255,7 +252,89 @@ Fixture debt to pay alongside: a mixed contract that interleaves raw and legacy-
 member WRITES around a chunk boundary (the write-side mirror of the read's
 split-at-every-offset sweeps) - `StreamParseBenchmarks.ChunkedStream` has the recipe,
 and a tiny-block `IBufferWriter` harness would force the boundary through every member
-shape.
+shape. **Half paid by cut 8**: `WriterChunkBoundaryTests` is that harness, sweeping
+`TypeModel.BufferSize` against an exactly-as-asked `IBufferWriter`. What it does NOT cover
+is the *generated* path - it drives the classic engine only - so the raw-and-legacy
+interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
+`AotConformanceTests` rather than a fixture here.
+
+## Cut 8 landed: the deferred position, buffer-core step 1 (2026-08-13)
+
+`_position64` now counts **committed** bytes only; the true position is DERIVED as committed
+plus whatever the backend still holds uncommitted, through one
+`private protected virtual long GetUncommitted(in State)`:
+
+| backend | uncommitted | commits at |
+| --- | --- | --- |
+| buffer-writer | `state.OffsetInCurrent` | `TryFlush` (`ConsiderWritten` then `Advance`) |
+| stream | `ioIndex` | flush, and the two write-straight-to-`dest` arms |
+| null | always 0 | its own `Impl*` stores, which ARE the measurement |
+
+So `AdvanceAndReset(count)` loses its count and becomes `ResetWireType()`: the ~40 shared write
+sites stop maintaining a position alongside the buffer offset they were already advancing,
+which is the second half of the double bookkeeping step 2 needs gone before a raw op can be a
+span-direct store touching the writer object not at all. Surfaced as `[PBN9002]
+state.Position64` / `writer.GetPosition(in state)`, and every internal reader now goes through
+it - `state.GetPosition()` is a one-line forwarder, so there is a single source.
+
+Two audit results worth keeping, both the opposite of what the plan expected:
+
+- **`ResetWriteState`/`SetWriteState`, called out above as the sharpest edge, is safe by
+  construction.** All five call sites are `Measure*` statics taking a `NullProtoWriter`, which
+  has no pending buffer - so zeroing the committed count *is* zeroing the position. Noted at
+  the method, along with what a buffered backend would have to do differently, since the
+  next person will ask the same question.
+- **The stream backend is not span-backed at all.** The plan said "the span-backed backends
+  (buffer-writer, stream)"; in fact `StreamProtoWriter` never calls `State.Init` and keeps its
+  own `ioBuffer`/`ioIndex`, so `State`'s span belongs to the buffer-writer alone. The same
+  invariant still fits it exactly - `ioIndex` is its uncommitted count - which is why the
+  accessor is one virtual and not a special case.
+
+**The Null writer's `Impl*` stores now advance for themselves.** They used to be empty (or a
+bare `MeasureUInt32`) with the caller advancing; with the caller out of that business they own
+it. The two sites that consumed a preamble length as a *return value* - `AdvanceSubMessage`
+and `ImplEndLengthPrefixedSubItem` - would otherwise double-count, so their `Impl`-calling arms
+now contribute zero and only the arms that write nothing contribute a width.
+
+New fixture, `WriterChunkBoundaryTests`, paying part of the debt below: an `IBufferWriter` that
+hands out **exactly** what was asked for and never a byte more, swept across `TypeModel.BufferSize`,
+so a commit lands inside every member shape rather than wherever a generous pool put it. It
+pins bytes against the stream backend, the reported root length, the measured-write path (which
+runs both position regimes in one operation), and `Position64` read mid-write with bytes still
+uncommitted. `BufferWriterTests.ManualWriter_*` already refereed the same invariant for free -
+it asserts position after every op on all three backends, and would have failed flat if the
+derivation were wrong.
+
+**It found a pre-existing bug, and the sweep floor records it rather than hiding it:** a
+`BufferSize` below 10 overruns the lease, because the buffer-writer's room checks
+(`if (RemainingInCurrent < 10) GetBuffer`) assume a lease at least as wide as the widest
+primitive written without re-checking, while `GetBuffer` asks for exactly `BufferSize`. With a
+strict `IBufferWriter` that is an `IndexOutOfRangeException` on a public config knob. Confirmed
+pre-existing by re-running the fixture against the writer as it stood before this cut - the
+same 18 cases fail identically - so it is not this cut's. Fixed separately, next commit.
+
+**Benchmark: measured back-to-back on one machine, which turned out to matter more than
+expected.** net10.0, descriptor serialize:
+
+| row | before | after | delta |
+| --- | ---: | ---: | ---: |
+| LegacyReal | 19.85 us | 20.87 us | +5.1% (inside its own between-run spread) |
+| GeneratedProtogen | 15.42 us | 15.14 us | **-1.8%** |
+| NanoGenerated | 13.77 us | 13.54 us | **-1.7%** |
+| NanoGeneratedMeasure | 3.65 us | 3.66 us | +0.3% |
+| GoogleProtobuf (the drift gauge) | 13.19 us | 13.27 us | +0.6% |
+
+A small consistent gain, which is what this step should produce: one add-and-store leaves the
+hot path, but every op still routes through the virtual `Impl*`, which dominates. Step 2 is
+where the win is.
+
+**And a caution worth more than the numbers: between-DAY drift dwarfs between-run drift.** This
+run's *baseline* - byte-identical code to cut 5 - reads 13.77 us where cut 5 recorded 12.64 us,
+so the machine is ~9% slower today than on 2026-08-12. Read cold against the recorded table,
+this cut looks like a 7% regression; measured paired, it is a 1.7% gain. The 1.6-1.8% figure
+recorded for cut 5's race was two runs minutes apart and does NOT bound this. **Never compare
+against a table from another day** - re-measure the baseline in the same session, and prefer
+`git stash` + two runs to any amount of arithmetic.
 
 ## Cut 7 landed: the measure state, made right (2026-08-13)
 
@@ -321,15 +400,16 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 ## Where this stands / what's next (current as of 2026-08-13, cuts 1-7 pushed)
 
 **Handover note: this section plus "The presized buffer core: the plan" above is the
-entry point for a fresh session.** Cuts 1-7 are pushed to `raw-writer` and green on every
+entry point for a fresh session.** Cuts 1-8 are pushed to `raw-writer` and green on every
 gate; the serialize numbers (both TFMs) are in `src/NanoBench/DescriptorSerializeResults.md`
 and already beat Google.Protobuf on home turf before the buffer core exists. The remaining
 ladder, in priority order:
 
 1. **The presized buffer core** - the full plan, with the position-invariant design and
-   the decided cap policy, is the section above. Step 1 of its own ladder (the invariant
-   flip alone) is the next piece of work. Deep surgery on shared writer internals; gates
-   per commit as usual.
+   the decided cap policy, is the section above. **Step 1 (the invariant flip) landed as cut
+   8**; step 2 (span-direct raw ops, the fast/slow split) is the next piece of work, and is
+   where the win is - the invariant flip only cleared the way for it. Deep surgery on shared
+   writer internals; gates per commit as usual.
 2. Counting mode for mixed contracts (legacy-mode members measured via the classic body
    against the Null writer, landing in the same lengthCache - which now lives on
    NetObjectCache, shared with the sidecar and the MeasureState hand-off, so the landing

@@ -14,6 +14,30 @@ measures (no lzcnt) - with every setup gate passing:
 | GoogleProtobuf | 28.26 us | -22% |
 
 
+## Buffer-core step 1: the deferred position (net10.0, 2026-08-13, cut 8)
+
+Measured PAIRED - `git stash`, run, pop, run - because the recorded tables above turned out
+not to be comparable across days (see below).
+
+| row | before | after | delta |
+| --- | ---: | ---: | ---: |
+| LegacyReal | 19.85 us | 20.87 us | +5.1% |
+| GeneratedProtogen | 15.42 us | 15.14 us | **-1.8%** |
+| NanoGenerated | 13.77 us | 13.54 us | **-1.7%** |
+| NanoGeneratedMeasure | 3.65 us | 3.66 us | +0.3% |
+| GoogleProtobuf | 13.19 us | 13.27 us | +0.6% |
+
+A small consistent gain on the two generated rows, which is what removing one add-and-store
+per op should buy while every op still routes through the virtual `Impl*`. LegacyReal's +5.1%
+is inside its own between-run spread (it has read 19.85, 20.15, 20.64, 20.87, 20.97 for
+unchanged code across this arc); Google is the untouched drift gauge at +0.6%.
+
+**Between-DAY drift dwarfs between-run drift, and nearly caused a wrong conclusion.** The
+"before" row here is byte-identical to the cut-5 code that measured 12.64 us on 2026-08-12,
+and reads 13.77 us today - the machine is ~9% slower. Compared cold against the table below,
+this cut looks like a 7% regression; measured paired, it is a 1.7% gain. Re-measure the
+baseline in the same session; do not diff against a recorded table from another day.
+
 ## The memoization race: lengthCache wins (net10.0, 2026-08-12, cut 5)
 
 Same rig, same machine, `??=` lengthCache in place (per-writer Dictionary keyed by

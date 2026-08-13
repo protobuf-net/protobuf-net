@@ -82,9 +82,14 @@ namespace ProtoBuf
             {
                 Debug.Assert(length >= 0);
                 writer.ioIndex += length;
-                writer.Advance(length);
                 writer.WireType = WireType.None;
             }
+
+            // the deferred-position invariant (docs/nano-writer.md): ioBuffer is this backend's
+            // pending buffer and ioIndex is exactly what it holds uncommitted, so the committed
+            // count only moves where bytes actually leave for the destination stream - a flush,
+            // or one of the write-straight-through arms below
+            private protected override long GetUncommitted(in State state) => ioIndex;
 
             private protected override bool TryFlush(ref State state)
             {
@@ -92,6 +97,7 @@ namespace ProtoBuf
                 if (ioIndex != 0 && dest is not null)
                 {
                     dest.Write(ioBuffer, 0, ioIndex);
+                    Advance(ioIndex);
                     ioIndex = 0;
                 }
                 return true;
@@ -142,6 +148,7 @@ namespace ProtoBuf
 #else
                     WriteFallback(bytes, dest);
 #endif
+                    Advance(length); // straight through: committed without ever being pending
                     // since we've flushed offset etc is 0, and remains
                     // zero since we're writing directly to the stream
                 }
@@ -212,6 +219,7 @@ namespace ProtoBuf
                         }
 #endif
                     }
+                    Advance(length); // straight through: committed without ever being pending
 
                     // since we've flushed offset etc is 0, and remains
                     // zero since we're writing directly to the stream
@@ -282,7 +290,6 @@ namespace ProtoBuf
                 while (space > 0 && (bytesRead = source.Read(buffer, ioIndex, space)) > 0)
                 {
                     ioIndex += bytesRead;
-                    Advance(bytesRead);
                     space -= bytesRead;
                 }
                 if (bytesRead <= 0) return; // all done using just the buffer; stream exhausted
@@ -312,7 +319,6 @@ namespace ProtoBuf
                         {
                             break;
                         }
-                        Advance(bytesRead);
                         ioIndex += bytesRead;
                     }
                 }
@@ -325,7 +331,6 @@ namespace ProtoBuf
                         WireType = WireType.None;
                         DemandSpace(32, this, ref state); // make some space in anticipation...
                         flushLock++;
-                        Advance(1);
                         return new SubItemToken((long)(ioIndex++)); // leave 1 space (optimistic) for length
                     case WireType.Fixed32:
                         DemandSpace(32, this, ref state); // make some space in anticipation...
@@ -385,7 +390,6 @@ namespace ProtoBuf
                                 blob[value++] = (byte)((tmp & 0x7F) | 0x80);
                             } while ((tmp >>= 7) != 0);
                             blob[value - 1] = (byte)(blob[value - 1] & ~0x80);
-                            Advance(offset);
                             ioIndex += offset;
                         }
                         break;
