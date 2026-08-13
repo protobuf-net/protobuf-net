@@ -936,9 +936,28 @@ slow as its own stream figure). The remaining ladder, in priority order:
    lifetime. Either way keep the strong reference for the duration of a serialize so the hot path
    takes no null check, and revive at `Init` rather than lazily per access.
 
-   Measure the hazard as well as the throughput: serialize a large graph, dispose, collect, and
-   compare retained bytes against a run that never serialized one. The benchmark alone cannot
-   see the thing being designed against.
+   **Both numbers now measured (2026-08-13), and they justify E outright:**
+
+   | arm | steady-state alloc | time | retained after ONE 200k-message graph |
+   | --- | ---: | ---: | ---: |
+   | A - today | 22,392 B/op | baseline | < 1 MB |
+   | B - retain capacity | **0 B** | **-7% to -12%** | **11,680,888 B** |
+
+   So the whole 22 KB/op was the caches re-growing from empty every serialize, and removing it
+   is worth 7-12% on top (paired; the Google gauge flat at 13.10 -> 13.06 us). Legacy benefits
+   too: -8.9% on the buffer-writer leg. And the hazard is exactly as predicted - ~11.7 MB held
+   forever from a 1.18 MB payload, about 10x. **A capacity policy is therefore mandatory, not
+   optional**: the prize is large and so is the hole.
+
+   `PooledWriterRetentionTests` measures the hazard and is the gate; it passes on A and fails on
+   B. Two things about it are load-bearing, and both were wrong in the first cut:
+   - it serializes through an `IBufferWriter`, **not** a stream. The stream backend back-fills,
+     so it never populates the length caches at all - measuring it proved nothing, and both arms
+     read identically because neither was exercising the thing under test;
+   - it has a **control** that builds and drops the same graph without serializing. Without it
+     the graph's own footprint read as retention - the first run reported 10 MB on *both* arms,
+     which was the 200k nodes still rooted by a local, not the writer. The control now reads
+     0 bytes, which is what makes the 11.7 MB trustworthy.
 
 2. **Task #4 - AOT coverage for callback context shapes.** Closes a gap created on this branch:
    `ISerializationContext` works on the runtime paths but the generator accepts only "no
