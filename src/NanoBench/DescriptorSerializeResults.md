@@ -14,6 +14,38 @@ measures (no lzcnt) - with every setup gate passing:
 | GoogleProtobuf | 28.26 us | -22% |
 
 
+## The buffer-writer backend, measured at last (net10.0, 2026-08-13)
+
+`DescriptorSerializeBufferWriterBenchmarks`: the same five-way composite against
+`IBufferWriter<byte>` instead of a `MemoryStream`. Everything above this line is the STREAM
+backend; nothing had ever measured the other one, which is the backend the buffer core is
+actually about. Means are not comparable across the two classes - only ratios within each.
+
+| row | mean | vs LegacyReal | (same row, stream) |
+| --- | ---: | ---: | ---: |
+| LegacyReal | 40.37 us | baseline | ~20 us |
+| GeneratedProtogen | 19.87 us | **-51%** | ~15 us |
+| NanoGenerated | 12.44 us | **-69%** | ~13.5 us |
+| GoogleProtobuf | 12.73 us | -68% | ~13.2 us |
+
+Two readings, both of which change how the arc should be judged:
+
+- **The legacy engine is TWICE as slow against a buffer-writer as against a stream** (40.4 vs
+  ~20 us) - and it is the same contracts and the same objects. The stream writer back-fills a
+  length prefix into its own byte[]; the buffer-writer cannot reach back into a chunk it may
+  already have handed over, so every prefix costs a full null-writer traversal of the subtree.
+  That is precisely the cost measure-first exists to delete.
+- **So the generated model's lead is 3.2x here against 1.5x on the stream**, and it passes
+  Google.Protobuf (12.44 vs 12.73) on the destination modern code actually uses. The headline
+  numbers recorded above understate the writer arc, because they were all taken on the backend
+  that already had a workaround.
+
+**Allocation is the open question this leg exposes**: 22392 B per serialize on both generated
+rows, and identical on the stream backend - so it is not the writer. Google allocates zero
+here. The size and its backend-independence both point at the `??=` lengthCache
+(`Dictionary<object, long>`, one entry per sub-message, hundreds of them on this tree). Worth
+a cut of its own; the cache won the race on time and was never priced on bytes.
+
 ## Buffer-core step 1: the deferred position (net10.0, 2026-08-13, cut 8)
 
 Measured PAIRED - `git stash`, run, pop, run - because the recorded tables above turned out
