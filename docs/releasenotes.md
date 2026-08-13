@@ -14,6 +14,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+- add `[ProtoSerializer]` (`[Experimental]`): assembly/model-scoped hand-written serializer
+  declarations for the AOT generator, with open-generic mapping — the declarative twin of
+  `MetaType.SerializerType` (#xxxx)
 - **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
   the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
   `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected
