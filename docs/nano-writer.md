@@ -1029,6 +1029,28 @@ slow as its own stream figure). The remaining ladder, in priority order:
    forever from a 1.18 MB payload, about 10x. **A capacity policy is therefore mandatory, not
    optional**: the prize is large and so is the hole.
 
+   **Landed as arm E**, and the mechanism is simpler than the design called for: no
+   `Gen2GcCallback`, no finalizer, no registry, no weak reference, no per-stash allocation -
+   just `GC.CollectionCount(2)` compared against the value recorded at the previous clear.
+   Capacity is kept by default and handed back on either signal: a **gen2 since we last cleared**
+   (if no GC has run, memory is not scarce, so retaining costs nothing) or a **size above a cap**
+   (1024 entries), so the single enormous graph is dropped on the spot rather than waiting for a
+   gen2 an idle process may never run.
+
+   | | arm A | **arm E** | arm B (unsafe) |
+   | --- | ---: | ---: | ---: |
+   | stream `NanoGenerated` | 15.57 us / 22,392 B | **14.40 us / 0 B** | 14.39 us / 0 B |
+   | buffer-writer `NanoGenerated` | 11.30 us / 22,392 B | **10.33 us / 0 B** | 9.97 us / 0 B |
+   | hazard (one 200k graph) | ~0 | **passes** | 11,680,888 B |
+
+   So E takes essentially all of B's win while keeping A's safety. **Caveat on those numbers**:
+   the intended A/E paired run silently measured E twice (the toggle script asserted on arm B's
+   text, which no longer existed, under a `|| true`), so arm A here is the earlier same-session
+   run - defensible only because the Google gauge is flat across the two (13.100 -> 13.094 and
+   12.56 -> 12.48). **A clean paired re-run is owed.** The residual ~3.6% gap to B on the
+   buffer-writer leg is plausibly the gen2 signal firing in an allocating loop, i.e. the
+   mechanism working, but that is a hypothesis and not measured.
+
    `PooledWriterRetentionTests` measures the hazard and is the gate; it passes on A and fails on
    B. Two things about it are load-bearing, and both were wrong in the first cut:
    - it serializes through an `IBufferWriter`, **not** a stream. The stream backend back-fills,
