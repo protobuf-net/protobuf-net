@@ -7,11 +7,7 @@ namespace ProtoBuf
 {
     internal sealed class NetObjectCache
     {
-        private
-#if NET
-            readonly
-#endif
-            Dictionary<ObjectKey, long> _knownLengths = new();
+        private Dictionary<ObjectKey, long> _knownLengths = new();
 
         // the raw measure pass's ??= length cache (docs/nano-writer.md): sub-message lengths
         // keyed by reference identity, populated post-order by the generated Measure_ statics
@@ -26,11 +22,7 @@ namespace ProtoBuf
         // long, deliberately, matching _knownLengths: a single message body CAN exceed
         // int.MaxValue (many large byte[] members, say), and classic handles it - int
         // arithmetic would overflow silently, which is a corrupt stream, not an error
-        private
-#if NET
-            readonly
-#endif
-            Dictionary<object, long> _rawLengths = new(RawLengthComparer.Instance);
+        private Dictionary<object, long> _rawLengths = new(RawLengthComparer.Instance);
 
         internal Dictionary<object, long> RawLengths => _rawLengths;
 
@@ -282,16 +274,40 @@ namespace ProtoBuf
         internal int LengthHits => _hit;
         internal int LengthMisses => _miss;
 
+        /// <summary>
+        /// Takes over another cache's measurements, for the measure-then-write hand-off.
+        /// </summary>
+        /// <remarks>
+        /// EXCHANGES the dictionaries rather than copying them. The measured path measures a
+        /// whole tree and then writes it, so a copy meant building every entry twice and
+        /// allocating a second dictionary to hold them - measurably, exactly twice the
+        /// allocation of a direct write on the descriptor corpus.
+        /// <para>
+        /// A swap, not a share: each cache still owns exactly one dictionary afterwards, so
+        /// disposal and clearing behave as they always did. Sharing one instance between two
+        /// writers would alias caches whose lifetimes merely happen to nest today.
+        /// </para>
+        /// <para>
+        /// The source is left holding this cache's (empty) dictionaries, which is why serializing
+        /// the same measurement twice stays correct: the second pass simply finds nothing cached
+        /// and re-derives, exactly as an unmeasured write does. These are pure caches keyed by
+        /// object identity, and a length is a length whoever computed it.
+        /// </para>
+        /// </remarks>
         internal void InitializeFrom(NetObjectCache obj)
         {
             if (obj is not null)
             {
+                // plain temporaries rather than tuple deconstruction: net462 has no ValueTuple
                 _knownLengths.Clear();
-                foreach (var pair in obj._knownLengths)
-                    _knownLengths.Add(pair.Key, pair.Value);
+                var known = _knownLengths;
+                _knownLengths = obj._knownLengths;
+                obj._knownLengths = known;
+
                 _rawLengths.Clear();
-                foreach (var pair in obj._rawLengths)
-                    _rawLengths.Add(pair.Key, pair.Value);
+                var raw = _rawLengths;
+                _rawLengths = obj._rawLengths;
+                obj._rawLengths = raw;
             }
         }
 

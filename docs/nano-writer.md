@@ -307,10 +307,25 @@ sub-messages builds the whole cache twice and pays hundreds of hash inserts to d
 `NanoGenerated`'s 15.6us plus the 3.6us measure, roughly 5us of the measured path's 24.4us is
 unaccounted for, and this is the obvious candidate.
 
-A **swap** rather than a copy would be O(1) and allocation-free, and keeps single ownership
-(each cache still holds exactly one dictionary, so disposal semantics do not change) - unlike
-sharing the instance, which would alias two writers whose lifetimes only happen to nest today.
-Note `_rawLengths` is `readonly` under `#if NET` and would have to stop being.
+A **swap** rather than a copy is O(1) and allocation-free, and keeps single ownership (each
+cache still holds exactly one dictionary, so disposal semantics do not change) - unlike sharing
+the instance, which would alias two writers whose lifetimes only happen to nest today.
+**Done, and it pays:**
+
+| `NanoGeneratedMeasured`, net10.0, paired | copy | swap |
+| --- | ---: | ---: |
+| mean | 25.29 us | **22.44 us** (-11.2%) |
+| allocated | 44,784 B | **22,552 B** (-50%) |
+
+Exactly the duplicate cache, gone - the measured path now allocates what the direct path does.
+Nothing else moves. The one behaviour worth stating: serializing the same `MeasureState` twice
+still works, because the source is left holding the (empty) dictionaries it was handed, so a
+second pass simply finds nothing cached and re-derives - which is what an unmeasured write does
+anyway. These are pure caches keyed by object identity, and a length is a length whoever
+computed it.
+
+Note both fields had to lose `readonly` (it was conditional on `#if NET`), and the exchange
+uses plain temporaries rather than tuple deconstruction, since net462 has no `ValueTuple`.
 
 ## The lease hint is a HINT (Marc, 2026-08-13) - and this was already broken
 
