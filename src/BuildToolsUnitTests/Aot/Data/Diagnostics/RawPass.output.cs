@@ -263,8 +263,7 @@ partial class RawPassModel
             var tmp3 = value.Active;
             if (tmp3)
             {
-                state.WriteRawTag((3 << 3) | 0);  // Active
-                state.WriteRawVarint32(tmp3 ? 1u : 0u);
+                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // Active
             }
             var tmp4 = value.Total;
             if (tmp4 != 0)

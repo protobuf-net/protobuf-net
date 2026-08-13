@@ -118,8 +118,7 @@ partial class InheritModel
             var tmp1 = value.Purrs;
             if (tmp1)
             {
-                state.WriteRawTag((1 << 3) | 0);  // Purrs
-                state.WriteRawVarint32(tmp1 ? 1u : 0u);
+                state.WriteRawUInt16(tmp1 ? (ushort)0x0108 : (ushort)0x0008);  // Purrs
             }
         }
 

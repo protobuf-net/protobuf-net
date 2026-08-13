@@ -66,3 +66,4 @@
 [PBN9002]ProtoBuf.ProtoWriter.State.Position64.get -> long (forwarded, contained in protobuf-net.Core)
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool (forwarded, contained in protobuf-net.Core)
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawUInt16(ushort value) -> void (forwarded, contained in protobuf-net.Core)

@@ -43,8 +43,7 @@ partial class NullablesModel
             if (tmp2.HasValue)
             {
                 var val2 = tmp2.GetValueOrDefault();
-                state.WriteRawTag((2 << 3) | 0);  // MaybeBool
-                state.WriteRawVarint32(val2 ? 1u : 0u);
+                state.WriteRawUInt16(val2 ? (ushort)0x0110 : (ushort)0x0010);  // MaybeBool
             }
             var tmp3 = value.MaybeDouble;
             if (tmp3.HasValue)
