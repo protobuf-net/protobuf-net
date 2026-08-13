@@ -318,24 +318,58 @@ generated measure-first writer including the descriptor-set member, round-trippe
 verified. The writer arc adds no native regression. (The vswhere-on-PATH trap struck
 again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 
-## Where this stands / what's next
+## Where this stands / what's next (current as of 2026-08-13, cuts 1-7 pushed)
 
-Cuts 1-5 are pushed and green on every gate. The remaining lever, in priority order:
+**Handover note: this section plus "The presized buffer core: the plan" above is the
+entry point for a fresh session.** Cuts 1-7 are pushed to `raw-writer` and green on every
+gate; the serialize numbers (both TFMs) are in `src/NanoBench/DescriptorSerializeResults.md`
+and already beat Google.Protobuf on home turf before the buffer core exists. The remaining
+ladder, in priority order:
 
-1. **The presized buffer core** - every raw op is still a virtual Impl* call; the read
-   arc's step-2 equivalent (span+position in State, flush as the mirrored refill
-   boundary, per-TFM byte accessor) is the big remaining win on the ~12.6us write row.
-   Deep surgery on shared writer internals: start it with a fresh context, gates per
-   commit as usual.
+1. **The presized buffer core** - the full plan, with the position-invariant design and
+   the decided cap policy, is the section above. Step 1 of its own ladder (the invariant
+   flip alone) is the next piece of work. Deep surgery on shared writer internals; gates
+   per commit as usual.
 2. Counting mode for mixed contracts (legacy-mode members measured via the classic body
-   against the Null writer, landing in the same lengthCache) - widens measure-first
-   eligibility beyond all-native contracts.
+   against the Null writer, landing in the same lengthCache - which now lives on
+   NetObjectCache, shared with the sidecar and the MeasureState hand-off, so the landing
+   spot is already right).
 3. Packed repeated writes (IsPacked support arrived on the read side; the write needs the
    zero-length-header model option and per-element measure - the MemoryMarshal block
-   trick for fixed widths is recorded in the checklist above).
+   trick for fixed widths is recorded in the checklist above; `IMeasuringSerializer` is
+   already implemented by measurable contracts, which is what the packed engine keys on).
 4. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
    for the native kinds).
-5. net472 serialize benchmark leg (numbers recorded are net10 only).
+
+### Working practices this arc runs on (learned the hard way; do not relearn)
+
+- **The gate battery, per cut**: goldens x2 (first run rewrites, second asserts; review
+  `git diff`), AotConformanceTests, AotDifferential (see trap below), SchemaTests both
+  TFMs, protobuf-net.Test + Examples both TFMs, AotSmoke Release build (trim analysis) +
+  DownLevelSmoke run. Native publish + warning count (baseline 19, vswhere on PATH per
+  AGENTS.md) at milestones. Commit + push per green cut.
+- **The differential staleness trap, which has struck three times**: the differential
+  scans the *built* Debug binaries of protobuf-net.Test, Examples and
+  protobuf-net.Reflection.Test - rebuild all three after ANY Core or BuildTools change,
+  or you are comparing against a stale engine. Two sub-forms: (a) the rawWriter/rawReader
+  probes gate on member EXISTENCE, so every new emitted-call target must be added as a
+  probe sentinel (the "newest member" rule, recorded in Parse.cs) or a newer BuildTools
+  against an older Core emits calls that do not compile; (b) a member *signature* change
+  passes the name probe and still fails to compile - only the rebuild fixes that one.
+  And check the differential's EXIT CODE explicitly; in a `;`-chained script a later
+  command masks it.
+- **The one-build-behind hand-nudge**: BuildTools compiles in protobuf-net.Reflection's
+  committed `Generated/` file, so an emission-shape change that alters generated
+  *signatures* breaks the BuildTools build until the committed file is hand-patched to
+  the new shape; the next Reflection build then regenerates it properly. Documented in
+  the Reflection csproj; it has been needed twice in this arc (the static
+  ThrowNullRepeatedContents, the long Measure_).
+- **Raw surface changes are cheap right now**: everything `[PBN9002]` is unshipped, so
+  shapes change in place (as int->long did) rather than accreting overloads. That window
+  closes at release.
+- Measure/write agreement is refereed twice over: the differential's cross-deserialization,
+  and the classic engine's own calculated-vs-actual length throw (which cut 6 put on
+  every stateful path that consults the generated arithmetic).
 
 ## Cut 5 landed: the ??= lengthCache, and it wins the race (2026-08-12)
 
