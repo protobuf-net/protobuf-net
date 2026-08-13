@@ -959,6 +959,17 @@ slow as its own stream figure). The remaining ladder, in priority order:
      which was the 200k nodes still rooted by a local, not the writer. The control now reads
      0 bytes, which is what makes the 11.7 MB trustworthy.
 
+1b. **Audit the rest of Core for the same shape (task #6).** The length caches established a
+   pattern that recurs: pooled state that is `Clear()`ed but whose CAPACITY is either discarded
+   (churn - 22 KB/op and 7-12%) or kept (hogging ~10x the payload forever). Leads already found:
+   `NetObjectCache`'s FEAT_DYNAMIC_REF collections are `Clear()`ed with **no** `TrimExcess`, i.e.
+   already on the hogging side; `StreamProtoWriter.ioBuffer` grows to hold an entire payload
+   because `flushLock` forbids flushing mid-sub-item, then goes back to `ArrayPool` (check it is
+   not above the bucket limit, where it would be dropped rather than pooled); `ReadBufferT` does
+   the same dance on the READ side, which this arc has never measured; and `Pool<T>` sets the
+   multiplier on all of it. Whatever policy the length caches get should be applied once, to all
+   of them - one mechanism, not five.
+
 2. **Task #4 - AOT coverage for callback context shapes.** Closes a gap created on this branch:
    `ISerializationContext` works on the runtime paths but the generator accepts only "no
    parameter" or `StreamingContext`, so it DROPS the contract - denying `ProtoWriter.IsMeasuring`
