@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -158,7 +159,11 @@ namespace ProtoBuf
                 CheckOversized(ref state);
                 WireType = WireType.None;
             }
-            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
+            // the override restates the base's annotation exactly, or IL2095 fires and the
+            // unannotated T then fails IL2091 on the GetSubTypeSerializer fallback below - two
+            // warnings from one omission. Same rule the generated GetSerializer<T> override
+            // follows (AGENTS.md); DynamicAccess is internal, so the flags are spelled out
+            protected internal override void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISubTypeSerializer<T> serializer)
             {
                 serializer ??= TypeModel.GetSubTypeSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);

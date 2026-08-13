@@ -995,6 +995,32 @@ lands. The counting-mode idea (legacy bodies against the Null writer) remains fo
 members INSIDE an unmeasurable contract; this cut covers such a contract's measurable
 children.
 
+## Native validation (2026-08-13, cut 10) - and a baseline that had silently drifted
+
+Clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first) with the stream backend
+span-backed: the native executable **PASSES** - the same 559 bytes, round-tripped and verified -
+and the warning count is **19, the recorded baseline**.
+
+It did not start there, and the detour is the useful part. The first publish read **21**, and the
+honest move was to measure rather than to assume the two were mine: publishing the commit
+immediately prior gave **21 as well**, with an identical breakdown, so cut 10 added nothing. The
+recorded "19" had simply gone stale at some point between the last native validation and here.
+
+Both extras came from one omission, in `NullProtoWriter.WriteSubType<T>`: the override did not
+restate the base's `[DynamicallyAccessedMembers(DynamicAccess.ContractType)]`, which is an
+**IL2095** in its own right, and the resulting unannotated `T` then failed **IL2091** on the
+`GetSubTypeSerializer` fallback inside it. Two warnings from one missing attribute - exactly the
+rule AGENTS.md already records for the generated `GetSerializer<T>` override, applied one level
+down. Restating it on both overrides (the buffer-writer's had the same latent mismatch, not yet
+reachable) takes it back to **19**.
+
+Provenance, indicated rather than bisected: `NullProtoWriter.WriteSubType<T>` is only reachable
+under AOT once something measures a sub-type hierarchy, and the stream backend did not touch the
+null writer at all until the measure-first gate landed - which is `94d3b0df`, the same commit
+that carried that gate as an unmentioned passenger. So the *first* consequence of that commit
+being invisible was a stale handover; the second was a native regression nobody attributed. Both
+are arguments for the same discipline.
+
 ## Native validation (2026-08-13, cuts 1-9 + the buffer core so far)
 
 A clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first) with the deferred

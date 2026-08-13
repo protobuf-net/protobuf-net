@@ -437,7 +437,8 @@ namespace ProtoBuf
                 }
             }
 
-            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
+            // restates the base's annotation exactly; see the note on the null writer's override
+            protected internal override void WriteSubType<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISubTypeSerializer<T> serializer)
             {
                 switch (WireType)
                 {
