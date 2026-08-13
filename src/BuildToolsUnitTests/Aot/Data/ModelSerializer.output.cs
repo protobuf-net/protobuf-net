@@ -20,6 +20,7 @@ partial class ModelSerializerModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Request>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<byte>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<int>>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<long>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<string>>
     {
         public ProtoBufGeneratedServices()
@@ -35,6 +36,12 @@ partial class ModelSerializerModel
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
                 "AotFixtures.ModelSerializer.Wrapped<int> is generated as CategoryScalar, but its serializer disagrees; "
+                    + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
+            global::System.Diagnostics.Debug.Assert(
+                (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<long>, global::AotFixtures.ModelSerializer.Wrapped<long>>().Features
+                    & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
+                    == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
+                "AotFixtures.ModelSerializer.Wrapped<long> is generated as CategoryScalar, but its serializer disagrees; "
                     + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
             global::System.Diagnostics.Debug.Assert(
                 (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<string>, global::AotFixtures.ModelSerializer.Wrapped<string>>().Features
@@ -81,6 +88,13 @@ partial class ModelSerializerModel
                         value.Label = tmp4;
                         break;
                     }
+                    case 5:
+                    {
+                        var tmp5 = value.Optional.GetValueOrDefault();
+                        tmp5 = global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<long>, global::AotFixtures.ModelSerializer.Wrapped<long>>().Read(ref state, tmp5);
+                        value.Optional = tmp5;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -100,6 +114,11 @@ partial class ModelSerializerModel
             state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<int>>(3, tmp3, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<int>, global::AotFixtures.ModelSerializer.Wrapped<int>>());
             var tmp4 = value.Label;
             state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<string>>(4, tmp4, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<string>, global::AotFixtures.ModelSerializer.Wrapped<string>>());
+            var tmp5 = value.Optional;
+            if (tmp5.HasValue)
+            {
+                state.WriteAny<global::AotFixtures.ModelSerializer.Wrapped<long>>(5, tmp5.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<long>, global::AotFixtures.ModelSerializer.Wrapped<long>>());
+            }
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Wrapped<byte>> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<byte>>.Serializer
@@ -107,6 +126,9 @@ partial class ModelSerializerModel
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Wrapped<int>> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<int>>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<int>, global::AotFixtures.ModelSerializer.Wrapped<int>>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Wrapped<long>> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<long>>.Serializer
+            => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<long>, global::AotFixtures.ModelSerializer.Wrapped<long>>();
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Wrapped<string>> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<string>>.Serializer
             => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<string>, global::AotFixtures.ModelSerializer.Wrapped<string>>();

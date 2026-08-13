@@ -59,6 +59,14 @@ public class Request
     [DataMember(Order = 2)] public int Plain { get; set; }
     [DataMember(Order = 3)] public Wrapped<int> Id { get; set; }
     [DataMember(Order = 4)] public Wrapped<string> Label { get; set; }
+
+    // Nullable<T> of a declaration-served struct: probed against ref-emit (RuntimeTypeModel), which
+    // supports it - a nullable message member whose type is served by a hand-written serializer.
+    // Presence (HasValue) decides whether anything is written at all, exactly as for an ordinary
+    // nullable struct message; the wire form when present is byte-identical to the non-nullable case,
+    // since the underlying serializer is CategoryScalar (see AotFixtures.ExternalSerializer.Stamp for
+    // the same fact pinned against the [ProtoContract(Serializer = ...)] form).
+    [DataMember(Order = 5)] public Wrapped<long>? Optional { get; set; }
 }
 
 public static class ModelSerializerSamples
@@ -69,6 +77,8 @@ public static class ModelSerializerSamples
         new Request { Special = new Wrapped<byte>(4) },
         new Request { Id = new Wrapped<int>(11), Label = new Wrapped<string>(12) },
         new Request { Special = new Wrapped<byte>(200), Plain = 7, Id = new Wrapped<int>(-13) },
+        new Request { Optional = new Wrapped<long>(21) },
+        new Request { Special = new Wrapped<byte>(9), Optional = null },
     ];
 }
 
