@@ -53,8 +53,7 @@ partial class InterfaceModel
             var tmp3 = value.Aloof;
             if (tmp3)
             {
-                state.WriteRawTag((3 << 3) | 0);  // Aloof
-                state.WriteRawVarint32(tmp3 ? 1u : 0u);
+                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Aloof
             }
         }
 

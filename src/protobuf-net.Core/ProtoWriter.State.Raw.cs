@@ -48,6 +48,32 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public readonly long Position64 => _writer.GetPosition(in this);
 
+            // ---- pre-encoded constant tags ----
+            //
+            // A tag is (field << 3) | wire and is a compile-time CONSTANT at every generated call
+            // site, so each arm below folds completely: the range test disappears, the varint
+            // encoding collapses to one literal, and what survives is a room check and one or two
+            // stores. Nothing here reaches a loop, which the shipped LocalWriteVarint32 does - and
+            // its trip count is one the JIT cannot know even for a constant, since it is expressed
+            // through a shifting variable.
+            //
+            // The widths are all five a tag can take: field numbers run to 2^29-1, so the tag
+            // spans the whole uint range. In the descriptor model the population is 92 one-byte
+            // sites and 27 two-byte (nine of them field 999, uninterpreted_option, which is on
+            // every *Options message); the 3-5 byte arms are there for completeness and are
+            // pinned by test rather than by any fixture.
+            //
+            // The room demand is now EXACT rather than MaxVarint32 for everything above one byte,
+            // which also means fewer trips out of line near a chunk boundary.
+            //
+            // These constants are derived, never typed: RawTagEncodingTests checks every arm
+            // against the shipped varint encoder across the full range of widths and both sides
+            // of every boundary.
+
+            /// <summary>A varint byte with the continuation bit set.</summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static uint Cont(uint value) => ((value & 0x7F) | 0x80);
+
             /// <summary>
             /// Raw-convention field tag write: the tag is a compile-time constant from the
             /// generator ((field &lt;&lt; 3) | wire), written as-is with no state handshake.
@@ -56,11 +82,90 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawTag(uint tag)
             {
-                // the single-byte arm is the dominant case (fields 1-15) and the argument is a
-                // compile-time constant at every generated call site, so the test folds away
-                if (tag < 0x80 && RemainingInCurrent >= 1) LocalWriteByte((byte)tag);
-                else if (RemainingInCurrent >= MaxVarint32) LocalWriteVarint32(tag);
-                else SlowWriteRawTag(tag);
+                if (tag < 1u << 7)
+                {
+                    if (RemainingInCurrent >= 1) { LocalWriteByte((byte)tag); return; }
+                }
+                else if (tag < 1u << 14)
+                {
+                    if (RemainingInCurrent >= 2)
+                    {
+                        LocalWriteUInt16((ushort)(Cont(tag) | ((tag >> 7) << 8)));
+                        return;
+                    }
+                }
+                else if (tag < 1u << 21)
+                {
+                    if (RemainingInCurrent >= 3)
+                    {
+                        LocalWriteUInt16((ushort)(Cont(tag) | (Cont(tag >> 7) << 8)));
+                        LocalWriteByte((byte)(tag >> 14));
+                        return;
+                    }
+                }
+                else if (tag < 1u << 28)
+                {
+                    if (RemainingInCurrent >= 4)
+                    {
+                        LocalWriteFixed32(Cont(tag) | (Cont(tag >> 7) << 8)
+                            | (Cont(tag >> 14) << 16) | ((tag >> 21) << 24));
+                        return;
+                    }
+                }
+                else
+                {
+                    if (RemainingInCurrent >= 5)
+                    {
+                        LocalWriteFixed32(Cont(tag) | (Cont(tag >> 7) << 8)
+                            | (Cont(tag >> 14) << 16) | (Cont(tag >> 21) << 24));
+                        LocalWriteByte((byte)(tag >> 28));
+                        return;
+                    }
+                }
+                SlowWriteRawTag(tag);
+            }
+
+            /// <summary>
+            /// A whole bool field - constant tag plus the single byte 0 or 1 - in as few stores
+            /// as its tag width allows.
+            /// </summary>
+            /// <remarks>
+            /// At the dominant single-byte tag this is a select between two folded constants and
+            /// ONE store, in place of a tag write plus a varint write: two room checks, two
+            /// stores, and a loop. Bools are everywhere in real contracts - very nearly every
+            /// ShouldSerialize-guarded flag in the descriptor DTOs is one.
+            /// <para>
+            /// Where there is not room, control falls through to the ordinary tag-then-value
+            /// pair rather than to a dedicated slow arm. That is deliberate: the first attempt at
+            /// this shipped an out-of-line arm doing <c>new byte[2]</c> per chunk-boundary hit,
+            /// which put a 128 B/op allocation on a previously zero-allocation path. A slow path
+            /// that allocates is not a slow path.
+            /// </para>
+            /// </remarks>
+            [MethodImpl(ProtoReader.HotPath)]
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public void WriteRawTagBool(uint tag, bool value)
+            {
+                if (tag < 1u << 7)
+                {
+                    if (RemainingInCurrent >= 2)
+                    {
+                        LocalWriteUInt16(value ? (ushort)(tag | (1u << 8)) : (ushort)tag);
+                        return;
+                    }
+                }
+                else if (tag < 1u << 14)
+                {
+                    if (RemainingInCurrent >= 3)
+                    {
+                        LocalWriteUInt16((ushort)(Cont(tag) | ((tag >> 7) << 8)));
+                        LocalWriteByte(value ? (byte)1 : (byte)0);
+                        return;
+                    }
+                }
+                // wider tags, or no room: the ordinary pair, each op taking its own arm
+                WriteRawTag(tag);
+                WriteRawVarint32(value ? 1u : 0u);
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]

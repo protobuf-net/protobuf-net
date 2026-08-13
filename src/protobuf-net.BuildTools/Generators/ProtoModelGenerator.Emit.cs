@@ -2577,6 +2577,13 @@ namespace ProtoBuf.BuildTools.Generators
             // through 64 bits (a negative int32 is the 10-byte form on the wire).
             if (raw && member.DataFormat == ProtoDataFormat.Default && RawScalarWrite(member, expression) is { } rawWrite)
             {
+                // a bool's whole field is the constant tag plus one byte that is 0 or 1, so it
+                // collapses to a single op - and at the dominant single-byte tag, to one store
+                if (member.Kind == ProtoMemberKind.Bool)
+                {
+                    Line(sb, indent, $"state.WriteRawTagBool(({member.FieldNumber} << 3) | 0, {expression});  // {member.Name}");
+                    return;
+                }
                 Line(sb, indent, $"state.WriteRawTag(({member.FieldNumber} << 3) | {RawScalarWireBits(member.Kind)});  // {member.Name}");
                 Line(sb, indent, rawWrite);
                 return;

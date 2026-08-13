@@ -139,6 +139,17 @@ namespace ProtoBuf
                 RemainingInCurrent--;
             }
 
+            /// <summary>
+            /// Two pre-encoded bytes in one store, low byte first.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal void LocalWriteUInt16(ushort value)
+            {
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt16LittleEndian(Remaining, value);
+                OffsetInCurrent += 2;
+                RemainingInCurrent -= 2;
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void LocalWriteFixed32(uint value)
             {

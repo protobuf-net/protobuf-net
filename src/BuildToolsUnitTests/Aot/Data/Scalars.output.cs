@@ -37,8 +37,7 @@ partial class ScalarsModel
             var tmp1 = value.Bool;
             if (tmp1)
             {
-                state.WriteRawTag((1 << 3) | 0);  // Bool
-                state.WriteRawVarint32(tmp1 ? 1u : 0u);
+                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Bool
             }
             var tmp2 = value.SByte;
             if (tmp2 != 0)
