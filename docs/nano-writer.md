@@ -964,7 +964,7 @@ generated measure-first writer including the descriptor-set member, round-trippe
 verified. The writer arc adds no native regression. (The vswhere-on-PATH trap struck
 again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 
-## Where this stands / what's next (current as of 2026-08-13, cuts 1-7 pushed)
+## Where this stands / what's next (current as of 2026-08-13, cuts 1-9 pushed)
 
 **Handover note: this section plus "The presized buffer core: the plan" above is the
 entry point for a fresh session.**
@@ -977,12 +977,16 @@ policy, the measure hand-off cache swap, `ProtoWriter.IsMeasuring`, and four bug
 buffer-writer lease overrun, an under-delivering-destination crash, a process-killing stack
 overflow on cyclic graphs, and a validator that rejected a callback shape the rest of the stack
 supported. What was measured and REVERTED: the presized lease, and three primitive-level
-optimisations (see the section above). What is written but SHELVED and not in the tree: the
-stream measure-first gate - design and reasoning recorded, scaffolding
-(`WriteMeasuredWithLengthPrefix`) in place, but it needs re-implementing and measuring.
+optimisations (see the section above).
+
+**Corrected 2026-08-13 (see "Three corrections to this handover" below): the stream measure-first
+gate is IN THE TREE**, not shelved - `StreamProtoWriter.WriteMessage` gates on
+`IMeasuringSerializer<T>` + `OptionTrySkipWritingWhenMeasuring`. This paragraph previously said it
+was written but not landed, which cost a later session most of a sitting.
 
 The backlog lives in the task list (#4-#10) with enough detail to resume cold; the reasoning
-behind all of it is here rather than in any conversation.
+behind all of it is here rather than in any conversation. **The task list is session-scoped and
+does not survive**, so treat this document as the only backlog that persists.
 
 Cuts 1-9 are pushed to `raw-writer` and green on every
 gate; the serialize numbers are in `src/NanoBench/DescriptorSerializeResults.md`, which now
@@ -996,6 +1000,19 @@ slow as its own stream figure). The remaining ladder, in priority order:
    backend that has a span, and the stream backend got none of it. **This is now the top of
    the ladder**, having overtaken the presized lease on evidence (below). Real surgery - the
    length back-fill in `ImplEndLengthPrefixedSubItem` is the delicate part.
+
+   **Half of this already landed and the remaining half is smaller than it reads.** The stream
+   backend IS measure-first for arithmetically-measurable serializers (the gate at
+   `ProtoWriter.Stream.cs`), so back-fill survives only for the arm that cannot price itself -
+   runtime models, and callback-bearing contracts, which are excluded from cheap measure as a
+   correctness requirement. What is unbuilt is the buffer half: `StreamProtoWriter` still writes
+   into its own `ioBuffer`/`ioIndex` inside the `Impl*` overrides, and `State._span`/`_memory`
+   are populated only by the buffer-writer, so `RemainingInCurrent` is 0 on the stream backend
+   and every raw op takes the out-of-line arm. The open question is coexistence: can the stream
+   backend hold a State-owned lease for the measure-first arm while keeping the writer-owned
+   `ioBuffer` for the back-fill arm, given this document's own warning against "two regimes with
+   commit barriers - a divergence-bug factory"? The position invariant is already derived
+   (cut 8), which is what makes the question answerable rather than obviously no.
 2. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
    both backends, so it is not the writer; Google allocates zero, and its whole payload is
    7.6 KB). It won its race on time and was never priced on bytes. The measure hand-off's
@@ -1013,6 +1030,38 @@ slow as its own stream figure). The remaining ladder, in priority order:
    already implemented by measurable contracts, which is what the packed engine keys on).
 6. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
    for the native kinds).
+
+### Three corrections to this handover, and how each one got there (2026-08-13)
+
+Reconstructed in the session after the one that wrote it, from the tree rather than from memory.
+All three are recorded with their cause, because the causes are general and this document is the
+only thing a cold start has.
+
+1. **"The stream measure-first gate is written but SHELVED and not in the tree" - it is in the
+   tree.** `StreamProtoWriter.WriteMessage` gates on `IMeasuringSerializer<T>` +
+   `OptionTrySkipWritingWhenMeasuring`; `Measure<T>` then takes the arithmetic arm, so that path
+   does no null-writer traversal at all.
+
+   *Cause*: it landed as a **passenger** in `94d3b0df`, a commit whose message is entirely about
+   varint measure benchmarking and does not mention it. The handover was assembled from commit
+   messages, so a change that rode in someone else's diff was invisible to it. **A change big
+   enough to appear in the handover is big enough to have its own commit** - and where that is
+   not practical, the message must name what else it carries.
+
+2. **"A decision, then the stream span move" - the decision was already retracted.** The
+   callbacks-gate framing is withdrawn under "Callbacks must not be an input to strategy
+   selection", ~800 lines above the handover item that still cited it as blocking.
+
+   *Cause*: the retraction was applied where the **reasoning** lived and not where the **claim**
+   was repeated. A document long enough to have a handover section is long enough for the two to
+   drift; when something is retracted, grep this file for the claim, not just for the section.
+
+3. **"The backlog lives in the task list (#4-#10)"** - the task list is session-scoped and was
+   empty on the next cold start, so tasks #4-#10 exist only as the prose here.
+
+**What this cost, since that is the argument for the discipline**: the following session spent
+most of a sitting re-deriving all three from the source tree, and came within one decision of
+asking for a product judgement on behaviour that had already been settled and shipped.
 
 ### Recommended next steps, ranked by value-per-risk (2026-08-13)
 
@@ -1141,15 +1190,24 @@ slow as its own stream figure). The remaining ladder, in priority order:
    the validator, the reflection invoker, the ref-emit path and the generator agree on the
    accepted set. They demonstrably disagreed once already.
 
-3. **A decision, then the stream span move.** The move is the biggest perf prize (~9%, on the
-   backend the headline rows use), but it requires the stream backend to go measure-first, which
-   **doubles serialization callbacks for the majority of protobuf-net users**. `IsMeasuring` now
-   gives them an escape hatch, so the question is narrowed to: *is "callbacks may fire twice per
-   nested message, use `IsMeasuring` if that matters" an acceptable v4 behaviour change for
-   stream consumers?* If yes, the surgery is unblocked. If no, it needs the hoist design (new
-   API separating "fire the callbacks" from "write the members") first. **Do not start the
-   surgery before this is answered** - it is the one thing here that is not undoable in a branch,
-   because it changes shipped behaviour rather than internals.
+3. ~~**A decision, then the stream span move.**~~ **STALE - there is no decision to make; this
+   is unblocked engineering.** It read: the move requires the stream backend to go measure-first,
+   which doubles serialization callbacks for the majority of users, so *"do not start the surgery
+   before this is answered"*. Every clause of that has since been overtaken, by material in this
+   same document:
+
+   - the premise was withdrawn in "Callbacks must not be an input to strategy selection" above -
+     callback-bearing contracts are not in the cheap-measure set, so they land on back-fill
+     because of what they are, not because anything routed them there. *"The earlier framing
+     ('the callback question gates the stream move') was wrong: there is nothing to decide."*
+   - the gate that follows from it is **in the tree**, not shelved (`ProtoWriter.Stream.cs`);
+   - its one stated prerequisite - prove no contract emits both a `Measure_` static and a
+     serialization callback - is **discharged**, by `AotConformanceTests/MeasurableContractTests`,
+     non-vacuously (110 measurable contracts present, callback-bearing contracts present, the
+     overlap set reported by name if it ever breaks).
+
+   What remains is the buffer half, described under ladder item 1 above. It is internals, and
+   undoable in a branch.
 
 4. **Task #5 - the reflection callback path allocates three times per invocation**
    (`GetParameters()` returns a fresh array every call, plus the `object[]` args, plus a box for
