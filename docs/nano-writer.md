@@ -670,20 +670,19 @@ carries BOTH backends - and the buffer-writer one is the interesting half (the g
 model is ~10% ahead of Google.Protobuf there, against a legacy baseline that is twice as
 slow as its own stream figure). The remaining ladder, in priority order:
 
-1. **The presized buffer core** - the full plan, with the position-invariant design and
-   the decided cap policy, is the section above. **Steps 1 and 2 landed as cuts 8 and 9**;
-   **step 3 (the presized lease + cap policy) is the next piece of work**, and the shape is
-   settled: `clamp(measured, TypeModel.MinimumBufferSize, cap)` with the cap as decided, plus
-   the stream backend's pooled `byte[]` of the clamped size. Then step 4, re-validating
-   net472 and native and re-recording both benchmark legs.
-2. **The stream backend is not span-backed**, so cut 9's fast path never fires there - and
-   that backend is what the *headline* benchmark rows use. Moving `ioBuffer`/`ioIndex` onto
-   `State`'s span would let both backends share one fast arm. Sized as real surgery (the
-   length back-fill in `ImplEndLengthPrefixedSubItem` is the delicate part), and worth doing
-   after step 3 rather than before, since the presized lease changes what a chunk even is.
-3. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
-   both backends, so it is not the writer; Google allocates zero). It won its race on time
-   and was never priced on bytes. Its own cut.
+1. **The stream backend is not span-backed**, so cut 9's fast arm never fires there - and that
+   backend is what the *headline* benchmark rows use. Moving `ioBuffer`/`ioIndex` onto
+   `State`'s span would let both backends share one fast arm; cut 9 was worth ~9% on the
+   backend that has a span, and the stream backend got none of it. **This is now the top of
+   the ladder**, having overtaken the presized lease on evidence (below). Real surgery - the
+   length back-fill in `ImplEndLengthPrefixedSubItem` is the delicate part.
+2. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
+   both backends, so it is not the writer; Google allocates zero, and its whole payload is
+   7.6 KB). It won its race on time and was never priced on bytes. The measure hand-off's
+   duplicate of it is gone; the remaining copy is the cache itself. Its own cut.
+3. ~~**The presized buffer core**~~ - **steps 1 and 2 landed as cuts 8 and 9; step 3 was built,
+   measured and parked** (see its own section). What remains of that ladder is step 4:
+   re-validating net472 and native, which has been done at each milestone since.
 4. Counting mode for mixed contracts (legacy-mode members measured via the classic body
    against the Null writer, landing in the same lengthCache - which now lives on
    NetObjectCache, shared with the sidecar and the MeasureState hand-off, so the landing
