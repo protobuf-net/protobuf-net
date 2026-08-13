@@ -228,11 +228,12 @@ level 1, so level 1 goes first.
    the lengthCache holds the subtree lengths) - `clamp(total, backendDefault, cap)`.
    `IBufferWriter.GetSpan(sizeHint)` MUST honour the hint, which is why the cap exists:
    an unreasonable payload caps and chunks through level 1's boundary. Stream backend:
-   one pooled `byte[]` of the clamped size instead of the default block. **Open policy
-   question for Marc: the cap.** Candidates: `TypeModel.BufferSize` (exists, default
-   `BufferPool.BUFFER_LENGTH`), a fixed constant (64KB-ish), or the backend's own
-   preference (`GetSpan(0).Length`). Leaning `max(TypeModel.BufferSize, GetSpan(0))` so
-   existing configuration keeps meaning something.
+   one pooled `byte[]` of the clamped size instead of the default block. **Cap policy,
+   decided (Marc, 2026-08-13): `max(TypeModel.BufferSize, backend preference)`** - i.e.
+   the model's configured buffer size (default `BufferPool.BUFFER_LENGTH`) or what the
+   backend would hand out anyway (`GetSpan(0).Length` for a buffer-writer), whichever is
+   larger - so existing configuration keeps meaning something and a generous backend is
+   not artificially truncated.
 5. **API surface**: level 1 needs only the position accessor (`[PBN9002]`
    `state.Position64` / `GetPosition64(in state)`); internal readers move to it. Level 2
    adds one capacity-hint veneer for the generator. No public behaviour changes; no
