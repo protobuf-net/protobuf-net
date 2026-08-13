@@ -903,14 +903,42 @@ slow as its own stream figure). The remaining ladder, in priority order:
    reallocation again. Clearing the CONTENTS is a correctness requirement (a stale entry is a
    corrupt stream, not an error); discarding the CAPACITY is not.
 
-   **Marc's shape for it:** the real story is that the writer is stashed and reused, so the
-   caches should be retained between uses - but held behind a **GC-transparent (weak) reference
-   while idle**, so they stay collectable under memory pressure and do not pin a pooled writer's
-   working set. Costs one `WeakReference` allocation per stash, which is cheap against
-   re-growing a several-hundred-entry dictionary. Keep the strong reference for the duration of
-   a serialize (so the hot path takes no null check) and revive at `Init`, not lazily per access.
-   Measure both ways, paired, and consider a capacity cap so one enormous payload does not leave
-   a permanently fat writer in the pool.
+   **The hazard to design against** (Marc, and it is the whole point): serialize one large graph
+   once - at startup, say - and a pooled writer then hogs that memory forever. So plain
+   retention is not a candidate, only a ceiling measurement.
+
+   Arms, to be measured rather than argued:
+
+   | arm | steady-state churn | the startup-hog hazard |
+   | --- | --- | --- |
+   | A - today (`Clear` + `TrimExcess`) | bad: re-grows every serialize | safe |
+   | B - retain capacity | fixed | **unsafe: this is the hazard** |
+   | C - weak stash while idle | ? may be reclaimed too eagerly to help | safe, self-adjusting |
+   | D - capped retain | fixed for normal payloads | safe, but the cap is a guess |
+   | E - retain, trim on GC pressure | fixed | safe, and correctly targeted |
+
+   **E is the best-shaped, and has precedent**: `ArrayPool<T>.Shared` solves this identical
+   problem this identical way, trimming its buffers on a gen2 GC via the BCL's `Gen2GcCallback`
+   pattern. It also has the property C lacks - *if no GC has run, memory is not scarce, so
+   retaining is fine* - whereas a weak reference is cleared by any collection that happens to
+   look at it, pressure or not, which in an allocating steady state is constantly.
+
+   Shape that avoids per-instance finalizers (there is one `NetObjectCache` per pooled writer,
+   so per-instance finalizers would be a bad trade): **one static gen2 counter**, bumped by a
+   single `Gen2GcCallback`. Each cache records the counter when it stashes; on revive, if the
+   counter has moved, drop the retained capacity instead of reusing it. Allocation-free per
+   cache, no weak references, no finalizer per instance - and it composes with a cap (D) for the
+   single enormous graph, which should be dropped on the spot rather than waiting for a gen2 that
+   an idle post-startup process may not run for a long time.
+
+   If a weak stash is used after all, note it need not allocate per stash: keep one
+   `WeakReference<T>` on the cache and call `SetTarget`, so it is one allocation for the writer's
+   lifetime. Either way keep the strong reference for the duration of a serialize so the hot path
+   takes no null check, and revive at `Init` rather than lazily per access.
+
+   Measure the hazard as well as the throughput: serialize a large graph, dispose, collect, and
+   compare retained bytes against a run that never serialized one. The benchmark alone cannot
+   see the thing being designed against.
 
 2. **Task #4 - AOT coverage for callback context shapes.** Closes a gap created on this branch:
    `ISerializationContext` works on the runtime paths but the generator accepts only "no

@@ -259,15 +259,12 @@ namespace ProtoBuf
             if (stringKeys is object) stringKeys.Clear();
             if (objectKeys is object) objectKeys.Clear();
 #endif
-#if NET
+            // EXPERIMENT ARM B (ceiling): retain capacity across uses. Clearing the CONTENTS is
+            // a correctness requirement - a stale entry is a corrupt stream, not an error -
+            // but discarding the CAPACITY is not, and these writers are pooled, so every
+            // serialize was re-growing a several-hundred-entry dictionary from empty.
             _knownLengths.Clear();
-            _knownLengths.TrimExcess();
             _rawLengths.Clear();
-            _rawLengths.TrimExcess();
-#else
-            _knownLengths = new(); // reinitialize the Dictionary<> to free up all allocated memory
-            _rawLengths = new(RawLengthComparer.Instance);
-#endif
             _hit = _miss = 0;
         }
 
