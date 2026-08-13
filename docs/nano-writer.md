@@ -327,13 +327,34 @@ using different context shapes, and one contract whose four callbacks differ - a
 cross-check that the validator, the invoker, the ref-emit path and the generator agree on the
 accepted set. They already disagreed once.
 
-**On a `ref` struct context** (Marc's alternative): attractive for extensibility, since
-`ISerializationContext` cannot gain members without breaking implementers, whereas a struct can
-grow properties freely and allocates nothing. But `ref` - two-way communication - buys nothing
-for *this* question, which is purely "tell me"; and a new parameter shape costs support in all
-three codegen paths plus goldens, which is exactly the tax being paid for
-`ISerializationContext` in task #4. Worth it if the list of context questions grows past one;
-today its only new content over `ISerializationContext` would be `IsMeasuring`.
+**Asking requires a specific parameter shape, and that is fine** (Marc, explicitly): the shape
+is `ISerializationContext`, which is *pre-existing* - the invoker and the ref-emit path always
+handled it. A consumer who wants this capability declares that parameter; the other shapes
+carry copies of the context's data and cannot answer.
+
+**On an `in`/`ref` struct context** (Marc's alternative, and his stated bar - "we don't want to
+allocate a new context object each time we invoke a callback"): **that bar is already met, and
+by the shape chosen.** Per invocation:
+
+| callback parameter | allocation |
+| --- | --- |
+| `ISerializationContext` | **none** - it IS the writer, handed over as a reference |
+| `SerializationContext` | none for a null userState (cached `Default`) or one that already is a `SerializationContext`; **allocates** otherwise |
+| `StreamingContext` | a struct, but **boxed** into the args array on the reflection path |
+
+So a struct context could not beat "pass the reference we already have" on allocation; its case
+is purely extensibility, since `ISerializationContext` cannot gain members without breaking
+implementers whereas a struct grows properties freely. Worth revisiting if the list of context
+questions grows past one - today its only new content over `ISerializationContext` would be
+`IsMeasuring` itself - and note a new parameter shape costs support in all three codegen paths
+plus goldens.
+
+**Adjacent finding, task #5:** the *reflection* callback path allocates three times per
+invocation for any callback with a parameter - `method.GetParameters()` hands back a fresh
+array every call, plus the `object[]` args, plus a box for `StreamingContext`. The parameter
+shapes are fixed at registration, so that decision can be resolved once into a cached plan or
+delegate. The ref-emit and AOT-generated paths are already clean; this is the no-emit path
+only.
 
 Worth knowing before deciding: this has been the buffer-writer's behaviour since it shipped and
 nobody has reported it, which suggests the idempotent "populate a derived field" case - where
