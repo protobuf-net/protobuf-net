@@ -264,6 +264,61 @@ namespace ProtoBuf
 
 
         /// <summary>
+        /// Writes a length-prefixed sub-message MEASURE-FIRST: ask for the length, write it, then
+        /// write the body - as opposed to the classic reserve-and-back-fill.
+        /// </summary>
+        /// <remarks>
+        /// Shared by every backend that can use it, which is any backend that cannot (or would
+        /// rather not) reach back into bytes it has already written. The buffer-writer cannot by
+        /// construction - it may already have handed the chunk over - and the stream writer would
+        /// rather not, because back-filling forces `flushLock`, and a writer that cannot flush
+        /// while a sub-item is open has to GROW its buffer instead of draining it.
+        /// <para>
+        /// The calculated-vs-actual check at the end is the free correctness gate under the whole
+        /// measure-first design: it fires on any disagreement between the measure and the write.
+        /// </para>
+        /// </remarks>
+        private protected void WriteMeasuredWithLengthPrefix<T>(NullProtoWriter measureWriter,
+            ref State state, T value, ISerializer<T> serializer, PrefixStyle style)
+        {
+            serializer ??= TypeModel.ResolveSerializer<T>(model);
+            long calculatedLength = Measure<T>(measureWriter, value, serializer);
+
+            switch (style)
+            {
+                case PrefixStyle.None:
+                    break;
+                case PrefixStyle.Base128:
+                    ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                    ResetWireType();
+                    break;
+                case PrefixStyle.Fixed32:
+                case PrefixStyle.Fixed32BigEndian:
+                    ImplWriteFixed32(ref state, checked((uint)calculatedLength));
+                    if (style == PrefixStyle.Fixed32BigEndian)
+                        state.ReverseLast32();
+                    ResetWireType();
+                    break;
+                default:
+                    ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
+                    break;
+            }
+
+            if (calculatedLength != 0) // don't bother serializing if nothing there
+            {
+                var oldPos = GetPosition(in state);
+                serializer.Write(ref state, value);
+                var newPos = GetPosition(in state);
+
+                var actualLength = (newPos - oldPos);
+                if (actualLength != calculatedLength)
+                {
+                    ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                }
+            }
+        }
+
+        /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
         protected internal virtual void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)

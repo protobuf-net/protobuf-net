@@ -260,6 +260,77 @@ is the *generated* path - it drives the classic engine only - so the raw-and-leg
 interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
 `AotConformanceTests` rather than a fixture here.
 
+## The measure pass has no depth guard, and runs user callbacks (2026-08-13)
+
+Two shipped defects on the **measure-first** path, both found by trying to move the stream
+backend onto it (that experiment is below). Both are specific to measure-first, which today
+means the buffer-writer backend - and both are invisible to the corpus differential.
+
+### 1. The length compute did not check depth. FIXED.
+
+Marc's phrasing, and exactly right: `NullProtoWriter.WriteMessage` called `Measure` without
+going through `PreSubItem`, **which is where both guards live** - the `MaxDepth` cap and the
+recursion stack. So the measure walk re-entered through `Measure -> serializer.Write ->
+WriteMessage` with nothing counting, and a cyclic graph exhausted the STACK instead of throwing
+"Possible recursion detected". A stack overflow cannot be caught, so it takes the process down.
+
+Measured, not inferred: with the guard removed, the test host dies with exit code
+`-1073741571` (`STATUS_STACK_OVERFLOW`) and only the stream case completes. The classic
+reserve-and-back-fill path was immune only because it enters via `StartSubItem`, which does
+call `PreSubItem` - which is why the stream backend threw politely and the buffer-writer did
+not. `MeasureRecursionTests` pins all three backends.
+
+### 2. Serialization callbacks fire twice per nested message. NOT fixed - decide first.
+
+The measure IS a write, to the null writer, so anything with side effects runs once per pass.
+`AotSmoke`'s hook audit caught it the moment the stream backend went measure-first
+(`expected 'bs;as;', got 'bs;as;bs;as;'`), and the count on the buffer-writer today is
+precisely diagnostic: **3 for two instances** - the root fires once, because roots carry no
+length prefix and are never measured, and every nested message fires twice.
+
+**Suppressing callbacks during the measure is not the fix, and is worse than the disease**
+(Marc's point, sharpened): a `[ProtoBeforeSerialization]` that populates a member which is then
+serialized - the common idiom - would be measured *before* it ran and written *after*, so the
+lengths disagree and the calculated-vs-actual check throws. A side-effect bug becomes a hard
+failure.
+
+The shape that is actually correct is to **hoist**: fire `before` once ahead of the measure,
+suppress during both passes, fire `after` once after the write. Then both passes see the same
+object and the callback runs once. It is not free - callbacks are invoked *inside* the
+serializer body (generated and ref-emitted alike), so the writer cannot hoist them without new
+API separating "fire the callbacks" from "write the members".
+
+Worth knowing before deciding: this has been the buffer-writer's behaviour since it shipped and
+nobody has reported it, which suggests the idempotent "populate a derived field" case - where
+running twice is harmless - dominates in practice. `MeasureRecursionTests` pins the divergence
+as it stands, so whoever changes it will be told.
+
+## The stream backend on measure-first: tried, reverted (2026-08-13)
+
+The top of the ladder said "make the stream backend span-backed". Probing it turned up
+something better-shaped first: **the reason the stream backend cannot share the buffer-writer's
+fast path is not the span, it is back-fill.** `StartSubItem` is reached from `ProtoWriter`'s
+BASE `WriteMessage`/`WriteSubType`/`WriteWrapped*` - the modern serializer path.
+`BufferWriterProtoWriter` overrides every one of them to be measure-first; `StreamProtoWriter`
+simply never did, so it inherits reserve-and-back-fill for every sub-message. The obsolete
+non-`State` API is NOT what keeps back-fill alive, which is worth knowing before anyone
+deprecates it hoping to remove this.
+
+Back-fill is what forces the buffer to stay under the writer's control: it needs random access
+into *unflushed* bytes, hence `flushLock`, hence a deep message GROWS the buffer rather than
+draining it. Remove it and the stream backend's buffer is just a chunk to fill and flush -
+exactly the buffer-writer's lease - at which point `State` can own both and `Impl*` collapses
+toward the lease/flush pair that mirrors the reader's refill.
+
+So the experiment was: give `StreamProtoWriter` the same measure-first overrides (the shared
+body is now hoisted to `ProtoWriter.WriteMeasuredWithLengthPrefix`, which is kept - it is a
+pure refactor and the buffer-writer uses it). **Reverted**, because it surfaced both defects
+above: the stack overflow (now fixed) and the callback doubling (which would have been a
+visible regression for every stream consumer, where today it is only the buffer-writer's).
+
+**The callback question gates this work.** It is not a detail to sort out afterwards: moving
+the stream backend to measure-first doubles callbacks for the majority of protobuf-net users.
+
 ## The presized lease: built, measured, parked (2026-08-13)
 
 Step 3 of the buffer-core ladder, implemented as designed - `SetCapacityHint` feeding a

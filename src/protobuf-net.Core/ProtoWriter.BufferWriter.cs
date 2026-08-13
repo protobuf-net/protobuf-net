@@ -453,43 +453,7 @@ namespace ProtoBuf
             }
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style)
-            {
-                serializer ??= TypeModel.ResolveSerializer<T>(Model);
-                long calculatedLength = Measure<T>(_nullWriter, value, serializer);
-
-                switch (style)
-                {
-                    case PrefixStyle.None:
-                        break;
-                    case PrefixStyle.Base128:
-                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
-                        ResetWireType();
-                        break;
-                    case PrefixStyle.Fixed32:
-                    case PrefixStyle.Fixed32BigEndian:
-                        ImplWriteFixed32(ref state, checked((uint)calculatedLength));
-                        if (style == PrefixStyle.Fixed32BigEndian)
-                            state.ReverseLast32();
-                        ResetWireType();
-                        break;
-                    default:
-                        ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
-                        break;
-                }
-
-                if (calculatedLength != 0) // don't bother serializing if nothing there
-                {
-                    var oldPos = GetPosition(in state);
-                    serializer.Write(ref state, value);
-                    var newPos = GetPosition(in state);
-
-                    var actualLength = (newPos - oldPos);
-                    if (actualLength != calculatedLength)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
-                    }
-                }
-            }
+                => WriteMeasuredWithLengthPrefix<T>(_nullWriter, ref state, value, serializer, style);
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
                 where T : class

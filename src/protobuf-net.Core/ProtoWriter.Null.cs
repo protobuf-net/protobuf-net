@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -76,10 +76,24 @@ namespace ProtoBuf
                 if (position > _abortAfter) CheckOversized(_abortAfter, position);
             }
 
+            /// <summary>
+            /// Measuring a sub-message recurses exactly as writing one does, so it needs the same
+            /// depth and recursion guard.
+            /// </summary>
+            /// <remarks>
+            /// Without this, a cyclic graph overflows the STACK here instead of throwing
+            /// "Possible recursion detected": the measure walk re-enters through Measure ->
+            /// serializer.Write -> WriteMessage and never touches PreSubItem, which is where both
+            /// guards live. The classic reserve-and-back-fill path was immune only because it goes
+            /// through StartSubItem, which does call PreSubItem - so the exposure has always been
+            /// specific to the measure-first backends.
+            /// </remarks>
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
             {
+                PreSubItem(ref state, TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null);
                 var len = Measure<T>(this, value, serializer ?? TypeModel.ResolveSerializer<T>(Model));
-                AdvanceSubMessage(ref state, len, style);
+                AdvanceSubMessage(ref state, len, style); // leaves WireType = None, which PostSubItem demands
+                PostSubItem(ref state);
             }
 
             internal override void WriteWrappedItem<T>(ref State state, SerializerFeatures features, T value, ISerializer<T> serializer)
