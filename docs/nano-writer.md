@@ -742,6 +742,59 @@ A one-token change with a three-generator-plus-ecosystem audit behind it, buying
 any real payload. The rule this is an instance of: **a convention is cheap to choose and
 expensive to reverse once anything outside the repo can implement it.**
 
+## Cut 10 landed: the stream backend goes span-backed (2026-08-13)
+
+The top of the ladder, and the largest single win of the arc: **-29.2% on `NanoGenerated`, the
+headline serialize row** (14.521 -> 10.286 us), -25.0% against the drift gauge, with the
+generated model moving from **4.7% behind Google.Protobuf to 21.4% ahead** on the stream. Full
+table, both legs and the noise, in `src/NanoBench/DescriptorSerializeResults.md`.
+
+**What moves is the POSITION, not the buffer**, and that distinction is the whole design.
+`ioBuffer` stays the writer's and has to: back-filling a length prefix reaches into bytes
+already written, and growing replaces the array outright - neither is expressible as a
+buffer-writer-style lease that State owns and hands back. But `ioIndex` is exactly what a
+span-direct raw op already maintains as `state.OffsetInCurrent`, so moving *that* is enough for
+cut 9's fast arm to fire here, with no change to the ops themselves.
+
+Shape, following the reader's rather than inventing one (`docs/nano-core.md`):
+
+- **`ioIndex` survives as the SOLID form**, authoritative only while no State is active over the
+  buffer - which is the museum API's world, one State per call. `Pending(in state)` is the ONE
+  place the two forms meet; everything else asks it. Two sources of truth would be the
+  divergence-bug factory this document warns about, so there is exactly one accessor and it is
+  the only thing that knows both.
+- **`DefaultState()` liquifies, `Solidify` writes back** - the bridge, which needed its own
+  commit first (34 mechanical rewrites). The reader arc predicted "~40" for its version.
+- **`MakeSpace` replaces `DemandSpace`/`TryFlushOrResize`**: adopt the buffer, empty it, or grow
+  it, in that order and out of line, since a chunk with room is the case worth being fast.
+- **The growth arm re-takes the span at the same offset**, since `ResizeAndFlushLeft` replaces
+  the array. That is the one hazard this shape introduces, and the rule it implies is that
+  nothing may cache `ioBuffer` across a `DemandSpace` - `ImplCopyRawFromStream` and the Base128
+  back-fill both re-read it, and say so in a comment, because both had a captured local before.
+
+**Why it is three times cut 9's ~9%**: that cut removed the virtual `Impl*` hop from a backend
+that already had a span. This one gives the stream backend a span at all, so every raw op moves
+from `DemandSpace` (two field loads off the writer, then a write through `ioBuffer[ioIndex]`) to
+a register compare against `RemainingInCurrent` and a span-direct store. The runtime-model row
+barely moves (-2.2%), as expected: it takes the stateful path throughout and gains only the
+cheaper room check.
+
+**The coverage hole from cut 9 is now closed, and was probed rather than assumed.** That cut
+found the corpus differential would pass with the span-direct arm completely broken, because
+every gate wrote to a stream and the stream backend had no span. Repeating the identical probe
+here - corrupting the fast tag arm to `LocalWriteByte((byte)(tag ^ 1))` - now takes
+**AotDifferential from 3029/3029 (100%) to 1800/3029 (59%), exit 1**, where cut 9 recorded
+"3023 match, exit 0" for the same corruption. The gate can fail, so its passing means something.
+(`protobuf-net.Test` still passes with the corruption in place: the raw tag path is
+generated-model only, so the runtime-model suite never reaches it.)
+
+**What did NOT have to happen, and was expected to**: nothing about callbacks, and no decision
+from anyone. The handover recorded this work as gated on a product judgement about
+measure-first doubling serialization callbacks; that framing had already been retracted, and the
+buffer half turns out to be orthogonal to it - the back-fill arm is untouched in substance, so a
+contract that back-filled before still back-fills, callbacks and all. See "Three corrections to
+this handover".
+
 ## Cut 9 landed: span-direct raw ops, buffer-core step 2 (2026-08-13)
 
 Every raw write op now has two arms: where the backend holds a leased chunk with room, the
@@ -994,25 +1047,8 @@ carries BOTH backends - and the buffer-writer one is the interesting half (the g
 model is ~10% ahead of Google.Protobuf there, against a legacy baseline that is twice as
 slow as its own stream figure). The remaining ladder, in priority order:
 
-1. **The stream backend is not span-backed**, so cut 9's fast arm never fires there - and that
-   backend is what the *headline* benchmark rows use. Moving `ioBuffer`/`ioIndex` onto
-   `State`'s span would let both backends share one fast arm; cut 9 was worth ~9% on the
-   backend that has a span, and the stream backend got none of it. **This is now the top of
-   the ladder**, having overtaken the presized lease on evidence (below). Real surgery - the
-   length back-fill in `ImplEndLengthPrefixedSubItem` is the delicate part.
-
-   **Half of this already landed and the remaining half is smaller than it reads.** The stream
-   backend IS measure-first for arithmetically-measurable serializers (the gate at
-   `ProtoWriter.Stream.cs`), so back-fill survives only for the arm that cannot price itself -
-   runtime models, and callback-bearing contracts, which are excluded from cheap measure as a
-   correctness requirement. What is unbuilt is the buffer half: `StreamProtoWriter` still writes
-   into its own `ioBuffer`/`ioIndex` inside the `Impl*` overrides, and `State._span`/`_memory`
-   are populated only by the buffer-writer, so `RemainingInCurrent` is 0 on the stream backend
-   and every raw op takes the out-of-line arm. The open question is coexistence: can the stream
-   backend hold a State-owned lease for the measure-first arm while keeping the writer-owned
-   `ioBuffer` for the back-fill arm, given this document's own warning against "two regimes with
-   commit barriers - a divergence-bug factory"? The position invariant is already derived
-   (cut 8), which is what makes the question answerable rather than obviously no.
+1. ~~**The stream backend is not span-backed**~~ - **LANDED, see "Cut 10" below: -29% on the
+   headline row, and the generated model goes from 4.7% behind Google.Protobuf to 21.4% ahead.**
 2. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
    both backends, so it is not the writer; Google allocates zero, and its whole payload is
    7.6 KB). It won its race on time and was never priced on bytes. The measure hand-off's

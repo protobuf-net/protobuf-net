@@ -1,4 +1,49 @@
-# Descriptor serialize composite (docs/nano-writer.md)
+﻿# Descriptor serialize composite (docs/nano-writer.md)
+
+## net10.0, 2026-08-13, THE STREAM BACKEND GOES SPAN-BACKED (the buffer core, stream half)
+
+Paired, same machine, same sitting, `--job short`; the "before" leg is the commit immediately
+prior (the museum bridge, which is inert), the "after" leg is measured twice to price the noise.
+
+| row | before | after | after (2nd run) | delta | vs the gauge |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| LegacyReal | 20.776 us | 20.318 us | - | -2.2% | +3.7% |
+| GeneratedProtogen | 14.821 us | 12.590 us | 11.857 us | -15.1% | -9.9% |
+| **NanoGenerated** | **14.521 us** | **10.286 us** | 10.163 us | **-29.2%** | **-25.0%** |
+| NanoGeneratedMeasured | 20.911 us | 15.537 us | 15.326 us | -25.7% | -21.3% |
+| NanoGeneratedMeasure | 3.673 us | 3.635 us | 3.785 us | -1.0% | (writer-free row) |
+| GoogleProtobuf (drift gauge) | 13.873 us | 13.084 us | 13.154 us | -5.7% | - |
+
+**The generated model goes from 4.7% BEHIND Google.Protobuf to 21.4% AHEAD, on the stream** -
+14.521 vs 13.873 before, 10.286 vs 13.084 after. These are the headline rows: everything in the
+serialize battery writes to a `MemoryStream`, which is precisely why cut 9's span-direct arm was
+invisible here until now.
+
+Why it is so much larger than cut 9's ~9% on the buffer-writer: that cut removed the virtual
+`Impl*` hop from a backend that already had a span. This one gives the stream backend a span at
+all, so every raw op moves from `DemandSpace` (two field loads off the writer, then a write
+through `ioBuffer[ioIndex]`) to a register compare against `RemainingInCurrent` and a
+span-direct store. The runtime-model row (`LegacyReal`) barely moves, as expected - it takes the
+stateful path throughout and gains only the cheaper room check.
+
+**The gauge moved -5.7% between the two legs**, which is more drift than any single row's noise,
+so the normalised column is the one to read; the two "after" runs agree to within 1.2%, and the
+writer-free measure row to within 4%.
+
+### Coverage, checked rather than assumed
+
+The lesson from cut 9 was that a path no gate drives is unmeasured, not fine - the corpus
+differential passed with the span-direct arm completely broken, because every gate wrote to a
+stream and the stream backend had no span. That is now the opposite way round, and it was
+probed rather than believed: corrupting the fast tag arm (`LocalWriteByte((byte)(tag ^ 1))`)
+takes **AotDifferential from 3029/3029 (100%) to 1800/3029 (59%), exit 1**, where before this
+change the identical corruption was recorded as *"3023 match, exit 0"*. So the arm is genuinely
+reached, and the green run means something.
+
+Note `protobuf-net.Test` still passes with that corruption in place: the raw tag path is
+generated-model only, so the runtime-model suite never reaches it. AotDifferential is the gate
+for this area.
+
 
 ## net472 leg (2026-08-12, cut 5 in place)
 
