@@ -385,8 +385,10 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
 - `IProducerConsumerCollection<T>` resolves to a provider, but **reading** one needs a concrete type
   to construct, so ref-emit throws on deserialize. There is nothing to compare against, so it has no
   fixture.
-- `IReadOnlySet<T>` maps to `CreateReadOnySet` (sic), which only exists in the net6.0+ build of the
-  library; the generator checks the symbol is present before emitting a call to it.
+- `IReadOnlySet<T>` maps to `CreateReadOnlySet`, which only exists in the net6.0+ build of the
+  library; the generator checks the symbol is present before emitting a call to it, and falls back
+  to the 3.x spelling `CreateReadOnySet` (sic - now an `[Obsolete]` forwarder, kept because
+  previously-generated code binds to it by name) when only an older Core is referenced.
 
 ### Maps
 
