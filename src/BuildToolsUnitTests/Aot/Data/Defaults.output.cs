@@ -46,7 +46,8 @@ partial class DefaultsModel
             var tmp3 = value.Flag;
             if (tmp3 != true)
             {
-                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // Flag
+                state.WriteRawTag((3 << 3) | 0);  // Flag
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp4 = value.Ratio;
             if (tmp4 != 2.5D)

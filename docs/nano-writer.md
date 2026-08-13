@@ -1139,8 +1139,56 @@ slow as its own stream figure). The remaining ladder, in priority order:
    `StreamingContext`). The shapes are fixed at registration, so it resolves to a cached plan or
    delegate. No-emit path only; ref-emit and generated paths are already clean.
 
+### Three optimisations measured and reverted, and what they taught (2026-08-13)
+
+All three passed every gate and all three were backed out, because the descriptor benchmark said
+they bought nothing. Recorded so nobody rebuilds them, and because the pattern is more useful
+than any of them.
+
+| change | microbenchmark | end to end |
+| --- | --- | --- |
+| varint measure: table indexed by lzcnt | **2.2x** | nothing (~2% worse against the gauge) |
+| varint measure: ladder, down-level arm | beat the loop in every distribution | nothing (net472; the measure-ONLY row moved ~2%) |
+| bool write: one `ushort` store instead of tag+varint | (not micro'd) | nothing, **and +128 B/op** |
+
+**Why the first two failed**: the table swaps register-only arithmetic for a memory load, and was
+timed as back-to-back calls - an access pattern that never occurs. In a real write the measure is
+interleaved with other work, where the latency was already hidden by ILP. The clincher was
+`NanoGeneratedMeasure`, a row that does *nothing but* measure: even there the ladder was worth
+~2%. If a change is that small in the row that is entirely the thing you changed, the thing is
+not a meaningful fraction of the work.
+
+**Why the third failed differently, and it is the more interesting one**: it removed real work -
+two room checks, two stores and a loop collapsed to one store - and STILL did not show. But it
+also introduced a 128 B/op allocation on a previously zero-allocation path, because the
+out-of-line arm did `new byte[2]` per chunk-boundary hit. That was written off in the moment as
+"cold, rare, correct"; it was correct and neither cold enough nor free. **A slow path that
+allocates is not a slow path, it is a leak with good manners.**
+
+**The standing conclusion for this area**: per-op cost in the varint/tag primitives is not where
+this workload's time goes. The wins this arc actually found were structural - deleting a whole
+traversal (measure-first), deleting per-op bookkeeping (the position invariant), deleting the
+virtual hop (span-direct raw ops), deleting re-allocation (cache retention). Shaving cycles off
+a primitive that is already a small fraction has failed three times running.
+
+**Caveat that could reopen it**: packed repeated writes measure per ELEMENT, so if packed lands
+the measure becomes far hotter and all of this is worth re-testing. The strategy matrix in
+`src/NanoBench/VarintMeasureResults.md` is already built and correct, so that re-test is cheap.
+
 ### Working practices this arc runs on (learned the hard way; do not relearn)
 
+- **Verify the change is PRESENT before believing a gate or a number.** This cost three voided
+  measurements and one lost implementation in a single sitting: a toggle script that silently
+  no-opped (twice), and `git checkout --` used as a casual undo against a file whose committed
+  state was still the old one, which deleted the work - after which the whole battery passed
+  against the ABSENCE of the change and was reported as confirming it. A suite that goes green
+  without your change in the tree is telling you nothing. Concretely: `grep` for the code under
+  test; make any A/B toggle assert its own effect in BOTH directions under `set -e` with no
+  `|| true`; and **commit before measuring**, so the toggle restores rather than destroys.
+- **Assert the arms AGREE before comparing their times.** A wrong implementation is cheap and
+  will look fast. The varint matrix caught two of its own strategies this way - bad multiply-shift
+  constants, and a hand-written lookup table wrong at its second entry. Derive tables, do not
+  type them.
 - **The gate battery, per cut**: goldens x2 (first run rewrites, second asserts; review
   `git diff`), AotConformanceTests, AotDifferential (see trap below), SchemaTests both
   TFMs, protobuf-net.Test + Examples both TFMs, AotSmoke Release build (trim analysis) +

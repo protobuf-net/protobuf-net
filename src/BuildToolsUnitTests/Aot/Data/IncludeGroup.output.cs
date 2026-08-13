@@ -57,7 +57,8 @@ partial class IncludeGroupModel
             var tmp1 = value.Success;
             if (tmp1)
             {
-                state.WriteRawUInt16(tmp1 ? (ushort)0x0108 : (ushort)0x0008);  // Success
+                state.WriteRawTag((1 << 3) | 0);  // Success
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             var tmp2 = value.Error;
             if (tmp2 != null)

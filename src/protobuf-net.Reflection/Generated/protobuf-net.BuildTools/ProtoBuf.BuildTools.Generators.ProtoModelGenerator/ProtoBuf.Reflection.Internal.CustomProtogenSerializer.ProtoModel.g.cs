@@ -1015,12 +1015,14 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeAllowAlias())
             {
                 var tmp2 = value.AllowAlias;
-                state.WriteRawUInt16(tmp2 ? (ushort)0x0110 : (ushort)0x0010);  // AllowAlias
+                state.WriteRawTag((2 << 3) | 0);  // AllowAlias
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp3 = value.Deprecated;
-                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // Deprecated
+                state.WriteRawTag((3 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1267,7 +1269,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp1 = value.Deprecated;
-                state.WriteRawUInt16(tmp1 ? (ushort)0x0108 : (ushort)0x0008);  // Deprecated
+                state.WriteRawTag((1 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1766,17 +1769,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializePacked())
             {
                 var tmp2 = value.Packed;
-                state.WriteRawUInt16(tmp2 ? (ushort)0x0110 : (ushort)0x0010);  // Packed
+                state.WriteRawTag((2 << 3) | 0);  // Packed
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp3 = value.Deprecated;
-                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // Deprecated
+                state.WriteRawTag((3 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             if (value.ShouldSerializeLazy())
             {
                 var tmp5 = value.Lazy;
-                state.WriteRawUInt16(tmp5 ? (ushort)0x0128 : (ushort)0x0028);  // Lazy
+                state.WriteRawTag((5 << 3) | 0);  // Lazy
+                state.WriteRawVarint32(tmp5 ? 1u : 0u);
             }
             if (value.ShouldSerializeJstype())
             {
@@ -1786,7 +1792,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeWeak())
             {
                 var tmp10 = value.Weak;
-                state.WriteRawUInt16(tmp10 ? (ushort)0x0150 : (ushort)0x0050);  // Weak
+                state.WriteRawTag((10 << 3) | 0);  // Weak
+                state.WriteRawVarint32(tmp10 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -2343,7 +2350,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeJavaMultipleFiles())
             {
                 var tmp10 = value.JavaMultipleFiles;
-                state.WriteRawUInt16(tmp10 ? (ushort)0x0150 : (ushort)0x0050);  // JavaMultipleFiles
+                state.WriteRawTag((10 << 3) | 0);  // JavaMultipleFiles
+                state.WriteRawVarint32(tmp10 ? 1u : 0u);
             }
             if (value.ShouldSerializeGoPackage())
             {
@@ -2840,22 +2848,26 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeMessageSetWireFormat())
             {
                 var tmp1 = value.MessageSetWireFormat;
-                state.WriteRawUInt16(tmp1 ? (ushort)0x0108 : (ushort)0x0008);  // MessageSetWireFormat
+                state.WriteRawTag((1 << 3) | 0);  // MessageSetWireFormat
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             if (value.ShouldSerializeNoStandardDescriptorAccessor())
             {
                 var tmp2 = value.NoStandardDescriptorAccessor;
-                state.WriteRawUInt16(tmp2 ? (ushort)0x0110 : (ushort)0x0010);  // NoStandardDescriptorAccessor
+                state.WriteRawTag((2 << 3) | 0);  // NoStandardDescriptorAccessor
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp3 = value.Deprecated;
-                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // Deprecated
+                state.WriteRawTag((3 << 3) | 0);  // Deprecated
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             if (value.ShouldSerializeMapEntry())
             {
                 var tmp7 = value.MapEntry;
-                state.WriteRawUInt16(tmp7 ? (ushort)0x0138 : (ushort)0x0038);  // MapEntry
+                state.WriteRawTag((7 << 3) | 0);  // MapEntry
+                state.WriteRawVarint32(tmp7 ? 1u : 0u);
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -3048,12 +3060,14 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeClientStreaming())
             {
                 var tmp5 = value.ClientStreaming;
-                state.WriteRawUInt16(tmp5 ? (ushort)0x0128 : (ushort)0x0028);  // ClientStreaming
+                state.WriteRawTag((5 << 3) | 0);  // ClientStreaming
+                state.WriteRawVarint32(tmp5 ? 1u : 0u);
             }
             if (value.ShouldSerializeServerStreaming())
             {
                 var tmp6 = value.ServerStreaming;
-                state.WriteRawUInt16(tmp6 ? (ushort)0x0130 : (ushort)0x0030);  // ServerStreaming
+                state.WriteRawTag((6 << 3) | 0);  // ServerStreaming
+                state.WriteRawVarint32(tmp6 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }
@@ -4178,7 +4192,8 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.IsExtension;
-            state.WriteRawUInt16(tmp2 ? (ushort)0x0110 : (ushort)0x0010);  // IsExtension
+            state.WriteRawTag((2 << 3) | 0);  // IsExtension
+            state.WriteRawVarint32(tmp2 ? 1u : 0u);
             state.AppendExtensionData(value);
         }
 
@@ -4423,12 +4438,14 @@ partial class CustomProtogenSerializer
             var tmp3 = value.AsReference;
             if (tmp3)
             {
-                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // AsReference
+                state.WriteRawTag((3 << 3) | 0);  // AsReference
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp4 = value.DynamicType;
             if (tmp4)
             {
-                state.WriteRawUInt16(tmp4 ? (ushort)0x0120 : (ushort)0x0020);  // DynamicType
+                state.WriteRawTag((4 << 3) | 0);  // DynamicType
+                state.WriteRawVarint32(tmp4 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }
@@ -4546,12 +4563,14 @@ partial class CustomProtogenSerializer
             var tmp5 = value.EmitRequiredDefaults;
             if (tmp5)
             {
-                state.WriteRawUInt16(tmp5 ? (ushort)0x0128 : (ushort)0x0028);  // EmitRequiredDefaults
+                state.WriteRawTag((5 << 3) | 0);  // EmitRequiredDefaults
+                state.WriteRawVarint32(tmp5 ? 1u : 0u);
             }
             var tmp6 = value.EmitOneOfEnum;
             if (tmp6)
             {
-                state.WriteRawUInt16(tmp6 ? (ushort)0x0130 : (ushort)0x0030);  // EmitOneOfEnum
+                state.WriteRawTag((6 << 3) | 0);  // EmitOneOfEnum
+                state.WriteRawVarint32(tmp6 ? 1u : 0u);
             }
             var tmp7 = value.VisualBasicLanguageVersion;
             if (tmp7 != null && tmp7 != "")
@@ -4886,7 +4905,8 @@ partial class CustomProtogenSerializer
             var tmp2 = value.IsSubType;
             if (tmp2)
             {
-                state.WriteRawUInt16(tmp2 ? (ushort)0x0110 : (ushort)0x0010);  // IsSubType
+                state.WriteRawTag((2 << 3) | 0);  // IsSubType
+                state.WriteRawVarint32(tmp2 ? 1u : 0u);
             }
             state.AppendExtensionData(value);
         }

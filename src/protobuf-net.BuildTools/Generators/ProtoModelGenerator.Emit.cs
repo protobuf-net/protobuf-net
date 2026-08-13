@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -2577,17 +2577,6 @@ namespace ProtoBuf.BuildTools.Generators
             // through 64 bits (a negative int32 is the 10-byte form on the wire).
             if (raw && member.DataFormat == ProtoDataFormat.Default && RawScalarWrite(member, expression) is { } rawWrite)
             {
-                // A BOOL's whole field is one of exactly two constant byte pairs - tag+0 or
-                // tag+1 - so where the tag is a single byte (fields 1-15, the dominant case) it
-                // collapses to a select between two folded constants and ONE store, instead of a
-                // tag write plus a varint write: two room checks, two stores, and a loop whose
-                // trip count the JIT cannot know is 1. Bools are everywhere in real contracts.
-                if (member.Kind == ProtoMemberKind.Bool && member.FieldNumber <= 15)
-                {
-                    var tag = member.FieldNumber << 3; // varint wire type is 0
-                    Line(sb, indent, $"state.WriteRawUInt16({expression} ? (ushort)0x{tag | 0x100:X4} : (ushort)0x{tag:X4});  // {member.Name}");
-                    return;
-                }
                 Line(sb, indent, $"state.WriteRawTag(({member.FieldNumber} << 3) | {RawScalarWireBits(member.Kind)});  // {member.Name}");
                 Line(sb, indent, rawWrite);
                 return;

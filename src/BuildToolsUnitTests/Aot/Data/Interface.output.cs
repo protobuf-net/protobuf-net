@@ -53,7 +53,8 @@ partial class InterfaceModel
             var tmp3 = value.Aloof;
             if (tmp3)
             {
-                state.WriteRawUInt16(tmp3 ? (ushort)0x0118 : (ushort)0x0018);  // Aloof
+                state.WriteRawTag((3 << 3) | 0);  // Aloof
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
         }
 

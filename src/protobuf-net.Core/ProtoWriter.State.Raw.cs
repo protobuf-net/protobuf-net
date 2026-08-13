@@ -71,36 +71,6 @@ namespace ProtoBuf
                 writer.ImplWriteVarint32(ref this, tag);
             }
 
-            /// <summary>
-            /// Two pre-encoded bytes in one store, low byte first - a whole field whose encoding
-            /// is known at compile time.
-            /// </summary>
-            /// <remarks>
-            /// A bool field is the case this exists for: its entire encoding is one of exactly two
-            /// constant byte pairs (tag+0 or tag+1), so the generator emits a select between two
-            /// folded constants rather than a tag write followed by a varint write - one test and
-            /// one store, instead of two room checks, two stores and a loop whose trip count the
-            /// JIT cannot know is 1. Applies equally to a two-byte tag for fields 16-2047.
-            /// </remarks>
-            [MethodImpl(ProtoReader.HotPath)]
-            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
-            public void WriteRawUInt16(ushort value)
-            {
-                if (RemainingInCurrent >= 2) LocalWriteUInt16(value);
-                else SlowWriteRawUInt16(value);
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            private void SlowWriteRawUInt16(ushort value)
-            {
-                var writer = _writer;
-                writer._needFlush = true; // a backend that never leases has no other hook
-                // a two-byte array on the COLD path only - this is the chunk-boundary case, and a
-                // stackalloc cannot be passed alongside `ref this` without the compiler fearing
-                // it escapes into the state
-                writer.ImplWriteBytes(ref this, new byte[] { (byte)value, (byte)(value >> 8) });
-            }
-
             /// <summary>Raw-convention varint write (32-bit).</summary>
             [MethodImpl(ProtoReader.HotPath)]
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
