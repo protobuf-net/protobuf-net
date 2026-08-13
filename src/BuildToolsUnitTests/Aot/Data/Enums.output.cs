@@ -114,10 +114,10 @@ partial class EnumsModel
             }
         }
 
-        public static int Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.SByteEnum;
             if (tmp1 != default(global::AotFixtures.Enums.AsSByte)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(sbyte)tmp1));  // SByteEnum
             var tmp2 = value.ByteEnum;
@@ -166,8 +166,8 @@ partial class EnumsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Enums.WithEnums>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Enums.WithEnums value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Enums_WithEnums(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Enums_WithEnums(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Enums.WithEnums RawRead_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
         {

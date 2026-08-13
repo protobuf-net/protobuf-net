@@ -13,6 +13,37 @@ namespace ProtoBuf
 #endif
             Dictionary<ObjectKey, long> _knownLengths = new();
 
+        // the raw measure pass's ??= length cache (docs/nano-writer.md): sub-message lengths
+        // keyed by reference identity, populated post-order by the generated Measure_ statics
+        // and consumed at the write sites. It lives HERE rather than on the writer because this
+        // cache is the codebase's established home for cross-writer measurement state: the
+        // buffer-writer's null-writer sidecar shares the parent's instance by construction
+        // ("share the *same* known objects key"), and MeasureState's Serialize hands the
+        // measuring writer's cache to the writing writer via InitializeFrom - so a length
+        // measured ANYWHERE serves the write EVERYWHERE, captured the first time. Clearing
+        // rides the same lifecycle as _knownLengths, which is what makes a stale entry (a
+        // corrupt stream, not an error) impossible wherever known-lengths were already safe.
+        // long, deliberately, matching _knownLengths: a single message body CAN exceed
+        // int.MaxValue (many large byte[] members, say), and classic handles it - int
+        // arithmetic would overflow silently, which is a corrupt stream, not an error
+        private
+#if NET
+            readonly
+#endif
+            Dictionary<object, long> _rawLengths = new(RawLengthComparer.Instance);
+
+        internal Dictionary<object, long> RawLengths => _rawLengths;
+
+        // reference identity regardless of user Equals/GetHashCode overrides; the BCL's
+        // ReferenceEqualityComparer is net5+ only, and this must serve every TFM
+        private sealed class RawLengthComparer : IEqualityComparer<object>
+        {
+            internal static readonly RawLengthComparer Instance = new RawLengthComparer();
+            private RawLengthComparer() { }
+            bool IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+            int IEqualityComparer<object>.GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+        }
+
         [StructLayout(LayoutKind.Auto)]
         private readonly struct ObjectKey : IEquatable<ObjectKey>
         {
@@ -239,8 +270,11 @@ namespace ProtoBuf
 #if NET
             _knownLengths.Clear();
             _knownLengths.TrimExcess();
+            _rawLengths.Clear();
+            _rawLengths.TrimExcess();
 #else
             _knownLengths = new(); // reinitialize the Dictionary<> to free up all allocated memory
+            _rawLengths = new(RawLengthComparer.Instance);
 #endif
             _hit = _miss = 0;
         }
@@ -255,6 +289,9 @@ namespace ProtoBuf
                 _knownLengths.Clear();
                 foreach (var pair in obj._knownLengths)
                     _knownLengths.Add(pair.Key, pair.Value);
+                _rawLengths.Clear();
+                foreach (var pair in obj._rawLengths)
+                    _rawLengths.Add(pair.Key, pair.Value);
             }
         }
 

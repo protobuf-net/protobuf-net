@@ -62,10 +62,10 @@ partial class DefaultConverterModel
             if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static int Measure_AotFixtures_DefaultConverter_Converted(global::AotFixtures.DefaultConverter.Converted value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_DefaultConverter_Converted(global::AotFixtures.DefaultConverter.Converted value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Number;
             if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             var tmp2 = value.Text;
@@ -86,8 +86,8 @@ partial class DefaultConverterModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.DefaultConverter.Converted>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.DefaultConverter.Converted value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_DefaultConverter_Converted(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_DefaultConverter_Converted(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.DefaultConverter.Converted RawRead_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
         {

@@ -42,10 +42,10 @@ partial class NestedModel
             }
         }
 
-        public static int Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.City;
             if (tmp1 != null)
             {
@@ -56,8 +56,8 @@ partial class NestedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Address>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nested.Address value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Nested_Address(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Nested_Address(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Nested.Address RawRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
         {
@@ -110,15 +110,15 @@ partial class NestedModel
                     len2 = Measure_AotFixtures_Nested_Address(tmp2, state.RawDepthBudget, lengths2);
                     lengths2[tmp2] = len2;
                 }
-                state.WriteRawVarint32((uint)len2);
+                state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Nested_Address(ref state, tmp2);
             }
         }
 
-        public static int Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             var tmp2 = value.Address;
@@ -129,15 +129,15 @@ partial class NestedModel
                     len2 = Measure_AotFixtures_Nested_Address(tmp2, depth, lengths);
                     lengths[tmp2] = len2;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // Address
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Address
             }
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Customer>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nested.Customer value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Nested_Customer(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Nested_Customer(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Nested.Customer RawRead_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
         {
@@ -201,7 +201,7 @@ partial class NestedModel
                     len2 = Measure_AotFixtures_Nested_Customer(tmp2, state.RawDepthBudget, lengths2);
                     lengths2[tmp2] = len2;
                 }
-                state.WriteRawVarint32((uint)len2);
+                state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Nested_Customer(ref state, tmp2);
             }
             var tmp3 = value.ShipTo;
@@ -214,15 +214,15 @@ partial class NestedModel
                     len3 = Measure_AotFixtures_Nested_Address(tmp3, state.RawDepthBudget, lengths3);
                     lengths3[tmp3] = len3;
                 }
-                state.WriteRawVarint32((uint)len3);
+                state.WriteRawVarint64((ulong)len3);
                 RawWrite_AotFixtures_Nested_Address(ref state, tmp3);
             }
         }
 
-        public static int Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Number;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             var tmp2 = value.Customer;
@@ -233,7 +233,7 @@ partial class NestedModel
                     len2 = Measure_AotFixtures_Nested_Customer(tmp2, depth, lengths);
                     lengths[tmp2] = len2;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // Customer
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Customer
             }
             var tmp3 = value.ShipTo;
             if (tmp3 != null)
@@ -243,15 +243,15 @@ partial class NestedModel
                     len3 = Measure_AotFixtures_Nested_Address(tmp3, depth, lengths);
                     lengths[tmp3] = len3;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;  // ShipTo
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // ShipTo
             }
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Invoice>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nested.Invoice value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Nested_Invoice(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Nested_Invoice(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Nested.Invoice RawRead_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
         {

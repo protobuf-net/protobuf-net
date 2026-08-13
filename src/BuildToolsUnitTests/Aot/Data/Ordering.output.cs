@@ -43,10 +43,10 @@ partial class OrderingModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static int Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp2 = value.OnlyDataMember;
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OnlyDataMember
             var tmp5 = value.Both;
@@ -56,8 +56,8 @@ partial class OrderingModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.Mixed value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Ordering_Mixed(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Ordering_Mixed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Ordering.Mixed RawRead_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
         {
@@ -114,10 +114,10 @@ partial class OrderingModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.First;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
             return len;
@@ -125,8 +125,8 @@ partial class OrderingModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Ordering_OffsetIgnoredByXml(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Ordering_OffsetIgnoredByXml(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Ordering.OffsetIgnoredByXml RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
         {
@@ -180,7 +180,7 @@ partial class OrderingModel
                     len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1);
             }
             var tmp2 = value.FromXmlType;
@@ -193,7 +193,7 @@ partial class OrderingModel
                     len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget, lengths2);
                     lengths2[tmp2] = len2;
                 }
-                state.WriteRawVarint32((uint)len2);
+                state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2);
             }
             var tmp3 = value.Several;
@@ -209,16 +209,16 @@ partial class OrderingModel
                         len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, state.RawDepthBudget, lengths3);
                         lengths3[item3] = len3;
                     }
-                    state.WriteRawVarint32((uint)len3);
+                    state.WriteRawVarint64((ulong)len3);
                     RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, item3);
                 }
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.FromDataContract;
             if (tmp1 != null)
             {
@@ -227,7 +227,7 @@ partial class OrderingModel
                     len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // FromDataContract
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // FromDataContract
             }
             var tmp2 = value.FromXmlType;
             if (tmp2 != null)
@@ -237,7 +237,7 @@ partial class OrderingModel
                     len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, lengths);
                     lengths[tmp2] = len2;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // FromXmlType
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // FromXmlType
             }
             var tmp3 = value.Several;
             if (tmp3 != null)
@@ -250,7 +250,7 @@ partial class OrderingModel
                         len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, lengths);
                         lengths[item3] = len3;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;
                 }
             }
             return len;
@@ -258,8 +258,8 @@ partial class OrderingModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Referencing>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.Referencing value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Ordering_Referencing(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Ordering_Referencing(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Ordering.Referencing RawRead_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
         {
@@ -333,10 +333,10 @@ partial class OrderingModel
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.First;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
             var tmp2 = value.Second;
@@ -349,8 +349,8 @@ partial class OrderingModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMember>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.ViaDataMember value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Ordering_ViaDataMember(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Ordering_ViaDataMember(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Ordering.ViaDataMember RawRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
         {
@@ -410,10 +410,10 @@ partial class OrderingModel
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp11 = value.First;
             if (tmp11 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp11));  // First
             var tmp12 = value.Second;
@@ -426,8 +426,8 @@ partial class OrderingModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.ViaDataMemberOffset value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Ordering_ViaDataMemberOffset(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Ordering_ViaDataMemberOffset(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Ordering.ViaDataMemberOffset RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
         {
@@ -487,10 +487,10 @@ partial class OrderingModel
             }
         }
 
-        public static int Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.First;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
             var tmp2 = value.Second;
@@ -503,8 +503,8 @@ partial class OrderingModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaXmlElement>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.ViaXmlElement value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Ordering_ViaXmlElement(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Ordering_ViaXmlElement(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Ordering.ViaXmlElement RawRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
         {

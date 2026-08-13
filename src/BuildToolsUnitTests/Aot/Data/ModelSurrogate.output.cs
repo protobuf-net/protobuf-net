@@ -54,10 +54,10 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Ticks;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Ticks
             var tmp2 = value.OffsetMinutes;
@@ -67,8 +67,8 @@ partial class ModelSurrogateModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
         {
@@ -246,10 +246,10 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Value
             return len;
@@ -257,8 +257,8 @@ partial class ModelSurrogateModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_ModelSurrogate_TicksSurrogate(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_ModelSurrogate_TicksSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ModelSurrogate.TicksSurrogate RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
         {
@@ -310,10 +310,10 @@ partial class ModelSurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -324,8 +324,8 @@ partial class ModelSurrogateModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_ModelSurrogate_VersionSurrogate(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_ModelSurrogate_VersionSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ModelSurrogate.VersionSurrogate RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {

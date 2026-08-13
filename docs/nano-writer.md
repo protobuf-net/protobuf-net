@@ -257,6 +257,36 @@ split-at-every-offset sweeps) - `StreamParseBenchmarks.ChunkedStream` has the re
 and a tiny-block `IBufferWriter` harness would force the boundary through every member
 shape.
 
+## Cut 7 landed: the measure state, made right (2026-08-13)
+
+Two Marc questions, two fixes, one cut:
+
+- **"Does the state traverse, so we capture everything the first time?"** It didn't - the
+  RawLengths cache was homed on the writer, but the codebase's established home for
+  cross-writer measurement state is **NetObjectCache**: the buffer-writer's null-writer
+  sidecar shares the parent's instance by construction ("share the *same* known objects
+  key"), and MeasureState's Serialize hands the measuring writer's cache to the writing
+  writer via netCache.InitializeFrom. RawLengths moved there, so both traversals now come
+  free: a length measured during the classic engine's prefix measure serves the real
+  write all the way down, and the global Measure(value)->Serialize(output) flow writes
+  entirely from cache hits. Clearing rides the same lifecycle as _knownLengths - the
+  staleness guarantees are now identical to what has shipped for years, replacing the
+  parallel Init/Cleanup clears.
+- **"Should the reply be 64-bit?"** The interface reply stays int: the engine's contract
+  is "non-positive -> measure by traversal" and the traversal is long-capable end to end,
+  so the generated implementation spills a body wider than int.MaxValue to it
+  (`len <= int.MaxValue ? (int)len : -1`) - correct at every size with zero new surface.
+  But the question exposed that OUR arithmetic was int, which a colossal single body
+  (many large byte[] members) would overflow SILENTLY where classic is correct: Measure_
+  now accumulates long, count-folds multiply in 64-bit, prefix sites use
+  WriteRawVarint64/MeasureRawVarint64 (byte-identical for small values), and RawLengths
+  is Dictionary<object, long>, matching _knownLengths - all changed in place, being
+  [PBN9002]-unshipped. **A 64-bit interface member is parked, with the mechanism
+  recorded**: if ever wanted, a `Measure64` DIM under `#if` (absent on net462/ns2.0,
+  defaulted-to-Measure where DIM exists) - Core already ships per-TFM interface members
+  (CreateReadOnySet is net6+), so the shape has precedent - but the int+spill design
+  makes it unnecessary today.
+
 ## Cut 6 landed: IMeasuringSerializer, the classic engine's measure hook (2026-08-13)
 
 Marc's spot: `IMeasuringSerializer<T>` + `OptionTrySkipWritingWhenMeasuring` is SHIPPED

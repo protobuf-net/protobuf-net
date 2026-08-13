@@ -45,7 +45,7 @@ partial class AbstractLeafModel
                     len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1);
             }
             var tmp2 = value.Name;
@@ -56,10 +56,10 @@ partial class AbstractLeafModel
             }
         }
 
-        public static int Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -68,7 +68,7 @@ partial class AbstractLeafModel
                     len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Value
             }
             var tmp2 = value.Name;
             if (tmp2 != null)
@@ -80,8 +80,8 @@ partial class AbstractLeafModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AbstractLeaf.Holder value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_AbstractLeaf_Holder(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_AbstractLeaf_Holder(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
         {
@@ -157,10 +157,10 @@ partial class AbstractLeafModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Sides;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Sides
             return len;
@@ -168,8 +168,8 @@ partial class AbstractLeafModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Shape>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AbstractLeaf.Shape value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_AbstractLeaf_Shape(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_AbstractLeaf_Shape(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

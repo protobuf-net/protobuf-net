@@ -38,17 +38,17 @@ partial class SchemaOnlyModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
         }
 
-        public static int Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.Empty>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SchemaOnly.Empty value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_SchemaOnly_Empty(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_SchemaOnly_Empty(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.SchemaOnly.Empty RawRead_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Empty value)
         {
@@ -83,18 +83,18 @@ partial class SchemaOnlyModel
             state.AppendExtensionData(value);
         }
 
-        public static int Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SchemaOnly.EmptyExtensible value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_SchemaOnly_EmptyExtensible(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_SchemaOnly_EmptyExtensible(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.SchemaOnly.EmptyExtensible RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
         {
@@ -136,10 +136,10 @@ partial class SchemaOnlyModel
             }
         }
 
-        public static int Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Text;
@@ -152,8 +152,8 @@ partial class SchemaOnlyModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.Ignoring>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SchemaOnly.Ignoring value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_SchemaOnly_Ignoring(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_SchemaOnly_Ignoring(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.SchemaOnly.Ignoring RawRead_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Ignoring value)
         {
@@ -213,10 +213,10 @@ partial class SchemaOnlyModel
             }
         }
 
-        public static int Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Text;
@@ -229,8 +229,8 @@ partial class SchemaOnlyModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.Plain>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SchemaOnly.Plain value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_SchemaOnly_Plain(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_SchemaOnly_Plain(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.SchemaOnly.Plain RawRead_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.Plain value)
         {
@@ -290,10 +290,10 @@ partial class SchemaOnlyModel
             }
         }
 
-        public static int Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Text;
@@ -306,8 +306,8 @@ partial class SchemaOnlyModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.SchemaOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SchemaOnly.SchemaOnly value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_SchemaOnly_SchemaOnly(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_SchemaOnly_SchemaOnly(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.SchemaOnly.SchemaOnly RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
         {

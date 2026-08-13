@@ -61,10 +61,10 @@ partial class PartialModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Pinned;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Pinned
             var tmp2 = value.FromPartial;
@@ -74,8 +74,8 @@ partial class PartialModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Contested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Contested value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Partial_Contested(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Partial_Contested(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
         {
@@ -263,10 +263,10 @@ partial class PartialModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Kept;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Kept
             return len;
@@ -274,8 +274,8 @@ partial class PartialModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Excluded>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Excluded value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Partial_Excluded(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Partial_Excluded(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
         {
@@ -325,10 +325,10 @@ partial class PartialModel
             if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
         }
 
-        public static int Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp2 = value.OrderOnly;
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OrderOnly
             var tmp7 = value.Both;
@@ -338,8 +338,8 @@ partial class PartialModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Mixed value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Partial_Mixed(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Partial_Mixed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
         {

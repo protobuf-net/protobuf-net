@@ -56,10 +56,10 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Number;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             return len;
@@ -67,8 +67,8 @@ partial class InitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Init.InitStruct>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Init.InitStruct value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Init_InitStruct(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Init_InitStruct(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -102,17 +102,17 @@ partial class InitModel
                     len3 = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget, lengths3);
                     lengths3[tmp3] = len3;
                 }
-                state.WriteRawVarint32((uint)len3);
+                state.WriteRawVarint64((ulong)len3);
                 RawWrite_AotFixtures_Init_Nested(ref state, tmp3);
             }
             var tmp4 = value.Mutable;
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        public static int Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Number;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             var tmp2 = value.Text;
@@ -128,7 +128,7 @@ partial class InitModel
                     len3 = Measure_AotFixtures_Init_Nested(tmp3, depth, lengths);
                     lengths[tmp3] = len3;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;  // Message
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // Message
             }
             var tmp4 = value.Mutable;
             if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Mutable
@@ -137,8 +137,8 @@ partial class InitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Init.Inits>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Init.Inits value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Init_Inits(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Init_Inits(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Init.Inits RawRead_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Inits value)
         {
@@ -222,10 +222,10 @@ partial class InitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
@@ -233,8 +233,8 @@ partial class InitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Init.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Init.Nested value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Init_Nested(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Init_Nested(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Init.Nested RawRead_AotFixtures_Init_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Init.Nested value)
         {

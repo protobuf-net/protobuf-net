@@ -41,10 +41,10 @@ partial class WrappedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Wrapped_Nested(global::AotFixtures.Wrapped.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Wrapped_Nested(global::AotFixtures.Wrapped.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
@@ -52,8 +52,8 @@ partial class WrappedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Wrapped.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Wrapped.Nested value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Wrapped_Nested(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Wrapped_Nested(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Wrapped.Nested RawRead_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
         {

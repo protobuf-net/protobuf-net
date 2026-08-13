@@ -55,10 +55,10 @@ partial class GenericHierarchyModel
             }
         }
 
-        public static int Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Bar;
             if (tmp1 != null)
             {
@@ -69,8 +69,8 @@ partial class GenericHierarchyModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Crate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Crate value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_GenericHierarchy_Crate(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_GenericHierarchy_Crate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.GenericHierarchy.Crate RawRead_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)
         {
@@ -121,7 +121,7 @@ partial class GenericHierarchyModel
                     len1 = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1);
             }
         }
@@ -395,10 +395,10 @@ partial class GenericHierarchyModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Foo;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Foo
             return len;
@@ -406,8 +406,8 @@ partial class GenericHierarchyModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Ship>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Ship value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_GenericHierarchy_Ship(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_GenericHierarchy_Ship(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.GenericHierarchy.Ship RawRead_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Ship value)
         {
@@ -461,7 +461,7 @@ partial class GenericHierarchyModel
                     len1 = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1);
             }
         }

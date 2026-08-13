@@ -43,10 +43,10 @@ partial class DerivedModel
             }
         }
 
-        public static int Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Label;
             if (tmp1 != null)
             {
@@ -57,8 +57,8 @@ partial class DerivedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Derived.Ambiguous>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Derived.Ambiguous value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Derived_Ambiguous(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Derived_Ambiguous(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Derived.Ambiguous RawRead_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
         {
@@ -121,7 +121,7 @@ partial class DerivedModel
                     len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, lengths4);
                     lengths4[tmp4] = len4;
                 }
-                state.WriteRawVarint32((uint)len4);
+                state.WriteRawVarint64((ulong)len4);
                 RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4);
             }
         }

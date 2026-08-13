@@ -40,10 +40,10 @@ partial class DroppedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
@@ -51,8 +51,8 @@ partial class DroppedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.HasCallback>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.HasCallback value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Dropped_HasCallback(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Dropped_HasCallback(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Dropped.HasCallback RawRead_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
         {
@@ -112,10 +112,10 @@ partial class DroppedModel
             }
         }
 
-        public static int Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             var tmp2 = value.Tags;
@@ -132,8 +132,8 @@ partial class DroppedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.HasUnsupportedMember value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Dropped_HasUnsupportedMember(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Dropped_HasUnsupportedMember(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Dropped.HasUnsupportedMember RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
         {
@@ -192,15 +192,15 @@ partial class DroppedModel
                     len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp1);
             }
         }
 
-        public static int Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Child;
             if (tmp1 != null)
             {
@@ -209,15 +209,15 @@ partial class DroppedModel
                     len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Child
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Child
             }
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.ReferencesDropped>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.ReferencesDropped value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Dropped_ReferencesDropped(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Dropped_ReferencesDropped(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Dropped.ReferencesDropped RawRead_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
         {
@@ -264,10 +264,10 @@ partial class DroppedModel
             if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
@@ -275,8 +275,8 @@ partial class DroppedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.UnrenderableDefault value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Dropped_UnrenderableDefault(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Dropped_UnrenderableDefault(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Dropped.UnrenderableDefault RawRead_AotFixtures_Dropped_UnrenderableDefault(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
         {
@@ -324,10 +324,10 @@ partial class DroppedModel
             state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
@@ -335,8 +335,8 @@ partial class DroppedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.UsesMemberOptions value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Dropped_UsesMemberOptions(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Dropped_UsesMemberOptions(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Dropped.UsesMemberOptions RawRead_AotFixtures_Dropped_UsesMemberOptions(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
         {

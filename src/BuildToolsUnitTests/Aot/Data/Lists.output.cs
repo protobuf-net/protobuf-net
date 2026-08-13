@@ -67,10 +67,10 @@ partial class ListsModel
             }
         }
 
-        public static int Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Label;
@@ -83,8 +83,8 @@ partial class ListsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Lists.Inner value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Lists_Inner(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Lists_Inner(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
         {
@@ -212,7 +212,7 @@ partial class ListsModel
                         len9 = Measure_AotFixtures_Lists_Inner(item9, state.RawDepthBudget, lengths9);
                         lengths9[item9] = len9;
                     }
-                    state.WriteRawVarint32((uint)len9);
+                    state.WriteRawVarint64((ulong)len9);
                     RawWrite_AotFixtures_Lists_Inner(ref state, item9);
                 }
             }
@@ -229,7 +229,7 @@ partial class ListsModel
                         len10 = Measure_AotFixtures_Lists_Inner(item10, state.RawDepthBudget, lengths10);
                         lengths10[item10] = len10;
                     }
-                    state.WriteRawVarint32((uint)len10);
+                    state.WriteRawVarint64((ulong)len10);
                     RawWrite_AotFixtures_Lists_Inner(ref state, item10);
                 }
             }
@@ -257,10 +257,10 @@ partial class ListsModel
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
         }
 
-        public static int Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Int32Array;
             if (tmp1 != null)
             {
@@ -280,17 +280,17 @@ partial class ListsModel
             var tmp3 = value.DoubleArray;
             if (tmp3 != null)
             {
-                len += tmp3.Length * 9;  // DoubleArray
+                len += tmp3.Length * 9L;  // DoubleArray
             }
             var tmp4 = value.SingleArray;
             if (tmp4 != null)
             {
-                len += tmp4.Length * 5;  // SingleArray
+                len += tmp4.Length * 5L;  // SingleArray
             }
             var tmp5 = value.BoolList;
             if (tmp5 != null)
             {
-                len += tmp5.Count * 2;  // BoolList
+                len += tmp5.Count * 2L;  // BoolList
             }
             var tmp6 = value.StringArray;
             if (tmp6 != null)
@@ -321,7 +321,7 @@ partial class ListsModel
                         len9 = Measure_AotFixtures_Lists_Inner(item9, depth, lengths);
                         lengths[item9] = len9;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len9) + len9;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len9) + len9;
                 }
             }
             var tmp10 = value.MessageArray;
@@ -335,7 +335,7 @@ partial class ListsModel
                         len10 = Measure_AotFixtures_Lists_Inner(item10, depth, lengths);
                         lengths[item10] = len10;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len10) + len10;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len10) + len10;
                 }
             }
             var tmp11 = value.Scalar;
@@ -363,8 +363,8 @@ partial class ListsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Repeated>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Lists.Repeated value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Lists_Repeated(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Lists_Repeated(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
         {

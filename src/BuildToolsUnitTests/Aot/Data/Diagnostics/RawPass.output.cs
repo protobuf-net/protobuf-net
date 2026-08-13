@@ -43,10 +43,10 @@ partial class RawPassModel
             state.AppendExtensionData(value);
         }
 
-        public static int Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -55,8 +55,8 @@ partial class RawPassModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Bag>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Bag value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_RawPass_Bag(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_RawPass_Bag(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.RawPass.Bag RawRead_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Bag value)
         {
@@ -146,10 +146,10 @@ partial class RawPassModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
@@ -157,8 +157,8 @@ partial class RawPassModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Child>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Child value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_RawPass_Child(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_RawPass_Child(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.RawPass.Child RawRead_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Child value)
         {
@@ -313,7 +313,7 @@ partial class RawPassModel
                         len9 = Measure_AotFixtures_RawPass_Child(item9, state.RawDepthBudget, lengths9);
                         lengths9[item9] = len9;
                     }
-                    state.WriteRawVarint32((uint)len9);
+                    state.WriteRawVarint64((ulong)len9);
                     RawWrite_AotFixtures_RawPass_Child(ref state, item9);
                 }
             }
@@ -327,7 +327,7 @@ partial class RawPassModel
                     len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget, lengths10);
                     lengths10[tmp10] = len10;
                 }
-                state.WriteRawVarint32((uint)len10);
+                state.WriteRawVarint64((ulong)len10);
                 RawWrite_AotFixtures_RawPass_Child(ref state, tmp10);
             }
             var tmp11 = value.Score;
@@ -344,10 +344,10 @@ partial class RawPassModel
             }
         }
 
-        public static int Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             var tmp2 = value.Name;
@@ -395,7 +395,7 @@ partial class RawPassModel
                         len9 = Measure_AotFixtures_RawPass_Child(item9, depth, lengths);
                         lengths[item9] = len9;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len9) + len9;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len9) + len9;
                 }
             }
             var tmp10 = value.Favourite;
@@ -406,7 +406,7 @@ partial class RawPassModel
                     len10 = Measure_AotFixtures_RawPass_Child(tmp10, depth, lengths);
                     lengths[tmp10] = len10;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len10) + len10;  // Favourite
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len10) + len10;  // Favourite
             }
             var tmp11 = value.Score;
             if (tmp11 != 0d) len += 9;  // Score
@@ -420,8 +420,8 @@ partial class RawPassModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Order>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Order value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_RawPass_Order(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_RawPass_Order(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.RawPass.Order RawRead_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Order value)
         {

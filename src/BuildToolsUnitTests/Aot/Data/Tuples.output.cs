@@ -75,10 +75,10 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
@@ -91,8 +91,8 @@ partial class TuplesModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (int, string) value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure__int__string_(value, depth, lengths)
-                : -1;
+                && Measure__int__string_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -149,10 +149,10 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.A;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // A
             var tmp2 = value.B;
@@ -165,8 +165,8 @@ partial class TuplesModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Tuples.ClassTuple>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Tuples.ClassTuple value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Tuples_ClassTuple(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Tuples_ClassTuple(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -216,10 +216,10 @@ partial class TuplesModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
         }
 
-        public static int Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.First;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
             var tmp2 = value.Second;
@@ -229,8 +229,8 @@ partial class TuplesModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Tuples.NamedLikeATuple>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Tuples.NamedLikeATuple value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Tuples_NamedLikeATuple(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Tuples_NamedLikeATuple(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -284,10 +284,10 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.X;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
             var tmp2 = value.Y;
@@ -300,8 +300,8 @@ partial class TuplesModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Tuples.StructTuple>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Tuples.StructTuple value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Tuples_StructTuple(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Tuples_StructTuple(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -355,10 +355,10 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Key;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Key
             var tmp2 = value.Value;
@@ -371,8 +371,8 @@ partial class TuplesModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.Collections.Generic.KeyValuePair<int, string> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, lengths)
-                : -1;
+                && Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -429,10 +429,10 @@ partial class TuplesModel
             }
         }
 
-        public static int Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
@@ -445,8 +445,8 @@ partial class TuplesModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Tuple<int, string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.Tuple<int, string> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_System_Tuple_int__string_(value, depth, lengths)
-                : -1;
+                && Measure_System_Tuple_int__string_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

@@ -1222,10 +1222,14 @@ namespace ProtoBuf.BuildTools.Generators
                 // (docs/nano-writer.md): populated post-order here, consumed at the write sites,
                 // so each reference-typed object is measured once per root however deep or
                 // shared it is; struct contracts have no identity and bypass it.
-                Line(sb, indent, $"public static int Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)");
+                // long arithmetic, deliberately: a single message body CAN exceed int.MaxValue
+                // (many large byte[] members, a colossal repeated field), and classic handles it
+                // with its long lengths throughout - int accumulation would overflow silently,
+                // which is a corrupt stream, not an error
+                Line(sb, indent, $"public static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
-                Line(sb, indent + 1, "int len = 0;");
+                Line(sb, indent + 1, "long len = 0;");
                 EmitMeasureMembers(sb, indent + 1, contract, measurable, listAsSpan);
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");
@@ -1234,11 +1238,13 @@ namespace ProtoBuf.BuildTools.Generators
                 // a mixed parent, a map entry, a non-native collection element - asks here
                 // first (flag + interface, ProtoWriter.Measure) and gets the arithmetic
                 // instead of a null-writer traversal. A non-writer context answers -1, which
-                // the engine treats as "measure by writing", exactly as before.
+                // the engine treats as "measure by writing", exactly as before - and so does a
+                // body wider than the interface's int reply, spilling the pathological giant
+                // to the traversal, which is long-capable end to end.
                 Line(sb, indent, $"int {Serializers}.IMeasuringSerializer<{contract.TypeName}>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, {contract.TypeName} value)");
                 Line(sb, indent + 1, "=> global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)");
-                Line(sb, indent + 2, $"? Measure_{san}(value, depth, lengths)");
-                Line(sb, indent + 2, ": -1;");
+                Line(sb, indent + 2, $"&& Measure_{san}(value, depth, lengths) is var len && len <= int.MaxValue");
+                Line(sb, indent + 2, "? (int)len : -1;");
                 return;
             }
 
@@ -1839,7 +1845,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner + 1, $"lengths{number}[tmp{number}] = len{number};");
                             Line(sb, inner, "}");
                         }
-                        Line(sb, inner, $"state.WriteRawVarint32((uint)len{number});");
+                        Line(sb, inner, $"state.WriteRawVarint64((ulong)len{number});");
                         Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number});");
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
@@ -2700,7 +2706,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, $"lengths{number}[{item}] = len{number};");
                     Line(sb, indent + 1, "}");
                 }
-                Line(sb, indent + 1, $"state.WriteRawVarint32((uint)len{number});");
+                Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len{number});");
                 Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item});");
             }
             else if (member.Kind == ProtoMemberKind.String)
@@ -2978,7 +2984,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner, "}");
                         }
                         Line(sb, inner, MeasureAdd(member, 2,
-                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len{number}) + len{number}"));
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number}"));
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
                     }
@@ -3021,7 +3027,9 @@ namespace ProtoBuf.BuildTools.Generators
                     ProtoMemberKind.Single => 4,
                     _ => 8,
                 };
-                Line(sb, indent, $"len += {count} * {tagLen + width};  // {member.Name}");
+                // the long literal keeps the count-fold in 64-bit arithmetic: a colossal
+                // collection could overflow an int multiply where the sum is still legal
+                Line(sb, indent, $"len += {count} * {tagLen + width}L;  // {member.Name}");
                 return;
             }
             var source = listAsSpan && member.Repeated.Factory == "CreateList"
@@ -3050,7 +3058,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, $"lengths[{item}] = len{number};");
                     Line(sb, indent + 1, "}");
                 }
-                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len{number}) + len{number};");
+                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number};");
             }
             else if (member.Kind == ProtoMemberKind.String)
             {

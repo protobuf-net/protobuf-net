@@ -74,7 +74,7 @@ partial class GroupedElementsModel
                         len3 = Measure_AotFixtures_GroupedElements_Item(item3, state.RawDepthBudget, lengths3);
                         lengths3[item3] = len3;
                     }
-                    state.WriteRawVarint32((uint)len3);
+                    state.WriteRawVarint64((ulong)len3);
                     RawWrite_AotFixtures_GroupedElements_Item(ref state, item3);
                 }
             }
@@ -309,10 +309,10 @@ partial class GroupedElementsModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Name;
             if (tmp1 != null)
             {
@@ -325,8 +325,8 @@ partial class GroupedElementsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.Item>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GroupedElements.Item value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_GroupedElements_Item(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_GroupedElements_Item(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
         {

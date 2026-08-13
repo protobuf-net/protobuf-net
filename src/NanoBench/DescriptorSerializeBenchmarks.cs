@@ -40,8 +40,8 @@ public class DescriptorSerializeBenchmarks
     private MemoryStream _ms = null!;
     private Meta.TypeModel _protogenModel = null!;
 
-    private delegate int GeneratedMeasure(Model.FileDescriptorSet value, int depth,
-        System.Collections.Generic.Dictionary<object, int> lengths);
+    private delegate long GeneratedMeasure(Model.FileDescriptorSet value, int depth,
+        System.Collections.Generic.Dictionary<object, long> lengths);
     private static readonly GeneratedMeasure s_generatedMeasure = ResolveMeasure();
 
     // reference identity, both TFMs (the BCL's ReferenceEqualityComparer is net5+ only)
@@ -53,7 +53,7 @@ public class DescriptorSerializeBenchmarks
             => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
     }
 
-    private readonly System.Collections.Generic.Dictionary<object, int> _measureScratch = new(RefComparer.Instance);
+    private readonly System.Collections.Generic.Dictionary<object, long> _measureScratch = new(RefComparer.Instance);
 
     [GlobalSetup]
     public void Setup()
@@ -156,7 +156,7 @@ public class DescriptorSerializeBenchmarks
     }
 
     [Benchmark]
-    public int NanoGeneratedMeasure()
+    public long NanoGeneratedMeasure()
     {
         // cleared per invoke: the row prices a cold measure INCLUDING cache population,
         // which is what a root serialize actually pays

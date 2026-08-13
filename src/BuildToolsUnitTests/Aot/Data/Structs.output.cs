@@ -35,7 +35,7 @@ partial class StructsModel
             var tmp1 = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
             var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint32((uint)len1);
+            state.WriteRawVarint64((ulong)len1);
             RawWrite_AotFixtures_Structs_Point(ref state, tmp1);
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)
@@ -144,10 +144,10 @@ partial class StructsModel
             }
         }
 
-        public static int Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.X;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
             var tmp2 = value.Label;
@@ -160,8 +160,8 @@ partial class StructsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Structs.Point value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Structs_Point(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Structs_Point(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

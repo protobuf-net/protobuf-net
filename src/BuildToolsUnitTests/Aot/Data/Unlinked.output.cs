@@ -45,10 +45,10 @@ partial class UnlinkedModel
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
 
-        public static int Measure_AotFixtures_Unlinked_Derived(global::AotFixtures.Unlinked.Derived value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Unlinked_Derived(global::AotFixtures.Unlinked.Derived value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp2 = value.FromDerived;
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // FromDerived
             return len;
@@ -56,8 +56,8 @@ partial class UnlinkedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Derived>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Derived value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Unlinked_Derived(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Unlinked_Derived(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Unlinked.Derived RawRead_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
         {
@@ -172,10 +172,10 @@ partial class UnlinkedModel
             }
         }
 
-        public static int Measure_AotFixtures_Unlinked_FromPlain(global::AotFixtures.Unlinked.FromPlain value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Unlinked_FromPlain(global::AotFixtures.Unlinked.FromPlain value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Name;
             if (tmp1 != null)
             {
@@ -186,8 +186,8 @@ partial class UnlinkedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.FromPlain>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.FromPlain value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Unlinked_FromPlain(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Unlinked_FromPlain(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Unlinked.FromPlain RawRead_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
         {
@@ -232,10 +232,10 @@ partial class UnlinkedModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Unlinked_Reuses(global::AotFixtures.Unlinked.Reuses value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Unlinked_Reuses(global::AotFixtures.Unlinked.Reuses value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Mine;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Mine
             return len;
@@ -243,8 +243,8 @@ partial class UnlinkedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Reuses>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Reuses value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Unlinked_Reuses(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Unlinked_Reuses(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Unlinked.Reuses RawRead_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
         {
@@ -340,10 +340,10 @@ partial class UnlinkedModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_Unlinked_Unlinked(global::AotFixtures.Unlinked.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Unlinked_Unlinked(global::AotFixtures.Unlinked.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp3 = value.NotLinked;
             if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // NotLinked
             return len;
@@ -351,8 +351,8 @@ partial class UnlinkedModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Unlinked>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Unlinked value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Unlinked_Unlinked(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Unlinked_Unlinked(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Unlinked.Unlinked RawRead_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)
         {

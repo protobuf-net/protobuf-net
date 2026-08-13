@@ -52,10 +52,10 @@ partial class EnumContractModel
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) state.WriteInt32Varint(3, (int)tmp3);
         }
 
-        public static int Measure_AotFixtures_EnumContract_Holder(global::AotFixtures.EnumContract.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_EnumContract_Holder(global::AotFixtures.EnumContract.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Shade;
             if (tmp1 != default(global::AotFixtures.EnumContract.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp1));  // Shade
             var tmp2 = value.Size;
@@ -67,8 +67,8 @@ partial class EnumContractModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.EnumContract.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.EnumContract.Holder value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_EnumContract_Holder(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_EnumContract_Holder(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.EnumContract.Holder RawRead_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
         {

@@ -65,10 +65,10 @@ partial class DefaultsModel
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static int Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Number;
             if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             var tmp2 = value.Text;
@@ -89,8 +89,8 @@ partial class DefaultsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Declared>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Defaults.Declared value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Defaults_Declared(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Defaults_Declared(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
         {
@@ -202,10 +202,10 @@ partial class DefaultsModel
             }
         }
 
-        public static int Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.ByName;
             if (tmp1 != (global::AotFixtures.Defaults.Shade)(2)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp1);  // ByName
             var tmp2 = value.ByValue;
@@ -221,8 +221,8 @@ partial class DefaultsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Parsed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Defaults.Parsed value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Defaults_Parsed(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Defaults_Parsed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
         {

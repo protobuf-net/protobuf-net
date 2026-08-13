@@ -46,10 +46,10 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_Implicit_AllFields(global::AotFixtures.Implicit.AllFields value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Implicit_AllFields(global::AotFixtures.Implicit.AllFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // <Ignored>k__BackingField
             var tmp2 = value.Apple;
@@ -61,8 +61,8 @@ partial class ImplicitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.AllFields>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Implicit.AllFields value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Implicit_AllFields(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Implicit_AllFields(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Implicit.AllFields RawRead_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllFields value)
         {
@@ -138,10 +138,10 @@ partial class ImplicitModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_Implicit_AllPublic(global::AotFixtures.Implicit.AllPublic value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Implicit_AllPublic(global::AotFixtures.Implicit.AllPublic value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Apple;
             if (tmp1 != null)
             {
@@ -156,8 +156,8 @@ partial class ImplicitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.AllPublic>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Implicit.AllPublic value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Implicit_AllPublic(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Implicit_AllPublic(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Implicit.AllPublic RawRead_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.AllPublic value)
         {
@@ -222,10 +222,10 @@ partial class ImplicitModel
             if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
         }
 
-        public static int Measure_AotFixtures_Implicit_FirstTag(global::AotFixtures.Implicit.FirstTag value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Implicit_FirstTag(global::AotFixtures.Implicit.FirstTag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp10 = value.Alpha;
             if (tmp10 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp10));  // Alpha
             var tmp11 = value.Beta;
@@ -235,8 +235,8 @@ partial class ImplicitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.FirstTag>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Implicit.FirstTag value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Implicit_FirstTag(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Implicit_FirstTag(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Implicit.FirstTag RawRead_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.FirstTag value)
         {
@@ -293,10 +293,10 @@ partial class ImplicitModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Implicit_Ignoring(global::AotFixtures.Implicit.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Implicit_Ignoring(global::AotFixtures.Implicit.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Kept;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Kept
             return len;
@@ -304,8 +304,8 @@ partial class ImplicitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.Ignoring>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Implicit.Ignoring value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Implicit_Ignoring(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Implicit_Ignoring(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Implicit.Ignoring RawRead_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Ignoring value)
         {
@@ -357,10 +357,10 @@ partial class ImplicitModel
             if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
         }
 
-        public static int Measure_AotFixtures_Implicit_Mixed(global::AotFixtures.Implicit.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Implicit_Mixed(global::AotFixtures.Implicit.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Alpha;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Alpha
             var tmp2 = value.Zulu;
@@ -372,8 +372,8 @@ partial class ImplicitModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Implicit.Mixed value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Implicit_Mixed(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Implicit_Mixed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Implicit.Mixed RawRead_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Implicit.Mixed value)
         {

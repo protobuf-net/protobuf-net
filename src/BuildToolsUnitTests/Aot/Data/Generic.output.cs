@@ -53,7 +53,7 @@ partial class GenericModel
                     len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1);
             }
             var tmp2 = value.Text;
@@ -66,7 +66,7 @@ partial class GenericModel
                     len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, state.RawDepthBudget, lengths2);
                     lengths2[tmp2] = len2;
                 }
-                state.WriteRawVarint32((uint)len2);
+                state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, tmp2);
             }
             var tmp3 = value.Message;
@@ -79,7 +79,7 @@ partial class GenericModel
                     len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, state.RawDepthBudget, lengths3);
                     lengths3[tmp3] = len3;
                 }
-                state.WriteRawVarint32((uint)len3);
+                state.WriteRawVarint64((ulong)len3);
                 RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, tmp3);
             }
             var tmp4 = value.Deep;
@@ -92,7 +92,7 @@ partial class GenericModel
                     len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, state.RawDepthBudget, lengths4);
                     lengths4[tmp4] = len4;
                 }
-                state.WriteRawVarint32((uint)len4);
+                state.WriteRawVarint64((ulong)len4);
                 RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, tmp4);
             }
             var tmp5 = value.Many;
@@ -105,13 +105,13 @@ partial class GenericModel
                     len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, state.RawDepthBudget, lengths5);
                     lengths5[tmp5] = len5;
                 }
-                state.WriteRawVarint32((uint)len5);
+                state.WriteRawVarint64((ulong)len5);
                 RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, tmp5);
             }
             var tmp6 = value.Pair;
             state.WriteRawTag((6 << 3) | 2);  // Pair
             var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint32((uint)len6);
+            state.WriteRawVarint64((ulong)len6);
             RawWrite_AotFixtures_Generic_Pair_int__string_(ref state, tmp6);
             var tmp7 = value.Wrappers;
             if (tmp7 != null)
@@ -126,16 +126,16 @@ partial class GenericModel
                         len7 = Measure_AotFixtures_Generic_Wrapper_int_(item7, state.RawDepthBudget, lengths7);
                         lengths7[item7] = len7;
                     }
-                    state.WriteRawVarint32((uint)len7);
+                    state.WriteRawVarint64((ulong)len7);
                     RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, item7);
                 }
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Holder(global::AotFixtures.Generic.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Holder(global::AotFixtures.Generic.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Number;
             if (tmp1 != null)
             {
@@ -144,7 +144,7 @@ partial class GenericModel
                     len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Number
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Number
             }
             var tmp2 = value.Text;
             if (tmp2 != null)
@@ -154,7 +154,7 @@ partial class GenericModel
                     len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, depth, lengths);
                     lengths[tmp2] = len2;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len2) + len2;  // Text
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Text
             }
             var tmp3 = value.Message;
             if (tmp3 != null)
@@ -164,7 +164,7 @@ partial class GenericModel
                     len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, depth, lengths);
                     lengths[tmp3] = len3;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len3) + len3;  // Message
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // Message
             }
             var tmp4 = value.Deep;
             if (tmp4 != null)
@@ -174,7 +174,7 @@ partial class GenericModel
                     len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, depth, lengths);
                     lengths[tmp4] = len4;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len4) + len4;  // Deep
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len4) + len4;  // Deep
             }
             var tmp5 = value.Many;
             if (tmp5 != null)
@@ -184,11 +184,11 @@ partial class GenericModel
                     len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, depth, lengths);
                     lengths[tmp5] = len5;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len5) + len5;  // Many
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len5) + len5;  // Many
             }
             var tmp6 = value.Pair;
             var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, depth, lengths);
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len6) + len6;  // Pair
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len6) + len6;  // Pair
             var tmp7 = value.Wrappers;
             if (tmp7 != null)
             {
@@ -200,7 +200,7 @@ partial class GenericModel
                         len7 = Measure_AotFixtures_Generic_Wrapper_int_(item7, depth, lengths);
                         lengths[item7] = len7;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len7) + len7;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len7) + len7;
                 }
             }
             return len;
@@ -208,8 +208,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Holder value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Holder(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Holder(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Holder RawRead_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Holder value)
         {
@@ -313,10 +313,10 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
@@ -324,8 +324,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Nested value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Nested(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Nested(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Nested RawRead_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Nested value)
         {
@@ -401,10 +401,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Pair_int__string_(global::AotFixtures.Generic.Pair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Pair_int__string_(global::AotFixtures.Generic.Pair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Key;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Key
             var tmp2 = value.Value;
@@ -417,8 +417,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Pair<int, string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Pair<int, string> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Pair_int__string_(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Pair_int__string_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -438,10 +438,10 @@ partial class GenericModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Item;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item
             return len;
@@ -449,8 +449,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Standalone<int>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Standalone<int> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Standalone_int_(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Standalone_int_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Standalone<int> RawRead_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<int> value)
         {
@@ -502,10 +502,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Standalone_string_(global::AotFixtures.Generic.Standalone<string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Standalone_string_(global::AotFixtures.Generic.Standalone<string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Item;
             if (tmp1 != null)
             {
@@ -516,8 +516,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Standalone<string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Standalone<string> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Standalone_string_(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Standalone_string_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Standalone<string> RawRead_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Standalone<string> value)
         {
@@ -568,7 +568,7 @@ partial class GenericModel
                     len1 = Measure_AotFixtures_Generic_Nested(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Generic_Nested(ref state, tmp1);
             }
             var tmp2 = value.Label;
@@ -579,10 +579,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -591,7 +591,7 @@ partial class GenericModel
                     len1 = Measure_AotFixtures_Generic_Nested(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Value
             }
             var tmp2 = value.Label;
             if (tmp2 != null)
@@ -603,8 +603,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
         {
@@ -663,7 +663,7 @@ partial class GenericModel
                     len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1);
             }
             var tmp2 = value.Label;
@@ -674,10 +674,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -686,7 +686,7 @@ partial class GenericModel
                     len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Value
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Value
             }
             var tmp2 = value.Label;
             if (tmp2 != null)
@@ -698,8 +698,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
         {
@@ -765,10 +765,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -787,8 +787,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
         {
@@ -856,10 +856,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_int_(global::AotFixtures.Generic.Wrapper<int> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Wrapper_int_(global::AotFixtures.Generic.Wrapper<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Label;
@@ -872,8 +872,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Wrapper<int>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Wrapper<int> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Wrapper_int_(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Wrapper_int_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Wrapper<int> RawRead_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<int> value)
         {
@@ -937,10 +937,10 @@ partial class GenericModel
             }
         }
 
-        public static int Measure_AotFixtures_Generic_Wrapper_string_(global::AotFixtures.Generic.Wrapper<string> value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Generic_Wrapper_string_(global::AotFixtures.Generic.Wrapper<string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -956,8 +956,8 @@ partial class GenericModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Generic.Wrapper<string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Generic.Wrapper<string> value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Generic_Wrapper_string_(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Generic_Wrapper_string_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Generic.Wrapper<string> RawRead_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Generic.Wrapper<string> value)
         {

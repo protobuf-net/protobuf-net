@@ -40,10 +40,10 @@ partial class KeywordsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.@int;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // int
             return len;
@@ -51,8 +51,8 @@ partial class KeywordsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Inner value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Keywords_Inner(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Keywords_Inner(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Keywords.Inner RawRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
         {
@@ -123,7 +123,7 @@ partial class KeywordsModel
                     len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, lengths4);
                     lengths4[tmp4] = len4;
                 }
-                state.WriteRawVarint32((uint)len4);
+                state.WriteRawVarint64((ulong)len4);
                 RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4);
             }
             var tmp5 = value.@lock;
@@ -136,17 +136,17 @@ partial class KeywordsModel
                     len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, lengths5);
                     lengths5[tmp5] = len5;
                 }
-                state.WriteRawVarint32((uint)len5);
+                state.WriteRawVarint64((ulong)len5);
                 RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5);
             }
             var tmp6 = value.value;
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
 
-        public static int Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.@case;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // case
             var tmp2 = value.@event;
@@ -170,7 +170,7 @@ partial class KeywordsModel
                     len4 = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
                     lengths[tmp4] = len4;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len4) + len4;  // class
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len4) + len4;  // class
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
@@ -180,7 +180,7 @@ partial class KeywordsModel
                     len5 = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
                     lengths[tmp5] = len5;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len5) + len5;  // lock
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len5) + len5;  // lock
             }
             var tmp6 = value.value;
             if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // value
@@ -189,8 +189,8 @@ partial class KeywordsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Keywords>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Keywords value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Keywords_Keywords(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Keywords_Keywords(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Keywords.Keywords RawRead_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
         {
@@ -328,10 +328,10 @@ partial class KeywordsModel
             }
         }
 
-        public static int Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.@if;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // if
             var tmp2 = value.@else;
@@ -344,8 +344,8 @@ partial class KeywordsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Pair>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Pair value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Keywords_Pair(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Keywords_Pair(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

@@ -54,10 +54,10 @@ partial class TrivialGetterModel
             }
         }
 
-        public static int Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Text;
@@ -78,8 +78,8 @@ partial class TrivialGetterModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Backed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Backed value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_TrivialGetter_Backed(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_TrivialGetter_Backed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
@@ -158,10 +158,10 @@ partial class TrivialGetterModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Doubled;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Doubled
             return len;
@@ -169,8 +169,8 @@ partial class TrivialGetterModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Computed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Computed value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_TrivialGetter_Computed(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_TrivialGetter_Computed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
         {

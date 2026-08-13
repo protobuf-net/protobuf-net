@@ -71,10 +71,10 @@ partial class ConditionalModel
             }
         }
 
-        public static int Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             if (value.ValueSpecified)
             {
                 var tmp1 = value.Value;
@@ -114,8 +114,8 @@ partial class ConditionalModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Conditional.Conditional>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Conditional.Conditional value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_Conditional_Conditional(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_Conditional_Conditional(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
         {

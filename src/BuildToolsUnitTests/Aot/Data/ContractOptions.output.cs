@@ -47,10 +47,10 @@ partial class ContractOptionsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_ContractOptions_BothFamilies(global::AotFixtures.ContractOptions.BothFamilies value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_ContractOptions_BothFamilies(global::AotFixtures.ContractOptions.BothFamilies value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Ordered;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Ordered
             var tmp3 = value.Tagged;
@@ -60,8 +60,8 @@ partial class ContractOptionsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.BothFamilies>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ContractOptions.BothFamilies value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_ContractOptions_BothFamilies(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_ContractOptions_BothFamilies(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ContractOptions.BothFamilies RawRead_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
         {
@@ -162,10 +162,10 @@ partial class ContractOptionsModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_ContractOptions_Lenient(global::AotFixtures.ContractOptions.Lenient value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_ContractOptions_Lenient(global::AotFixtures.ContractOptions.Lenient value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
@@ -173,8 +173,8 @@ partial class ContractOptionsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.Lenient>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ContractOptions.Lenient value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_ContractOptions_Lenient(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_ContractOptions_Lenient(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ContractOptions.Lenient RawRead_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
         {
@@ -330,10 +330,10 @@ partial class ContractOptionsModel
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
         }
 
-        public static int Measure_AotFixtures_ContractOptions_ProtoOnly(global::AotFixtures.ContractOptions.ProtoOnly value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_ContractOptions_ProtoOnly(global::AotFixtures.ContractOptions.ProtoOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp3 = value.Tagged;
             if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
             return len;
@@ -341,8 +341,8 @@ partial class ContractOptionsModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ContractOptions.ProtoOnly value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_ContractOptions_ProtoOnly(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_ContractOptions_ProtoOnly(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ContractOptions.ProtoOnly RawRead_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
         {

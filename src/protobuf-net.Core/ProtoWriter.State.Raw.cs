@@ -193,7 +193,7 @@ namespace ProtoBuf
             /// writer; value-type contracts have no identity and bypass it.
             /// </summary>
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
-            public System.Collections.Generic.Dictionary<object, int> RawLengths => _writer.RawLengths;
+            public System.Collections.Generic.Dictionary<object, long> RawLengths => _writer.RawLengths;
 
             /// <summary>
             /// The remaining nesting budget for a generated measure recursion, honouring
@@ -225,7 +225,7 @@ namespace ProtoBuf
             /// </summary>
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static bool TryMeasureRaw(ISerializationContext context, out int depthBudget,
-                out System.Collections.Generic.Dictionary<object, int> lengths)
+                out System.Collections.Generic.Dictionary<object, long> lengths)
             {
                 if (context is ProtoWriter writer)
                 {
@@ -253,16 +253,16 @@ namespace ProtoBuf
             /// is - since the measure must not consume what the write is about to copy.
             /// </summary>
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
-            public static int MeasureRawExtensionData(IExtensible instance)
+            public static long MeasureRawExtensionData(IExtensible instance)
                 => MeasureRawExtensionDataImpl(instance.GetExtensionObject(false));
 
             /// <summary>The typed-bag form of <see cref="MeasureRawExtensionData(IExtensible)"/>,
             /// keyed per hierarchy layer exactly as the write is.</summary>
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
-            public static int MeasureRawExtensionData(ITypedExtensible instance, Type type)
+            public static long MeasureRawExtensionData(ITypedExtensible instance, Type type)
                 => MeasureRawExtensionDataImpl(instance.GetExtensionObject(type, false));
 
-            private static int MeasureRawExtensionDataImpl(IExtension extn)
+            private static long MeasureRawExtensionDataImpl(IExtension extn)
             {
                 if (extn is null) return 0;
                 var source = extn.BeginQuery();
@@ -275,7 +275,7 @@ namespace ProtoBuf
                         Internal.ThrowHelper.ThrowNotSupportedException(
                             "Extension data cannot be measured over a non-seekable query stream; consider [ProtoModel(ClassicEmit = true)]");
                     }
-                    return checked((int)(source.Length - source.Position));
+                    return source.Length - source.Position;
                 }
                 finally { extn.EndQuery(source); }
             }

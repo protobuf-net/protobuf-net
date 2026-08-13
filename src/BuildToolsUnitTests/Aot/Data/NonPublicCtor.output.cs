@@ -47,15 +47,15 @@ partial class NonPublicCtorModel
                     len1 = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp1, state.RawDepthBudget, lengths1);
                     lengths1[tmp1] = len1;
                 }
-                state.WriteRawVarint32((uint)len1);
+                state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, tmp1);
             }
         }
 
-        public static int Measure_AotFixtures_NonPublicCtor_Holder(global::AotFixtures.NonPublicCtor.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_NonPublicCtor_Holder(global::AotFixtures.NonPublicCtor.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Child;
             if (tmp1 != null)
             {
@@ -64,15 +64,15 @@ partial class NonPublicCtorModel
                     len1 = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp1, depth, lengths);
                     lengths[tmp1] = len1;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)len1) + len1;  // Child
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Child
             }
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.Holder value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_NonPublicCtor_Holder(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_NonPublicCtor_Holder(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.NonPublicCtor.Holder RawRead_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
         {
@@ -142,10 +142,10 @@ partial class NonPublicCtorModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_NonPublicCtor_InternalCtor(global::AotFixtures.NonPublicCtor.InternalCtor value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_NonPublicCtor_InternalCtor(global::AotFixtures.NonPublicCtor.InternalCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
@@ -153,8 +153,8 @@ partial class NonPublicCtorModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.InternalCtor value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_NonPublicCtor_InternalCtor(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_NonPublicCtor_InternalCtor(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -204,10 +204,10 @@ partial class NonPublicCtorModel
             }
         }
 
-        public static int Measure_AotFixtures_NonPublicCtor_PrivateCtor(global::AotFixtures.NonPublicCtor.PrivateCtor value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_NonPublicCtor_PrivateCtor(global::AotFixtures.NonPublicCtor.PrivateCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Name;
@@ -220,8 +220,8 @@ partial class NonPublicCtorModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.PrivateCtor value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_NonPublicCtor_PrivateCtor(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_NonPublicCtor_PrivateCtor(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -259,10 +259,10 @@ partial class NonPublicCtorModel
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
-        public static int Measure_AotFixtures_NonPublicCtor_ProtectedCtor(global::AotFixtures.NonPublicCtor.ProtectedCtor value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_NonPublicCtor_ProtectedCtor(global::AotFixtures.NonPublicCtor.ProtectedCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
@@ -270,8 +270,8 @@ partial class NonPublicCtorModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.ProtectedCtor value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_NonPublicCtor_ProtectedCtor(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_NonPublicCtor_ProtectedCtor(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 

@@ -61,7 +61,7 @@
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawString(string value) -> int
 [PBN9002]ProtoBuf.ProtoWriter.State.RawDepthBudget.get -> int
 [PBN9002]static ProtoBuf.ProtoWriter.State.ThrowRawTooDeep() -> void
-[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.IExtensible instance) -> int
-[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.ITypedExtensible instance, System.Type type) -> int
-[PBN9002]ProtoBuf.ProtoWriter.State.RawLengths.get -> System.Collections.Generic.Dictionary<object, int>
-[PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, int> lengths) -> bool
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.IExtensible instance) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.ITypedExtensible instance, System.Type type) -> long
+[PBN9002]ProtoBuf.ProtoWriter.State.RawLengths.get -> System.Collections.Generic.Dictionary<object, long>
+[PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, long> lengths) -> bool

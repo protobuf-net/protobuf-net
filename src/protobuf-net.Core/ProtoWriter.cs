@@ -166,30 +166,12 @@ namespace ProtoBuf
             WireType = WireType.None;
             if (userState is SerializationContext context) context.Freeze();
             UserState = userState;
-            _rawLengths?.Clear();
         }
 
-        // the raw measure pass's ??= length cache (docs/nano-writer.md): sub-message lengths
-        // keyed by reference identity, populated by the generated Measure_ statics and consumed
-        // at the write sites, so each object is measured once per root serialize however deep or
-        // shared it is. MUST be cleared per root (Init and Cleanup both do): a stale entry for a
-        // recycled address would emit a wrong prefix, which is a corrupt stream, not an error.
-        private System.Collections.Generic.Dictionary<object, int> _rawLengths;
-
-        internal System.Collections.Generic.Dictionary<object, int> RawLengths
-            => _rawLengths ??= new System.Collections.Generic.Dictionary<object, int>(RawLengthComparer.Instance);
-
-        // reference identity regardless of user Equals/GetHashCode overrides; the BCL's
-        // ReferenceEqualityComparer is net5+ only, and this must serve every TFM
-        private sealed class RawLengthComparer : System.Collections.Generic.IEqualityComparer<object>
-        {
-            internal static readonly RawLengthComparer Instance = new RawLengthComparer();
-            private RawLengthComparer() { }
-            bool System.Collections.Generic.IEqualityComparer<object>.Equals(object x, object y)
-                => ReferenceEquals(x, y);
-            int System.Collections.Generic.IEqualityComparer<object>.GetHashCode(object obj)
-                => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
-        }
+        // the raw measure pass's ??= length cache lives on netCache - the codebase's home for
+        // cross-writer measurement state - so the null-writer sidecar and MeasureState's
+        // InitializeFrom hand-off both share it for free; see the notes on the field itself
+        internal System.Collections.Generic.Dictionary<object, long> RawLengths => netCache.RawLengths;
 
         [StructLayout(LayoutKind.Auto)]
         internal readonly struct WriteState
@@ -268,7 +250,6 @@ namespace ProtoBuf
             }
             recursionStack?.Clear();
             ClearKnownObjects();
-            _rawLengths?.Clear();
             model = null;
             UserState = null;
         }

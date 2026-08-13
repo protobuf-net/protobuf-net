@@ -91,10 +91,10 @@ partial class AssemblySurrogateModel
             }
         }
 
-        public static int Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
@@ -105,8 +105,8 @@ partial class AssemblySurrogateModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {

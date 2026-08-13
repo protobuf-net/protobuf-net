@@ -55,10 +55,10 @@ partial class NonPublicSetterModel
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
         }
 
-        public static int Measure_AotFixtures_NonPublicSetter_Guarded(global::AotFixtures.NonPublicSetter.Guarded value, int depth, global::System.Collections.Generic.Dictionary<object, int> lengths)
+        public static long Measure_AotFixtures_NonPublicSetter_Guarded(global::AotFixtures.NonPublicSetter.Guarded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
-            int len = 0;
+            long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             var tmp2 = value.Text;
@@ -81,8 +81,8 @@ partial class NonPublicSetterModel
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicSetter.Guarded>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicSetter.Guarded value)
             => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                ? Measure_AotFixtures_NonPublicSetter_Guarded(value, depth, lengths)
-                : -1;
+                && Measure_AotFixtures_NonPublicSetter_Guarded(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.NonPublicSetter.Guarded RawRead_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicSetter.Guarded value)
         {
