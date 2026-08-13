@@ -118,6 +118,13 @@ public class Order
     [ProtoMember(56)] public Dictionary<Status, int> ByStatus { get; set; }
     [ProtoMember(57)] public Dictionary<int, Status> ToStatus { get; set; }
 
+    // declaration-served scalar: field 58 is a bare varint - a wrongly-assumed message category
+    // would have written a length prefix over it, so check the payload dump by eye too. Bonus is
+    // the nullable twin, proving the same shape survives ILC for Nullable<T> of an externally
+    // scalar-serialized struct.
+    [ProtoMember(58)] public Tally<int> Score { get; set; }
+    [ProtoMember(59)] public Tally<string>? Bonus { get; set; }
+
     // hand-written serializers, one per category - see the note by their declarations. These are
     // the only members that reach SerializerCache.Get<TProvider, T>(), i.e. the last genuinely
     // reflective step on the generated path.
@@ -467,6 +474,29 @@ public readonly struct Batch
     public int Value { get; }
 }
 
+// [ProtoSerializer] on the model: the open mapping closes over each instantiation, so ILC must
+// generate SerializerCache<TallySerializer<int>, Tally<int>> (and the string one) from a name that
+// exists only in generated code - the declaration-served twin of Batch/Gauge/Barcode above. Bonus
+// is Nullable<Tally<string>>, proving the ISerializerProxy-for-Nullable path an externally-scalar
+// serialized struct member takes also survives under real ILC, not just JIT.
+public readonly struct Tally<T>
+{
+    public Tally(long count) => Count = count;
+    public long Count { get; }
+}
+
+public sealed class TallySerializer<T> : ISerializer<Tally<T>>
+{
+    SerializerFeatures ISerializer<Tally<T>>.Features
+        => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeVarint;
+
+    Tally<T> ISerializer<Tally<T>>.Read(ref ProtoReader.State state, Tally<T> value)
+        => new Tally<T>(state.ReadInt64());
+
+    void ISerializer<Tally<T>>.Write(ref ProtoWriter.State state, Tally<T> value)
+        => state.WriteInt64(value.Count);
+}
+
 /// <summary>
 /// Constructed via <c>BclHelpers.GetUninitializedObject</c> rather than <c>new</c>, so the
 /// constructor never runs on deserialize. <see cref="Stamp"/> is not serialized and exists purely
@@ -487,6 +517,11 @@ public class Blank
 [ProtoModel(AllowParseableTypes = true)]
 [ProtoSerializable(typeof(Order))]
 [ProtoSerializable(typeof(NoteV2))]
+// an open [ProtoSerializer] mapping: the declaration names Tally<> and TallySerializer<> as open
+// generic definitions, and the generator closes each over the type arguments of its use sites
+// (Tally<int> for Score, Tally<string> for Bonus) - the declaration-served twin of the
+// [ProtoContract(Serializer = ...)] shapes above, proven under real ILC rather than JIT alone.
+[ProtoSerializer(typeof(Tally<>), typeof(TallySerializer<>), IsScalar = true)]
 // A .proto-generated DTO tree, from descriptor.proto - the schema every other schema
 // imports, and about as unlike a hand-written contract as protobuf-net produces: getter-only
 // collections reached through their backing fields, ShouldSerialize* on nearly every member,
@@ -537,6 +572,8 @@ internal static class Program
             Barcode = new Barcode { Code = "X-9" },
             Gauge = new Gauge(4242),
             Batch = new Batch(77),
+            Score = new Tally<int>(421),
+            Bonus = new Tally<string>(-9),
             Codes = [11, 12, 13],
             Team = [new Customer { Id = 4, Name = "cat" }],
             Tags = ["red", "blue"],
@@ -649,6 +686,10 @@ internal static class Program
         Check(ref failures, "Barcode", "X-9", clone.Barcode?.Code);
         Check(ref failures, "Gauge", original.Gauge.Value, clone.Gauge.Value);
         Check(ref failures, "Batch", original.Batch.Value, clone.Batch.Value);
+
+        // the declaration-served open mapping, closed over int and (nullable) string
+        Check(ref failures, "Score", original.Score.Count, clone.Score.Count);
+        Check(ref failures, "Bonus", original.Bonus?.Count, clone.Bonus?.Count);
 
         // the collection families, one per RepeatedSerializer factory
         Check(ref failures, "Codes", "11,12,13", Join(clone.Codes));

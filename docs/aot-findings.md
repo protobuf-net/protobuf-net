@@ -71,6 +71,25 @@ file's own conventions record as a genuine .NET Framework signature), which is e
 divergence that makes Mono output untrustworthy here. Run `AotRefGen` on real Windows and commit the
 result.
 
+**New since 2026-08-13 ([ProtoSerializer] plan, Task 11): `AotSmoke` gained an open-mapping member —
+re-measured, no regression.** `Tally<T>`/`TallySerializer<T>` is a declaration-served hand-written
+scalar serializer (`[ProtoSerializer(typeof(Tally<>), typeof(TallySerializer<>), IsScalar = true)]`
+on the model, rather than `[ProtoContract(Serializer = ...)]` on the type), closed over two
+instantiations: `Order.Score` (`Tally<int>`) and `Order.Bonus` (`Tally<string>?`, the nullable-of-an-
+externally-scalar-serialized-struct shape Task 6 landed). Re-measured on Linux (clean
+`src/AotSmoke/obj`/`bin`, `dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r linux-x64
+-p:DelaySign=true`): **still exactly 19 warnings**, the identical id breakdown recorded above (6
+`IL2067`, 5 `IL3050`, 3 `IL2091`, 3 `IL2070`, 1 `IL2057`, 1 `IL2055`) — the open mapping introduced no
+new reflective demand. Binary: **3,818,904 bytes (3.64 MB)**. No linux-x64 byte baseline had been
+recorded on this machine before now (the only prior linux-x64 note above is that its sizes are not
+comparable to win-x64's 3.53 MB), so this is the first linux-x64 size baseline captured in this file;
+diff the next `AotSmoke` change against this number rather than the win-x64 one. The published binary
+was also run directly (not just built): exit code 0, "AOT smoke test PASSED", and the payload hex was
+inspected by eye for both new fields — `D0-03-A5-03` (field 58, `Score` = 421) and
+`D8-03-F7-FF-FF-FF-FF-FF-FF-FF-FF-01` (field 59, `Bonus` = −9) — both bare varints (tag then value,
+no length prefix), confirming ILC resolved `SerializerCache<TallySerializer<int>, Tally<int>>` and
+the `Tally<string>` instantiation as scalar rather than falling back to a message framing.
+
 ## Open
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
