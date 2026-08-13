@@ -71,6 +71,13 @@ partial class DynamicCategoryModel
                         if (tmp5 != null) value.Messages = tmp5;
                         break;
                     }
+                    case 6:
+                    {
+                        var tmp6 = value.NullableScalar.GetValueOrDefault();
+                        tmp6 = state.ReadAny<global::AotFixtures.DynamicCategory.Measure>(default, tmp6, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                        value.NullableScalar = tmp6;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -97,6 +104,11 @@ partial class DynamicCategoryModel
             if (tmp5 != null)
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
+            }
+            var tmp6 = value.NullableScalar;
+            if (tmp6.HasValue)
+            {
+                state.WriteAny<global::AotFixtures.DynamicCategory.Measure>(6, tmp6.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
             }
         }
     }

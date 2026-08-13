@@ -25,6 +25,14 @@ namespace ProtoBuf
     /// same arity, in which case the serializer is closed with the type arguments of each use site;
     /// a closed declaration wins over the open mapping for that one type.
     /// </para>
+    /// <para>
+    /// An open serializer's own generic constraints are <b>not</b> validated against each use site at
+    /// compile time. If a use-site type argument violates a constraint the serializer itself declares
+    /// (e.g. <c>where T : class</c>), the generator still closes the mapping and emits a reference the
+    /// consumer's build will fail to compile — a real, if rare, class of error. A consumer declaring an
+    /// open serializer with constraints should either keep the serializer unconstrained (protobuf-net's
+    /// own de-facto policy) or verify by hand that every reachable instantiation satisfies them.
+    /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
     [Experimental(ProtoModelAttribute.DiagnosticId)]

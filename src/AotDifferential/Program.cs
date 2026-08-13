@@ -218,17 +218,30 @@ internal static class Program
         }
 
         // close every open declaration over the constructed generic types each contract's own
-        // member graph reaches - the same closure the generator performs
-        foreach (var contract in corpus.Contracts)
+        // member graph reaches - the same closure the generator performs. Skipped entirely when
+        // there are no open declarations to close, since the walk is otherwise pure overhead; the
+        // closed declarations below still apply regardless.
+        if (open.Count != 0)
         {
-            foreach (var reached in ReachableTypes(contract))
+            foreach (var contract in corpus.Contracts)
             {
-                if (!reached.IsConstructedGenericType) continue;
-                foreach (var (definition, serializer) in open)
+                try
                 {
-                    if (reached.GetGenericTypeDefinition() != definition) continue;
-                    if (closed.Any(x => x.Type == reached)) continue; // a closed declaration wins
-                    closed.Add((reached, serializer.MakeGenericType(reached.GenericTypeArguments)));
+                    foreach (var reached in ReachableTypes(contract))
+                    {
+                        if (!reached.IsConstructedGenericType) continue;
+                        foreach (var (definition, serializer) in open)
+                        {
+                            if (reached.GetGenericTypeDefinition() != definition) continue;
+                            if (closed.Any(x => x.Type == reached)) continue; // a closed declaration wins
+                            closed.Add((reached, serializer.MakeGenericType(reached.GenericTypeArguments)));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"could not close an open [ProtoSerializer] declaration for "
+                        + $"{contract.FullName}: " + Summarize(ex));
                 }
             }
         }

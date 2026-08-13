@@ -78,6 +78,15 @@ assembly):
 - **Open-generic rule:** `Type` and `Serializer` are both closed or both open with the same arity.
   An open pair is closed at each use site with the use site's type arguments. A closed declaration
   beats the open mapping for the same closed type.
+  - **Stated v1 scope boundary:** closing the mapping (`INamedTypeSymbol.Construct`) validates arity
+    only, not the open serializer's own generic constraints. If a use-site type argument violates a
+    constraint the serializer declares on itself (e.g. `where T : class`), every downstream check
+    still passes — `Construct` succeeds and substitutes cleanly — and the emitted
+    `SerializerCache.Get<ClosedSerializer, T>()` then fails to *compile* in the consumer's build.
+    Full constraint validation (checking `HasReferenceTypeConstraint` /
+    `HasValueTypeConstraint` / `HasConstructorConstraint` / `ConstraintTypes` per type parameter
+    against each use-site argument) is deliberately deferred as its own follow-up rather than folded
+    into this pass; documented as a known limitation on `ProtoSerializerAttribute`'s xml-doc.
 - **Scopes and precedence**, mirroring `[ProtoSurrogate]`: referenced assemblies → this assembly →
   the model; most specific wins. A type's own `[ProtoContract(Serializer = ...)]` beats any
   assembly-level declaration, but a model-level declaration beats even that — the model is the

@@ -104,13 +104,40 @@ namespace BuildToolsUnitTests.Aot
             Assert.Contains("WriteAny<global::Norse.Token<int>>", result.GeneratedCode);
         }
 
+        // same as HelperSource but with no IsScalar stated, so Features cannot fold across the
+        // compiled reference and framing must defer to WriteAny/ReadAny at runtime. Declared
+        // independently rather than derived from HelperSource via string surgery: HelperSource is a
+        // raw string literal and does NOT normalize line endings, so on Windows CI (this repo's only
+        // CI platform) it checks out with CRLF and a "\n"-based Replace silently fails to match.
+        private const string HelperSourceNoScalar = """
+            using ProtoBuf;
+            using ProtoBuf.Serializers;
+
+            #pragma warning disable PBN9001 // the compile-time model attributes are [Experimental]
+            [assembly: ProtoSerializer(typeof(Norse.Token<>), typeof(Norse.Proto.TokenSerializer<>))]
+            #pragma warning restore PBN9001
+
+            namespace Norse.Proto
+            {
+                public sealed class TokenSerializer<T> : ISerializer<Norse.Token<T>>
+                {
+                    SerializerFeatures ISerializer<Norse.Token<T>>.Features
+                        => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeVarint;
+
+                    Norse.Token<T> ISerializer<Norse.Token<T>>.Read(ref ProtoReader.State state, Norse.Token<T> value)
+                        => new Norse.Token<T>(state.ReadInt64());
+
+                    void ISerializer<Norse.Token<T>>.Write(ref ProtoWriter.State state, Norse.Token<T> value)
+                        => state.WriteInt64(value.Tag);
+                }
+            }
+            """;
+
         [Fact]
         public void WithoutIsScalarTheFramingDefersToRuntime()
         {
-            var helperNoScalar = HelperSource.Replace(",\n    IsScalar = true", "")
-                .Replace(", IsScalar = true", "");
             var domain = Compile("Norse", DomainSource);
-            var helper = Compile("Norse.Proto", helperNoScalar, domain);
+            var helper = Compile("Norse.Proto", HelperSourceNoScalar, domain);
             var contracts = Compile("Norse.Contracts", ContractsSource, domain);
 
             var result = Execute<ProtoModelGenerator>(ConsumerSource, null,

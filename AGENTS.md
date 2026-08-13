@@ -1854,6 +1854,7 @@ None of the absences is work — each is a shape ref-emit cannot produce output 
 | `NonPublicSetter`, `NonPublicCtor`, `InheritAccessor`, `ImplicitPrivate` | ref-emit's *compiled* path refuses the shape outright ("Non-public member cannot be used with full dll compilation"), so there is no output to compare |
 | `TrivialGetter` | no reference behaviour exists — we are strictly more capable there |
 | `DateOnly` | `<Compile Remove>`d from `AotRefGen`, which is net472 and has no `DateOnly` |
+| `ModelSerializer` | **pending, not permanent** — added on Linux, and `AotRefGen` is net472 so it could not be run here; nothing in the fixture is refused by ref-emit once the harness replays the `[ProtoSerializer]` declarations, so it *should* get one — run `AotRefGen` on Windows and commit the result |
 
 Two artefacts of decompilation are cosmetic, not semantic: `Features` appears as a uniquely-named
 method plus an ILSpy `.override` note (it's really an explicit-interface property), and
