@@ -291,11 +291,37 @@ So **back-fill is not legacy baggage - it is the correct algorithm when a messag
 priced cheaply**, and moving the stream backend wholesale to measure-first would roughly double
 the cost for every ref-emit and no-emit consumer, which is most of them.
 
-**The middle row is the one that breaks the easy answer.** Being arithmetically measurable is
-NOT sufficient: the protogen DTOs are all `IExtensible`, and cut 4 recorded the reason - an
-extensible node pays a `BeginQuery`/`EndQuery` round-trip per measure, so measure-then-write
-pays it twice. A gate of "measure-first iff `IMeasuringSerializer` with the skip flag" would
-therefore make that case ~20% *worse*. Right shape, wrong predicate.
+**The middle row looked like it broke the easy answer, and does not** - recorded because the
+wrong explanation was reached first and was plausible. The protogen DTOs are all `IExtensible`,
+and cut 4 records that an extensible node pays a `BeginQuery`/`EndQuery` round-trip per measure
+(and `BufferExtension.BeginQuery` really does allocate a `MemoryStream` per call when the bag is
+non-empty), so "extensibility makes measure-first expensive" fits. It is not the cause here: the
+two generated rows allocate 22,552 B and 22,392 B - 160 B apart - so those DTOs carry almost no
+extension data.
+
+The actual cause, counted rather than guessed, in the committed generated model:
+
+```
+ISerializer<> implementations:  103
+Measure_ statics:                29     <- only ~28% are arithmetically measurable
+```
+
+**72% of that model is not measurable at all**, so on the buffer-writer those contracts fall
+back to null-writer traversal - the runtime model's 2.27x penalty, diluted across the tree. The
+buffer-writer has no choice, because it cannot back-fill.
+
+**So the per-serializer gate is right, and the doubt above was misplaced.** On a stream each
+contract takes its better path:
+
+| contract | stream today | stream, gated |
+| --- | --- | --- |
+| measurable (29 here) | back-fill | **arithmetic measure-first** |
+| not measurable (74 here) | back-fill | back-fill, unchanged |
+| any runtime model (0 measurable) | back-fill | back-fill, **no regression** |
+| has callbacks (excluded by cut 3) | back-fill | back-fill, **no doubling** |
+
+Every concern resolves together, and the buffer-writer's 1.20x was showing the cost of *lacking*
+the fallback rather than the cost of the strategy.
 
 Treat the 2.27x as beyond argument and the 1.20x/1.32x as indicative - the cross-class
 comparison is only sound at all because Google calibrates the destination.
@@ -305,11 +331,14 @@ comparison is only sound at all because Google calibrates the destination.
 1. **Do measurability and callback-freedom coincide?** If cut 3's exclusion means every
    measure-first-eligible contract is already callback-free, the doubling problem dissolves for
    the stream move and the blocker becomes purely performance. Prove it; do not believe it.
-2. **Why is the extensible generated model slower under measure-first** - is it the extension
-   blob query, is that fixable (cache the length; it is already known), or must the gate exclude
-   extensible contracts as well?
+2. ~~Why is the extensible generated model slower under measure-first~~ - **answered above:
+   most of that model is not measurable, so it falls back to traversal on a backend that cannot
+   back-fill. The gate fixes it rather than being defeated by it.**
 
-Only (2) determines whether the stream work is worth doing at all, so it goes first.
+So the remaining prerequisite is (1), and it is a proof rather than an investigation. Note also
+that `BufferExtension.BeginQuery` allocating a `MemoryStream` per call is real, just not the
+cause here - it will bite a model whose instances DO carry extension data, and the length is
+already known to the extension object, so measuring one should not need a stream at all.
 
 ## The measure pass has no depth guard, and runs user callbacks (2026-08-13)
 
