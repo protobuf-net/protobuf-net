@@ -525,6 +525,19 @@ lands. The counting-mode idea (legacy bodies against the Null writer) remains fo
 members INSIDE an unmeasurable contract; this cut covers such a contract's measurable
 children.
 
+## Native validation (2026-08-13, cuts 1-9 + the buffer core so far)
+
+A clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first) with the deferred
+position, the span-direct raw ops and the minimum lease all in place: **19 IL warnings,
+exactly the recorded baseline**, and the native executable PASSES - the same 559 bytes,
+round-tripped and verified. Deep surgery on the shared writer internals, and no native
+regression at all.
+
+(Trap hit and worth repeating since it is already in AGENTS.md: running `publish` twice in
+one command to get a warning breakdown yields nothing the second time - the publish is
+incremental and reports no warnings on a no-op run. Take the count from the first run, or
+clear `obj`/`bin` between them.)
+
 ## Native validation (2026-08-12, cuts 1-5)
 
 A clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first - a second run
@@ -537,25 +550,35 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 ## Where this stands / what's next (current as of 2026-08-13, cuts 1-7 pushed)
 
 **Handover note: this section plus "The presized buffer core: the plan" above is the
-entry point for a fresh session.** Cuts 1-8 are pushed to `raw-writer` and green on every
-gate; the serialize numbers (both TFMs) are in `src/NanoBench/DescriptorSerializeResults.md`
-and already beat Google.Protobuf on home turf before the buffer core exists. The remaining
-ladder, in priority order:
+entry point for a fresh session.** Cuts 1-9 are pushed to `raw-writer` and green on every
+gate; the serialize numbers are in `src/NanoBench/DescriptorSerializeResults.md`, which now
+carries BOTH backends - and the buffer-writer one is the interesting half (the generated
+model is ~10% ahead of Google.Protobuf there, against a legacy baseline that is twice as
+slow as its own stream figure). The remaining ladder, in priority order:
 
 1. **The presized buffer core** - the full plan, with the position-invariant design and
-   the decided cap policy, is the section above. **Step 1 (the invariant flip) landed as cut
-   8**; step 2 (span-direct raw ops, the fast/slow split) is the next piece of work, and is
-   where the win is - the invariant flip only cleared the way for it. Deep surgery on shared
-   writer internals; gates per commit as usual.
-2. Counting mode for mixed contracts (legacy-mode members measured via the classic body
+   the decided cap policy, is the section above. **Steps 1 and 2 landed as cuts 8 and 9**;
+   **step 3 (the presized lease + cap policy) is the next piece of work**, and the shape is
+   settled: `clamp(measured, TypeModel.MinimumBufferSize, cap)` with the cap as decided, plus
+   the stream backend's pooled `byte[]` of the clamped size. Then step 4, re-validating
+   net472 and native and re-recording both benchmark legs.
+2. **The stream backend is not span-backed**, so cut 9's fast path never fires there - and
+   that backend is what the *headline* benchmark rows use. Moving `ioBuffer`/`ioIndex` onto
+   `State`'s span would let both backends share one fast arm. Sized as real surgery (the
+   length back-fill in `ImplEndLengthPrefixedSubItem` is the delicate part), and worth doing
+   after step 3 rather than before, since the presized lease changes what a chunk even is.
+3. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
+   both backends, so it is not the writer; Google allocates zero). It won its race on time
+   and was never priced on bytes. Its own cut.
+4. Counting mode for mixed contracts (legacy-mode members measured via the classic body
    against the Null writer, landing in the same lengthCache - which now lives on
    NetObjectCache, shared with the sidecar and the MeasureState hand-off, so the landing
    spot is already right).
-3. Packed repeated writes (IsPacked support arrived on the read side; the write needs the
+5. Packed repeated writes (IsPacked support arrived on the read side; the write needs the
    zero-length-header model option and per-element measure - the MemoryMarshal block
    trick for fixed widths is recorded in the checklist above; `IMeasuringSerializer` is
    already implemented by measurable contracts, which is what the packed engine keys on).
-4. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
+6. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
    for the native kinds).
 
 ### Working practices this arc runs on (learned the hard way; do not relearn)
