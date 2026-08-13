@@ -1,5 +1,53 @@
 ﻿# Descriptor serialize composite (docs/nano-writer.md)
 
+## Where the write path stands (net10.0, 2026-08-13, cut 10 + the tag ladder)
+
+Both destinations, one sitting, `--job short`. The payload is the 7,670-byte self-describing
+descriptor set.
+
+| engine | stream | buffer-writer | vs Google (stream) | alloc (stream) |
+| --- | ---: | ---: | ---: | ---: |
+| **vanilla protobuf-net** (`RuntimeTypeModel`) | 20.026 us | 40.335 us | +52% | 0 B |
+| **AOT protobuf-net**, shipped protogen model | 11.590 us | 17.831 us | -12% | 0 B |
+| **AOT protobuf-net**, bench DTOs | **10.408 us** | **9.986 us** | **-21%** | 0 B |
+| AOT, explicit `IMeasuredProtoOutput` | 15.313 us | 15.074 us | +16% | 1 B |
+| **Google.Protobuf** (home turf) | 13.213 us | 12.824 us | - | 4232 B |
+| *UTF-8 floor* (see below) | *2.666 us* | *2.666 us* | *-80%* | *0 B* |
+
+As throughput: **737 MB/s** for the AOT model against **580 MB/s** for Google.Protobuf and
+383 MB/s for the runtime model, on the stream.
+
+Readings:
+
+- **The two backends have converged**, which is what cut 10 was for: the AOT model is 10.408 us
+  on the stream and 9.986 on the buffer-writer, where before that cut the same rows read 14.521
+  and ~9.9. The stream was the outlier and no longer is.
+- **The runtime model goes the other way, and dramatically**: 20.0 us on the stream against
+  **40.3** on the buffer-writer. That is not a writer defect - it is measure-first pricing. A
+  buffer-writer cannot back-fill, so a serializer with no arithmetic measure has to be priced by
+  null-writer traversal, which the corpus put at ~2.3x. It is exactly why the stream backend's
+  measure-first gate is conditional on `IMeasuringSerializer`.
+- **AOT beats Google.Protobuf on both destinations** by ~21%, and allocates nothing where Google
+  allocates 4,232 B per serialize on the stream. Against vanilla protobuf-net the engine swap is
+  **-48% on the stream and -75% on the buffer-writer**.
+- **The explicit measure-first API is the slow row**, 15.3/15.1 against 10.4/10.0 for a plain
+  `Serialize`. Asking the root for its length up front costs more than it looks - already
+  recorded in `docs/nano-writer.md` - and this is a standing item rather than a surprise.
+
+### "We're probably just measuring UTF8 at this point" - no, a quarter of it
+
+`Utf8Floor` is a real row now, not an estimate: every string in the graph (393 of them, 5,475
+bytes, **71.4% of the payload**) put through `GetByteCount` *and* `GetBytes` - both halves,
+since a measure-first serializer pays both - and nothing else. No tags, no lengths, no
+traversal, no destination.
+
+**2.666 us**, i.e. **25.6% of the AOT write row** and 20% of Google's. So the encoder is a
+quarter of the job and the other three quarters are still traversal, guards, framing and
+destination. Worth knowing in both directions: it is not the whole story, and it *is* a hard
+floor that no amount of writer work goes below - the remaining headroom above Google is roughly
+7.7 us of non-UTF8 work against their 10.5.
+
+
 ## net10.0, 2026-08-13, THE STREAM BACKEND GOES SPAN-BACKED (the buffer core, stream half)
 
 Paired, same machine, same sitting, `--job short`; the "before" leg is the commit immediately
