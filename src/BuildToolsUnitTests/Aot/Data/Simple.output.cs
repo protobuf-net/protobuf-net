@@ -18,10 +18,10 @@ partial class SimpleModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Simple.Order>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Simple.Order global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
             => RawRead_AotFixtures_Simple_Order(ref state, value);
@@ -55,6 +55,11 @@ partial class SimpleModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Simple.Order>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Simple.Order value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Simple_Order(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Simple.Order RawRead_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Simple.Order value)
         {

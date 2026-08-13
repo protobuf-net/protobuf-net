@@ -18,10 +18,10 @@ partial class ReservedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Reserved.ReservedButClear>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Reserved.ReservedButClear global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
             => RawRead_AotFixtures_Reserved_ReservedButClear(ref state, value);
@@ -55,6 +55,11 @@ partial class ReservedModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Reserved.ReservedButClear>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Reserved.ReservedButClear value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Reserved_ReservedButClear(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Reserved.ReservedButClear RawRead_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Reserved.ReservedButClear value)
         {

@@ -18,15 +18,15 @@ partial class OrderingModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Mixed>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Referencing>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMember>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaXmlElement>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Ordering.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
             => RawRead_AotFixtures_Ordering_Mixed(ref state, value);
@@ -53,6 +53,11 @@ partial class OrderingModel
             if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // Both
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.Mixed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Ordering_Mixed(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Ordering.Mixed RawRead_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Mixed value)
         {
@@ -94,7 +99,7 @@ partial class OrderingModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Ordering.OffsetIgnoredByXml global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
             => RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value);
@@ -117,6 +122,11 @@ partial class OrderingModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // First
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Ordering_OffsetIgnoredByXml(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Ordering.OffsetIgnoredByXml RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
         {
@@ -149,7 +159,7 @@ partial class OrderingModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Ordering.Referencing global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
             => RawRead_AotFixtures_Ordering_Referencing(ref state, value);
@@ -246,6 +256,11 @@ partial class OrderingModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Referencing>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.Referencing value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Ordering_Referencing(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.Ordering.Referencing RawRead_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.Referencing value)
         {
             value ??= new global::AotFixtures.Ordering.Referencing();
@@ -297,7 +312,7 @@ partial class OrderingModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Ordering.ViaDataMember global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
             => RawRead_AotFixtures_Ordering_ViaDataMember(ref state, value);
@@ -331,6 +346,11 @@ partial class OrderingModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMember>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.ViaDataMember value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Ordering_ViaDataMember(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Ordering.ViaDataMember RawRead_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMember value)
         {
@@ -369,7 +389,7 @@ partial class OrderingModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Ordering.ViaDataMemberOffset global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
             => RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value);
@@ -403,6 +423,11 @@ partial class OrderingModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.ViaDataMemberOffset value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Ordering_ViaDataMemberOffset(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Ordering.ViaDataMemberOffset RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
         {
@@ -441,7 +466,7 @@ partial class OrderingModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Ordering.ViaXmlElement global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
             => RawRead_AotFixtures_Ordering_ViaXmlElement(ref state, value);
@@ -475,6 +500,11 @@ partial class OrderingModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaXmlElement>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Ordering.ViaXmlElement value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Ordering_ViaXmlElement(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Ordering.ViaXmlElement RawRead_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Ordering.ViaXmlElement value)
         {

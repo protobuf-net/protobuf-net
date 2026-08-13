@@ -18,7 +18,7 @@ partial class WrappedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Wrapped.Nested>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade?>
@@ -26,7 +26,7 @@ partial class WrappedModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Wrapped.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
             => RawRead_AotFixtures_Wrapped_Nested(ref state, value);
@@ -49,6 +49,11 @@ partial class WrappedModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Wrapped.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Wrapped.Nested value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Wrapped_Nested(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Wrapped.Nested RawRead_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
         {

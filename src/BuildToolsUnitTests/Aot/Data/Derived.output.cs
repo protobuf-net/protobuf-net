@@ -18,13 +18,13 @@ partial class DerivedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Derived.Ambiguous>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Derived.Ambiguous global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
             => RawRead_AotFixtures_Derived_Ambiguous(ref state, value);
@@ -54,6 +54,11 @@ partial class DerivedModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Derived.Ambiguous>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Derived.Ambiguous value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Derived_Ambiguous(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Derived.Ambiguous RawRead_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Derived.Ambiguous value)
         {

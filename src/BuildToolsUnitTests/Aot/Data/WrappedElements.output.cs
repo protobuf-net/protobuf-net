@@ -18,7 +18,7 @@ partial class WrappedElementsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrappedElements.Payload>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Wrapped>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrappedElements.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrappedElements.Shade?>
@@ -26,7 +26,7 @@ partial class WrappedElementsModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.WrappedElements.Payload global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
             => RawRead_AotFixtures_WrappedElements_Payload(ref state, value);
@@ -49,6 +49,11 @@ partial class WrappedElementsModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrappedElements.Payload>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.WrappedElements.Payload value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_WrappedElements_Payload(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.WrappedElements.Payload RawRead_AotFixtures_WrappedElements_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrappedElements.Payload value)
         {

@@ -20,11 +20,11 @@ partial class ExtensibleModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.BaseExt>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.ByHand>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.DerivedExt>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.DerivedExt>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.FromBase>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.TypedOnly>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -93,7 +93,7 @@ partial class ExtensibleModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Extensible.ByHand global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
             => RawRead_AotFixtures_Extensible_ByHand(ref state, value);
@@ -118,6 +118,11 @@ partial class ExtensibleModel
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.ByHand>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.ByHand value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Extensible_ByHand(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Extensible.ByHand RawRead_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
         {
@@ -199,7 +204,7 @@ partial class ExtensibleModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Extensible.FromBase global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
             => RawRead_AotFixtures_Extensible_FromBase(ref state, value);
@@ -224,6 +229,11 @@ partial class ExtensibleModel
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.FromBase>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.FromBase value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Extensible_FromBase(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Extensible.FromBase RawRead_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
         {
@@ -256,7 +266,7 @@ partial class ExtensibleModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Extensible.TypedOnly global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)
             => RawRead_AotFixtures_Extensible_TypedOnly(ref state, value);
@@ -281,6 +291,11 @@ partial class ExtensibleModel
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.TypedOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.TypedOnly value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Extensible_TypedOnly(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Extensible.TypedOnly RawRead_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)
         {

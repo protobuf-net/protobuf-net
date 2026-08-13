@@ -18,13 +18,13 @@ partial class TrivialGetterModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Backed>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Computed>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.TrivialGetter.Backed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
             => RawRead_AotFixtures_TrivialGetter_Backed(ref state, value);
@@ -75,6 +75,11 @@ partial class TrivialGetterModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Backed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Backed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_TrivialGetter_Backed(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
@@ -138,7 +143,7 @@ partial class TrivialGetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.TrivialGetter.Computed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
             => RawRead_AotFixtures_TrivialGetter_Computed(ref state, value);
@@ -161,6 +166,11 @@ partial class TrivialGetterModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Doubled
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Computed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Computed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_TrivialGetter_Computed(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
         {

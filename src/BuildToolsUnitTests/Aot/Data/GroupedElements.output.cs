@@ -20,7 +20,7 @@ partial class GroupedElementsModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Grouped>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedMaps>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.Item>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -288,7 +288,7 @@ partial class GroupedElementsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GroupedElements.Item global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
             => RawRead_AotFixtures_GroupedElements_Item(ref state, value);
@@ -322,6 +322,11 @@ partial class GroupedElementsModel
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Count
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.Item>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GroupedElements.Item value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_GroupedElements_Item(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
         {

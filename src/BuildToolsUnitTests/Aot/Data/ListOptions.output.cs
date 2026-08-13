@@ -18,7 +18,7 @@ partial class ListOptionsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.NotACollection>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
@@ -42,7 +42,7 @@ partial class ListOptionsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ListOptions.NotACollection global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
             => RawRead_AotFixtures_ListOptions_NotACollection(ref state, value);
@@ -113,6 +113,11 @@ partial class ListOptionsModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.NotACollection>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListOptions.NotACollection value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ListOptions_NotACollection(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
         {

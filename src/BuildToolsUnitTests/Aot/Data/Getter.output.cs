@@ -19,8 +19,8 @@ partial class GetterModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Nested>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Point>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -278,7 +278,7 @@ partial class GetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Getter.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
             => RawRead_AotFixtures_Getter_Nested(ref state, value);
@@ -301,6 +301,11 @@ partial class GetterModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Getter.Nested value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Getter_Nested(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Getter.Nested RawRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
         {
@@ -333,7 +338,7 @@ partial class GetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Getter.Point global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Point value)
         {
@@ -372,6 +377,11 @@ partial class GetterModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Point>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Getter.Point value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Getter_Point(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 

@@ -19,7 +19,7 @@ partial class MapKeyModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Keys>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapKey.Payload>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -179,7 +179,7 @@ partial class MapKeyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.MapKey.Payload global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
             => RawRead_AotFixtures_MapKey_Payload(ref state, value);
@@ -202,6 +202,11 @@ partial class MapKeyModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapKey.Payload>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapKey.Payload value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_MapKey_Payload(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.MapKey.Payload RawRead_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapKey.Payload value)
         {

@@ -18,13 +18,13 @@ partial class DefaultsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Declared>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Parsed>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Defaults.Declared global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
             => RawRead_AotFixtures_Defaults_Declared(ref state, value);
@@ -86,6 +86,11 @@ partial class DefaultsModel
             if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Plain
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Declared>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Defaults.Declared value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Defaults_Declared(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
         {
@@ -154,7 +159,7 @@ partial class DefaultsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Defaults.Parsed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
             => RawRead_AotFixtures_Defaults_Parsed(ref state, value);
@@ -213,6 +218,11 @@ partial class DefaultsModel
             if (tmp5 != (global::AotFixtures.Defaults.Shade)(1)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp5);  // ByConverter
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Parsed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Defaults.Parsed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Defaults_Parsed(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
         {

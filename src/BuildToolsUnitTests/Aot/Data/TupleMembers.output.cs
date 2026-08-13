@@ -18,15 +18,15 @@ partial class TupleMembersModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>
-        , global::ProtoBuf.Serializers.ISerializer<(int, string)>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<(int, (int, string))>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>
-        , global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         (int, (int, string)) global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Read(ref global::ProtoBuf.ProtoReader.State state, (int, (int, string)) value)
         {
@@ -86,10 +86,15 @@ partial class TupleMembersModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<(int, (int, string))>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (int, (int, string)) value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure__int___int__string__(value, depth, lengths)
+                : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, string)>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         (int, string) global::ProtoBuf.Serializers.ISerializer<(int, string)>.Read(ref global::ProtoBuf.ProtoReader.State state, (int, string) value)
         {
@@ -151,6 +156,11 @@ partial class TupleMembersModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (int, string) value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure__int__string_(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -283,7 +293,7 @@ partial class TupleMembersModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::System.Collections.Generic.KeyValuePair<int, string> global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
         {
@@ -345,6 +355,11 @@ partial class TupleMembersModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.Collections.Generic.KeyValuePair<int, string> value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

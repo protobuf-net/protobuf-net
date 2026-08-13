@@ -18,12 +18,12 @@ partial class ScalarsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Scalars.Primitives>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Scalars.Primitives global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
             => RawRead_AotFixtures_Scalars_Primitives(ref state, value);
@@ -126,6 +126,11 @@ partial class ScalarsModel
             if (tmp11 != 0d) len += 9;  // Double
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Scalars.Primitives>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Scalars.Primitives value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Scalars_Primitives(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Scalars.Primitives RawRead_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
         {

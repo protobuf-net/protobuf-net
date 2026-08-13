@@ -103,14 +103,51 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, $"=> {Serializers}.SerializerCache.Get<{ServicesTypeName}, T>();");
             sb.AppendLine();
 
+            // write-side: the contracts whose serialized SIZE is computable by pure arithmetic
+            // (a generated Measure_ static), which is what lets a message member emit an exact
+            // length prefix and call the target's RawWrite_ directly, instead of the stateful
+            // engine's reserve-and-patch. Unlike read eligibility this NEEDS a fixed point:
+            // there is no legacy-mode arm inside arithmetic, so one unmeasurable member takes
+            // the whole contract out, and a dropped target takes its referrers' measures with
+            // it (they keep their raw statements; only the measure-first message shape needs
+            // the set). Keyed to the plan rather than a bare name set because the emit sites
+            // need the TARGET's IsValueType to shape the null handling. Computed before the
+            // interface list, because a measurable contract declares IMeasuringSerializer.
+            var measurable = new Dictionary<string, ProtoContractPlan>();
+            if (plan.RawWriter)
+            {
+                foreach (var contract in plan.Contracts)
+                {
+                    if (RawMeasurableShape(contract)) measurable[contract.TypeName] = contract;
+                }
+                bool changed;
+                do
+                {
+                    changed = false;
+                    foreach (var contract in plan.Contracts)
+                    {
+                        if (measurable.ContainsKey(contract.TypeName)
+                            && contract.Members.Any(m => RawMemberMeasureBlocked(m, measurable)))
+                        {
+                            measurable.Remove(contract.TypeName);
+                            changed = true;
+                        }
+                    }
+                } while (changed);
+            }
+
             Line(sb, indent + 1, $"private sealed class {ServicesTypeName}");
             var prefix = ':';
             foreach (var contract in plan.Contracts)
             {
-                // a contract with a hand-written serializer is *proxied*, never implemented
-                Line(sb, indent + 2, contract.ExternalSerializerTypeName is null
-                    ? $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>"
-                    : $"{prefix} {Serializers}.ISerializerProxy<{contract.TypeName}>");
+                // a contract with a hand-written serializer is *proxied*, never implemented;
+                // a measurable one declares the measuring shape (which includes ISerializer),
+                // handing the classic engine's measure hook the Measure_ arithmetic
+                Line(sb, indent + 2, contract.ExternalSerializerTypeName is not null
+                    ? $"{prefix} {Serializers}.ISerializerProxy<{contract.TypeName}>"
+                    : measurable.ContainsKey(contract.TypeName)
+                        ? $"{prefix} {Serializers}.IMeasuringSerializer<{contract.TypeName}>"
+                        : $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>");
                 prefix = ',';
                 if (contract.RootTypeName is not null)
                 {
@@ -198,38 +235,6 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, "}");
                     sb.AppendLine();
                 }
-            }
-
-            // write-side: the contracts whose serialized SIZE is computable by pure arithmetic
-            // (a generated Measure_ static), which is what lets a message member emit an exact
-            // length prefix and call the target's RawWrite_ directly, instead of the stateful
-            // engine's reserve-and-patch. Unlike read eligibility this NEEDS a fixed point:
-            // there is no legacy-mode arm inside arithmetic, so one unmeasurable member takes
-            // the whole contract out, and a dropped target takes its referrers' measures with
-            // it (they keep their raw statements; only the measure-first message shape needs
-            // the set). Keyed to the plan rather than a bare name set because the emit sites
-            // need the TARGET's IsValueType to shape the null handling.
-            var measurable = new Dictionary<string, ProtoContractPlan>();
-            if (plan.RawWriter)
-            {
-                foreach (var contract in plan.Contracts)
-                {
-                    if (RawMeasurableShape(contract)) measurable[contract.TypeName] = contract;
-                }
-                bool changed;
-                do
-                {
-                    changed = false;
-                    foreach (var contract in plan.Contracts)
-                    {
-                        if (measurable.ContainsKey(contract.TypeName)
-                            && contract.Members.Any(m => RawMemberMeasureBlocked(m, measurable)))
-                        {
-                            measurable.Remove(contract.TypeName);
-                            changed = true;
-                        }
-                    }
-                } while (changed);
             }
 
             var first = true;
@@ -1062,9 +1067,14 @@ namespace ProtoBuf.BuildTools.Generators
                 return;
             }
 
+            // the option flag is what makes the classic engine ASK the IMeasuringSerializer
+            // (ProtoWriter.Measure requires flag AND interface); InheritFrom copies only the
+            // masked category and wire-type bits, so it cannot leak into member features
+            var measuring = rawWrite && measurable is not null && measurable.ContainsKey(contract.TypeName);
             Line(sb, indent, $"{Features} {self}.Features");
             Line(sb, indent + 1, $"=> {Features}.CategoryMessage | {Features}."
-                + (contract.IsGroup ? "WireTypeStartGroup" : "WireTypeString") + ";");
+                + (contract.IsGroup ? "WireTypeStartGroup" : "WireTypeString")
+                + (measuring ? $" | {Features}.OptionTrySkipWritingWhenMeasuring" : "") + ";");
             sb.AppendLine();
 
             if (contract.SkipConstructor)
@@ -1219,6 +1229,16 @@ namespace ProtoBuf.BuildTools.Generators
                 EmitMeasureMembers(sb, indent + 1, contract, measurable, listAsSpan);
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");
+                sb.AppendLine();
+                // the classic engine's measure hook: any STATEFUL path writing this contract -
+                // a mixed parent, a map entry, a non-native collection element - asks here
+                // first (flag + interface, ProtoWriter.Measure) and gets the arithmetic
+                // instead of a null-writer traversal. A non-writer context answers -1, which
+                // the engine treats as "measure by writing", exactly as before.
+                Line(sb, indent, $"int {Serializers}.IMeasuringSerializer<{contract.TypeName}>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, {contract.TypeName} value)");
+                Line(sb, indent + 1, "=> global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)");
+                Line(sb, indent + 2, $"? Measure_{san}(value, depth, lengths)");
+                Line(sb, indent + 2, ": -1;");
                 return;
             }
 

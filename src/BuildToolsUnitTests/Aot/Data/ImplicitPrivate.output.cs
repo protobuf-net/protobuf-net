@@ -18,13 +18,13 @@ partial class ImplicitPrivateModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitPrivate.Explicit>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitPrivate.Private>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ImplicitPrivate.Explicit global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
             => RawRead_AotFixtures_ImplicitPrivate_Explicit(ref state, value);
@@ -47,6 +47,11 @@ partial class ImplicitPrivateModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ImplicitPrivate.Explicit value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ImplicitPrivate_Explicit(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ImplicitPrivate.Explicit RawRead_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
         {
@@ -81,7 +86,7 @@ partial class ImplicitPrivateModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ImplicitPrivate.Private global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)
             => RawRead_AotFixtures_ImplicitPrivate_Private(ref state, value);
@@ -119,6 +124,11 @@ partial class ImplicitPrivateModel
             if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // _zebra
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitPrivate.Private>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ImplicitPrivate.Private value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ImplicitPrivate_Private(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ImplicitPrivate.Private RawRead_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitPrivate.Private value)
         {

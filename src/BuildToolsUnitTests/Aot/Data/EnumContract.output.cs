@@ -18,7 +18,7 @@ partial class EnumContractModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.EnumContract.Holder>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Options>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Options?>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Shade>
@@ -29,7 +29,7 @@ partial class EnumContractModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.EnumContract.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
             => RawRead_AotFixtures_EnumContract_Holder(ref state, value);
@@ -64,6 +64,11 @@ partial class EnumContractModel
             if (tmp3 != default(global::AotFixtures.EnumContract.Options)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp3));  // Options
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.EnumContract.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.EnumContract.Holder value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_EnumContract_Holder(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.EnumContract.Holder RawRead_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.EnumContract.Holder value)
         {

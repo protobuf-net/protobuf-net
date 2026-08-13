@@ -18,19 +18,19 @@ partial class ContractOptionsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.BothFamilies>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Grouped>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.Lenient>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.LenientBase>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.ContractOptions.LenientBase>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.LenientDerived>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.ContractOptions.LenientDerived>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.ProtoOnly>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ContractOptions.BothFamilies global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
             => RawRead_AotFixtures_ContractOptions_BothFamilies(ref state, value);
@@ -57,6 +57,11 @@ partial class ContractOptionsModel
             if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.BothFamilies>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ContractOptions.BothFamilies value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ContractOptions_BothFamilies(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ContractOptions.BothFamilies RawRead_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.BothFamilies value)
         {
@@ -143,7 +148,7 @@ partial class ContractOptionsModel
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ContractOptions.Lenient global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
             => RawRead_AotFixtures_ContractOptions_Lenient(ref state, value);
@@ -165,6 +170,11 @@ partial class ContractOptionsModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.Lenient>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ContractOptions.Lenient value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ContractOptions_Lenient(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ContractOptions.Lenient RawRead_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.Lenient value)
         {
@@ -305,7 +315,7 @@ partial class ContractOptionsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ContractOptions.ProtoOnly global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
             => RawRead_AotFixtures_ContractOptions_ProtoOnly(ref state, value);
@@ -328,6 +338,11 @@ partial class ContractOptionsModel
             if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Tagged
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ContractOptions.ProtoOnly value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ContractOptions_ProtoOnly(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ContractOptions.ProtoOnly RawRead_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
         {

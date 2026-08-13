@@ -62,3 +62,4 @@
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.IExtensible instance) -> int (forwarded, contained in protobuf-net.Core)
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(ProtoBuf.ITypedExtensible instance, System.Type type) -> int (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoWriter.State.RawLengths.get -> System.Collections.Generic.Dictionary<object, int> (forwarded, contained in protobuf-net.Core)
+[PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, int> lengths) -> bool (forwarded, contained in protobuf-net.Core)

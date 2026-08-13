@@ -18,11 +18,11 @@ partial class ListLikeModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.NotAList>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ListLike.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
             => RawRead_AotFixtures_ListLike_Holder(ref state, value);
@@ -69,6 +69,11 @@ partial class ListLikeModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListLike.Holder value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ListLike_Holder(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.ListLike.Holder RawRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
         {
             value ??= new global::AotFixtures.ListLike.Holder();
@@ -108,7 +113,7 @@ partial class ListLikeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ListLike.NotAList global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
             => RawRead_AotFixtures_ListLike_NotAList(ref state, value);
@@ -142,6 +147,11 @@ partial class ListLikeModel
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Count2
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.NotAList>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListLike.NotAList value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ListLike_NotAList(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ListLike.NotAList RawRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
         {

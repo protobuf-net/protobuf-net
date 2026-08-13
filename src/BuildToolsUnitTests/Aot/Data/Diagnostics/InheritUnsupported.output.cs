@@ -18,11 +18,11 @@ partial class InheritUnsupportedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.Unlinked>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritUnsupported.AbstractLeaf global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
         {
@@ -64,10 +64,15 @@ partial class InheritUnsupportedModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_InheritUnsupported_AbstractLeaf(value, depth, lengths)
+                : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritUnsupported.Unlinked global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
             => RawRead_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
@@ -90,6 +95,11 @@ partial class InheritUnsupportedModel
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Extra
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritUnsupported.Unlinked value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_InheritUnsupported_Unlinked(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {

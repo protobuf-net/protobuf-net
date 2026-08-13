@@ -18,14 +18,14 @@ partial class KeywordsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Inner>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Keywords>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Pair>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Keywords.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
             => RawRead_AotFixtures_Keywords_Inner(ref state, value);
@@ -48,6 +48,11 @@ partial class KeywordsModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // int
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Inner value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Keywords_Inner(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Keywords.Inner RawRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
         {
@@ -80,7 +85,7 @@ partial class KeywordsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Keywords.Keywords global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
             => RawRead_AotFixtures_Keywords_Keywords(ref state, value);
@@ -182,6 +187,11 @@ partial class KeywordsModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Keywords>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Keywords value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Keywords_Keywords(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.Keywords.Keywords RawRead_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
         {
             value ??= new global::AotFixtures.Keywords.Keywords();
@@ -266,7 +276,7 @@ partial class KeywordsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Keywords.Pair global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Pair value)
         {
@@ -331,6 +341,11 @@ partial class KeywordsModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Pair>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Pair value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Keywords_Pair(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

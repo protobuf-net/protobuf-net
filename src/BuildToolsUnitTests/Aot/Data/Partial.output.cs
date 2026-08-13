@@ -18,10 +18,10 @@ partial class PartialModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Contested>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Described>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Excluded>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Mixed>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -44,7 +44,7 @@ partial class PartialModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Partial.Contested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
             => RawRead_AotFixtures_Partial_Contested(ref state, value);
@@ -71,6 +71,11 @@ partial class PartialModel
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // FromPartial
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Contested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Contested value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Partial_Contested(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
         {
@@ -243,7 +248,7 @@ partial class PartialModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Partial.Excluded global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
             => RawRead_AotFixtures_Partial_Excluded(ref state, value);
@@ -266,6 +271,11 @@ partial class PartialModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Kept
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Excluded>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Excluded value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Partial_Excluded(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
         {
@@ -298,7 +308,7 @@ partial class PartialModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Partial.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
             => RawRead_AotFixtures_Partial_Mixed(ref state, value);
@@ -325,6 +335,11 @@ partial class PartialModel
             if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Both
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Mixed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Partial_Mixed(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
         {

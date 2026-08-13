@@ -18,14 +18,14 @@ partial class DroppedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.HasCallback>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.HasUnsupportedMember>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.ReferencesDropped>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.UnrenderableDefault>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.UsesMemberOptions>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Dropped.HasCallback global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasCallback>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
             => RawRead_AotFixtures_Dropped_HasCallback(ref state, value);
@@ -48,6 +48,11 @@ partial class DroppedModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.HasCallback>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.HasCallback value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Dropped_HasCallback(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Dropped.HasCallback RawRead_AotFixtures_Dropped_HasCallback(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasCallback value)
         {
@@ -82,7 +87,7 @@ partial class DroppedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Dropped.HasUnsupportedMember global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
             => RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref state, value);
@@ -125,6 +130,11 @@ partial class DroppedModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.HasUnsupportedMember>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.HasUnsupportedMember value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Dropped_HasUnsupportedMember(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.Dropped.HasUnsupportedMember RawRead_AotFixtures_Dropped_HasUnsupportedMember(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.HasUnsupportedMember value)
         {
             value ??= new global::AotFixtures.Dropped.HasUnsupportedMember();
@@ -161,7 +171,7 @@ partial class DroppedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Dropped.ReferencesDropped global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.ReferencesDropped>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
             => RawRead_AotFixtures_Dropped_ReferencesDropped(ref state, value);
@@ -204,6 +214,11 @@ partial class DroppedModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.ReferencesDropped>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.ReferencesDropped value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Dropped_ReferencesDropped(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.Dropped.ReferencesDropped RawRead_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.ReferencesDropped value)
         {
             value ??= new global::AotFixtures.Dropped.ReferencesDropped();
@@ -234,7 +249,7 @@ partial class DroppedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Dropped.UnrenderableDefault global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
             => RawRead_AotFixtures_Dropped_UnrenderableDefault(ref state, value);
@@ -257,6 +272,11 @@ partial class DroppedModel
             if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.UnrenderableDefault>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.UnrenderableDefault value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Dropped_UnrenderableDefault(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Dropped.UnrenderableDefault RawRead_AotFixtures_Dropped_UnrenderableDefault(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UnrenderableDefault value)
         {
@@ -289,7 +309,7 @@ partial class DroppedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Dropped.UsesMemberOptions global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
             => RawRead_AotFixtures_Dropped_UsesMemberOptions(ref state, value);
@@ -312,6 +332,11 @@ partial class DroppedModel
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Dropped.UsesMemberOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Dropped.UsesMemberOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Dropped_UsesMemberOptions(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Dropped.UsesMemberOptions RawRead_AotFixtures_Dropped_UsesMemberOptions(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Dropped.UsesMemberOptions value)
         {

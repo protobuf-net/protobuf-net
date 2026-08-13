@@ -18,12 +18,12 @@ partial class SkipCtorModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Bypassed>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SkipCtor.Bypassed>
         , global::ProtoBuf.Serializers.IFactory<global::AotFixtures.SkipCtor.Bypassed>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SkipCtor.Constructed>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Bypassed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.SkipCtor.Bypassed global::ProtoBuf.Serializers.IFactory<global::AotFixtures.SkipCtor.Bypassed>.Create(global::ProtoBuf.ISerializationContext context)
             => (global::AotFixtures.SkipCtor.Bypassed)global::ProtoBuf.BclHelpers.GetUninitializedObject(typeof(global::AotFixtures.SkipCtor.Bypassed));
@@ -85,10 +85,15 @@ partial class SkipCtorModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SkipCtor.Bypassed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SkipCtor.Bypassed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_SkipCtor_Bypassed(value, depth, lengths)
+                : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.SkipCtor.Constructed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
             => RawRead_AotFixtures_SkipCtor_Constructed(ref state, value);
@@ -111,6 +116,11 @@ partial class SkipCtorModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SkipCtor.Constructed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SkipCtor.Constructed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_SkipCtor_Constructed(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.SkipCtor.Constructed RawRead_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SkipCtor.Constructed value)
         {

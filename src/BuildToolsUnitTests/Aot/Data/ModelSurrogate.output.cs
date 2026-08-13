@@ -18,18 +18,18 @@ partial class ModelSurrogateModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>
         , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
             => RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value);
@@ -64,6 +64,11 @@ partial class ModelSurrogateModel
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OffsetMinutes
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
         {
@@ -222,7 +227,7 @@ partial class ModelSurrogateModel
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ModelSurrogate.TicksSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
             => RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value);
@@ -249,6 +254,11 @@ partial class ModelSurrogateModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ModelSurrogate_TicksSurrogate(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ModelSurrogate.TicksSurrogate RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
         {
@@ -281,7 +291,7 @@ partial class ModelSurrogateModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ModelSurrogate.VersionSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
             => RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value);
@@ -311,6 +321,11 @@ partial class ModelSurrogateModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_ModelSurrogate_VersionSurrogate(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.ModelSurrogate.VersionSurrogate RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
         {

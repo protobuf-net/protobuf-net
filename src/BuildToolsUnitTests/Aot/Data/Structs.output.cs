@@ -19,7 +19,7 @@ partial class StructsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -101,7 +101,7 @@ partial class StructsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Structs.Point global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.Point value)
         {
@@ -157,6 +157,11 @@ partial class StructsModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Structs.Point value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Structs_Point(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

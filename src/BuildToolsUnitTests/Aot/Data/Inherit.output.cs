@@ -27,7 +27,7 @@ partial class InheritModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Puppy>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Standalone>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -314,7 +314,7 @@ partial class InheritModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Inherit.Standalone global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)
             => RawRead_AotFixtures_Inherit_Standalone(ref state, value);
@@ -336,6 +336,11 @@ partial class InheritModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Standalone>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Inherit.Standalone value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Inherit_Standalone(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Inherit.Standalone RawRead_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Standalone value)
         {

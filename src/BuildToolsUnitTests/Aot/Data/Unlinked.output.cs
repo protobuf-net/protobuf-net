@@ -18,19 +18,19 @@ partial class UnlinkedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Derived>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.ForkedBase>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.ForkedBase>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.FromPlain>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Reuses>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Sibling>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.Sibling>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Unlinked>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Unlinked.Derived global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
             => RawRead_AotFixtures_Unlinked_Derived(ref state, value);
@@ -53,6 +53,11 @@ partial class UnlinkedModel
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // FromDerived
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Derived>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Derived value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Unlinked_Derived(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Unlinked.Derived RawRead_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Derived value)
         {
@@ -148,7 +153,7 @@ partial class UnlinkedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Unlinked.FromPlain global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
             => RawRead_AotFixtures_Unlinked_FromPlain(ref state, value);
@@ -179,6 +184,11 @@ partial class UnlinkedModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.FromPlain>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.FromPlain value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Unlinked_FromPlain(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.Unlinked.FromPlain RawRead_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.FromPlain value)
         {
             value ??= new global::AotFixtures.Unlinked.FromPlain();
@@ -207,7 +217,7 @@ partial class UnlinkedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Unlinked.Reuses global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
             => RawRead_AotFixtures_Unlinked_Reuses(ref state, value);
@@ -230,6 +240,11 @@ partial class UnlinkedModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Mine
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Reuses>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Reuses value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Unlinked_Reuses(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Unlinked.Reuses RawRead_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Reuses value)
         {
@@ -310,7 +325,7 @@ partial class UnlinkedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Unlinked.Unlinked global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)
             => RawRead_AotFixtures_Unlinked_Unlinked(ref state, value);
@@ -333,6 +348,11 @@ partial class UnlinkedModel
             if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // NotLinked
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Unlinked>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Unlinked value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Unlinked_Unlinked(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Unlinked.Unlinked RawRead_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Unlinked value)
         {

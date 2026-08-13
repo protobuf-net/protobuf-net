@@ -19,7 +19,7 @@ partial class AssemblySurrogateModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
@@ -72,7 +72,7 @@ partial class AssemblySurrogateModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.AssemblySurrogate.VersionSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
             => RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
@@ -102,6 +102,11 @@ partial class AssemblySurrogateModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.AssemblySurrogate.VersionSurrogate RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
         {

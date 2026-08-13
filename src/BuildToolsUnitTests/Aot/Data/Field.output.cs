@@ -18,13 +18,13 @@ partial class FieldModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.DataFields>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.FieldStruct>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.Nested>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Field.DataFields global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
             => RawRead_AotFixtures_Field_DataFields(ref state, value);
@@ -58,6 +58,11 @@ partial class FieldModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.DataFields>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Field.DataFields value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Field_DataFields(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Field.DataFields RawRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
         {
@@ -96,7 +101,7 @@ partial class FieldModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Field.FieldStruct global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.FieldStruct value)
         {
@@ -135,6 +140,11 @@ partial class FieldModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.FieldStruct>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Field.FieldStruct value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Field_FieldStruct(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -268,7 +278,7 @@ partial class FieldModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Field.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)
             => RawRead_AotFixtures_Field_Nested(ref state, value);
@@ -291,6 +301,11 @@ partial class FieldModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Field.Nested value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Field_Nested(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Field.Nested RawRead_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)
         {

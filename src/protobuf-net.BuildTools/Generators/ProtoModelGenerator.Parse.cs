@@ -214,6 +214,7 @@ namespace ProtoBuf.BuildTools.Generators
                         && rawWriteType.GetMembers("MeasureRawString").Length != 0 // the measure wave
                         && rawWriteType.GetMembers("MeasureRawExtensionData").Length != 0 // the extensible-measure wave
                         && rawWriteType.GetMembers("RawLengths").Length != 0 // the length-cache wave
+                        && rawWriteType.GetMembers("TryMeasureRaw").Length != 0 // the IMeasuringSerializer wave
                         && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly),
                     // net5+ framework capability, probed per compilation like UnsafeAccessor: the
                     // raw repeated write enumerates a List<T> as a span where it can

@@ -18,7 +18,7 @@ partial class GenericHierarchyModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Crate>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Crate>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.CrateHolder>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>
@@ -29,14 +29,14 @@ partial class GenericHierarchyModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.PlainNode>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.PlainNode>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Ship>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Ship>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Crate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.Crate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Crate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)
             => RawRead_AotFixtures_GenericHierarchy_Crate(ref state, value);
@@ -66,6 +66,11 @@ partial class GenericHierarchyModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Crate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Crate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_GenericHierarchy_Crate(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.GenericHierarchy.Crate RawRead_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Crate value)
         {
@@ -375,7 +380,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Ship>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.Ship global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Ship>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Ship value)
             => RawRead_AotFixtures_GenericHierarchy_Ship(ref state, value);
@@ -398,6 +403,11 @@ partial class GenericHierarchyModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Foo
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Ship>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Ship value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_GenericHierarchy_Ship(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.GenericHierarchy.Ship RawRead_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Ship value)
         {

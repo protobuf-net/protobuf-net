@@ -18,15 +18,15 @@ partial class NonPublicCtorModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.NonPublicCtor.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
             => RawRead_AotFixtures_NonPublicCtor_Holder(ref state, value);
@@ -69,6 +69,11 @@ partial class NonPublicCtorModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.Holder value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_NonPublicCtor_Holder(value, depth, lengths)
+                : -1;
+
         private static global::AotFixtures.NonPublicCtor.Holder RawRead_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.Holder value)
         {
             value ??= new global::AotFixtures.NonPublicCtor.Holder();
@@ -104,7 +109,7 @@ partial class NonPublicCtorModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.NonPublicCtor.InternalCtor global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.InternalCtor value)
         {
@@ -146,10 +151,15 @@ partial class NonPublicCtorModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.InternalCtor value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_NonPublicCtor_InternalCtor(value, depth, lengths)
+                : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.NonPublicCtor.PrivateCtor global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.PrivateCtor value)
         {
@@ -208,10 +218,15 @@ partial class NonPublicCtorModel
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.PrivateCtor value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_NonPublicCtor_PrivateCtor(value, depth, lengths)
+                : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.NonPublicCtor.ProtectedCtor global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.NonPublicCtor.ProtectedCtor value)
         {
@@ -252,6 +267,11 @@ partial class NonPublicCtorModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.NonPublicCtor.ProtectedCtor value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_NonPublicCtor_ProtectedCtor(value, depth, lengths)
+                : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 

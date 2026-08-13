@@ -160,6 +160,28 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## Cut 6 landed: IMeasuringSerializer, the classic engine's measure hook (2026-08-13)
+
+Marc's spot: `IMeasuringSerializer<T>` + `OptionTrySkipWritingWhenMeasuring` is SHIPPED
+API whose single consumer is `ProtoWriter.Measure<T>` - the hook the classic buffer-writer
+engine already calls for every length prefix (its WriteMessage has been measure-first all
+along; it just measured by null-writer traversal). Measurable contracts now declare the
+interface, carry the flag in Features, and answer with Measure_ - recovering the depth
+budget and the ??= cache from the ISerializationContext via `TryMeasureRaw` (a non-writer
+context answers -1, "measure by writing", exactly as before). InheritFrom copies only
+masked category/wire-type bits, so the flag cannot leak into member features.
+
+This is the mixed-contract bridge from the other direction: the arithmetic now reaches
+every STATEFUL write of a measurable contract - measurable members inside unmeasurable
+parents, elements of non-native collections (immutable families, sets, queues), and map
+entries with message values - without any of those shapes being native. Free correctness
+gate: WriteWithLengthPrefix throws on calculated-vs-actual mismatch, so the differential's
+100% doubles as proof the arithmetic agrees with the engine everywhere it is now consulted.
+The interface's OTHER consumer is the packed repeated write, which will matter when packed
+lands. The counting-mode idea (legacy bodies against the Null writer) remains for the
+members INSIDE an unmeasurable contract; this cut covers such a contract's measurable
+children.
+
 ## Native validation (2026-08-12, cuts 1-5)
 
 A clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first - a second run

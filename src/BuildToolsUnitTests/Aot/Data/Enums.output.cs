@@ -18,12 +18,12 @@ partial class EnumsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Enums.WithEnums>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Enums.WithEnums global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
             => RawRead_AotFixtures_Enums_WithEnums(ref state, value);
@@ -163,6 +163,11 @@ partial class EnumsModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Enums.WithEnums>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Enums.WithEnums value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Enums_WithEnums(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Enums.WithEnums RawRead_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Enums.WithEnums value)
         {

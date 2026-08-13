@@ -19,7 +19,7 @@ partial class FormatsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Inner>
     {
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
         {
@@ -253,7 +253,7 @@ partial class FormatsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Formats.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
             => RawRead_AotFixtures_Formats_Inner(ref state, value);
@@ -276,6 +276,11 @@ partial class FormatsModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Formats.Inner value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Formats_Inner(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Formats.Inner RawRead_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
         {

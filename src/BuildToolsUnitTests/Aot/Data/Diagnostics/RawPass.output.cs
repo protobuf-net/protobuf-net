@@ -18,16 +18,16 @@ partial class RawPassModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Bag>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Child>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Order>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.RawPass.Bag global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Bag value)
             => RawRead_AotFixtures_RawPass_Bag(ref state, value);
@@ -52,6 +52,11 @@ partial class RawPassModel
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Bag>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Bag value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_RawPass_Bag(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.RawPass.Bag RawRead_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Bag value)
         {
@@ -126,7 +131,7 @@ partial class RawPassModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.RawPass.Child global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Child value)
             => RawRead_AotFixtures_RawPass_Child(ref state, value);
@@ -149,6 +154,11 @@ partial class RawPassModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Child>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Child value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_RawPass_Child(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.RawPass.Child RawRead_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Child value)
         {
@@ -231,7 +241,7 @@ partial class RawPassModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.RawPass.Order global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Order value)
             => RawRead_AotFixtures_RawPass_Order(ref state, value);
@@ -407,6 +417,11 @@ partial class RawPassModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Order>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Order value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_RawPass_Order(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.RawPass.Order RawRead_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Order value)
         {

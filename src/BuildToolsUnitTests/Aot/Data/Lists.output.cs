@@ -18,8 +18,8 @@ partial class ListsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Inner>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Repeated>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Colour?>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Lists.Small>
@@ -46,7 +46,7 @@ partial class ListsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Lists.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
             => RawRead_AotFixtures_Lists_Inner(ref state, value);
@@ -80,6 +80,11 @@ partial class ListsModel
             }
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Lists.Inner value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Lists_Inner(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
         {
@@ -118,7 +123,7 @@ partial class ListsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Lists.Repeated global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
             => RawRead_AotFixtures_Lists_Repeated(ref state, value);
@@ -355,6 +360,11 @@ partial class ListsModel
             if (tmp14 != default(global::AotFixtures.Lists.Colour)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp14));  // SingleColour
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Repeated>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Lists.Repeated value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Lists_Repeated(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
         {

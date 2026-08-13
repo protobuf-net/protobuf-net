@@ -20,7 +20,7 @@ partial class ParseableModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Endpoint>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Parseable.NotParseable>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -170,7 +170,7 @@ partial class ParseableModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Parseable.NotParseable global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.NotParseable value)
             => RawRead_AotFixtures_Parseable_NotParseable(ref state, value);
@@ -193,6 +193,11 @@ partial class ParseableModel
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Parseable.NotParseable>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Parseable.NotParseable value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Parseable_NotParseable(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Parseable.NotParseable RawRead_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Parseable.NotParseable value)
         {

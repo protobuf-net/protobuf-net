@@ -18,10 +18,10 @@ partial class NullablesModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nullables.Optional>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nullables.Optional>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nullables.Optional>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Nullables.Optional global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nullables.Optional>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)
             => RawRead_AotFixtures_Nullables_Optional(ref state, value);
@@ -128,6 +128,11 @@ partial class NullablesModel
             if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nullables.Optional>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nullables.Optional value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_Nullables_Optional(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.Nullables.Optional RawRead_AotFixtures_Nullables_Optional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nullables.Optional value)
         {

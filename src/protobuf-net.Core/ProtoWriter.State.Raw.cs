@@ -211,6 +211,33 @@ namespace ProtoBuf
                 }
             }
 
+            /// <summary>
+            /// Recovers the raw measure inputs - the depth budget and the length cache - from a
+            /// serialization context, where that context is a writer. The generated
+            /// <c>IMeasuringSerializer</c> implementations call this so the classic engine's
+            /// measure hook (<c>ProtoWriter.Measure</c>) lands on Measure_ arithmetic instead of
+            /// a null-writer traversal - which is how a MIXED shape (a map entry, a non-native
+            /// collection element, a measurable member of an unmeasurable parent) benefits from
+            /// the measure pass without being native itself. A message body's length does not
+            /// depend on its framing, so no wire-type test is needed; a non-writer context
+            /// returns false, the caller reports a non-positive length, and the engine measures
+            /// by writing, exactly as before.
+            /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static bool TryMeasureRaw(ISerializationContext context, out int depthBudget,
+                out System.Collections.Generic.Dictionary<object, int> lengths)
+            {
+                if (context is ProtoWriter writer)
+                {
+                    depthBudget = (writer.Model is null ? Meta.TypeModel.DefaultMaxDepth : writer.Model.MaxDepth) - writer.Depth;
+                    lengths = writer.RawLengths;
+                    return true;
+                }
+                depthBudget = 0;
+                lengths = null;
+                return false;
+            }
+
             /// <summary>Throws for an exhausted measure budget - a cyclic or pathologically deep
             /// object graph - mirroring the stateful writer's depth failure.</summary>
             [MethodImpl(MethodImplOptions.NoInlining)]

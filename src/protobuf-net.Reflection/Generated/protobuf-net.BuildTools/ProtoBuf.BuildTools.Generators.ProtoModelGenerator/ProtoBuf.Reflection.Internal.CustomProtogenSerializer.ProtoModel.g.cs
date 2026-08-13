@@ -17,39 +17,39 @@ partial class CustomProtogenSerializer
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldOptions>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldOptions>
         , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>
         , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MessageOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FileOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MessageOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MethodOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.OneofOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ServiceOptions>
         , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>
         , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption>
-        , global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>
-        , global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>
     {
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
         {
@@ -70,7 +70,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.DescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_DescriptorProto(ref state, value);
@@ -368,6 +368,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.DescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_DescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.DescriptorProto RawRead_Google_Protobuf_Reflection_DescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.DescriptorProto();
@@ -492,7 +497,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
             => RawRead_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref state, value);
@@ -557,6 +562,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
         {
             value ??= new global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange();
@@ -605,7 +615,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
             => RawRead_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref state, value);
@@ -647,6 +657,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
         {
             value ??= new global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange();
@@ -687,7 +702,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.EnumDescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_EnumDescriptorProto(ref state, value);
@@ -830,6 +845,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_EnumDescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.EnumDescriptorProto RawRead_Google_Protobuf_Reflection_EnumDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumDescriptorProto();
@@ -894,7 +914,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
             => RawRead_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref state, value);
@@ -936,6 +956,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange RawRead_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange();
@@ -976,7 +1001,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.EnumOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumOptions value)
             => RawRead_Google_Protobuf_Reflection_EnumOptions(ref state, value);
@@ -1051,6 +1076,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_EnumOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.EnumOptions RawRead_Google_Protobuf_Reflection_EnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumOptions();
@@ -1103,7 +1133,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.EnumValueDescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref state, value);
@@ -1175,6 +1205,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.EnumValueDescriptorProto RawRead_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumValueDescriptorProto();
@@ -1220,7 +1255,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.EnumValueOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
             => RawRead_Google_Protobuf_Reflection_EnumValueOptions(ref state, value);
@@ -1284,6 +1319,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumValueOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_EnumValueOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.EnumValueOptions RawRead_Google_Protobuf_Reflection_EnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.EnumValueOptions();
@@ -1327,7 +1367,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.ExtensionRangeOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
             => RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, value);
@@ -1380,6 +1420,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.ExtensionRangeOptions RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.ExtensionRangeOptions();
@@ -1414,7 +1459,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.FieldDescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, value);
@@ -1595,6 +1640,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_FieldDescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.FieldDescriptorProto RawRead_Google_Protobuf_Reflection_FieldDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.FieldDescriptorProto();
@@ -1700,7 +1750,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.FieldOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions value)
             => RawRead_Google_Protobuf_Reflection_FieldOptions(ref state, value);
@@ -1816,6 +1866,11 @@ partial class CustomProtogenSerializer
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FieldOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_FieldOptions(value, depth, lengths)
+                : -1;
 
         private static global::Google.Protobuf.Reflection.FieldOptions RawRead_Google_Protobuf_Reflection_FieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions value)
         {
@@ -2258,7 +2313,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.FileOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileOptions value)
             => RawRead_Google_Protobuf_Reflection_FileOptions(ref state, value);
@@ -2590,6 +2645,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FileOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FileOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_FileOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.FileOptions RawRead_Google_Protobuf_Reflection_FileOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.FileOptions();
@@ -2774,7 +2834,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MessageOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.MessageOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MessageOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MessageOptions value)
             => RawRead_Google_Protobuf_Reflection_MessageOptions(ref state, value);
@@ -2871,6 +2931,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MessageOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.MessageOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_MessageOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.MessageOptions RawRead_Google_Protobuf_Reflection_MessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MessageOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.MessageOptions();
@@ -2941,7 +3006,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.MethodDescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_MethodDescriptorProto(ref state, value);
@@ -3059,6 +3124,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_MethodDescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.MethodDescriptorProto RawRead_Google_Protobuf_Reflection_MethodDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.MethodDescriptorProto();
@@ -3125,7 +3195,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.MethodOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodOptions value)
             => RawRead_Google_Protobuf_Reflection_MethodOptions(ref state, value);
@@ -3199,6 +3269,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MethodOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.MethodOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_MethodOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.MethodOptions RawRead_Google_Protobuf_Reflection_MethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.MethodOptions();
@@ -3251,7 +3326,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.OneofDescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_OneofDescriptorProto(ref state, value);
@@ -3313,6 +3388,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_OneofDescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.OneofDescriptorProto RawRead_Google_Protobuf_Reflection_OneofDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.OneofDescriptorProto();
@@ -3349,7 +3429,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.OneofOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofOptions value)
             => RawRead_Google_Protobuf_Reflection_OneofOptions(ref state, value);
@@ -3402,6 +3482,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.OneofOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.OneofOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_OneofOptions(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.OneofOptions RawRead_Google_Protobuf_Reflection_OneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofOptions value)
         {
             value ??= new global::Google.Protobuf.Reflection.OneofOptions();
@@ -3436,7 +3521,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.ServiceDescriptorProto global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
             => RawRead_Google_Protobuf_Reflection_ServiceDescriptorProto(ref state, value);
@@ -3529,6 +3614,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.ServiceDescriptorProto RawRead_Google_Protobuf_Reflection_ServiceDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
         {
             value ??= new global::Google.Protobuf.Reflection.ServiceDescriptorProto();
@@ -3577,7 +3667,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.ServiceOptions global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
             => RawRead_Google_Protobuf_Reflection_ServiceOptions(ref state, value);
@@ -3640,6 +3730,11 @@ partial class CustomProtogenSerializer
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ServiceOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ServiceOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_ServiceOptions(value, depth, lengths)
+                : -1;
 
         private static global::Google.Protobuf.Reflection.ServiceOptions RawRead_Google_Protobuf_Reflection_ServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
         {
@@ -3867,7 +3962,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.UninterpretedOption global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
             => RawRead_Google_Protobuf_Reflection_UninterpretedOption(ref state, value);
@@ -4004,6 +4099,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.UninterpretedOption value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_UninterpretedOption(value, depth, lengths)
+                : -1;
+
         private static global::Google.Protobuf.Reflection.UninterpretedOption RawRead_Google_Protobuf_Reflection_UninterpretedOption(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
         {
             value ??= new global::Google.Protobuf.Reflection.UninterpretedOption();
@@ -4074,7 +4174,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::Google.Protobuf.Reflection.UninterpretedOption.NamePart global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>.Read(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
             => RawRead_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref state, value);
@@ -4111,6 +4211,11 @@ partial class CustomProtogenSerializer
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(value, depth, lengths)
+                : -1;
 
         private static global::Google.Protobuf.Reflection.UninterpretedOption.NamePart RawRead_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
         {
@@ -4149,7 +4254,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenEnumOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenEnumOptions(ref state, value);
@@ -4197,6 +4302,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenEnumOptions(value, depth, lengths)
+                : -1;
+
         private static global::ProtoBuf.Reflection.ProtogenEnumOptions RawRead_ProtoBuf_Reflection_ProtogenEnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenEnumOptions();
@@ -4240,7 +4350,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenEnumValueOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenEnumValueOptions(ref state, value);
@@ -4273,6 +4383,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenEnumValueOptions(value, depth, lengths)
+                : -1;
+
         private static global::ProtoBuf.Reflection.ProtogenEnumValueOptions RawRead_ProtoBuf_Reflection_ProtogenEnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenEnumValueOptions();
@@ -4301,7 +4416,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenFieldOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenFieldOptions(ref state, value);
@@ -4353,6 +4468,11 @@ partial class CustomProtogenSerializer
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenFieldOptions(value, depth, lengths)
+                : -1;
 
         private static global::ProtoBuf.Reflection.ProtogenFieldOptions RawRead_ProtoBuf_Reflection_ProtogenFieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
         {
@@ -4409,7 +4529,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenFileOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFileOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenFileOptions(ref state, value);
@@ -4495,6 +4615,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenFileOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenFileOptions(value, depth, lengths)
+                : -1;
+
         private static global::ProtoBuf.Reflection.ProtogenFileOptions RawRead_ProtoBuf_Reflection_ProtogenFileOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFileOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenFileOptions();
@@ -4568,7 +4693,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenMessageOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenMessageOptions(ref state, value);
@@ -4631,6 +4756,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenMessageOptions(value, depth, lengths)
+                : -1;
+
         private static global::ProtoBuf.Reflection.ProtogenMessageOptions RawRead_ProtoBuf_Reflection_ProtogenMessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenMessageOptions();
@@ -4689,7 +4819,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenMethodOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenMethodOptions(ref state, value);
@@ -4722,6 +4852,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenMethodOptions(value, depth, lengths)
+                : -1;
+
         private static global::ProtoBuf.Reflection.ProtogenMethodOptions RawRead_ProtoBuf_Reflection_ProtogenMethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenMethodOptions();
@@ -4750,7 +4885,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenOneofOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenOneofOptions(ref state, value);
@@ -4791,6 +4926,11 @@ partial class CustomProtogenSerializer
             return len;
         }
 
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenOneofOptions(value, depth, lengths)
+                : -1;
+
         private static global::ProtoBuf.Reflection.ProtogenOneofOptions RawRead_ProtoBuf_Reflection_ProtogenOneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
         {
             value ??= new global::ProtoBuf.Reflection.ProtogenOneofOptions();
@@ -4828,7 +4968,7 @@ partial class CustomProtogenSerializer
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::ProtoBuf.Reflection.ProtogenServiceOptions global::ProtoBuf.Serializers.ISerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>.Read(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
             => RawRead_ProtoBuf_Reflection_ProtogenServiceOptions(ref state, value);
@@ -4864,6 +5004,11 @@ partial class CustomProtogenSerializer
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_ProtoBuf_Reflection_ProtogenServiceOptions(value, depth, lengths)
+                : -1;
 
         private static global::ProtoBuf.Reflection.ProtogenServiceOptions RawRead_ProtoBuf_Reflection_ProtogenServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
         {

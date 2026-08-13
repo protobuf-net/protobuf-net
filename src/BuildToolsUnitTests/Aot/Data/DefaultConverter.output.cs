@@ -18,10 +18,10 @@ partial class DefaultConverterModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.DefaultConverter.Converted>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.DefaultConverter.Converted global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
             => RawRead_AotFixtures_DefaultConverter_Converted(ref state, value);
@@ -83,6 +83,11 @@ partial class DefaultConverterModel
             if (tmp7 != 9) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
             return len;
         }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.DefaultConverter.Converted>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.DefaultConverter.Converted value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                ? Measure_AotFixtures_DefaultConverter_Converted(value, depth, lengths)
+                : -1;
 
         private static global::AotFixtures.DefaultConverter.Converted RawRead_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DefaultConverter.Converted value)
         {
