@@ -89,6 +89,25 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Takes a span over a buffer that already holds <paramref name="offset"/> pending
+            /// bytes - the stream backend's shape, where the buffer belongs to the writer (it
+            /// has to, since back-filling a length prefix reaches into bytes already written)
+            /// and only the POSITION within it moves here.
+            /// </summary>
+            /// <remarks>
+            /// Unlike the lease form above, this sets the offset rather than assuming a fresh
+            /// chunk: it is used both to adopt the buffer at the start of a write and to re-take
+            /// it after a resize has replaced the array underneath.
+            /// </remarks>
+            internal void Init(byte[] buffer, int offset)
+            {
+                _memory = buffer;
+                _span = _memory.Span;
+                OffsetInCurrent = offset;
+                RemainingInCurrent = buffer.Length - offset;
+            }
+
+            /// <summary>
             /// Writes any uncommitted data to the output
             /// </summary>
             public void Flush()
