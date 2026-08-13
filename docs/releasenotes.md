@@ -14,6 +14,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+- add `[ProtoDataFormat(type, format)]`: a per-type DataFormat default (assembly/module/type
+  scoped, explicit member format wins), honoured by both the runtime model and the AOT
+  generator — e.g. fixed 16-byte Guids at CompatibilityLevel 300 without editing members (#xxxx)
 - **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
   the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
   `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected

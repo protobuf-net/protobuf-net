@@ -705,6 +705,20 @@ attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They
 with the rest of that group — see item 4 of `docs/aot-findings.md`, and treat per-feature warning
 attributions with suspicion generally.
 
+`[ProtoDataFormat(type, format)]` rides the same machinery as the level: it resolves **type → module
+→ assembly**, exactly like `CompatibilityLevel`, and an explicit member format always wins over the
+default. `Default` is the zero sentinel, so "explicit `Default`" cannot be distinguished from
+"unstated" and cannot be used to opt a member back out of a default in force above it. It keys on the
+**Nullable-unwrapped scalar or element type** — a `Guid?` member picks up a `Guid` default exactly as
+a bare `Guid` does — and deliberately never reaches **maps** or **null-wrapped** members, both of
+which have their own per-side format story already. Both the runtime (`TypeDataFormatHelper` plus the
+`MetaType.ApplyDefaultBehaviour` hook) and the generator (`GetDataFormatDefault`, alongside
+`GetCompatibilityLevel`) honour it, so the differential suite covers it with no replay needed. Note
+the fixture-assembly trap applies to it exactly as to `[module: CompatibilityLevel]`: an assembly- or
+module-scoped declaration would re-level every fixture linked into the same compilation, so an
+assembly/module-scoped golden fixture belongs under `Data/Diagnostics/` for the same reason —
+`AotRefGen`/`AotConformanceTests` link every fixture into one.
+
 ### Extensible contracts
 
 An extensible contract keeps the fields it does not recognise: the read's `default:` case becomes
