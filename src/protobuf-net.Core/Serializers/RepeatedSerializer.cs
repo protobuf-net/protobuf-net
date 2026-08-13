@@ -85,8 +85,15 @@ namespace ProtoBuf.Serializers
 #if NET6_0_OR_GREATER
         /// <summary>Create a serializer that operates on sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<T>()
+        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnlySet<T>()
             => SerializerCache<ReadOnlySetSerializer<T>>.InstanceField;
+
+        /// <summary>Create a serializer that operates on sets</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        [Obsolete("This was a typo, kept for compatibility with previously-generated code; use " + nameof(CreateReadOnlySet) + " instead.")]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<T>()
+            => CreateReadOnlySet<T>();
 #endif
 
         /// <summary>Reverses a range of values</summary>

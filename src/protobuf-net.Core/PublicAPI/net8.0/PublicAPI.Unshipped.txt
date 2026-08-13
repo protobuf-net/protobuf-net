@@ -1,0 +1,1 @@
+static ProtoBuf.Serializers.RepeatedSerializer.CreateReadOnlySet<T>() -> ProtoBuf.Serializers.RepeatedSerializer<System.Collections.Generic.IReadOnlySet<T>, T>

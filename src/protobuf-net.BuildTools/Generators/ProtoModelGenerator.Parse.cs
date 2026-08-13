@@ -2647,10 +2647,20 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates, allowParseableTypes);
 
-                // IReadOnlySet<T> support is conditional on the runtime the library was built for
-                if (repeated.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
+                // IReadOnlySet<T> support is conditional on the runtime the library was built
+                // for - and the correctly-spelled factory is 4.x-and-up (the shipped 3.x name
+                // is the typo'd CreateReadOnySet, kept as an [Obsolete] forwarder), so an older
+                // Core falls back to the old spelling rather than dropping the member, and only
+                // a Core with NEITHER (built below net6) drops it
+                var repeatedPlan = repeated.AsRepeatedPlan();
+                if (repeatedPlan.Factory == "CreateReadOnlySet" && !HasFactory(compilation, "CreateReadOnlySet"))
+                {
+                    if (!HasFactory(compilation, "CreateReadOnySet")) return null;
+                    repeatedPlan = new ProtoRepeatedPlan("CreateReadOnySet",
+                        repeatedPlan.TakesCollectionType, repeatedPlan.IsValueType);
+                }
 
-                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type, surrogates, allowParseableTypes);
+                return AsRepeated(compilation, repeated.Element, repeatedPlan, type, surrogates, allowParseableTypes);
             }
             return null;
         }
@@ -2735,7 +2745,7 @@ namespace ProtoBuf.BuildTools.Generators
             new("System.Collections.Generic.Stack`1", "CreateStack", false, true),
             new("System.Collections.Generic.HashSet`1", "CreateSet", true, true),
             new("System.Collections.Generic.ISet`1", "CreateSet", true, true),
-            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnySet", true, false),
+            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnlySet", true, false),
 
             // the fallback, which is why nearly anything enumerable is a collection
             new("System.Collections.Generic.IEnumerable`1", "CreateEnumerable", false, true),
