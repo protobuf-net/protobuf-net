@@ -160,6 +160,102 @@ but enters as the favorite, being the only entrant that also answers mixed contr
   the write reuses nothing (no double GetByteCount - the lengthCache question applies to
   string elements too, worth including in the memoization race).
 
+## The presized buffer core: the plan (2026-08-13, agreed shape with Marc)
+
+Two levels. Level 1 is the op-level mirror of the read arc's step 2; level 2 is the
+presized lease ("measure; if reasonable, lease the whole payload; if unreasonable, cap
+and chunk" - Marc's formulation, and correct). Level 2 is a small policy layered on
+level 1, so level 1 goes first.
+
+### What exists today (audited, not assumed)
+
+- **Writer State ALREADY holds the current chunk**: `_span`/`_memory`,
+  `OffsetInCurrent`, `RemainingInCurrent`, and the `LocalWrite*` family. Both real
+  backends serve `Impl*` by ensuring room (`GetBuffer`) and then writing locally. So
+  "hoist a span into State" is DONE and shared; what is wrong is the per-op protocol
+  around it.
+- **Per op today**: one virtual `Impl*` call + room check + local write + a writer-object
+  `AdvanceAndReset(n)` (`_position64 += n; WireType = None`). That is double bookkeeping -
+  the span offset AND the writer position advance for every op - plus a virtual hop. The
+  cut-1 raw veneers ride this protocol deliberately (surface-first).
+- **Position has one source, `_position64`, maintained per-op** - and every reader is
+  internal (`state.GetPosition()`, the dispose incomplete-state check, the
+  length-mismatch checks, the measure machinery's `ResetWriteState`/`SetWriteState`
+  snapshot). There is NO public writer position anywhere in Core or protobuf-net, so the
+  invariant is ours to change without an [Obsolete] dance; if the audit turns up a
+  compat member after all, the fallback is Marc's treatment - mark it approximate and
+  point at the accurate accessor.
+
+### The design
+
+1. **One position invariant, changed globally per backend** (not two regimes with commit
+   barriers - that is a divergence-bug factory). For the span-backed backends
+   (buffer-writer, stream): `_position64` counts COMMITTED bytes only, advanced at chunk
+   commit (`ConsiderWritten`/flush), never per-op. True position is DERIVED:
+   `_position64 + state.OffsetInCurrent`, surfaced as `writer.GetPosition64(in state)`
+   (Marc's shape) / `state.Position64`. The Null writer has no span (`OffsetInCurrent`
+   is always 0) and keeps its per-op advance - the SAME formula answers correctly for
+   it, so the accessor is uniform and branchless.
+2. **Raw ops go span-direct**: when `state.IsActive` with room, a raw op is a direct
+   local write - no virtual call, and NO writer-object touch at all:
+   - `WireType`: raw ops stop writing it entirely. It was `None` on entry to a raw body
+     (every stateful op resets after itself) and stays `None` because nothing touches it;
+     legacy-mode statements inside a raw body do their own handshake and end at `None`.
+     Cut 1 only reset it per-op because the veneers shared `AdvanceAndReset`.
+   - `_needFlush`: set once at lease time, not per tag.
+   - slow path (no room / no span, i.e. the Null writer or an exhausted chunk): the
+     current virtual veneer body, out-of-line.
+3. **The flush-to-writer surface, enumerated** - what a legacy/stateful statement inside
+   a raw body needs to be correct, under the new invariant:
+   - the DATA needs nothing: the legacy `Impl*` path writes through the SAME state-local
+     span, so there is no buffer hand-off at all;
+   - the POSITION needs nothing: derivation makes it always-accurate on both sides;
+   - `WireType`/`fieldNumber`/`packedFieldNumber`: owned by the stateful ops themselves,
+     untouched by raw ops - nothing to reconcile;
+   - `_depth`: writer-side only, raw sub-message writes never touch it (the measure walk
+     guards the recursion instead) - nothing to reconcile.
+   So under invariant (1) there are NO per-statement commit points; the residual audit
+   is the sites that mutate or read `_position64` directly:
+   `Advance`/`AdvanceAndReset` callers per backend (each either moves to chunk-commit or
+   is Null-writer-only), `ResetWriteState`/`SetWriteState` (the measure snapshot zeroes
+   position for a null-run: fresh State, offset 0 - verify, this is the sharpest edge),
+   `ImplCopyRawFromStream` and `State.ReadFrom` (stream copies: confirm they route via
+   the span or commit explicitly), `ConsiderWritten`, `TryFlush`, the dispose check, and
+   the two throw-message readers.
+4. **Presized lease (level 2)**: at lease time, size the demand from what measure-first
+   already knows. A measurable root primes it - the generator emits a capacity hint at
+   the top of the write (total = root `Measure_`, already needed for nothing extra since
+   the lengthCache holds the subtree lengths) - `clamp(total, backendDefault, cap)`.
+   `IBufferWriter.GetSpan(sizeHint)` MUST honour the hint, which is why the cap exists:
+   an unreasonable payload caps and chunks through level 1's boundary. Stream backend:
+   one pooled `byte[]` of the clamped size instead of the default block. **Open policy
+   question for Marc: the cap.** Candidates: `TypeModel.BufferSize` (exists, default
+   `BufferPool.BUFFER_LENGTH`), a fixed constant (64KB-ish), or the backend's own
+   preference (`GetSpan(0).Length`). Leaning `max(TypeModel.BufferSize, GetSpan(0))` so
+   existing configuration keeps meaning something.
+5. **API surface**: level 1 needs only the position accessor (`[PBN9002]`
+   `state.Position64` / `GetPosition64(in state)`); internal readers move to it. Level 2
+   adds one capacity-hint veneer for the generator. No public behaviour changes; no
+   obsoletions required on current evidence.
+
+### Step ladder (gates per step, as always)
+
+1. **Invariant flip alone** - deferred position + accessor + full audit, no fast path
+   yet. The battery referees hard here: positions are load-bearing in the
+   length-mismatch checks, so any missed site fails loudly, and cut 6 widened where
+   those checks run.
+2. **Span-direct raw ops** (fast/slow split) - battery + serialize benchmark.
+3. **Presized lease + cap policy** - battery + benchmark, watching the MemoryDiagnoser
+   column (pool pressure is the failure mode the cap guards).
+4. Re-validate net472 and native (clean publish, warning baseline 19), re-record both
+   benchmark legs.
+
+Fixture debt to pay alongside: a mixed contract that interleaves raw and legacy-mode
+member WRITES around a chunk boundary (the write-side mirror of the read's
+split-at-every-offset sweeps) - `StreamParseBenchmarks.ChunkedStream` has the recipe,
+and a tiny-block `IBufferWriter` harness would force the boundary through every member
+shape.
+
 ## Cut 6 landed: IMeasuringSerializer, the classic engine's measure hook (2026-08-13)
 
 Marc's spot: `IMeasuringSerializer<T>` + `OptionTrySkipWritingWhenMeasuring` is SHIPPED
