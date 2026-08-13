@@ -259,16 +259,49 @@ namespace ProtoBuf
             if (stringKeys is object) stringKeys.Clear();
             if (objectKeys is object) objectKeys.Clear();
 #endif
-#if NET
-            _knownLengths.Clear();
-            _knownLengths.TrimExcess();
-            _rawLengths.Clear();
-            _rawLengths.TrimExcess();
-#else
-            _knownLengths = new(); // reinitialize the Dictionary<> to free up all allocated memory
-            _rawLengths = new(RawLengthComparer.Instance);
-#endif
+            // RETAIN, BUT NOT FOREVER (docs/nano-writer.md). These writers are pooled, so
+            // discarding capacity on every use meant re-growing a several-hundred-entry
+            // dictionary from empty each time - measured at 22,392 B per serialize and 7-12%.
+            // Retaining it unconditionally is the opposite mistake: one large graph left a
+            // pooled writer holding 11.7 MB forever, ~10x the payload.
+            //
+            // So capacity is kept by default and handed back on either of two signals:
+            //   - a gen2 collection since we last cleared, i.e. actual memory pressure. If no
+            //     GC has run, memory is not scarce and retaining costs nothing; this is the
+            //     cadence ArrayPool trims on, and GC.CollectionCount answers it with a static
+            //     read - no finalizer, no registry, no allocation, every TFM;
+            //   - a size that is not worth retaining regardless, so the single enormous graph
+            //     is dropped on the spot rather than waiting for a gen2 that an idle process
+            //     may not run for a long time.
+            var gen2 = GC.CollectionCount(2);
+            bool pressure = gen2 != _lastGen2;
+            _lastGen2 = gen2;
+
+            ClearAndMaybeTrim(ref _knownLengths, pressure, static () => new());
+            ClearAndMaybeTrim(ref _rawLengths, pressure, static () => new(RawLengthComparer.Instance));
             _hit = _miss = 0;
+        }
+
+        private int _lastGen2;
+
+        /// <summary>Above this many entries the capacity is handed back immediately rather than
+        /// retained: a cache this large is the "one enormous graph" case, and the whole point is
+        /// not to leave a pooled writer holding it.</summary>
+        private const int RetainedEntryCap = 1024;
+
+        private static void ClearAndMaybeTrim<TKey, TValue>(ref Dictionary<TKey, TValue> map,
+            bool pressure, Func<Dictionary<TKey, TValue>> create)
+        {
+            var count = map.Count;
+            map.Clear();
+            if (pressure || count > RetainedEntryCap)
+            {
+#if NET
+                map.TrimExcess();
+#else
+                map = create(); // no TrimExcess down-level; a fresh instance releases it
+#endif
+            }
         }
 
         internal int LengthHits => _hit;
