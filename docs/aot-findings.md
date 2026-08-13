@@ -80,10 +80,15 @@ externally-scalar-serialized-struct shape Task 6 landed). Re-measured on Linux (
 `src/AotSmoke/obj`/`bin`, `dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r linux-x64
 -p:DelaySign=true`): **still exactly 19 warnings**, the identical id breakdown recorded above (6
 `IL2067`, 5 `IL3050`, 3 `IL2091`, 3 `IL2070`, 1 `IL2057`, 1 `IL2055`) — the open mapping introduced no
-new reflective demand. Binary: **3,818,904 bytes (3.64 MB)**. No linux-x64 byte baseline had been
-recorded on this machine before now (the only prior linux-x64 note above is that its sizes are not
-comparable to win-x64's 3.53 MB), so this is the first linux-x64 size baseline captured in this file;
-diff the next `AotSmoke` change against this number rather than the win-x64 one. The published binary
+new reflective demand. Binary: **3,818,904 bytes (3.64 MB)**, down from the **4,032,072 bytes**
+recorded in the "Next steps" section's coverage-widening round (item 1) — a decrease of **213,168
+bytes**, measured the same way (linux-x64, `-c Release`) so the two numbers are comparable. This
+member alone would not be expected to shrink the binary; the interim decrease is almost certainly the
+trim-annotation-removal work recorded elsewhere in this file (the transport, `MapSerializer`,
+element-type and `ThrowUnexpectedSubtype<T>` annotation removals, several of them multi-hundred-KB),
+which landed between that measurement and this one and was not previously re-measured against a
+linux-x64 binary containing this round's map/generic members. This is now the current linux-x64
+baseline; diff the next `AotSmoke` change against **3,818,904 bytes**. The published binary
 was also run directly (not just built): exit code 0, "AOT smoke test PASSED", and the payload hex was
 inspected by eye for both new fields — `D0-03-A5-03` (field 58, `Score` = 421) and
 `D8-03-F7-FF-FF-FF-FF-FF-FF-FF-FF-01` (field 59, `Bonus` = −9) — both bare varints (tag then value,
