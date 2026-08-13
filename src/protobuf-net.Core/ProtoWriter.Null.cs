@@ -244,20 +244,12 @@ namespace ProtoBuf
 #if PLAT_INTRINSICS
             return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
-            // DOWN-LEVEL ONLY. net4x has no BitOperations, so the choice here is between this
-            // predicted comparison chain and the shift loop it replaces - one iteration per 7
-            // bits, with a data-dependent trip count. The strategy matrix
-            // (src/NanoBench/VarintMeasureResults.md) had the loop LOSING to the ladder in every
-            // distribution, and losing to the *intrinsic* baseline on wide values.
-            //
-            // Note the intrinsic arm was left alone deliberately: a table lookup won that matrix
-            // by 2.2x and then produced nothing end-to-end, because it trades register-only
-            // arithmetic for a load. This changes the shape of the work rather than its cost,
-            // which is why it is worth measuring separately.
-            return value < 1u << 7 ? 1
-                : value < 1u << 14 ? 2
-                : value < 1u << 21 ? 3
-                : value < 1u << 28 ? 4 : 5;
+            int count = 1;
+            while ((value >>= 7) != 0)
+            {
+                count++;
+            }
+            return count;
 #endif
         }
 
@@ -271,15 +263,12 @@ namespace ProtoBuf
 #if PLAT_INTRINSICS
             return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
-            return value < 1ul << 7 ? 1
-                : value < 1ul << 14 ? 2
-                : value < 1ul << 21 ? 3
-                : value < 1ul << 28 ? 4
-                : value < 1ul << 35 ? 5
-                : value < 1ul << 42 ? 6
-                : value < 1ul << 49 ? 7
-                : value < 1ul << 56 ? 8
-                : value < 1ul << 63 ? 9 : 10;
+            int count = 1;
+            while ((value >>= 7) != 0)
+            {
+                count++;
+            }
+            return count;
 #endif
         }
     }

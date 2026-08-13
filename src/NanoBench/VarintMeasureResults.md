@@ -77,8 +77,19 @@ it says useful things (the divide costs 18%; a jump table loses with 30x the var
 down-level loop is worse than even the intrinsic baseline on wide data). Just do not assume any
 of it converts into end-to-end time.
 
-**Still open, and NOT settled by this:** the down-level (net472) arm. `Table` is unavailable
-there and the ladder-vs-loop question was never measured in situ - the micro-benchmark cannot
-run on net472 at all, and the descriptor validation above was net10.0 only. The loop being worse
-than the *intrinsic* baseline on wide data is suggestive but is not evidence about net472. That
-needs `DescriptorSerializeBenchmarks` on the net472 leg before anything changes there.
+**The down-level arm was then measured too, and is also null.** net472 descriptor serialize,
+paired, ladder vs the shipped shift loop: `NanoGenerated` 25.42 -> 25.74 us and
+`GeneratedProtogen` 27.13 -> 27.39 us, against a gauge that moved +1.2% - i.e. flat. The telling
+row is `NanoGeneratedMeasure`, which is *nothing but* the arithmetic traversal: even there the
+ladder is worth only ~2%. Reverted, for consistency with the intrinsic arm.
+
+**So the line is closed: the varint length primitive is not a meaningful fraction of a write on
+EITHER TFM.** Two microbenchmark winners, 2.2x and "beats the loop everywhere", both producing
+nothing end to end. The matrix remains a correct record of relative cost; it is simply measuring
+something that does not matter at this scale.
+
+**One caveat on "does not matter": it is true of THIS corpus.** Packed repeated writes measure
+per ELEMENT, so if packed lands (ladder item 5) the measure becomes far hotter and this should be
+re-tested rather than assumed still-null. The matrix is already built, so that re-test is cheap.
+
+**Superseded, for the record:** the previous text below. (Now answered above.)
