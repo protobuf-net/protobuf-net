@@ -135,6 +135,79 @@ namespace ProtoBuf.AotRefGen
             return Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(from, to), method);
         }
 
+        /// <summary>
+        /// Replay the model's [ProtoSerializer] declarations onto the reference model, which is what
+        /// MetaType.SerializerType exists for. Open declarations are closed over every matching
+        /// instantiation reachable from the seeds' member graphs.
+        /// </summary>
+        private static void ApplySerializers(RuntimeTypeModel model, Type modelType, List<Type> seeds)
+        {
+            var declarations = modelType.Assembly
+                .GetCustomAttributes(typeof(ProtoSerializerAttribute), inherit: false)
+                .Cast<ProtoSerializerAttribute>()
+                .Concat(modelType.GetCustomAttributes(typeof(ProtoSerializerAttribute), inherit: false)
+                    .Cast<ProtoSerializerAttribute>())
+                .ToList();
+            if (declarations.Count == 0) return;
+
+            var closed = new List<(Type Type, Type Serializer)>();
+            var open = new List<(Type Definition, Type Serializer)>();
+            foreach (var declaration in declarations)
+            {
+                if (declaration.Type.IsGenericTypeDefinition) open.Add((declaration.Type, declaration.Serializer));
+                else closed.Add((declaration.Type, declaration.Serializer));
+            }
+
+            foreach (var seed in seeds)
+            foreach (var reached in ReachableTypes(seed))
+            {
+                if (!reached.IsConstructedGenericType) continue;
+                foreach (var (definition, serializer) in open)
+                {
+                    if (reached.GetGenericTypeDefinition() != definition) continue;
+                    if (closed.Any(x => x.Type == reached)) continue;
+                    closed.Add((reached, serializer.MakeGenericType(reached.GetGenericArguments())));
+                }
+            }
+
+            foreach (var (underlying, serializer) in closed)
+            {
+                model.Add(underlying, applyDefaultBehaviour: false).SerializerType = serializer;
+            }
+        }
+
+        /// <summary>
+        /// Every type reachable from a contract's public members. Member recursion stays inside the
+        /// fixture assembly; generic arguments and element types are always followed.
+        /// </summary>
+        private static IEnumerable<Type> ReachableTypes(Type root)
+        {
+            var seen = new HashSet<Type>();
+            var stack = new Stack<Type>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (!seen.Add(current)) continue;
+                yield return current;
+                if (Nullable.GetUnderlyingType(current) is { } wrapped) stack.Push(wrapped);
+                if (current.IsConstructedGenericType)
+                {
+                    foreach (var argument in current.GenericTypeArguments) stack.Push(argument);
+                }
+                if (current.IsArray) stack.Push(current.GetElementType()!);
+                if (current.Assembly != root.Assembly) continue;
+                foreach (var property in current.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    stack.Push(property.PropertyType);
+                }
+                foreach (var field in current.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    stack.Push(field.FieldType);
+                }
+            }
+        }
+
         private static void Emit(Type modelType, string fixtureDir)
         {
             var seeds = modelType
@@ -160,6 +233,7 @@ namespace ProtoBuf.AotRefGen
                 .Any(static x => x.AllowParseableTypes);
 
             ApplySurrogates(model, modelType);
+            ApplySerializers(model, modelType, seeds);
 
             foreach (var seed in seeds) model.Add(seed, applyDefaultBehaviour: true);
 
