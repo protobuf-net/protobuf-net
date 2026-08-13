@@ -41,6 +41,7 @@ internal static class Program
         var reference = RuntimeTypeModel.Create();
         reference.AutoCompile = false;
         ApplySurrogates(reference, corpus);
+        ApplySerializers(reference, corpus);
         var refused = new Dictionary<Type, string>();
         foreach (var contract in corpus.Contracts)
         {
@@ -161,6 +162,133 @@ internal static class Program
                 null, [from], null)
                 ?? throw new InvalidOperationException($"{converter.Name}.{methodName}({from.Name}) not found");
             return Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(from, to), method);
+        }
+    }
+
+    /// <summary>
+    /// Replay every <c>[ProtoSerializer]</c> declaration the generator can see onto the reference
+    /// model, exactly as <see cref="ApplySurrogates"/> does for <c>[ProtoSurrogate]</c>.
+    /// </summary>
+    /// <remarks>
+    /// One extra step over the surrogate replay: <c>Type</c> and <c>Serializer</c> may both be open
+    /// generic definitions of the same arity, in which case the generator closes the pairing over
+    /// every constructed generic type reachable from a contract's member graph. This mirrors that —
+    /// <see cref="ReachableTypes"/> is the same walk <c>AotConformanceTests.DifferentialTests</c>
+    /// uses, rooted per contract so the "stay inside this assembly" guard compares against each
+    /// contract's own declaring assembly rather than one fixed fixture assembly, since the corpus
+    /// spans several. A closed declaration for a given type always wins over a closure.
+    /// <para>
+    /// The corpus declares no <c>[ProtoSerializer]</c> today, so this is presently inert — a
+    /// regression guard for the day one is added, not a proof the feature works (that is
+    /// <c>AotConformanceTests</c>' job).
+    /// </para>
+    /// </remarks>
+    private static void ApplySerializers(RuntimeTypeModel reference, Corpus corpus)
+    {
+        const string ProtoSerializerAttribute = "ProtoBuf.ProtoSerializerAttribute";
+
+        // the declaring assembly is usually not loaded: nothing in the corpus necessarily *uses* it
+        // eagerly, and a package shipping serializers for someone else's types is exactly that shape
+        foreach (var path in corpus.Neighbours)
+        {
+            try { System.Reflection.Assembly.LoadFrom(path); }
+            catch { /* not a managed assembly, or already loaded under another identity */ }
+        }
+
+        var closed = new List<(Type Type, Type Serializer)>();
+        var open = new List<(Type Definition, Type Serializer)>();
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            object[] declarations;
+            try { declarations = assembly.GetCustomAttributes(inherit: false); }
+            catch { continue; } // a reflection-only or otherwise unloadable assembly
+
+            foreach (var declaration in declarations)
+            {
+                var type = declaration.GetType();
+                if (type.FullName != ProtoSerializerAttribute) continue;
+                try { Collect(declaration, type, closed, open); }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"could not read a [ProtoSerializer] declaration from "
+                        + $"{assembly.GetName().Name}: " + Summarize(ex));
+                }
+            }
+        }
+
+        // close every open declaration over the constructed generic types each contract's own
+        // member graph reaches - the same closure the generator performs
+        foreach (var contract in corpus.Contracts)
+        {
+            foreach (var reached in ReachableTypes(contract))
+            {
+                if (!reached.IsConstructedGenericType) continue;
+                foreach (var (definition, serializer) in open)
+                {
+                    if (reached.GetGenericTypeDefinition() != definition) continue;
+                    if (closed.Any(x => x.Type == reached)) continue; // a closed declaration wins
+                    closed.Add((reached, serializer.MakeGenericType(reached.GenericTypeArguments)));
+                }
+            }
+        }
+
+        foreach (var (underlying, serializer) in closed)
+        {
+            try { reference.Add(underlying, applyDefaultBehaviour: false).SerializerType = serializer; }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"could not replay a serializer for {underlying.FullName}: "
+                    + Summarize(ex));
+            }
+        }
+
+        static void Collect(object declaration, Type type,
+            List<(Type Type, Type Serializer)> closed, List<(Type Definition, Type Serializer)> open)
+        {
+            var underlying = (Type)type.GetProperty("Type")!.GetValue(declaration)!;
+            var serializer = (Type)type.GetProperty("Serializer")!.GetValue(declaration)!;
+            if (underlying.IsGenericTypeDefinition) open.Add((underlying, serializer));
+            else closed.Add((underlying, serializer));
+        }
+    }
+
+    /// <summary>
+    /// Every type reachable from a contract's public members. Member recursion stays inside the
+    /// contract's own declaring assembly; generic arguments and element types are always followed.
+    /// </summary>
+    /// <remarks>
+    /// Rooted per contract deliberately: the corpus spans several assemblies, so a single fixed
+    /// "stay inside this assembly" boundary (as <c>AotConformanceTests.DifferentialTests</c> can use,
+    /// having only one fixture assembly) would be wrong here.
+    /// </remarks>
+    private static IEnumerable<Type> ReachableTypes(Type root)
+    {
+        var seen = new HashSet<Type>();
+        var stack = new Stack<Type>();
+        stack.Push(root);
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (!seen.Add(current)) continue;
+            yield return current;
+            if (Nullable.GetUnderlyingType(current) is { } wrapped) stack.Push(wrapped);
+            if (current.IsConstructedGenericType)
+            {
+                foreach (var argument in current.GenericTypeArguments) stack.Push(argument);
+            }
+            if (current.IsArray) stack.Push(current.GetElementType()!);
+            if (current.Assembly != root.Assembly) continue;
+            foreach (var property in current.GetProperties(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                stack.Push(property.PropertyType);
+            }
+            foreach (var field in current.GetFields(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                stack.Push(field.FieldType);
+            }
         }
     }
 
