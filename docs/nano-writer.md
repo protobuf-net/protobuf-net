@@ -258,6 +258,73 @@ is the *generated* path - it drives the classic engine only - so the raw-and-leg
 interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
 `AotConformanceTests` rather than a fixture here.
 
+## The minimum lease: `TypeModel.MinimumBufferSize` = 128 (Marc, 2026-08-13)
+
+Two floors in one number, and it is worth keeping both reasons because they justify very
+different values:
+
+- **correctness** wants 10: the buffer-writer checks for room once per op and then writes up
+  to a 10-byte varint, so a narrower lease overruns it. An `IBufferWriter` promises only the
+  hint, and a strict one gives exactly that (which is how the overrun above was found);
+- **policy** wants much more: every lease is a `GetMemory`/`Advance` pair, which on a real
+  pipe may rent or allocate, so a 16-byte chunk is pathological however correct.
+
+**128, decided by Marc**, and enforced in the `BufferSize` **setter** rather than in the
+backend - the property already normalises non-positive values to the default, so this is the
+established pattern, it is *observable* (you can read back what you actually got), and step
+3's cap policy inherits it instead of needing its own floor. The backend keeps a clamp as
+belt-and-braces for the model-less path.
+
+**"Do we fight our own measure?"** (Marc's check, and the right one to make): no. The floor
+bounds the *lease*, never the message - a 2-byte message still measures 2, writes 2 and
+advances 2; the extra leased space is simply not used, and a real buffer-writer satisfies a
+128-byte hint out of a block it already holds. The formulation step 3 should implement is
+therefore `clamp(measured, MinimumBufferSize, cap)`: the measure decides, with a floor below
+and the decided cap above.
+
+Consequence for the fixtures: sweeping `BufferSize` below 128 no longer varies anything, so
+both chunk-boundary sweeps now start there. That costs nothing where it matters - a bigger
+lease exercises the FAST arm more, and that is the arm nothing else in the battery reaches;
+the slow arm is covered everywhere already, since the stream backend has no span and takes
+it always.
+
+### Zero-length measures: we already skip, and it is safe for a non-obvious reason
+
+Also Marc's question. The classic buffer-writer engine skips the body entirely when the
+calculated length is zero - four sites, `if (calculatedLength != 0) // don't bother
+serializing if nothing there` - and that predates this arc. The generated raw path does not
+skip; it calls `RawWrite_` unconditionally, which writes nothing. Both are correct.
+
+The worry worth having is that the **calculated-vs-actual length check lives inside that
+`if`**, so a measure that wrongly reported zero would skip the body *and* the check that
+would have caught it - the one measure bug the runtime net cannot see. It cannot happen, and
+the reason is a convention that was chosen for something else entirely:
+`ProtoWriter.Measure` accepts an `IMeasuringSerializer` answer only when it is **`> 0`**. A
+zero from arithmetic is *rejected* and re-measured by traversal. So the same rule that means
+"non-positive: measure by traversal" also guarantees a skipped body was measured **by
+writing it**, which is exact by construction.
+
+So no extra check is wanted, and one would cost the common path for a case that cannot arise.
+
+There is a small *cost* hiding in it rather than a risk, recorded and deliberately NOT fixed:
+a genuinely empty measurable contract measures twice - arithmetic says 0, `> 0` rejects it,
+and a full null-writer traversal confirms 0. The obvious tightening is `>= 0` (Marc's
+instinct, and mine), with the generated implementation's existing **-1** spill - already there
+for the int-overflow case - carrying "cannot answer". It is declined, and the reason is the
+size of the audit rather than the size of the change:
+
+- `>= 0` reverses the meaning of an answer that **shipped API** already assigns, so every
+  existing `IMeasuringSerializer` implementation returning 0 to mean "don't know" would
+  silently start writing nothing. Consumers can and do hand-write these;
+- and the producers are not one place. Measure-first has to be right in **all three codegen
+  paths** - runtime-no-emit, runtime ref-emit, and the AOT generator - and only the third
+  emits `IMeasuringSerializer` today, so the other two would have to be got right at the
+  moment they start, forever, for a case that essentially never occurs.
+
+A one-token change with a three-generator-plus-ecosystem audit behind it, buying nothing on
+any real payload. The rule this is an instance of: **a convention is cheap to choose and
+expensive to reverse once anything outside the repo can implement it.**
+
 ## Cut 9 landed: span-direct raw ops, buffer-core step 2 (2026-08-13)
 
 Every raw write op now has two arms: where the backend holds a leased chunk with room, the
@@ -377,11 +444,11 @@ derivation were wrong.
 primitive written without re-checking, while `GetBuffer` asks for exactly `BufferSize`. With a
 strict `IBufferWriter` that is an `IndexOutOfRangeException` on a public config knob. Confirmed
 pre-existing by re-running the fixture against the writer as it stood before this cut - the
-same 18 cases fail identically - so it is not this cut's. **Fixed in the following commit**:
-`GetBuffer` floors its demand at a `MinimumLease`, and the sweep runs from 1 again. It went
-unnoticed because a real `IBufferWriter` hands out far more than the hint - but the hint is
-all the interface promises. The stream backend has no equivalent problem: `DemandSpace`
-resizes `ioBuffer` on demand rather than living within a lease.
+same 18 cases fail identically - so it is not this cut's. **Fixed in the following commits**
+(see "The minimum lease" below). It went unnoticed because a real `IBufferWriter` hands out
+far more than the hint - but the hint is all the interface promises. The stream backend has
+no equivalent problem: `DemandSpace` resizes `ioBuffer` on demand rather than living within
+a lease.
 
 **Benchmark: measured back-to-back on one machine, which turned out to matter more than
 expected.** net10.0, descriptor serialize:

@@ -64,3 +64,4 @@
 [PBN9002]ProtoBuf.ProtoWriter.State.RawLengths.get -> System.Collections.Generic.Dictionary<object, long> (forwarded, contained in protobuf-net.Core)
 [PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, long> lengths) -> bool (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoWriter.State.Position64.get -> long (forwarded, contained in protobuf-net.Core)
+const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int (forwarded, contained in protobuf-net.Core)

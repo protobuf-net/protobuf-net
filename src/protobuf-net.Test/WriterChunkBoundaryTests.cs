@@ -91,13 +91,13 @@ namespace ProtoBuf.Tests
             Grouped = new Inner { Id = 9, Label = "grouped" },
         };
 
-        // these straddle every varint, fixed and length-prefix width in turn. Sizes below the
-        // backend's minimum lease are deliberately included: BufferSize is a public knob with no
-        // documented floor, so asking for 1 must produce a small chunk rather than an overrun
+        // these straddle every varint, fixed and length-prefix width in turn. Values below
+        // TypeModel.MinimumBufferSize are deliberately included: BufferSize is a public knob, so
+        // asking for 1 must normalise to a small-but-workable lease rather than overrun one
         // (which is exactly what it did until this fixture found it).
         public static IEnumerable<object[]> BufferSizes()
         {
-            foreach (var size in new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 31, 32, 64, 127, 128, 1024 })
+            foreach (var size in new[] { 1, 2, 7, 15, 16, 64, 127, 128, 129, 131, 149, 192, 256, 320, 1024 })
                 yield return new object[] { size };
         }
 

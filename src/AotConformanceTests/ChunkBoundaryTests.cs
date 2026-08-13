@@ -55,11 +55,11 @@ namespace ProtoBuf.AotConformance
             }
         }
 
-        // small enough to land inside a member, and spread so that the prefix-plus-body ops
-        // (string, bytes) split at a different point each time. 16 is the floor that means
-        // anything: the backend clamps its demand to MinimumLease, so smaller values here would
-        // silently all be the same test.
-        private static readonly int[] LeaseSizes = [16, 17, 18, 19, 21, 24, 27, 32, 40, 48, 64, 96];
+        // spread so that the prefix-plus-body ops (string, bytes) split at a different point
+        // each time. TypeModel.MinimumBufferSize is the smallest value that means anything -
+        // below it the property normalises, so smaller entries would silently be one test.
+        private static readonly int[] LeaseSizes =
+            [128, 129, 131, 137, 149, 160, 181, 192, 224, 256, 320, 512];
 
         public static IEnumerable<object[]> GetCases() => DifferentialTests.GetCases();
 

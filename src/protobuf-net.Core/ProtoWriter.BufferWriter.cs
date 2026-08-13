@@ -72,12 +72,6 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
-            /// <summary>
-            /// The smallest chunk this backend can write into: a 10-byte varint is the widest
-            /// value it emits after a single room check.
-            /// </summary>
-            private const int MinimumLease = 16;
-
             // the deferred-position invariant (docs/nano-writer.md): bytes written into the
             // leased chunk are uncommitted until TryFlush hands them to the IBufferWriter, and
             // state.OffsetInCurrent is exactly how many those are - so the per-op writer-object
@@ -168,10 +162,11 @@ namespace ProtoBuf
 
                 // the room checks in this backend ("if (RemainingInCurrent < 10) GetBuffer") only
                 // work if the lease is at least as wide as the widest primitive written without
-                // re-checking, so the demand has a floor. A well-behaved IBufferWriter usually
-                // hands out far more than the hint, which is why this went unnoticed - but the
-                // hint is all we are promised, and a strict one overruns the lease.
-                int bytes = Math.Max(model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize, MinimumLease);
+                // re-checking, so the demand has a floor. TypeModel.BufferSize enforces the same
+                // floor on the way in; this is belt-and-braces for the model-less path, and the
+                // one place that would overrun if the property ever stopped normalising.
+                int bytes = Math.Max(model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize,
+                    Meta.TypeModel.MinimumBufferSize);
                 bool step = false;
                 try
                 {
