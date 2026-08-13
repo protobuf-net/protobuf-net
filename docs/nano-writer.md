@@ -298,6 +298,40 @@ That leaves a generator-emitted hint as the only honest route to the common path
 generator does know its `Measure_` is arithmetic. Given the table above, that is not worth
 building until something demonstrates the lease size matters at all.
 
+### A "supports write-free measure" feature bit: considered, not built (Marc, 2026-08-13)
+
+The natural fix for the trap above - `OptionTrySkipWritingWhenMeasuring` says "you may ask",
+not "asking is cheap and free of side-effects" - is a second flag saying the latter. Bits are
+available (`SerializerFeatures` uses up to `1 << 16`, with `1 << 30` reserved). It is not
+built, and the reasons are worth keeping because two of them are non-obvious.
+
+- **Its motivating use case evaporated.** It would have made root capacity-priming safe; the
+  presized lease that priming served is measured as neutral. A flag that unlocks a feature
+  worth nothing is worth nothing.
+- **Its one surviving use is the `>= 0` question**, and there it is genuinely elegant: the
+  objection to `>= 0` was the audit surface (it reverses the meaning of an answer shipped API
+  already assigns, across three codegen paths plus hand-written implementations). An opt-in
+  flag dissolves that entirely - existing implementations keep "non-positive: traverse", and
+  only an opted-in serializer gets "zero means genuinely empty". Purely additive. But the
+  payoff is the double-measure of an *empty* contract, which essentially never happens.
+- **For the GENERATOR, a features bit is the wrong shape**, and this is the part to remember.
+  `Features` is a property, obtained by instantiating the serializer - which is exactly why
+  `IsScalar` needed its three-way resolution (attribute argument, then folding the `Features`
+  expression when the serializer is in this compilation, then deferring to run time). A
+  write-free claim would need the same, **minus the third arm**: you cannot defer "is it safe
+  to ask", because asking is the thing with the side effect. So it would have to be an
+  attribute *argument*, with a feature bit as the assertable runtime counterpart - not a
+  feature bit alone.
+- **The failure mode is worse than IsScalar's.** Every `Measure` call today goes to a null
+  writer, so an implementation that lies about being cheap is merely slow. A flag licensing a
+  speculative ask against the LIVE writer turns that into a corrupted stream. Anything built
+  here wants the `Debug.Assert`-in-the-constructor treatment the generator already gives
+  `IsScalar`.
+
+Revisit if either changes: something demonstrates that lease sizing matters after all (a
+destination that allocates per lease, rather than the generous ones measured here), or the
+empty-contract double-measure turns up in a real profile.
+
 ### The lead this did turn up: the measured path copies its length cache
 
 `NanoGeneratedMeasured` allocates **44,784 B against NanoGenerated's 22,392 B - exactly twice**,
