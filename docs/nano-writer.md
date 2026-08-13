@@ -332,6 +332,44 @@ Revisit if either changes: something demonstrates that lease sizing matters afte
 destination that allocates per lease, rather than the generous ones measured here), or the
 empty-contract double-measure turns up in a real profile.
 
+### Would `Features` be a better attribute argument than `IsScalar`? (Marc, 2026-08-13)
+
+More general, yes; better, only for things that are genuinely **values** - and the case that
+prompted the question is not one. **No change made**, on the reasoning below.
+
+`IsScalar` needs an attribute at all because category is a *value* in a bit field that ref-emit
+obtains by INSTANTIATING the serializer. A generator cannot instantiate, so the value has to be
+mirrored into metadata. Taking the whole `Features` value instead would be more general, and
+would fix a real wart: `IsScalar` is a `bool` standing in for a slice of a three-valued field
+(`CategoryRepeated = 0`, `CategoryScalar`, `CategoryMessage`), which is exactly why
+`ResolveExternalScalar` returns `bool?` - it needs an "unset" state the bool cannot carry. It
+would also strengthen the runtime `Debug.Assert` from "declared category matches" to "declared
+features match".
+
+**But a capability does not belong in `Features` at all.** "My measure is write-free" is a
+property of the *type*, not a per-instance value - and interfaces are metadata Roslyn reads
+straight off a referenced assembly: no attribute, no duplication, no drift, no precedence rule
+between two sources, and no assert, because there is nothing to contradict.
+`IMeasuringSerializer<T>` is already that pattern and the generator already inspects for it. So
+`Features`-as-argument would make a write-free bit *possible*; an interface makes it *free*.
+The write-free case therefore argues AGAINST widening `Features`, not for it.
+
+Two things that temper the change on its own merits:
+
+- **over-specification**: most `Features` bits do not affect the emitted shape - wire type,
+  packed-disabled and the wrapped flags are all deferred to `WriteAny`/`ReadAny` at run time by
+  design. Inviting consumers to state them means mismatches on bits that do not matter, which
+  are then either ignored (so why state them?) or reported (noise). `IsScalar` states exactly
+  the one thing that changes the shape, which is minimal-and-sufficient;
+- **nothing is blocked by its narrowness today**: the known refusal of a scalar external
+  serializer as a collection element or map value is for want of *reference behaviour to copy*,
+  not for want of information.
+
+If the contract attributes are ever revisited for other reasons, `Features` beside `IsScalar`
+(with `Features` winning where both appear) is additive and worth taking then, for the
+three-valued category and the stronger assert. Not on its own, and not as the enabler for
+write-free measure.
+
 ### The lead this did turn up: the measured path copies its length cache
 
 `NanoGeneratedMeasured` allocates **44,784 B against NanoGenerated's 22,392 B - exactly twice**,
