@@ -44,6 +44,9 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => false;
 
+            // this writer only ever counts; see ProtoWriter.IsMeasuring
+            private protected override bool IsMeasuringPass => true;
+
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {
                 var buffer = ArrayPool<byte>.Shared.Rent(8 * 1024);

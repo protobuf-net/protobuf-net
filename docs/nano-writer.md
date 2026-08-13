@@ -300,6 +300,41 @@ object and the callback runs once. It is not free - callbacks are invoked *insid
 serializer body (generated and ref-emitted alike), so the writer cannot hoist them without new
 API separating "fire the callbacks" from "write the members".
 
+**So the callback is asked instead of decided** (Marc): `ProtoWriter.IsMeasuring(context)`
+answers "is this a counting pass", and a callback whose side-effect is not part of the message
+returns early. Only the caller can make that judgement - which is the whole point, since the
+framework cannot tell a derived-field populator (must run in both passes) from an audit hook
+(must run once).
+
+Three things made this cheap, and one of them was already broken:
+
+- **the distinction already existed**; it simply was not askable. The context handed to a
+  callback IS the writer, and during a measure that is the counting writer.
+- **`ISerializationContext` was rejected by the validator** while the reflection invoker
+  (`TypeSerializer.InvokeCallback`) and the ref-emit path both handled it -
+  `CallbackSet.CheckCallbackParameters` allowed only `SerializationContext`, `System.Type` and
+  `StreamingContext`. So declaring the one parameter shape that carries the context *object*
+  threw. Fixed; it is the shape `IsMeasuring` needs, the others carry copies of data.
+- **the writer names the concept** rather than the caller sniffing a type:
+  `IsMeasuringPass` is a virtual on `ProtoWriter`, `true` on the null writer. Any future
+  counting backend overrides it instead of being added to a type test elsewhere.
+
+**Gap, and it is live: the AOT generator does not accept this callback shape.** It allows only
+"no parameter" or `StreamingContext`, so a contract whose callback takes `ISerializationContext`
+is *dropped* (with a diagnostic - safe, but useless to an AOT consumer who wants exactly this).
+Widening it is task #4, which should also cover MIXED models - different contracts in one model
+using different context shapes, and one contract whose four callbacks differ - and should
+cross-check that the validator, the invoker, the ref-emit path and the generator agree on the
+accepted set. They already disagreed once.
+
+**On a `ref` struct context** (Marc's alternative): attractive for extensibility, since
+`ISerializationContext` cannot gain members without breaking implementers, whereas a struct can
+grow properties freely and allocates nothing. But `ref` - two-way communication - buys nothing
+for *this* question, which is purely "tell me"; and a new parameter shape costs support in all
+three codegen paths plus goldens, which is exactly the tax being paid for
+`ISerializationContext` in task #4. Worth it if the list of context questions grows past one;
+today its only new content over `ISerializationContext` would be `IsMeasuring`.
+
 Worth knowing before deciding: this has been the buffer-writer's behaviour since it shipped and
 nobody has reported it, which suggests the idempotent "populate a derived field" case - where
 running twice is harmless - dominates in practice. `MeasureRecursionTests` pins the divergence

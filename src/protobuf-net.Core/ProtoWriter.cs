@@ -213,6 +213,43 @@ namespace ProtoBuf
         public SerializationContext Context => SerializationContext.AsSerializationContext(this);
 
         /// <summary>
+        /// Indicates whether the current operation is a measuring pass rather than a write, so
+        /// that a serialization callback with side-effects can decline to repeat them.
+        /// </summary>
+        /// <remarks>
+        /// A length-prefixed sub-message is sized before it is written, and the sizing is
+        /// performed by writing to a counting writer - so a callback runs once per pass. That is
+        /// harmless for the common shape, where the callback populates a member which is then
+        /// serialized: both passes must see the same object, so the callback MUST run in both.
+        /// It is wrong for a side-effect that is not part of the message - a counter, a log, an
+        /// audit hook - which wants to happen exactly once.
+        /// <para>
+        /// Only the caller can tell those apart, which is why this is asked rather than decided:
+        /// suppressing callbacks wholesale would measure the object before the callback ran and
+        /// write it after, so the lengths would disagree and serialization would fail outright.
+        /// </para>
+        /// <para>
+        /// Callbacks receive this by declaring an <see cref="ISerializationContext"/>,
+        /// <see cref="SerializationContext"/> or <c>StreamingContext</c> parameter; the first
+        /// carries the context object itself and is what this takes.
+        /// </para>
+        /// </remarks>
+        /// <param name="context">The context supplied to the callback.</param>
+        public static bool IsMeasuring(ISerializationContext context)
+            => context is ProtoWriter writer && writer.IsMeasuringPass;
+
+        /// <summary>
+        /// Whether this writer exists to count bytes rather than to emit them.
+        /// </summary>
+        /// <remarks>
+        /// Named here rather than inferred from the writer's type at the point of asking: the
+        /// question is "is this a measuring pass", not "is this one particular writer", and any
+        /// future counting backend should answer it by overriding rather than by being added to
+        /// a type test somewhere else.
+        /// </remarks>
+        private protected virtual bool IsMeasuringPass => false;
+
+        /// <summary>
         /// Addition information about this serialization operation.
         /// </summary>
         public object UserState { get; private set; }

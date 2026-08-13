@@ -132,6 +132,47 @@ namespace ProtoBuf.Tests
 #endif
         }
 
+        [ProtoContract]
+        public class HookedAskingContext
+        {
+            [ProtoMember(1)] public int Value { get; set; }
+            [ProtoMember(2)] public HookedAskingContext Child { get; set; }
+
+            [ProtoIgnore] public static int SideEffectCount;
+
+            [ProtoBeforeSerialization]
+            public void OnBefore(ISerializationContext context)
+            {
+                // the measure pass is a real write to a counting writer, so anything here runs
+                // once per pass; a side-effect that is not part of the message says so
+                if (ProtoWriter.IsMeasuring(context)) return;
+                SideEffectCount++;
+            }
+        }
+
+        /// <summary>
+        /// A callback that asks whether it is measuring can keep its side-effects to one per
+        /// serialize, on every backend.
+        /// </summary>
+        [Fact]
+        public void CallbackCanDeclineToRepeatItselfWhileMeasuring()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(HookedAskingContext), true);
+            var value = new HookedAskingContext { Value = 1, Child = new HookedAskingContext { Value = 2 } };
+
+            HookedAskingContext.SideEffectCount = 0;
+            using (var ms = new MemoryStream()) model.Serialize(ms, value);
+            Assert.Equal(2, HookedAskingContext.SideEffectCount);
+
+#if PLAT_SPANS
+            // the backend that measures every sub-message, and so doubled the plain callback
+            HookedAskingContext.SideEffectCount = 0;
+            model.Serialize<HookedAskingContext>(new MinimalBufferWriter(), value);
+            Assert.Equal(2, HookedAskingContext.SideEffectCount);
+#endif
+        }
+
         /// <summary>
         /// Depth, as distinct from a cycle: a long-but-finite chain past MaxDepth must also be
         /// reported rather than run the stack out.
