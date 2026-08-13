@@ -65,6 +65,13 @@ partial class FormatDefaultModel
                         if (tmp6 != null) value.ById = tmp6;
                         break;
                     }
+                    case 7:
+                    {
+                        var tmp7 = value.Certs;
+                        tmp7 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid?>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid?>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
+                        if (tmp7 != null) value.Certs = tmp7;
+                        break;
+                    }
                     default:
                         state.SkipField();
                         break;
@@ -110,6 +117,11 @@ partial class FormatDefaultModel
             if (tmp6 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::System.Guid>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.Default));
+            }
+            var tmp7 = value.Certs;
+            if (tmp7 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid?>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid?>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
             }
         }
     }

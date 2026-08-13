@@ -1132,15 +1132,19 @@ namespace ProtoBuf.BuildTools.Generators
                 // never for maps (whose per-side formats belong to [ProtoMap]) and never for
                 // null-wrapped members (protobuf-net throws on that combination, and an ambient
                 // default must not newly break it). Mirrors MetaType.ApplyDefaultBehaviour's
-                // `repeated?.ItemType ?? effectiveType`, Nullable-unwrapped, must see the effective
-                // value before the compatibility-level and ZigZag/Group checks below do
+                // `repeated?.ItemType ?? effectiveType` *then* Nullable-unwrapped - select first,
+                // unwrap second, so a `List<Guid?>` element keys on Guid rather than Guid? (the
+                // element itself is never Nullable-wrapped when it's the *member* that is nullable,
+                // but a collection's element can be, and only the unwrap-after-select order handles
+                // that). Must see the effective value before the compatibility-level and
+                // ZigZag/Group checks below do
                 if (dataFormat == ProtoDataFormat.Default && !isMap && !wrappedValue && !wrappedCollection)
                 {
-                    var bare = memberType is INamedTypeSymbol { IsGenericType: true } nullableMember
-                        && nullableMember.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T
-                        ? nullableMember.TypeArguments[0] : memberType;
-                    var scalarType = isCollection && ResolveRepeated(bare) is { Element: { } element }
-                        ? element : bare;
+                    var selected = isCollection && ResolveRepeated(memberType) is { Element: { } element }
+                        ? element : memberType;
+                    var scalarType = selected is INamedTypeSymbol { IsGenericType: true } nullableSelected
+                        && nullableSelected.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T
+                        ? nullableSelected.TypeArguments[0] : selected;
                     if (GetDataFormatDefault(compilation, memberSource, scalarType) is { } ambient)
                     {
                         dataFormat = ambient;

@@ -30,6 +30,9 @@ public class Payment
     [ProtoMember(5, DataFormat = DataFormat.FixedSize)] public int Stated { get; set; }
     // a map value does not take the default: [ProtoMap(ValueFormat)] is the tool there
     [DataMember(Order = 6)] public Dictionary<int, Guid> ById { get; set; }
+    // select-then-unwrap regression: a repeated *nullable* element must key the ambient default on
+    // the unwrapped Guid, not on Guid? - selecting the element before unwrapping Nullable<T>
+    [DataMember(Order = 7)] public List<Guid?> Certs { get; set; }
 }
 
 public static class FormatDefaultSamples
@@ -44,6 +47,9 @@ public static class FormatDefaultSamples
             Batch = [Guid.Parse("00112233-4455-6677-8899-aabbccddeeff")],
             Stated = -7,
             ById = new() { { 2, Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee") } },
+            // elements are non-null: protobuf-net rejects a null element outright, so this exercises
+            // the FixedSize default on the unwrapped Guid without also testing null-in-collection
+            Certs = [Guid.Parse("55667788-99aa-bbcc-ddee-ff0011223344"), Guid.Empty],
         },
     ];
 }
