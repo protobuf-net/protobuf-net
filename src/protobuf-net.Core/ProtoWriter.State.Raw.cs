@@ -9,23 +9,35 @@ namespace ProtoBuf
         {
             // ---- the raw write surface (docs/nano-writer.md) ----
             //
-            // SURFACE-FIRST, deliberately: these are veneers over the existing backend
-            // machinery (Impl* virtuals), so every backend - buffer-writer, stream, and
-            // crucially the NULL writer, whose Impl* stores are no-ops - serves them today,
-            // and the Null backend gives MEASURE MODE for free. The fast presized-region
-            // core lands beneath this surface later without touching generated code: the
-            // same playbook the reader ran (the generated emission is the contract; the
-            // engine swaps underneath).
+            // These are SPAN-DIRECT where the backend has a leased chunk with room: the store
+            // goes straight into State's own span, touching the writer object not at all - no
+            // virtual Impl* hop, no position advance (position is derived from the offset the
+            // store maintains, see the invariant on ProtoWriter), no wire-type reset. Where
+            // there is no room - or no span at all, which is the stream and NULL backends -
+            // control falls out-of-line to the veneer over the Impl* virtuals, so every
+            // backend still serves the whole surface and the Null one still gives MEASURE
+            // MODE for free.
             //
             // The raw convention, mirrored from the read side: the generator knows every
             // tag and wire form at compile time, so the WireType handshake the stateful API
-            // performs (WriteFieldHeader records state; the value write switches on it)
-            // is skipped entirely - the tag is a compile-time constant argument and the
-            // value write names its own encoding. Every op still leaves WireType = None
-            // (ResetWireType), so raw and legacy-mode member writes interleave safely
-            // within one body, exactly as the read side's StashTag arms do. Position is NOT
-            // touched here: it is derived from the backend's uncommitted offset (see the
-            // position invariant on ProtoWriter), which the store itself maintains.
+            // performs (WriteFieldHeader records state; the value write switches on it) is
+            // skipped entirely - the tag is a compile-time constant argument and the value
+            // write names its own encoding.
+            //
+            // WIRE-TYPE, and why nothing here writes it: it is None on entry to any serializer
+            // body (every framing path resets before handing over) and every stateful op
+            // resets after itself, so a raw body starts at None and stays there - which is
+            // what lets raw and legacy-mode member writes interleave within one body, exactly
+            // as the read side's StashTag arms do. Cut 1 reset it per-op only because the
+            // veneers shared AdvanceAndReset.
+            //
+            // _needFlush likewise moves to LEASE time (the backend sets it when it takes a
+            // chunk) rather than being stamped per tag; the slow tag path still sets it, for
+            // the backends that never lease.
+
+            // the widest encoding each op can emit without re-checking; a lease is never
+            // smaller than the largest of these (see BufferWriterProtoWriter.MinimumLease)
+            private const int MaxVarint32 = 5, MaxVarint64 = 10;
 
             /// <summary>
             /// The number of bytes written so far. Under the writer's deferred-position
@@ -44,10 +56,19 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawTag(uint tag)
             {
+                // the single-byte arm is the dominant case (fields 1-15) and the argument is a
+                // compile-time constant at every generated call site, so the test folds away
+                if (tag < 0x80 && RemainingInCurrent >= 1) LocalWriteByte((byte)tag);
+                else if (RemainingInCurrent >= MaxVarint32) LocalWriteVarint32(tag);
+                else SlowWriteRawTag(tag);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawTag(uint tag)
+            {
                 var writer = _writer;
-                writer._needFlush = true;
+                writer._needFlush = true; // a backend that never leases has no other hook
                 writer.ImplWriteVarint32(ref this, tag);
-                writer.ResetWireType();
             }
 
             /// <summary>Raw-convention varint write (32-bit).</summary>
@@ -55,10 +76,13 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawVarint32(uint value)
             {
-                var writer = _writer;
-                writer.ImplWriteVarint32(ref this, value);
-                writer.ResetWireType();
+                if (RemainingInCurrent >= MaxVarint32) LocalWriteVarint32(value);
+                else SlowWriteRawVarint32(value);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawVarint32(uint value)
+                => _writer.ImplWriteVarint32(ref this, value);
 
             /// <summary>Raw-convention varint write (64-bit); a negative int32/int64 arrives
             /// here sign-extended to the 10-byte form, exactly as the stateful writer emits.</summary>
@@ -66,10 +90,13 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawVarint64(ulong value)
             {
-                var writer = _writer;
-                writer.ImplWriteVarint64(ref this, value);
-                writer.ResetWireType();
+                if (RemainingInCurrent >= MaxVarint64) LocalWriteVarint64(value);
+                else SlowWriteRawVarint64(value);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawVarint64(ulong value)
+                => _writer.ImplWriteVarint64(ref this, value);
 
             /// <summary>Raw-convention zig-zag write (32-bit).</summary>
             [MethodImpl(ProtoReader.HotPath)]
@@ -88,20 +115,26 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawFixed32(uint value)
             {
-                var writer = _writer;
-                writer.ImplWriteFixed32(ref this, value);
-                writer.ResetWireType();
+                if (RemainingInCurrent >= 4) LocalWriteFixed32(value);
+                else SlowWriteRawFixed32(value);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawFixed32(uint value)
+                => _writer.ImplWriteFixed32(ref this, value);
 
             /// <summary>Raw-convention fixed64 write.</summary>
             [MethodImpl(ProtoReader.HotPath)]
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawFixed64(ulong value)
             {
-                var writer = _writer;
-                writer.ImplWriteFixed64(ref this, value);
-                writer.ResetWireType();
+                if (RemainingInCurrent >= 8) LocalWriteFixed64(value);
+                else SlowWriteRawFixed64(value);
             }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawFixed64(ulong value)
+                => _writer.ImplWriteFixed64(ref this, value);
 
             /// <summary>Raw-convention float write (fixed32 bits). The netfx arm reinterprets
             /// via Unsafe: SingleToInt32Bits does not exist down-level.</summary>
@@ -132,19 +165,28 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawString(string value)
             {
-                var writer = _writer;
                 if (value.Length == 0)
                 {
-                    writer.ImplWriteVarint32(ref this, 0);
-                    writer.ResetWireType();
+                    WriteRawVarint32(0);
+                    return;
                 }
-                else
+                var len = UTF8.GetByteCount(value);
+                // prefix and body land in one chunk or neither does, so the fast path needs
+                // room for both; a string straddling a boundary is the slow path's problem
+                if (RemainingInCurrent >= MaxVarint32 + len)
                 {
-                    var len = UTF8.GetByteCount(value);
-                    writer.ImplWriteVarint32(ref this, (uint)len);
-                    writer.ResetWireType();
-                    writer.ImplWriteString(ref this, value, len);
+                    LocalWriteVarint32((uint)len);
+                    LocalWriteString(value);
                 }
+                else SlowWriteRawString(value, len);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawString(string value, int len)
+            {
+                var writer = _writer;
+                writer.ImplWriteVarint32(ref this, (uint)len);
+                writer.ImplWriteString(ref this, value, len);
             }
 
             /// <summary>
@@ -154,9 +196,19 @@ namespace ProtoBuf
             [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawBytes(ReadOnlySpan<byte> value)
             {
+                if (RemainingInCurrent >= MaxVarint32 + value.Length)
+                {
+                    LocalWriteVarint32((uint)value.Length);
+                    if (value.Length != 0) LocalWriteBytes(value);
+                }
+                else SlowWriteRawBytes(value);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void SlowWriteRawBytes(ReadOnlySpan<byte> value)
+            {
                 var writer = _writer;
                 writer.ImplWriteVarint32(ref this, (uint)value.Length);
-                writer.ResetWireType();
                 if (value.Length != 0) writer.ImplWriteBytes(ref this, value);
             }
 

@@ -242,7 +242,7 @@ level 1, so level 1 goes first.
 ### Step ladder (gates per step, as always)
 
 1. ~~**Invariant flip alone**~~ - **landed, see cut 8 below.**
-2. **Span-direct raw ops** (fast/slow split) - battery + serialize benchmark.
+2. ~~**Span-direct raw ops**~~ - **landed, see cut 9 below.**
 3. **Presized lease + cap policy** - battery + benchmark, watching the MemoryDiagnoser
    column (pool pressure is the failure mode the cap guards).
 4. Re-validate net472 and native (clean publish, warning baseline 19), re-record both
@@ -257,6 +257,72 @@ shape. **Half paid by cut 8**: `WriterChunkBoundaryTests` is that harness, sweep
 is the *generated* path - it drives the classic engine only - so the raw-and-legacy
 interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
 `AotConformanceTests` rather than a fixture here.
+
+## Cut 9 landed: span-direct raw ops, buffer-core step 2 (2026-08-13)
+
+Every raw write op now has two arms: where the backend holds a leased chunk with room, the
+store goes **straight into State's span** - no virtual `Impl*` hop, and no writer-object touch
+of any kind; otherwise control falls out-of-line to the previous veneer body. Cut 8 is what
+made the second half possible: with position derived from the offset the store already
+maintains, there is nothing left on the writer object for a raw op to update.
+
+Three things had to go with it, each a writer-object store that would have defeated the point:
+
+- **the wire-type reset, entirely.** It is `None` on entry to any serializer body (every
+  framing path resets before handing over) and every stateful op resets after itself, so a raw
+  body starts at `None` and stays there. Cut 1 reset per-op only because the veneers shared
+  `AdvanceAndReset`. The raw/legacy interleave within one body is unaffected - that was always
+  what the invariant was for;
+- **`_needFlush`, moved to LEASE time.** A chunk being out *is* the condition it records, and
+  `GetBuffer` is the one place a chunk is taken. The slow tag arm still sets it, for backends
+  that never lease;
+- the position advance, already gone in cut 8.
+
+`WriteRawTag` additionally gets a **single-byte arm** for fields 1-15. The argument is a
+compile-time constant at every generated call site, so `tag < 0x80` folds away and the
+dominant case becomes one store - the write mirror of the read side's range trick.
+
+**The stream and Null backends have no span at all, so they always take the slow arm.** That is
+correct but has a consequence worth stating plainly: the benchmark headline rows write to a
+`MemoryStream`, so **this cut is invisible there**. It had to be measured on the buffer-writer
+leg added just before it.
+
+Paired, buffer-writer backend:
+
+| row | before | after | delta |
+| --- | ---: | ---: | ---: |
+| LegacyReal | 42.30 us | 41.03 us | -3.0% |
+| GeneratedProtogen | 20.37 us | 18.76 us | **-7.9%** |
+| NanoGenerated | 12.41 us | 11.32 us | **-8.8%** |
+| GoogleProtobuf (the drift gauge) | 12.47 us | 12.58 us | +0.9% |
+
+Normalised against the gauge that is ~-9.6%, and the generated model is now **10% ahead of
+Google.Protobuf** on this destination (11.32 vs 12.58).
+
+### The coverage hole this exposed, which matters more than the 9%
+
+The fast arm is only reachable on a backend that has a span - i.e. the buffer-writer - and
+**nothing in the battery drove that backend.** Every gate serializes to a stream or a byte[].
+Probed rather than assumed, by deliberately corrupting each arm in turn:
+
+| probe | ChunkBoundaryTests | DifferentialTests | AotDifferential (3023 contracts) |
+| --- | --- | --- | --- |
+| corrupt the **slow** string arm | 89 fail | 90 fail | (caught) |
+| corrupt the **fast** tag arm | **132 fail** | **652 pass** | **3023 match, exit 0** |
+
+So the corpus differential - the CI gate, and the sharpest measurement in this arc - would
+have shipped a completely broken span-direct write path without a murmur. The slow arm looked
+well covered only because the stream backend has no span and therefore takes it always.
+
+`AotConformanceTests/ChunkBoundaryTests` closes it: every case in the generated corpus is
+re-serialized through an exactly-as-asked `IBufferWriter` at twelve lease sizes, so the chunk
+boundary walks through every emitted op in turn and the fast/slow transition happens mid-message.
+Note the lease sizes start at **16**: the backend clamps its demand to `MinimumLease`, so
+smaller values would silently all be the same test.
+
+The general lesson, which is the same one AGENTS.md records for native AOT: **a path that no
+gate drives is not "fine", it is unmeasured** - and "the differential is at 100%" means only
+that the destinations it uses are at 100%.
 
 ## Cut 8 landed: the deferred position, buffer-core step 1 (2026-08-13)
 

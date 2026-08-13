@@ -160,6 +160,12 @@ namespace ProtoBuf
                 if (writer is null) ThrowNoWriter();
                 TryFlush(ref state);
 
+                // _needFlush at LEASE time, not per tag: once a chunk is out, there is
+                // uncommitted data until something flushes it, and this is the one place a
+                // chunk is taken - which is what lets a span-direct raw op touch no writer
+                // state at all (docs/nano-writer.md, buffer-core step 2)
+                _needFlush = true;
+
                 // the room checks in this backend ("if (RemainingInCurrent < 10) GetBuffer") only
                 // work if the lease is at least as wide as the widest primitive written without
                 // re-checking, so the demand has a floor. A well-behaved IBufferWriter usually
