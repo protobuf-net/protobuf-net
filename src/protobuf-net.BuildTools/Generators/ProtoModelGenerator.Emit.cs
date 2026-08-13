@@ -1123,7 +1123,8 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 3, $"== {Features}.{expected},");
                 Line(sb, indent + 2, $"\"{Simplify(contract.TypeName)} is generated as {expected}, but its "
                     + $"serializer disagrees; \"");
-                Line(sb, indent + 3, $"+ \"set [ProtoContract(IsScalar = {fix})] on it, or correct the serializer.\");");
+                Line(sb, indent + 3, $"+ \"set IsScalar = {fix} on its [ProtoContract] or [ProtoSerializer] "
+                    + $"declaration, or correct the serializer.\");");
             }
             Line(sb, indent, "}");
             sb.AppendLine();

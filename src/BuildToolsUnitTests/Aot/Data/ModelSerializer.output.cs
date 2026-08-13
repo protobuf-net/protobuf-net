@@ -29,19 +29,19 @@ partial class ModelSerializerModel
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
                 "AotFixtures.ModelSerializer.Wrapped<byte> is generated as CategoryScalar, but its serializer disagrees; "
-                    + "set [ProtoContract(IsScalar = false)] on it, or correct the serializer.");
+                    + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
             global::System.Diagnostics.Debug.Assert(
                 (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<int>, global::AotFixtures.ModelSerializer.Wrapped<int>>().Features
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
                 "AotFixtures.ModelSerializer.Wrapped<int> is generated as CategoryScalar, but its serializer disagrees; "
-                    + "set [ProtoContract(IsScalar = false)] on it, or correct the serializer.");
+                    + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
             global::System.Diagnostics.Debug.Assert(
                 (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ModelSerializer.WrappedSerializer<string>, global::AotFixtures.ModelSerializer.Wrapped<string>>().Features
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
                 "AotFixtures.ModelSerializer.Wrapped<string> is generated as CategoryScalar, but its serializer disagrees; "
-                    + "set [ProtoContract(IsScalar = false)] on it, or correct the serializer.");
+                    + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSerializer.Request>.Features
