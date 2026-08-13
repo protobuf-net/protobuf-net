@@ -893,6 +893,48 @@ slow as its own stream figure). The remaining ladder, in priority order:
 6. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
    for the native kinds).
 
+### Recommended next steps, ranked by value-per-risk (2026-08-13)
+
+1. **The length caches re-allocate on every serialize.** The biggest outstanding gap against
+   Google (22,392 B against their 4,232 on the stream, 0 on the buffer-writer), self-contained,
+   and needing no decision from anyone. The cause is in `NetObjectCache.Clear()`: on `NET` it
+   does `Clear()` **and `TrimExcess()`**, and down-level it allocates fresh dictionaries - so a
+   *pooled* writer re-grows its caches from empty every single time, paying every doubling
+   reallocation again. Clearing the CONTENTS is a correctness requirement (a stale entry is a
+   corrupt stream, not an error); discarding the CAPACITY is not.
+
+   **Marc's shape for it:** the real story is that the writer is stashed and reused, so the
+   caches should be retained between uses - but held behind a **GC-transparent (weak) reference
+   while idle**, so they stay collectable under memory pressure and do not pin a pooled writer's
+   working set. Costs one `WeakReference` allocation per stash, which is cheap against
+   re-growing a several-hundred-entry dictionary. Keep the strong reference for the duration of
+   a serialize (so the hot path takes no null check) and revive at `Init`, not lazily per access.
+   Measure both ways, paired, and consider a capacity cap so one enormous payload does not leave
+   a permanently fat writer in the pool.
+
+2. **Task #4 - AOT coverage for callback context shapes.** Closes a gap created on this branch:
+   `ISerializationContext` works on the runtime paths but the generator accepts only "no
+   parameter" or `StreamingContext`, so it DROPS the contract - denying `ProtoWriter.IsMeasuring`
+   to exactly the AOT consumer who wants it. Include mixed models (different contracts in one
+   model using different shapes; one contract whose four callbacks differ) and cross-check that
+   the validator, the reflection invoker, the ref-emit path and the generator agree on the
+   accepted set. They demonstrably disagreed once already.
+
+3. **A decision, then the stream span move.** The move is the biggest perf prize (~9%, on the
+   backend the headline rows use), but it requires the stream backend to go measure-first, which
+   **doubles serialization callbacks for the majority of protobuf-net users**. `IsMeasuring` now
+   gives them an escape hatch, so the question is narrowed to: *is "callbacks may fire twice per
+   nested message, use `IsMeasuring` if that matters" an acceptable v4 behaviour change for
+   stream consumers?* If yes, the surgery is unblocked. If no, it needs the hoist design (new
+   API separating "fire the callbacks" from "write the members") first. **Do not start the
+   surgery before this is answered** - it is the one thing here that is not undoable in a branch,
+   because it changes shipped behaviour rather than internals.
+
+4. **Task #5 - the reflection callback path allocates three times per invocation**
+   (`GetParameters()` returns a fresh array every call, plus the `object[]` args, plus a box for
+   `StreamingContext`). The shapes are fixed at registration, so it resolves to a cached plan or
+   delegate. No-emit path only; ref-emit and generated paths are already clean.
+
 ### Working practices this arc runs on (learned the hard way; do not relearn)
 
 - **The gate battery, per cut**: goldens x2 (first run rewrites, second asserts; review
