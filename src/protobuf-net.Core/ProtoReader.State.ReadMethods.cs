@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -67,7 +67,7 @@ namespace ProtoBuf
             }
 
             /// <summary>
-            /// Addition information about this deserialization operation.
+            /// Additional information about this deserialization operation.
             /// </summary>
             public ISerializationContext Context
             {

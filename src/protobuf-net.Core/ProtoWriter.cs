@@ -207,7 +207,7 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Addition information about this serialization operation.
+        /// Additional information about this serialization operation.
         /// </summary>
         [Obsolete("Prefer " + nameof(UserState))]
         public SerializationContext Context => SerializationContext.AsSerializationContext(this);
@@ -250,7 +250,7 @@ namespace ProtoBuf
         private protected virtual bool IsMeasuringPass => false;
 
         /// <summary>
-        /// Addition information about this serialization operation.
+        /// Additional information about this serialization operation.
         /// </summary>
         public object UserState { get; private set; }
 
