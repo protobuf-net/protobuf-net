@@ -1063,17 +1063,22 @@ slow as its own stream figure). The remaining ladder, in priority order:
 
    | | arm A | **arm E** | arm B (unsafe) |
    | --- | ---: | ---: | ---: |
-   | stream `NanoGenerated` | 15.57 us / 22,392 B | **14.40 us / 0 B** | 14.39 us / 0 B |
-   | buffer-writer `NanoGenerated` | 11.30 us / 22,392 B | **10.33 us / 0 B** | 9.97 us / 0 B |
-   | hazard (one 200k graph) | ~0 | **passes** | 11,680,888 B |
+   | stream `NanoGenerated` | 15.61 us / 22,392 B | **14.31 us / 0 B** | 14.39 us / 0 B |
+   | buffer-writer `NanoGenerated` | 11.26 us / 22,392 B | **9.91 us / 0 B** | 9.97 us / 0 B |
+   | hazard (one 200k graph) | passes | **passes** | 11,680,888 B |
 
-   So E takes essentially all of B's win while keeping A's safety. **Caveat on those numbers**:
-   the intended A/E paired run silently measured E twice (the toggle script asserted on arm B's
-   text, which no longer existed, under a `|| true`), so arm A here is the earlier same-session
-   run - defensible only because the Google gauge is flat across the two (13.100 -> 13.094 and
-   12.56 -> 12.48). **A clean paired re-run is owed.** The residual ~3.6% gap to B on the
-   buffer-writer leg is plausibly the gen2 signal firing in an allocating loop, i.e. the
-   mechanism working, but that is a hypothesis and not measured.
+   Gauge-corrected (Google moved -2.5% stream, -0.2% buffer-writer): **-6% and -11.8%**, with
+   the allocation gone entirely. E matches B to within noise on both legs, so it takes the whole
+   win while keeping A's safety.
+
+   **The measurement discipline this needed, after three false starts in one sitting:** the
+   toggle asserts its own effect in BOTH directions (the marker gone, `TrimExcess` present) under
+   `set -e` with no `|| true`, and the code under test is `grep`ed for before any gate or number
+   is believed. Two runs were voided by a toggle that silently no-opped, and a third by
+   `git checkout --` used as an undo idiom, which restored a file whose committed state was still
+   arm A and deleted the implementation - after which the battery passed against the ABSENCE of
+   the change and was reported as confirming it. A suite that goes green without your change in
+   the tree is telling you nothing.
 
    `PooledWriterRetentionTests` measures the hazard and is the gate; it passes on A and fails on
    B. Two things about it are load-bearing, and both were wrong in the first cut:
