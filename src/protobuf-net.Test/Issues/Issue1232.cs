@@ -224,14 +224,14 @@ namespace ProtoBuf.Test.Issues
             var serializeHits = measure.GetLengthHits(out var serializeMisses);
             this.log.WriteLine($"After serialize: {serializeHits} hits, {serializeMisses} misses");
             Assert.NotNull(ex);
-            if (useBufferWritter)
-            {
-                Assert.Contains("Length mismatch", ex.Message);
-            }
-            else
-            {
-                Assert.Contains("Invalid length", ex.Message);
-            }
+            // Both backends report this the same way now, and from the same place. This
+            // serializer declares OptionTrySkipWritingWhenMeasuring, so the stream writer prices
+            // it up front instead of reserving-and-back-filling, and the disagreement is caught
+            // at the sub-message that caused it - naming both lengths - rather than only at the
+            // root by MeasureState ("Invalid length"). A serializer that CANNOT price itself
+            // still back-fills and still reports the root-level message; the convergence is per
+            // serializer, not global. See docs/nano-writer.md.
+            Assert.Contains("Length mismatch", ex.Message);
 
         }
 
