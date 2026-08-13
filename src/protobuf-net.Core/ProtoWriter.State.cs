@@ -13,6 +13,45 @@ namespace ProtoBuf
         /// </summary>
         protected internal abstract State DefaultState();
 
+        // ---- the museum bridge ----
+        //
+        // The obsolete class-based API is written as `writer.DefaultState().DoTheThing(...)`:
+        // a State per call, discarded at the semicolon. That is only correct while every
+        // durable thing lives on the WRITER, which is exactly what the buffer core is moving
+        // away from - a backend whose buffer position lives in State would lose it at each of
+        // those semicolons, silently, as truncated output.
+        //
+        // So the pair mirrors the reader's (docs/nano-core.md): DefaultState() LIQUIFIES the
+        // writer's solid form into a State, and Solidify hands whatever moved back. Museum API,
+        // museum prices - the cost is one liquify/solidify per call, paid only by callers of an
+        // API that has been obsolete since v3, and never by the state-passing path.
+        //
+        // Backends that keep nothing in State (the null writer) inherit the no-op base and are
+        // unaffected. A backend that cannot express a fresh State at all (the buffer-writer)
+        // still throws from DefaultState, and so never reaches this.
+
+        /// <summary>
+        /// Hands back to the writer anything the museum API's temporary <see cref="State"/>
+        /// advanced. The base implementation is empty: a backend only needs this if it keeps
+        /// buffer position in State rather than on the writer object.
+        /// </summary>
+        /// <remarks>
+        /// THE RULE, and it is a rule rather than a convention: every <see cref="DefaultState"/>
+        /// is paired with exactly one Solidify on the same writer. An unpaired one loses
+        /// whatever that call wrote, silently and as truncated output rather than as an error.
+        /// It is greppable in both directions, which is the enforcement -
+        /// <c>MuseumBridgeTests</c> asserts the pairing over Core's own sources, and drives the
+        /// obsolete surface against a real stream so that a miss fails a test rather than a
+        /// consumer.
+        /// <para>
+        /// This was first written as a <c>using</c>-scoped ref struct, so that dispose could not
+        /// be forgotten. C# does not allow it: passing a field of a <c>using</c> variable as a
+        /// <c>ref</c> argument is CS1655, and most of these sites do exactly that. The explicit
+        /// pair is what compiles.
+        /// </para>
+        /// </remarks>
+        internal virtual void Solidify(ref State state) { }
+
         /// <summary>
         /// Writer state
         /// </summary>

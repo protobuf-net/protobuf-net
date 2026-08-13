@@ -175,7 +175,9 @@ namespace ProtoBuf.Meta
             }
             return WireType.None;
         }
-        /// <summary>        /// Indicates whether a type is known to the model
+
+        /// <summary>
+        /// Indicates whether a type is known to the model
         /// </summary>
         internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
@@ -381,8 +383,9 @@ namespace ProtoBuf.Meta
         [Obsolete(ProtoReader.PreferStateAPI, false)]
         public void Serialize(ProtoWriter dest, object value)
         {
-            ProtoWriter.State state = dest.DefaultState();
+            var state = dest.DefaultState();
             SerializeRootFallback(ref state, value);
+            dest.Solidify(ref state);
         }
 
         internal static long SerializeImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref ProtoWriter.State state, T value)
