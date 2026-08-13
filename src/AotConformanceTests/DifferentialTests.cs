@@ -24,6 +24,7 @@ namespace ProtoBuf.AotConformance
         private const string ProtoModelAttribute = "ProtoBuf.ProtoModelAttribute";
         private const string ProtoSerializableAttribute = "ProtoBuf.ProtoSerializableAttribute";
         private const string ProtoSurrogateAttribute = "ProtoBuf.ProtoSurrogateAttribute";
+        private const string ProtoSerializerAttribute = "ProtoBuf.ProtoSerializerAttribute";
 
         public static IEnumerable<object[]> GetCases()
             => from model in DiscoverModels()
@@ -205,6 +206,7 @@ namespace ProtoBuf.AotConformance
             }
 
             ApplySurrogates(runtime, modelType);
+            ApplySerializers(runtime, modelType, contractType);
             runtime.Add(contractType, applyDefaultBehaviour: true);
             return runtime;
         }
@@ -245,6 +247,80 @@ namespace ProtoBuf.AotConformance
                 typeof(RuntimeTypeModel).GetMethod(nameof(RuntimeTypeModel.SetSurrogate))!
                     .MakeGenericMethod(underlying, surrogate)
                     .Invoke(runtime, [toSurrogate, toUnderlying, DataFormat.Default, CompatibilityLevel.NotSpecified]);
+            }
+        }
+
+        /// <summary>
+        /// Replay the model's <c>[ProtoSerializer]</c> declarations, the compile-time equivalent of
+        /// <see cref="MetaType.SerializerType"/>. Open declarations are closed over every matching
+        /// instantiation reachable from the contract's member graph, which is exactly the set the
+        /// generator closes over.
+        /// </summary>
+        private static void ApplySerializers(RuntimeTypeModel runtime, Type modelType, Type contractType)
+        {
+            var declarations = modelType.Assembly.GetCustomAttributes()
+                .Concat(modelType.GetCustomAttributes())
+                .Where(static x => x.GetType().FullName == ProtoSerializerAttribute)
+                .ToList();
+            if (declarations.Count == 0) return;
+
+            var closed = new List<(Type Type, Type Serializer)>();
+            var open = new List<(Type Definition, Type Serializer)>();
+            foreach (var declaration in declarations)
+            {
+                var type = declaration.GetType();
+                var underlying = (Type)type.GetProperty("Type")!.GetValue(declaration)!;
+                var serializer = (Type)type.GetProperty("Serializer")!.GetValue(declaration)!;
+                if (underlying.IsGenericTypeDefinition) open.Add((underlying, serializer));
+                else closed.Add((underlying, serializer));
+            }
+
+            foreach (var reached in ReachableTypes(contractType))
+            {
+                if (!reached.IsConstructedGenericType) continue;
+                foreach (var (definition, serializer) in open)
+                {
+                    if (reached.GetGenericTypeDefinition() != definition) continue;
+                    if (closed.Any(x => x.Type == reached)) continue; // a closed declaration wins
+                    closed.Add((reached, serializer.MakeGenericType(reached.GenericTypeArguments)));
+                }
+            }
+
+            foreach (var (underlying, serializer) in closed)
+            {
+                runtime.Add(underlying, applyDefaultBehaviour: false).SerializerType = serializer;
+            }
+        }
+
+        /// <summary>
+        /// Every type reachable from a contract's public members. Member recursion stays inside the
+        /// fixture assembly; generic arguments and element types are always followed.
+        /// </summary>
+        private static IEnumerable<Type> ReachableTypes(Type root)
+        {
+            var seen = new HashSet<Type>();
+            var stack = new Stack<Type>();
+            stack.Push(root);
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (!seen.Add(current)) continue;
+                yield return current;
+                if (Nullable.GetUnderlyingType(current) is { } wrapped) stack.Push(wrapped);
+                if (current.IsConstructedGenericType)
+                {
+                    foreach (var argument in current.GenericTypeArguments) stack.Push(argument);
+                }
+                if (current.IsArray) stack.Push(current.GetElementType()!);
+                if (current.Assembly != root.Assembly) continue;
+                foreach (var property in current.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    stack.Push(property.PropertyType);
+                }
+                foreach (var field in current.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    stack.Push(field.FieldType);
+                }
             }
         }
 
