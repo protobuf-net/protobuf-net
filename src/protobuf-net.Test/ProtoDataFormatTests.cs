@@ -214,5 +214,25 @@ namespace ProtoBuf.Test
         public void AssemblyScopedGuidGoesOutFixed() => AssertPayload(
             new ProtoBuf.Test.TestDataFormat.AssemblyScopedFormats { Guid = s_KnownGuid },
             "0A-10-C4-16-E4-AF-45-5E-41-4C-94-8C-F2-78-73-26-35-47");
+
+        // the precedence is type -> module -> assembly, most specific wins; the tests above prove
+        // module beats assembly, and DeclaredTypeIsMatched/DerivedDeclarationWinsOverBase prove type
+        // scope resolves in isolation (no module/assembly declaration in play). Neither proves TYPE
+        // beats MODULE/ASSEMBLY end to end. TypeOverridesModule carries its own [ProtoDataFormat] for
+        // int (ZigZag), in the same module/assembly that declares FixedSize for int - so this is the
+        // one place the full three-way precedence is actually exercised.
+        [Fact]
+        public void TypeLevelBeatsModuleLevel()
+            => Assert.Equal(DataFormat.ZigZag, TypeDataFormatHelper.GetTypeDataFormat(
+                typeof(ProtoBuf.Test.TestDataFormat.TypeOverridesModule), typeof(int)));
+
+        [Fact]
+        public void TypeLevelOverrideGoesOutZigZag() => AssertPayload(
+            new ProtoBuf.Test.TestDataFormat.TypeOverridesModule { Int32 = -1 },
+            "08-01");
+        /*
+        08-01 = field 1 varint, -1 zigzag-encoded as 1 - not 0D-FF-FF-FF-FF, which is what the
+        module's FixedSize default would have produced
+        */
     }
 }

@@ -35,6 +35,17 @@ public class Payment
     [DataMember(Order = 7)] public List<Guid?> Certs { get; set; }
 }
 
+// separate from Payment because Payment is pinned to Level300, where DateTime is already Timestamp
+// regardless of WellKnown - this contract is deliberately level 200 (no [CompatibilityLevel]), so
+// the ambient WellKnown default is the only thing that can promote it to 240/Timestamp encoding.
+// Mirrors ProtoDataFormatTests.WellKnownDefaultPromotesLevel200To240 on the generator side.
+[DataContract]
+[ProtoDataFormat(typeof(DateTime), DataFormat.WellKnown)]
+public class TimestampPromotion
+{
+    [DataMember(Order = 1)] public DateTime When { get; set; }
+}
+
 public static class FormatDefaultSamples
 {
     public static object[] Values =>
@@ -51,11 +62,14 @@ public static class FormatDefaultSamples
             // the FixedSize default on the unwrapped Guid without also testing null-in-collection
             Certs = [Guid.Parse("55667788-99aa-bbcc-ddee-ff0011223344"), Guid.Empty],
         },
+        new TimestampPromotion(),
+        new TimestampPromotion { When = new DateTime(2026, 8, 12, 3, 4, 5, DateTimeKind.Utc) },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Payment))]
+[ProtoSerializable(typeof(TimestampPromotion))]
 public partial class FormatDefaultModel : TypeModel
 {
 }

@@ -1935,11 +1935,16 @@ namespace ProtoBuf.BuildTools.Generators
                     return GetDataFormat(declared); // never a cast: the ordinals differ
                 }
             }
-            if (GetDeclaredFormat(compilation, compilation.SourceModule, key) is { } fromModule)
+            // the contract's OWN module/assembly, not the compilation's - a contract declared in a
+            // referenced assembly must resolve its ambient default against that assembly, exactly as
+            // the runtime does (TypeDataFormatHelper.GetTypeDataFormat: declaringType.Module). For a
+            // contract in the current compilation these are identical, so this is strictly more
+            // correct and changes nothing for that (overwhelmingly common) case.
+            if (GetDeclaredFormat(compilation, contract.ContainingModule, key) is { } fromModule)
             {
                 return GetDataFormat(fromModule);
             }
-            if (GetDeclaredFormat(compilation, compilation.Assembly, key) is { } fromAssembly)
+            if (GetDeclaredFormat(compilation, contract.ContainingAssembly, key) is { } fromAssembly)
             {
                 return GetDataFormat(fromAssembly);
             }

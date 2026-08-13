@@ -15,18 +15,19 @@ namespace ProtoBuf.Internal
         private static readonly Dictionary<Module, KeyValuePair<Type, DataFormat>[]> s_ByModule
             = new Dictionary<Module, KeyValuePair<Type, DataFormat>[]>();
 
+        // ApplyDefaultBehaviour runs this once PER MEMBER (unlike TypeCompatibilityHelper's per-type
+        // walk, which is deliberately left uncached), so the base-type chain itself needs caching too,
+        // not just the module/assembly tail. Keyed on the declaring type, storing the fully-resolved
+        // type-chain result so a repeat call - same or different scalarType, same declaringType -
+        // never re-walks Attribute.GetCustomAttributes.
+        private static readonly Dictionary<Type, KeyValuePair<Type, DataFormat>[]> s_ByType
+            = new Dictionary<Type, KeyValuePair<Type, DataFormat>[]>();
+
         internal static DataFormat GetTypeDataFormat(Type declaringType, Type scalarType)
         {
-            // explicit base-type walk with inherit: false per level: AllowMultiple = true makes
-            // Attribute.GetCustomAttributes(..., inherit: true) merge base and derived declarations
-            // with no defined winner, and derived must win
-            for (var current = declaringType; current is object; current = current.BaseType)
+            foreach (var pair in GetTypeDefaults(declaringType))
             {
-                if (FindDeclared(Attribute.GetCustomAttributes(
-                    current, typeof(ProtoDataFormatAttribute), inherit: false), scalarType) is { } declared)
-                {
-                    return declared;
-                }
+                if (pair.Key == scalarType) return pair.Value;
             }
             foreach (var pair in GetModuleDefaults(declaringType.Module))
             {
@@ -35,16 +36,48 @@ namespace ProtoBuf.Internal
             return DataFormat.Default;
         }
 
-        private static DataFormat? FindDeclared(Attribute[] attributes, Type scalarType)
+        private static KeyValuePair<Type, DataFormat>[] GetTypeDefaults(Type declaringType)
         {
-            foreach (var attribute in attributes)
+            if (declaringType is null) return Array.Empty<KeyValuePair<Type, DataFormat>>();
+            lock (s_ByType)
             {
-                if (attribute is ProtoDataFormatAttribute declared && declared.Type == scalarType)
-                {
-                    return declared.DataFormat;
-                }
+                if (s_ByType.TryGetValue(declaringType, out var alreadyKnown)) return alreadyKnown;
             }
-            return null;
+            // calculated twice outside the lock rather than blocking other paths; indexer-set,
+            // not Add — the same trade GetModuleDefaults (and TypeCompatibilityHelper) records
+            var calculated = Calculate(declaringType);
+            lock (s_ByType)
+            {
+                s_ByType[declaringType] = calculated;
+            }
+            return calculated;
+
+            static KeyValuePair<Type, DataFormat>[] Calculate(Type declaringType)
+            {
+                var result = new List<KeyValuePair<Type, DataFormat>>();
+                // most-derived first, matching the explicit base-type walk with inherit: false per
+                // level this replaces: AllowMultiple = true makes
+                // Attribute.GetCustomAttributes(..., inherit: true) merge base and derived
+                // declarations with no defined winner, and derived must win - so a scalarType already
+                // seen from a more-derived level is skipped when a base level declares it too.
+                for (var current = declaringType; current is object; current = current.BaseType)
+                {
+                    foreach (ProtoDataFormatAttribute declared in Attribute.GetCustomAttributes(
+                        current, typeof(ProtoDataFormatAttribute), inherit: false))
+                    {
+                        var seen = false;
+                        foreach (var pair in result)
+                        {
+                            if (pair.Key == declared.Type) { seen = true; break; }
+                        }
+                        if (!seen)
+                        {
+                            result.Add(new KeyValuePair<Type, DataFormat>(declared.Type, declared.DataFormat));
+                        }
+                    }
+                }
+                return result.ToArray();
+            }
         }
 
         private static KeyValuePair<Type, DataFormat>[] GetModuleDefaults(Module module)

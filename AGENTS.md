@@ -708,7 +708,12 @@ attributions with suspicion generally.
 `[ProtoDataFormat(type, format)]` rides the same machinery as the level: it resolves **type → module
 → assembly**, exactly like `CompatibilityLevel`, and an explicit member format always wins over the
 default. `Default` is the zero sentinel, so "explicit `Default`" cannot be distinguished from
-"unstated" and cannot be used to opt a member back out of a default in force above it. It keys on the
+"unstated" — **at member scope**: a member cannot state `DataFormat.Default` to opt itself back out
+of a default declared above it, because that is indistinguishable from the member saying nothing at
+all. **At type scope this is not true**: a type carrying its own `[ProtoDataFormat(typeof(X),
+DataFormat.Default)]` genuinely does shadow an assembly- or module-level default for `X` on its own
+members, because type beats module/assembly in the walk regardless of which value the type declared —
+first match wins, even when the matched value is `Default`. It keys on the
 **Nullable-unwrapped scalar or element type** — a `Guid?` member picks up a `Guid` default exactly as
 a bare `Guid` does — and deliberately never reaches **maps** or **null-wrapped** members, both of
 which have their own per-side format story already. Both the runtime (`TypeDataFormatHelper` plus the
@@ -718,6 +723,16 @@ the fixture-assembly trap applies to it exactly as to `[module: CompatibilityLev
 module-scoped declaration would re-level every fixture linked into the same compilation, so an
 assembly/module-scoped golden fixture belongs under `Data/Diagnostics/` for the same reason —
 `AotRefGen`/`AotConformanceTests` link every fixture into one.
+
+The ambient default is applied **exactly as if the member had stated it explicitly** — including
+triggering whatever refusal that combination would produce. Maps and null-wrapped members are exempt
+because the injection never reaches them at all (above), but everything else is not: an assembly
+declaring `[assembly: ProtoDataFormat(typeof(int), DataFormat.Group)]` makes every bare `List<int>`
+member in that assembly newly throw while building the model, exactly as `DataFormat.Group` on an
+explicitly-stated scalar collection member already does. That is not a parity bug between the runtime
+and the generator — both agree on the refusal — it is simply a consequence of the default being
+applied before the usual per-member checks run, worth knowing before reaching for an assembly-wide
+default.
 
 ### Extensible contracts
 
@@ -1849,13 +1864,17 @@ fixture change so the two cannot drift.
 
 **Every fixture without a `.reference.cs` now says why, in its own header**, because an absence and a
 genuinely-empty ref-emit output look identical and that has already caused one wrong conclusion.
-None of the absences is work — each is a shape ref-emit cannot produce output for:
+Most of the absences are not work — each is a shape ref-emit cannot produce output for. `FormatDefault`
+is different: it is a normal shape ref-emit handles perfectly well, just not yet compared, because
+`AotRefGen` is net472-only and this fixture was added from Linux — so this one genuinely is pending
+work, not a permanent gap:
 
 | fixture | why |
 | --- | --- |
 | `NonPublicSetter`, `NonPublicCtor`, `InheritAccessor`, `ImplicitPrivate` | ref-emit's *compiled* path refuses the shape outright ("Non-public member cannot be used with full dll compilation"), so there is no output to compare |
 | `TrivialGetter` | no reference behaviour exists — we are strictly more capable there |
 | `DateOnly` | `<Compile Remove>`d from `AotRefGen`, which is net472 and has no `DateOnly` |
+| `FormatDefault` | pending, not permanent: nothing here is refused by ref-emit, so this fixture *should* have a `.reference.cs` — it was added from Linux, where `AotRefGen` (net472) cannot run. Differentially covered by `AotConformanceTests` in the meantime; run `AotRefGen` on Windows and commit the result |
 
 Two artefacts of decompilation are cosmetic, not semantic: `Features` appears as a uniquely-named
 method plus an ILSpy `.override` note (it's really an explicit-interface property), and

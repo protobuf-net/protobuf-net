@@ -1243,8 +1243,8 @@ namespace ProtoBuf.Meta
             var dataFormat = normalizedAttribute.DataFormat;
             if (dataFormat == DataFormat.Default
                 && (repeated is null || !repeated.IsMap)
-                && GetAttribute(attribs, "ProtoBuf.NullWrappedValueAttribute") is null
-                && GetAttribute(attribs, "ProtoBuf.NullWrappedCollectionAttribute") is null)
+                && GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName) is null
+                && GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName) is null)
             {
                 var scalarType = repeated?.ItemType ?? effectiveType;
                 scalarType = Nullable.GetUnderlyingType(scalarType) ?? scalarType;

@@ -18,6 +18,7 @@ partial class FormatDefaultModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.Payment>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.TimestampPromotion>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.Payment>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -123,6 +124,38 @@ partial class FormatDefaultModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid?>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid?>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
             }
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.TimestampPromotion>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+
+        global::AotFixtures.FormatDefault.TimestampPromotion global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.TimestampPromotion>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.FormatDefault.TimestampPromotion value)
+        {
+            value ??= new global::AotFixtures.FormatDefault.TimestampPromotion();
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        value.When = global::ProtoBuf.BclHelpers.ReadTimestamp(ref state);
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value;
+        }
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.TimestampPromotion>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.FormatDefault.TimestampPromotion value)
+        {
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.When;
+            state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
+            global::ProtoBuf.BclHelpers.WriteTimestamp(ref state, tmp1);
         }
     }
 }
