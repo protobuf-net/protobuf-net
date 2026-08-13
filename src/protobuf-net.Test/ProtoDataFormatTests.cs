@@ -199,5 +199,20 @@ namespace ProtoBuf.Test
             var schema = model.GetSchema(typeof(WellKnownPromotes), ProtoSyntax.Proto3);
             Assert.Contains(".google.protobuf.Timestamp", schema);
         }
+
+        [Fact]
+        public void AssemblyScopedGuidDefaultApplies()
+            => Assert.Equal(DataFormat.FixedSize, TypeDataFormatHelper.GetTypeDataFormat(
+                typeof(ProtoBuf.Test.TestDataFormat.AssemblyScopedFormats), typeof(Guid)));
+
+        [Fact]
+        public void ModuleBeatsAssembly()
+            => Assert.Equal(DataFormat.FixedSize, TypeDataFormatHelper.GetTypeDataFormat(
+                typeof(ProtoBuf.Test.TestDataFormat.AssemblyScopedFormats), typeof(int)));
+
+        [Fact]
+        public void AssemblyScopedGuidGoesOutFixed() => AssertPayload(
+            new ProtoBuf.Test.TestDataFormat.AssemblyScopedFormats { Guid = s_KnownGuid },
+            "0A-10-C4-16-E4-AF-45-5E-41-4C-94-8C-F2-78-73-26-35-47");
     }
 }

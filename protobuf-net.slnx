@@ -108,6 +108,9 @@
     <Project Path="src/protobuf-net.TestCompatibilityLevel/protobuf-net.TestCompatibilityLevel.csproj">
       <BuildType Solution="VS|*" Project="Debug" />
     </Project>
+    <Project Path="src/protobuf-net.TestDataFormat/protobuf-net.TestDataFormat.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
     <Project Path="src/protobuf-net.TestWeb/protobuf-net.TestWeb.csproj">
       <BuildType Solution="VS|*" Project="Debug" />
     </Project>
