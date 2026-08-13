@@ -37,12 +37,28 @@ public sealed class WrappedByteSerializer : ISerializer<Wrapped<byte>>
         => state.WriteInt32((int)value.Tag);
 }
 
+// the open mapping: one declaration serves every instantiation the model meets. Varint framing,
+// distinguishable from the closed override's fixed32
+public sealed class WrappedSerializer<T> : ISerializer<Wrapped<T>>
+{
+    SerializerFeatures ISerializer<Wrapped<T>>.Features
+        => SerializerFeatures.CategoryScalar | SerializerFeatures.WireTypeVarint;
+
+    Wrapped<T> ISerializer<Wrapped<T>>.Read(ref ProtoReader.State state, Wrapped<T> value)
+        => new Wrapped<T>(state.ReadInt64());
+
+    void ISerializer<Wrapped<T>>.Write(ref ProtoWriter.State state, Wrapped<T> value)
+        => state.WriteInt64(value.Tag);
+}
+
 // WCF-style contract: [DataContract]/[DataMember(Order)] supply the family and the field numbers
 [DataContract]
 public class Request
 {
     [DataMember(Order = 1)] public Wrapped<byte> Special { get; set; }
     [DataMember(Order = 2)] public int Plain { get; set; }
+    [DataMember(Order = 3)] public Wrapped<int> Id { get; set; }
+    [DataMember(Order = 4)] public Wrapped<string> Label { get; set; }
 }
 
 public static class ModelSerializerSamples
@@ -51,12 +67,14 @@ public static class ModelSerializerSamples
     [
         new Request(),
         new Request { Special = new Wrapped<byte>(4) },
-        new Request { Special = new Wrapped<byte>(200), Plain = 7 },
+        new Request { Id = new Wrapped<int>(11), Label = new Wrapped<string>(12) },
+        new Request { Special = new Wrapped<byte>(200), Plain = 7, Id = new Wrapped<int>(-13) },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Request))]
+[ProtoSerializer(typeof(Wrapped<>), typeof(WrappedSerializer<>), IsScalar = true)]
 [ProtoSerializer(typeof(Wrapped<byte>), typeof(WrappedByteSerializer), IsScalar = true)]
 public partial class ModelSerializerModel : TypeModel
 {

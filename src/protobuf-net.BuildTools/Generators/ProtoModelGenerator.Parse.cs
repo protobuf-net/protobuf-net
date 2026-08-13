@@ -2225,6 +2225,14 @@ namespace ProtoBuf.BuildTools.Generators
                 closedSerializer = declaration.Serializer;
                 return declaration;
             }
+            if (type.IsGenericType && !type.IsUnboundGenericType
+                && serializers.Open.TryGetValue(Qualified(compilation, type.OriginalDefinition), out declaration))
+            {
+                // close the serializer over the use site's arguments; arity was validated at gathering
+                closedSerializer = declaration.Serializer.OriginalDefinition
+                    .Construct(type.TypeArguments.ToArray());
+                return declaration;
+            }
             return null;
         }
 
