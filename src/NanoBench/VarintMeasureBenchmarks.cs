@@ -78,6 +78,8 @@ public class VarintMeasureBenchmarks
             Check(v, Current(v), Ladder(v), nameof(Ladder));
             Check(v, Current(v), Table(v), nameof(Table));
             Check(v, Current(v), Loop(v), nameof(Loop));
+            Check(v, Current(v), Switch(v), nameof(Switch));
+            Check(v, Current(v), SwitchShift(v), nameof(SwitchShift));
         }
         for (int bit = 0; bit < 32; bit++)
         {
@@ -88,6 +90,8 @@ public class VarintMeasureBenchmarks
                 Check(v, Current(v), Ladder(v), nameof(Ladder));
                 Check(v, Current(v), Table(v), nameof(Table));
                 Check(v, Current(v), Loop(v), nameof(Loop));
+                Check(v, Current(v), Switch(v), nameof(Switch));
+                Check(v, Current(v), SwitchShift(v), nameof(SwitchShift));
             }
         }
         foreach (var v in _u64)
@@ -95,6 +99,8 @@ public class VarintMeasureBenchmarks
             Check(v, Current64(v), Ladder64(v), nameof(Ladder64));
             Check(v, Current64(v), Hybrid64(v), nameof(Hybrid64));
             Check(v, Current64(v), Loop64(v), nameof(Loop64));
+            Check(v, Current64(v), Table64(v), nameof(Table64));
+            Check(v, Current64(v), MulShift64(v), nameof(MulShift64));
         }
         for (int bit = 0; bit < 64; bit++)
         {
@@ -103,6 +109,8 @@ public class VarintMeasureBenchmarks
                 Check(v, Current64(v), Ladder64(v), nameof(Ladder64));
                 Check(v, Current64(v), Hybrid64(v), nameof(Hybrid64));
                 Check(v, Current64(v), Loop64(v), nameof(Loop64));
+                Check(v, Current64(v), Table64(v), nameof(Table64));
+                Check(v, Current64(v), MulShift64(v), nameof(MulShift64));
             }
         }
         Console.WriteLine($"// {Distribution}: all strategies agree with the shipped form");
@@ -156,6 +164,30 @@ public class VarintMeasureBenchmarks
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int Table(uint value) => LengthByLeadingZeros[BitOperations.LeadingZeroCount(value | 1)];
 
+    /// <summary>Switch expression over the leading-zero count - the compiler may emit a jump
+    /// table. Note this repo's DispatchResults.md found a jump table LOSING to a predicted
+    /// comparison chain on ordered data, so this is a real question rather than a formality.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int Switch(uint value) => BitOperations.LeadingZeroCount(value | 1) switch
+    {
+        0 or 1 or 2 or 3 => 5,
+        4 or 5 or 6 or 7 or 8 or 9 or 10 => 4,
+        11 or 12 or 13 or 14 or 15 or 16 or 17 => 3,
+        18 or 19 or 20 or 21 or 22 or 23 or 24 => 2,
+        _ => 1,
+    };
+
+    /// <summary>Switch expression over the value's own magnitude, rather than over lzcnt.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int SwitchShift(uint value) => (value >> 7) switch
+    {
+        0 => 1,
+        < 1u << 7 => 2,
+        < 1u << 14 => 3,
+        < 1u << 21 => 4,
+        _ => 5,
+    };
+
     // ---- runners; summed so nothing is elided ----
 
     [Benchmark(Baseline = true)]
@@ -172,6 +204,12 @@ public class VarintMeasureBenchmarks
 
     [Benchmark]
     public int U32_Table() { var a = _u32; int t = 0; for (int i = 0; i < a.Length; i++) t += Table(a[i]); return t; }
+
+    [Benchmark]
+    public int U32_Switch() { var a = _u32; int t = 0; for (int i = 0; i < a.Length; i++) t += Switch(a[i]); return t; }
+
+    [Benchmark]
+    public int U32_SwitchShift() { var a = _u32; int t = 0; for (int i = 0; i < a.Length; i++) t += SwitchShift(a[i]); return t; }
 
     [Benchmark]
     public int U32_Loop() { var a = _u32; int t = 0; for (int i = 0; i < a.Length; i++) t += Loop(a[i]); return t; }
@@ -206,6 +244,28 @@ public class VarintMeasureBenchmarks
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int Hybrid64(ulong value)
         => value < 1ul << 7 ? 1 : ((63 - BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
+
+    private static ReadOnlySpan<byte> Length64ByLeadingZeros =>
+        [10,  9,  9,  9,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  8,  7,
+          7,  7,  7,  7,  7,  7,  6,  6,  6,  6,  6,  6,  6,  5,  5,  5,
+          5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  3,  3,  3,  3,  3,
+          3,  3,  2,  2,  2,  2,  2,  2,  2,  1,  1,  1,  1,  1,  1,  1,
+          1];
+
+    /// <summary>The gap in the first pass: Table dominated for u32, so it very likely does here.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int Table64(ulong value) => Length64ByLeadingZeros[BitOperations.LeadingZeroCount(value | 1)];
+
+    /// <summary>The divide removed, as MulShift does for 32-bit - worth 18% there.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int MulShift64(ulong value)
+        => (int)(((uint)BitOperations.Log2(value | 1) * 37) >> 8) + 1;
+
+    [Benchmark]
+    public int U64_Table() { var a = _u64; int t = 0; for (int i = 0; i < a.Length; i++) t += Table64(a[i]); return t; }
+
+    [Benchmark]
+    public int U64_MulShift() { var a = _u64; int t = 0; for (int i = 0; i < a.Length; i++) t += MulShift64(a[i]); return t; }
 
     [Benchmark]
     public int U64_Current() { var a = _u64; int t = 0; for (int i = 0; i < a.Length; i++) t += Current64(a[i]); return t; }
