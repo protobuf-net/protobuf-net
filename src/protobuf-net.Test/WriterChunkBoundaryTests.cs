@@ -91,17 +91,13 @@ namespace ProtoBuf.Tests
             Grouped = new Inner { Id = 9, Label = "grouped" },
         };
 
-        // 10 is the floor: the buffer-writer backend's room checks assume a lease at least as
-        // large as the widest primitive it writes without re-checking ("if (RemainingInCurrent
-        // < 10) GetBuffer"), so a smaller BufferSize against a strict IBufferWriter overruns the
-        // lease. That is a pre-existing defect - confirmed against the writer as it stood before
-        // the deferred-position invariant, where these same cases fail identically - and belongs
-        // with the presized lease (docs/nano-writer.md, buffer-core step 3), which is where the
-        // lease size becomes a policy rather than a raw pass-through of BufferSize.
-        // From 10 up, these straddle every varint, fixed and length-prefix width in turn.
+        // these straddle every varint, fixed and length-prefix width in turn. Sizes below the
+        // backend's minimum lease are deliberately included: BufferSize is a public knob with no
+        // documented floor, so asking for 1 must produce a small chunk rather than an overrun
+        // (which is exactly what it did until this fixture found it).
         public static IEnumerable<object[]> BufferSizes()
         {
-            foreach (var size in new[] { 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 31, 32, 64, 127, 128, 1024 })
+            foreach (var size in new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 23, 31, 32, 64, 127, 128, 1024 })
                 yield return new object[] { size };
         }
 

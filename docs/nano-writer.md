@@ -311,7 +311,11 @@ derivation were wrong.
 primitive written without re-checking, while `GetBuffer` asks for exactly `BufferSize`. With a
 strict `IBufferWriter` that is an `IndexOutOfRangeException` on a public config knob. Confirmed
 pre-existing by re-running the fixture against the writer as it stood before this cut - the
-same 18 cases fail identically - so it is not this cut's. Fixed separately, next commit.
+same 18 cases fail identically - so it is not this cut's. **Fixed in the following commit**:
+`GetBuffer` floors its demand at a `MinimumLease`, and the sweep runs from 1 again. It went
+unnoticed because a real `IBufferWriter` hands out far more than the hint - but the hint is
+all the interface promises. The stream backend has no equivalent problem: `DemandSpace`
+resizes `ioBuffer` on demand rather than living within a lease.
 
 **Benchmark: measured back-to-back on one machine, which turned out to matter more than
 expected.** net10.0, descriptor serialize:
