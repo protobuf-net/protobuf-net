@@ -967,7 +967,24 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 ## Where this stands / what's next (current as of 2026-08-13, cuts 1-7 pushed)
 
 **Handover note: this section plus "The presized buffer core: the plan" above is the
-entry point for a fresh session.** Cuts 1-9 are pushed to `raw-writer` and green on every
+entry point for a fresh session.**
+
+**State as of 2026-08-13, end of session.** Everything is pushed to `raw-writer` and green on
+every gate (protobuf-net.Test 1110 x2 TFMs, Examples 679/705, Reflection 556 x2, conformance
+1364, AotDifferential 3028/3028 exit 0, AotSmoke + DownLevelSmoke, native 19 warnings). What
+landed: cuts 8 and 9 (the deferred position, span-direct raw ops), the length-cache retention
+policy, the measure hand-off cache swap, `ProtoWriter.IsMeasuring`, and four bug fixes - a
+buffer-writer lease overrun, an under-delivering-destination crash, a process-killing stack
+overflow on cyclic graphs, and a validator that rejected a callback shape the rest of the stack
+supported. What was measured and REVERTED: the presized lease, and three primitive-level
+optimisations (see the section above). What is written but SHELVED and not in the tree: the
+stream measure-first gate - design and reasoning recorded, scaffolding
+(`WriteMeasuredWithLengthPrefix`) in place, but it needs re-implementing and measuring.
+
+The backlog lives in the task list (#4-#10) with enough detail to resume cold; the reasoning
+behind all of it is here rather than in any conversation.
+
+Cuts 1-9 are pushed to `raw-writer` and green on every
 gate; the serialize numbers are in `src/NanoBench/DescriptorSerializeResults.md`, which now
 carries BOTH backends - and the buffer-writer one is the interesting half (the generated
 model is ~10% ahead of Google.Protobuf there, against a legacy baseline that is twice as
