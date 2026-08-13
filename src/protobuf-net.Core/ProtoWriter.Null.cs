@@ -238,47 +238,18 @@ namespace ProtoBuf
         internal static int MeasureInt32(int value)
             => value < 0 ? 10 : MeasureUInt32((uint)value);
 
-        // Raced against six alternatives across four value distributions
-        // (src/NanoBench/VarintMeasureResults.md). A table indexed by the leading-zero count
-        // wins at 0.45/0.46 of the previous form for 32/64-bit, and - the reason it is the
-        // right CHOICE rather than merely the fastest - it is distribution-independent, so it
-        // needs no bet on the data. A comparison ladder beats it on small-only input and loses
-        // elsewhere; a switch/jump-table loses outright, with thirty times the variance.
-        //
-        // Down-level has no LeadingZeroCount, so it takes the ladder - which still beats the
-        // shift loop it replaces in every distribution, and that loop was worse than the
-        // INTRINSIC baseline on wide values.
-        //
-        // The tables are derived, not typed: bytes = ceil(bits / 7) where bits = width - lzcnt.
-        // A hand-written one was wrong at its second entry when this was first attempted.
-#if PLAT_INTRINSICS
-        private static ReadOnlySpan<byte> VarintLength32 =>
-        [
-             5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  3,  3,  3,  3,  3,
-             3,  3,  2,  2,  2,  2,  2,  2,  2,  1,  1,  1,  1,  1,  1,  1,
-             1
-        ];
-
-        private static ReadOnlySpan<byte> VarintLength64 =>
-        [
-            10,  9,  9,  9,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  8,  7,
-             7,  7,  7,  7,  7,  7,  6,  6,  6,  6,  6,  6,  6,  5,  5,  5,
-             5,  5,  5,  5,  4,  4,  4,  4,  4,  4,  4,  3,  3,  3,  3,  3,
-             3,  3,  2,  2,  2,  2,  2,  2,  2,  1,  1,  1,  1,  1,  1,  1,
-             1
-        ];
-#endif
-
         [MethodImpl(ProtoReader.HotPath)]
         internal static int MeasureUInt32(uint value)
         {
 #if PLAT_INTRINSICS
-            return VarintLength32[System.Numerics.BitOperations.LeadingZeroCount(value | 1)];
+            return ((31 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
-            return value < 1u << 7 ? 1
-                : value < 1u << 14 ? 2
-                : value < 1u << 21 ? 3
-                : value < 1u << 28 ? 4 : 5;
+            int count = 1;
+            while ((value >>= 7) != 0)
+            {
+                count++;
+            }
+            return count;
 #endif
         }
 
@@ -290,17 +261,14 @@ namespace ProtoBuf
         internal static int MeasureUInt64(ulong value)
         {
 #if PLAT_INTRINSICS
-            return VarintLength64[System.Numerics.BitOperations.LeadingZeroCount(value | 1)];
+            return ((63 - System.Numerics.BitOperations.LeadingZeroCount(value | 1)) / 7) + 1;
 #else
-            return value < 1ul << 7 ? 1
-                : value < 1ul << 14 ? 2
-                : value < 1ul << 21 ? 3
-                : value < 1ul << 28 ? 4
-                : value < 1ul << 35 ? 5
-                : value < 1ul << 42 ? 6
-                : value < 1ul << 49 ? 7
-                : value < 1ul << 56 ? 8
-                : value < 1ul << 63 ? 9 : 10;
+            int count = 1;
+            while ((value >>= 7) != 0)
+            {
+                count++;
+            }
+            return count;
 #endif
         }
     }

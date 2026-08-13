@@ -52,8 +52,33 @@ and a hand-written `Table64` had two 10s where it needed one. Both would simply 
 - The realistic hot input is a sub-message LENGTH PREFIX - constant tags are folded to literals by
   the generator - which is what `prefix` models.
 
-## Recommendation
+## Outcome: applied, validated in situ, and REVERTED
 
-- intrinsic path: `Table` for `MeasureUInt32`, `Table64` for `MeasureUInt64`
-- down-level path: `Ladder`
-- validate on `DescriptorSerializeBenchmarks` before landing
+The recommendation above was applied and then measured on `DescriptorSerializeBenchmarks`, which
+is the arbiter. **The 2.2x does not transfer, and may cost slightly:**
+
+| | before | after | vs the Google gauge (-1.1%/-1.2%) |
+| --- | ---: | ---: | --- |
+| stream `NanoGenerated` | 14.27 us | 14.38 us | ~+2% worse |
+| stream `NanoGeneratedMeasure` | 3.626 us | 3.600 us | flat |
+| buffer-writer `NanoGenerated` | 9.81 us | 9.96 us | ~+2% worse |
+
+So it was reverted, per this repo's standing rule that nothing merges on "should be faster".
+
+**Why the micro-benchmark misled, which is the durable lesson here:** the table swaps
+register-only arithmetic for a memory load, and it was measured in a tight loop of back-to-back
+calls - an access pattern that never occurs. In a real write the measure is interleaved with
+other work, where the arithmetic latency was already hidden by instruction-level parallelism and
+the extra load is not free. A primitive microbenchmark measures THROUGHPUT of a thing that is
+never issued back-to-back; the win it reports is available only in that shape.
+
+Keep the matrix: it is a correct, checked record of the relative cost of these formulations, and
+it says useful things (the divide costs 18%; a jump table loses with 30x the variance; the
+down-level loop is worse than even the intrinsic baseline on wide data). Just do not assume any
+of it converts into end-to-end time.
+
+**Still open, and NOT settled by this:** the down-level (net472) arm. `Table` is unavailable
+there and the ladder-vs-loop question was never measured in situ - the micro-benchmark cannot
+run on net472 at all, and the descriptor validation above was net10.0 only. The loop being worse
+than the *intrinsic* baseline on wide data is suggestive but is not evidence about net472. That
+needs `DescriptorSerializeBenchmarks` on the net472 leg before anything changes there.
