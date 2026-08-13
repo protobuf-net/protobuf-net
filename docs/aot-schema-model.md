@@ -1,0 +1,183 @@
+# A `.proto` schema as an AOT model, in one project
+
+**Status: design, with the load-bearing mechanism proved by test. No implementation yet.**
+
+## The problem
+
+A `.proto`-first consumer cannot get the AOT generator's performance without **two projects and
+two builds**. `ProtoFileGenerator` turns schemas into DTOs; `ProtoModelGenerator` turns
+`[ProtoSerializable(typeof(Foo))]` seeds into serializers - and source generators all run against
+the same input compilation and never see each other's output, so a `typeof` naming a generated
+DTO resolves to an **error symbol**. `PBN2002` recognises `TypeKind.Error` and says so; the
+workaround is `src/AotSchemaDtos` plus a separate consumer, which is fine for this repo's own
+smoke test and unreasonable to ask of a consumer.
+
+That is a shame, because **nothing in the AOT model actually needs the C# type**. The plan types
+in `Internal/Aot` are hand-written equatable values holding strings, bools and enums - they are
+*required* to hold no Roslyn reference at all (`ProtoModelPlanShapeTests` enforces it, because a
+symbol in a cached model both defeats the incremental cache and pins the compilation alive). So a
+plan can be built from anything that knows the same facts, and a `.proto` schema knows all of
+them - arguably better, since it is the wire contract in the first place.
+
+## The mechanism, probed rather than assumed
+
+`SchemaSourcedModelProbeTests` establishes all three halves of it against a real generator driver:
+
+| | |
+| --- | --- |
+| a generator **cannot see** another generator's emitted type | `GetTypeByMetadataName("Probe.Thing")` is null inside the second generator - the obstacle is real, and is asserted so it cannot later be confused with "nobody tried" |
+| emitted code **may name** what it cannot see | a second generator emits `new global::Probe.Thing { Id = 42, Name = "probe" }` for a DTO that does not exist when it runs; the final compilation has **zero errors** and both types bind |
+| the names are **derivable, not guessable** | the DTO's members really are `Id`/`Name`, and `NameNormalizer.Default.GetName(FieldDescriptorProto)` returns exactly those - the same call the DTO generator makes, on the same descriptor object |
+
+The third row is the one that makes this a design rather than a hope, and it rests on a fact
+about the build that is easy to miss: **`protobuf-net.BuildTools` compiles protobuf-net.Reflection's
+sources in** (`<Compile Include="../protobuf-net.Reflection/**/*.cs" />`), exactly as it does
+Core's. The parser, `FileDescriptorSet`, `NameNormalizer` and `CSharpCodeGenerator` are all
+already inside the generator assembly. A schema front-end does not *reimplement* protogen's naming
+- it calls it.
+
+So the shape is: both generators consume the same `.proto` additional files, independently; one
+emits DTOs, the other emits a model that names them; the compiler joins the two at the end.
+Neither needs the other's output.
+
+## The question this turns on: how does a consumer ask for it?
+
+`typeof` is out, since the type does not exist yet. Three candidates were considered.
+
+### A. An MSBuild property
+
+`<ProtoBufAotModel>true</ProtoBufAotModel>`, surfaced as `build_property.ProtoBufAotModel` -
+the same route `ProtoBufDisableBuildTools` already uses (`Literals.DisableProperty`).
+
+Cheap, and reaches consumers who never write C# for their DTOs at all. But it is all-or-nothing
+per project, has nowhere to put a model *name*, and cannot express "these three schemas in one
+model, that one in another".
+
+### B. Per-file metadata on the `AdditionalFiles` item
+
+`<AdditionalFiles Include="shop.proto" ProtoBufAotModel="ShopModel" />`. The plumbing exists -
+`ProtoFileGenerator` already reads `ImportPaths` and `IncludeInOutput` this way, through
+`Literals.AdditionalFileMetadataPrefix`.
+
+Expressive, but it puts the model's identity in the project file, where nothing else about the
+model lives, and where no analyzer, code fix or IDE navigation can see it.
+
+### C. A seed attribute naming the schema — **recommended**
+
+```csharp
+[ProtoModel]
+[ProtoSchema("shop.proto")]
+public partial class ShopModel : TypeModel { }
+```
+
+Exactly parallel to the seeding that already exists: `[ProtoSerializable(typeof(Foo))]` says
+"seed this model from that type", `[ProtoSchema("shop.proto")]` says "seed this model from that
+schema". Reasons to prefer it:
+
+- **The model type must exist in source anyway.** It is a `partial class : TypeModel` the
+  consumer writes; that is the natural home for the switch, and it keeps the whole `Model.Instance`
+  / migration-analyzer / code-fix story unchanged.
+- **It costs nothing when absent.** The generator's trigger is already
+  `ForAttributeWithMetadataName` on `[ProtoModel]`, which fires only for a type carrying it -
+  and `AdditionalTextsProvider` is a separate, cached input.
+- **A string here is not the `[ProtoInclude(tag, "TypeName")]` smell**, and the distinction is
+  worth stating because that one is *refused* on principle. That resolves a **type** at
+  **runtime**, by name, which AOT cannot do. This resolves a **file** at **compile time**,
+  against the additional-files list, and a miss is a diagnostic pointing at the attribute.
+- **It composes.** A model can carry `[ProtoSchema]` and `[ProtoSerializable(typeof(...))]` and
+  `[ProtoSurrogate]` together - schema-derived contracts and hand-written ones in one model,
+  which is what a real service usually has.
+- **Per-model granularity**, which neither A nor B gives.
+
+A supports A as a shorthand: with the property set and no `[ProtoSchema]` anywhere, seed every
+schema in the project into the single model that carries `[ProtoModel]`. That covers the
+"I just want it on" case without giving up the expressive form.
+
+## What the plan builder needs, and where each fact comes from
+
+The schema supplies the wire facts outright, and they are the ones that matter: field number,
+type, `repeated`/`map`, `optional`/`required`, packedness, enums, nested messages, oneofs,
+defaults, groups, extensions.
+
+What it does **not** supply is the *emitted C# shape*, and that is the real work - because the
+plan describes the C# the serializer will talk to:
+
+| plan fact | source |
+| --- | --- |
+| `TypeName`, member names | `NameNormalizer` - the same instance/settings the DTO generator used |
+| `ProtoExtensibleKind` | protogen emits `IExtensible` on messages; a codegen convention, not a schema fact |
+| `Specified` / `ShouldSerialize` conditionals | protogen's syntax-dependent choice for `optional` |
+| getter-only collections, backing fields | protogen emits `List<T>` with a getter only - so the plan needs the accessor route it already has for that shape |
+| construction | protogen always emits a public parameterless constructor |
+| `IsSealed`, `IsValueType`, tuples, surrogates | not reachable from a schema at all - and not needed, since protogen never emits them |
+
+Note the direction of that list: the schema path is **narrower and more predictable** than the
+symbol path, because we control both ends. There is no `[UnsafeAccessor]` guesswork, no
+auto-tuple detection, no `extern alias`. The risk is not complexity, it is **drift** - if the DTO
+codegen changes a name or a conditional and the plan builder does not, the consumer gets a build
+break in code neither of them wrote.
+
+## The one design decision that matters: don't predict, share
+
+Two ways to keep the two halves in step:
+
+1. **Shared calls** - the plan builder calls `NameNormalizer` and mirrors protogen's conventions
+   at each decision point. Simple, and what the probe demonstrates; but every convention is a
+   separate opportunity to drift, and nothing forces them to move together.
+2. **A shared intermediate model** - the schema is projected once into a codegen model that
+   records the C# actually being emitted (names, nullability, conditionals), and *both* the DTO
+   writer and the plan builder consume it. Drift becomes impossible rather than merely tested for.
+
+(2) is the better shape, and it has history here: commit `c6c2a42a` (Sep 2022) built exactly that
+- `ProtoBuf.CodeGen`'s `CodeGenSet.Parse(FileDescriptorSet, CodeGenContext)` walking into
+`CodeGenFile`/`CodeGenMessage`/`CodeGenField`/`CodeGenEnum`, with golden tests serialising the
+model to JSON. It never merged and is not in the tree today, but it is the right ancestor to read
+first. This is the `ToAotCodegenModel()` idea, and the name says the whole thing: the codegen
+model already knows what it is about to emit, so let it hand that to the AOT plan builder.
+
+Starting with (1) and moving to (2) is defensible - the probe shows (1) works - but the gate below
+has to exist either way, and (2) is what makes the gate mostly redundant.
+
+## The gate
+
+The comparison that matters is the one the rest of this arc uses: **bytes against
+`RuntimeTypeModel`**. For each schema, compile the generated DTOs plus the generated model, and
+check that serializing a populated instance agrees with the runtime model over the same DTOs, in
+both directions.
+
+Most of that harness exists. `src/AotDifferential`'s `Schemas.cs` already parses the schema tree
+under `protobuf-net.Reflection.Test/Schemas`, runs it through `CSharpCodeGenerator` and compiles
+the DTOs in-process into a `SchemaCorpus` assembly - which is how the corpus differential got its
+machine-generated half. The new leg adds the generated *model* to that compilation and compares.
+Note what that half already found when it was first turned on: a member named after a C# keyword
+that broke the consumer's build (item 14 of `docs/aot-findings.md`). Machine-generated contracts
+are a different distribution, and this path is entirely machine-generated.
+
+A second, cheaper gate: the emitted model must *compile* against the emitted DTOs, which the
+probe test's shape already demonstrates and which a golden fixture would pin per schema.
+
+## Locations, and why they are not a problem
+
+`PlanLocation` deliberately stores Roslyn *value* types (`TextSpan`, `LinePositionSpan`) and
+reconstitutes a `Location` only at report time - so a schema-sourced plan can carry a location
+into the `.proto` file rather than into C#. `ProtoFileGenerator` already does exactly this for
+parse errors: it turns the parser's `LineNumber`/`ColumnNumber` into a `LinePositionSpan` and
+calls `Location.Create(error.File, default, span)`. The same route serves plan diagnostics.
+
+And the deeper point stands: **most such diagnostics should not arise**. The generator drops a
+contract it cannot handle - but on this path we also *emit* the contract, so a shape the plan
+cannot serialize is a shape protogen should not have emitted. Where the two genuinely disagree,
+pointing at the `.proto` line is the most useful thing that could happen.
+
+## Suggested order
+
+1. **The seed attribute**, as Core API alongside `[ProtoModel]`/`[ProtoSerializable]` (same
+   `[Experimental("PBN9001")]` gate), plus the diagnostic for a schema that no additional file
+   matches. Nothing generates yet - this is the surface.
+2. **The schema front-end**, narrow: messages of scalars, `repeated`, `map`, enums and nested
+   messages. That is the bulk of any real schema and it is all shapes the plan already emits.
+3. **The differential leg**, before widening. It is the thing that turns "it compiles" into "it
+   is correct", and this path has already proved it finds real bugs.
+4. **Widen** on evidence: oneofs, extensions, groups, proto2 defaults, well-known types.
+5. **Then** consider hoisting to the shared codegen model of (2) above, once the set of
+   conventions that must not drift is known from having written them.
