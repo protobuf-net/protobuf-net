@@ -742,6 +742,53 @@ A one-token change with a three-generator-plus-ecosystem audit behind it, buying
 any real payload. The rule this is an instance of: **a convention is cheap to choose and
 expensive to reverse once anything outside the repo can implement it.**
 
+## Pre-encoded constant tags: built, measured FLAT, and now explained (2026-08-13)
+
+The fourth primitive-level optimisation in this arc to buy nothing end to end - but the first
+where the null result is *explained* rather than merely observed, which changes what it is worth.
+
+What landed: `WriteRawTag` gains an arm per tag width (all five - field numbers run to 2^29-1),
+each folding at a generated call site to a literal and one or two stores; the room demand
+becomes exact instead of `MaxVarint32`; and `WriteRawTagBool` composes a whole bool field, which
+at a single-byte tag is a select between two folded constants and ONE store. Census afterwards:
+**zero `WriteRawVarint32/64` sites with a constant argument anywhere in the golden corpus**,
+which was the stated goal for the generated write path.
+
+Measured, paired, two runs each side:
+
+| row | before | after | |
+| --- | ---: | ---: | --- |
+| NanoGenerated | 10.286 / 10.163 us | 10.385 / 10.327 us | **+1.4%**, i.e. nothing |
+| GoogleProtobuf (gauge) | 13.084 / 13.154 us | 13.057 / 13.121 us | flat |
+
+**Why - and this is the useful half.** `src/NanoBench/DescriptorPayloadCensus.md` classifies
+every byte of the payload and every varint by width:
+
+- **99.7% of tags written are one byte** (1,056 of 1,059), and that arm has been a single store
+  since cut 9. The generated model has 27 two-byte *call sites*, nine of them field 999
+  (`uninterpreted_option`) - but that field is absent from real data. **Static call-site
+  population and dynamic op population are different distributions**, and only the second pays;
+- **96.7% of length prefixes are one byte**, so that varint is nearly always a single store too;
+- **bools are at most 122 fields** out of ~2,700 write ops;
+- **71.5% of the payload is string/bytes payload** - `UTF8.GetBytes` over 5.5 KB.
+
+So the ceiling on the whole change was about 3 tag ops and 122 bool ops out of ~2,700, against a
+workload whose mass is UTF-8 encoding. It could not have shown, and now we can say that with a
+count instead of a shrug.
+
+**Kept rather than reverted, deliberately, and the distinction from the three that were backed
+out matters**: those bought nothing *and* cost something (the bool collapse put 128 B/op on a
+zero-allocation path; the measure table traded register arithmetic for a memory load). This one
+costs nothing measurable, allocates nothing, leaves the dominant one-byte arm untouched, tightens
+the room demand from 5 bytes to the real width (fewer out-of-line trips near a chunk boundary),
+and is pinned by tests that are verified able to fail. If the judgement is that unmeasurable
+means unwanted regardless, the revert is clean - but it is a different call from the other three.
+
+**What would re-open it**: packed repeated writes measure and write per ELEMENT, so a
+packed-heavy payload has a completely different census. So does anything extension-shaped, where
+field numbers are high by construction and the two-byte arm stops being rare. Re-run the census
+before assuming.
+
 ## Cut 10 landed: the stream backend goes span-backed (2026-08-13)
 
 The top of the ladder, and the largest single win of the arc: **-29.2% on `NanoGenerated`, the
