@@ -62,6 +62,9 @@ namespace ProtoBuf
                 base.Cleanup();
                 _nullWriter.Cleanup();
                 _writer = default;
+                // the latch is per-destination, so it must not survive into the next use of a
+                // pooled writer - a friendly destination would otherwise inherit the penalty
+                if (_ownedLease is not null) BufferPool.ReleaseBufferToPool(ref _ownedLease);
             }
 
             protected internal override State DefaultState()
@@ -78,6 +81,32 @@ namespace ProtoBuf
             // position advance is pure duplication of a count the span write already maintains
             private protected override long GetUncommitted(in State state) => state.OffsetInCurrent;
 
+            // ---- when the destination will not give us a usable chunk ----
+            //
+            // The size passed to GetMemory/GetSpan is a HINT. The documented contract is "at
+            // least this much, or throw", but it is a contract we neither control nor can
+            // verify: a simplistic destination may hand back a fixed small block however much
+            // is asked for, and in the limit one byte at a time.
+            //
+            // "Large but not large enough" needs nothing - a chunk at least as wide as the
+            // widest single op can be written into, and the room checks simply re-lease more
+            // often. Only an UNUSABLE chunk is a problem, and the answer is to stop using the
+            // destination's memory: lease our own region, and hand the bytes over on flush via
+            // BuffersExtensions.Write, which loops GetSpan/Advance internally and so copes with
+            // any chunk size the destination cares to offer. The fragmentation becomes its
+            // problem, which is where it belongs.
+            //
+            // The choice LATCHES: a destination that gave an unusable chunk once will do it
+            // again, and re-probing would burn a GetMemory call per chunk to learn nothing.
+
+            /// <summary>
+            /// The narrowest chunk that can be written into at all: the widest single op is a
+            /// 10-byte varint, and the room checks assume that much is available after one test.
+            /// </summary>
+            private const int UsableLease = 16;
+
+            private byte[] _ownedLease; // non-null once the destination proved unusable
+
             private protected override bool TryFlush(ref State state)
             {
                 if (state.IsActive)
@@ -89,7 +118,22 @@ namespace ProtoBuf
                         bytes = state.ConsiderWritten();
                         step = true;
                         Advance(bytes); // uncommitted -> committed; position is unchanged across this
-                        _writer.Advance(bytes);
+                        if (_ownedLease is not null)
+                        {
+                            // our memory, not theirs: push it across in whatever sizes they will
+                            // take. Called STATICALLY and by type name, not as an extension
+                            // method, and that is deliberate: `writer.Write(span)` binds to
+                            // whichever identically-shaped extension happens to be in scope, and
+                            // there is at least one in the wild (CommunityToolkit.HighPerformance)
+                            // whose version assumes GetSpan honours the hint - the very thing
+                            // being defended against here. Naming the type pins the BCL's
+                            // multi-segment implementation and makes that unbindable.
+                            if (bytes != 0) BuffersExtensions.Write(_writer, new ReadOnlySpan<byte>(_ownedLease, 0, bytes));
+                        }
+                        else
+                        {
+                            _writer.Advance(bytes);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -170,9 +214,28 @@ namespace ProtoBuf
                 bool step = false;
                 try
                 {
-                    var buffer = _writer.GetMemory(bytes);
-                    step = true;
-                    state.Init(buffer);
+                    if (_ownedLease is not null)
+                    {
+                        // already latched: never ask the destination for memory again
+                        state.Init(_ownedLease);
+                    }
+                    else
+                    {
+                        var buffer = _writer.GetMemory(bytes);
+                        step = true;
+                        if (buffer.Length >= UsableLease)
+                        {
+                            state.Init(buffer);
+                        }
+                        else
+                        {
+                            // unusable: take our own region and latch (see the note above).
+                            // Nothing was Advance()d, so the chunk we are declining is simply
+                            // abandoned, which is what an IBufferWriter permits.
+                            _ownedLease = BufferPool.GetBuffer(bytes);
+                            state.Init(_ownedLease);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

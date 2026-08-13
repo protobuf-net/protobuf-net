@@ -258,6 +258,51 @@ is the *generated* path - it drives the classic engine only - so the raw-and-leg
 interleave through a chunk boundary is still owed, and wants a buffer-writer leg in
 `AotConformanceTests` rather than a fixture here.
 
+## The lease hint is a HINT (Marc, 2026-08-13) - and this was already broken
+
+`IBufferWriter<T>.GetMemory`/`GetSpan` document their argument as "at least this much, or
+throw", but that is a contract we neither control nor can verify. A simplistic destination can
+hand back a fixed small block however much is asked for, and in the limit one byte at a time.
+**Optimise for a friendly lease; survive an unfriendly one.**
+
+Probed rather than reasoned about, with a destination that ignores the hint entirely:
+
+| the destination grants | before | why |
+| --- | --- | --- |
+| >= 10 bytes | **worked already** | a chunk at least as wide as the widest single op is usable; the room checks just re-lease more often |
+| < 10 bytes | **`IndexOutOfRangeException`** | `GetBuffer` called `state.Init(buffer)` without ever looking at what came back, and `LocalWriteVarint64` then wrote past it |
+
+So "large but not large enough" needed nothing, and only the pathological case was broken -
+a useful narrowing, because it means the fix does not touch the normal path at all.
+
+**The fix is Marc's: stop using their memory.** When a chunk comes back narrower than
+`UsableLease` (16), the writer leases its own pooled region and hands the bytes over at flush
+via `BuffersExtensions.Write`, which loops `GetSpan`/`Advance` internally and copes with any
+size the destination offers - so the fragmentation becomes its problem, which is where it
+belongs. The choice **latches**: a destination that gave an unusable chunk once will do it
+again, and re-probing would burn a `GetMemory` call per chunk to learn nothing. The latch is
+cleared in `Cleanup`, since the writer is pooled and a friendly destination must not inherit
+the penalty.
+
+### Call `BuffersExtensions.Write` by type name, never as an extension method
+
+This is not style, and the reason is a live bug in a popular library.
+`CommunityToolkit.HighPerformance` declares an *identically shaped*
+`Write<T>(this IBufferWriter<T>, ReadOnlySpan<T>)` whose body is the naive
+`GetSpan(len)` / `CopyTo` / `Advance(len)` - i.e. it assumes the hint is honoured. It is meant
+to be a polyfill, gated `#if !NETSTANDARD2_1_OR_GREATER`, but that symbol is defined **only for
+netstandard2.1+ TFMs**, not for `net8.0` (which gets `NET`, `NET8_0_OR_GREATER`, `NETCOREAPP*`),
+so the polyfill ships on every target *except* the one it was excluded from. Verified with a
+two-TFM probe project, not from memory.
+
+Worse than dead weight: with both namespaces imported on net8.0 the call is **not ambiguous** -
+it compiles, the Toolkit's version wins silently, and against a one-byte-granting destination it
+throws where the BCL's would have looped and succeeded. (The BCL implementation cannot throw
+there, so whatever threw was not it.)
+
+Hence the static, type-qualified call in `TryFlush`. It pins the multi-segment implementation
+and makes the other one unbindable.
+
 ## The minimum lease: `TypeModel.MinimumBufferSize` = 128 (Marc, 2026-08-13)
 
 Two floors in one number, and it is worth keeping both reasons because they justify very
