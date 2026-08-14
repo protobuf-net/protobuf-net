@@ -58,7 +58,7 @@ partial class GetterModel
                     lengths3[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
-                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3);
+                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3, state.RawDepthBudget);
             }
             var tmp4 = value.Value;
             if (tmp4 != 0)
@@ -107,7 +107,7 @@ partial class GetterModel
             state.WriteRawTag((11 << 3) | 2);  // Where
             var len11 = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len11);
-            RawWrite_AotFixtures_Getter_Point(ref state, tmp11);
+            RawWrite_AotFixtures_Getter_Point(ref state, tmp11, state.RawDepthBudget);
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)
             {
@@ -292,10 +292,11 @@ partial class GetterModel
             => RawRead_AotFixtures_Getter_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
-            => RawWrite_AotFixtures_Getter_Nested(ref state, value);
+            => RawWrite_AotFixtures_Getter_Nested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
+        public static void RawWrite_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)
@@ -373,10 +374,11 @@ partial class GetterModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
-            => RawWrite_AotFixtures_Getter_Point(ref state, value);
+            => RawWrite_AotFixtures_Getter_Point(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Getter_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
+        public static void RawWrite_AotFixtures_Getter_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.X;
             if (tmp1 != 0)
             {

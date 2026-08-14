@@ -36,7 +36,7 @@ partial class StructsModel
             state.WriteRawTag((1 << 3) | 2);  // Location
             var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len1);
-            RawWrite_AotFixtures_Structs_Point(ref state, tmp1);
+            RawWrite_AotFixtures_Structs_Point(ref state, tmp1, state.RawDepthBudget);
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)
             {
@@ -134,10 +134,11 @@ partial class StructsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
-            => RawWrite_AotFixtures_Structs_Point(ref state, value);
+            => RawWrite_AotFixtures_Structs_Point(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
+        public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.X;
             if (tmp1 != 0)
             {

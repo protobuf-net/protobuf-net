@@ -46,10 +46,11 @@ partial class InheritUnsupportedModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
-            => RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref state, value);
+            => RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
+        public static void RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -82,10 +83,11 @@ partial class InheritUnsupportedModel
             => RawRead_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
-            => RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
+            => RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
+        public static void RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Extra;
             if (tmp2 != 0)

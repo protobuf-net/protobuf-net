@@ -30,10 +30,11 @@ partial class AbstractLeafModel
             => RawRead_AotFixtures_AbstractLeaf_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value)
-            => RawWrite_AotFixtures_AbstractLeaf_Holder(ref state, value);
+            => RawWrite_AotFixtures_AbstractLeaf_Holder(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value)
+        public static void RawWrite_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)
@@ -46,7 +47,7 @@ partial class AbstractLeafModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1);
+                RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1, depth);
             }
             var tmp2 = value.Name;
             if (tmp2 != null)
@@ -148,10 +149,11 @@ partial class AbstractLeafModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value)
-            => RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, value);
+            => RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_AbstractLeaf_Shape(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value)
+        public static void RawWrite_AotFixtures_AbstractLeaf_Shape(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Sides;
             if (tmp1 != 0)

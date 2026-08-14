@@ -35,10 +35,11 @@ partial class EnumContractModel
             => RawRead_AotFixtures_EnumContract_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.EnumContract.Holder value)
-            => RawWrite_AotFixtures_EnumContract_Holder(ref state, value);
+            => RawWrite_AotFixtures_EnumContract_Holder(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.EnumContract.Holder value)
+        public static void RawWrite_AotFixtures_EnumContract_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.EnumContract.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Shade;
             if (tmp1 != default(global::AotFixtures.EnumContract.Shade))

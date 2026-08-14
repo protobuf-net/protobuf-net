@@ -30,10 +30,11 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_DataFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
-            => RawWrite_AotFixtures_Field_DataFields(ref state, value);
+            => RawWrite_AotFixtures_Field_DataFields(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
+        public static void RawWrite_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
             if (tmp1 != 0)
@@ -128,10 +129,11 @@ partial class FieldModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
-            => RawWrite_AotFixtures_Field_FieldStruct(ref state, value);
+            => RawWrite_AotFixtures_Field_FieldStruct(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
+        public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -188,7 +190,7 @@ partial class FieldModel
                     lengths3[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
-                RawWrite_AotFixtures_Field_Nested(ref state, tmp3);
+                RawWrite_AotFixtures_Field_Nested(ref state, tmp3, state.RawDepthBudget);
             }
             var tmp4 = value.Zig;
             if (tmp4 != 0)
@@ -304,10 +306,11 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
-            => RawWrite_AotFixtures_Field_Nested(ref state, value);
+            => RawWrite_AotFixtures_Field_Nested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
+        public static void RawWrite_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)

@@ -27,10 +27,11 @@ partial class ReservedModel
             => RawRead_AotFixtures_Reserved_ReservedButClear(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Reserved.ReservedButClear>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Reserved.ReservedButClear value)
-            => RawWrite_AotFixtures_Reserved_ReservedButClear(ref state, value);
+            => RawWrite_AotFixtures_Reserved_ReservedButClear(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Reserved.ReservedButClear value)
+        public static void RawWrite_AotFixtures_Reserved_ReservedButClear(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Reserved.ReservedButClear value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.A;
             if (tmp1 != 0)

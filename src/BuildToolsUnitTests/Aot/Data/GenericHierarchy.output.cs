@@ -42,10 +42,11 @@ partial class GenericHierarchyModel
             => RawRead_AotFixtures_GenericHierarchy_Crate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Crate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Crate value)
-            => RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, value);
+            => RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Crate value)
+        public static void RawWrite_AotFixtures_GenericHierarchy_Crate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Crate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Bar;
             if (tmp1 != null)
@@ -122,7 +123,7 @@ partial class GenericHierarchyModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1);
+                RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1, state.RawDepthBudget);
             }
         }
 
@@ -390,10 +391,11 @@ partial class GenericHierarchyModel
             => RawRead_AotFixtures_GenericHierarchy_Ship(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Ship>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Ship value)
-            => RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, value);
+            => RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Ship value)
+        public static void RawWrite_AotFixtures_GenericHierarchy_Ship(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GenericHierarchy.Ship value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Foo;
             if (tmp1 != 0)
@@ -470,7 +472,7 @@ partial class GenericHierarchyModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1);
+                RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1, state.RawDepthBudget);
             }
         }
 

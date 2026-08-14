@@ -185,10 +185,11 @@ partial class MapKeyModel
             => RawRead_AotFixtures_MapKey_Payload(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Payload>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapKey.Payload value)
-            => RawWrite_AotFixtures_MapKey_Payload(ref state, value);
+            => RawWrite_AotFixtures_MapKey_Payload(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapKey.Payload value)
+        public static void RawWrite_AotFixtures_MapKey_Payload(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapKey.Payload value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)

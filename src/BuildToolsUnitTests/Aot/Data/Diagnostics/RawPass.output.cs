@@ -33,10 +33,11 @@ partial class RawPassModel
             => RawRead_AotFixtures_RawPass_Bag(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Bag value)
-            => RawWrite_AotFixtures_RawPass_Bag(ref state, value);
+            => RawWrite_AotFixtures_RawPass_Bag(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Bag value)
+        public static void RawWrite_AotFixtures_RawPass_Bag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Bag value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)
@@ -141,10 +142,11 @@ partial class RawPassModel
             => RawRead_AotFixtures_RawPass_Child(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Child>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Child value)
-            => RawWrite_AotFixtures_RawPass_Child(ref state, value);
+            => RawWrite_AotFixtures_RawPass_Child(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Child value)
+        public static void RawWrite_AotFixtures_RawPass_Child(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Child value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -255,10 +257,11 @@ partial class RawPassModel
             => RawRead_AotFixtures_RawPass_Order(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Order>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Order value)
-            => RawWrite_AotFixtures_RawPass_Order(ref state, value);
+            => RawWrite_AotFixtures_RawPass_Order(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Order value)
+        public static void RawWrite_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Order value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)
@@ -329,7 +332,7 @@ partial class RawPassModel
                         lengths9[item9] = len9;
                     }
                     state.WriteRawVarint64((ulong)len9);
-                    RawWrite_AotFixtures_RawPass_Child(ref state, item9);
+                    RawWrite_AotFixtures_RawPass_Child(ref state, item9, depth);
                 }
             }
             var tmp10 = value.Favourite;
@@ -343,7 +346,7 @@ partial class RawPassModel
                     lengths10[tmp10] = len10;
                 }
                 state.WriteRawVarint64((ulong)len10);
-                RawWrite_AotFixtures_RawPass_Child(ref state, tmp10);
+                RawWrite_AotFixtures_RawPass_Child(ref state, tmp10, depth);
             }
             var tmp11 = value.Score;
             if (tmp11 != 0d)

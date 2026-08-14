@@ -30,10 +30,11 @@ partial class TrivialGetterModel
             => RawRead_AotFixtures_TrivialGetter_Backed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value)
-            => RawWrite_AotFixtures_TrivialGetter_Backed(ref state, value);
+            => RawWrite_AotFixtures_TrivialGetter_Backed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value)
+        public static void RawWrite_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -153,10 +154,11 @@ partial class TrivialGetterModel
             => RawRead_AotFixtures_TrivialGetter_Computed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value)
-            => RawWrite_AotFixtures_TrivialGetter_Computed(ref state, value);
+            => RawWrite_AotFixtures_TrivialGetter_Computed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value)
+        public static void RawWrite_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Doubled;
             if (tmp1 != 0)

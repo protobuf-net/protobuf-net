@@ -30,10 +30,11 @@ partial class DefaultsModel
             => RawRead_AotFixtures_Defaults_Declared(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
-            => RawWrite_AotFixtures_Defaults_Declared(ref state, value);
+            => RawWrite_AotFixtures_Defaults_Declared(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
+        public static void RawWrite_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
             if (tmp1 != 5)
@@ -172,10 +173,11 @@ partial class DefaultsModel
             => RawRead_AotFixtures_Defaults_Parsed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
-            => RawWrite_AotFixtures_Defaults_Parsed(ref state, value);
+            => RawWrite_AotFixtures_Defaults_Parsed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
+        public static void RawWrite_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.ByName;
             if (tmp1 != (global::AotFixtures.Defaults.Shade)(2))

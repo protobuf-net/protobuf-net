@@ -125,7 +125,7 @@ partial class ParseableModel
                     lengths2[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
-                RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2);
+                RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2, state.RawDepthBudget);
             }
         }
 
@@ -176,10 +176,11 @@ partial class ParseableModel
             => RawRead_AotFixtures_Parseable_NotParseable(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.NotParseable>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.NotParseable value)
-            => RawWrite_AotFixtures_Parseable_NotParseable(ref state, value);
+            => RawWrite_AotFixtures_Parseable_NotParseable(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.NotParseable value)
+        public static void RawWrite_AotFixtures_Parseable_NotParseable(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.NotParseable value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

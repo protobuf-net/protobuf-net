@@ -56,10 +56,11 @@ partial class SkipCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Bypassed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value)
-            => RawWrite_AotFixtures_SkipCtor_Bypassed(ref state, value);
+            => RawWrite_AotFixtures_SkipCtor_Bypassed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SkipCtor_Bypassed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value)
+        public static void RawWrite_AotFixtures_SkipCtor_Bypassed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -103,10 +104,11 @@ partial class SkipCtorModel
             => RawRead_AotFixtures_SkipCtor_Constructed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value)
-            => RawWrite_AotFixtures_SkipCtor_Constructed(ref state, value);
+            => RawWrite_AotFixtures_SkipCtor_Constructed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value)
+        public static void RawWrite_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

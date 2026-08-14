@@ -48,10 +48,11 @@ partial class ListOptionsModel
             => RawRead_AotFixtures_ListOptions_NotACollection(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
-            => RawWrite_AotFixtures_ListOptions_NotACollection(ref state, value);
+            => RawWrite_AotFixtures_ListOptions_NotACollection(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
+        public static void RawWrite_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.PackedScalar;
             if (tmp1 != 0)

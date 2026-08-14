@@ -28,10 +28,11 @@ partial class ListLikeModel
             => RawRead_AotFixtures_ListLike_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value)
-            => RawWrite_AotFixtures_ListLike_Holder(ref state, value);
+            => RawWrite_AotFixtures_ListLike_Holder(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value)
+        public static void RawWrite_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.NotAList;
             if (tmp1 != null)
@@ -44,7 +45,7 @@ partial class ListLikeModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1);
+                RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1, depth);
             }
             var tmp2 = value.Other;
             if (tmp2 != 0)
@@ -123,10 +124,11 @@ partial class ListLikeModel
             => RawRead_AotFixtures_ListLike_NotAList(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value)
-            => RawWrite_AotFixtures_ListLike_NotAList(ref state, value);
+            => RawWrite_AotFixtures_ListLike_NotAList(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value)
+        public static void RawWrite_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
             if (tmp1 != null)

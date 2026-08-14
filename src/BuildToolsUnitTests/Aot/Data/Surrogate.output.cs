@@ -75,10 +75,11 @@ partial class SurrogateModel
             => RawRead_AotFixtures_Surrogate_CodeSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
-            => RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref state, value);
+            => RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
+        public static void RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -290,10 +291,11 @@ partial class SurrogateModel
             => RawRead_AotFixtures_Surrogate_MoneySurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
-            => RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref state, value);
+            => RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
+        public static void RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Units;
             if (tmp1 != 0)
@@ -395,10 +397,11 @@ partial class SurrogateModel
             => RawRead_AotFixtures_Surrogate_TagSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value)
-            => RawWrite_AotFixtures_Surrogate_TagSurrogate(ref state, value);
+            => RawWrite_AotFixtures_Surrogate_TagSurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value)
+        public static void RawWrite_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Text;
             if (tmp1 != null)

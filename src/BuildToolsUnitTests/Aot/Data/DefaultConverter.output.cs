@@ -27,10 +27,11 @@ partial class DefaultConverterModel
             => RawRead_AotFixtures_DefaultConverter_Converted(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DefaultConverter.Converted>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DefaultConverter.Converted value)
-            => RawWrite_AotFixtures_DefaultConverter_Converted(ref state, value);
+            => RawWrite_AotFixtures_DefaultConverter_Converted(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DefaultConverter.Converted value)
+        public static void RawWrite_AotFixtures_DefaultConverter_Converted(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DefaultConverter.Converted value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
             if (tmp1 != 5)

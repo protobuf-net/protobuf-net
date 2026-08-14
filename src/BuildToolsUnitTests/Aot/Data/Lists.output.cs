@@ -52,10 +52,11 @@ partial class ListsModel
             => RawRead_AotFixtures_Lists_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value)
-            => RawWrite_AotFixtures_Lists_Inner(ref state, value);
+            => RawWrite_AotFixtures_Lists_Inner(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value)
+        public static void RawWrite_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -133,10 +134,11 @@ partial class ListsModel
             => RawRead_AotFixtures_Lists_Repeated(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value)
-            => RawWrite_AotFixtures_Lists_Repeated(ref state, value);
+            => RawWrite_AotFixtures_Lists_Repeated(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value)
+        public static void RawWrite_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Int32Array;
             if (tmp1 != null)
@@ -217,7 +219,7 @@ partial class ListsModel
                         lengths9[item9] = len9;
                     }
                     state.WriteRawVarint64((ulong)len9);
-                    RawWrite_AotFixtures_Lists_Inner(ref state, item9);
+                    RawWrite_AotFixtures_Lists_Inner(ref state, item9, depth);
                 }
             }
             var tmp10 = value.MessageArray;
@@ -234,7 +236,7 @@ partial class ListsModel
                         lengths10[item10] = len10;
                     }
                     state.WriteRawVarint64((ulong)len10);
-                    RawWrite_AotFixtures_Lists_Inner(ref state, item10);
+                    RawWrite_AotFixtures_Lists_Inner(ref state, item10, depth);
                 }
             }
             var tmp11 = value.Scalar;

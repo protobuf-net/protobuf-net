@@ -27,10 +27,11 @@ partial class ConditionalModel
             => RawRead_AotFixtures_Conditional_Conditional(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
-            => RawWrite_AotFixtures_Conditional_Conditional(ref state, value);
+            => RawWrite_AotFixtures_Conditional_Conditional(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
+        public static void RawWrite_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ValueSpecified)
             {

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -1201,16 +1201,24 @@ namespace ProtoBuf.BuildTools.Generators
                 // extension data or before-serialize callback reaches here.
                 var san = Sanitise(contract.TypeName);
                 Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
-                Line(sb, indent + 1, $"=> RawWrite_{san}(ref state, value);");
+                Line(sb, indent + 1, $"=> RawWrite_{san}(ref state, value, state.RawDepthBudget);");
                 sb.AppendLine();
-                Line(sb, indent, $"public static void RawWrite_{san}(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+                Line(sb, indent, $"public static void RawWrite_{san}(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value, int depth)");
                 Line(sb, indent, "{");
+                // the write recursion USED to be safe by construction - every write was
+                // preceded by a measure, and the measure was depth-budgeted. A GROUPED member
+                // breaks that: it has no length prefix, so nothing measures it, and the write
+                // recurses unguarded. Spotted by Marc reading the emitted code. Guarding here
+                // rather than only on the grouped edge keeps it uniform - the alternative is
+                // working out which contracts are reachable through a group, which is exactly
+                // the kind of predicate whose failure mode is a process-killing stack overflow
+                Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed
                     && !contract.IgnoreUnknownSubTypes)
                 {
                     Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
                 }
-                EmitWriteMembers(sb, indent + 1, contract, "value", raw: true, listAsSpan: listAsSpan, measurable: measurable);
+                EmitWriteMembers(sb, indent + 1, contract, "value", raw: true, listAsSpan: listAsSpan, measurable: measurable, depth: "depth");
                 EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
                 Line(sb, indent, "}");
                 sb.AppendLine();
@@ -1566,7 +1574,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
         private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
             string instance = "value", bool raw = false, bool listAsSpan = false,
-            Dictionary<string, ProtoContractPlan>? measurable = null)
+            Dictionary<string, ProtoContractPlan>? measurable = null,
+            string depth = "state.RawDepthBudget")
         {
             foreach (var member in contract.Members)
             {
@@ -1609,7 +1618,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // null guard is unconditional; empty falls out of the loop itself
                         Line(sb, indent, $"if (tmp{number} != null)");
                         Line(sb, indent, "{");
-                        EmitRawRepeatedWrite(sb, indent + 1, member, number, listAsSpan, repeatedTarget);
+                        EmitRawRepeatedWrite(sb, indent + 1, member, number, listAsSpan, repeatedTarget, depth);
                         Line(sb, indent, "}");
                         goto written;
                     }
@@ -1843,6 +1852,20 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent, "{");
                             inner++;
                         }
+                        if (member.DataFormat == ProtoDataFormat.Group)
+                        {
+                            // THE point of a group, and the whole of gap B14: framed by a
+                            // start/end tag pair rather than a length prefix, so there is no
+                            // length to compute and the measure call is not merely cheap - it is
+                            // ABSENT. A fully-grouped tree therefore writes without a single
+                            // measure pass. The read side pays for it by scanning for the
+                            // sentinel instead of being able to skip a known span.
+                            Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 3);  // {member.Name} (start group)");
+                            Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number}, {depth});");
+                            Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 4);  // {member.Name} (end group)");
+                            if (!target.IsValueType) Line(sb, indent, "}");
+                            break;
+                        }
                         Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
                         if (target.IsValueType)
                         {
@@ -1861,7 +1884,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner, "}");
                         }
                         Line(sb, inner, $"state.WriteRawVarint64((ulong)len{number});");
-                        Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number});");
+                        Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number}, {depth});");
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
                     }
@@ -2688,7 +2711,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// loop. A message element takes the measure-first shape: exact prefix, direct call.
         /// </summary>
         private static void EmitRawRepeatedWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
-            bool listAsSpan, ProtoContractPlan? messageTarget = null)
+            bool listAsSpan, ProtoContractPlan? messageTarget = null,
+            string depth = "state.RawDepthBudget")
         {
             var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
                 ? 2 : RawScalarWireBits(member.Kind);
@@ -2729,7 +2753,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, "}");
                 }
                 Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len{number});");
-                Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item});");
+                Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item}, {depth});");
             }
             else if (member.Kind == ProtoMemberKind.String)
             {
@@ -2773,7 +2797,20 @@ namespace ProtoBuf.BuildTools.Generators
         {
             if (member.Map.Factory is not null) return true;
             if (member.WrappedValue || member.WrappedCollection) return true;
-            if (member.DataFormat != ProtoDataFormat.Default) return true;
+            // Group is the ONE non-default format that does not need the engine, and blocking it
+            // was backwards: a grouped sub-message carries no length prefix, so its size is
+            // start-tag + body + end-tag, every part of which is known when the target is
+            // measurable - and the tags fold, since the field number is a constant. Blocking it
+            // removed the CONTAINING contract from the measurable set, and that exclusion runs to
+            // a fixed point, so one grouped member dropped a whole tree onto write-to-count -
+            // i.e. reaching for groups because they are faster produced the opposite.
+            // Restricted to a unary message member: a grouped COLLECTION or MAP frames each
+            // element, which is a different sum and is not attempted here.
+            if (member.DataFormat != ProtoDataFormat.Default
+                && !(member.DataFormat == ProtoDataFormat.Group
+                    && member.Kind == ProtoMemberKind.Message
+                    && member.Repeated.Factory is null
+                    && member.Map.Factory is null)) return true;
             if (member.Repeated.Factory is not null)
             {
                 if (RawRepeatedWritable(member)) return false;
@@ -2807,7 +2844,12 @@ namespace ProtoBuf.BuildTools.Generators
         private static ProtoContractPlan? RawNativeMessageTarget(ProtoMemberPlan member,
             Dictionary<string, ProtoContractPlan>? measurable)
             => !member.IsNullable
-                && member.DataFormat == ProtoDataFormat.Default
+                // Group joins Default here: it is framed by a start/end tag pair instead of a
+                // length prefix, so it takes the raw path too - and takes it more cheaply, since
+                // there is no length to compute. See the emit site, which skips the measure call
+                // entirely rather than measuring and discarding
+                && (member.DataFormat == ProtoDataFormat.Default
+                    || member.DataFormat == ProtoDataFormat.Group)
                 && member.SubSerializer is null or "this"
                 && !member.SubSerializerIsScalar && !member.SubSerializerDynamic
                 && member.TypeName is not null
@@ -2868,6 +2910,22 @@ namespace ProtoBuf.BuildTools.Generators
             return int.TryParse(payload, out var constant)
                 ? $"len += {tagLen + constant};  // {member.Name}"
                 : $"len += {tagLen} + {payload};  // {member.Name}";
+        }
+
+        /// <summary>
+        /// A grouped sub-message's contribution: the body plus a start-group and an end-group tag,
+        /// with no length prefix — the shape that makes groups cheap to write.
+        /// </summary>
+        /// <remarks>
+        /// Both tags carry the same field number and differ only in wire type (3 = StartGroup,
+        /// 4 = EndGroup), and those two bits cannot cross a varint boundary — the low three bits
+        /// of the tag are the wire type — so the two encoded lengths are always equal, and the
+        /// pair folds to one literal.
+        /// </remarks>
+        private static string MeasureAddGroup(ProtoMemberPlan member, string payload)
+        {
+            var tagLen = VarintLen((uint)((member.FieldNumber << 3) | 3));
+            return $"len += {tagLen * 2} + {payload};  // {member.Name} (group: no length prefix)";
         }
 
         /// <summary>
@@ -3005,8 +3063,19 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner + 1, $"lengths[tmp{number}] = len{number};");
                             Line(sb, inner, "}");
                         }
-                        Line(sb, inner, MeasureAdd(member, 2,
-                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number}"));
+                        if (member.DataFormat == ProtoDataFormat.Group)
+                        {
+                            // no length prefix: a start-group tag, the body, an end-group tag.
+                            // Both tags carry the same field number and differ only in wire type
+                            // (3 vs 4), which cannot change their encoded length - so this is the
+                            // body plus two folded constants, and no varint measure at all
+                            Line(sb, inner, MeasureAddGroup(member, $"len{number}"));
+                        }
+                        else
+                        {
+                            Line(sb, inner, MeasureAdd(member, 2,
+                                $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number}"));
+                        }
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
                     }

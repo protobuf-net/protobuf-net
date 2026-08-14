@@ -32,10 +32,11 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Mixed value)
-            => RawWrite_AotFixtures_Ordering_Mixed(ref state, value);
+            => RawWrite_AotFixtures_Ordering_Mixed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Mixed value)
+        public static void RawWrite_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Mixed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.OnlyDataMember;
             if (tmp2 != 0)
@@ -113,10 +114,11 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
-            => RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value);
+            => RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
+        public static void RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
             if (tmp1 != 0)
@@ -177,10 +179,11 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_Referencing(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Referencing>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Referencing value)
-            => RawWrite_AotFixtures_Ordering_Referencing(ref state, value);
+            => RawWrite_AotFixtures_Ordering_Referencing(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Referencing value)
+        public static void RawWrite_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Referencing value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.FromDataContract;
             if (tmp1 != null)
@@ -193,7 +196,7 @@ partial class OrderingModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1);
+                RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1, depth);
             }
             var tmp2 = value.FromXmlType;
             if (tmp2 != null)
@@ -206,7 +209,7 @@ partial class OrderingModel
                     lengths2[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
-                RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2);
+                RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2, depth);
             }
             var tmp3 = value.Several;
             if (tmp3 != null)
@@ -222,7 +225,7 @@ partial class OrderingModel
                         lengths3[item3] = len3;
                     }
                     state.WriteRawVarint64((ulong)len3);
-                    RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, item3);
+                    RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, item3, depth);
                 }
             }
         }
@@ -330,10 +333,11 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_ViaDataMember(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMember value)
-            => RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, value);
+            => RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMember value)
+        public static void RawWrite_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMember value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
             if (tmp1 != 0)
@@ -411,10 +415,11 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
-            => RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value);
+            => RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
+        public static void RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp11 = value.First;
             if (tmp11 != 0)
@@ -492,10 +497,11 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_ViaXmlElement(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaXmlElement value)
-            => RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, value);
+            => RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaXmlElement value)
+        public static void RawWrite_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaXmlElement value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
             if (tmp1 != 0)

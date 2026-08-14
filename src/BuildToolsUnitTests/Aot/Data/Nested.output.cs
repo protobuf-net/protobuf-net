@@ -29,10 +29,11 @@ partial class NestedModel
             => RawRead_AotFixtures_Nested_Address(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Address value)
-            => RawWrite_AotFixtures_Nested_Address(ref state, value);
+            => RawWrite_AotFixtures_Nested_Address(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Address value)
+        public static void RawWrite_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Address value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.City;
             if (tmp1 != null)
@@ -93,10 +94,11 @@ partial class NestedModel
             => RawRead_AotFixtures_Nested_Customer(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value)
-            => RawWrite_AotFixtures_Nested_Customer(ref state, value);
+            => RawWrite_AotFixtures_Nested_Customer(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value)
+        public static void RawWrite_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)
@@ -115,7 +117,7 @@ partial class NestedModel
                     lengths2[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
-                RawWrite_AotFixtures_Nested_Address(ref state, tmp2);
+                RawWrite_AotFixtures_Nested_Address(ref state, tmp2, depth);
             }
         }
 
@@ -188,10 +190,11 @@ partial class NestedModel
             => RawRead_AotFixtures_Nested_Invoice(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value)
-            => RawWrite_AotFixtures_Nested_Invoice(ref state, value);
+            => RawWrite_AotFixtures_Nested_Invoice(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value)
+        public static void RawWrite_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
             if (tmp1 != 0)
@@ -210,7 +213,7 @@ partial class NestedModel
                     lengths2[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
-                RawWrite_AotFixtures_Nested_Customer(ref state, tmp2);
+                RawWrite_AotFixtures_Nested_Customer(ref state, tmp2, depth);
             }
             var tmp3 = value.ShipTo;
             if (tmp3 != null)
@@ -223,7 +226,7 @@ partial class NestedModel
                     lengths3[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
-                RawWrite_AotFixtures_Nested_Address(ref state, tmp3);
+                RawWrite_AotFixtures_Nested_Address(ref state, tmp3, depth);
             }
         }
 

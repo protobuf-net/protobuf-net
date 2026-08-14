@@ -30,10 +30,11 @@ partial class DerivedModel
             => RawRead_AotFixtures_Derived_Ambiguous(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
-            => RawWrite_AotFixtures_Derived_Ambiguous(ref state, value);
+            => RawWrite_AotFixtures_Derived_Ambiguous(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
+        public static void RawWrite_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
             if (tmp1 != null)
@@ -122,7 +123,7 @@ partial class DerivedModel
                     lengths4[tmp4] = len4;
                 }
                 state.WriteRawVarint64((ulong)len4);
-                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4);
+                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4, state.RawDepthBudget);
             }
         }
 

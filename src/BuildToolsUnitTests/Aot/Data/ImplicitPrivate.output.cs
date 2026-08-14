@@ -30,10 +30,11 @@ partial class ImplicitPrivateModel
             => RawRead_AotFixtures_ImplicitPrivate_Explicit(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
-            => RawWrite_AotFixtures_ImplicitPrivate_Explicit(ref state, value);
+            => RawWrite_AotFixtures_ImplicitPrivate_Explicit(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Explicit value)
+        public static void RawWrite_AotFixtures_ImplicitPrivate_Explicit(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Explicit value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
             if (tmp1 != 0)
@@ -96,10 +97,11 @@ partial class ImplicitPrivateModel
             => RawRead_AotFixtures_ImplicitPrivate_Private(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Private>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Private value)
-            => RawWrite_AotFixtures_ImplicitPrivate_Private(ref state, value);
+            => RawWrite_AotFixtures_ImplicitPrivate_Private(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Private value)
+        public static void RawWrite_AotFixtures_ImplicitPrivate_Private(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitPrivate.Private value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Public;
             if (tmp1 != 0)

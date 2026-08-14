@@ -78,10 +78,11 @@ partial class AssemblySurrogateModel
             => RawRead_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
-            => RawWrite_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value);
+            => RawWrite_AotFixtures_AssemblySurrogate_VersionSurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value)
+        public static void RawWrite_AotFixtures_AssemblySurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)

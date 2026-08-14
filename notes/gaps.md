@@ -334,7 +334,7 @@ produced a confident wrong answer twice running on this one question.
 covers depth incidentally, at ~600 nested messages).
 
 
-### B14. Groups defeat measure-first, when they should be the case that needs no measure — **next, and a real bug**
+### B14. ~~Groups defeat measure-first~~ — **done 2026-08-14; write-side depth guard added with it**
 
 Marc, 2026-08-14: *"group basically avoids the whole 'measure before you write' — it boosts write
 perf hugely at the cost of reads needing to watch for a sentinel."* Exactly so, and that is what
@@ -372,6 +372,22 @@ do, and the first is much smaller than the second:
 
 Worth measuring rather than assuming, as ever — but unlike the seven flat micro-experiments this
 one is a *structural* removal of work, not a cheaper way of doing it.
+
+### B15. Depth is not synced on the raw → stateful transition — **open, narrow**
+
+`RawWrite_` now carries a **remaining depth budget**, seeded from `state.RawDepthBudget` where the
+stateful world hands off to the raw one, and never touches `writer.Depth` — the "raw API does not
+maintain all the members" convention, and Marc's read of how the two worlds should meet.
+
+The gap is the **reverse** transition. Where a raw body falls back to the stateful engine mid-way
+(`state.WriteMessage(...)` for a member the raw path does not handle), the engine measures depth
+from `writer.Depth`, which was last set at the *outer* boundary — so a deep raw chain that then
+goes stateful under-counts, and the effective cap is larger than `MaxDepth`.
+
+Narrow, and not a correctness hole in the sense B14 was: the cap still exists at both ends, it is
+just not additive across a boundary. The fix is to push `writer.Depth` at the point of transition
+rather than to thread anything further. Recorded rather than done because it wants a fixture that
+actually crosses the boundary deeply, and no existing one does.
 
 ## C. Schema front-end (`[ProtoSchema]`)
 

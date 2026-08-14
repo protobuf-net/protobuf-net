@@ -38,10 +38,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Holder value)
-            => RawWrite_AotFixtures_Generic_Holder(ref state, value);
+            => RawWrite_AotFixtures_Generic_Holder(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Holder value)
+        public static void RawWrite_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
             if (tmp1 != null)
@@ -54,7 +55,7 @@ partial class GenericModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1);
+                RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1, depth);
             }
             var tmp2 = value.Text;
             if (tmp2 != null)
@@ -67,7 +68,7 @@ partial class GenericModel
                     lengths2[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
-                RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, tmp2);
+                RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, tmp2, depth);
             }
             var tmp3 = value.Message;
             if (tmp3 != null)
@@ -80,7 +81,7 @@ partial class GenericModel
                     lengths3[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
-                RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, tmp3);
+                RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, tmp3, depth);
             }
             var tmp4 = value.Deep;
             if (tmp4 != null)
@@ -93,7 +94,7 @@ partial class GenericModel
                     lengths4[tmp4] = len4;
                 }
                 state.WriteRawVarint64((ulong)len4);
-                RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, tmp4);
+                RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, tmp4, depth);
             }
             var tmp5 = value.Many;
             if (tmp5 != null)
@@ -106,13 +107,13 @@ partial class GenericModel
                     lengths5[tmp5] = len5;
                 }
                 state.WriteRawVarint64((ulong)len5);
-                RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, tmp5);
+                RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, tmp5, depth);
             }
             var tmp6 = value.Pair;
             state.WriteRawTag((6 << 3) | 2);  // Pair
             var len6 = Measure_AotFixtures_Generic_Pair_int__string_(tmp6, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len6);
-            RawWrite_AotFixtures_Generic_Pair_int__string_(ref state, tmp6);
+            RawWrite_AotFixtures_Generic_Pair_int__string_(ref state, tmp6, depth);
             var tmp7 = value.Wrappers;
             if (tmp7 != null)
             {
@@ -127,7 +128,7 @@ partial class GenericModel
                         lengths7[item7] = len7;
                     }
                     state.WriteRawVarint64((ulong)len7);
-                    RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, item7);
+                    RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, item7, depth);
                 }
             }
         }
@@ -304,10 +305,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Nested value)
-            => RawWrite_AotFixtures_Generic_Nested(ref state, value);
+            => RawWrite_AotFixtures_Generic_Nested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Nested value)
+        public static void RawWrite_AotFixtures_Generic_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Nested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)
@@ -391,10 +393,11 @@ partial class GenericModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Pair<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Pair<int, string> value)
-            => RawWrite_AotFixtures_Generic_Pair_int__string_(ref state, value);
+            => RawWrite_AotFixtures_Generic_Pair_int__string_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Pair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Pair<int, string> value)
+        public static void RawWrite_AotFixtures_Generic_Pair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Pair<int, string> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Key;
             if (tmp1 != 0)
             {
@@ -437,10 +440,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Standalone_int_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<int>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<int> value)
-            => RawWrite_AotFixtures_Generic_Standalone_int_(ref state, value);
+            => RawWrite_AotFixtures_Generic_Standalone_int_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<int> value)
+        public static void RawWrite_AotFixtures_Generic_Standalone_int_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<int> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Item;
             if (tmp1 != 0)
@@ -501,10 +505,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Standalone_string_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Standalone<string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<string> value)
-            => RawWrite_AotFixtures_Generic_Standalone_string_(ref state, value);
+            => RawWrite_AotFixtures_Generic_Standalone_string_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<string> value)
+        public static void RawWrite_AotFixtures_Generic_Standalone_string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Standalone<string> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Item;
             if (tmp1 != null)
@@ -565,10 +570,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
-            => RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, value);
+            => RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value)
+        public static void RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)
@@ -581,7 +587,7 @@ partial class GenericModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_Generic_Nested(ref state, tmp1);
+                RawWrite_AotFixtures_Generic_Nested(ref state, tmp1, depth);
             }
             var tmp2 = value.Label;
             if (tmp2 != null)
@@ -660,10 +666,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
-            => RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, value);
+            => RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value)
+        public static void RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)
@@ -676,7 +683,7 @@ partial class GenericModel
                     lengths1[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1);
+                RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1, depth);
             }
             var tmp2 = value.Label;
             if (tmp2 != null)
@@ -755,10 +762,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
-            => RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, value);
+            => RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value)
+        public static void RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)
@@ -853,10 +861,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Wrapper_int_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<int>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<int> value)
-            => RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, value);
+            => RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<int> value)
+        public static void RawWrite_AotFixtures_Generic_Wrapper_int_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<int> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -934,10 +943,11 @@ partial class GenericModel
             => RawRead_AotFixtures_Generic_Wrapper_string_(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Generic.Wrapper<string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<string> value)
-            => RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, value);
+            => RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<string> value)
+        public static void RawWrite_AotFixtures_Generic_Wrapper_string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<string> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)

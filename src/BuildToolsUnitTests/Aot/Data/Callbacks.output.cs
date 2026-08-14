@@ -29,10 +29,11 @@ partial class CallbacksModel
             => RawRead_AotFixtures_Callbacks_AfterOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
-            => RawWrite_AotFixtures_Callbacks_AfterOnly(ref state, value);
+            => RawWrite_AotFixtures_Callbacks_AfterOnly(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
+        public static void RawWrite_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

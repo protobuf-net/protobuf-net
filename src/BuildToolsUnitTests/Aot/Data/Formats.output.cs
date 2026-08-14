@@ -88,7 +88,12 @@ partial class FormatsModel
                 state.WriteRawString(tmp7);
             }
             var tmp8 = value.Grouped;
-            state.WriteGroup<global::AotFixtures.Formats.Inner>(8, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, this);
+            if (tmp8 != null)
+            {
+                state.WriteRawTag((8 << 3) | 3);  // Grouped (start group)
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp8, state.RawDepthBudget);
+                state.WriteRawTag((8 << 3) | 4);  // Grouped (end group)
+            }
             var tmp9 = value.Plain;
             if (tmp9 != null)
             {
@@ -100,7 +105,7 @@ partial class FormatsModel
                     lengths9[tmp9] = len9;
                 }
                 state.WriteRawVarint64((ulong)len9);
-                RawWrite_AotFixtures_Formats_Inner(ref state, tmp9);
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp9, state.RawDepthBudget);
             }
             var tmp10 = value.ZigZagArray;
             if (tmp10 != null)
@@ -264,10 +269,11 @@ partial class FormatsModel
             => RawRead_AotFixtures_Formats_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
-            => RawWrite_AotFixtures_Formats_Inner(ref state, value);
+            => RawWrite_AotFixtures_Formats_Inner(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
+        public static void RawWrite_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

@@ -29,10 +29,11 @@ partial class ScalarsModel
             => RawRead_AotFixtures_Scalars_Primitives(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
-            => RawWrite_AotFixtures_Scalars_Primitives(ref state, value);
+            => RawWrite_AotFixtures_Scalars_Primitives(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
+        public static void RawWrite_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Bool;
             if (tmp1)
