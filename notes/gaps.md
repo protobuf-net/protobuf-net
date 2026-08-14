@@ -560,10 +560,29 @@ not longer. There is no performance argument against it.
 It would let callback-bearing contracts join measure-first, which is the actual prize. Two things
 to settle first, and only the second is hard:
 
-1. **Double-fire.** The callback would run once in the measure and once in the write. That
-   *matches* the classic path (where the counting pass is a write) and `IsMeasuring` already exists
-   for a callback to tell them apart — so this is consistent rather than novel. The alternative,
-   firing once before the measure and not in the write, is cleaner but diverges from ref-emit.
+1. **Double-fire is REQUIRED, not merely acceptable** — settled by prior art, not open. Marc
+   recalled it; `CallbackMeasurePassTests` now pins it against the runtime model:
+
+   | route | `BeforeSerialization` fires | `IsMeasuring` |
+   | --- | ---: | --- |
+   | plain `Serialize` | **once** | `false` |
+   | `Measure` + `Serialize` | **twice** | `true`, then `false` |
+
+   The reasoning is in `df529277`: *"the measure pass is a real write to a counting writer, so a
+   serialization callback runs once per pass — correct for the common shape (populate a member
+   that is then serialized: both passes MUST see the same object). Suppressing wholesale is worse
+   than the doubling, because the two passes would then see different objects and the length check
+   would throw."*
+
+   So "fire once before the measure, not in the write" — which I first called the cleaner
+   alternative — is the **broken** one. If `Measure_` ever fires callbacks it must fire them per
+   pass, exactly as the classic path does, with `IsMeasuring` distinguishing them.
+
+   This also makes the current refusal **load-bearing rather than conservative**: firing
+   `BeforeSerialize` only in `RawWrite_` would let the object change between measuring and writing
+   and commit a wrong length. `RawMeasurableShape`'s exclusion is the only thing keeping that
+   correct today — so relaxing it is not "let callbacks through", it is "fire them per pass in
+   `Measure_` too", which is now a settled design rather than an open question.
 2. **Coupling.** `Measure_` is today a pure arithmetic walk with no writer in sight, which is what
    makes it trivially testable and independently callable. Taking `ref state` ties it to a live
    writer. That is the real trade, and it is a design call rather than a measurement.
