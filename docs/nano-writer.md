@@ -765,10 +765,26 @@ is now gated on `!raw`; raw emission takes the general branch, which is `WriteRa
 `WriteRawVarint64`. 55 goldens changed shape; bytes are unchanged (AotDifferential 3029/3029,
 AotConformanceTests 1382).
 
-**This is very likely why the tag ladder measured flat**, and it is the first thing to re-test:
-the payload census counted 1,056 one-byte tags written, and a large share of those are `int32`
-members that were never calling `WriteRawTag` at all. Unmeasured as yet — the fix is committed
-green but no benchmark has been run over it.
+**It was expected to be why the tag ladder measured flat. It is not — measured, and also flat.**
+Paired against the commit before it:
+
+| | before | after |
+| --- | ---: | ---: |
+| `NanoGenerated` | 10.192 us | 10.207 us |
+| GoogleProtobuf (gauge) | 13.194 us | 13.530 us |
+
+Raw +0.15%; the gauge moved +2.5% between the two legs, which is larger than the effect either
+way. So: no change, and that is now **five** consecutive write-path micro-optimisations measuring
+flat. The census remains the explanation - the removed work per `int32` field is a runtime tag
+encode, a `WireType` set and reset, and a virtual call, which is real but small against a payload
+that is 71.5% UTF-8 encoding.
+
+**Kept anyway, and not on performance grounds.** The raw path should be the raw path: this is the
+one place a "raw" body was still reaching the stateful writer, and it was doing so *invisibly*.
+It also quietly propped up cut 9's wire-type invariant - that a raw body starts at `None` and
+stays there because "every stateful op resets after itself" - which held here only because
+`WriteInt32Varint` happens to reset. An invariant that depends on the op you were trying not to
+call is not one to leave standing.
 
 The general lesson is the one this file keeps relearning from the other direction: **a
 convenience overload that predates an optimisation will silently opt out of it**, and nothing
