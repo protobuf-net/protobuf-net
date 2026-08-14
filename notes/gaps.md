@@ -12,13 +12,14 @@ Detail lives in the linked documents; this file is the index and the verdict. St
 | **open** | needs a human decision, and is blocking nothing until it gets one |
 | **next** | agreed, unstarted |
 
-This file lives on **`aot-schema-model`**, and reaches `writer-buffer-core` and below when that
-branch merges.
+This file lives on **`v4`** — the writer/schema stack collapsed onto it on 2026-08-14 — and on
+whatever sub-branch is currently in flight off it.
 
-*(It originally asserted it lived on `writer-buffer-core`, and did not — every commit landed on
-whichever branch happened to be checked out. Recorded rather than quietly corrected: a document
-stating where it lives, wrongly, is precisely the staleness this file exists to prevent, and it
-took someone looking at GitHub to catch it.)*
+*(It has now asserted the wrong branch **twice** — first `writer-buffer-core`, then
+`aot-schema-model` after the stack collapsed — and `AGENTS.md`'s index repeated the error
+independently. Recorded rather than quietly corrected, because a document stating where it lives,
+wrongly, is precisely the staleness this file exists to prevent. **If you move this file or cut a
+branch, this paragraph is the one to re-read.**)*
 
 ---
 
@@ -456,6 +457,58 @@ the default `DataFormat` — which is exactly what protogen emits. See `docs/aot
 
 Still deferred here: the **well-known types** (`Timestamp`, `Duration`, `Any`), where the
 compatibility level starts to matter, and **schema-level options** that can change the contract.
+
+### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**
+
+Marc, 2026-08-14. protogen emits extension accessors as static methods (see C7):
+
+``` c#
+public static string GetNote(this Base obj) => Extensible.GetValue<string>(obj, 100);
+public static void SetNote(this Base obj, string value) => Extensible.AppendValue<string>(obj, 100, value);
+```
+
+C# 14 **extension blocks** allow extension *properties*, so the same thing could read as an
+ordinary member — `thing.Note = "x"` rather than `thing.SetNote("x")`:
+
+``` c#
+public static partial class Extensions
+{
+    extension(Base obj)
+    {
+        public string Note
+        {
+            get => Extensible.GetValue<string>(obj, 100);
+            set => Extensible.AppendValue<string>(obj, 100, value);
+        }
+    }
+}
+```
+
+Four things to settle before building it, in the order they bite:
+
+- **TWO gates, and they are AND — not either** (Marc). It is API-breaking, so the primary gate is
+  an explicit opt-in: another protogen option in the shape of `SubTypes`, honoured on all three
+  routes, **off by default**. The language version is a *second* guard on top, never the enabling
+  condition.
+
+  **This distinction is the whole point, and there is a specific trap behind it.**
+  `ctx.Supports(Version)` returns **true when no version was stated** — "default is highest" — so a
+  langver-only gate would switch the new shape on for a consumer the moment they *upgrade their
+  SDK*, breaking every `GetNote(...)` call site in a build they did not change. Nobody should get
+  an API break as a side effect of a machine getting a newer SDK.
+
+  So: opt-in off → nothing ever changes. Opt-in on, language version too low → a **diagnostic and
+  fall back to methods**, not a build break; that is the failure mode the `PBN2000` floor exists
+  to avoid elsewhere, and the reason it is a fallback here rather than a hard floor is that the
+  consumer asked for a nicety, not for a wall.
+- **`repeated` extensions do not fit the shape.** Today they are `GetTags` (returning
+  `IEnumerable<T>`) plus `AddTags` — and a property cannot express "append". So this is not a
+  blanket swap: either repeated extensions keep their methods (a mixed API, which is ugly but
+  honest) or the property returns something with an `Add`, which changes the semantics. **This is
+  the part that needs a decision, not just work.**
+- **No AOT implication whatsoever.** These are consumer API and never reach the plan — see C7 —
+  so nothing in the AOT generator or the byte gate changes. It is purely a protogen codegen
+  nicety, which is also why it is safe to defer indefinitely.
 
 ### C8. ~~Cross-schema type references~~ — **covered, 2026-08-14**
 
