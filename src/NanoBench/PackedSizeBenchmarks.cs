@@ -42,6 +42,7 @@ public class PackedSizeBenchmarks
     public string Distribution { get; set; } = "small";
 
     private uint[] _values = [];
+    private int[] _signed = [];
 
     [GlobalSetup]
     public void Setup()
@@ -64,12 +65,25 @@ public class PackedSizeBenchmarks
             };
         }
 
+        _signed = new int[Count];
+        for (int i = 0; i < Count; i++)
+        {
+            // half negative, so the sign-mask half of the identity is genuinely exercised
+            _signed[i] = (i % 2 == 0) ? unchecked((int)_values[i]) : -unchecked((int)(_values[i] & 0x7FFFFFFF));
+        }
+
         // the arms must agree, or the comparison is meaningless - and a packed length that is
         // wrong by one byte is a corrupt payload, which WritePacked's own validation would catch
         if (Scalar() != Vectorised() || Scalar() != Ladder())
         {
             throw new InvalidOperationException(
                 $"arms disagree: scalar={Scalar()}, vectorised={Vectorised()}, ladder={Ladder()}");
+        }
+
+        if (ZigZagScalar() != ZigZagVectorised())
+        {
+            throw new InvalidOperationException(
+                $"zigzag arms disagree: scalar={ZigZagScalar()}, vectorised={ZigZagVectorised()}");
         }
     }
 
@@ -105,6 +119,68 @@ public class PackedSizeBenchmarks
             var v = values[i];
             len += (v >= 1u << 7 ? 1 : 0) + (v >= 1u << 14 ? 1 : 0)
                  + (v >= 1u << 21 ? 1 : 0) + (v >= 1u << 28 ? 1 : 0);
+        }
+        return len;
+    }
+
+    /// <summary>Scalar zigzag sizing, as the reference for the vector arm.</summary>
+    [Benchmark]
+    public long ZigZagScalar()
+    {
+        var values = _signed;
+        long len = 0;
+        for (int i = 0; i < values.Length; i++)
+        {
+            var v = values[i];
+            len += VarintLen(unchecked((uint)((v << 1) ^ (v >> 31))));
+        }
+        return len;
+    }
+
+    /// <summary>
+    /// Vectorised zigzag — and it needs NO shift instructions, which is what makes it viable on
+    /// every TFM (<c>Vector.ShiftLeft</c> is .NET 7+).
+    /// </summary>
+    /// <remarks>
+    /// <c>v &lt;&lt; 1</c> is <c>v + v</c>, and the arithmetic <c>v &gt;&gt; 31</c> is exactly what
+    /// <c>Vector.LessThan(v, Zero)</c> yields — all-ones for a negative lane, zero otherwise. So
+    /// the transform is add, compare, xor. Zigzag then SIMPLIFIES the ladder: the result is
+    /// unsigned, so there is no 10-byte blend, and sint32 is always 1-5 bytes unlike int32.
+    /// </remarks>
+    [Benchmark]
+    public long ZigZagVectorised()
+    {
+        var values = _signed;
+        long len = values.Length;
+        int i = 0;
+
+        if (Vector.IsHardwareAccelerated && values.Length >= Vector<int>.Count)
+        {
+            var t7 = new Vector<uint>(1u << 7);
+            var t14 = new Vector<uint>(1u << 14);
+            var t21 = new Vector<uint>(1u << 21);
+            var t28 = new Vector<uint>(1u << 28);
+            var acc = Vector<uint>.Zero;
+
+            for (; i <= values.Length - Vector<int>.Count; i += Vector<int>.Count)
+            {
+                var v = new Vector<int>(values, i);
+                // (v << 1) ^ (v >> 31), with neither shift: v+v, and the sign mask from a compare
+                var zig = Vector.AsVectorUInt32((v + v) ^ Vector.LessThan(v, Vector<int>.Zero));
+                acc -= Vector.GreaterThanOrEqual(zig, t7);
+                acc -= Vector.GreaterThanOrEqual(zig, t14);
+                acc -= Vector.GreaterThanOrEqual(zig, t21);
+                acc -= Vector.GreaterThanOrEqual(zig, t28);
+            }
+
+            for (int lane = 0; lane < Vector<uint>.Count; lane++) len += acc[lane];
+        }
+
+        for (; i < values.Length; i++)
+        {
+            var z = unchecked((uint)((values[i] << 1) ^ (values[i] >> 31)));
+            len += (z >= 1u << 7 ? 1 : 0) + (z >= 1u << 14 ? 1 : 0)
+                 + (z >= 1u << 21 ? 1 : 0) + (z >= 1u << 28 ? 1 : 0);
         }
         return len;
     }

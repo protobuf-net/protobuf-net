@@ -840,7 +840,7 @@ which is free — same element width, no copy.
 | `long` | **`ulong`** | a negative `long` reinterprets as a large `ulong`, and both encode as the same 64-bit two's-complement varint — identical length, so this one is free |
 | enum | `int`/`uint`/`long`/`ulong` | by underlying type; same width, same sign rule |
 | `bool` | — | always one byte: the answer is `count` |
-| `sint32`/`sint64` | zigzag, then pun | `(v << 1) ^ (v >> 31)` is itself vectorisable |
+| `sint32`/`sint64` | **two more methods**, not three - see below | there is no unsigned zigzag, and the transform needs no shift instructions |
 | `float`/`double` | — | fixed width; `WritePacked` is already O(1) for these |
 | `short`/`sbyte` | **cannot pun** | narrower elements, so a `short[]` is not castable to `int[]`. Code-first only — no `.proto` produces them |
 
@@ -851,6 +851,36 @@ uses the 32-bit form. This is protobuf's long-standing quirk (*"if you use int32
 type for a negative number, the resulting varint is always ten bytes long"*), and it is exactly why
 `int` cannot share the `uint` ladder: the branchless form has to **blend 10 in where the lane is
 negative** rather than running four thresholds.
+
+#### Zigzag: two more methods, no shifts, and a BIGGER relative win (Marc asked)
+
+Marc asked whether zigzag needs a separate SIMD implementation for the extra shifts. Two answers,
+both measured rather than reasoned:
+
+**It needs no shift instructions at all.** `zigzag(v) = (v << 1) ^ (v >> 31)`, and neither shift is
+required: `v << 1` is `v + v`, while the arithmetic `v >> 31` is *exactly* what
+`Vector.LessThan(v, Zero)` produces — all-ones for a negative lane, zero otherwise. So the
+transform is **add, compare, xor**, using only the down-level-safe `Vector<T>` surface. That
+matters: `Vector.ShiftLeft` is .NET 7+, so a shift-based version would have no vector path on
+netstandard2.0 or net4x. The identity is cross-checked in the benchmark's setup, which throws if
+the two forms disagree.
+
+**And it is two methods, not three** — `sint32` and `sint64`; there is no unsigned zigzag. Zigzag
+also *simplifies* the ladder rather than complicating it: the result is unsigned, so there is no
+10-byte blend, and `sint32` is always 1–5 bytes where `int32` can be 10.
+
+**Measured, and the shape is the interesting part:**
+
+| | plain | zigzag | overhead |
+| --- | ---: | ---: | ---: |
+| vectorised, 256 mixed | 32.65 ns | 34.36 ns | **+5%** |
+| vectorised, 256 small | 32.40 ns | 34.36 ns | **+6%** |
+| scalar, 256 mixed | 129.7 ns | 175.7 ns | +35% |
+| scalar, 256 small | 63.2 ns | 112.8 ns | **+78%** |
+
+The transform amortises across lanes, so **zigzag is a bigger relative win for SIMD than plain
+varint is** — the scalar path pays the shifts per element, the vector path pays them per block.
+`sint32` columns are therefore the best case for this work, not the awkward one.
 
 **Where it plugs in, and it is better placed than expected**: protogen emits `T[]` for every
 packable scalar (`string`/`bytes`/message become getter-only `List<T>` and are not packed at all),
