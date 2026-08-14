@@ -389,6 +389,55 @@ just not additive across a boundary. The fix is to push `writer.Depth` at the po
 rather than to thread anything further. Recorded rather than done because it wants a fixture that
 actually crosses the boundary deeply, and no existing one does.
 
+### B16. The emitted bodies declare one local per member, and large contracts have a lot of them — **open**
+
+Marc, 2026-08-14, on two shapes in the generated code:
+
+```csharp
+var lengths2 = state.RawLengths;   // repeated per message member
+var tmp7 = value.Something;        // one per member, whatever the type
+```
+
+**Scale first, because it changed the answer.** Sampling the test fixtures gave 8–11 locals per
+body and the conclusion "the JIT already handles this". Marc pointed at a real model, and the
+fixtures are not representative:
+
+| body | locals | source |
+| --- | ---: | --- |
+| `RawWrite_TestEnormousDescriptor` | **1000** | corpus |
+| `RawWrite_FileOptions` | 21 | an ordinary protogen DTO |
+
+`state.RawLengths` appears 1613 times in the differential model, 33 in protogen's own serializer.
+
+**Why the scale matters rather than just being a bigger number.** RyuJIT tracks a bounded number
+of locals for liveness; beyond that limit locals become *untracked*, and untracked locals are
+neither enregistered nor lifetime-merged. So "the register allocator already reuses slots by
+liveness, which beats folding by type" is true for a ten-local body and stops being true long
+before a thousand. Marc's suggestion — fold the temporaries **by type**, via a map in the emitter
+— would cut a 1000-local body to roughly one local per distinct type, back inside the tracked set.
+
+**A second cost, not previously connected.** `[module: SkipLocalsInit]` is applied to
+protobuf-net's own assemblies, but **the generated model lands in the consumer's assembly**, which
+has no such attribute — so every one of those locals is zero-initialised on each call, in their
+build rather than ours. Per-method `[SkipLocalsInit]` is the targeted fix and is **not usable**:
+it requires `AllowUnsafeBlocks` in the consumer's project, which a serializer has no business
+demanding.
+
+**The `lengths` half is separate and simpler.** `state.RawLengths` is three dependent field loads
+(`state._writer` → `writer.netCache` → `netCache._rawLengths`); Roslyn does not CSE across
+statements, and the JIT cannot hoist the two heap loads across the intervening `TryGetValue` /
+`Measure_` / `RawWrite_` calls. One method-level local removes N−1 of them.
+
+That hoist is **safe today but needs a comment saying why**: `_rawLengths` is genuinely reassigned
+— `NetObjectCache.InitializeFrom` swaps it for the measure→write hand-off, and `ClearAndMaybeTrim`
+may replace it — but both happen at the boundaries, never mid-body. If the hand-off ever moved,
+a hoisted local would go stale silently.
+
+**Unmeasured, and deliberately so far.** Nothing in this arc has targeted *dependent load chains*
+or *local-count pressure*, so unlike the seven flat micro-experiments there is no census result
+predicting the outcome. Worth measuring on a large contract rather than on the descriptor payload,
+since the effect scales with member count and `descriptor.proto`'s messages are mostly small.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
