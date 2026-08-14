@@ -660,25 +660,25 @@ namespace ProtoBuf.Serializers
                 // virtual dispatch AND a wire-type switch before any bytes are produced. The raw
                 // surface skips both; the encoding is identical, and WritePacked's own length check
                 // confirms it.
-                foreach (var value in new ReadOnlySpan<uint>((uint[])(object)values)) state.WriteRawVarint32(value);
+                PackedVarintMeasure.WritePackedUInt32(ref state, new ReadOnlySpan<uint>((uint[])(object)values));
                 return true;
             }
             else if (wireType == WireType.Varint && typeof(T) == typeof(int))
             {
                 // a negative int32 sign-extends to the ten-byte form, so this is the 64-bit writer
-                foreach (var value in new ReadOnlySpan<int>((int[])(object)values))
-                    state.WriteRawVarint64(unchecked((ulong)(long)value));
+                PackedVarintMeasure.WritePackedInt32(ref state, new ReadOnlySpan<int>((int[])(object)values));
                 return true;
             }
             else if (wireType == WireType.Varint && typeof(T) == typeof(ulong))
             {
-                foreach (var value in new ReadOnlySpan<ulong>((ulong[])(object)values)) state.WriteRawVarint64(value);
+                PackedVarintMeasure.WritePackedUInt64(ref state, new ReadOnlySpan<ulong>((ulong[])(object)values));
                 return true;
             }
             else if (wireType == WireType.Varint && typeof(T) == typeof(long))
             {
-                foreach (var value in new ReadOnlySpan<long>((long[])(object)values))
-                    state.WriteRawVarint64(unchecked((ulong)value));
+                // `long` puns onto the unsigned blit: a negative is a large ulong, so it never
+                // passes the < 128 test, and both encode as the same 64-bit two's-complement varint.
+                PackedVarintMeasure.WritePackedUInt64(ref state, MemoryMarshal.Cast<long, ulong>((long[])(object)values));
                 return true;
             }
             else if (wireType == WireType.SignedVarint && typeof(T) == typeof(int))

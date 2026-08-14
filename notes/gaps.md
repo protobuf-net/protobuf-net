@@ -909,7 +909,7 @@ down-level, which costs little given the shape protogen actually emits.
 the descriptor set would show none of this. An in-situ number needs a packed-numeric payload that
 does not exist yet, and that payload is the real prerequisite, not the algorithm.
 
-### B21. SIMD for the packed varint WRITE — **three tiers; only tier 1 is both portable and clearly worth it**
+### B21. SIMD for the packed varint WRITE — **tier 1 LANDED (6.6×–8.7×); tiers 2–3 still open**
 
 Marc, 2026-08-14: can SIMD do something clever for the write — measure a block at once, then
 "scatter/gather, switch, something"? Yes, but it separates into tiers that differ enormously in
@@ -922,6 +922,57 @@ continuation bits to interleave — so the encode collapses to **narrow-and-stor
 `DescriptorPayloadCensus.md` puts 99.7% of tags and most field values in the single-byte class, so
 this arm would carry most real traffic — and it needs only `Narrow`, the same portable primitive
 B20 wants. **This is the one to try first.**
+
+**Tier 1 is now LANDED**, 2026-08-15, for all four varint element types — `uint32`, `int32`,
+`uint64`, `int64` — on both the array path (every TFM) and the `CollectionsMarshal` span path
+(net5+). `PackedVarintMeasure.WritePackedUInt32` / `WritePackedInt32` / `WritePackedUInt64`.
+Measured in isolation by `PackedWriteBenchmarks`, 999 elements:
+
+| element | scalar | tier 1 | where it fires | where it cannot |
+| --- | --- | --- | --- | --- |
+| `uint32` | 1449 ns | **169 ns** | **8.6×** | +3% |
+| `int32` | 1448 ns | **170 ns** | **8.5×** | +6% |
+| `uint64` | 1445 ns | **217 ns** | **6.6×** | +5% |
+
+64-bit is behind 32-bit because it takes **three** narrowing steps rather than two, so a block is
+eight vectors rather than four; the element count per block is 32 either way.
+
+Two puns make four element types into three methods, and both were verified rather than assumed:
+`long` rides on `WritePackedUInt64` (a negative `long` reinterprets as a large `ulong`, so it fails
+the `< 128` test and is never blitted, and both encode as the same 64-bit two's-complement varint),
+while `int32` needs its **own** method — the block test can be the unsigned one, but the scalar
+*fallback* must write the 64-bit sign-extended form, so it cannot simply call the `uint32` version.
+
+**The cost side is the number that mattered for the decision**, since the check runs on every block
+whether it succeeds or not: +3% to +6% on a distribution where a block is essentially never
+uniform. Against 6.6×–8.7× where it does fire, and a census that puts 99.7% of values in the
+single-byte class, that trade is not close.
+
+**A mixed block hands the REST to the scalar loop rather than falling back per-block.** That is
+deliberate: resuming the vector loop after a wide value would need the tail written first to keep
+byte order, and the pathological case (`oneWide`) measures at full speed anyway because a single
+wide value in the ragged tail never breaks the block loop at all.
+
+**Two methodology findings came out of this, and both generalise:**
+
+- **The end-to-end harness could not resolve it.** `PackedMatrixBenchmarks` serializes a four-member
+  contract, and the run-to-run spread on a single arm (7.26–7.84 µs for identical code) was
+  *larger than the effect being claimed*; two successive runs put the same arm on opposite sides of
+  its baseline, which would have supported either conclusion. The dilution has two named causes —
+  the ~1 µs/member fixed overhead (item 3 in `notes/packed-writes.md`) and, before the 64-bit arm
+  landed, half the members having no fast path. An end-to-end number is the right *final* check and
+  the wrong instrument for attributing a delta to one loop; `PackedWriteBenchmarks` exists for that,
+  at ±0.5% noise.
+- **Watch what the control arm does.** Classic-emit tracked raw within 1% throughout, which looks
+  like "the optimisation did nothing" and actually means "both models go through the same library
+  `RepeatedSerializer`, so both got it". A control that shares the code under test is not a control.
+
+**The test had a hole that only sabotage found.** `PackedBlockCopyTests.PackedVarintBlockMatchesTheEncodingRules`
+sweeps 31/32/33/47/64/999 elements against a hand-written LEB128 oracle — but widening the
+uniformity threshold from `0x80` to `0x100` left every case passing, because no fixture value lay
+in **128–255**, the band the cutoff actually discriminates. With a `justOver` pattern added it
+fails as it should. The differential suite is structurally blind here for the usual reason: both
+sides go through `RepeatedSerializer`, so a wrong blit is wrong identically on both.
 
 **Tier 2 — measure, then write without per-element room checks. Nearly free, falls out of B19.**
 SIMD-measure the block for its total length, reserve exactly that, then run the scalar encoder with

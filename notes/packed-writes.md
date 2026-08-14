@@ -157,6 +157,30 @@ its values are spread evenly across the width classes, so a block of eight is ra
 Real data is the opposite — the census puts almost everything in the single-byte class — so this
 would **understate** tier 1, and a "small" distribution should be added before anyone judges it.
 
+**Both were done (2026-08-15), and the harness still could not answer the question** — which is the
+more useful finding of the two. A `[Params("spread", "small")]` distribution went in, and tier 1
+landed for all four varint element types; the end-to-end arms moved by an amount indistinguishable
+from noise, because the run-to-run spread on a single arm (7.26–7.84 µs for *identical* code) is
+larger than the effect. Two successive runs put the same arm on opposite sides of its baseline.
+
+Two things dilute it, and naming them is what made the result readable:
+
+- **the ~1 µs/member overhead below** — at four members that is over half the total before a single
+  element is encoded;
+- **the control shares the code under test.** Classic-emit tracked raw within 1% throughout, which
+  reads as "the change did nothing" and actually means *both* models go through the same library
+  `RepeatedSerializer` and both got the optimisation. A control that shares the code under test is
+  not a control.
+
+The sink was eliminated as a cause rather than assumed: `IBufferWriter` arms were added alongside
+the `MemoryStream` ones and are only ~6% faster, so the stream is not where the time goes.
+
+**So tier 1 is measured by `PackedWriteBenchmarks` instead**, which times the primitive directly
+against the scalar loop it replaces, at ±0.5% noise: **8.6× (`uint32`), 8.5× (`int32`), 6.6×
+(`uint64`)** where a block is uniform, against **+3% to +6%** where it never is. The end-to-end
+harness remains the right *final* check and is the wrong instrument for attributing a delta to one
+loop — keep both, and reach for the isolated one when the answer is smaller than the variance.
+
 ### The largest unexplained cost is NOT packed-specific: ~1 µs per member
 
 Now that the copies are bulk, the per-byte figures separate cleanly:
@@ -194,9 +218,10 @@ will keep landing on the 0.16 ns/byte side of a 1000 ns/member problem.
    which for zigzag is a transform plus an encode per element. It is the clearest evidence that the
    remaining cost is B21's territory, not B19's.
 
-**Still to do, in order:** `bool[]` (O(1) sizing, near-blit write); B21 tier 1 (the single-byte
-homogeneous block); B21 tier 2 (write without per-element room checks, free once the measure is
-vectorised); enums, which are never packed at all.
+**Still to do, in order:** ~~`bool[]`~~ (done); ~~B21 tier 1~~ (**done 2026-08-15**, all four
+varint element types, both collection paths); B21 tier 2 (write without per-element room checks,
+free once the measure is vectorised); enums, which are never packed at all. And ahead of all of
+them, the ~1 µs/member overhead above — it is now the largest number in this file by a wide margin.
 
 ## Ranked, by value over effort
 

@@ -241,6 +241,170 @@ namespace ProtoBuf.Internal
         }
 
         /// <summary>
+        /// Writes a packed <c>uint32</c> column, taking a <b>blit</b> for any block whose values
+        /// are all below 128 — gap B21 tier 1.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A value below 128 is a one-byte varint with no continuation bit, so a block of such
+        /// values narrows straight to its own payload: <c>uint</c> → <c>ushort</c> → <c>byte</c>,
+        /// two <c>Vector.Narrow</c> steps, one store. No shuffle and no compaction, which is what
+        /// makes this the portable tier — the general case needs <c>pshufb</c> and is .NET 7+.
+        /// </para>
+        /// <para>
+        /// The block is <b>four vectors wide</b> because <c>Vector.Narrow</c> halves the element
+        /// count each time and consumes two inputs: four <c>Vector&lt;uint&gt;</c> collapse to one
+        /// <c>Vector&lt;byte&gt;</c>. Anything not covered — a mixed block, or the ragged tail —
+        /// falls through to the ordinary per-element write, so correctness never depends on the
+        /// distribution.
+        /// </para>
+        /// <para>
+        /// Worth it because of the shape of real data rather than of this code: the payload census
+        /// puts almost every field value in the single-byte class, so the blit is the common path
+        /// even though a synthetic even spread across width classes barely reaches it.
+        /// </para>
+        /// </remarks>
+        internal static void WritePackedUInt32(ref ProtoWriter.State state, ReadOnlySpan<uint> values)
+        {
+            int i = 0;
+            if (Vector.IsHardwareAccelerated && BitConverter.IsLittleEndian)
+            {
+                int lanes = Vector<uint>.Count, block = lanes * 4;
+                if (values.Length >= block)
+                {
+                    var limit = new Vector<uint>(0x80);
+                    for (; i <= values.Length - block; i += block)
+                    {
+                        var v0 = Load(values, i);
+                        var v1 = Load(values, i + lanes);
+                        var v2 = Load(values, i + (lanes * 2));
+                        var v3 = Load(values, i + (lanes * 3));
+                        if (Vector.GreaterThanOrEqualAny(v0, limit) || Vector.GreaterThanOrEqualAny(v1, limit)
+                            || Vector.GreaterThanOrEqualAny(v2, limit) || Vector.GreaterThanOrEqualAny(v3, limit))
+                        {
+                            break;   // mixed block: hand the REST to the scalar loop, in order
+                        }
+
+                        // The narrowed bytes are emitted as ulong LANES rather than through a
+                        // scratch buffer: a stackalloc cannot be passed into a ref struct's method
+                        // (the compiler cannot prove it will not escape), and WriteRawFixed64 lays
+                        // eight bytes down little-endian, which is exactly the lane's own order.
+                        var packed = Vector.AsVectorUInt64(
+                            Vector.Narrow(Vector.Narrow(v0, v1), Vector.Narrow(v2, v3)));
+                        for (int lane = 0; lane < Vector<ulong>.Count; lane++)
+                        {
+                            state.WriteRawFixed64(packed[lane]);
+                        }
+                    }
+                }
+            }
+            for (; i < values.Length; i++) state.WriteRawVarint32(values[i]);
+        }
+
+        /// <summary>
+        /// The same tier-1 blit for a packed 64-bit column. <c>long</c> puns onto this.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The pun is safe in <b>both</b> halves, which is what makes one method enough: a negative
+        /// <c>long</c> reinterprets as a very large <c>ulong</c>, so it fails the <c>&lt; 128</c>
+        /// test and is never blitted, and the scalar fallback encodes it as the same 64-bit
+        /// two's-complement varint either way. That is the same reasoning <see cref="Measure(ReadOnlySpan{ulong})"/>
+        /// already relies on — and it is exactly what <c>int32</c> cannot do, since protobuf
+        /// sign-extends a negative <c>int32</c> to ten bytes.
+        /// </para>
+        /// <para>
+        /// A block is <b>eight</b> vectors here rather than four, because it takes three narrowing
+        /// steps to get from 64-bit lanes down to bytes; the element count per block is the same 32
+        /// as the 32-bit form on any given width.
+        /// </para>
+        /// </remarks>
+        internal static void WritePackedUInt64(ref ProtoWriter.State state, ReadOnlySpan<ulong> values)
+        {
+            int i = 0;
+            if (Vector.IsHardwareAccelerated && BitConverter.IsLittleEndian)
+            {
+                int lanes = Vector<ulong>.Count, block = lanes * 8;
+                if (values.Length >= block)
+                {
+                    var limit = new Vector<ulong>(0x80);
+                    for (; i <= values.Length - block; i += block)
+                    {
+                        var v0 = Load(values, i);
+                        var v1 = Load(values, i + lanes);
+                        var v2 = Load(values, i + (lanes * 2));
+                        var v3 = Load(values, i + (lanes * 3));
+                        var v4 = Load(values, i + (lanes * 4));
+                        var v5 = Load(values, i + (lanes * 5));
+                        var v6 = Load(values, i + (lanes * 6));
+                        var v7 = Load(values, i + (lanes * 7));
+                        if (Vector.GreaterThanOrEqualAny(v0, limit) || Vector.GreaterThanOrEqualAny(v1, limit)
+                            || Vector.GreaterThanOrEqualAny(v2, limit) || Vector.GreaterThanOrEqualAny(v3, limit)
+                            || Vector.GreaterThanOrEqualAny(v4, limit) || Vector.GreaterThanOrEqualAny(v5, limit)
+                            || Vector.GreaterThanOrEqualAny(v6, limit) || Vector.GreaterThanOrEqualAny(v7, limit))
+                        {
+                            break;   // mixed block: hand the REST to the scalar loop, in order
+                        }
+                        var packed = Vector.AsVectorUInt64(Vector.Narrow(
+                            Vector.Narrow(Vector.Narrow(v0, v1), Vector.Narrow(v2, v3)),
+                            Vector.Narrow(Vector.Narrow(v4, v5), Vector.Narrow(v6, v7))));
+                        for (int lane = 0; lane < Vector<ulong>.Count; lane++)
+                        {
+                            state.WriteRawFixed64(packed[lane]);
+                        }
+                    }
+                }
+            }
+            for (; i < values.Length; i++) state.WriteRawVarint64(values[i]);
+        }
+
+        /// <summary>
+        /// The same tier-1 blit for a packed <c>int32</c> column.
+        /// </summary>
+        /// <remarks>
+        /// The block test is the <b>unsigned</b> one, and that is not a shortcut: reinterpreted as
+        /// <c>uint</c>, a negative <c>int</c> becomes a very large value and so fails
+        /// <c>&lt; 128</c> automatically — which is exactly right, because a negative
+        /// <c>int32</c> sign-extends to the ten-byte form and must never be blitted. Values 0–127
+        /// encode identically whether the member is signed or not.
+        /// <para>
+        /// It cannot simply call <see cref="WritePackedUInt32"/>, because that method's fallback
+        /// writes a 32-bit varint; a signed member's fallback must be the 64-bit sign-extended one.
+        /// </para>
+        /// </remarks>
+        internal static void WritePackedInt32(ref ProtoWriter.State state, ReadOnlySpan<int> values)
+        {
+            int i = 0;
+            if (Vector.IsHardwareAccelerated && BitConverter.IsLittleEndian)
+            {
+                int lanes = Vector<uint>.Count, block = lanes * 4;
+                if (values.Length >= block)
+                {
+                    var limit = new Vector<uint>(0x80);
+                    for (; i <= values.Length - block; i += block)
+                    {
+                        var v0 = Vector.AsVectorUInt32(Load(values, i));
+                        var v1 = Vector.AsVectorUInt32(Load(values, i + lanes));
+                        var v2 = Vector.AsVectorUInt32(Load(values, i + (lanes * 2)));
+                        var v3 = Vector.AsVectorUInt32(Load(values, i + (lanes * 3)));
+                        if (Vector.GreaterThanOrEqualAny(v0, limit) || Vector.GreaterThanOrEqualAny(v1, limit)
+                            || Vector.GreaterThanOrEqualAny(v2, limit) || Vector.GreaterThanOrEqualAny(v3, limit))
+                        {
+                            break;
+                        }
+                        var packed = Vector.AsVectorUInt64(
+                            Vector.Narrow(Vector.Narrow(v0, v1), Vector.Narrow(v2, v3)));
+                        for (int lane = 0; lane < Vector<ulong>.Count; lane++)
+                        {
+                            state.WriteRawFixed64(packed[lane]);
+                        }
+                    }
+                }
+            }
+            for (; i < values.Length; i++) state.WriteRawVarint64(unchecked((ulong)(long)values[i]));
+        }
+
+        /// <summary>
         /// Whether every byte is already 0 or 1 — i.e. whether the span IS the wire payload.
         /// </summary>
         /// <remarks>
@@ -265,6 +429,24 @@ namespace ProtoBuf.Internal
         }
 
 #if NET5_0_OR_GREATER
+        /// <summary>
+        /// Reinterprets a span of unconstrained <typeparamref name="TFrom"/> — which is why this is
+        /// not <c>MemoryMarshal.Cast</c>, whose <c>struct</c> constraint the callers cannot satisfy.
+        /// Only ever reached once the element type has been proven by a <c>typeof</c> test.
+        /// </summary>
+        /// <remarks>
+        /// Guarded, and the guard is load-bearing rather than tidy: <c>MemoryMarshal.CreateReadOnlySpan</c>
+        /// is absent from the reference set <b>protobuf-net.BuildTools</b> compiles these sources
+        /// under, so hoisting this out of the guard breaks the analyzer build — which is the only
+        /// place that failure shows up.
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ReadOnlySpan<TTo> As<TFrom, TTo>(ReadOnlySpan<TFrom> values)
+            => System.Runtime.InteropServices.MemoryMarshal.CreateReadOnlySpan(
+                ref Unsafe.As<TFrom, TTo>(
+                    ref System.Runtime.InteropServices.MemoryMarshal.GetReference(values)),
+                values.Length);
+
         /// <summary>
         /// The same dispatch over a span, for a <c>List&lt;T&gt;</c> reached through
         /// <c>CollectionsMarshal</c>.
@@ -314,13 +496,13 @@ namespace ProtoBuf.Internal
             if (wireType == WireType.Varint)
             {
                 if (typeof(T) == typeof(uint))
-                { foreach (var v in As<T, uint>(values)) state.WriteRawVarint32(v); return true; }
+                { WritePackedUInt32(ref state, As<T, uint>(values)); return true; }
                 if (typeof(T) == typeof(int))
-                { foreach (var v in As<T, int>(values)) state.WriteRawVarint64(unchecked((ulong)(long)v)); return true; }
+                { WritePackedInt32(ref state, As<T, int>(values)); return true; }
                 if (typeof(T) == typeof(ulong))
-                { foreach (var v in As<T, ulong>(values)) state.WriteRawVarint64(v); return true; }
+                { WritePackedUInt64(ref state, As<T, ulong>(values)); return true; }
                 if (typeof(T) == typeof(long))
-                { foreach (var v in As<T, long>(values)) state.WriteRawVarint64(unchecked((ulong)v)); return true; }
+                { WritePackedUInt64(ref state, As<T, ulong>(values)); return true; }
                 if (typeof(T) == typeof(bool) && le)
                 {
                     var raw = System.Runtime.InteropServices.MemoryMarshal.AsBytes(As<T, bool>(values));
@@ -357,18 +539,6 @@ namespace ProtoBuf.Internal
         private static void Blit<TValue>(ref ProtoWriter.State state, ReadOnlySpan<TValue> values)
             where TValue : unmanaged
             => state.WriteRawBytesBody(System.Runtime.InteropServices.MemoryMarshal.AsBytes(values));
-
-        /// <summary>
-        /// Reinterprets a span of unconstrained <typeparamref name="TFrom"/> — which is why this is
-        /// not <c>MemoryMarshal.Cast</c>, whose <c>struct</c> constraint the callers cannot satisfy.
-        /// Only ever reached once the element type has been proven by a <c>typeof</c> test.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ReadOnlySpan<TTo> As<TFrom, TTo>(ReadOnlySpan<TFrom> values)
-            => System.Runtime.InteropServices.MemoryMarshal.CreateReadOnlySpan(
-                ref Unsafe.As<TFrom, TTo>(
-                    ref System.Runtime.InteropServices.MemoryMarshal.GetReference(values)),
-                values.Length);
 #endif
 
         /// <summary>
