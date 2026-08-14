@@ -652,6 +652,63 @@ to settle first, and only the second is hard:
 Note this also interacts with **B1** (packed writes) and **B5** (counting mode for mixed
 contracts), both of which want the measure path to reach further into shapes it currently declines.
 
+### B18. `ClassicEmit` is never exercised by any gate — **open, and it undermines the other gates**
+
+Marc, 2026-08-14: *"remember to cross-check classic-emit in all cases... classic-emit should be
+functionally equivalent, if slower."* Checked, and **no test project sets
+`[ProtoModel(ClassicEmit = true)]`** — not one fixture, not the conformance model, nothing. So the
+generator's classic path is emitted by nobody and compared against nothing.
+
+That matters more than a normal coverage gap, because `ClassicEmit` is the **escape hatch** we
+point people at (it is named in `ProtoWriter.State.Raw.cs`'s own error text for the
+non-seekable-stream case). It is the fallback that is least tested.
+
+Everything on this branch — proto2 `required`/defaults, groups taking the raw path, the write-side
+depth guard, dropping the per-site length local — was verified **only on the raw path**. The
+differential proves generated-vs-`RuntimeTypeModel`; it does not prove
+generated-classic-vs-generated-raw.
+
+**Closing it is nearly free, with one obstacle.** `DifferentialTests.DiscoverModels()` enumerates
+every `[ProtoModel]` type in the assembly, so a twin model declaring `ClassicEmit = true` over the
+same seeds is picked up and compared automatically — no new harness. The obstacle is that
+`GetSamples` resolves samples **by name convention**: `<Stem>Model` → `<Stem>Samples.Values`. A
+twin therefore needs either a name that still resolves, or a small change to that resolver (strip a
+known prefix/suffix before looking up the samples class). That is the whole job.
+
+Worth doing **before** B1: packed writes are exactly the kind of change where the two emit paths
+could diverge, and there is currently no gate that would notice.
+
+### B1 addendum: what the packed code actually says (2026-08-14)
+
+Gathered while starting B1, and it may **invert** what B1 states above — flagged rather than
+corrected, because it has not been verified end to end yet.
+
+`RepeatedSerializer.WritePacked` accepts `Fixed32` (count×4), `Fixed64` (count×8) and
+`Varint`/`SignedVarint` (measured per element), and throws for anything else. So the packable set
+is the protobuf one — **enums pack**, being varint, which is why protogen marks a repeated enum
+`IsPacked = true` (Marc asked; the answer is yes).
+
+The decision site reads:
+
+```csharp
+if (TypeHelper<TItem>.CanBePacked && !features.IsPackedDisabled()
+    && (count == 0 || count > 1) && serializer is IMeasuringSerializer<TItem> measurer)
+{
+    if (count == 0) WriteZeroLengthPackedHeader(ref state, fieldNumber);
+    else WritePacked(...);
+}
+```
+
+So the runtime **does** write a zero-length header for an empty *packed* collection. B1 above says
+we emit a zero-length field "where ref-emit writes nothing" — that looks backwards: the difference
+is more likely that **we never enable packing at all** (`AGENTS.md`: the `IsPacked` argument "is not
+supported yet, so we always emit the disabled form"), so our empty collection writes nothing while a
+genuinely packed one writes the header. Same disagreement, opposite attribution — and the fix is
+"support `IsPacked`", not "stop writing a header".
+
+**Verify before building.** Both directions are cheap to test and the wrong attribution would send
+the work the wrong way.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
