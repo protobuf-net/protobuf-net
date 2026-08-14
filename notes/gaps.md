@@ -458,7 +458,7 @@ the default `DataFormat` — which is exactly what protogen emits. See `docs/aot
 Still deferred here: the **well-known types** (`Timestamp`, `Duration`, `Any`), where the
 compatibility level starts to matter, and **schema-level options** that can change the contract.
 
-### C13. `ProtoFileGenerator`'s language-version detection stops at C# 9 — **latent, blocks C12**
+### C13. ~~`ProtoFileGenerator`'s language-version detection stops at C# 9~~ — **fixed 2026-08-14**
 
 `ProtoFileGenerator` maps `context.ParseOptions.LanguageVersion` onto the string protogen's
 `GeneratorContext` parses, and the switch ends at `LanguageVersion.CSharp9 => "9"`, with
@@ -475,8 +475,28 @@ language version (C12 is the first) is inert until this is fixed, which makes it
 rather than a tidy-up.
 
 Found by Marc questioning a claim in C12 that the Roslyn path was version-blind. It is not blind —
-it reads the real value — but it discards everything above C# 9, which has the same effect and is
+it reads the real value — but it discarded everything above C# 9, which has the same effect and is
 harder to see.
+
+**Fixed by decoding arithmetically rather than by naming constants.** From C# 8 the enum is
+`major*100 + minor` (`CSharp8 = 800`, `CSharp10 = 1000`, `CSharp12 = 1200`), so the mapping names
+nothing — which it must not, since this assembly compiles against the Roslyn 4.3.1 baseline where
+`LanguageVersion.CSharp12` does not exist. That is the same reason `ProtoModelGenerator` already
+spells its AOT floor `(LanguageVersion)1200`, and following that precedent means **C# 15 needs no
+change here either**.
+
+Safe to switch on, checked rather than assumed: every existing `Supports(...)` gate in
+`CSharpCodeGenerator` is C# 3, 6 or 7.1, so reporting 10+ where nothing was reported before
+satisfies all of them and changes no output — 403 BuildTools, 556 Reflection (both TFMs) and 1431
+conformance tests pass with no golden drift.
+
+**A correction worth keeping**, since it is the exact failure this file exists to prevent: the
+first cut assumed the values were 10, 11, 12 and range-checked `>= 10 and < 100`. They are 1000,
+1100, 1200 — so it matched *nothing*, and was a silent no-op that a hand-written test expectation
+would have confirmed happily. Marc's aside that "for AOT *we* demand C# 12" is what led to the
+existing `(LanguageVersion)1200` constant and the real numbering. `LanguageVersionMappingTests`
+therefore **derives** its expectations from the enum rather than restating them, so the same
+mistake cannot pass twice.
 
 ### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**
 
