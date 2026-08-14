@@ -763,7 +763,7 @@ genuinely packed one writes the header. Same disagreement, opposite attribution 
 **Verify before building.** Both directions are cheap to test and the wrong attribution would send
 the work the wrong way.
 
-### B19. Vectorised sizing for a packed varint span — **idea, and it scopes smaller than it sounds**
+### B19. Vectorised sizing for a packed varint span — **measured: 1.8×-6.6×, the first non-flat result in this arc**
 
 Marc, 2026-08-14: for a large span of integers — `CollectionsMarshal.AsSpan` on a `List<T>`, or an
 array directly — is there anything SIMD can do to *size* them, given more than a vector's width?
@@ -799,11 +799,37 @@ was actually written (*"packed encoding length miscalculation for … expected X
 vectorised sizer that disagreed with the scalar writer would be caught immediately rather than
 producing a corrupt payload.
 
-**Where it would show, and where it would not.** `DescriptorPayloadCensus.md` says this repo's
-reference payload is 71.5% string/bytes with tiny varint counts — so it would measure flat there,
-exactly as the tag work did. The census itself names the payload that *would* show it: "packed
-numeric columns". So this wants its own benchmark payload rather than the descriptor set, and it
-belongs with B1 — the packed work is what creates the caller.
+#### Measured (`src/NanoBench/PackedSizeBenchmarks.cs`) — and it is the first non-flat result in this arc
+
+| count | distribution | scalar | vectorised | ratio |
+| ---: | --- | ---: | ---: | ---: |
+| 4096 | mixed | 3,481 ns | **530 ns** | **0.15×** |
+| 4096 | small | 948 ns | **534 ns** | 0.56× |
+| 256 | mixed | 144 ns | **32.7 ns** | 0.23× |
+| 256 | small | 63.4 ns | **32.7 ns** | 0.52× |
+| 16 | mixed | 8.39 ns | **3.19 ns** | 0.38× |
+| 16 | small | 3.73 ns | **3.18 ns** | 0.85× |
+
+**It wins at every size and distribution, including 16 elements.** Seven consecutive
+micro-optimisations in this arc measured flat; this one does not, and the reason is structural
+rather than clever — the work per element genuinely drops.
+
+**The branch-free scalar `Ladder` arm LOSES everywhere** (1.13× to 4.27× *worse* than scalar), and
+that is why it was included: it isolates the cause. The win is SIMD, not branch-avoidance —
+removing the branches without vectorising is a **pessimisation**, because the early-exit ladder is
+already cheap on the small values that dominate real data, and the branch-free form always pays
+all four comparisons.
+
+**Vectorised is nearly flat across distributions** (530–534 ns at 4096) because it does the same
+work regardless of the values, while scalar swings 948 → 3,481 ns on the same count. So the edge is
+*smallest* on the small-value data most columns actually contain (1.8×) and largest on mixed or
+wide data (6.6×). Quote the 1.8× when deciding, not the 6.6×.
+
+**What this does NOT say.** It measures *sizing in isolation*. Sizing is one part of packed writing
+— the encode still has to happen — and packed columns are in turn a fraction of most payloads;
+`DescriptorPayloadCensus.md` has this repo's reference payload at 71.5% string/bytes, which is why
+the descriptor set would show none of this. An in-situ number needs a packed-numeric payload that
+does not exist yet, and that payload is the real prerequisite, not the algorithm.
 
 ## C. Schema front-end (`[ProtoSchema]`)
 
