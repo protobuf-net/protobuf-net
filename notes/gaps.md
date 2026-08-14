@@ -529,27 +529,47 @@ So the right instrument is **the local count on a large contract**, not a nanose
 and the honest status is that the idea is agreed and unimplemented, not that it was tried and
 failed. The same applies to the `lenN` temporaries.
 
-### B17. Callbacks during measure need the context — which is on the state, not in `Measure_`'s args — **open, design**
+### B17. Callbacks and measure-first — **answered; a `BeforeSerialize` contract silently loses measure-first**
 
-Marc, 2026-08-14: to fire a serialization callback *during* the measure pass (with the "am I
-measuring?" flag that already exists on the callback side), the callback needs the
-`ISerializationContext` — and that lives on the writer state. `Measure_` does not take the state:
-its signature is `(value, int depth, Dictionary<object, long> lengths)`, threading exactly the two
-things it needs and nothing else.
+Marc asked how we stand. Checked rather than assumed, and the answer is a real limitation that was
+not written down anywhere:
 
-So the question is whether `Measure_` should take **`ref state`** instead. Marc's observation
-settles the cost side: **`ref state` costs exactly the same as the object reference it replaces**
-— a ref-struct passed by ref is one pointer, the same as the `lengths` reference — so this is not
-a performance trade. And if the state goes in, `lengths` and `depth` come *off* it rather than
-being separate arguments, so the signature gets shorter rather than longer.
+- **`RawMeasurableShape` requires `!HasCallback(contract, BeforeSerialize)`.** So a contract with a
+  before-serialize callback is **excluded from measure-first entirely** and drops to the classic
+  write-to-count path — the very path measure-first exists to replace. That is correctness-driven
+  rather than an oversight: a before-serialize callback may *mutate the object*, so anything
+  measured before it ran would be measuring the wrong state, and `Measure_` has nowhere to run it.
+- **`AfterSerialize` is fine** and is emitted at the end of `RawWrite_`.
+- **The measure pass invokes no callbacks at all**, and cannot: `Measure_(value, depth, lengths)`
+  holds no `ISerializationContext`.
+- `ProtoWriter.IsMeasuring(context)` exists, but it serves the **classic** path, where measuring
+  *is* writing to a null writer and callbacks therefore fire on the counting pass as well as the
+  real one. On the measure-first route there is nothing to disambiguate, because nothing fires.
 
-What it needs deciding on is coupling, not cost: `Measure_` is currently a pure arithmetic walk
-with no writer in sight, which is what makes it trivially testable and reusable. Taking `ref
-state` ties it to a live writer.
+**So the cost of a callback today is not "the callback runs" — it is that the whole contract, and
+by cascade everything referencing it, falls off the fast path.** That is worth knowing before
+recommending callbacks to anyone.
 
-Related and unresolved: `notes/nano-writer.md` records that a callback can already ask whether it
-is measuring, but the measure path does not currently *invoke* callbacks at all — so the flag has
-no caller on this route. Whether measure-time callbacks are even wanted is the prior question.
+#### What `ref state` would buy, and what it would cost
+
+Marc's proposal: give `Measure_` `ref state` instead of `(depth, lengths)`. His own observation
+settles the cost side — **`ref state` is one pointer, exactly what the `lengths` reference already
+costs** — and `depth`/`lengths` would then come *off* the state, so the signature gets **shorter**,
+not longer. There is no performance argument against it.
+
+It would let callback-bearing contracts join measure-first, which is the actual prize. Two things
+to settle first, and only the second is hard:
+
+1. **Double-fire.** The callback would run once in the measure and once in the write. That
+   *matches* the classic path (where the counting pass is a write) and `IsMeasuring` already exists
+   for a callback to tell them apart — so this is consistent rather than novel. The alternative,
+   firing once before the measure and not in the write, is cleaner but diverges from ref-emit.
+2. **Coupling.** `Measure_` is today a pure arithmetic walk with no writer in sight, which is what
+   makes it trivially testable and independently callable. Taking `ref state` ties it to a live
+   writer. That is the real trade, and it is a design call rather than a measurement.
+
+Note this also interacts with **B1** (packed writes) and **B5** (counting mode for mixed
+contracts), both of which want the measure path to reach further into shapes it currently declines.
 
 ## C. Schema front-end (`[ProtoSchema]`)
 
