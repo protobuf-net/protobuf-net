@@ -1,4 +1,4 @@
-# Packed repeated writes: the scenario matrix
+﻿# Packed repeated writes: the scenario matrix
 
 **The question this answers** (Marc, 2026-08-14): *what packed scenarios exist, and have we
 considered how to optimise each — where it isn't a simple block copy?*
@@ -9,7 +9,7 @@ they are all downstream of it.
 
 ---
 
-## The finding: there is no block copy at all
+## The finding: there was no block copy at all — **now fixed for the matching fixed-width cells**
 
 `RepeatedSerializer.WritePacked` writes **every** packed element through an enumerator and a
 virtual serializer call, whatever the type:
@@ -27,8 +27,31 @@ There is no `MemoryMarshal`, no `AsBytes`, no bulk path anywhere in the file. So
 `float[]` → `repeated float` — which on a little-endian machine is a **pure `memcpy`** — is
 currently emitted one float at a time through an interface dispatch.
 
-That reorders everything: block copy is trivially correct, portable, needs no intrinsics, and
-covers the fixed-width cells outright. It should land before any of the vectorised work.
+That reordered everything: block copy is trivially correct, portable, needs no intrinsics, and
+covers the fixed-width cells outright — so it landed first, ahead of any vectorised work.
+
+**Landed 2026-08-14** (`VectorSerializer<T>.TryWritePackedBlock` + `State.WriteRawBytesBody`): the
+matching fixed-width cells now emit the array's bytes in one copy. Guarded on
+`BitConverter.IsLittleEndian`, which the JIT folds away on LE; big-endian falls back to the
+per-element loop, which goes through `BinaryPrimitives` and is already correct.
+
+**It needed its own oracle**, and that is the part worth remembering. The differential compares the
+generated model against `RuntimeTypeModel` — but **both go through `RepeatedSerializer`**, so a
+wrong block copy would be wrong identically on both sides and pass. A round trip would agree with
+itself for the same reason. `PackedBlockCopyTests` therefore pins **hand-computed wire bytes**
+(`1f` is `00-00-80-3F` little-endian, `3F-80-00-00` big-endian — different in every position that
+matters), plus an 8192-element payload that crosses buffer boundaries so the out-of-line arm runs
+too.
+
+Two behaviours were pinned incidentally, both found by a *wrong expectation* rather than by
+design:
+
+- **a single element is written UNPACKED** — `(count == 0 || count > 1)` in
+  `RepeatedSerializer.Write`, since tag+value beats tag+length+value, and packing is the writer's
+  choice so both are legal. The test's first draft expected `0A-…` and got `09-…`, i.e. wire type 1;
+- **an empty packed collection writes a zero-length header** (`0A-00`), not nothing. That is the
+  exact shape gap B1 was filed against as a disagreement — and since both paths are this one piece
+  of code, there was never a disagreement available to find.
 
 ---
 
