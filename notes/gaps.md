@@ -334,6 +334,45 @@ produced a confident wrong answer twice running on this one question.
 covers depth incidentally, at ~600 nested messages).
 
 
+### B14. Groups defeat measure-first, when they should be the case that needs no measure — **next, and a real bug**
+
+Marc, 2026-08-14: *"group basically avoids the whole 'measure before you write' — it boosts write
+perf hugely at the cost of reads needing to watch for a sentinel."* Exactly so, and that is what
+makes the current behaviour backwards.
+
+A grouped sub-message is framed by a start-group tag and an end-group tag, with **no length
+prefix** — so its size is never needed. It is the one shape that should cost *nothing* to write.
+
+Instead: `RawMemberMeasureBlocked` blanket-blocks on `member.DataFormat != ProtoDataFormat.Default`,
+and a blocked member **removes its whole contract from the `measurable` set** — computed to a
+fixed point, so the exclusion cascades to every referrer. A single grouped member therefore drops
+its containing tree onto the classic write-to-count path, which is the slow one measure-first
+exists to replace.
+
+So a consumer who reaches for groups *because* they are faster gets the opposite. Two things to
+do, and the first is much smaller than the second:
+
+- **Stop blocking on it.** `Group` on a message member is perfectly measurable when its target is:
+  the size is `startTag + Measure_(body) + endTag`, all known. The blanket `DataFormat != Default`
+  test is right for the formats that genuinely need the engine (`FixedSize`, BCL kinds, wrapping)
+  and wrong for this one.
+  The tag lengths fold, since the field number is a compile-time constant — so a grouped member's
+  measure is literally `Measure_(body) + <two constants>`.
+
+- **Then skip the measure entirely**, which is the actual prize and is bigger than making the
+  measure cheap. A length is only ever needed by a *length-prefixed* parent, so **an entire
+  grouped tree can be written without a single measure pass**. That is not a faster measure, it is
+  no measure: the measure leg is 3.76 µs of the gRPC shape's 15.45 µs (`docs/aot.md`), and a
+  grouped tree deletes it rather than shrinking it.
+
+  The trade is on the read side, and it is real: a length prefix lets a reader skip a sub-message
+  without parsing it, while a sentinel has to be scanned for. That is the choice protobuf made in
+  the other direction for proto3, and the reason this is a *format* decision rather than a
+  free win.
+
+Worth measuring rather than assuming, as ever — but unlike the seven flat micro-experiments this
+one is a *structural* removal of work, not a cheaper way of doing it.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
@@ -497,6 +536,30 @@ would have confirmed happily. Marc's aside that "for AOT *we* demand C# 12" is w
 existing `(LanguageVersion)1200` constant and the real numbering. `LanguageVersionMappingTests`
 therefore **derives** its expectations from the enum rather than restating them, so the same
 mistake cannot pass twice.
+
+### C14. protobuf **editions**, and refreshing `descriptor.proto` — **future, likely 4.1**
+
+Marc, 2026-08-14. Editions replace the proto2/proto3 split with per-feature settings, and the one
+that matters here is **`features.message_encoding = DELIMITED`** — which *resurrects group
+encoding*, deprecated in proto3 and now back as a first-class choice. Marc's note: this is
+substantially what he recommended to the protobuf team 15+ years ago, and it is what protobuf-net
+has implemented throughout as `DataFormat.Group`.
+
+So we are unusually well placed: the wire form is already implemented on both paths, and the
+`DataFormat.Group` plumbing is the same plumbing editions needs. What is missing is the *schema*
+half — recognising an `edition = "2023"` file and mapping its feature set onto the options
+protobuf-net already has.
+
+**A prerequisite, and one we have already stubbed a toe on:** our `descriptor.proto` needs
+refreshing. It is behind upstream — regenerating it during the sub-type work turned up a missing
+`FieldOptions.unverified_lazy` that had been silently landing in extension data — and editions add
+a good deal more (`Edition`, `FeatureSet`, `FeatureSetDefaults`, and the `features` fields on every
+options message). That refresh is worth doing on its own, ahead of and independent of editions
+support, since a stale descriptor mis-parses schemas rather than merely lacking features.
+
+See also **B14**: groups currently *defeat* measure-first rather than benefiting from it, which
+would make an editions-delimited payload slower rather than faster until it is fixed. That is the
+ordering constraint between these two items.
 
 ### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**
 
