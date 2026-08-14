@@ -508,6 +508,27 @@ Two methodological notes worth keeping, both mine to own:
   failed in the default Debug configuration for an implementation-detail reason, and the
   hypothesis it was written to defend turned out false.
 
+#### The case for folding stands anyway, and does not rest on a benchmark
+
+Marc: *"if nothing else, it'll make the compiler's job easier."* Right, and that argument is
+untouched by the null result above, because neither thing I measured tests it — I measured
+**scoping** (not folding) on a **~50-local** body (not the 1000-local one that motivated this).
+
+Emitting genuinely fewer distinct locals reduces, by arithmetic rather than by hypothesis:
+
+- **IL size** and Roslyn's own analysis work on very large bodies;
+- **RyuJIT tracked-local pressure** — past its limit locals are neither enregistered nor
+  lifetime-merged, and 1000 is comfortably past it;
+- **`.locals init` zeroing**, which the *consumer's* assembly pays because
+  `[module: SkipLocalsInit]` is on protobuf-net's assemblies and not on theirs, and the per-method
+  form is unusable (it requires `AllowUnsafeBlocks` in their project);
+- **frame size**, which is the one that matters: `MaxDepth` of 512 only bounds recursion if frames
+  are small.
+
+So the right instrument is **the local count on a large contract**, not a nanosecond benchmark —
+and the honest status is that the idea is agreed and unimplemented, not that it was tried and
+failed. The same applies to the `lenN` temporaries.
+
 ### B17. Callbacks during measure need the context — which is on the state, not in `Measure_`'s args — **open, design**
 
 Marc, 2026-08-14: to fire a serialization callback *during* the measure pass (with the "am I
