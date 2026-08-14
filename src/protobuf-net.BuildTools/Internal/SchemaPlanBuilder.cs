@@ -93,7 +93,7 @@ namespace ProtoBuf.BuildTools.Internal
 
                 foreach (var message in file.MessageTypes)
                 {
-                    if (!AddMessage(message, ns, null, names, types, mapEntries, contracts, ref unsupported, subTypes)) return null;
+                    if (!AddMessage(message, ns, null, names, types, mapEntries, contracts, ref unsupported, subTypes, IsProto2(file))) return null;
                 }
 
                 // an enum reached as a MEMBER is an inline scalar and needs no plan of its own; it
@@ -128,7 +128,7 @@ namespace ProtoBuf.BuildTools.Internal
         private static bool AddMessage(DescriptorProto message, string? ns, string? outer,
             NameNormalizer names, Dictionary<string, string> types,
             Dictionary<string, DescriptorProto> mapEntries,
-            List<ProtoContractPlan> contracts, ref string? unsupported, SchemaSubTypes subTypes)
+            List<ProtoContractPlan> contracts, ref string? unsupported, SchemaSubTypes subTypes, bool proto2)
         {
             // the synthetic map-entry type: real to the descriptor, absent from the C#
             if (message.Options?.MapEntry == true) return true;
@@ -136,13 +136,13 @@ namespace ProtoBuf.BuildTools.Internal
             var localName = names.GetName(message);
             var qualified = outer is null ? localName : outer + "." + localName;
 
-            var contract = TryBuildMessage(message, ns, qualified, names, types, mapEntries, ref unsupported, subTypes);
+            var contract = TryBuildMessage(message, ns, qualified, names, types, mapEntries, ref unsupported, subTypes, proto2);
             if (contract is null) return false;
             contracts.Add(contract);
 
             foreach (var nested in message.NestedTypes)
             {
-                if (!AddMessage(nested, ns, qualified, names, types, mapEntries, contracts, ref unsupported, subTypes)) return false;
+                if (!AddMessage(nested, ns, qualified, names, types, mapEntries, contracts, ref unsupported, subTypes, proto2)) return false;
             }
             return true;
         }
@@ -197,7 +197,7 @@ namespace ProtoBuf.BuildTools.Internal
 
         private static ProtoContractPlan? TryBuildMessage(DescriptorProto message, string? ns,
             string qualifiedName, NameNormalizer names, Dictionary<string, string> types,
-            Dictionary<string, DescriptorProto> mapEntries, ref string? unsupported, SchemaSubTypes subTypes)
+            Dictionary<string, DescriptorProto> mapEntries, ref string? unsupported, SchemaSubTypes subTypes, bool proto2)
         {
             var typeName = Qualify(ns, qualifiedName);
             var members = new List<ProtoMemberPlan>();
@@ -252,7 +252,11 @@ namespace ProtoBuf.BuildTools.Internal
                     enumTypeName: enumTypeName,
                     defaultLiteral: defaultLiteral,
                     dataFormat: dataFormat,
-                    writeCondition: WriteCondition(field, name)));
+                    writeCondition: WriteCondition(field, name, proto2),
+                    // proto2 `required` becomes [ProtoMember(..., IsRequired = true)], which DROPS
+                    // the write guard - so a required zero reaches the wire where an optional one
+                    // does not. Without this an all-zero required message serialized to NOTHING
+                    isRequired: field.label == FieldDescriptorProto.Label.LabelRequired));
             }
 
             // ORDER BY FIELD NUMBER, not by declaration. protobuf-net writes members in field-number
@@ -488,8 +492,49 @@ namespace ProtoBuf.BuildTools.Internal
         /// needs distinguishing. That is why one line covers two features.
         /// </para>
         /// </remarks>
-        private static string? WriteCondition(FieldDescriptorProto field, string name)
-            => field.ShouldSerializeOneofIndex() ? "ShouldSerialize" + name + "()" : null;
+        /// <remarks>
+        /// PROTO2 arrives by a different route to the same place. Every proto2 <c>optional</c> is
+        /// presence-tracked whether or not it declares a default — protogen backs each one with a
+        /// nullable field and emits <c>ShouldSerialize{Name}()</c> — so the condition applies to
+        /// all of them, and <c>[default = x]</c> then needs no handling of its own: the condition
+        /// REPLACES the value guard, so the declared default never reaches a comparison.
+        /// <para>
+        /// This was not a missing feature but a WIRE BUG, and it went both ways: an all-default
+        /// <c>Defaulted</c> serialized to a full payload where ref-emit writes nothing (we
+        /// compared each member against its type's zero, and the getters return the declared
+        /// defaults), while an all-zero <c>Required</c> serialized to nothing where ref-emit
+        /// writes every member. Caught by adding proto2 to the byte gate, which was proto3-only —
+        /// the corpus probe could not see it, since it only asks whether a plan BUILDS.
+        /// </para>
+        /// </remarks>
+        private static string? WriteCondition(FieldDescriptorProto field, string name, bool proto2)
+        {
+            // a oneof member, or a proto3 `optional` (a synthetic one-field oneof)
+            if (field.ShouldSerializeOneofIndex()) return "ShouldSerialize" + name + "()";
+
+            // ...or any proto2 optional. `required` is unconditional and `repeated` is a
+            // collection, so neither gets one
+            if (proto2 && field.label == FieldDescriptorProto.Label.LabelOptional)
+                return "ShouldSerialize" + name + "()";
+
+            return null;
+        }
+
+        /// <summary>
+        /// Whether a file is proto2 — which is the case when `syntax` is ABSENT as well as when
+        /// it is stated, since proto2 is the default and most proto2 files never say so.
+        /// </summary>
+        /// <remarks>
+        /// It has to come from the FILE: a proto3 singular field is also <c>LabelOptional</c> in
+        /// the descriptor, so the label alone cannot tell the two apart, and getting that wrong
+        /// would put a <c>ShouldSerialize</c> guard on every proto3 field in the corpus.
+        /// </remarks>
+        private static bool IsProto2(FileDescriptorProto file)
+        {
+            var syntax = file?.Syntax;
+            return string.IsNullOrEmpty(syntax)
+                || string.Equals(syntax, "proto2", StringComparison.Ordinal);
+        }
 
         /// <summary>The C# spelling of a scalar kind, as the element of a collection.</summary>
         private static string ScalarTypeName(ProtoMemberKind kind) => kind switch

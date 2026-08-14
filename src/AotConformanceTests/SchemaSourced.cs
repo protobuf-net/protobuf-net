@@ -20,7 +20,7 @@ namespace ProtoBuf.AotConformance.SchemaSourced
     /// check that can catch a wrong write GUARD, as opposed to a wrong name.
     /// </para>
     /// </remarks>
-    [ProtoModel, ProtoSchema("conformance.proto")]
+    [ProtoModel, ProtoSchema("conformance.proto"), ProtoSchema("legacy.proto")]
     public partial class SchemaSourcedModel : TypeModel { }
 
     /// <summary>
@@ -70,7 +70,7 @@ namespace ProtoBuf.AotConformance.SchemaSourced
             // a single-element packed run, which is where the length prefix is easiest to get wrong
             new global::Conformance.Sample { Id = 3, Nums = [7], Names = { "solo" } },
 
-            // the pluralised member: `repeated int32 tally` is emitted as Tallies
+            // the pluralised member: `repeated int32 tally` is emitted as Tallies
             new global::Conformance.Sample { Id = 4, Tallies = [11, 22] },
 
             // nested message and nested enum, emitted as Sample.Node / Sample.Flavour
@@ -152,6 +152,35 @@ namespace ProtoBuf.AotConformance.SchemaSourced
 
             new global::Conformance.Detail { Depth = 9, Note = "standalone" },
             new global::Conformance.Detail(),
+
+            // ---- proto2 (Schemas/legacy.proto) ----------------------------------------------
+            // Both of these are chosen so the GUARD can fail, which is the only way this half of
+            // the gate is worth anything: a wrong guard compiles perfectly and round-trips
+            // perfectly against itself.
+
+            // `required` DROPS the write guard, so an all-zero Required must still write every
+            // member. A plan that treats these as ordinary optionals writes nothing at all here
+            new global::Legacy.Required(),
+            new global::Legacy.Required { Id = 5, Name = "named", Flag = true, Spare = 1 },
+            // required present, optional absent - the two must be distinguishable
+            new global::Legacy.Required { Id = 0, Name = "", Flag = false },
+
+            // presence, not value: protogen backs a defaulted proto2 optional with a nullable
+            // field and ShouldSerialize, so a value EQUAL to the declared default must still be
+            // written once assigned. This is exactly what a `!= default` guard gets wrong
+            new global::Legacy.Defaulted { Count = 7, Label = "unnamed", Enabled = true, Ratio = 1.5 },
+            // ...and the opposite corner: values that differ from the declared defaults
+            new global::Legacy.Defaulted
+            {
+                Count = 0,
+                Label = "",
+                Enabled = false,
+                Ratio = 0,
+                Shade = global::Legacy.Shade.ShadeRed,
+                Plain = 0,
+            },
+            // nothing assigned: no member may be written, however non-zero its default
+            new global::Legacy.Defaulted(),
         ];
     }
 }

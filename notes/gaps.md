@@ -405,15 +405,57 @@ Found by a scope test asserting the refusal and getting a plan instead — the t
 list to evaporate on contact (with the enum map key, and the enum-proxy plumbing). Worth the
 pattern: **a refusal nobody has tried to trigger may be describing an impossibility.**
 
-### C6. proto2 — deferred
+### C6. proto2 — **`required` and defaults fixed 2026-08-14; `group` still deferred**
 
-`required`, `[default = x]` (→ `[DefaultValue]`), and `group` encoding.
+Not a deferral on inspection: `required` and `[default = x]` were **silently wrong on the wire**,
+and the fix was two lines. `group` remains refused, which is safe.
 
-### C7. `extend` / extensions, well-known types, schema options — deferred
+The bug went both ways, which is why neither showed up as a missing feature:
 
-protogen emits extension *accessor methods* rather than members; the well-known types
-(`Timestamp`, `Duration`, `Any`) are where the compatibility level starts to matter; and
-schema-level options can change the contract.
+| sample | ref-emit | us, before |
+| --- | --- | --- |
+| `new Required()` (all zero) | `08-00 12-00 18-00` | **`(empty)`** — every required member dropped |
+| `new Defaulted()` (nothing set) | **`(empty)`** | a full payload — every declared default written |
+| `Defaulted` with values equal to the declared defaults | writes them | omits the enum one |
+
+The cause is that protogen presence-tracks proto2 differently from how the plan assumed:
+`required` becomes `[ProtoMember(..., IsRequired = true)]`, which **drops** the write guard; and
+**every** proto2 `optional` — with or without a declared default — is backed by a nullable field
+and a `ShouldSerialize{Name}()`, so presence rather than value decides. We were comparing each
+member against its type's zero, and the generated getters return the declared defaults.
+
+So `[default = x]` needs **no handling of its own**: the condition REPLACES the value guard, so
+the declared default never reaches a comparison. Two lines: set `IsRequired` from the label, and
+extend `WriteCondition` to proto2 optionals.
+
+`proto2`-ness has to come from the **file**, not the field: a proto3 singular field is also
+`LabelOptional` in the descriptor, so the label alone cannot tell them apart and getting it wrong
+would put a `ShouldSerialize` guard on every proto3 field in the corpus. Note `syntax` is *absent*
+in most proto2 files, since it is the default.
+
+**Why this was invisible:** the byte gate was proto3-only, and the corpus probe only asks whether
+a plan BUILDS. `SchemaProto2ProbeTests` now reports the plan's view of each proto2 shape, and
+`Schemas/legacy.proto` puts them on the byte gate — with samples chosen so the guard can fail: an
+all-zero `required`, and values explicitly set EQUAL to their declared defaults.
+
+Still deferred: **`group`** — 6 of the corpus's 268 schemas, and the only genuinely missing
+schema feature. It is refused rather than mis-emitted.
+
+### C7. ~~`extend` / extensions~~ — **already works, 2026-08-14**; well-known types and schema options deferred
+
+Probed rather than assumed, and the extension half needed nothing: protogen emits extension
+accessors as **static extension methods** (`Extensible.GetValue<T>(obj, 100)` /
+`AppendValue<T>(obj, 100, value)`) rather than as members, so they are consumer API and never
+reach the plan. The message carrying `extensions 100 to 199` is just an extensible contract, which
+the AOT generator has supported throughout — `SchemaPlanBuilder` already marks every
+schema-sourced contract `ProtoExtensibleKind.Untyped`, matching protogen's `: IExtensible` on
+every message. An `extend` block adds no members and needs no plan.
+
+Worth knowing: those accessors DO work under native AOT, but only for the generic overloads at
+the default `DataFormat` — which is exactly what protogen emits. See `docs/aot.md`'s known issues.
+
+Still deferred here: the **well-known types** (`Timestamp`, `Duration`, `Any`), where the
+compatibility level starts to matter, and **schema-level options** that can change the contract.
 
 ### C8. ~~Cross-schema type references~~ — **covered, 2026-08-14**
 
