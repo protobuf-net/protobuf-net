@@ -479,6 +479,57 @@ address-taken and therefore memory-resident, which **defeats enregistration enti
 every small body worse to fix the large ones. Folding by type gets most of the reduction while
 leaving ordinary locals the JIT can still keep in registers.
 
+#### Attempted and REVERTED: scoping is not folding
+
+I substituted a cheaper mechanism for Marc's idea — wrap each member's temporaries in a `{ }`
+block and let Roslyn's slot allocator reuse the slot, on the reasoning that the compiler knows the
+exact types and cannot mis-key them. Measured before/after on IL local counts
+(`MethodBody.LocalVariables`), Release:
+
+| body | before | after |
+| --- | ---: | ---: |
+| `RawWrite_Lists_Repeated` | 50 | **50** |
+| `Measure_Lists_Repeated` | 40 | **40** |
+| `RawWrite_Generic_Holder` | 18 | **18** |
+
+**Byte-identical. Reverted**, rather than keeping churn in every generated body for a hypothesis
+that did not show.
+
+**But the null result does not test Marc's idea — it tests my substitute for it.** Scoping asks
+the compiler to fold; *folding* means emitting genuinely fewer distinct locals, from a
+generator-side name map. Those are different changes and only the first has been measured. The
+original idea remains open and untested, and the same applies to the `lenN` temporaries Marc
+raised alongside — same family, same mechanism, same open question.
+
+Two methodological notes worth keeping, both mine to own:
+- **Roslyn reuses slots in Release only** — Debug keeps locals alive for the debugger. A first
+  measurement taken under `dotnet test` (Debug by default) reported 70 and meant nothing.
+- The probe test that produced these numbers was **deleted**: its threshold was invented, it
+  failed in the default Debug configuration for an implementation-detail reason, and the
+  hypothesis it was written to defend turned out false.
+
+### B17. Callbacks during measure need the context — which is on the state, not in `Measure_`'s args — **open, design**
+
+Marc, 2026-08-14: to fire a serialization callback *during* the measure pass (with the "am I
+measuring?" flag that already exists on the callback side), the callback needs the
+`ISerializationContext` — and that lives on the writer state. `Measure_` does not take the state:
+its signature is `(value, int depth, Dictionary<object, long> lengths)`, threading exactly the two
+things it needs and nothing else.
+
+So the question is whether `Measure_` should take **`ref state`** instead. Marc's observation
+settles the cost side: **`ref state` costs exactly the same as the object reference it replaces**
+— a ref-struct passed by ref is one pointer, the same as the `lengths` reference — so this is not
+a performance trade. And if the state goes in, `lengths` and `depth` come *off* it rather than
+being separate arguments, so the signature gets shorter rather than longer.
+
+What it needs deciding on is coupling, not cost: `Measure_` is currently a pure arithmetic walk
+with no writer in sight, which is what makes it trivially testable and reusable. Taking `ref
+state` ties it to a live writer.
+
+Related and unresolved: `notes/nano-writer.md` records that a callback can already ask whether it
+is measuring, but the measure path does not currently *invoke* callbacks at all — so the flag has
+no caller on this route. Whether measure-time callbacks are even wanted is the prior question.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in

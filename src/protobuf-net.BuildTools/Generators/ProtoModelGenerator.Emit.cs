@@ -1590,7 +1590,8 @@ namespace ProtoBuf.BuildTools.Generators
                 var indent = condition is null ? baseIndent : baseIndent + 1;
 
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
-                // hoist to a local, as ref-emit does; the member could be a computed property
+                // hoist to a local, as ref-emit does; the member could be a computed property, so
+                // this one is about CORRECTNESS - reading it twice could yield two answers
                 Line(sb, indent, $"var tmp{number} = {MemberAccess(contract, member, instance)};");
 
                 // WriteAny handles the null itself, so there is no guard - not even for a null int?
