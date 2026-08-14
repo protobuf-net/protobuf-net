@@ -2,6 +2,7 @@
 [PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.set -> void
 [PBN9001]ProtoBuf.ProtoSchemaAttribute
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.Path.get -> string
+[PBN9001]ProtoBuf.ProtoSchemaAttribute.ProtoSchemaAttribute() -> void
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.ProtoSchemaAttribute(string path) -> void
 [PBN9002]ProtoBuf.ProtoReader.ReadScope
 [PBN9002]ProtoBuf.ProtoReader.ReadScope.ReadScope() -> void

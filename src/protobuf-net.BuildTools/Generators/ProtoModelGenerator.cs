@@ -82,8 +82,24 @@ namespace ProtoBuf.BuildTools.Generators
             // no .proto files, where the collection is a stable empty array.
             var schemas = context.AdditionalTextsProvider
                 .Where(static text => text.Path.EndsWith(".proto", StringComparison.OrdinalIgnoreCase))
-                .Select(static (text, cancellationToken)
-                    => new SchemaText(text.Path, text.GetText(cancellationToken)?.ToString() ?? ""))
+                .Combine(context.AnalyzerConfigOptionsProvider)
+                .Select(static (pair, cancellationToken) =>
+                {
+                    var (text, options) = pair;
+                    // the same per-file switch the DTO generator honours: a schema excluded from
+                    // output produces no DTOs, so a model over it would name types that do not
+                    // exist. Carried on the value rather than filtered here, since a schema named
+                    // EXPLICITLY deserves a diagnostic rather than silence
+                    var includeInOutput = true;
+                    if (options.GetOptions(text).TryGetValue(
+                            Literals.AdditionalFileMetadataPrefix + "IncludeInOutput", out var raw)
+                        && bool.TryParse(raw, out var parsed))
+                    {
+                        includeInOutput = parsed;
+                    }
+                    return new SchemaText(text.Path, text.GetText(cancellationToken)?.ToString() ?? "",
+                        includeInOutput);
+                })
                 .Collect();
 
             var resolved = parsed.Combine(schemas)

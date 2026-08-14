@@ -83,16 +83,27 @@ message Widget { int32 size = 1; }";
         /// </remarks>
         private const string WidgetPath = @"C:\proj\other\widget.proto";
 
-        private async Task<(Compilation Compilation, ImmutableArray<Diagnostic> Diagnostics)> RunAsync(
+        private Task<(Compilation Compilation, ImmutableArray<Diagnostic> Diagnostics)> RunAsync(
             string consumerSource, params (string path, string content)[] extraSchemas)
+            => RunAsync(consumerSource, Texts(new[] { (ShopPath, Schema) }.Concat(extraSchemas).ToArray()));
+
+        private async Task<(Compilation Compilation, ImmutableArray<Diagnostic> Diagnostics)> RunAsync(
+            string consumerSource, AdditionalText[] additional)
         {
-            var texts = new[] { (ShopPath, Schema) }.Concat(extraSchemas).ToArray();
-            var additional = Texts(texts);
 
             var parseOptions = new CSharpParseOptions(LanguageVersion.CSharp12,
                 documentationMode: DocumentationMode.Parse);
             var optionsProvider = TestAnalyzeConfigOptionsProvider.Empty.WithGlobalOptions(
                 new TestAnalyzerConfigOptions(ImmutableDictionary<string, string>.Empty));
+
+            // per-file metadata (ProtoBuf_IncludeInOutput and friends) has to be wired through, or
+            // the generator sees defaults and the exclusion cases quietly test nothing
+            var perFile = ImmutableDictionary.CreateBuilder<object, Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptions>();
+            foreach (var text in additional)
+            {
+                if (text is InMemoryAdditionalText mem) perFile.Add(text, mem.GetOptions());
+            }
+            optionsProvider = optionsProvider.WithAdditionalTreeOptions(perFile.ToImmutable());
 
             GeneratorDriver driver = CSharpGeneratorDriver.Create(
                 new ISourceGenerator[]
@@ -159,6 +170,80 @@ message Widget { int32 size = 1; }";
                 .ToArray();
             Assert.Contains(generated, t => t.Contains("ISerializer<global::Shop.Customer>"));
             Assert.Contains(generated, t => t.Contains("ISerializer<global::Shop.Address>"));
+        }
+
+        /// <summary>
+        /// The no-argument form: every schema in the project, which is the "I just want it on"
+        /// case and sidesteps naming (and therefore ambiguity) altogether.
+        /// </summary>
+        [Fact]
+        public async Task NoArgumentMeansEverySchema()
+        {
+            var consumer = ConsumerSource.Replace(@"ProtoSchema(""shop.proto"")", "ProtoSchema");
+            var (compilation, diagnostics) = await RunAsync(consumer, (WidgetPath, OtherSchema));
+
+            Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+            var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+            foreach (var error in errors) _output.WriteLine(error.ToString());
+            Assert.Empty(errors);
+
+            var generated = compilation.SyntaxTrees.Select(t => t.ToString())
+                .Where(t => t.Contains("ShopModel")).ToArray();
+            Assert.Contains(generated, t => t.Contains("ISerializer<global::Shop.Customer>"));
+            Assert.Contains(generated, t => t.Contains("ISerializer<global::Other.Widget>"));
+        }
+
+        /// <summary>
+        /// "All" cannot mean "and also the ones you told me not to generate": a schema excluded
+        /// from output produces no DTOs, so modelling it would name types that do not exist.
+        /// </summary>
+        [Fact]
+        public async Task NoArgumentSkipsSchemasExcludedFromOutput()
+        {
+            var consumer = ConsumerSource.Replace(@"ProtoSchema(""shop.proto"")", "ProtoSchema");
+            var excluded = new[]
+            {
+                (ShopPath, Schema, (( string key, string value)[])null!),
+                (WidgetPath, OtherSchema, new[]
+                {
+                    ("IncludeInOutput", "false") // the harness prepends build_metadata.AdditionalFiles.,
+                }),
+            };
+
+            var (compilation, _) = await RunAsync(consumer, Texts(excluded));
+
+            var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+            foreach (var error in errors) _output.WriteLine(error.ToString());
+            Assert.Empty(errors);
+
+            var generated = compilation.SyntaxTrees.Select(t => t.ToString())
+                .Where(t => t.Contains("ShopModel")).ToArray();
+            Assert.Contains(generated, t => t.Contains("ISerializer<global::Shop.Customer>"));
+            // the excluded one generates no DTOs, so it must not be modelled either
+            Assert.DoesNotContain(generated, t => t.Contains("Other.Widget"));
+        }
+
+        /// <summary>
+        /// ...but naming an excluded schema EXPLICITLY is a mistake worth reporting, rather than
+        /// the silent skip the "all" form gets.
+        /// </summary>
+        [Fact]
+        public async Task NamingAnExcludedSchemaIsReported()
+        {
+            var consumer = ConsumerSource.Replace(@"""shop.proto""", @"""widget.proto""");
+            var files = new[]
+            {
+                (ShopPath, Schema, ((string key, string value)[])null!),
+                (WidgetPath, OtherSchema, new[]
+                {
+                    ("IncludeInOutput", "false") // the harness prepends build_metadata.AdditionalFiles.,
+                }),
+            };
+
+            var (_, diagnostics) = await RunAsync(consumer, Texts(files));
+
+            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN2023"));
+            Assert.Contains("IncludeInOutput", reported.GetMessage());
         }
 
         [Fact]

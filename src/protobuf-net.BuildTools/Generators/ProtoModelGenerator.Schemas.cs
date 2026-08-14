@@ -23,22 +23,36 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         internal readonly struct SchemaText : IEquatable<SchemaText>
         {
-            public SchemaText(string path, string content)
+            public SchemaText(string path, string content, bool includeInOutput)
             {
                 Path = path;
                 Content = content;
+                IncludeInOutput = includeInOutput;
             }
 
             public string Path { get; }
 
             public string Content { get; }
 
-            public bool Equals(SchemaText other) => Path == other.Path && Content == other.Content;
+            /// <summary>
+            /// Whether the DTO generator emits types for this schema
+            /// (<c>ProtoBuf_IncludeInOutput</c>).
+            /// </summary>
+            /// <remarks>
+            /// Load-bearing for the no-argument <c>[ProtoSchema]</c>: "all" has to mean "all the
+            /// ones that produce DTOs", or the model names types that were never generated.
+            /// </remarks>
+            public bool IncludeInOutput { get; }
+
+            public bool Equals(SchemaText other)
+                => Path == other.Path && Content == other.Content
+                    && IncludeInOutput == other.IncludeInOutput;
 
             public override bool Equals(object? obj) => obj is SchemaText other && Equals(other);
 
             public override int GetHashCode()
-                => ((Path?.GetHashCode() ?? 0) * 397) ^ (Content?.GetHashCode() ?? 0);
+                => (((Path?.GetHashCode() ?? 0) * 397) ^ (Content?.GetHashCode() ?? 0)) * 397
+                    ^ IncludeInOutput.GetHashCode();
         }
 
         /// <summary>
@@ -67,10 +81,35 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var paths = schemas.Select(static s => s.Path).ToArray();
+            var chosen = new List<(SchemaText Text, PlanSchemaRequest Request)>();
+
             for (int i = 0; i < parsed.SchemaRequests.Count; i++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var request = parsed.SchemaRequests[i];
+
+                // the no-argument form: every schema that produces DTOs. Excluded ones are skipped
+                // silently here - the consumer said "all", and "all" cannot reasonably mean "and
+                // also the ones you told me not to generate"
+                if (string.IsNullOrEmpty(request.Path))
+                {
+                    var any = false;
+                    foreach (var candidate in schemas)
+                    {
+                        if (!candidate.IncludeInOutput) continue;
+                        chosen.Add((candidate, request));
+                        any = true;
+                    }
+                    if (!any)
+                    {
+                        diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.SchemaNotFound,
+                            request.Location, "(all)",
+                            schemas.Length == 0
+                                ? "the project has no .proto files in <AdditionalFiles>"
+                                : "every schema is excluded by ProtoBuf_IncludeInOutput"));
+                    }
+                    continue;
+                }
 
                 switch (SchemaFileMatcher.TryMatch(request.Path, paths, out var match, out var detail))
                 {
@@ -87,12 +126,35 @@ namespace ProtoBuf.BuildTools.Generators
                         continue;
                 }
 
-                var text = schemas.First(s => s.Path == match);
+                var named = schemas.First(s => s.Path == match);
+                if (!named.IncludeInOutput)
+                {
+                    // named explicitly, so say so rather than skipping: the consumer asked for a
+                    // model over a schema whose DTOs are not being generated
+                    diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.SchemaUnsupported,
+                        request.Location, request.Path,
+                        "it is excluded from output (ProtoBuf_IncludeInOutput=\"false\"), so no DTOs "
+                        + "are generated for it and there would be nothing to serialize"));
+                    continue;
+                }
+                chosen.Add((named, request));
+            }
+
+            // the same schema can be named twice, or named AND covered by the no-argument form
+            var done = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (text, request) in chosen)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                if (!done.Add(text.Path)) continue;
+
+                // the no-argument form has no path of its own, so report against the file
+                var shown = string.IsNullOrEmpty(request.Path) ? text.Path : request.Path;
+
                 var set = TryParse(text, schemas, out var parseError);
                 if (set is null)
                 {
                     diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.SchemaInvalid,
-                        request.Location, request.Path, parseError ?? "unknown error"));
+                        request.Location, shown, parseError ?? "unknown error"));
                     continue;
                 }
 
@@ -101,7 +163,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (built is null)
                 {
                     diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.SchemaUnsupported,
-                        request.Location, request.Path, unsupported ?? "unsupported"));
+                        request.Location, shown, unsupported ?? "unsupported"));
                     continue;
                 }
 

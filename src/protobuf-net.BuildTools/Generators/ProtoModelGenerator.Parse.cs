@@ -111,13 +111,18 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     // resolved later: the syntax-driven parse cannot see additional files, so the
                     // path is carried out with its location and matched against them downstream
-                    if (attribute.ConstructorArguments.Length == 1
+                    var at = PlanLocation.From(attribute.ApplicationSyntaxReference
+                        ?.GetSyntax(cancellationToken)?.GetLocation());
+                    if (attribute.ConstructorArguments.Length == 0)
+                    {
+                        // the no-argument form: every schema in the project
+                        schemaRequests.Add(new PlanSchemaRequest(null, at));
+                    }
+                    else if (attribute.ConstructorArguments.Length == 1
                         && attribute.ConstructorArguments[0].Value is string schemaPath
                         && !string.IsNullOrWhiteSpace(schemaPath))
                     {
-                        schemaRequests.Add(new PlanSchemaRequest(schemaPath,
-                            PlanLocation.From(attribute.ApplicationSyntaxReference?.GetSyntax(cancellationToken)
-                                ?.GetLocation())));
+                        schemaRequests.Add(new PlanSchemaRequest(schemaPath, at));
                     }
                     continue;
                 }

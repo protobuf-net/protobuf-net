@@ -94,6 +94,16 @@ namespace ProtoBuf
     public sealed class ProtoSchemaAttribute : Attribute
     {
         /// <summary>
+        /// Include <em>every</em> schema in the project.
+        /// </summary>
+        /// <remarks>
+        /// Schemas excluded from output (<c>ProtoBuf_IncludeInOutput="false"</c>) are excluded here
+        /// too: no DTOs are generated for those, so there would be nothing for the model to
+        /// serialize.
+        /// </remarks>
+        public ProtoSchemaAttribute() { }
+
+        /// <summary>
         /// Create a new instance.
         /// </summary>
         /// <param name="path">
@@ -104,7 +114,7 @@ namespace ProtoBuf
         public ProtoSchemaAttribute(string path) => Path = path;
 
         /// <summary>
-        /// The schema to include, as a path.
+        /// The schema to include, as a path; <c>null</c> for every schema in the project.
         /// </summary>
         public string Path { get; }
     }
