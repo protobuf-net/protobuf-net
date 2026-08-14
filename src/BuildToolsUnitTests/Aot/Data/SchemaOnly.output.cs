@@ -38,7 +38,7 @@ partial class SchemaOnlyModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
         }
 
-        public static long Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -83,7 +83,7 @@ partial class SchemaOnlyModel
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -140,7 +140,7 @@ partial class SchemaOnlyModel
             }
         }
 
-        public static long Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -221,7 +221,7 @@ partial class SchemaOnlyModel
             }
         }
 
-        public static long Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -302,7 +302,7 @@ partial class SchemaOnlyModel
             }
         }
 
-        public static long Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

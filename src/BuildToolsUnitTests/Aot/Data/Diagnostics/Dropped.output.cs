@@ -44,7 +44,7 @@ partial class DroppedModel
             }
         }
 
-        public static long Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -120,7 +120,7 @@ partial class DroppedModel
             }
         }
 
-        public static long Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -205,7 +205,7 @@ partial class DroppedModel
             }
         }
 
-        public static long Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -276,7 +276,7 @@ partial class DroppedModel
             }
         }
 
-        public static long Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -337,7 +337,7 @@ partial class DroppedModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
         }
 
-        public static long Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

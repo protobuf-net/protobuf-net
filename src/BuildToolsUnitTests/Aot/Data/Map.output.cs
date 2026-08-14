@@ -619,7 +619,7 @@ partial class MapModel
             }
         }
 
-        public static long Measure_AotFixtures_Map_Payload(global::AotFixtures.Map.Payload value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Map_Payload(global::AotFixtures.Map.Payload value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

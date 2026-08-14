@@ -42,7 +42,7 @@ partial class NestedModel
             }
         }
 
-        public static long Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -119,7 +119,7 @@ partial class NestedModel
             }
         }
 
-        public static long Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -227,7 +227,7 @@ partial class NestedModel
             }
         }
 
-        public static long Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

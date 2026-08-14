@@ -791,15 +791,30 @@ fails. It took reading the generated output to see.
    copy down, so the budget shrinks with nesting and restores on return by virtue of being a
    local. There is no counter to reset. The root value comes from `state.RawDepthBudget`.
 
-**Marc's suggestion, which looks right and is not built:** a contract with no message-typed
-members - no sub-message, no repeated-of-message, no map with a message side - cannot recurse, so
-its depth check can never fire and is pure per-call overhead. Emitting it only where recursion is
+**Marc's suggestion, which is correct in principle and DELIBERATELY NOT BUILT:** a contract with
+no message-typed members - no sub-message, no repeated-of-message, no map with a message side -
+cannot recurse, so its depth check can never usefully fire. Emitting it only where recursion is
 reachable would remove a branch from every leaf contract, on both the measure and write paths.
-Off-by-one is not a hazard here: the check exists to stop unbounded recursion, not to enforce an
-exact depth.
+Off-by-one is genuinely not a hazard: the check bounds unbounded recursion rather than enforcing
+an exact depth, and every level that *can* nest still checks.
 
-Worth pairing with a measurement, since the census says leaf contracts are the common case and
-the check is one predictable compare - so the honest expectation is "small, but free".
+The reasons for not doing it yet, which are about the ratio rather than the idea:
+
+- **the expected gain is ~nothing, on this file's own evidence.** It removes one predictable,
+  never-taken compare per measure call. Four consecutive micro-optimisations in this area have
+  measured flat, and the payload census explains why: per-op cost in this workload is not where
+  the time is. The honest prior is that this joins them;
+- **the failure mode if the predicate is wrong is not a wrong byte, it is a process-killing stack
+  overflow** on a cyclic graph - which was a real bug on this branch, fixed earlier in this arc,
+  and is the one class of failure that takes the test host with it. A predicate that has to be
+  right about "can this contract reach itself" across sub-messages, repeated elements, both map
+  sides, inheritance and surrogates is not a one-liner;
+- so the sequence should be **measure the ceiling first**: price a measure-only benchmark row for
+  a leaf-heavy payload with the check removed by hand. If that shows nothing, the idea is closed
+  cheaply and correctly, exactly as the varint-measure matrix closed its line.
+
+`MeasureRecursionTests` (a self-referencing `Node`) is the gate that would catch a wrong
+predicate, and it should be run explicitly - not merely relied on - if this is ever built.
 
 ### `ThrowUnexpectedSubtype` reads as unconditional and is not
 

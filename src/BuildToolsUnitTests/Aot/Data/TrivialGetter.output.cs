@@ -58,7 +58,7 @@ partial class TrivialGetterModel
             }
         }
 
-        public static long Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -166,7 +166,7 @@ partial class TrivialGetterModel
             }
         }
 
-        public static long Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

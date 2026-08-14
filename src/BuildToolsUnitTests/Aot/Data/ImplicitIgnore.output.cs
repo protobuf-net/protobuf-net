@@ -53,7 +53,7 @@ partial class ImplicitIgnoreModel
             }
         }
 
-        public static long Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -151,7 +151,7 @@ partial class ImplicitIgnoreModel
             }
         }
 
-        public static long Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

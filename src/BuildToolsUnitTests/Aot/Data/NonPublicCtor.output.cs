@@ -52,7 +52,7 @@ partial class NonPublicCtorModel
             }
         }
 
-        public static long Measure_AotFixtures_NonPublicCtor_Holder(global::AotFixtures.NonPublicCtor.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_NonPublicCtor_Holder(global::AotFixtures.NonPublicCtor.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -146,7 +146,7 @@ partial class NonPublicCtorModel
             }
         }
 
-        public static long Measure_AotFixtures_NonPublicCtor_InternalCtor(global::AotFixtures.NonPublicCtor.InternalCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_NonPublicCtor_InternalCtor(global::AotFixtures.NonPublicCtor.InternalCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -212,7 +212,7 @@ partial class NonPublicCtorModel
             }
         }
 
-        public static long Measure_AotFixtures_NonPublicCtor_PrivateCtor(global::AotFixtures.NonPublicCtor.PrivateCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_NonPublicCtor_PrivateCtor(global::AotFixtures.NonPublicCtor.PrivateCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -271,7 +271,7 @@ partial class NonPublicCtorModel
             }
         }
 
-        public static long Measure_AotFixtures_NonPublicCtor_ProtectedCtor(global::AotFixtures.NonPublicCtor.ProtectedCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_NonPublicCtor_ProtectedCtor(global::AotFixtures.NonPublicCtor.ProtectedCtor value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -75,7 +75,7 @@ partial class SkipCtorModel
             }
         }
 
-        public static long Measure_AotFixtures_SkipCtor_Bypassed(global::AotFixtures.SkipCtor.Bypassed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SkipCtor_Bypassed(global::AotFixtures.SkipCtor.Bypassed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -116,7 +116,7 @@ partial class SkipCtorModel
             }
         }
 
-        public static long Measure_AotFixtures_SkipCtor_Constructed(global::AotFixtures.SkipCtor.Constructed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SkipCtor_Constructed(global::AotFixtures.SkipCtor.Constructed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

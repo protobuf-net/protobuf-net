@@ -55,7 +55,7 @@ partial class GenericHierarchyModel
             }
         }
 
-        public static long Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GenericHierarchy_Crate(global::AotFixtures.GenericHierarchy.Crate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -403,7 +403,7 @@ partial class GenericHierarchyModel
             }
         }
 
-        public static long Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

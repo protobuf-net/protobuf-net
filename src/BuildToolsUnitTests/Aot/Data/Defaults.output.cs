@@ -72,7 +72,7 @@ partial class DefaultsModel
             }
         }
 
-        public static long Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -209,7 +209,7 @@ partial class DefaultsModel
             }
         }
 
-        public static long Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

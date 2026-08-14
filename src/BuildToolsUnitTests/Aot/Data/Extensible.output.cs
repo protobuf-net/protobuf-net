@@ -117,7 +117,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -236,7 +236,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -302,7 +302,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
 
-        public static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

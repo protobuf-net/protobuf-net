@@ -49,7 +49,7 @@ partial class FieldModel
             }
         }
 
-        public static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -140,7 +140,7 @@ partial class FieldModel
             }
         }
 
-        public static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -317,7 +317,7 @@ partial class FieldModel
             }
         }
 
-        public static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

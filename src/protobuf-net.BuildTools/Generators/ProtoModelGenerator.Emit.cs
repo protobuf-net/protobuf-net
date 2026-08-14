@@ -1226,7 +1226,13 @@ namespace ProtoBuf.BuildTools.Generators
                 // (many large byte[] members, a colossal repeated field), and classic handles it
                 // with its long lengths throughout - int accumulation would overflow silently,
                 // which is a corrupt stream, not an error
-                Line(sb, indent, $"public static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
+                // private, not public: these sit on a private sealed services class, so `public`
+                // grants nothing a consumer can reach and reads as API that is not. Every caller
+                // is either in this same class (the IMeasuringSerializer body, and the enclosing
+                // contracts' measure statics, which is the sub-message recursion) or reflective -
+                // and both reflective binders, NanoBench.ResolveMeasure and
+                // AotConformanceTests.MeasurableContractTests, already pass NonPublic
+                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 Line(sb, indent + 1, "long len = 0;");

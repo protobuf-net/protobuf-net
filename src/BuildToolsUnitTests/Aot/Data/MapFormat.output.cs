@@ -440,7 +440,7 @@ partial class MapFormatModel
             }
         }
 
-        public static long Measure_AotFixtures_MapFormat_Nested(global::AotFixtures.MapFormat.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_MapFormat_Nested(global::AotFixtures.MapFormat.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

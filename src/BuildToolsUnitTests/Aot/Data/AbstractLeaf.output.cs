@@ -56,7 +56,7 @@ partial class AbstractLeafModel
             }
         }
 
-        public static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -161,7 +161,7 @@ partial class AbstractLeafModel
             }
         }
 
-        public static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

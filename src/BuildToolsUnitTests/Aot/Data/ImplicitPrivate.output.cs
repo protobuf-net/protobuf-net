@@ -43,7 +43,7 @@ partial class ImplicitPrivateModel
             }
         }
 
-        public static long Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -121,7 +121,7 @@ partial class ImplicitPrivateModel
             }
         }
 
-        public static long Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

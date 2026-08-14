@@ -44,7 +44,7 @@ partial class KeywordsModel
             }
         }
 
-        public static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -155,7 +155,7 @@ partial class KeywordsModel
             }
         }
 
-        public static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -340,7 +340,7 @@ partial class KeywordsModel
             }
         }
 
-        public static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

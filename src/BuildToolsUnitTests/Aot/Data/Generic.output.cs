@@ -132,7 +132,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Holder(global::AotFixtures.Generic.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Holder(global::AotFixtures.Generic.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -317,7 +317,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -409,7 +409,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Pair_int__string_(global::AotFixtures.Generic.Pair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Pair_int__string_(global::AotFixtures.Generic.Pair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -450,7 +450,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -514,7 +514,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Standalone_string_(global::AotFixtures.Generic.Standalone<string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Standalone_string_(global::AotFixtures.Generic.Standalone<string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -591,7 +591,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -686,7 +686,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -777,7 +777,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(global::AotFixtures.Generic.Wrapper<global::System.Collections.Generic.List<int>> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -872,7 +872,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Wrapper_int_(global::AotFixtures.Generic.Wrapper<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Wrapper_int_(global::AotFixtures.Generic.Wrapper<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -953,7 +953,7 @@ partial class GenericModel
             }
         }
 
-        public static long Measure_AotFixtures_Generic_Wrapper_string_(global::AotFixtures.Generic.Wrapper<string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Generic_Wrapper_string_(global::AotFixtures.Generic.Wrapper<string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -69,7 +69,7 @@ partial class PartialModel
             }
         }
 
-        public static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -280,7 +280,7 @@ partial class PartialModel
             }
         }
 
-        public static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -350,7 +350,7 @@ partial class PartialModel
             }
         }
 
-        public static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

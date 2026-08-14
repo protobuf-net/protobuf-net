@@ -305,7 +305,7 @@ partial class GetterModel
             }
         }
 
-        public static long Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -385,7 +385,7 @@ partial class GetterModel
             }
         }
 
-        public static long Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -47,7 +47,7 @@ partial class RawPassModel
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -154,7 +154,7 @@ partial class RawPassModel
             }
         }
 
-        public static long Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -359,7 +359,7 @@ partial class RawPassModel
             }
         }
 
-        public static long Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

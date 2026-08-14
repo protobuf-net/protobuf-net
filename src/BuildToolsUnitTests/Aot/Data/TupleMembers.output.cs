@@ -74,7 +74,7 @@ partial class TupleMembersModel
             RawWrite__int__string_(ref state, tmp2);
         }
 
-        public static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -143,7 +143,7 @@ partial class TupleMembersModel
             }
         }
 
-        public static long Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -346,7 +346,7 @@ partial class TupleMembersModel
             }
         }
 
-        public static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

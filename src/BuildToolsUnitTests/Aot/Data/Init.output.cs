@@ -60,7 +60,7 @@ partial class InitModel
             }
         }
 
-        public static long Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -121,7 +121,7 @@ partial class InitModel
             }
         }
 
-        public static long Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -238,7 +238,7 @@ partial class InitModel
             }
         }
 
-        public static long Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -45,7 +45,7 @@ partial class WrappedElementsModel
             }
         }
 
-        public static long Measure_AotFixtures_WrappedElements_Payload(global::AotFixtures.WrappedElements.Payload value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_WrappedElements_Payload(global::AotFixtures.WrappedElements.Payload value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

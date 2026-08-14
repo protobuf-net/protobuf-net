@@ -59,7 +59,7 @@ partial class InheritUnsupportedModel
             }
         }
 
-        public static long Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -95,7 +95,7 @@ partial class InheritUnsupportedModel
             }
         }
 
-        public static long Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

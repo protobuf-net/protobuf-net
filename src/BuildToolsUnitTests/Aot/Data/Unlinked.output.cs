@@ -49,7 +49,7 @@ partial class UnlinkedModel
             }
         }
 
-        public static long Measure_AotFixtures_Unlinked_Derived(global::AotFixtures.Unlinked.Derived value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Unlinked_Derived(global::AotFixtures.Unlinked.Derived value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -180,7 +180,7 @@ partial class UnlinkedModel
             }
         }
 
-        public static long Measure_AotFixtures_Unlinked_FromPlain(global::AotFixtures.Unlinked.FromPlain value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Unlinked_FromPlain(global::AotFixtures.Unlinked.FromPlain value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -244,7 +244,7 @@ partial class UnlinkedModel
             }
         }
 
-        public static long Measure_AotFixtures_Unlinked_Reuses(global::AotFixtures.Unlinked.Reuses value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Unlinked_Reuses(global::AotFixtures.Unlinked.Reuses value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -360,7 +360,7 @@ partial class UnlinkedModel
             }
         }
 
-        public static long Measure_AotFixtures_Unlinked_Unlinked(global::AotFixtures.Unlinked.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Unlinked_Unlinked(global::AotFixtures.Unlinked.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
