@@ -883,6 +883,13 @@ the room demand from 5 bytes to the real width (fewer out-of-line trips near a c
 and is pinned by tests that are verified able to fail. If the judgement is that unmeasurable
 means unwanted regardless, the revert is clean - but it is a different call from the other three.
 
+**THE DECISION IS STILL OPEN, and this is what to revert if the answer is no**: `651be919` (the
+ladder and `WriteRawTagBool`, plus `RawTagEncodingTests` and the API baseline entries) and
+`c03462c2` (the measurement and the census write-up). `src/NanoBench/census.py` and
+`DescriptorPayloadCensus.md` are worth keeping either way - the census is the evidence, not the
+change. Note the goldens move with it, since `WriteRawTagBool` appears in eight of them plus the
+descriptor model.
+
 **What would re-open it**: packed repeated writes measure and write per ELEMENT, so a
 packed-heavy payload has a completely different census. So does anything extension-shaped, where
 field numbers are high by construction and the two-byte arm stops being rare. Re-run the census
@@ -1238,6 +1245,36 @@ slow as its own stream figure). The remaining ladder, in priority order:
    already implemented by measurable contracts, which is what the packed engine keys on).
 6. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
    for the native kinds).
+
+### Everything parked or owed, in one place (2026-08-14)
+
+An index, because the details are spread over two documents and a commit log, and the commit log
+is not a backlog. Each entry says where the detail lives.
+
+**Decisions owed by a human**
+
+| | |
+| --- | --- |
+| the tag ladder: keep or revert? | measured flat but costs nothing; revert is `651be919` + `c03462c2`. See "Pre-encoded constant tags" below |
+| manual review of the write-emitted goldens | 55 changed shape when `int32` moved onto the raw path |
+
+**Parked with a recorded reason**
+
+| | where |
+| --- | --- |
+| leaf contracts could skip the depth check | "Three on the `Measure_` statics", below - correct in principle, ~nothing expected, stack-overflow failure mode if the predicate is wrong. Measure the ceiling first |
+| enum in a `repeated` or map value (schema path) | `docs/aot-schema-model.md` - the proxy is free; what blocks it is that an EMPTY PACKED collection disagrees with ref-emit |
+| **packed writes on an empty collection** | the above, and it is the sharper item: `IsPacked` has never been supported on the symbol path, so that arm is largely undriven and this may be a pre-existing generator bug |
+| the presized lease (buffer core step 3) | its own section - built, measured neutral, parked |
+| `ProtoFileGenerator` is not incremental | `docs/aot-schema-model.md` - re-parses every schema on every compilation; the fix also removes the schema path's double parse |
+
+**Still on the writer ladder** — the numbered list under "Where this stands" below: the length
+caches' remaining audit (`Pool<T>`, `BufferPool`), counting mode for mixed contracts, packed
+repeated writes, maps measure-first. Note packed repeated writes and the packed-empty
+disagreement above are the same area, and would sensibly be done together.
+
+**Schema front-end gaps** — enumerated and ranked in `docs/aot-schema-model.md`; the top item is
+not a feature but pointing the existing schema corpus at the new path.
 
 ### Three corrections to this handover, and how each one got there (2026-08-13)
 

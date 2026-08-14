@@ -329,6 +329,53 @@ run (item 14 of `docs/aot-findings.md`).
 Doing that *before* items 1-9 would also answer "which gaps actually occur", rather than working
 through the list in the order I happened to think of it.
 
+## Open items that are not feature gaps (2026-08-14)
+
+Recorded here because none of them lives anywhere else — a commit message is not a backlog.
+
+### The schema is parsed TWICE, and the fix is bigger than it looks
+
+`ProtoFileGenerator` parses each schema to emit DTOs; `ProtoModelGenerator.AddSchemas` parses it
+again to build the plan. They cannot share the parse, because sharing it means one generator, and
+the two are separate by design.
+
+Two things make this less urgent than it sounds, and one makes it more interesting:
+
+- **`ProtoFileGenerator` is an `ISourceGenerator` with an empty `Initialize`** — it is not
+  incremental, so it re-parses every schema on *every* compilation, i.e. continuously while
+  typing. The model side is an incremental step keyed on schema content, so it re-parses only
+  when a `.proto` actually changes. In steady-state editing the *new* parse is the cheaper one;
+- so the real prize is **making `ProtoFileGenerator` incremental**, which would remove the
+  per-keystroke re-parse *and* make one shared parse feeding both emissions possible. That is a
+  refactor of a shipped generator, and is worth measuring before starting;
+- the second parse was also, at first, **wrong rather than merely redundant**: it had no
+  `IFileSystem` and no import path, so any schema with an `import` modelled as broken while
+  generating DTOs perfectly. Fixed (`SchemaTextFileSystem`), and it is the reason to be
+  suspicious of "just parse it again" as a general answer.
+
+### A precedence rule with no reachable scenario
+
+`AddSchemas` resolves a name clash between a schema-derived contract and a symbol-derived one by
+letting the **symbol** win. The reasoning is plausible — a consumer who wrote the DTO by hand
+meant it — but no case has been found where the clash actually arises, and **a rule with no
+reachable scenario is a rule nobody has tested**. It may want to be a diagnostic instead of a
+silent precedence. Revisit when (if) a real collision turns up.
+
+### `ProtoFileGenerator` keys schemas by LEAF name
+
+`Path.GetFileName` then `set.Add(name, …)`, so two same-named `.proto` files in different
+directories do not both produce DTOs. Pre-existing, and not the model path's — but it means the
+ambiguity `PBN2021` reports is only reachable today in a project whose DTO generation is already
+incomplete. The diagnostic still earns its place (it names the problem where the alternative is a
+silent pick), and `SchemaSourcedModelEndToEndTests` records the constraint.
+
+### `docs/aot.md` still says a `.proto` needs its own project — correctly, for now
+
+`aot.md`'s "Things that catch people out" section tells consumers to put the schema and its DTOs
+in a separate project. That is **still true for real schemas**, because the front-end refuses
+`oneof`, proto2 and the rest. It must be rewritten when breadth justifies it, and **not before** —
+updating it early would be exactly the overclaiming this document had to correct once already.
+
 ## Suggested order
 
 1. **The seed attribute**, as Core API alongside `[ProtoModel]`/`[ProtoSerializable]` (same
