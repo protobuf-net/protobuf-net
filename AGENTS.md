@@ -127,9 +127,21 @@ Where doubling happens it is *required*, not incidental: both passes must observ
 or the measured length will not match the bytes written — which is exactly what that validation
 catches. `ProtoWriter.IsMeasuring(context)` is how a callback tells the passes apart.
 
+**It is not as simple as "twice for anything nested", though**, because a **group** carries no
+length prefix — so nothing measures it and its callback fires once, *unless something above it
+needs a length*, at which point the parent's measure walks through it anyway. The count follows the
+nearest **length-prefixed ancestor**, i.e. the path from the root, not the member's own framing:
+
+| shape | stream | buffer-writer |
+| --- | --- | --- |
+| group at the root | `[false]` | `[false]` |
+| same group under a length-prefixed parent | `[false]` | `[true, false]` |
+
 **Decided (Marc, 2026-08-14): twice becomes the consistent normal for both backends**, rather than
-the stream being the odd one out. That is also where measure-first leads anyway, since it *is*
-measure-then-write. See `notes/gaps.md` B17 for what it costs the classic stream path.
+the stream being the odd one out — with the target stated as "**once per pass over this node**",
+since the number of passes is a property of the path. That is also where measure-first leads
+anyway, since it *is* measure-then-write. See `notes/gaps.md` B17 for what it costs the classic
+stream path, and B14 for why the two cannot be settled independently.
 
 **3. The write recursion is depth-guarded on its own, and used not to be.** It was once safe *by
 construction* — every write was preceded by a measure, and the measure carried the budget. A

@@ -360,10 +360,22 @@ do, and the first is much smaller than the second:
   measure is literally `Measure_(body) + <two constants>`.
 
 - **Then skip the measure entirely**, which is the actual prize and is bigger than making the
-  measure cheap. A length is only ever needed by a *length-prefixed* parent, so **an entire
-  grouped tree can be written without a single measure pass**. That is not a faster measure, it is
-  no measure: the measure leg is 3.76 µs of the gRPC shape's 15.45 µs (`docs/aot.md`), and a
-  grouped tree deletes it rather than shrinking it.
+  measure cheap. A length is only ever needed by a *length-prefixed* parent, so a grouped tree can
+  be written without a measure pass. That is not a faster measure, it is no measure: the measure
+  leg is 3.76 µs of the gRPC shape's 15.45 µs (`docs/aot.md`), and a grouped tree deletes it
+  rather than shrinking it.
+
+  **With one condition I first stated too strongly** (Marc): it holds only while **nothing above it
+  needs a length**. A grouped subtree hanging under an ordinary length-prefixed parent is still
+  walked, because the parent's own length includes it. So the property belongs to the **path from
+  the root**, not to the member — "a grouped tree needs no measure" is true of a tree grouped *all
+  the way up*, and false of a grouped subtree. `CallbackPassesFollowTheNearestLengthPrefixedAncestor`
+  pins the distinction:
+
+  ```
+  group at root,        stream / buffer-writer : [false]  / [false]
+  group under a length, stream / buffer-writer : [false]  / [true, false]
+  ```
 
   The trade is on the read side, and it is real: a length prefix lets a reader skip a sub-message
   without parsing it, while a sentinel has to be scanned for. That is the choice protobuf made in
@@ -602,6 +614,20 @@ to settle first, and only the second is hard:
    **Decision (Marc, 2026-08-14): make twice the consistent normal for both**, rather than leaving
    the stream as the exception. It is also where measure-first leads anyway, since that *is*
    measure-then-write.
+
+   **But "always twice for nested" is not the rule, and cannot be** (Marc). The count is set by the
+   nearest **length-prefixed ancestor**, not by the member's own framing: a *grouped* member needs
+   no length, so it is visited once — **unless** something above it does need one, at which point
+   the parent's measure walks straight through it. Pinned:
+
+   | shape | stream | buffer-writer |
+   | --- | --- | --- |
+   | group at the root | `[false]` | `[false]` |
+   | same group under a length-prefixed parent | `[false]` | `[true, false]` |
+
+   So the target is "**once per pass over this node**", where the number of passes is a property of
+   the path from the root — not "twice, always". This is also why B14 and B17 cannot be settled
+   independently: making grouped trees measure-free changes how often callbacks inside them fire.
 
    The cost to weigh when doing it: on the **classic** stream path, replacing one back-fill shuffle
    (a memmove only when the varint width changes) with a full second crawl is a real slowdown. On

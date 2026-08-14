@@ -1,3 +1,4 @@
+using System;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
@@ -88,6 +89,78 @@ namespace ProtoBuf.Test
         public class Outer
         {
             [ProtoMember(1)] public Counted Inner { get; set; }
+        }
+
+        [ProtoContract]
+        public class GroupedOuter
+        {
+            [ProtoMember(1, DataFormat = DataFormat.Group)] public Counted Inner { get; set; }
+        }
+
+        /// <summary>Length-prefixed holder for a grouped member — so the group is not the root.</summary>
+        [ProtoContract]
+        public class HoldsGrouped
+        {
+            [ProtoMember(1)] public GroupedOuter Wrapped { get; set; }
+        }
+
+        /// <summary>
+        /// How many times a callback fires is set by the nearest LENGTH-PREFIXED ANCESTOR, not by
+        /// the member's own framing — which is why "always twice for nested" cannot be the rule.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A group is framed by a start/end tag pair with no length prefix, so nothing needs to
+        /// measure it and its callback fires once — <b>but only while nothing above it needs a
+        /// length</b> (Marc). Nest the same grouped message inside an ordinary length-prefixed
+        /// message and measuring <i>that</i> parent walks the whole subtree, group included, so
+        /// the grouped child is visited twice after all.
+        /// </para>
+        /// <para>
+        /// So the property belongs to the PATH FROM THE ROOT, not to the member. That is what makes
+        /// "make twice the consistent normal" a statement about the writer rather than a local
+        /// change, and it is why gap B14 (grouped trees needing no measure) and B17 (callback
+        /// firing) cannot be settled independently.
+        /// </para>
+        /// </remarks>
+        [Fact]
+        public void CallbackPassesFollowTheNearestLengthPrefixedAncestor()
+        {
+            var model = Model();
+            model.Add(typeof(GroupedOuter), true);
+            model.Add(typeof(HoldsGrouped), true);
+
+            static (List<bool> Stream, List<bool> Buffer) Run<T>(RuntimeTypeModel model,
+                T viaStream, T viaBuffer, Func<T, List<bool>> pick)
+            {
+                using (var ms = new MemoryStream()) model.Serialize(ms, viaStream);
+                var bw = new System.Buffers.ArrayBufferWriter<byte>();
+                ((IProtoOutput<System.Buffers.IBufferWriter<byte>>)model).Serialize(bw, viaBuffer);
+                return (pick(viaStream), pick(viaBuffer));
+            }
+
+            // (a) the group IS the root's member: no length is needed anywhere above it
+            var atRoot = Run(model,
+                new GroupedOuter { Inner = new Counted() },
+                new GroupedOuter { Inner = new Counted() },
+                x => x.Inner.BeforeCalls);
+
+            // (b) the same group, one level down inside a length-prefixed message
+            var nested = Run(model,
+                new HoldsGrouped { Wrapped = new GroupedOuter { Inner = new Counted() } },
+                new HoldsGrouped { Wrapped = new GroupedOuter { Inner = new Counted() } },
+                x => x.Wrapped.Inner.BeforeCalls);
+
+            _output($"group at root, stream/buffer   : [{string.Join(",", atRoot.Stream)}] / [{string.Join(",", atRoot.Buffer)}]");
+            _output($"group under length, stream/buf : [{string.Join(",", nested.Stream)}] / [{string.Join(",", nested.Buffer)}]");
+
+            // the assertions are deliberately only on what is INVARIANT: the stream back-fills, so
+            // it never measures; the buffer-writer's count is what the ancestor decides
+            Assert.Equal([false], atRoot.Stream);
+            Assert.Equal([false], nested.Stream);
+            Assert.Equal([false], atRoot.Buffer);
+            Assert.True(nested.Buffer.Count >= atRoot.Buffer.Count,
+                "a group under a length-prefixed parent cannot be visited FEWER times than at the root");
         }
 
         /// <summary>
