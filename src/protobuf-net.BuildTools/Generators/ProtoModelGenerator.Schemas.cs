@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Google.Protobuf.Reflection;
 using ProtoBuf.BuildTools.Internal;
 using ProtoBuf.BuildTools.Internal.Aot;
@@ -88,7 +88,7 @@ namespace ProtoBuf.BuildTools.Generators
                 }
 
                 var text = schemas.First(s => s.Path == match);
-                var set = TryParse(text, out var parseError);
+                var set = TryParse(text, schemas, out var parseError);
                 if (set is null)
                 {
                     diagnostics.Add(new PlanDiagnostic(ProtoDiagnosticKind.SchemaInvalid,
@@ -117,18 +117,53 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
-        /// Parses one schema in isolation. Imports are not resolved yet - the file system the DTO
-        /// generator uses is built from the whole additional-file set, and wiring that in is part
-        /// of widening this, not of proving it.
+        /// Resolves <c>import</c> against the compilation's additional files, exactly as the DTO
+        /// generator does - the schema being modelled is the same one being turned into DTOs, so
+        /// anything it can import, this must be able to import too.
         /// </summary>
-        private static FileDescriptorSet? TryParse(SchemaText text, out string? error)
+        private sealed class SchemaTextFileSystem : IFileSystem
+        {
+            private readonly ImmutableArray<SchemaText> _schemas;
+
+            public SchemaTextFileSystem(ImmutableArray<SchemaText> schemas) => _schemas = schemas;
+
+            internal static string Normalize(string path) => path?.Replace('/', '\\') ?? "";
+
+            private SchemaText? Find(string path)
+            {
+                path = Normalize(path);
+                foreach (var schema in _schemas)
+                {
+                    if (Normalize(schema.Path) == path) return schema;
+                }
+                return null;
+            }
+
+            bool IFileSystem.Exists(string path) => Find(path) is not null;
+
+            System.IO.TextReader? IFileSystem.OpenText(string path)
+                => Find(path) is { } found ? new System.IO.StringReader(found.Content) : null;
+        }
+
+        /// <summary>
+        /// Parses one schema, with imports resolved across the whole additional-file set.
+        /// </summary>
+        private static FileDescriptorSet? TryParse(SchemaText text, ImmutableArray<SchemaText> all,
+            out string? error)
         {
             error = null;
             try
             {
-                var set = new FileDescriptorSet();
+                var set = new FileDescriptorSet { FileSystem = new SchemaTextFileSystem(all) };
                 var name = System.IO.Path.GetFileName(text.Path);
-                set.Add(name, includeInOutput: true, source: new System.IO.StringReader(text.Content));
+                var directory = System.IO.Path.GetDirectoryName(text.Path);
+                if (!string.IsNullOrEmpty(directory)) set.AddImportPath(directory);
+
+                if (!set.Add(name, includeInOutput: true))
+                {
+                    error = "the schema could not be added";
+                    return null;
+                }
                 set.Process();
                 var errors = set.GetErrors();
                 var first = errors.FirstOrDefault(static e => e.IsError);
