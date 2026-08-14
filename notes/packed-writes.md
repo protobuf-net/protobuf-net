@@ -62,19 +62,20 @@ Three dimensions: the **wire encoding**, whether the **CLR width matches** it, a
 
 ### Fixed-width, CLR width matches the wire
 
-| CLR | wire | sizing | writing today | optimal | gap |
-| --- | --- | --- | --- | --- | --- |
-| `float[]` | `float` (I32) | `count * 4`, O(1) ✅ | per element | **block copy** | **missing** |
-| `double[]` | `double` (I64) | `count * 8`, O(1) ✅ | per element | **block copy** | **missing** |
-| `int[]` | `sfixed32` | `count * 4` ✅ | per element | **block copy** | **missing** |
-| `uint[]` | `fixed32` | `count * 4` ✅ | per element | **block copy** | **missing** |
-| `long[]` | `sfixed64` | `count * 8` ✅ | per element | **block copy** | **missing** |
-| `ulong[]` | `fixed64` | `count * 8` ✅ | per element | **block copy** | **missing** |
+| CLR | wire | sizing | writing | status |
+| --- | --- | --- | --- | --- |
+| `float[]` | `float` (I32) | `count * 4`, O(1) | **block copy** | ✅ done |
+| `double[]` | `double` (I64) | `count * 8`, O(1) | **block copy** | ✅ done |
+| `int[]` | `sfixed32` | `count * 4` | **block copy** | ✅ done |
+| `uint[]` | `fixed32` | `count * 4` | **block copy** | ✅ done |
+| `long[]` | `sfixed64` | `count * 8` | **block copy** | ✅ done |
+| `ulong[]` | `fixed64` | `count * 8` | **block copy** | ✅ done |
 
-**Sizing is already optimal** here — `WritePacked` special-cases `Fixed32`/`Fixed64` to
-`count * 4` / `count * 8` without touching the elements. It is only the *write* that is missing a
-bulk path. Needs a `BitConverter.IsLittleEndian` guard, which the JIT folds away on LE; see the
-endianness note in gaps.md B20.
+**Both halves are now optimal.** Sizing always was — `WritePacked` special-cases
+`Fixed32`/`Fixed64` to `count * 4` / `count * 8` without touching the elements — and the write is
+now one copy, behind the `IsLittleEndian` guard described above. **`List<T>` of these types is not
+covered**: it needs `CollectionsMarshal.AsSpan` (net5+), and protogen emits arrays for packable
+scalars anyway, so the schema-first surface is complete.
 
 ### Fixed-width, CLR width does NOT match
 
@@ -129,10 +130,12 @@ entire schema-first packed surface, on every TFM, with no `CollectionsMarshal` d
 
 ## Ranked, by value over effort
 
-1. **Block copy for the matching fixed-width cells.** Portable, no intrinsics, trivially correct
-   behind an `IsLittleEndian` guard, and it is currently *absent* — a per-element interface
-   dispatch where a `memcpy` belongs.
-2. **`bool[]`**: O(1) sizing and a near-blit write, for a type that currently walks the ladder.
+1. ~~**Block copy for the matching fixed-width cells.**~~ **DONE 2026-08-14.** Portable, no
+   intrinsics, correct behind an `IsLittleEndian` guard — it replaced a per-element interface
+   dispatch where a `memcpy` belonged. `List<T>` of the same types remains open (needs
+   `CollectionsMarshal`, net5+).
+2. **`bool[]`** — **next, and still unbuilt**: O(1) sizing and a near-blit write, for a type that
+   currently walks the ladder element by element.
 3. **B19 sizing** (measured 1.8×–6.6×) and **B21 tier 2**, which comes free with it.
 4. **B21 tier 1**, the homogeneous single-byte block — portable, and the census says it is the
    common case.
