@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
@@ -211,6 +211,10 @@ namespace ProtoBuf.Internal
 
             if (wireType == WireType.Varint)
             {
+                // bool LOOKS like a varint and behaves like a fixed width: false is 0x00 and true
+                // is 0x01, so every element is exactly one byte and the whole answer is the count.
+                // It walked the ladder element by element before this
+                if (typeof(T) == typeof(bool)) { length = count; return true; }
                 if (typeof(T) == typeof(uint))
                 { length = Measure(new ReadOnlySpan<uint>((uint[])(object)values, 0, count)); return true; }
                 if (typeof(T) == typeof(int))
@@ -254,6 +258,7 @@ namespace ProtoBuf.Internal
 
             if (wireType == WireType.Varint)
             {
+                if (typeof(T) == typeof(bool)) { length = values.Length; return true; }
                 if (typeof(T) == typeof(uint)) { length = Measure(As<T, uint>(values)); return true; }
                 if (typeof(T) == typeof(int)) { length = Measure(As<T, int>(values)); return true; }
                 if (typeof(T) == typeof(ulong)) { length = Measure(As<T, ulong>(values)); return true; }
@@ -266,6 +271,68 @@ namespace ProtoBuf.Internal
             }
             return false;
         }
+
+        /// <summary>
+        /// The write half, for a <c>List&lt;T&gt;</c> reached through <c>CollectionsMarshal</c> —
+        /// the same dispatch the array path performs, over a span.
+        /// </summary>
+        /// <remarks>
+        /// Duplicates the array version's arms rather than sharing them, deliberately: the array
+        /// form casts through <c>object</c> and so works on every TFM, while the span form needs
+        /// <c>MemoryMarshal.CreateReadOnlySpan</c> and is net5+. Unifying them would drag the array
+        /// path — the one protogen actually emits — down to net5+ as well.
+        /// </remarks>
+        internal static bool TryWrite<T>(ref ProtoWriter.State state, ReadOnlySpan<T> values, WireType wireType)
+        {
+            if (values.IsEmpty) return false;
+            var le = BitConverter.IsLittleEndian;
+
+            if (wireType == WireType.Varint)
+            {
+                if (typeof(T) == typeof(uint))
+                { foreach (var v in As<T, uint>(values)) state.WriteRawVarint32(v); return true; }
+                if (typeof(T) == typeof(int))
+                { foreach (var v in As<T, int>(values)) state.WriteRawVarint64(unchecked((ulong)(long)v)); return true; }
+                if (typeof(T) == typeof(ulong))
+                { foreach (var v in As<T, ulong>(values)) state.WriteRawVarint64(v); return true; }
+                if (typeof(T) == typeof(long))
+                { foreach (var v in As<T, long>(values)) state.WriteRawVarint64(unchecked((ulong)v)); return true; }
+                if (typeof(T) == typeof(bool) && le)
+                {
+                    var raw = System.Runtime.InteropServices.MemoryMarshal.AsBytes(As<T, bool>(values));
+                    foreach (var b in raw) if (b > 1) return false;   // non-canonical: defer
+                    state.WriteRawBytesBody(raw);
+                    return true;
+                }
+            }
+            else if (wireType == WireType.SignedVarint)
+            {
+                if (typeof(T) == typeof(int))
+                { foreach (var v in As<T, int>(values)) state.WriteRawZigZag32(v); return true; }
+                if (typeof(T) == typeof(long))
+                { foreach (var v in As<T, long>(values)) state.WriteRawZigZag64(v); return true; }
+            }
+            else if (le && wireType == WireType.Fixed32)
+            {
+                // reinterpret to the proven element type first: MemoryMarshal.AsBytes demands
+                // `struct`, which an unconstrained T cannot satisfy
+                if (typeof(T) == typeof(float)) { Blit(ref state, As<T, float>(values)); return true; }
+                if (typeof(T) == typeof(int)) { Blit(ref state, As<T, int>(values)); return true; }
+                if (typeof(T) == typeof(uint)) { Blit(ref state, As<T, uint>(values)); return true; }
+            }
+            else if (le && wireType == WireType.Fixed64)
+            {
+                if (typeof(T) == typeof(double)) { Blit(ref state, As<T, double>(values)); return true; }
+                if (typeof(T) == typeof(long)) { Blit(ref state, As<T, long>(values)); return true; }
+                if (typeof(T) == typeof(ulong)) { Blit(ref state, As<T, ulong>(values)); return true; }
+            }
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void Blit<TValue>(ref ProtoWriter.State state, ReadOnlySpan<TValue> values)
+            where TValue : unmanaged
+            => state.WriteRawBytesBody(System.Runtime.InteropServices.MemoryMarshal.AsBytes(values));
 
         /// <summary>
         /// Reinterprets a span of unconstrained <typeparamref name="TFrom"/> — which is why this is

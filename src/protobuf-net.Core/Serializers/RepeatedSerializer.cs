@@ -472,6 +472,13 @@ namespace ProtoBuf.Serializers
         }
         internal override void WritePacked(ref ProtoWriter.State state, TList values, IMeasuringSerializer<T> serializer, WireType wireType)
         {
+#if NET5_0_OR_GREATER
+            if (values is not null && values.Count != 0
+                && PackedVarintMeasure.TryWrite<T>(ref state, CollectionsMarshal.AsSpan(values), wireType))
+            {
+                return;
+            }
+#endif
             var iter = values.GetEnumerator();
             WritePacked(ref state, ref iter, serializer, wireType);
         }
@@ -647,11 +654,86 @@ namespace ProtoBuf.Serializers
                 if (typeof(T) == typeof(long)) return Block(ref state, (long[])(object)values);
                 if (typeof(T) == typeof(ulong)) return Block(ref state, (ulong[])(object)values);
             }
+            else if (wireType == WireType.Varint && typeof(T) == typeof(uint))
+            {
+                // Direct varint encoding, bypassing the per-element `serializer.Write` - which is a
+                // virtual dispatch AND a wire-type switch before any bytes are produced. The raw
+                // surface skips both; the encoding is identical, and WritePacked's own length check
+                // confirms it.
+                foreach (var value in new ReadOnlySpan<uint>((uint[])(object)values)) state.WriteRawVarint32(value);
+                return true;
+            }
+            else if (wireType == WireType.Varint && typeof(T) == typeof(int))
+            {
+                // a negative int32 sign-extends to the ten-byte form, so this is the 64-bit writer
+                foreach (var value in new ReadOnlySpan<int>((int[])(object)values))
+                    state.WriteRawVarint64(unchecked((ulong)(long)value));
+                return true;
+            }
+            else if (wireType == WireType.Varint && typeof(T) == typeof(ulong))
+            {
+                foreach (var value in new ReadOnlySpan<ulong>((ulong[])(object)values)) state.WriteRawVarint64(value);
+                return true;
+            }
+            else if (wireType == WireType.Varint && typeof(T) == typeof(long))
+            {
+                foreach (var value in new ReadOnlySpan<long>((long[])(object)values))
+                    state.WriteRawVarint64(unchecked((ulong)value));
+                return true;
+            }
+            else if (wireType == WireType.SignedVarint && typeof(T) == typeof(int))
+            {
+                foreach (var value in new ReadOnlySpan<int>((int[])(object)values)) state.WriteRawZigZag32(value);
+                return true;
+            }
+            else if (wireType == WireType.SignedVarint && typeof(T) == typeof(long))
+            {
+                foreach (var value in new ReadOnlySpan<long>((long[])(object)values)) state.WriteRawZigZag64(value);
+                return true;
+            }
+            else if (wireType == WireType.Varint && typeof(T) == typeof(bool))
+            {
+                // A packed bool column IS its own payload - false is 0x00 and true is 0x01, one
+                // byte each - so it blits like a fixed width despite being a varint on paper.
+                //
+                // ...but only if every byte is already CANONICAL. The CLR guarantees `false == 0`
+                // and nothing more: a `true` produced through unsafe or interop can be any non-zero
+                // byte, and protobuf expects 0x01. Rather than normalise into a scratch buffer, the
+                // span is scanned for a non-canonical byte and the per-element loop takes over if
+                // one is found - which never happens for a bool that came from C#, so this is the
+                // common path, and correctness does not depend on that being true.
+                var raw = MemoryMarshal.AsBytes(new ReadOnlySpan<bool>((bool[])(object)values));
+                if (AllCanonical(raw))
+                {
+                    state.WriteRawBytesBody(raw);
+                    return true;
+                }
+            }
             return false;
 
             static bool Block<TValue>(ref ProtoWriter.State state, TValue[] values) where TValue : unmanaged
             {
                 state.WriteRawBytesBody(MemoryMarshal.AsBytes(new ReadOnlySpan<TValue>(values)));
+                return true;
+            }
+
+            // vectorised: every byte must be 0 or 1 for the span to BE the payload
+            static bool AllCanonical(ReadOnlySpan<byte> raw)
+            {
+                int i = 0;
+                if (System.Numerics.Vector.IsHardwareAccelerated
+                    && raw.Length >= System.Numerics.Vector<byte>.Count)
+                {
+                    var one = new System.Numerics.Vector<byte>(1);
+                    for (; i <= raw.Length - System.Numerics.Vector<byte>.Count;
+                           i += System.Numerics.Vector<byte>.Count)
+                    {
+                        var v = Unsafe.ReadUnaligned<System.Numerics.Vector<byte>>(
+                            ref Unsafe.Add(ref MemoryMarshal.GetReference(raw), i));
+                        if (System.Numerics.Vector.GreaterThanAny(v, one)) return false;
+                    }
+                }
+                for (; i < raw.Length; i++) if (raw[i] > 1) return false;
                 return true;
             }
         }
