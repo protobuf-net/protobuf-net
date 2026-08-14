@@ -157,6 +157,30 @@ its values are spread evenly across the width classes, so a block of eight is ra
 Real data is the opposite — the census puts almost everything in the single-byte class — so this
 would **understate** tier 1, and a "small" distribution should be added before anyone judges it.
 
+### The largest unexplained cost is NOT packed-specific: ~1 µs per member
+
+Now that the copies are bulk, the per-byte figures separate cleanly:
+
+| | ns/member | ns/byte |
+| --- | ---: | ---: |
+| fixed int | 965 | **0.161** |
+| floating | 1065 | **0.178** |
+| bool | 1320 | 1.321 |
+
+Fixed and floating are at **memcpy speed** — those cells are finished, and no further copy work is
+warranted. But **every member costs roughly a microsecond regardless of payload size**: bool carries
+six times *less* data than fixed and costs *more* per member. For bool that overhead is essentially
+the entire remaining cost, which is why optimising the bool copy further did nothing (measured, not
+assumed — sharing the vectorised canonical scan moved the number by zero).
+
+So the biggest single number left in this matrix is **not about packing at all** — it is whatever
+the per-member machinery does before and after the payload. That wants a profile rather than a
+guess, and it may dwarf everything else here: at ~1 µs × members, a contract with twenty repeated
+members spends 20 µs before any bytes are counted.
+
+**Do not chase further packed micro-optimisation until that number is understood**, or the effort
+will keep landing on the 0.16 ns/byte side of a 1000 ns/member problem.
+
 **Three findings from the baseline itself**, before any optimisation:
 
 1. **varint costs ~5× fixed** — about 5 ns/element against 0.9 — because a packed varint makes
