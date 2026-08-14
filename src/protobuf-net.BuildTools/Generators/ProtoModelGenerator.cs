@@ -3,6 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using ProtoBuf.BuildTools.Internal;
+using System;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
 
@@ -23,6 +24,7 @@ namespace ProtoBuf.BuildTools.Generators
     {
         internal const string ProtoModelAttributeName = "ProtoBuf.ProtoModelAttribute";
         internal const string ProtoSerializableAttributeName = "ProtoBuf.ProtoSerializableAttribute";
+        internal const string ProtoSchemaAttributeName = "ProtoBuf.ProtoSchemaAttribute";
 
         /// <summary>
         /// The lowest C# version this generator emits for.
@@ -73,11 +75,25 @@ namespace ProtoBuf.BuildTools.Generators
                     && cls.Modifiers.Any(SyntaxKind.PartialKeyword),
                 transform: static (ctx, cancellationToken) => Parse(ctx, cancellationToken));
 
+            // the schemas a [ProtoSchema] can name. This is a SEPARATE input from the syntax parse
+            // because a generator cannot see another generator's output: the DTOs do not exist while
+            // this runs, so the model is derived from the same schema they are, and the compiler
+            // joins the two afterwards (docs/aot-schema-model.md). Costs nothing in a project with
+            // no .proto files, where the collection is a stable empty array.
+            var schemas = context.AdditionalTextsProvider
+                .Where(static text => text.Path.EndsWith(".proto", StringComparison.OrdinalIgnoreCase))
+                .Select(static (text, cancellationToken)
+                    => new SchemaText(text.Path, text.GetText(cancellationToken)?.ToString() ?? ""))
+                .Collect();
+
+            var resolved = parsed.Combine(schemas)
+                .Select(static (pair, cancellationToken) => AddSchemas(pair.Left, pair.Right, cancellationToken));
+
             // split the plan from its diagnostics: diagnostics carry locations, which shift whenever
             // anything above them moves, whereas the plan does not - so emission stays cached across
             // edits that only move code around
-            var models = parsed.Select(static (result, _) => result?.Plan).WithTrackingName(ModelTrackingName);
-            var diagnostics = parsed
+            var models = resolved.Select(static (result, _) => result?.Plan).WithTrackingName(ModelTrackingName);
+            var diagnostics = resolved
                 .Select(static (result, _) => result?.Diagnostics ?? default)
                 .WithTrackingName(DiagnosticTrackingName);
 

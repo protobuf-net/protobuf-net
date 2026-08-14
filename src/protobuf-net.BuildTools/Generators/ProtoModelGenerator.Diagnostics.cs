@@ -46,12 +46,52 @@ namespace ProtoBuf.BuildTools.Generators
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        // the [ProtoSchema] block. These are about the DECLARATION rather than about a contract,
+        // so they are anchored on the attribute and say what was available instead - which a
+        // typeof() of a not-yet-generated type could never do
+
+        internal static readonly DiagnosticDescriptor SchemaNotFound = new(
+            id: "PBN2020",
+            title: "Schema not found",
+            messageFormat: "No additional file matches the schema '{0}' ({1}); add it to <AdditionalFiles>.",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor SchemaAmbiguous = new(
+            id: "PBN2021",
+            title: "Schema is ambiguous",
+            messageFormat: "The schema '{0}' matches more than one additional file ({1}); include enough of the path to identify one.",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor SchemaInvalid = new(
+            id: "PBN2022",
+            title: "Schema could not be parsed",
+            messageFormat: "The schema '{0}' could not be parsed: {1}.",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        internal static readonly DiagnosticDescriptor SchemaUnsupported = new(
+            id: "PBN2023",
+            title: "Schema shape not supported",
+            messageFormat: "The schema '{0}' is omitted from the AOT model: {1}.",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         private static DiagnosticDescriptor GetDescriptor(ProtoDiagnosticKind kind) => kind switch
         {
             ProtoDiagnosticKind.UnsupportedMember => UnsupportedMember,
             ProtoDiagnosticKind.UnsupportedContract => UnsupportedContract,
             ProtoDiagnosticKind.UnsupportedOption => UnsupportedOption,
             ProtoDiagnosticKind.OmittedCascade => OmittedCascade,
+            ProtoDiagnosticKind.SchemaNotFound => SchemaNotFound,
+            ProtoDiagnosticKind.SchemaAmbiguous => SchemaAmbiguous,
+            ProtoDiagnosticKind.SchemaInvalid => SchemaInvalid,
+            ProtoDiagnosticKind.SchemaUnsupported => SchemaUnsupported,
             _ => throw new ArgumentOutOfRangeException(nameof(kind)),
         };
 

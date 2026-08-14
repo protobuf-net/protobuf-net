@@ -34,4 +34,8 @@ PBN2010  | ProtoBuf | Warning  | Call uses the runtime model, not the AOT model
 PBN2011  | ProtoBuf | Warning  | Call resolves its contract type at run time
 PBN2012  | ProtoBuf | Warning  | Project publishes AOT or trimmed, but has no AOT model
 PBN2013  | ProtoBuf | Info     | Compile-time serializers are available
+PBN2020  | ProtoBuf | Warning  | No additional file matches a `[ProtoSchema]` path
+PBN2021  | ProtoBuf | Warning  | A `[ProtoSchema]` path matches more than one additional file
+PBN2022  | ProtoBuf | Warning  | A `[ProtoSchema]` file could not be parsed
+PBN2023  | ProtoBuf | Warning  | A `[ProtoSchema]` shape is not supported by the AOT model yet
 

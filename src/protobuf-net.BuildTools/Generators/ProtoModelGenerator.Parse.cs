@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -84,6 +84,9 @@ namespace ProtoBuf.BuildTools.Generators
             // doc asks anyone who needs it to report the symptom as an issue.
             var classicEmit = false;
 
+            // [ProtoSchema] declarations, resolved against additional files in a later step
+            var schemaRequests = new List<PlanSchemaRequest>();
+
             foreach (var attribute in model.GetAttributes())
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -101,6 +104,20 @@ namespace ProtoBuf.BuildTools.Generators
                         {
                             classicEmit = true;
                         }
+                    }
+                    continue;
+                }
+                if (attributeName == ProtoSchemaAttributeName)
+                {
+                    // resolved later: the syntax-driven parse cannot see additional files, so the
+                    // path is carried out with its location and matched against them downstream
+                    if (attribute.ConstructorArguments.Length == 1
+                        && attribute.ConstructorArguments[0].Value is string schemaPath
+                        && !string.IsNullOrWhiteSpace(schemaPath))
+                    {
+                        schemaRequests.Add(new PlanSchemaRequest(schemaPath,
+                            PlanLocation.From(attribute.ApplicationSyntaxReference?.GetSyntax(cancellationToken)
+                                ?.GetLocation())));
                     }
                     continue;
                 }
@@ -169,7 +186,10 @@ namespace ProtoBuf.BuildTools.Generators
             DropUnsatisfiable(parsed, locations, diagnostics);
 
             ProtoModelPlan? plan = null;
-            if (parsed.Count != 0 || enums.Count != 0)
+            // a [ProtoSchema] model legitimately has NOTHING at this point: its contracts come from
+            // the schema, which is resolved a step later against the compilation's additional files.
+            // Without this the plan would be null and the whole model silently emitted nothing
+            if (parsed.Count != 0 || enums.Count != 0 || schemaRequests.Count != 0)
             {
                 var contracts = parsed.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
                 var enumPlans = enums.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
@@ -223,7 +243,8 @@ namespace ProtoBuf.BuildTools.Generators
                         && collectionsMarshal.GetMembers("AsSpan").Length != 0);
             }
 
-            return new ProtoParseResult(plan, new(diagnostics.ToArray()));
+            return new ProtoParseResult(plan, new(diagnostics.ToArray()),
+                new(schemaRequests.ToArray()));
         }
 
         /// <summary>

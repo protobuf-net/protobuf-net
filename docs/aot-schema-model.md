@@ -144,6 +144,25 @@ auto-tuple detection, no `extern alias`. The risk is not complexity, it is **dri
 codegen changes a name or a conditional and the plan builder does not, the consumer gets a build
 break in code neither of them wrote.
 
+## Where the projection may live — settled (Marc, 2026-08-14)
+
+The obvious spelling is `descriptorSet.ToAotCodegenModel()`, and it is **not available**. The
+projection has to be a static (or extension) local to the generator project, which is what
+`SchemaPlanBuilder` is. Four reasons, all checked rather than assumed:
+
+- **`FileDescriptorSet` is shipped public API** of protobuf-net.Reflection
+  (`PublicAPI.Shipped.txt`), so anything hung off it is a compatibility surface forever;
+- **`Descriptor.cs` is auto-generated** from `descriptor.proto` and says so in its header - direct
+  changes are overwritten, so it would have to be a partial anyway;
+- **BuildTools compiles Reflection's sources in**, so a method added there exists in *both*
+  assemblies - including the shipped one, where it means nothing;
+- and decisively: **the plan types are `internal` to BuildTools**. An instance method on the
+  shared model could not name `ProtoModelPlan` as its return type without making the whole plan
+  surface public, in a shipped library, for the benefit of one caller.
+
+So the direction of the dependency is fixed: the generator knows about the descriptor model, and
+the descriptor model knows nothing about the generator.
+
 ## The one design decision that matters: don't predict, share
 
 Two ways to keep the two halves in step:
