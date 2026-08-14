@@ -93,9 +93,32 @@ schema". Reasons to prefer it:
   which is what a real service usually has.
 - **Per-model granularity**, which neither A nor B gives.
 
-A supports A as a shorthand: with the property set and no `[ProtoSchema]` anywhere, seed every
+C supports A as a shorthand: with the property set and no `[ProtoSchema]` anywhere, seed every
 schema in the project into the single model that carries `[ProtoModel]`. That covers the
 "I just want it on" case without giving up the expressive form.
+
+#### Resolving the path (Marc, 2026-08-14)
+
+The string has to behave like a path, not like a name: **`foo/bar/blap.proto` and `x/blap.proto`
+are different files and must stay distinguishable, while `/` and `\` are the same separator and
+must not be.** `SchemaFileMatcher` implements exactly that, and `SchemaFileMatcherTests` pins it:
+
+- **separators are interchangeable**, including mixed within one string, and a leading `./` is
+  ignored;
+- **matching is on whole path SEGMENTS from the right**, never on raw substrings - so
+  `bar/blap.proto` matches `…/foo/bar/blap.proto`, and `ar/blap.proto` matches nothing. This is
+  the difference between a resolver and an `EndsWith`, and it is what keeps sibling directories
+  apart;
+- **a bare leaf is allowed while it is unambiguous** - the common case is one `shop.proto` and
+  writing the directory would be noise. Where two additional files share a leaf, it is an
+  **error naming both**, never a silent pick;
+- **an exact whole-path match wins outright**, so a consumer who writes the full path is never
+  told it is ambiguous with a deeper file it happens to be a suffix of;
+- **case is folded**, since a consumer on Windows will write whichever casing they remember.
+
+Note the resolution is against the compilation's additional files, which is also what makes the
+failure diagnosable: a miss can list what *is* available, which a `typeof` of a not-yet-generated
+type never could.
 
 ## What the plan builder needs, and where each fact comes from
 
@@ -189,21 +212,37 @@ So the direction works, and the remaining work is breadth rather than risk.
 
 **The conventions the plan must match are now concrete rather than hypothetical.** Reading
 protogen's actual output for that schema, each of these is a decision the plan builder has to
-mirror, and each is marked `CONVENTION` in the source:
+mirror, and each is marked `CONVENTION` in the source.
+
+**To be unambiguous, since an earlier draft of this section read otherwise: none of these is a
+scenario that fails today.** The existing two-project route handles all of them - the corpus
+differential's machine-generated half covers 63 map-using schemas and every schema's proto3
+strings, at 100% byte match. What follows is a list of ways the NEW front-end could be written
+wrongly, i.e. the work, not a defect report.
 
 - the package becomes the namespace via `NameNormalizer` (`spike` -> `Spike`);
 - **every** message is emitted `: IExtensible` with a private `__pbn__extensionData` field, so
   the plan is `ProtoExtensibleKind.Untyped` throughout - not `None`;
 - a proto3 **string** member is emitted with `[DefaultValue("")]` *and* an `= ""` initialiser,
-  which moves the write guard from `!= null` to `!= ""`. This one is the sharpest: getting it
-  wrong is a silent **wire** difference, not a build break, so the compile gate would not catch
-  it and only the byte differential would;
+  which moves the write guard from `!= null` to `!= ""` - so an empty string is **not written**,
+  which is what proto3 requires. The hazard is one-directional and specific: if the front-end
+  omits the declared default from the plan, the generated serializer writes two bytes where
+  ref-emit over the very same DTO writes none. The DTO is unaffected either way, so it compiles
+  cleanly and disagrees only on the wire. This is the sharpest item here for that reason, and the
+  spike sets `defaultLiteral` for exactly this;
 - `repeated` scalars become `T[]` with `IsPacked = true`, while `repeated` messages/strings
   become a **getter-only** `List<T>` with an initialiser - two different shapes from one schema
   construct, and the getter-only one needs the plan's existing accessor route;
 - a `map<k,v>` is not a distinct feature at descriptor level: it compiles to a **synthetic nested
-  entry message** plus a repeated field. So map support is gated on nested-type support rather
-  than being separate work, which the scope test pins.
+  entry message** (`options.map_entry = true`) plus a `repeated` field of it. Two consequences,
+  and neither is a limitation of anything shipped - they are instructions for building the
+  front-end:
+  1. **map support is gated on nested-type support**, since the entry message is a nested type -
+     so the two cannot be sequenced independently, which the scope test pins;
+  2. when nested types do land, the front-end must **skip** the entry messages rather than walk
+     them. protogen emits a `Dictionary<K,V>` property and **no C# type** for the entry, so a
+     front-end that treated it as an ordinary nested message would emit a contract for a type
+     that does not exist. That one *is* caught by the compile gate.
 
 **The drift gate is real, and was verified able to fail** by perturbing the namespace convention
 in the builder: the spike test goes red with `CS0234`/`CS0246` rather than passing quietly. But
