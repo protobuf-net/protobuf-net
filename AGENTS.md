@@ -475,9 +475,19 @@ member's declared type, while `Create{X}<TElement>()` has it fixed by the factor
 it. Read uses the same merge shape as sub-messages (existing collection passed in, result assigned
 back only when non-null). Facts confirmed against ref-emit rather than assumed:
 
-- **Packing is a compile-time decision.** The features constant carries `OptionPackedDisabled`, and
-  ref-emit simply *omits* it for `[ProtoMember(IsPacked = true)]`. Unpacked is the default; that
-  named argument is not supported yet, so we always emit the disabled form.
+- **Packing is a compile-time decision, and `IsPacked` IS honoured** — this previously said the
+  argument "is not supported yet, so we always emit the disabled form", which was **stale**. The
+  features constant carries `OptionPackedDisabled` by default and both ref-emit and the generator
+  *omit* it for `[ProtoMember(IsPacked = true)]`; `ListOptions.input.cs` pins five such members
+  against `ListOptions.reference.cs`.
+
+  Two things worth knowing before treating packing as a correctness matter. **Whether to pack is
+  the writer's free choice** — protobuf requires a *reader* to accept both forms, so declining to
+  pack is never a wire bug. And **protobuf-net packs only when it can cheaply size the elements**:
+  `RepeatedSerializer.Write` takes the packed branch only when the element serializer is an
+  `IMeasuringSerializer<T>`. `EnumSerializer<TEnum>` is not one, so **a repeated enum is never
+  actually packed**, on either path, even though `TypeHelper.CanBePacked` returns true for enums.
+  See `notes/gaps.md` B1.
 - The features wire type is the **element's**, not the member's.
 - A message element passes `this` as the sub-serializer; a scalar element passes nothing.
 - **A repeated enum needs a serializer proxy.** Unlike an inline scalar, `RepeatedSerializer`

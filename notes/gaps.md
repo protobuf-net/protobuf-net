@@ -43,15 +43,43 @@ emitted" while *raising* correctness.
 The reasoning is here rather than in `notes/nano-writer.md`, which keeps the *findings* (what was
 tried, measured and reverted) but no longer carries a to-do list.
 
-### B1. Packed writes, and the empty-collection disagreement — **next**
+### B1. Packed writes — **premise is STALE; re-verify before doing anything (2026-08-14)**
 
-The sharpest item, because it is the only one suspected of being a **live bug** rather than
-absent work. An empty packed collection appears to emit a zero-length field where ref-emit writes
-nothing. Found while adding enum support to the schema front-end, but it is **not enum-specific**:
-protogen marks a repeated enum `IsPacked = true`, and per `AGENTS.md` the symbol path has never
-supported that argument — *"that named argument is not supported yet, so we always emit the
-disabled form"* — so the packed raw-write arm is largely undriven and the schema path is simply
-the first thing to reach it.
+This was "the sharpest item, the only one suspected of being a live bug". Three checks say the
+premise does not hold up, and none of them needed new code:
+
+**1. `IsPacked` IS supported, contrary to `AGENTS.md`.** `ListOptions.input.cs` carries five
+`IsPacked = true` members, and we emit `WireTypeVarint` **without** `OptionPackedDisabled` for
+them — byte-identical to `ListOptions.reference.cs`, and the differential has been comparing them
+all along. The claim that "we always emit the disabled form" was simply out of date.
+
+**2. Packing is the WRITER'S FREE CHOICE** (Marc). protobuf requires a *reader* to accept both the
+packed and unpacked forms of a repeated primitive field, so a writer may choose either regardless
+of the `[packed=true]` hint. **Declining to pack is therefore never a wire bug** — which removes
+the whole category this item was filed under.
+
+**3. protobuf-net packs only when it can cheaply size the elements.**
+`RepeatedSerializer.Write` takes the packed branch only when
+`serializer is IMeasuringSerializer<TItem>`. `EnumSerializer<TEnum>` implements
+`ISerializer<TEnum>` and `ISerializer<TEnum?>` but **not** the measuring interface — so a repeated
+enum is *never* packed by protobuf-net, on either path, even though `TypeHelper.CanBePacked`
+returns true for enums. Both paths fall through to the unpacked loop identically, so there is
+nothing to disagree about.
+
+So the original observation — "an empty packed collection emits a zero-length field where ref-emit
+writes nothing" — needs reproducing before it is believed. It may have come from one specific
+configuration rather than being general, and the attribution to `IsPacked` being unsupported is
+definitely wrong.
+
+**What genuinely remains** is the *opportunity*, not a bug: making enums (and other kinds) packable
+by giving them measuring serializers, which is a size win on the wire and the thing B19's
+vectorised sizing would serve. That is worth doing on its own merits — but it is optional
+behaviour, not a correctness fix, and it should be measured rather than assumed.
+
+Note also that `descriptor.proto` **does** use `[packed = true]` — on `SourceCodeInfo.Location`'s
+`path` and `span` — but source info is normally stripped, so the benchmark payload carries none.
+Any packed work needs a **bespoke payload** for both correctness and performance (Marc); the
+census already predicts the descriptor set would show nothing.
 
 Packed repeated writes generally belong with it: the write needs the zero-length-header model
 option and a per-element measure, the `MemoryMarshal` block trick for fixed widths is recorded in
