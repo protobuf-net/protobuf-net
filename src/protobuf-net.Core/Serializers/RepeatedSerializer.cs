@@ -457,6 +457,16 @@ namespace ProtoBuf.Serializers
 
         internal override long Measure(TList values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
+#if NET5_0_OR_GREATER
+            // a List<T>'s backing store is the same shape as an array, so it takes the same
+            // vectorised ladder. Down-level there is no way to reach it and the per-element loop
+            // stands - which costs little, since protogen emits ARRAYS for packable scalars
+            if (values is not null && values.Count != 0 && PackedVarintMeasure.TryMeasure<T>(
+                CollectionsMarshal.AsSpan(values), wireType, out var vectorised))
+            {
+                return vectorised;
+            }
+#endif
             var iter = values.GetEnumerator();
             return Measure(ref iter, serializer, context, wireType);
         }
@@ -579,6 +589,11 @@ namespace ProtoBuf.Serializers
 
         internal override long Measure(T[] values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
+            if (values is not null
+                && PackedVarintMeasure.TryMeasure<T>(values, values.Length, wireType, out var vectorised))
+            {
+                return vectorised;
+            }
             var iter = new Enumerator(values);
             return Measure(ref iter, serializer, context, wireType);
         }

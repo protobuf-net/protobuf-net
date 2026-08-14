@@ -128,6 +128,41 @@ entire schema-first packed surface, on every TFM, with no `CollectionsMarshal` d
 
 ---
 
+## Measured: the matrix payload, and what has landed against it
+
+`src/NanoBench/PackedMatrix.cs` + `PackedMatrixBenchmarks.cs` — Marc's challenge, and the payload
+every SIMD item was blocked on. One contract per encoding category, each carrying the same shape as
+both `T[]` and `List<T>`, **999 elements** (not a multiple of 8, 4 or even 2, so every vectorised
+tail is ragged on every run). Two models over the same domain — one raw, one `ClassicEmit` — and the
+setup **asserts they agree byte-for-byte** before any timing.
+
+| category | baseline classic / raw | after | change |
+| --- | ---: | ---: | ---: |
+| **varint unsigned** | 18.92 / 21.67 µs | **15.63 / 15.61** | **−17% / −28%** |
+| **varint signed** | 19.68 / 19.10 | 17.62 / 17.49 | −10% / −8% |
+| zigzag | 18.48 / 19.96 | 18.98 / 18.81 | +3% / −6% |
+| fixed int | 3.64 / 3.79 | 4.03 / 3.84 | untouched |
+| floating | 4.30 / 4.48 | 4.47 / 4.31 | untouched |
+| bool | 4.56 / 4.70 | 4.60 / 4.71 | untouched |
+| enum | 5.14 / 5.07 | 5.08 / 5.17 | untouched |
+
+**Three findings from the baseline itself**, before any optimisation:
+
+1. **varint costs ~5× fixed** — about 5 ns/element against 0.9 — because a packed varint makes
+   **two per-element passes**, measure then write, where fixed measures in O(1);
+2. **the raw writer was NO BETTER than classic for packed, and sometimes worse** (unsigned was 15%
+   *slower*). A packed member is measure-*blocked* — `RawRepeatedWritable` declines `IsPacked` — so
+   the containing contract loses measure-first entirely and both models end in the same
+   `RepeatedSerializer` code, with the raw model paying setup for nothing. That gap is now closed
+   by accident rather than design: both land on the same vectorised measure;
+3. **zigzag barely moved.** The measure is vectorised for it too, so what remains is the *write* —
+   which for zigzag is a transform plus an encode per element. It is the clearest evidence that the
+   remaining cost is B21's territory, not B19's.
+
+**Still to do, in order:** `bool[]` (O(1) sizing, near-blit write); B21 tier 1 (the single-byte
+homogeneous block); B21 tier 2 (write without per-element room checks, free once the measure is
+vectorised); enums, which are never packed at all.
+
 ## Ranked, by value over effort
 
 1. ~~**Block copy for the matching fixed-width cells.**~~ **DONE 2026-08-14.** Portable, no
