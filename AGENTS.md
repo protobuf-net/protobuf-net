@@ -34,6 +34,7 @@ main → v4   (raw-writer, writer-buffer-core and aot-schema-model are folded in
 | **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
 | `notes/nano-core.md` | the reader arc: design and the cuts |
 | `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
+| `notes/packed-writes.md` | the packed-scenario **matrix**: what is a block copy, what is not, and what each needs |
 | `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
 | `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
 | `notes/aot-findings.md` | numbered findings from the AOT generator work |

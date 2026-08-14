@@ -763,6 +763,20 @@ genuinely packed one writes the header. Same disagreement, opposite attribution 
 **Verify before building.** Both directions are cheap to test and the wrong attribution would send
 the work the wrong way.
 
+### B18b. Packed writes are per-element even where a block copy would do — **the biggest packed win, and it needs no SIMD**
+
+`RepeatedSerializer.WritePacked` writes **every** packed element through an enumerator and a
+virtual serializer call, whatever the type — there is no `MemoryMarshal`, no `AsBytes`, no bulk
+path anywhere in the file. So a packed `float[]` → `repeated float`, which on a little-endian
+machine is a **pure `memcpy`**, is emitted one float at a time through an interface dispatch.
+
+Sizing is already O(1) for those types (`count * 4` / `count * 8`); it is only the write.
+
+This outranks every vectorised idea below it: block copy is portable, needs no intrinsics, is
+trivially correct behind the `IsLittleEndian` guard the codebase already uses, and covers the whole
+matching-fixed-width family. **`notes/packed-writes.md` has the full scenario matrix** and the
+ranking; B19–B21 are all downstream of this one.
+
 ### B19. Vectorised sizing for a packed varint span — **measured: 1.8×-6.6×, the first non-flat result in this arc**
 
 Marc, 2026-08-14: for a large span of integers — `CollectionsMarshal.AsSpan` on a `List<T>`, or an
