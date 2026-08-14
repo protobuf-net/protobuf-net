@@ -825,6 +825,40 @@ work regardless of the values, while scalar swings 948 → 3,481 ns on the same 
 *smallest* on the small-value data most columns actually contain (1.8×) and largest on mixed or
 wide data (6.6×). Quote the 1.8× when deciding, not the 6.6×.
 
+#### The API shape: three methods, and the rest puns (Marc)
+
+Marc's read, and it holds: the surface is
+`MeasureVarint(ReadOnlySpan<uint>)`, `MeasureVarint(ReadOnlySpan<ulong>)` and
+`MeasureVarint(ReadOnlySpan<int>)`. Everything else reaches one of those by `MemoryMarshal.Cast`,
+which is free — same element width, no copy.
+
+| CLR type | puns to | why |
+| --- | --- | --- |
+| `uint` | *itself* | 1–5 bytes |
+| `ulong` | *itself* | 1–10 bytes |
+| `int` | **needs its own** | **negatives sign-extend to 10 bytes**, so it is emphatically not `uint` |
+| `long` | **`ulong`** | a negative `long` reinterprets as a large `ulong`, and both encode as the same 64-bit two's-complement varint — identical length, so this one is free |
+| enum | `int`/`uint`/`long`/`ulong` | by underlying type; same width, same sign rule |
+| `bool` | — | always one byte: the answer is `count` |
+| `sint32`/`sint64` | zigzag, then pun | `(v << 1) ^ (v >> 31)` is itself vectorisable |
+| `float`/`double` | — | fixed width; `WritePacked` is already O(1) for these |
+| `short`/`sbyte` | **cannot pun** | narrower elements, so a `short[]` is not castable to `int[]`. Code-first only — no `.proto` produces them |
+
+**The int/uint asymmetry is the load-bearing part**, and it is confirmed in our own emitted code
+rather than assumed: an `int32`-family member measures as
+`MeasureRawVarint64(unchecked((ulong)(long)value))` — sign-extended to 64 bits — while `uint32`
+uses the 32-bit form. This is protobuf's long-standing quirk (*"if you use int32 or int64 as the
+type for a negative number, the resulting varint is always ten bytes long"*), and it is exactly why
+`int` cannot share the `uint` ladder: the branchless form has to **blend 10 in where the lane is
+negative** rather than running four thresholds.
+
+**Where it plugs in, and it is better placed than expected**: protogen emits `T[]` for every
+packable scalar (`string`/`bytes`/message become getter-only `List<T>` and are not packed at all),
+so the array-backed `RepeatedSerializer` override *is* the packed sizing path for schema-first
+consumers — and an array yields a span natively on every TFM, with no `CollectionsMarshal` and no
+new API. `List<T>` would need `CollectionsMarshal.AsSpan` (net5+) and keeps the scalar loop
+down-level, which costs little given the shape protogen actually emits.
+
 **What this does NOT say.** It measures *sizing in isolation*. Sizing is one part of packed writing
 — the encode still has to happen — and packed columns are in turn a fraction of most payloads;
 `DescriptorPayloadCensus.md` has this repo's reference payload at 71.5% string/bytes, which is why
