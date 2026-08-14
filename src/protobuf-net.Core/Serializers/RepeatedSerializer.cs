@@ -703,7 +703,7 @@ namespace ProtoBuf.Serializers
                 // one is found - which never happens for a bool that came from C#, so this is the
                 // common path, and correctness does not depend on that being true.
                 var raw = MemoryMarshal.AsBytes(new ReadOnlySpan<bool>((bool[])(object)values));
-                if (AllCanonical(raw))
+                if (PackedVarintMeasure.AllCanonicalBools(raw))
                 {
                     state.WriteRawBytesBody(raw);
                     return true;
@@ -717,25 +717,6 @@ namespace ProtoBuf.Serializers
                 return true;
             }
 
-            // vectorised: every byte must be 0 or 1 for the span to BE the payload
-            static bool AllCanonical(ReadOnlySpan<byte> raw)
-            {
-                int i = 0;
-                if (System.Numerics.Vector.IsHardwareAccelerated
-                    && raw.Length >= System.Numerics.Vector<byte>.Count)
-                {
-                    var one = new System.Numerics.Vector<byte>(1);
-                    for (; i <= raw.Length - System.Numerics.Vector<byte>.Count;
-                           i += System.Numerics.Vector<byte>.Count)
-                    {
-                        var v = Unsafe.ReadUnaligned<System.Numerics.Vector<byte>>(
-                            ref Unsafe.Add(ref MemoryMarshal.GetReference(raw), i));
-                        if (System.Numerics.Vector.GreaterThanAny(v, one)) return false;
-                    }
-                }
-                for (; i < raw.Length; i++) if (raw[i] > 1) return false;
-                return true;
-            }
         }
 
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer, SerializerFeatures features)

@@ -240,6 +240,30 @@ namespace ProtoBuf.Internal
             return false;
         }
 
+        /// <summary>
+        /// Whether every byte is already 0 or 1 — i.e. whether the span IS the wire payload.
+        /// </summary>
+        /// <remarks>
+        /// Vectorised, and shared by the array and list paths. The list one originally scanned
+        /// scalar-ly, which cost more than the blit saved and made a packed <c>bool</c> column
+        /// slower <i>per byte</i> than a fixed-width one despite carrying six times less data —
+        /// found by comparing ns/member against ns/byte rather than by reading the code.
+        /// </remarks>
+        internal static bool AllCanonicalBools(ReadOnlySpan<byte> raw)
+        {
+            int i = 0;
+            if (Vector.IsHardwareAccelerated && raw.Length >= Vector<byte>.Count)
+            {
+                var one = new Vector<byte>(1);
+                for (; i <= raw.Length - Vector<byte>.Count; i += Vector<byte>.Count)
+                {
+                    if (Vector.GreaterThanAny(Load(raw, i), one)) return false;
+                }
+            }
+            for (; i < raw.Length; i++) if (raw[i] > 1) return false;
+            return true;
+        }
+
 #if NET5_0_OR_GREATER
         /// <summary>
         /// The same dispatch over a span, for a <c>List&lt;T&gt;</c> reached through
@@ -300,7 +324,7 @@ namespace ProtoBuf.Internal
                 if (typeof(T) == typeof(bool) && le)
                 {
                     var raw = System.Runtime.InteropServices.MemoryMarshal.AsBytes(As<T, bool>(values));
-                    foreach (var b in raw) if (b > 1) return false;   // non-canonical: defer
+                    if (!AllCanonicalBools(raw)) return false;   // non-canonical: defer
                     state.WriteRawBytesBody(raw);
                     return true;
                 }
