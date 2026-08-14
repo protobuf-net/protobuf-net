@@ -652,7 +652,7 @@ to settle first, and only the second is hard:
 Note this also interacts with **B1** (packed writes) and **B5** (counting mode for mixed
 contracts), both of which want the measure path to reach further into shapes it currently declines.
 
-### B18. `ClassicEmit` is never exercised by any gate — **open, and it undermines the other gates**
+### B18. ~~`ClassicEmit` is never exercised by any gate~~ — **closed 2026-08-14**
 
 Marc, 2026-08-14: *"remember to cross-check classic-emit in all cases... classic-emit should be
 functionally equivalent, if slower."* Checked, and **no test project sets
@@ -675,8 +675,21 @@ same seeds is picked up and compared automatically — no new harness. The obsta
 twin therefore needs either a name that still resolves, or a small change to that resolver (strip a
 known prefix/suffix before looking up the samples class). That is the whole job.
 
-Worth doing **before** B1: packed writes are exactly the kind of change where the two emit paths
-could diverge, and there is currently no gate that would notice.
+**Closed.** Five `ClassicEmit` twins now live in `src/AotConformanceTests/ClassicEmitTwins.cs`,
+chosen for where the paths could plausibly diverge rather than for breadth: groups (raw path, no
+measure), callbacks (which disqualify a contract from measure-first), repeated members (where B1
+lands), nesting (length prefixes and the cache), and scalars as the control. They are declared in
+the test project rather than beside the fixtures, which are shared with the golden tests and
+`AotRefGen`.
+
+`DifferentialTests` picks them up automatically and compares each against `RuntimeTypeModel`:
+**1445 → 1544 cases**. And per Marc — *nothing precludes two type models over the same domain, one
+classic and one not* — `ClassicVsRawTests` compares the twins against their raw siblings
+**directly**, in one build. That is sharper than two separate comparisons against ref-emit, which
+two models diverging the same way would both pass.
+
+**Verified to be a real second path, not a silently-ignored flag**: `GroupedElementsModel` emits 3
+`RawWrite_` and 3 `Measure_` bodies; its classic twin emits none of either.
 
 ### B1 addendum: what the packed code actually says (2026-08-14)
 
@@ -708,6 +721,48 @@ genuinely packed one writes the header. Same disagreement, opposite attribution 
 
 **Verify before building.** Both directions are cheap to test and the wrong attribution would send
 the work the wrong way.
+
+### B19. Vectorised sizing for a packed varint span — **idea, and it scopes smaller than it sounds**
+
+Marc, 2026-08-14: for a large span of integers — `CollectionsMarshal.AsSpan` on a `List<T>`, or an
+array directly — is there anything SIMD can do to *size* them, given more than a vector's width?
+
+**First, the scoping, which cuts most of it away.** `RepeatedSerializer.WritePacked` already handles
+the fixed widths in O(1): `Fixed32` is `count * 4`, `Fixed64` is `count * 8`. So floats, doubles
+and the fixed integer forms need **no sizing at all** — the opportunity is exactly the
+`Varint`/`SignedVarint` arm, which is the one that measures per element.
+
+**Second, it needs no leading-zero intrinsic**, which is what makes it plausible. A varint length is
+a threshold ladder, and thresholds vectorise trivially:
+
+```
+len(v) = 1 + (v >= 2^7) + (v >= 2^14) + (v >= 2^21) + (v >= 2^28)      // uint32
+```
+
+A vector comparison yields all-ones (`-1`) per lane, so the total for a block is
+`count - Σ(mask₇ + mask₁₄ + mask₂₁ + mask₂₈)` — four compares and four adds per vector, no
+horizontal work until the very end. At `Vector<uint>`'s 8 lanes that is roughly **one instruction
+per element**, against a branchy scalar loop today. `uint64` is the same shape with nine thresholds.
+
+The wrinkles, none fatal:
+
+- **`int32`/`int64` sign-extend**: a negative value is always the 10-byte form, so compute the
+  unsigned ladder and blend `10` in where the lane is negative;
+- **`sint32`/`sint64`** zigzag first — `(v << 1) ^ (v >> 31)` is itself vectorisable — then take the
+  unsigned ladder;
+- **the span has to exist.** Arrays and `List<T>` via `CollectionsMarshal` are fine; anything only
+  enumerable is not, so this is a fast path beside the loop rather than a replacement for it.
+
+**And there is a free correctness net**: `WritePacked` already validates the measure against what
+was actually written (*"packed encoding length miscalculation for … expected X, got Y"*), so a
+vectorised sizer that disagreed with the scalar writer would be caught immediately rather than
+producing a corrupt payload.
+
+**Where it would show, and where it would not.** `DescriptorPayloadCensus.md` says this repo's
+reference payload is 71.5% string/bytes with tiny varint counts — so it would measure flat there,
+exactly as the tag work did. The census itself names the payload that *would* show it: "packed
+numeric columns". So this wants its own benchmark payload rather than the descriptor set, and it
+belongs with B1 — the packed work is what creates the caller.
 
 ## C. Schema front-end (`[ProtoSchema]`)
 
