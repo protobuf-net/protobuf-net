@@ -895,6 +895,45 @@ down-level, which costs little given the shape protogen actually emits.
 the descriptor set would show none of this. An in-situ number needs a packed-numeric payload that
 does not exist yet, and that payload is the real prerequisite, not the algorithm.
 
+### B21. SIMD for the packed varint WRITE — **three tiers; only tier 1 is both portable and clearly worth it**
+
+Marc, 2026-08-14: can SIMD do something clever for the write — measure a block at once, then
+"scatter/gather, switch, something"? Yes, but it separates into tiers that differ enormously in
+cost and reach, and the honest answer is that the cheapest one carries the most traffic.
+
+**Tier 1 — the homogeneous-block fast path. Portable, and the dominant case.**
+If every value in a block is `< 128`, every varint is exactly one byte and there are no
+continuation bits to interleave — so the encode collapses to **narrow-and-store**. Detect with
+`Vector.GreaterThanAny(v, 127)`, then `Vector.Narrow` twice (`uint`→`ushort`→`byte`) and blit.
+`DescriptorPayloadCensus.md` puts 99.7% of tags and most field values in the single-byte class, so
+this arm would carry most real traffic — and it needs only `Narrow`, the same portable primitive
+B20 wants. **This is the one to try first.**
+
+**Tier 2 — measure, then write without per-element room checks. Nearly free, falls out of B19.**
+SIMD-measure the block for its total length, reserve exactly that, then run the scalar encoder with
+**no `RemainingInCurrent` test per element**, because the room is already guaranteed. That deletes
+a compare-and-branch per element from the current raw path. Unglamorous, portable, and essentially
+free once B19 exists.
+
+**Tier 3 — full vectorised LEB128. Real, published, and a big lift.**
+The shape is: encode each element into a fixed-width lane, derive a per-block length pattern, then
+**compact via a shuffle table** indexed by that pattern (`pshufb`). It is what streamvbyte and
+group-varint do. Two things bite:
+
+- **LEB128 is deliberately SIMD-hostile.** Group-varint exists *because* interleaved continuation
+  bits resist vectorisation — Google designed a different format rather than vectorising this one,
+  and we cannot change the format;
+- **the shuffle is not portable.** `Vector128.Shuffle`/`Ssse3.Shuffle` is .NET Core 3.0+/.NET 7+,
+  not in the `Vector<T>` API and absent on net472. So tier 3 is a modern-TFM-only path with tiers
+  1–2 as the fallback.
+
+**There is no scatter/gather shortcut past this**: variable-width output needs a compaction step,
+and compaction needs a shuffle. That is the whole difficulty, and it is why the format-level answer
+(group-varint) exists at all.
+
+Ordering: tier 1 is cheap, portable and hits the common case; tier 2 comes free with B19; tier 3 is
+a research-shaped piece that should only start once tiers 1–2 have shown what is left to win.
+
 ### B20. Cross-width packed columns: SIMD narrow/widen for the WRITE — **idea, isolatable**
 
 Marc, 2026-08-14: protobuf-net supports cross-targeting widths — a C# `double`/`double[]` member
