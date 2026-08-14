@@ -119,14 +119,8 @@ message Thing {
         // a repeated ENUM is still refused, and for a reason of its own: it resolves its element
         // serializer from the model, so the services type needs an ISerializerProxy<TEnum>
         [InlineData("enum E { A = 0; }\nmessage M { repeated E xs = 1; }", "serializer proxy")]
-        // a map is refused as NESTED rather than as repeated, and that is not an accident of the
-        // ordering: `map<k,v>` compiles to a synthetic nested entry message plus a repeated field,
-        // so the nested check sees it first. Worth pinning, since it means map support is gated on
-        // nested-type support rather than being a separate feature
-        // a map reaches the builder as a repeated field of the SYNTHETIC entry message, which is
-        // deliberately absent from the type index - so the refusal doubles as the guard against a
-        // KeyNotFoundException escaping a source generator
-        [InlineData("message M { map<string, int32> m = 1; }", "map")]
+        // ...and an enum on either side of a MAP, for exactly the same reason
+        [InlineData("enum E { A = 0; }\nmessage M { map<string, E> m = 1; }", "serializer proxy")]
         [InlineData("message M { oneof choice { int32 a = 1; string b = 2; } }", "oneof")]
         public void OutOfScopeShapesAreRefused(string body, string because)
         {

@@ -47,12 +47,13 @@ namespace ProtoBuf.BuildTools.Internal
             // second implementation of protogen's naming; a lookup built by the same walk cannot
             // disagree with itself
             var types = new Dictionary<string, string>(StringComparer.Ordinal);
+            var mapEntries = new Dictionary<string, DescriptorProto>(StringComparer.Ordinal);
             foreach (var file in set.Files)
             {
                 if (!file.IncludeInOutput) continue;
                 var ns = Namespace(file, names);
                 var package = string.IsNullOrEmpty(file.Package) ? "" : "." + file.Package;
-                foreach (var message in file.MessageTypes) IndexMessage(message, ns, package, null, names, types);
+                foreach (var message in file.MessageTypes) IndexMessage(message, ns, package, null, names, types, mapEntries);
                 foreach (var @enum in file.EnumTypes)
                 {
                     types[package + "." + @enum.Name] = Qualify(ns, names.GetName(@enum));
@@ -67,7 +68,7 @@ namespace ProtoBuf.BuildTools.Internal
 
                 foreach (var message in file.MessageTypes)
                 {
-                    if (!AddMessage(message, ns, null, names, types, contracts, ref unsupported)) return null;
+                    if (!AddMessage(message, ns, null, names, types, mapEntries, contracts, ref unsupported)) return null;
                 }
 
                 // an enum reached as a MEMBER is an inline scalar and needs no plan of its own; it
@@ -102,6 +103,7 @@ namespace ProtoBuf.BuildTools.Internal
         /// </remarks>
         private static bool AddMessage(DescriptorProto message, string? ns, string? outer,
             NameNormalizer names, Dictionary<string, string> types,
+            Dictionary<string, DescriptorProto> mapEntries,
             List<ProtoContractPlan> contracts, ref string? unsupported)
         {
             // the synthetic map-entry type: real to the descriptor, absent from the C#
@@ -110,13 +112,13 @@ namespace ProtoBuf.BuildTools.Internal
             var localName = names.GetName(message);
             var qualified = outer is null ? localName : outer + "." + localName;
 
-            var contract = TryBuildMessage(message, ns, qualified, names, types, ref unsupported);
+            var contract = TryBuildMessage(message, ns, qualified, names, types, mapEntries, ref unsupported);
             if (contract is null) return false;
             contracts.Add(contract);
 
             foreach (var nested in message.NestedTypes)
             {
-                if (!AddMessage(nested, ns, qualified, names, types, contracts, ref unsupported)) return false;
+                if (!AddMessage(nested, ns, qualified, names, types, mapEntries, contracts, ref unsupported)) return false;
             }
             return true;
         }
@@ -130,9 +132,18 @@ namespace ProtoBuf.BuildTools.Internal
         /// C# chain (<c>Outer.Inner</c>, after normalisation). They differ at every segment.
         /// </remarks>
         private static void IndexMessage(DescriptorProto message, string? ns, string schemaOuter,
-            string? csOuter, NameNormalizer names, Dictionary<string, string> types)
+            string? csOuter, NameNormalizer names, Dictionary<string, string> types,
+            Dictionary<string, DescriptorProto> mapEntries)
         {
-            if (message.Options?.MapEntry == true) return; // no C# type is emitted for these
+            var entrySchemaName = schemaOuter + "." + message.Name;
+            if (message.Options?.MapEntry == true)
+            {
+                // no C# TYPE is emitted for a map entry - protogen emits a Dictionary<K,V> - but the
+                // entry descriptor is still the only place the key and value types are written down,
+                // so it is indexed separately rather than discarded
+                mapEntries[entrySchemaName] = message;
+                return;
+            }
 
             var schemaName = schemaOuter + "." + message.Name;
             var localName = names.GetName(message);
@@ -142,7 +153,7 @@ namespace ProtoBuf.BuildTools.Internal
 
             foreach (var nested in message.NestedTypes)
             {
-                IndexMessage(nested, ns, schemaName, csName, names, types);
+                IndexMessage(nested, ns, schemaName, csName, names, types, mapEntries);
             }
             foreach (var @enum in message.EnumTypes)
             {
@@ -162,7 +173,7 @@ namespace ProtoBuf.BuildTools.Internal
 
         private static ProtoContractPlan? TryBuildMessage(DescriptorProto message, string? ns,
             string qualifiedName, NameNormalizer names, Dictionary<string, string> types,
-            ref string? unsupported)
+            Dictionary<string, DescriptorProto> mapEntries, ref string? unsupported)
         {
             var typeName = Qualify(ns, qualifiedName);
             var members = new List<ProtoMemberPlan>();
@@ -171,7 +182,7 @@ namespace ProtoBuf.BuildTools.Internal
             {
                 if (field.label == FieldDescriptorProto.Label.LabelRepeated)
                 {
-                    var repeated = TryBuildRepeated(message, field, types, names, ref unsupported);
+                    var repeated = TryBuildRepeated(message, field, types, mapEntries, names, ref unsupported);
                     if (repeated is null) return null;
                     members.Add(repeated.Value);
                     continue;
@@ -244,7 +255,8 @@ namespace ProtoBuf.BuildTools.Internal
         /// collection read mutates the instance the property already holds rather than assigning.
         /// </remarks>
         private static ProtoMemberPlan? TryBuildRepeated(DescriptorProto message,
-            FieldDescriptorProto field, Dictionary<string, string> types, NameNormalizer names,
+            FieldDescriptorProto field, Dictionary<string, string> types,
+            Dictionary<string, DescriptorProto> mapEntries, NameNormalizer names,
             ref string? unsupported)
         {
             if (field.type == FieldDescriptorProto.Type.TypeEnum)
@@ -265,13 +277,18 @@ namespace ProtoBuf.BuildTools.Internal
                 return null;
             }
 
-            // a map arrives here as a repeated field of the synthetic entry message, and that entry
-            // is deliberately absent from the type index (protogen emits no C# type for it). So an
-            // unresolved message reference IS the map case - and refusing cleanly matters, because
-            // the alternative is a KeyNotFoundException thrown out of a source generator
+            // a map arrives here as a repeated field of the synthetic entry message, which is
+            // deliberately absent from the TYPE index (protogen emits no C# type for it) and
+            // present in the entry index instead
+            if (typeRef is not null && mapEntries.TryGetValue(typeRef, out var entry))
+            {
+                return TryBuildMap(message, field, entry, types, names, ref unsupported);
+            }
             if (typeRef is not null && !types.ContainsKey(typeRef))
             {
-                unsupported = $"{message.Name}.{field.Name}: map is not supported yet";
+                // not a map and not a known type: refuse rather than throw KeyNotFoundException
+                // out of a source generator
+                unsupported = $"{message.Name}.{field.Name}: type {typeRef} could not be resolved";
                 return null;
             }
 
@@ -302,6 +319,83 @@ namespace ProtoBuf.BuildTools.Internal
                 // emits is what guarantees there is one, so no accessor is needed
                 isReadOnly: !packable,
                 dataFormat: format);
+        }
+
+        /// <summary>
+        /// A <c>map&lt;k,v&gt;</c>, which protogen emits as a getter-only
+        /// <c>Dictionary&lt;K,V&gt;</c> with an initialiser.
+        /// </summary>
+        /// <remarks>
+        /// The entry message's two fields ARE the key and value, by construction: field 1 is
+        /// <c>key</c> and field 2 is <c>value</c>. Read from the descriptor rather than assumed
+        /// positionally, since the schema is what defines them.
+        /// <para>
+        /// <c>IsValidProtobufMap</c> is protobuf-net's question, not proto's, and the two do not
+        /// agree: protobuf-net excludes <c>bool</c> (and char and floating point) from valid keys,
+        /// while proto permits <c>map&lt;bool, V&gt;</c>. Getting it wrong adds
+        /// <c>OptionFailOnDuplicateKey</c>, which switches reading from <c>SetValues</c> to
+        /// <c>AddRange</c> - a behavioural difference, not a cosmetic flag.
+        /// </para>
+        /// </remarks>
+        private static ProtoMemberPlan? TryBuildMap(DescriptorProto message,
+            FieldDescriptorProto field, DescriptorProto entry, Dictionary<string, string> types,
+            NameNormalizer names, ref string? unsupported)
+        {
+            FieldDescriptorProto? keyField = null, valueField = null;
+            foreach (var f in entry.Fields)
+            {
+                if (f.Number == 1) keyField = f;
+                else if (f.Number == 2) valueField = f;
+            }
+            if (keyField is null || valueField is null)
+            {
+                unsupported = $"{message.Name}.{field.Name}: the map entry has no key/value pair";
+                return null;
+            }
+
+            if (keyField.type == FieldDescriptorProto.Type.TypeEnum
+                || valueField.type == FieldDescriptorProto.Type.TypeEnum)
+            {
+                // same reason a repeated enum is refused: the element serializer is resolved from
+                // the model, so the services type needs an ISerializerProxy<TEnum>
+                unsupported = $"{message.Name}.{field.Name}: an enum in a map needs a serializer "
+                    + "proxy, which is not built yet";
+                return null;
+            }
+
+            var keyKind = MapKind(keyField, out _, out _);
+            var valueKind = MapKind(valueField, out var valueRef, out _);
+            if (keyKind is null || valueKind is null)
+            {
+                unsupported = $"{message.Name}.{field.Name}: map<{keyField.type}, {valueField.type}> "
+                    + "is outside the spike";
+                return null;
+            }
+
+            var valueIsMessage = valueField.type == FieldDescriptorProto.Type.TypeMessage;
+            if (valueIsMessage && !types.ContainsKey(valueRef!))
+            {
+                // a map whose value is itself a map: legal proto, and not modelled here
+                unsupported = $"{message.Name}.{field.Name}: a map value that is itself a map is "
+                    + "not supported yet";
+                return null;
+            }
+
+            var keyTypeName = ScalarTypeName(keyKind.Value);
+            var valueTypeName = valueIsMessage ? types[valueRef!] : ScalarTypeName(valueKind.Value);
+
+            // protobuf-net's own validity rule; note bool is NOT a valid key to it, though proto
+            // allows one
+            var validKey = keyKind.Value is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.String;
+
+            return new ProtoMemberPlan(field.Number, names.GetName(field), ProtoMemberKind.Message,
+                declaredTypeName: $"global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>",
+                map: new ProtoMapPlan("CreateDictionary", takesCollectionType: false,
+                    keyKind.Value, keyTypeName, valueKind.Value, valueTypeName,
+                    isValidProtobufMap: validKey),
+                // getter-only, exactly as the List<T> shape is
+                isReadOnly: true);
         }
 
         /// <summary>The C# spelling of a scalar kind, as the element of a collection.</summary>

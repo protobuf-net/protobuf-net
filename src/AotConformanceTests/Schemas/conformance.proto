@@ -1,4 +1,4 @@
-// The byte gate for the schema-sourced AOT model (docs/aot-schema-model.md).
+﻿// The byte gate for the schema-sourced AOT model (docs/aot-schema-model.md).
 //
 // This file is an <AdditionalFiles> item, so ProtoFileGenerator turns it into DTOs during this
 // project's build, and [ProtoSchema] on the model beside it turns the SAME schema into
@@ -78,6 +78,14 @@ message Sample {
         FLAVOUR_NONE = 0;
         FLAVOUR_SALT = 1;
     }
+    // maps: a synthetic nested entry message plus a repeated field of it, emitted as a
+    // getter-only Dictionary<K,V>. A bool key is legal proto but is NOT a valid protobuf-net map
+    // key, which flips OptionFailOnDuplicateKey and so changes how reads merge - a behavioural
+    // difference worth pinning rather than a cosmetic one
+    map<string, int32> counts = 24;
+    map<int32, Detail> lookup = 25;
+    map<bool, string> flags = 26;
+
     Node node = 21;
     Flavour flavour = 22;
     repeated Node nodes = 23;

@@ -88,6 +88,17 @@ namespace ProtoBuf.AotConformance.SchemaSourced
                 },
             },
 
+            // maps, including the bool-keyed one that protobuf-net does not consider a valid
+            // protobuf map. Keys are disjoint per sample because the differential manufactures
+            // repeated fields by concatenating payloads, and AddRange throws on a repeated key
+            new global::Conformance.Sample
+            {
+                Id = 6,
+                Counts = { { "a", 1 }, { "b", 2 } },
+                Lookups = { { 7, new global::Conformance.Detail { Depth = 4, Note = "in map" } } },
+                Flags = { { true, "yes" } },
+            },
+
             new global::Conformance.Sample.Node { Weight = 99, Tag = "standalone nested" },
             new global::Conformance.Sample.Node(),
 
