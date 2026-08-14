@@ -261,12 +261,16 @@ namespace ProtoBuf.BuildTools.Internal
         {
             if (field.type == FieldDescriptorProto.Type.TypeEnum)
             {
-                // a repeated enum resolves its element serializer FROM THE MODEL, so the services
-                // type has to implement ISerializerProxy<TEnum> for it (AGENTS.md, "A repeated enum
-                // needs a serializer proxy"). That is real plumbing rather than a plan field, so it
-                // waits for its own commit and its own byte test
-                unsupported = $"{message.Name}.{field.Name}: a repeated enum needs a serializer proxy, "
-                    + "which is not built yet";
+                // PARKED, and not for the reason first assumed. The proxy itself is free - naming
+                // the enum on the plan is all EmitEnumProxies needs - but turning it on exposed a
+                // byte disagreement that is NOT enum-specific: an EMPTY packed collection emits a
+                // zero-length field (`DA-01-00`) where ref-emit writes nothing. protogen marks a
+                // repeated enum `IsPacked = true`, and per AGENTS.md the symbol path has never
+                // supported that argument - so the packed raw-write arm is largely unexercised and
+                // this is the first thing to drive it. Worth its own investigation rather than a
+                // guess; see docs/aot-schema-model.md
+                unsupported = $"{message.Name}.{field.Name}: a repeated enum is packed, and the "
+                    + "packed write arm disagrees with ref-emit on an empty collection";
                 return null;
             }
 
@@ -294,12 +298,20 @@ namespace ProtoBuf.BuildTools.Internal
 
             var name = names.GetName(field);
             var isMessage = field.type == FieldDescriptorProto.Type.TypeMessage;
-            var elementTypeName = isMessage
+            var isEnum = field.type == FieldDescriptorProto.Type.TypeEnum;
+
+            // an enum element is the ENUM type in the collection (List<E>) while its KIND is the
+            // underlying scalar, which is what goes on the wire. Naming it on the plan is all the
+            // serializer proxy needs: EmitEnumProxies derives ISerializerProxy<E> / <E?> from it,
+            // which is how a repeated enum resolves its element serializer from the model
+            var elementTypeName = isMessage || isEnum
                 ? types[typeRef!]
                 : ScalarTypeName(elementKind.Value);
 
-            // packable scalars take the array shape; everything else the getter-only List<T>
-            var packable = !isMessage
+            // packable scalars take the array shape; everything else the getter-only List<T>.
+            // An enum is packable but is NOT an array - protogen emits a getter-only List<E> that
+            // is packed, which is the one combination crossing the other two
+            var packable = !isMessage && !isEnum
                 && field.type is not (FieldDescriptorProto.Type.TypeString
                     or FieldDescriptorProto.Type.TypeBytes);
 
@@ -309,11 +321,14 @@ namespace ProtoBuf.BuildTools.Internal
 
             return new ProtoMemberPlan(field.Number, name, elementKind.Value,
                 typeName: isMessage ? elementTypeName : null,
+                enumTypeName: isEnum ? elementTypeName : null,
+                // packable already excludes enums, so an enum takes the List factory
                 repeated: new ProtoRepeatedPlan(packable ? "CreateVector" : "CreateList",
                     takesCollectionType: false, isValueType: false),
                 elementTypeName: elementTypeName,
                 declaredTypeName: declaredTypeName,
-                isPacked: packable,
+                // an enum collection IS packed, even though it takes the List shape
+                isPacked: packable || isEnum,
                 // the List<T> shape is GETTER-ONLY, so the read must mutate the instance the
                 // property already holds rather than assign back to it. The initialiser protogen
                 // emits is what guarantees there is one, so no accessor is needed
@@ -353,17 +368,7 @@ namespace ProtoBuf.BuildTools.Internal
                 return null;
             }
 
-            if (keyField.type == FieldDescriptorProto.Type.TypeEnum
-                || valueField.type == FieldDescriptorProto.Type.TypeEnum)
-            {
-                // same reason a repeated enum is refused: the element serializer is resolved from
-                // the model, so the services type needs an ISerializerProxy<TEnum>
-                unsupported = $"{message.Name}.{field.Name}: an enum in a map needs a serializer "
-                    + "proxy, which is not built yet";
-                return null;
-            }
-
-            var keyKind = MapKind(keyField, out _, out _);
+            var keyKind = MapKind(keyField, out var keyRef, out _);
             var valueKind = MapKind(valueField, out var valueRef, out _);
             if (keyKind is null || valueKind is null)
             {
@@ -381,11 +386,28 @@ namespace ProtoBuf.BuildTools.Internal
                 return null;
             }
 
-            var keyTypeName = ScalarTypeName(keyKind.Value);
-            var valueTypeName = valueIsMessage ? types[valueRef!] : ScalarTypeName(valueKind.Value);
+            // an enum on either side is the Dictionary's type argument, while its KIND stays the
+            // underlying scalar; naming it is all ISerializerProxy<TEnum> needs
+            var keyIsEnum = keyField.type == FieldDescriptorProto.Type.TypeEnum;
+            var valueIsEnum = valueField.type == FieldDescriptorProto.Type.TypeEnum;
+            if (valueIsEnum)
+            {
+                // parked alongside the repeated enum above, to keep the two moving together -
+                // the proxy plumbing is shared and so is the test that would cover it
+                unsupported = $"{message.Name}.{field.Name}: an enum map value is parked with the "
+                    + "repeated-enum case";
+                return null;
+            }
 
-            // protobuf-net's own validity rule; note bool is NOT a valid key to it, though proto
-            // allows one
+            var keyTypeName = keyIsEnum ? types[keyRef!] : ScalarTypeName(keyKind.Value);
+            var valueTypeName = valueIsMessage || valueIsEnum
+                ? types[valueRef!]
+                : ScalarTypeName(valueKind.Value);
+
+            // protobuf-net's own validity rule. Note bool is NOT a valid key to it, though proto
+            // allows one - so that case is real and is covered. An ENUM key cannot occur at all:
+            // proto forbids it ("invalid map key type (only integral and string types are
+            // allowed)"), so keyIsEnum is dead on this path and is not tested for
             var validKey = keyKind.Value is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
                 or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.String;
 
@@ -393,7 +415,9 @@ namespace ProtoBuf.BuildTools.Internal
                 declaredTypeName: $"global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>",
                 map: new ProtoMapPlan("CreateDictionary", takesCollectionType: false,
                     keyKind.Value, keyTypeName, valueKind.Value, valueTypeName,
-                    isValidProtobufMap: validKey),
+                    isValidProtobufMap: validKey,
+                    keyEnumTypeName: keyIsEnum ? keyTypeName : null,
+                    valueEnumTypeName: valueIsEnum ? valueTypeName : null),
                 // getter-only, exactly as the List<T> shape is
                 isReadOnly: true);
         }

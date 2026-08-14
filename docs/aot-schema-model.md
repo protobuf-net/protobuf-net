@@ -269,6 +269,66 @@ note its limit, which is exactly the string-default case above - **a compile gat
 NAMES and cannot catch wrong GUARDS.** That is the argument for putting the byte differential in
 early (step 3 below) rather than treating it as the finishing touch.
 
+## Where the schema front-end stands: what works, and every gap (2026-08-14)
+
+Everything under "works" is verified **on bytes** against `RuntimeTypeModel` in both directions,
+by `AotConformanceTests` over `Schemas/conformance.proto` — not merely "it compiles".
+
+### Works
+
+| | |
+| --- | --- |
+| scalars | every width and signedness, including the `sint*` (zig-zag) and `*fixed*` spellings, which are wire forms rather than CLR types |
+| `string` | with protogen's proto3 `[DefaultValue("")]`, so an empty string writes nothing |
+| `bytes`, `bool`, `float`, `double` | |
+| enums | as a plain member (underlying scalar plus a cast) |
+| nested messages and enums | to any depth, emitted as nested C# types |
+| `repeated` | both protogen shapes: packable scalar → `T[]` + `IsPacked`; string/bytes/message → getter-only `List<T>` |
+| maps | `Dictionary<K,V>`, including a `bool` key — legal proto, but *not* a valid protobuf-net map key, which flips `OptionFailOnDuplicateKey` |
+| `import` | resolved across the additional-file set, as the DTO generator does |
+| naming | package → namespace, pluralisation of repeated, collision avoidance, `Name` option — all via the shared `NameNormalizer`, configured as the C# generator configures it |
+
+### Gaps, most-tractable first
+
+1. **`oneof` — small, and smaller than it looks.** protogen emits it as ORDINARY members with
+   `ShouldSerialize{Name}()`; the `DiscriminatedUnion32Object` is a private field behind the
+   property. The plan already models that as `WriteCondition`, which emits
+   `if (value.ShouldSerializeA())`. So this is a couple of lines, not a feature.
+2. **proto3 `optional` — the same shape**: a `ShouldSerialize{Name}()` over a private nullable
+   backing field. Also just a `WriteCondition`.
+3. **Enum in a `repeated` or as a map value — PARKED, and the reason changed.** The proxy is
+   free: naming the enum on the plan is all `EmitEnumProxies` needs, and that was built and
+   working. Turning it on exposed a byte disagreement that is **not enum-specific** — an EMPTY
+   packed collection emits a zero-length field (`DA-01-00`) where ref-emit writes nothing.
+   protogen marks a repeated enum `IsPacked = true`, and per `AGENTS.md` the symbol path has
+   never supported that argument (*"that named argument is not supported yet, so we always emit
+   the disabled form"*), so **the packed raw-write arm is largely unexercised** and the schema
+   path is the first thing to drive it. That is the item to investigate, and it may well be a
+   pre-existing generator bug rather than a schema-path one. Note an enum map **key** cannot
+   occur: proto forbids it outright (*"invalid map key type"*).
+4. **A map value that is itself a map** — refused; legal proto, and the one map shape not modelled.
+5. **proto2**: `required`, `[default = x]` (→ `[DefaultValue]`), and `group` encoding.
+6. **`extend` / extensions** — protogen emits extension accessor methods rather than members.
+7. **Well-known types** (`Timestamp`, `Duration`, `Any`, …), where protogen maps some onto BCL
+   types and the compatibility level starts to matter.
+8. **Schema-level options** that change the contract (`msgopt`/`fldopt` and friends).
+9. **Cross-schema type references** — supported in principle by the type index, which is built
+   across every file in the set, but not yet covered by a test with two schemas referring to
+   each other.
+
+### The gap that is not a feature
+
+**The corpus.** `conformance.proto` is hand-written and deliberately small. The
+`protobuf-net.Reflection.Test/Schemas` tree — the one `AotDifferential` already compiles
+in-process, 63 of whose schemas use maps — has **never been run through the schema-sourced
+path**. Pointing it there is the single highest-value remaining item: it is a different
+distribution (machine-generated, wide, full of shapes nobody writes by hand), and the last time
+that corpus was turned on against a new path it found a consumer-build-breaking bug on the first
+run (item 14 of `docs/aot-findings.md`).
+
+Doing that *before* items 1-9 would also answer "which gaps actually occur", rather than working
+through the list in the order I happened to think of it.
+
 ## Suggested order
 
 1. **The seed attribute**, as Core API alongside `[ProtoModel]`/`[ProtoSerializable]` (same

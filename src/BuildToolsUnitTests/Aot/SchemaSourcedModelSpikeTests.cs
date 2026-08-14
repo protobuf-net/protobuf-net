@@ -116,11 +116,14 @@ message Thing {
         /// wrongly, since a plan that silently omits a member is a wire bug.
         /// </summary>
         [Theory]
-        // a repeated ENUM is still refused, and for a reason of its own: it resolves its element
-        // serializer from the model, so the services type needs an ISerializerProxy<TEnum>
-        [InlineData("enum E { A = 0; }\nmessage M { repeated E xs = 1; }", "serializer proxy")]
-        // ...and an enum on either side of a MAP, for exactly the same reason
-        [InlineData("enum E { A = 0; }\nmessage M { map<string, E> m = 1; }", "serializer proxy")]
+        // an enum in a collection is refused - but NOT for the reason first assumed. The proxy is
+        // free: naming the enum on the plan is all EmitEnumProxies needs, and that worked. What
+        // turning it on exposed is that an EMPTY PACKED collection emits a zero-length field where
+        // ref-emit writes nothing, and protogen marks a repeated enum IsPacked - an arm the symbol
+        // path has never driven. So the refusal is parked on the PACKED disagreement, not on the
+        // proxy, and the message says which: the two would be fixed in different places
+        [InlineData("enum E { A = 0; }\nmessage M { repeated E xs = 1; }", "packed")]
+        [InlineData("enum E { A = 0; }\nmessage M { map<string, E> m = 1; }", "parked")]
         [InlineData("message M { oneof choice { int32 a = 1; string b = 2; } }", "oneof")]
         public void OutOfScopeShapesAreRefused(string body, string because)
         {
