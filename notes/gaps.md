@@ -458,6 +458,26 @@ the default `DataFormat` — which is exactly what protogen emits. See `docs/aot
 Still deferred here: the **well-known types** (`Timestamp`, `Duration`, `Any`), where the
 compatibility level starts to matter, and **schema-level options** that can change the contract.
 
+### C13. `ProtoFileGenerator`'s language-version detection stops at C# 9 — **latent, blocks C12**
+
+`ProtoFileGenerator` maps `context.ParseOptions.LanguageVersion` onto the string protogen's
+`GeneratorContext` parses, and the switch ends at `LanguageVersion.CSharp9 => "9"`, with
+`_ => null` for everything above. `CommonCodeGenerator.GeneratorContext.Supports(Version)` then
+reads null as **"default is highest"** and returns true.
+
+So today **every C# 10+ project reports no language version to the code generator**, and every
+`Supports(...)` test passes unconditionally.
+
+**Harmless right now, and not harmless in general.** Nothing protogen emits is newer than C# 9, so
+no consumer can currently hit it — but the failure mode is emitting syntax a consumer's compiler
+does not accept, i.e. a build break in a project they did not change. Any feature gated on
+language version (C12 is the first) is inert until this is fixed, which makes it a prerequisite
+rather than a tidy-up.
+
+Found by Marc questioning a claim in C12 that the Roslyn path was version-blind. It is not blind —
+it reads the real value — but it discards everything above C# 9, which has the same effect and is
+harder to see.
+
 ### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**
 
 Marc, 2026-08-14. protogen emits extension accessors as static methods (see C7):
@@ -491,11 +511,21 @@ Four things to settle before building it, in the order they bite:
   routes, **off by default**. The language version is a *second* guard on top, never the enabling
   condition.
 
-  **This distinction is the whole point, and there is a specific trap behind it.**
-  `ctx.Supports(Version)` returns **true when no version was stated** — "default is highest" — so a
-  langver-only gate would switch the new shape on for a consumer the moment they *upgrade their
-  SDK*, breaking every `GetNote(...)` call site in a build they did not change. Nobody should get
-  an API break as a side effect of a machine getting a newer SDK.
+  **This distinction is the whole point**: nobody should get an API break as a side effect of a
+  machine acquiring a newer SDK.
+
+  **PREREQUISITE, found by Marc questioning the claim above.** The build-tools path *does* read
+  the language version from the project — `context.ParseOptions.LanguageVersion` in
+  `ProtoFileGenerator` — so it is not blind, as this note first said. But **the mapping stops at
+  `CSharp9`**: everything newer falls to `_ => null`, and `ctx.Supports(null)` returns *true*
+  ("default is highest"). So every modern project currently reports **no** language version, and a
+  langver gate would be **inert** — the mechanism would emit C# 14 syntax into a C# 10 project.
+  That switch has to be extended before the second gate means anything, and it is a live
+  latent bug rather than a new requirement: it is simply unexercised because nothing yet emits
+  syntax newer than C# 9.
+
+  The **CLI** is genuinely ignorant unless `+langver=` is passed, so the opt-in has to carry the
+  weight there regardless — which is a second reason it, not the version, is the primary gate.
 
   So: opt-in off → nothing ever changes. Opt-in on, language version too low → a **diagnostic and
   fall back to methods**, not a build break; that is the failure mode the `PBN2000` floor exists
