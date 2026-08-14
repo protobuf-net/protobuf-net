@@ -53,10 +53,23 @@ premise does not hold up, and none of them needed new code:
 them — byte-identical to `ListOptions.reference.cs`, and the differential has been comparing them
 all along. The claim that "we always emit the disabled form" was simply out of date.
 
-**2. Packing is the WRITER'S FREE CHOICE** (Marc). protobuf requires a *reader* to accept both the
-packed and unpacked forms of a repeated primitive field, so a writer may choose either regardless
-of the `[packed=true]` hint. **Declining to pack is therefore never a wire bug** — which removes
-the whole category this item was filed under.
+**2. Packing is the WRITER'S FREE CHOICE** (Marc), and the spec says so in as many words —
+[the encoding guide](https://protobuf.dev/programming-guides/encoding/#packed), read 2026-08-14:
+*"Protocol buffer parsers must be able to parse repeated fields that were compiled as `packed` as
+if they were not packed, and vice versa."* **Declining to pack is therefore never a wire bug** —
+which removes the whole category this item was filed under.
+
+Three further points from that page, all load-bearing somewhere:
+
+- **only repeated primitive numeric types may be packed** — those using `VARINT`, `I32` or `I64`,
+  which includes enums and excludes `string`/`bytes`;
+- **parsers must accept *multiple* packed records for one field and concatenate the payloads** —
+  which is what `RepeatedFieldOccurrencesMergeIdentically` already exercises by concatenating
+  sample payloads;
+- **the page is silent on empty/zero-length packed fields.** So `WriteZeroLengthPackedHeader` is a
+  permitted choice rather than a requirement, and either form is readable — meaning the original
+  "disagreement" would be a byte difference from ref-emit, not an interop problem. That is a much
+  weaker thing than the item claimed.
 
 **3. protobuf-net packs only when it can cheaply size the elements.**
 `RepeatedSerializer.Write` takes the packed branch only when
@@ -968,6 +981,19 @@ So we are unusually well placed: the wire form is already implemented on both pa
 `DataFormat.Group` plumbing is the same plumbing editions needs. What is missing is the *schema*
 half — recognising an `edition = "2023"` file and mapping its feature set onto the options
 protobuf-net already has.
+
+**Two features map onto options we already have**, per
+[the encoding guide](https://protobuf.dev/programming-guides/encoding/#packed) (read 2026-08-14,
+because "things keep changing"):
+
+| edition feature | protobuf-net equivalent |
+| --- | --- |
+| `message_encoding = DELIMITED` | `DataFormat.Group` |
+| `repeated_field_encoding = PACKED` / `EXPANDED` | `IsPacked = true` / default |
+
+Note **Edition 2023+ packs by default**, which inverts the proto2 posture — so an editions
+front-end has to treat "packed" as the default and `EXPANDED` as the opt-out, rather than the
+reverse. Worth knowing before the mapping is written, since getting the polarity wrong is silent.
 
 **A prerequisite, and one we have already stubbed a toe on:** our `descriptor.proto` needs
 refreshing. It is behind upstream — regenerating it during the sub-type work turned up a missing
