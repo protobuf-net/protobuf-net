@@ -43,7 +43,23 @@ emitted" while *raising* correctness.
 The reasoning is here rather than in `notes/nano-writer.md`, which keeps the *findings* (what was
 tried, measured and reverted) but no longer carries a to-do list.
 
-### B1. Packed writes — **premise is STALE; re-verify before doing anything (2026-08-14)**
+### B1. Packed writes — **largely LANDED; the enum premise was false (2026-08-15)**
+
+**Status, 2026-08-15.** Tier 1 of B21 has landed for all four varint element types (see B21), and
+the two remaining premises recorded here were both checked rather than carried forward:
+
+- **"enums are never packed, because `EnumSerializer` is not an `IMeasuringSerializer`" — FALSE.**
+  They are packed, and always were; `PackedBlockCopyTests.PackedEnumsAreActuallyPacked` pins the
+  bytes. `TypeHelper.CanBePacked` returns true for `IsEnum` outright, and the *concrete*
+  `EnumSerializer<TEnum, TRaw>` implements `IMeasuringSerializer<TEnum>` — only the public abstract
+  base does not, and the gate tests the instance. The real gap is smaller: a packed enum does not
+  reach the fast varint arms (they match `typeof(T) == typeof(uint)` and an enum is none of them),
+  so it pays an enumerator step and a virtual write per element — 2.54 ns/element against 1.74 for
+  `uint32`. Routing it through the underlying-type pun is the fix, and it is worth doing.
+- **"~1 µs per member blocks further packed work" — RETRACTED.** It is ~10 ns; the figure was a
+  total divided by a member count. See `notes/packed-writes.md`, which carries the measurement and
+  the methodology lesson.
+
 
 This was "the sharpest item, the only one suspected of being a live bug". Three checks say the
 premise does not hold up, and none of them needed new code:

@@ -277,6 +277,32 @@ varint element types, both collection paths); B21 tier 2 (write without per-elem
 free once the measure is vectorised); enums, which are never packed at all. And ahead of all of
 them, the ~1 µs/member overhead above — it is now the largest number in this file by a wide margin.
 
+
+### Enums: already packed — the recorded blocker was false
+
+This file and gaps.md B1 both said a packed enum column "is never actually packed, because
+`EnumSerializer` is not an `IMeasuringSerializer`". It is packed, and has been throughout;
+`PackedBlockCopyTests.PackedEnumsAreActuallyPacked` pins the bytes (`0A-03-01-02-03`).
+
+Neither half of the reason survives reading the code. `TypeHelper.CanBePacked` returns true for
+`type.IsEnum` **outright**, before the type-code switch. And the concrete
+`EnumSerializer<TEnum, TRaw>` **does** implement `IMeasuringSerializer<TEnum>` — it is only the
+public abstract `EnumSerializer<TEnum>` that does not, and `RepeatedSerializer`'s gate tests the
+*instance* (`serializer is IMeasuringSerializer<TItem>`), which succeeds.
+
+**The real gap is a different and much smaller one**: a packed enum is packed but takes the
+**per-element** path, because the fast varint arms match on `typeof(T) == typeof(uint)` and friends,
+and an enum is none of them. So it pays an enumerator step and a virtual `serializer.Write` per
+element — measured at 2.54 ns/element against 1.74 for `uint32` in the same harness, i.e. ~46%
+worse. The fix is the pun this file already relies on elsewhere (an enum reinterprets as its
+underlying primitive), routed through the same `PackedVarintMeasure` entry points; it is worth
+doing and is not what the old note described.
+
+**That is the fifth claimed gap in this arc to evaporate on inspection**, after the enum map key,
+the enum-proxy plumbing, map-of-map, and B1's packed premise. The rule already recorded — *a
+refusal nobody has tried to trigger, or a limitation nobody has re-read since it was written, is
+worth checking before it is worked* — keeps paying, and the cost of checking is a single test.
+
 ## Ranked, by value over effort
 
 1. ~~**Block copy for the matching fixed-width cells.**~~ **DONE 2026-08-14.** Portable, no

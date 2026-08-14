@@ -18,8 +18,9 @@ namespace ProtoBuf.Nano.Bench.Packed;
 //   fixed integer     4 or 8 bytes flat; block-copyable
 //   floating point    likewise, and always fixed - there is no varint form
 //   bool              looks like a varint, behaves like a fixed width: always exactly one byte
-//   enum              varint over the underlying type - and NEVER actually packed today, because
-//                     EnumSerializer is not an IMeasuringSerializer (gaps.md B1)
+//   enum              varint over the underlying type. Packed - the note that said otherwise was
+//                     wrong (see notes/packed-writes.md); what enums DON'T get is the fast varint
+//                     arms, since those match on typeof(T) == typeof(uint) and an enum is not
 //
 // Each category carries the same shape as both T[] and List<T>: the array has a span natively on
 // every TFM, the list only via CollectionsMarshal on net5+, so they take different paths.

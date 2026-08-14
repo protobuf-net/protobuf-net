@@ -294,5 +294,37 @@ namespace ProtoBuf.Test
             target.Write(header, 0, header.Length);
             target.Write(body, 0, body.Length);
         }
+
+        public enum Level { None = 0, Low = 1, Mid = 2, High = 3 }
+
+        [ProtoContract]
+        public class Enums
+        {
+            [ProtoMember(1, IsPacked = true)] public Level[] Values { get; set; }
+        }
+
+        /// <summary>
+        /// Are enums packed? <c>notes/packed-writes.md</c> and gaps.md B1 both recorded that they
+        /// are not, because <c>EnumSerializer</c> "is not an <c>IMeasuringSerializer</c>".
+        /// </summary>
+        /// <remarks>
+        /// Pinned rather than assumed because the recorded reason does not survive reading the
+        /// code: <c>TypeHelper.CanBePacked</c> returns true for <c>type.IsEnum</c> outright, and
+        /// the concrete <c>EnumSerializer&lt;TEnum, TRaw&gt;</c> does implement
+        /// <c>IMeasuringSerializer&lt;TEnum&gt;</c> - it is only the public abstract base that does
+        /// not, and the runtime check at <c>RepeatedSerializer</c> tests the instance.
+        /// </remarks>
+        [Fact]
+        public void PackedEnumsAreActuallyPacked()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(Enums), true);
+
+            using var ms = new MemoryStream();
+            model.Serialize(ms, new Enums { Values = [Level.Low, Level.Mid, Level.High] });
+
+            // packed: tag 1 wire-type 2, length 3, then the three values
+            Assert.Equal("0A-03-01-02-03", BitConverter.ToString(ms.ToArray()));
+        }
     }
 }
