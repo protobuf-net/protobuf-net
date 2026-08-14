@@ -859,12 +859,20 @@ as `WriteCondition`, which emits `if (value.ShouldSerializeA())`. A couple of li
 The same shape: a `ShouldSerialize{Name}()` over a private nullable backing field. Also just a
 `WriteCondition`.
 
-### C4. Enum in a `repeated`, or as a map value — blocked on B1
+### C4. ~~Enum in a `repeated`, or as a map value~~ — **done 2026-08-14**
 
-The proxy is **free**: naming the enum on the plan is all `EmitEnumProxies` needs, and that was
-built and working. What blocks it is the packed-empty disagreement in B1. Note an enum map **key**
-cannot occur at all — proto forbids it (*"invalid map key type (only integral and string types are
-allowed)"*).
+Both were refused, and neither refusal survived checking. The repeated-enum one claimed *"the
+packed write arm disagrees with ref-emit on an empty collection"*; every clause of that failed (see
+B1). The enum-map-value one was parked *"alongside the repeated enum, to keep the two moving
+together"* — it had no reason of its own, and the enum map **key** was already supported.
+
+Lifted, and held by the **byte gate** instead of by a refusal — `conformance.proto` gains
+`repeated Grade grades` and `map<string, Grade> ranks`, with samples covering the **empty** case
+specifically, since that was the shape the original disagreement was reported against. 1559
+conformance cases pass, byte-identical to `RuntimeTypeModel`.
+
+**Corpus: 241 → 261 of 268 schemas, 1369 → 1597 contracts, refusals 27 → 7.** The remaining 7 are
+all `group` (C6), which is now the only genuinely missing schema feature.
 
 ### C5. ~~A map value that is itself a map~~ — **not a gap**
 
@@ -969,7 +977,7 @@ existing `(LanguageVersion)1200` constant and the real numbering. `LanguageVersi
 therefore **derives** its expectations from the enum rather than restating them, so the same
 mistake cannot pass twice.
 
-### C14. protobuf **editions**, and refreshing `descriptor.proto` — **future, likely 4.1**
+### C14. protobuf **editions**, and refreshing `descriptor.proto` — **DEFERRED to 4.1 (Marc, 2026-08-14)**
 
 Marc, 2026-08-14. Editions replace the proto2/proto3 split with per-feature settings, and the one
 that matters here is **`features.message_encoding = DELIMITED`** — which *resurrects group

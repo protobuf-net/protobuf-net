@@ -306,20 +306,23 @@ namespace ProtoBuf.BuildTools.Internal
             Dictionary<string, DescriptorProto> mapEntries, NameNormalizer names,
             ref string? unsupported)
         {
-            if (field.type == FieldDescriptorProto.Type.TypeEnum)
-            {
-                // PARKED, and not for the reason first assumed. The proxy itself is free - naming
-                // the enum on the plan is all EmitEnumProxies needs - but turning it on exposed a
-                // byte disagreement that is NOT enum-specific: an EMPTY packed collection emits a
-                // zero-length field (`DA-01-00`) where ref-emit writes nothing. protogen marks a
-                // repeated enum `IsPacked = true`, and per AGENTS.md the symbol path has never
-                // supported that argument - so the packed raw-write arm is largely unexercised and
-                // this is the first thing to drive it. Worth its own investigation rather than a
-                // guess; see notes/aot-schema-model.md
-                unsupported = $"{message.Name}.{field.Name}: a repeated enum is packed, and the "
-                    + "packed write arm disagrees with ref-emit on an empty collection";
-                return null;
-            }
+            // A repeated enum was PARKED here on the grounds that "the packed write arm disagrees
+            // with ref-emit on an empty collection", emitting a zero-length field where ref-emit
+            // wrote nothing. Re-checked 2026-08-14 and every clause of that reasoning failed:
+            //
+            //  * `IsPacked` IS honoured by the symbol path (ListOptions pins five such members
+            //    against ref-emit), so it is not an unexercised argument;
+            //  * there is no separate "packed raw-write arm" to be unexercised: RawRepeatedWritable
+            //    declines `IsPacked` outright, so a packed member falls back to
+            //    RepeatedSerializer.WriteRepeated - the SAME runtime call ref-emit makes;
+            //  * and protobuf-net never actually packs an enum on either path anyway, because
+            //    RepeatedSerializer.Write takes the packed branch only when the element serializer
+            //    is IMeasuringSerializer<T>, and EnumSerializer<TEnum> is not one.
+            //
+            // Packing is also the WRITER'S choice - a reader must accept both forms - so declining
+            // to pack could not be a wire bug even if the paths did differ. The byte gate below
+            // (Schemas/conformance.proto's repeated enum, empty and populated) is what now holds
+            // this honest, rather than a refusal.
 
             var elementKind = MapKind(field, out var typeRef, out var format);
             if (elementKind is null)
@@ -441,14 +444,11 @@ namespace ProtoBuf.BuildTools.Internal
             // underlying scalar; naming it is all ISerializerProxy<TEnum> needs
             var keyIsEnum = keyField.type == FieldDescriptorProto.Type.TypeEnum;
             var valueIsEnum = valueField.type == FieldDescriptorProto.Type.TypeEnum;
-            if (valueIsEnum)
-            {
-                // parked alongside the repeated enum above, to keep the two moving together -
-                // the proxy plumbing is shared and so is the test that would cover it
-                unsupported = $"{message.Name}.{field.Name}: an enum map value is parked with the "
-                    + "repeated-enum case";
-                return null;
-            }
+            // an enum VALUE was parked here purely "alongside the repeated enum above, to keep the
+            // two moving together". That case turned out to rest on a disproven premise and is now
+            // lifted, so this follows it - the parking had no reason of its own, and the enum map
+            // KEY was already supported directly below. Covered by the byte gate rather than by a
+            // refusal: Schemas/conformance.proto's map<string, Grade>.
 
             var keyTypeName = keyIsEnum ? types[keyRef!] : ScalarTypeName(keyKind.Value);
             var valueTypeName = valueIsMessage || valueIsEnum

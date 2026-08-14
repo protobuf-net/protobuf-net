@@ -150,6 +150,25 @@ namespace ProtoBuf.AotConformance.SchemaSourced
             // nothing set at all: none of the tracked members may be written
             new global::Conformance.Presence(),
 
+            // the repeated enum, and the EMPTY case is the point: that is the exact shape the
+            // old refusal claimed emitted a zero-length field where ref-emit wrote nothing
+            new global::Conformance.Sample { Id = 30, Grades = { } },
+            new global::Conformance.Sample
+            {
+                Id = 31,
+                Grades = { global::Conformance.Grade.GradeLow, global::Conformance.Grade.GradeHigh },
+            },
+            new global::Conformance.Sample { Id = 32, Grades = { global::Conformance.Grade.GradeUnknown } },
+
+            // the enum map value, with keys disjoint from the other map samples because the
+            // differential manufactures repeated fields by concatenating payloads
+            new global::Conformance.Sample
+            {
+                Id = 33,
+                Ranks = { { "gold", global::Conformance.Grade.GradeHigh } },
+            },
+            new global::Conformance.Sample { Id = 34, Ranks = { } },
+
             new global::Conformance.Detail { Depth = 9, Note = "standalone" },
             new global::Conformance.Detail(),
 

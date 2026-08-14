@@ -49,6 +49,37 @@ namespace ProtoBuf.Test
             public void After() => AfterCalls++;
         }
 
+        /// <summary>
+        /// A minimal <see cref="System.Buffers.IBufferWriter{T}"/>, because
+        /// <c>ArrayBufferWriter&lt;T&gt;</c> is net5+/netstandard2.1 and this fixture also runs on
+        /// net472 — where the buffer-writer path is exactly as worth testing.
+        /// </summary>
+        private sealed class TestBufferWriter : System.Buffers.IBufferWriter<byte>
+        {
+            private byte[] _array = new byte[256];
+            private int _count;
+
+            public void Advance(int count) => _count += count;
+
+            public Memory<byte> GetMemory(int sizeHint = 0)
+            {
+                Ensure(sizeHint);
+                return new Memory<byte>(_array, _count, _array.Length - _count);
+            }
+
+            public Span<byte> GetSpan(int sizeHint = 0)
+            {
+                Ensure(sizeHint);
+                return new Span<byte>(_array, _count, _array.Length - _count);
+            }
+
+            private void Ensure(int sizeHint)
+            {
+                if (sizeHint < 1) sizeHint = 1;
+                while (_array.Length - _count < sizeHint) Array.Resize(ref _array, _array.Length * 2);
+            }
+        }
+
         private static RuntimeTypeModel Model()
         {
             var model = RuntimeTypeModel.Create();
@@ -132,7 +163,7 @@ namespace ProtoBuf.Test
             model.Add(typeof(L1), true);
 
             var deep = new L1 { Inner = new L2 { Inner = new L3 { Inner = new Counted { Value = 42 } } } };
-            var bw = new System.Buffers.ArrayBufferWriter<byte>();
+            var bw = new TestBufferWriter();
             ((IProtoOutput<System.Buffers.IBufferWriter<byte>>)model).Serialize(bw, deep);
 
             var calls = deep.Inner.Inner.Inner.BeforeCalls;
@@ -174,7 +205,7 @@ namespace ProtoBuf.Test
                 T viaStream, T viaBuffer, Func<T, List<bool>> pick)
             {
                 using (var ms = new MemoryStream()) model.Serialize(ms, viaStream);
-                var bw = new System.Buffers.ArrayBufferWriter<byte>();
+                var bw = new TestBufferWriter();
                 ((IProtoOutput<System.Buffers.IBufferWriter<byte>>)model).Serialize(bw, viaBuffer);
                 return (pick(viaStream), pick(viaBuffer));
             }
@@ -223,7 +254,7 @@ namespace ProtoBuf.Test
             using (var ms = new MemoryStream()) model.Serialize(ms, viaStream);
 
             var viaBuffer = new Outer { Inner = new Counted { Value = 42 } };
-            var bw = new System.Buffers.ArrayBufferWriter<byte>();
+            var bw = new TestBufferWriter();
             ((IProtoOutput<System.Buffers.IBufferWriter<byte>>)model).Serialize(bw, viaBuffer);
 
             _output($"stream       : {viaStream.Inner.BeforeCalls.Count} call(s) "
