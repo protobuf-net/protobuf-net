@@ -629,6 +629,17 @@ to settle first, and only the second is hard:
    the path from the root — not "twice, always". This is also why B14 and B17 cannot be settled
    independently: making grouped trees measure-free changes how often callbacks inside them fire.
 
+   **The fair demand is "at most twice"** (Marc), for a node not duplicated in the tree — and
+   **the length cache already buys it**. Every length-prefixed ancestor needs a length for
+   everything beneath it, so a naive measure-by-writing would re-walk the innermost node once per
+   ancestor, i.e. exponentially in depth. Memoising a sub-message's measured length by reference
+   collapses that to one measure pass plus one write pass. **Verified at depth 3: two calls, not
+   eight** — `AtMostTwiceHoweverDeepTheNesting`.
+
+   That is the invariant worth defending, and it is now guarded: if that test ever reports more
+   than two, the cache has stopped working and the cost has gone exponential in depth rather than
+   linear — which would be a far bigger problem than the callback count that exposed it.
+
    The cost to weigh when doing it: on the **classic** stream path, replacing one back-fill shuffle
    (a memmove only when the varint width changes) with a full second crawl is a real slowdown. On
    the **measure-first** path it is not, because the measure is arithmetic rather than a write —

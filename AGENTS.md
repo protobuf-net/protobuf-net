@@ -137,8 +137,16 @@ nearest **length-prefixed ancestor**, i.e. the path from the root, not the membe
 | group at the root | `[false]` | `[false]` |
 | same group under a length-prefixed parent | `[false]` | `[true, false]` |
 
+**The invariant to hold is "AT MOST TWICE"** (Marc), for a node not duplicated in the tree — and
+that is what the length cache buys. Every length-prefixed ancestor needs a length for everything
+beneath it, so a naive measure-by-writing would re-walk the innermost node once per ancestor;
+memoising a sub-message's measured length by reference collapses that to one measure pass plus one
+write pass, whatever the depth. **Verified at depth 3: two calls, not eight**
+(`AtMostTwiceHoweverDeepTheNesting`). If that test ever reports more, the cache has stopped working
+and the cost is exponential in depth, not linear.
+
 **Decided (Marc, 2026-08-14): twice becomes the consistent normal for both backends**, rather than
-the stream being the odd one out — with the target stated as "**once per pass over this node**",
+the stream being the odd one out — stated as "**once per pass over this node, at most twice**",
 since the number of passes is a property of the path. That is also where measure-first leads
 anyway, since it *is* measure-then-write. See `notes/gaps.md` B17 for what it costs the classic
 stream path, and B14 for why the two cannot be settled independently.

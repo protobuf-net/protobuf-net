@@ -104,6 +104,46 @@ namespace ProtoBuf.Test
             [ProtoMember(1)] public GroupedOuter Wrapped { get; set; }
         }
 
+        [ProtoContract] public class L3 { [ProtoMember(1)] public Counted Inner { get; set; } }
+        [ProtoContract] public class L2 { [ProtoMember(1)] public L3 Inner { get; set; } }
+        [ProtoContract] public class L1 { [ProtoMember(1)] public L2 Inner { get; set; } }
+
+        /// <summary>
+        /// <b>AT MOST TWICE</b>, however deep the nesting — the demand Marc set, and the thing the
+        /// length cache has to buy.
+        /// </summary>
+        /// <remarks>
+        /// Each length-prefixed ancestor needs a length for everything below it, so a naive
+        /// measure-by-writing would re-walk the innermost node once per ancestor — 2^depth crawls,
+        /// not 2. Memoising a sub-message's measured length by reference is what collapses that to
+        /// one measure pass plus one write pass, whatever the depth.
+        /// <para>
+        /// The caveat is in the demand itself: "assuming not duplicated in a tree". The same
+        /// INSTANCE appearing at two points is a different question, since each occurrence is a
+        /// separate field on the wire and must be written twice.
+        /// </para>
+        /// </remarks>
+        [Fact]
+        public void AtMostTwiceHoweverDeepTheNesting()
+        {
+            var model = Model();
+            model.Add(typeof(L3), true);
+            model.Add(typeof(L2), true);
+            model.Add(typeof(L1), true);
+
+            var deep = new L1 { Inner = new L2 { Inner = new L3 { Inner = new Counted { Value = 42 } } } };
+            var bw = new System.Buffers.ArrayBufferWriter<byte>();
+            ((IProtoOutput<System.Buffers.IBufferWriter<byte>>)model).Serialize(bw, deep);
+
+            var calls = deep.Inner.Inner.Inner.BeforeCalls;
+            _output($"three levels deep, buffer-writer: {calls.Count} call(s) "
+                + $"[{string.Join(", ", calls)}]");
+
+            Assert.True(calls.Count <= 2,
+                $"the innermost callback fired {calls.Count} times at depth 3; a length cache "
+                + "should hold this to at most twice, not once per length-prefixed ancestor");
+        }
+
         /// <summary>
         /// How many times a callback fires is set by the nearest LENGTH-PREFIXED ANCESTOR, not by
         /// the member's own framing — which is why "always twice for nested" cannot be the rule.
