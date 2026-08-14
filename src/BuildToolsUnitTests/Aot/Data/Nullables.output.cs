@@ -77,7 +77,11 @@ partial class NullablesModel
                 state.WriteRawVarint64(unchecked((ulong)(long)val6));
             }
             var tmp7 = value.Plain;
-            if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+            if (tmp7 != 0)
+            {
+                state.WriteRawTag((7 << 3) | 0);  // Plain
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+            }
         }
 
         public static long Measure_AotFixtures_Nullables_Optional(global::AotFixtures.Nullables.Optional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

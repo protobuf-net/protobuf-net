@@ -344,7 +344,11 @@ partial class GenericHierarchyModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.N;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // N
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.GenericHierarchy.PlainNode global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.PlainNode>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
@@ -392,7 +396,11 @@ partial class GenericHierarchyModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Foo;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Foo
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_GenericHierarchy_Ship(global::AotFixtures.GenericHierarchy.Ship value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

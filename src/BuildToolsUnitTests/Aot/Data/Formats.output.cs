@@ -73,9 +73,14 @@ partial class FormatsModel
                 state.WriteInt64(tmp4);
             }
             var tmp5 = value.TwosComplement;
-            if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
+            if (tmp5 != 0)
+            {
+                state.WriteRawTag((5 << 3) | 0);  // TwosComplement
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+            }
             var tmp6 = value.RequiredInt;
-            state.WriteInt32Varint(6, tmp6);
+            state.WriteRawTag((6 << 3) | 0);  // RequiredInt
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
             var tmp7 = value.RequiredString;
             if (tmp7 != null)
             {
@@ -265,7 +270,11 @@ partial class FormatsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Formats_Inner(global::AotFixtures.Formats.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

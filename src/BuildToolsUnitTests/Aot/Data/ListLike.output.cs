@@ -47,7 +47,11 @@ partial class ListLikeModel
                 RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1);
             }
             var tmp2 = value.Other;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Other
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
         }
 
         public static long Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -131,7 +135,11 @@ partial class ListLikeModel
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Count2;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Count2
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
         }
 
         public static long Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

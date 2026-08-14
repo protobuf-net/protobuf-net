@@ -97,8 +97,10 @@ namespace ProtoBuf.BuildTools.Internal
             {
                 if (field.label == FieldDescriptorProto.Label.LabelRepeated)
                 {
-                    unsupported = $"{message.Name}.{field.Name}: repeated is outside the spike";
-                    return null;
+                    var repeated = TryBuildRepeated(message, field, ns, names, ref unsupported);
+                    if (repeated is null) return null;
+                    members.Add(repeated.Value);
+                    continue;
                 }
                 if (field.ShouldSerializeOneofIndex())
                 {
@@ -147,6 +149,90 @@ namespace ProtoBuf.BuildTools.Internal
                 new EquatableArray<ProtoMemberPlan>(members.ToArray()),
                 extensible: ProtoExtensibleKind.Untyped);
         }
+
+        /// <summary>
+        /// A <c>repeated</c> field, which protogen emits as one of TWO C# shapes.
+        /// </summary>
+        /// <remarks>
+        /// CONVENTION, read off protogen's output rather than assumed - and it is not the split
+        /// anyone would guess:
+        /// <list type="bullet">
+        /// <item>a <b>packable scalar</b> (the numeric and bool types) becomes
+        /// <c>T[] { get; set; }</c> with <c>IsPacked = true</c>;</item>
+        /// <item><b>string</b>, <b>bytes</b> and <b>message</b> become a <b>getter-only</b>
+        /// <c>List&lt;T&gt;</c> with an initialiser, and are not packed - correctly, since
+        /// length-delimited elements cannot be;</item>
+        /// <item>an <b>enum</b> becomes a getter-only <c>List&lt;E&gt;</c> that IS packed, which is
+        /// the one combination that crosses the other two. It is refused here for a different
+        /// reason - see below.</item>
+        /// </list>
+        /// The getter-only shape needs no accessor: the initialiser guarantees an instance, and a
+        /// collection read mutates the instance the property already holds rather than assigning.
+        /// </remarks>
+        private static ProtoMemberPlan? TryBuildRepeated(DescriptorProto message,
+            FieldDescriptorProto field, string? ns, NameNormalizer names, ref string? unsupported)
+        {
+            if (field.type == FieldDescriptorProto.Type.TypeEnum)
+            {
+                // a repeated enum resolves its element serializer FROM THE MODEL, so the services
+                // type has to implement ISerializerProxy<TEnum> for it (AGENTS.md, "A repeated enum
+                // needs a serializer proxy"). That is real plumbing rather than a plan field, so it
+                // waits for its own commit and its own byte test
+                unsupported = $"{message.Name}.{field.Name}: a repeated enum needs a serializer proxy, "
+                    + "which is not built yet";
+                return null;
+            }
+
+            var elementKind = MapKind(field, out var typeRef, out var format);
+            if (elementKind is null)
+            {
+                unsupported = $"{message.Name}.{field.Name}: repeated {field.type} is outside the spike";
+                return null;
+            }
+
+            var name = names.GetName(field);
+            var isMessage = field.type == FieldDescriptorProto.Type.TypeMessage;
+            var elementTypeName = isMessage
+                ? QualifyTypeRef(typeRef!, ns, names)
+                : ScalarTypeName(elementKind.Value);
+
+            // packable scalars take the array shape; everything else the getter-only List<T>
+            var packable = !isMessage
+                && field.type is not (FieldDescriptorProto.Type.TypeString
+                    or FieldDescriptorProto.Type.TypeBytes);
+
+            var declaredTypeName = packable
+                ? elementTypeName + "[]"
+                : $"global::System.Collections.Generic.List<{elementTypeName}>";
+
+            return new ProtoMemberPlan(field.Number, name, elementKind.Value,
+                typeName: isMessage ? elementTypeName : null,
+                repeated: new ProtoRepeatedPlan(packable ? "CreateVector" : "CreateList",
+                    takesCollectionType: false, isValueType: false),
+                elementTypeName: elementTypeName,
+                declaredTypeName: declaredTypeName,
+                isPacked: packable,
+                // the List<T> shape is GETTER-ONLY, so the read must mutate the instance the
+                // property already holds rather than assign back to it. The initialiser protogen
+                // emits is what guarantees there is one, so no accessor is needed
+                isReadOnly: !packable,
+                dataFormat: format);
+        }
+
+        /// <summary>The C# spelling of a scalar kind, as the element of a collection.</summary>
+        private static string ScalarTypeName(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Bool => "bool",
+            ProtoMemberKind.Int32 => "int",
+            ProtoMemberKind.UInt32 => "uint",
+            ProtoMemberKind.Int64 => "long",
+            ProtoMemberKind.UInt64 => "ulong",
+            ProtoMemberKind.Single => "float",
+            ProtoMemberKind.Double => "double",
+            ProtoMemberKind.String => "string",
+            ProtoMemberKind.Bytes => "byte[]",
+            _ => "object", // unreachable: the caller has already refused anything else
+        };
 
         /// <summary>
         /// The member's kind AND its <see cref="ProtoDataFormat"/> - which are two questions, not

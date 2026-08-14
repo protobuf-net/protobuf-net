@@ -52,7 +52,23 @@ namespace ProtoBuf.AotConformance.SchemaSourced
                 Delta = -17,
                 Marker = 0xDEADBEEF,
                 Offset = -123_456_789L,
+                Nums = [1, -2, 300, -40_000],
+                Reals = [1.5, -2.25],
+                Names = { "alpha", "beta" },
+                Blobs = { new byte[] { 9, 8 }, System.Array.Empty<byte>() },
+                Details =
+                {
+                    new global::Conformance.Detail { Depth = 1, Note = "one" },
+                    new global::Conformance.Detail(),
+                },
             },
+
+            // repeated members present but EMPTY: an empty array and an empty list must write
+            // nothing, which is a different guard from "absent"
+            new global::Conformance.Sample { Id = 2, Nums = [] },
+
+            // a single-element packed run, which is where the length prefix is easiest to get wrong
+            new global::Conformance.Sample { Id = 3, Nums = [7], Names = { "solo" } },
 
             // THE guard case: an empty string must write nothing, because proto3 emits
             // [DefaultValue("")]. A plan that omitted the declared default writes two bytes here

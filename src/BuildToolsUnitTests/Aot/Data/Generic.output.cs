@@ -310,7 +310,11 @@ partial class GenericModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Generic_Nested(global::AotFixtures.Generic.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -392,7 +396,11 @@ partial class GenericModel
         public static void RawWrite_AotFixtures_Generic_Pair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Pair<int, string> value)
         {
             var tmp1 = value.Key;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Key
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Value;
             if (tmp2 != null)
             {
@@ -435,7 +443,11 @@ partial class GenericModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Item;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Item
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Generic_Standalone_int_(global::AotFixtures.Generic.Standalone<int> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -847,7 +859,11 @@ partial class GenericModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Label;
             if (tmp2 != null)
             {

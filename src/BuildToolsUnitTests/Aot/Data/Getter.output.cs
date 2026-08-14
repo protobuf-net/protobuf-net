@@ -61,7 +61,11 @@ partial class GetterModel
                 RawWrite_AotFixtures_Getter_Nested(ref state, tmp3);
             }
             var tmp4 = value.Value;
-            if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
+            if (tmp4 != 0)
+            {
+                state.WriteRawTag((4 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
+            }
             var tmp5 = value.Text;
             if (tmp5 != null)
             {
@@ -82,7 +86,11 @@ partial class GetterModel
                 state.WriteRawVarint64(unchecked((ulong)(long)val7));
             }
             var tmp8 = value.Colour;
-            if (tmp8 != default(global::AotFixtures.Getter.Shade)) state.WriteInt32Varint(8, (int)tmp8);
+            if (tmp8 != default(global::AotFixtures.Getter.Shade))
+            {
+                state.WriteRawTag((8 << 3) | 0);  // Colour
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp8));
+            }
             var tmp9 = value.When;
             state.WriteFieldHeader(9, global::ProtoBuf.WireType.String);
             global::ProtoBuf.BclHelpers.WriteDateTime(ref state, tmp9);
@@ -290,7 +298,11 @@ partial class GetterModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -366,7 +378,11 @@ partial class GetterModel
         public static void RawWrite_AotFixtures_Getter_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
         {
             var tmp1 = value.X;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // X
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

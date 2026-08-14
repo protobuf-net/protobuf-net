@@ -42,9 +42,17 @@ partial class ContractOptionsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Ordered;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Ordered
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp3 = value.Tagged;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Tagged
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
         }
 
         public static long Measure_AotFixtures_ContractOptions_BothFamilies(global::AotFixtures.ContractOptions.BothFamilies value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -136,7 +144,11 @@ partial class ContractOptionsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Name;
             if (tmp2 != null)
             {
@@ -159,7 +171,11 @@ partial class ContractOptionsModel
         public static void RawWrite_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value)
         {
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_ContractOptions_Lenient(global::AotFixtures.ContractOptions.Lenient value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -225,7 +241,11 @@ partial class ContractOptionsModel
                 }
             }
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.ContractOptions.LenientBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.ContractOptions.LenientBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.ContractOptions.LenientBase> value)
@@ -327,7 +347,11 @@ partial class ContractOptionsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.Tagged;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Tagged
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
         }
 
         public static long Measure_AotFixtures_ContractOptions_ProtoOnly(global::AotFixtures.ContractOptions.ProtoOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

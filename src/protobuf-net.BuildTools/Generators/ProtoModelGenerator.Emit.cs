@@ -1674,8 +1674,17 @@ namespace ProtoBuf.BuildTools.Generators
                         break;
 
                     // int32 has a convenience overload that writes its own field header; everything
-                    // else needs the header emitting separately, as ref-emit does
-                    case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default:
+                    // else needs the header emitting separately, as ref-emit does.
+                    //
+                    // NOT on the raw path, and this was a real hole (Marc, spotted by reading a
+                    // golden): WriteInt32Varint goes through the STATEFUL WriteFieldHeader - which
+                    // encodes the tag from a field number at run time and sets WireType on the
+                    // writer - and then ImplWriteVarint32, the virtual hop. So the single commonest
+                    // member shape in protobuf was bypassing the whole raw write path: no
+                    // pre-encoded constant tag, no span-direct store, and two writer-object state
+                    // writes that cut 9 exists to eliminate. Raw emission takes the general branch
+                    // below instead, which is WriteRawTag + WriteRawVarint64
+                    case ProtoMemberKind.Int32 when !raw && member.DataFormat == ProtoDataFormat.Default:
                         var int32Write = $"state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});";
                         Line(sb, indent, member.IsRequired || member.WriteCondition is not null
                             ? int32Write

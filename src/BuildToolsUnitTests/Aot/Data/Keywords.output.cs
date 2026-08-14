@@ -37,7 +37,11 @@ partial class KeywordsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.@int;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // int
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -97,7 +101,11 @@ partial class KeywordsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.@case;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // case
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.@event;
             if (tmp2 != null)
             {
@@ -140,7 +148,11 @@ partial class KeywordsModel
                 RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5);
             }
             var tmp6 = value.value;
-            if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+            if (tmp6 != 0)
+            {
+                state.WriteRawTag((6 << 3) | 0);  // value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+            }
         }
 
         public static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

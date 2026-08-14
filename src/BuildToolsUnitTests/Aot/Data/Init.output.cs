@@ -53,7 +53,11 @@ partial class InitModel
         public static void RawWrite_AotFixtures_Init_InitStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.InitStruct value)
         {
             var tmp1 = value.Number;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Init_InitStruct(global::AotFixtures.Init.InitStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -85,7 +89,11 @@ partial class InitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Text;
             if (tmp2 != null)
             {
@@ -106,7 +114,11 @@ partial class InitModel
                 RawWrite_AotFixtures_Init_Nested(ref state, tmp3);
             }
             var tmp4 = value.Mutable;
-            if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
+            if (tmp4 != 0)
+            {
+                state.WriteRawTag((4 << 3) | 0);  // Mutable
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
+            }
         }
 
         public static long Measure_AotFixtures_Init_Inits(global::AotFixtures.Init.Inits value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -219,7 +231,11 @@ partial class InitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Init_Nested(global::AotFixtures.Init.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

@@ -51,4 +51,13 @@ message Sample {
     sint32 delta = 12;
     fixed32 marker = 13;
     sfixed64 offset = 14;
+
+    // repeated, which protogen emits as TWO different C# shapes: a packable scalar becomes
+    // T[] with IsPacked, while string/bytes/message become a GETTER-ONLY List<T> that is not
+    // packed. Both shapes need covering, and packed-vs-not is itself a wire difference
+    repeated int32 nums = 15;
+    repeated double reals = 16;
+    repeated string names = 17;
+    repeated bytes blobs = 18;
+    repeated Detail details = 19;
 }

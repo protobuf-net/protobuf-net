@@ -49,7 +49,11 @@ partial class InheritAccessorModel
                 }
             }
             var tmp1 = Field_AotFixtures_InheritAccessor_Base__count(value);
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // _count
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Label;
             if (tmp2 != null)
             {
@@ -57,7 +61,11 @@ partial class InheritAccessorModel
                 state.WriteRawString(tmp2);
             }
             var tmp3 = value.Ordinal;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Ordinal
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
             var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
             if (tmp4 != null)
             {
@@ -228,7 +236,11 @@ partial class InheritAccessorModel
         public static void RawWrite_AotFixtures_InheritAccessor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
         {
             var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // _n
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_InheritAccessor_Holder(global::AotFixtures.InheritAccessor.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

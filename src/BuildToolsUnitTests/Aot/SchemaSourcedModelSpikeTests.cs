@@ -116,7 +116,9 @@ message Thing {
         /// wrongly, since a plan that silently omits a member is a wire bug.
         /// </summary>
         [Theory]
-        [InlineData("message M { repeated int32 xs = 1; }", "repeated")]
+        // a repeated ENUM is still refused, and for a reason of its own: it resolves its element
+        // serializer from the model, so the services type needs an ISerializerProxy<TEnum>
+        [InlineData("enum E { A = 0; }\nmessage M { repeated E xs = 1; }", "serializer proxy")]
         // a map is refused as NESTED rather than as repeated, and that is not an accident of the
         // ordering: `map<k,v>` compiles to a synthetic nested entry message plus a repeated field,
         // so the nested check sees it first. Worth pinning, since it means map support is gated on

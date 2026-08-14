@@ -64,7 +64,11 @@ partial class ScalarsModel
                 state.WriteRawVarint32(tmp5);
             }
             var tmp6 = value.Int32;
-            if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+            if (tmp6 != 0)
+            {
+                state.WriteRawTag((6 << 3) | 0);  // Int32
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+            }
             var tmp7 = value.UInt32;
             if (tmp7 != 0)
             {

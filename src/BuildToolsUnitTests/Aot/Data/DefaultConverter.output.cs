@@ -33,7 +33,11 @@ partial class DefaultConverterModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
-            if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 5)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Text;
             if (tmp2 != null && tmp2 != "abc")
             {
@@ -58,7 +62,11 @@ partial class DefaultConverterModel
                 state.WriteRawVarint64(unchecked((ulong)tmp6));
             }
             var tmp7 = value.Plain;
-            if (tmp7 != 9) state.WriteInt32Varint(7, tmp7);
+            if (tmp7 != 9)
+            {
+                state.WriteRawTag((7 << 3) | 0);  // Plain
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+            }
         }
 
         public static long Measure_AotFixtures_DefaultConverter_Converted(global::AotFixtures.DefaultConverter.Converted value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

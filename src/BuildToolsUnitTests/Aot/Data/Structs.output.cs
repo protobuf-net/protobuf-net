@@ -43,7 +43,11 @@ partial class StructsModel
                 state.WriteMessage<global::AotFixtures.Structs.Point>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2.GetValueOrDefault(), this);
             }
             var tmp3 = value.Other;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Other
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
         }
 
         private static global::AotFixtures.Structs.HasStructs RawRead_AotFixtures_Structs_HasStructs(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)
@@ -135,7 +139,11 @@ partial class StructsModel
         public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
         {
             var tmp1 = value.X;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // X
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Label;
             if (tmp2 != null)
             {

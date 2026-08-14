@@ -51,7 +51,11 @@ partial class ExtensibleModel
                 }
             }
             var tmp1 = value.Shared;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Shared
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.BaseExt));
         }
 
@@ -105,7 +109,11 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value);
         }
 
@@ -167,7 +175,11 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Extra;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Extra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.DerivedExt));
         }
 
@@ -216,7 +228,11 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value);
         }
 
@@ -278,7 +294,11 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
 

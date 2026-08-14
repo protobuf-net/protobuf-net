@@ -511,12 +511,14 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeStart())
             {
                 var tmp1 = value.Start;
-                state.WriteInt32Varint(1, tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Start
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             if (value.ShouldSerializeEnd())
             {
                 var tmp2 = value.End;
-                state.WriteInt32Varint(2, tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // End
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
             var tmp3 = value.Options;
             if (tmp3 != null)
@@ -629,12 +631,14 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeStart())
             {
                 var tmp1 = value.Start;
-                state.WriteInt32Varint(1, tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Start
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             if (value.ShouldSerializeEnd())
             {
                 var tmp2 = value.End;
-                state.WriteInt32Varint(2, tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // End
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
             state.AppendExtensionData(value);
         }
@@ -928,12 +932,14 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeStart())
             {
                 var tmp1 = value.Start;
-                state.WriteInt32Varint(1, tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Start
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             if (value.ShouldSerializeEnd())
             {
                 var tmp2 = value.End;
-                state.WriteInt32Varint(2, tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // End
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
             state.AppendExtensionData(value);
         }
@@ -1154,7 +1160,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeNumber())
             {
                 var tmp2 = value.Number;
-                state.WriteInt32Varint(2, tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
             var tmp3 = value.Options;
             if (tmp3 != null)
@@ -1488,17 +1495,20 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeNumber())
             {
                 var tmp3 = value.Number;
-                state.WriteInt32Varint(3, tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
             }
             if (value.ShouldSerializelabel())
             {
                 var tmp4 = value.label;
-                state.WriteInt32Varint(4, (int)tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // label
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp4));
             }
             if (value.ShouldSerializetype())
             {
                 var tmp5 = value.type;
-                state.WriteInt32Varint(5, (int)tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // type
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
             }
             if (value.ShouldSerializeTypeName())
             {
@@ -1534,7 +1544,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeOneofIndex())
             {
                 var tmp9 = value.OneofIndex;
-                state.WriteInt32Varint(9, tmp9);
+                state.WriteRawTag((9 << 3) | 0);  // OneofIndex
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp9));
             }
             if (value.ShouldSerializeJsonName())
             {
@@ -1760,7 +1771,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeCtype())
             {
                 var tmp1 = value.Ctype;
-                state.WriteInt32Varint(1, (int)tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Ctype
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp1));
             }
             if (value.ShouldSerializePacked())
             {
@@ -1780,7 +1792,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeJstype())
             {
                 var tmp6 = value.Jstype;
-                state.WriteInt32Varint(6, (int)tmp6);
+                state.WriteRawTag((6 << 3) | 0);  // Jstype
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp6));
             }
             if (value.ShouldSerializeWeak())
             {
@@ -2337,7 +2350,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeOptimizeFor())
             {
                 var tmp9 = value.OptimizeFor;
-                state.WriteInt32Varint(9, (int)tmp9);
+                state.WriteRawTag((9 << 3) | 0);  // OptimizeFor
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp9));
             }
             if (value.ShouldSerializeJavaMultipleFiles())
             {
@@ -3191,7 +3205,8 @@ partial class CustomProtogenSerializer
             if (value.ShouldSerializeidempotency_level())
             {
                 var tmp34 = value.idempotency_level;
-                state.WriteInt32Varint(34, (int)tmp34);
+                state.WriteRawTag((34 << 3) | 0);  // idempotency_level
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp34));
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -4246,7 +4261,11 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
+            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Access
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+            }
             var tmp3 = value.Namespace;
             if (tmp3 != null && tmp3 != "")
             {
@@ -4408,7 +4427,11 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
+            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Access
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+            }
             var tmp3 = value.AsReference;
             if (tmp3)
             {
@@ -4519,7 +4542,11 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
+            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Access
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+            }
             var tmp3 = value.ExtensionTypeName;
             if (tmp3 != null && tmp3 != "")
             {
@@ -4681,7 +4708,11 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
+            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Access
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+            }
             var tmp3 = value.ExtensionTypeName;
             if (tmp3 != null && tmp3 != "")
             {
@@ -4695,7 +4726,11 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp4);
             }
             var tmp5 = value.MessageKind;
-            if (tmp5 != (global::ProtoBuf.Reflection.MessageKind)(0)) state.WriteInt32Varint(5, (int)tmp5);
+            if (tmp5 != (global::ProtoBuf.Reflection.MessageKind)(0))
+            {
+                state.WriteRawTag((5 << 3) | 0);  // MessageKind
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+            }
             state.AppendExtensionData(value);
         }
 
@@ -4955,7 +4990,11 @@ partial class CustomProtogenSerializer
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Access;
-            if (tmp2 != default(global::ProtoBuf.Reflection.Access)) state.WriteInt32Varint(2, (int)tmp2);
+            if (tmp2 != default(global::ProtoBuf.Reflection.Access))
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Access
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp2));
+            }
             state.AppendExtensionData(value);
         }
 

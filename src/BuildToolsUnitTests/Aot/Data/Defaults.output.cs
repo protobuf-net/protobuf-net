@@ -36,7 +36,11 @@ partial class DefaultsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
-            if (tmp1 != 5) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 5)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Text;
             if (tmp2 != null && tmp2 != "abc")
             {
@@ -61,7 +65,11 @@ partial class DefaultsModel
                 state.WriteRawVarint64(unchecked((ulong)tmp5));
             }
             var tmp6 = value.Plain;
-            if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+            if (tmp6 != 0)
+            {
+                state.WriteRawTag((6 << 3) | 0);  // Plain
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+            }
         }
 
         public static long Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

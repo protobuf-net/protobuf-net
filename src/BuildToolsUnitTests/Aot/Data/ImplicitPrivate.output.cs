@@ -36,7 +36,11 @@ partial class ImplicitPrivateModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = Field_AotFixtures_ImplicitPrivate_Explicit__value(value);
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // _value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -98,7 +102,11 @@ partial class ImplicitPrivateModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Public;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Public
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = Field_AotFixtures_ImplicitPrivate_Private__apple(value);
             if (tmp2 != null)
             {
@@ -106,7 +114,11 @@ partial class ImplicitPrivateModel
                 state.WriteRawString(tmp2);
             }
             var tmp3 = Field_AotFixtures_ImplicitPrivate_Private__zebra(value);
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // _zebra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
         }
 
         public static long Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

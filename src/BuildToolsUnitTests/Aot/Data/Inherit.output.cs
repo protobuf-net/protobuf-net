@@ -177,7 +177,11 @@ partial class InheritModel
                 }
             }
             var tmp1 = value.Bark;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Bark
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.Inherit.Dog global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Dog>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Dog> value)
@@ -277,7 +281,11 @@ partial class InheritModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Age;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Age
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.Inherit.Puppy global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Puppy> value)
@@ -324,7 +332,11 @@ partial class InheritModel
         public static void RawWrite_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value)
         {
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         public static long Measure_AotFixtures_Inherit_Standalone(global::AotFixtures.Inherit.Standalone value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)

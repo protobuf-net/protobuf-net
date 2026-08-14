@@ -199,7 +199,11 @@ partial class TupleMembersModel
                 state.WriteMessage<(int, string)>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5.GetValueOrDefault(), this);
             }
             var tmp6 = value.Other;
-            if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+            if (tmp6 != 0)
+            {
+                state.WriteRawTag((6 << 3) | 0);  // Other
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+            }
         }
 
         private static global::AotFixtures.TupleMembers.HasTuples RawRead_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleMembers.HasTuples value)

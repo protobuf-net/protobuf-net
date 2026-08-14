@@ -742,6 +742,47 @@ A one-token change with a three-generator-plus-ecosystem audit behind it, buying
 any real payload. The rule this is an instance of: **a convention is cheap to choose and
 expensive to reverse once anything outside the repo can implement it.**
 
+## Two findings from reading a golden (Marc, 2026-08-14)
+
+Both from one look at `Lists.output.cs`, and the second is the more consequential thing found in
+this arc for a while.
+
+### `int32` was bypassing the raw write path entirely — FIXED
+
+The emitted line was `if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);` — a *field number*, not a
+pre-encoded tag. `WriteInt32Varint` goes through the **stateful** `WriteFieldHeader`, which
+encodes the tag from that field number at run time **and sets `WireType` on the writer object**,
+then `ImplWriteVarint32` — the **virtual hop** — then `ResetWireType()`.
+
+So the single commonest member shape in protobuf was getting none of the writer arc: no
+pre-encoded constant tag, no span-direct store, and two writer-object state writes that cut 9
+exists specifically to eliminate.
+
+The cause is a *compact* emit case that ran before `EmitScalarWrite` and so never reached the raw
+branch — `case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default` — added
+as a convenience (one line instead of a block) and never revisited when the raw path landed. It
+is now gated on `!raw`; raw emission takes the general branch, which is `WriteRawTag` +
+`WriteRawVarint64`. 55 goldens changed shape; bytes are unchanged (AotDifferential 3029/3029,
+AotConformanceTests 1382).
+
+**This is very likely why the tag ladder measured flat**, and it is the first thing to re-test:
+the payload census counted 1,056 one-byte tags written, and a large share of those are `int32`
+members that were never calling `WriteRawTag` at all. Unmeasured as yet — the fix is committed
+green but no benchmark has been run over it.
+
+The general lesson is the one this file keeps relearning from the other direction: **a
+convenience overload that predates an optimisation will silently opt out of it**, and nothing
+fails. It took reading the generated output to see.
+
+### `ThrowUnexpectedSubtype` reads as unconditional and is not
+
+`TypeModel.ThrowUnexpectedSubtype(value)` opens nearly every generated write body and looks like
+an unconditional throw. It is a guard: `if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T),
+value.GetType())` — it throws only when the runtime type differs from the declared one. The name
+is an imperative describing the failure, not the test, which is a reasonable thing to trip over
+when reading a golden. Not changed (it is shipped public API and the emitted call is correct),
+but recorded here since it will be read that way again.
+
 ## Pre-encoded constant tags: built, measured FLAT, and now explained (2026-08-13)
 
 The fourth primitive-level optimisation in this arc to buy nothing end to end - but the first

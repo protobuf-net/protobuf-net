@@ -114,7 +114,11 @@ partial class InterfaceModel
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Fetches;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Fetches
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
         }
 
         global::AotFixtures.Interface.Dog global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Dog>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Dog> value)
@@ -299,7 +303,11 @@ partial class InterfaceModel
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Order;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Order
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
         }
 
         global::AotFixtures.Interface.Tagged global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Tagged>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Interface.Tagged> value)
