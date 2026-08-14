@@ -90,6 +90,41 @@ writing no dll at all. Don't infer from that code that persistence works on mode
 
 If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
 
+## The writer's measure-first path: three invariants that are easy to break
+
+The generated writer measures a contract arithmetically (`Measure_`) and then writes it
+(`RawWrite_`) with an exact length prefix, instead of writing it twice. Design and history are in
+`notes/nano-writer.md`; these three are the ones that bite silently.
+
+**1. Not every contract is measurable, and losing it cascades.** `RawMeasurableShape` plus
+`RawMemberMeasureBlocked` decide, and an ineligible member removes its *whole contract* from the
+measurable set — computed **to a fixed point**, so the exclusion spreads to everything that
+references it. One awkward member can therefore drop a large subtree onto the classic
+write-to-count path. When something is unexpectedly slow, check whether it is still measurable
+before looking anywhere else.
+
+**2. A `[ProtoBeforeSerialization]` callback disqualifies a contract, and that is load-bearing.**
+The classic measure pass is a real write to a counting writer, so a callback fires **once per
+pass** — twice for measure+serialize, which `ProtoWriter.IsMeasuring(context)` lets a callback
+detect. That doubling is *required*: both passes must observe the same object, or the measured
+length will not match the bytes written. `Measure_` has no `ISerializationContext` and so cannot
+fire callbacks at all; refusing such contracts is the only thing keeping the length honest.
+`CallbackMeasurePassTests` pins the runtime-model behaviour that any change here has to match.
+
+**3. The write recursion is depth-guarded on its own, and used not to be.** It was once safe *by
+construction* — every write was preceded by a measure, and the measure carried the budget. A
+**grouped** sub-message has no length prefix, so nothing measures it; making groups write raw
+removed that guard, and a cycle through grouped members recursed until the process died. `RawWrite_`
+now threads a remaining depth budget, seeded at the boundary from `state.RawDepthBudget` and never
+touching `writer.Depth` — the "raw API does not maintain all the members" convention. Every
+`RawWrite_` checks it, deliberately: the alternative is a predicate over which contracts are
+reachable through a group, and that predicate's failure mode is an uncatchable stack overflow.
+`GroupCycleTests` drives exactly that graph.
+
+Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract emits a local
+per member — 1000 in the corpus's worst case — and at roughly 8 KB a frame the stack is exhausted
+around 128 levels, long before the depth guard fires. See `notes/gaps.md` B16.
+
 ## AOT source generator (work in progress)
 
 > **Picking this up on a new machine?** `notes/aot-findings.md` opens with a **Handover** section
