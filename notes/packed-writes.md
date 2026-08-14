@@ -181,7 +181,7 @@ against the scalar loop it replaces, at ±0.5% noise: **8.6× (`uint32`), 8.5× 
 harness remains the right *final* check and is the wrong instrument for attributing a delta to one
 loop — keep both, and reach for the isolated one when the answer is smaller than the variance.
 
-### The largest unexplained cost is NOT packed-specific: ~1 µs per member
+### ~~The largest unexplained cost is NOT packed-specific: ~1 µs per member~~ — **RETRACTED**
 
 Now that the copies are bulk, the per-byte figures separate cleanly:
 
@@ -204,6 +204,60 @@ members spends 20 µs before any bytes are counted.
 
 **Do not chase further packed micro-optimisation until that number is understood**, or the effort
 will keep landing on the 0.16 ns/byte side of a 1000 ns/member problem.
+
+> **RETRACTED, 2026-08-15. There is no ~1 µs per-member cost; it is ~10–17 ns.** The blocker above
+> is lifted.
+>
+> The claim was arithmetic, not measurement: it divided a *total* by the member count, which
+> attributes real per-byte work to a fixed cost. The tell was there in the same table and was read
+> as corroboration instead — for the fixed-int cells, `965 ns/member` and `0.161 ns/byte` are the
+> **same number** (each member carries ~6 KB, and 6000 × 0.161 ≈ 965). Those two figures are
+> consistent with a fixed per-member cost *and* with none at all, so they cannot distinguish them.
+> The bool row was offered as the discriminator — "six times less data, and costs *more* per
+> member" — but that shows bool is slower per **byte** (1.32 vs 0.16 ns), which is a different
+> claim.
+>
+> Separating them needs the payload swept while the member count is held still, so the intercept is
+> visible. `PackedOverheadBenchmarks` does that, and the intercept is flat:
+>
+> | | 0 elements | 999 elements |
+> | --- | ---: | ---: |
+> | no members at all | **30.6 ns** | **30.6 ns** |
+> | one packed member | 47.5 ns | 348.6 ns |
+> | four packed members | 71.3 ns | 1294 ns |
+>
+> A contract with nothing to write costs ~30 ns and does not move with payload — that is the
+> per-call floor. Each additional member costs **~10 ns** fixed (`(71.3 − 32.2) / 4`), and each
+> element about **0.31 ns**. So the twenty-repeated-member contract projected at 20 µs above is
+> really about 200 ns of fixed cost; the rest was always the bytes.
+>
+> **The methodology lesson is the durable part**: a per-unit figure derived by division cannot
+> establish that the cost *is* per-unit. Only holding one variable still and sweeping the other can,
+> and that experiment costs one benchmark class.
+
+### A real cliff found while checking it: `Serialize<object>` on a `RuntimeTypeModel`
+
+Not what the section above claimed, and worth knowing on its own terms — the two variables had to
+be separated before either could be read:
+
+| model | dispatch | per call | allocated |
+| --- | --- | ---: | ---: |
+| generated | generic | 58 ns | 0 |
+| generated | `object` | 76 ns | 0 |
+| `RuntimeTypeModel` | generic | 72 ns | 0 |
+| `RuntimeTypeModel` | **`object`** | **2951 ns** | **2272 B** |
+
+A `RuntimeTypeModel` asked to serialize at `T = object` costs **41× the typed form and allocates
+2.2 KB per call**, while the same object-typed dispatch against a *generated* model costs 18 ns
+extra and allocates nothing. So it is not "the object API is slow" and not "the runtime model is
+slow" — it is the pair, and either alone is fine.
+
+This is the shape `PBN2011` warns about for AOT reasons; it turns out to have a large throughput
+cost as well, on a call shape that plenty of pre-generic protobuf-net code still uses.
+
+**It did not contaminate the matrix below**, which was the first hypothesis and was wrong: those
+harnesses use generated models, where the penalty is 18 ns. Moving them to generic dispatch anyway
+(done) removes the confound rather than a constant.
 
 **Three findings from the baseline itself**, before any optimisation:
 

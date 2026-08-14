@@ -135,16 +135,17 @@ public class PackedMatrixBenchmarks
         _enums = new PackedEnums { EnumArray = levels, EnumList = new List<Level>(levels) };
 
         // both models must agree byte-for-byte, or the comparison below is meaningless
+        // outside the timed region, so the object-typed dispatch here costs nothing that matters
         foreach (var value in new object[] { _unsigned, _signed, _zigzag, _fixedInt, _floats, _bools, _enums })
         {
-            var a = Bytes(_raw, value);
-            var b = Bytes(_classic, value);
+            var a = Bytes<object>(_raw, value);
+            var b = Bytes<object>(_classic, value);
             if (a != b) throw new InvalidOperationException(
                 $"raw and classic disagree for {value.GetType().Name}");
         }
     }
 
-    private static string Bytes(TypeModel model, object value)
+    private static string Bytes<T>(TypeModel model, T value)
     {
         using var ms = new MemoryStream();
         model.Serialize(ms, value);
@@ -153,10 +154,10 @@ public class PackedMatrixBenchmarks
 
     private readonly Sink _sink = new();
 
-    private long WriteBuffer(TypeModel model, object value)
+    private long WriteBuffer<T>(TypeModel model, T value)
     {
         _sink.Reset();
-        model.Serialize<object>(_sink, value);
+        model.Serialize(_sink, value);
         return _sink.Written;
     }
 
@@ -171,7 +172,12 @@ public class PackedMatrixBenchmarks
         public Span<byte> GetSpan(int sizeHint = 0) => new(_buffer, Written, _buffer.Length - Written);
     }
 
-    private long Write(TypeModel model, object value)
+    // GENERIC rather than `object`, to remove a confound - though NOT, as first supposed, a large
+    // constant. Object-typed dispatch costs ~2.97 us and 2.2 KB per call on a RuntimeTypeModel, but
+    // only ~18 ns and zero allocation on a GENERATED model, which is what this file uses; the two
+    // were measured apart in PackedOverheadBenchmarks after the first reading confounded them.
+    // Recorded because the wrong version is the plausible one: see notes/packed-writes.md.
+    private long Write<T>(TypeModel model, T value)
     {
         _ms.Position = 0;
         _ms.SetLength(0);
