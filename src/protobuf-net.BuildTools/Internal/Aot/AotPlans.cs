@@ -905,6 +905,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         }
 
         /// <summary>
+        /// The same model with a different contract set — used to fold in schema-derived contracts
+        /// after the symbol-driven parse, which cannot see the compilation's additional files.
+        /// </summary>
+        public ProtoModelPlan WithContracts(EquatableArray<ProtoContractPlan> contracts)
+            => new(Namespace, TypeName, contracts, AnnotateTrimming, Enums, Aliases, EmitInstance,
+                EmitConstructor, IsSealed, RawReader, RawWriter, ListAsSpan);
+
+        /// <summary>
         /// Whether the raw reader surface (<c>ProtoReader.State.ReadRawTag</c> and friends) is
         /// visible to the compilation, enabling the optimized read emission (see
         /// <c>notes/nano-core.md</c>). Symbol-gated rather than configured, so a consumer on an

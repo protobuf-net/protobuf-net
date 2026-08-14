@@ -80,7 +80,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_DescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -507,7 +506,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeStart())
             {
                 var tmp1 = value.Start;
@@ -627,7 +625,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeStart())
             {
                 var tmp1 = value.Start;
@@ -716,7 +713,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -928,7 +924,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeStart())
             {
                 var tmp1 = value.Start;
@@ -1017,7 +1012,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeAllowAlias())
             {
                 var tmp2 = value.AllowAlias;
@@ -1147,7 +1141,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -1270,7 +1263,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp1 = value.Deprecated;
@@ -1381,7 +1373,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
             {
@@ -1473,7 +1464,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -1767,7 +1757,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_FieldOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FieldOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeCtype())
             {
                 var tmp1 = value.Ctype;
@@ -1799,6 +1788,11 @@ partial class CustomProtogenSerializer
             {
                 var tmp10 = value.Weak;
                 state.WriteRawTagBool((10 << 3) | 0, tmp10);  // Weak
+            }
+            if (value.ShouldSerializeUnverifiedLazy())
+            {
+                var tmp15 = value.UnverifiedLazy;
+                state.WriteRawTagBool((15 << 3) | 0, tmp15);  // UnverifiedLazy
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1853,6 +1847,11 @@ partial class CustomProtogenSerializer
             {
                 var tmp10 = value.Weak;
                 len += 2;  // Weak
+            }
+            if (value.ShouldSerializeUnverifiedLazy())
+            {
+                var tmp15 = value.UnverifiedLazy;
+                len += 2;  // UnverifiedLazy
             }
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
@@ -1939,6 +1938,15 @@ partial class CustomProtogenSerializer
                     case (10 << 3) | 1:  // Weak, field 10, fixed64
                         value.Weak = state.ReadRawFixed64() != 0;
                         break;
+                    case (15 << 3) | 0:  // UnverifiedLazy, field 15, varint
+                        value.UnverifiedLazy = state.ReadRawVarint32() != 0;
+                        break;
+                    case (15 << 3) | 5:  // UnverifiedLazy, field 15, fixed32
+                        value.UnverifiedLazy = state.ReadRawFixed32() != 0;
+                        break;
+                    case (15 << 3) | 1:  // UnverifiedLazy, field 15, fixed64
+                        value.UnverifiedLazy = state.ReadRawFixed64() != 0;
+                        break;
                     case (999 << 3) | 2:  // UninterpretedOptions, field 999, length-prefixed
                     case (999 << 3) | 3:  // UninterpretedOptions, field 999, group
                     {
@@ -1961,7 +1969,7 @@ partial class CustomProtogenSerializer
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 5 or 6 or 10 or 999;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 5 or 6 or 10 or 15 or 999;
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>.Features
@@ -1972,7 +1980,6 @@ partial class CustomProtogenSerializer
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -2275,7 +2282,6 @@ partial class CustomProtogenSerializer
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileDescriptorSet value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Files;
             if (tmp1 != null)
             {
@@ -2328,7 +2334,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_FileOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeJavaPackage())
             {
                 var tmp1 = value.JavaPackage;
@@ -2841,7 +2846,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_MessageOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MessageOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeMessageSetWireFormat())
             {
                 var tmp1 = value.MessageSetWireFormat;
@@ -3009,7 +3013,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_MethodDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -3196,7 +3199,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_MethodOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MethodOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp33 = value.Deprecated;
@@ -3327,7 +3329,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_OneofDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -3430,7 +3431,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_OneofOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.OneofOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp999 = value.UninterpretedOptions;
             if (tmp999 != null)
             {
@@ -3522,7 +3522,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_ServiceDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeName())
             {
                 var tmp1 = value.Name;
@@ -3668,7 +3667,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ShouldSerializeDeprecated())
             {
                 var tmp33 = value.Deprecated;
@@ -3776,7 +3774,6 @@ partial class CustomProtogenSerializer
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.SourceCodeInfo value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Locations;
             if (tmp1 != null)
             {
@@ -3826,7 +3823,6 @@ partial class CustomProtogenSerializer
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.SourceCodeInfo.Location value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Paths;
             if (tmp1 != null)
             {
@@ -3962,7 +3958,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Names;
             if (tmp2 != null)
             {
@@ -4174,7 +4169,6 @@ partial class CustomProtogenSerializer
 
         public static void RawWrite_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
         {
-            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.name_part;
             if (tmp1 != null)
             {

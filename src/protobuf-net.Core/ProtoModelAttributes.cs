@@ -66,4 +66,56 @@ namespace ProtoBuf
         /// </summary>
         public Type Type { get; }
     }
+
+    /// <summary>
+    /// Declares a <c>.proto</c> schema whose messages the associated model can serialize, so that the
+    /// schema, the DTOs generated from it, and the model can all live in ONE project.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This exists because <see cref="ProtoSerializableAttribute"/> cannot name a type that does not
+    /// exist yet: source generators all run against the same input compilation and never see each
+    /// other's output, so a <c>typeof</c> naming a generated DTO resolves to an error symbol. Naming
+    /// the <em>schema</em> avoids the problem entirely - the model is derived from the same schema the
+    /// DTOs are, and the compiler joins the two afterwards.
+    /// </para>
+    /// <para>
+    /// The schema must be an <c>AdditionalFiles</c> item, exactly as it must be to generate the DTOs.
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// [ProtoModel, ProtoSchema("shop.proto")]
+    /// public partial class ShopModel : TypeModel { }
+    /// </code>
+    /// </example>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    [Experimental(ProtoModelAttribute.DiagnosticId)]
+    public sealed class ProtoSchemaAttribute : Attribute
+    {
+        /// <summary>
+        /// Include <em>every</em> schema in the project.
+        /// </summary>
+        /// <remarks>
+        /// Schemas excluded from output (<c>ProtoBuf_IncludeInOutput="false"</c>) are excluded here
+        /// too: no DTOs are generated for those, so there would be nothing for the model to
+        /// serialize.
+        /// </remarks>
+        public ProtoSchemaAttribute() { }
+
+        /// <summary>
+        /// Create a new instance.
+        /// </summary>
+        /// <param name="path">
+        /// The schema to include, as a path. Either directory separator may be used, and a bare file
+        /// name is accepted while it identifies exactly one of the project's schemas; where it does
+        /// not, enough of the path to disambiguate is required.
+        /// </param>
+        public ProtoSchemaAttribute(string path) => Path = path;
+
+        /// <summary>
+        /// The schema to include, as a path; <c>null</c> for every schema in the project.
+        /// </summary>
+        public string Path { get; }
+    }
 }

@@ -57,18 +57,26 @@ namespace ProtoBuf
             // its trip count is one the JIT cannot know even for a constant, since it is expressed
             // through a shifting variable.
             //
-            // The widths are all five a tag can take: field numbers run to 2^29-1, so the tag
-            // spans the whole uint range. In the descriptor model the population is 92 one-byte
-            // sites and 27 two-byte (nine of them field 999, uninterpreted_option, which is on
-            // every *Options message); the 3-5 byte arms are there for completeness and are
-            // pinned by test rather than by any fixture.
+            // ONLY the one- and two-byte arms are folded, which is a deliberate narrowing after
+            // the whole ladder measured flat. Arms for the 3/4/5-byte widths (fields 2048 and up)
+            // existed and were correct, but they were the densest code here and the least
+            // exercised: DescriptorPayloadCensus.md counts 1056 one-byte tags against 3 two-byte
+            // and no wider ones in a realistic payload. Those widths now take the shipped
+            // LocalWriteVarint32 - a loop, but one nothing reaches. What survives is the arm with
+            // the dynamic population (one byte, 99.7% of ops) and the arm ordinary schemas do
+            // reach (two bytes, fields 16-2047: the descriptor model has 27 such call sites).
             //
-            // The room demand is now EXACT rather than MaxVarint32 for everything above one byte,
-            // which also means fewer trips out of line near a chunk boundary.
+            // The room demand is EXACT rather than MaxVarint32 for the folded arms, which also
+            // means fewer trips out of line near a chunk boundary.
+            //
+            // Note there is no `&&` to turn into `&` and nothing worth hoisting: `tag` is a
+            // JIT-time constant at every call site, so the width test folds away entirely and the
+            // room check is read exactly once per arm - and LocalWrite* MUTATES RemainingInCurrent,
+            // so a hoisted copy would be stale by the second store.
             //
             // These constants are derived, never typed: RawTagEncodingTests checks every arm
             // against the shipped varint encoder across the full range of widths and both sides
-            // of every boundary.
+            // of every boundary - including the widths that are no longer folded.
 
             /// <summary>A varint byte with the continuation bit set.</summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -94,33 +102,12 @@ namespace ProtoBuf
                         return;
                     }
                 }
-                else if (tag < 1u << 21)
+                else if (RemainingInCurrent >= MaxVarint32)
                 {
-                    if (RemainingInCurrent >= 3)
-                    {
-                        LocalWriteUInt16((ushort)(Cont(tag) | (Cont(tag >> 7) << 8)));
-                        LocalWriteByte((byte)(tag >> 14));
-                        return;
-                    }
-                }
-                else if (tag < 1u << 28)
-                {
-                    if (RemainingInCurrent >= 4)
-                    {
-                        LocalWriteFixed32(Cont(tag) | (Cont(tag >> 7) << 8)
-                            | (Cont(tag >> 14) << 16) | ((tag >> 21) << 24));
-                        return;
-                    }
-                }
-                else
-                {
-                    if (RemainingInCurrent >= 5)
-                    {
-                        LocalWriteFixed32(Cont(tag) | (Cont(tag >> 7) << 8)
-                            | (Cont(tag >> 14) << 16) | (Cont(tag >> 21) << 24));
-                        LocalWriteByte((byte)(tag >> 28));
-                        return;
-                    }
+                    // three fields and up: the shipped encoder, which is where the folded arms
+                    // for these widths used to be. See the note above for why they went
+                    LocalWriteVarint32(tag);
+                    return;
                 }
                 SlowWriteRawTag(tag);
             }

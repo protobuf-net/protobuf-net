@@ -1196,7 +1196,7 @@ generated measure-first writer including the descriptor-set member, round-trippe
 verified. The writer arc adds no native regression. (The vswhere-on-PATH trap struck
 again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 
-## Where this stands / what's next (current as of 2026-08-13, cuts 1-9 pushed)
+## Where the WRITER ARC stands / what's next (cuts 1-10; see `notes/gaps.md` for feature gaps)
 
 **Handover note: this section plus "The presized buffer core: the plan" above is the
 entry point for a fresh session.**
@@ -1220,60 +1220,17 @@ The backlog lives in the task list (#4-#10) with enough detail to resume cold; t
 behind all of it is here rather than in any conversation. **The task list is session-scoped and
 does not survive**, so treat this document as the only backlog that persists.
 
-Cuts 1-9 are pushed to `raw-writer` and green on every
-gate; the serialize numbers are in `src/NanoBench/DescriptorSerializeResults.md`, which now
-carries BOTH backends - and the buffer-writer one is the interesting half (the generated
-model is ~10% ahead of Google.Protobuf there, against a legacy baseline that is twice as
-slow as its own stream figure). The remaining ladder, in priority order:
+The serialize numbers are in `src/NanoBench/DescriptorSerializeResults.md`, which carries both
+backends. **The remaining ladder has moved to `notes/gaps.md`** (section B), so that what is
+outstanding lives in one place rather than in each arc's own document.
 
-1. ~~**The stream backend is not span-backed**~~ - **LANDED, see "Cut 10" below: -29% on the
-   headline row, and the generated model goes from 4.7% behind Google.Protobuf to 21.4% ahead.**
-2. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
-   both backends, so it is not the writer; Google allocates zero, and its whole payload is
-   7.6 KB). It won its race on time and was never priced on bytes. The measure hand-off's
-   duplicate of it is gone; the remaining copy is the cache itself. Its own cut.
-3. ~~**The presized buffer core**~~ - **steps 1 and 2 landed as cuts 8 and 9; step 3 was built,
-   measured and parked** (see its own section). What remains of that ladder is step 4:
-   re-validating net472 and native, which has been done at each milestone since.
-4. Counting mode for mixed contracts (legacy-mode members measured via the classic body
-   against the Null writer, landing in the same lengthCache - which now lives on
-   NetObjectCache, shared with the sidecar and the MeasureState hand-off, so the landing
-   spot is already right).
-5. Packed repeated writes (IsPacked support arrived on the read side; the write needs the
-   zero-length-header model option and per-element measure - the MemoryMarshal block
-   trick for fixed widths is recorded in the checklist above; `IMeasuringSerializer` is
-   already implemented by measurable contracts, which is what the packed engine keys on).
-6. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
-   for the native kinds).
+### Everything parked or owed
 
-### Everything parked or owed, in one place (2026-08-14)
+**Moved to `notes/gaps.md`**, which is now the single list of what is missing, deferred or
+awaiting a decision - across the writer arc, the AOT generator and the schema front-end. It is
+kept there rather than here so there is one place to review, and only one copy to go stale.
 
-An index, because the details are spread over two documents and a commit log, and the commit log
-is not a backlog. Each entry says where the detail lives.
-
-**Decisions owed by a human**
-
-| | |
-| --- | --- |
-| the tag ladder: keep or revert? | measured flat but costs nothing; revert is `651be919` + `c03462c2`. See "Pre-encoded constant tags" below |
-| manual review of the write-emitted goldens | 55 changed shape when `int32` moved onto the raw path |
-
-**Parked with a recorded reason**
-
-| | where |
-| --- | --- |
-| leaf contracts could skip the depth check | "Three on the `Measure_` statics", below - correct in principle, ~nothing expected, stack-overflow failure mode if the predicate is wrong. Measure the ceiling first |
-| **packed writes on an empty collection** | `IsPacked` has never been supported on the symbol path, so that arm is largely undriven; an empty packed collection is believed to emit a zero-length field where ref-emit writes nothing. Belongs with "packed repeated writes" on the ladder |
-| the presized lease (buffer core step 3) | its own section - built, measured neutral, parked |
-| `ProtoFileGenerator` is not incremental | it is an `ISourceGenerator` with an empty `Initialize`, so it re-parses every schema on every compilation |
-
-**Still on the writer ladder** — the numbered list under "Where this stands" below: the length
-caches' remaining audit (`Pool<T>`, `BufferPool`), counting mode for mixed contracts, packed
-repeated writes, maps measure-first. Note packed repeated writes and the packed-empty
-disagreement above are the same area, and would sensibly be done together.
-
-**Schema front-end gaps** — enumerated and ranked in `notes/aot-schema-model.md`; the top item is
-not a feature but pointing the existing schema corpus at the new path.
+This file keeps the FINDINGS: what was tried, what it measured, and what was reverted.
 
 ### Three corrections to this handover, and how each one got there (2026-08-13)
 
@@ -1307,156 +1264,11 @@ only thing a cold start has.
 most of a sitting re-deriving all three from the source tree, and came within one decision of
 asking for a product judgement on behaviour that had already been settled and shipped.
 
-### Recommended next steps, ranked by value-per-risk (2026-08-13)
+### Recommended next steps
 
-1. **The length caches re-allocate on every serialize.** The biggest outstanding gap against
-   Google (22,392 B against their 4,232 on the stream, 0 on the buffer-writer), self-contained,
-   and needing no decision from anyone. The cause is in `NetObjectCache.Clear()`: on `NET` it
-   does `Clear()` **and `TrimExcess()`**, and down-level it allocates fresh dictionaries - so a
-   *pooled* writer re-grows its caches from empty every single time, paying every doubling
-   reallocation again. Clearing the CONTENTS is a correctness requirement (a stale entry is a
-   corrupt stream, not an error); discarding the CAPACITY is not.
-
-   **The hazard to design against** (Marc, and it is the whole point): serialize one large graph
-   once - at startup, say - and a pooled writer then hogs that memory forever. So plain
-   retention is not a candidate, only a ceiling measurement.
-
-   Arms, to be measured rather than argued:
-
-   | arm | steady-state churn | the startup-hog hazard |
-   | --- | --- | --- |
-   | A - today (`Clear` + `TrimExcess`) | bad: re-grows every serialize | safe |
-   | B - retain capacity | fixed | **unsafe: this is the hazard** |
-   | C - weak stash while idle | ? may be reclaimed too eagerly to help | safe, self-adjusting |
-   | D - capped retain | fixed for normal payloads | safe, but the cap is a guess |
-   | E - retain, trim on GC pressure | fixed | safe, and correctly targeted |
-
-   **E is the best-shaped, and has precedent**: `ArrayPool<T>.Shared` solves this identical
-   problem this identical way, trimming its buffers on a gen2 GC via the BCL's `Gen2GcCallback`
-   pattern. It also has the property C lacks - *if no GC has run, memory is not scarce, so
-   retaining is fine* - whereas a weak reference is cleared by any collection that happens to
-   look at it, pressure or not, which in an allocating steady state is constantly.
-
-   Shape that avoids per-instance finalizers (there is one `NetObjectCache` per pooled writer,
-   so per-instance finalizers would be a bad trade): **one static gen2 counter**, bumped by a
-   single `Gen2GcCallback`. Each cache records the counter when it stashes; on revive, if the
-   counter has moved, drop the retained capacity instead of reusing it. Allocation-free per
-   cache, no weak references, no finalizer per instance - and it composes with a cap (D) for the
-   single enormous graph, which should be dropped on the spot rather than waiting for a gen2 that
-   an idle post-startup process may not run for a long time.
-
-   If a weak stash is used after all, note it need not allocate per stash: keep one
-   `WeakReference<T>` on the cache and call `SetTarget`, so it is one allocation for the writer's
-   lifetime. Either way keep the strong reference for the duration of a serialize so the hot path
-   takes no null check, and revive at `Init` rather than lazily per access.
-
-   **Both numbers now measured (2026-08-13), and they justify E outright:**
-
-   | arm | steady-state alloc | time | retained after ONE 200k-message graph |
-   | --- | ---: | ---: | ---: |
-   | A - today | 22,392 B/op | baseline | < 1 MB |
-   | B - retain capacity | **0 B** | **-7% to -12%** | **11,680,888 B** |
-
-   So the whole 22 KB/op was the caches re-growing from empty every serialize, and removing it
-   is worth 7-12% on top (paired; the Google gauge flat at 13.10 -> 13.06 us). Legacy benefits
-   too: -8.9% on the buffer-writer leg. And the hazard is exactly as predicted - ~11.7 MB held
-   forever from a 1.18 MB payload, about 10x. **A capacity policy is therefore mandatory, not
-   optional**: the prize is large and so is the hole.
-
-   **Landed as arm E**, and the mechanism is simpler than the design called for: no
-   `Gen2GcCallback`, no finalizer, no registry, no weak reference, no per-stash allocation -
-   just `GC.CollectionCount(2)` compared against the value recorded at the previous clear.
-   Capacity is kept by default and handed back on either signal: a **gen2 since we last cleared**
-   (if no GC has run, memory is not scarce, so retaining costs nothing) or a **size above a cap**
-   (1024 entries), so the single enormous graph is dropped on the spot rather than waiting for a
-   gen2 an idle process may never run.
-
-   | | arm A | **arm E** | arm B (unsafe) |
-   | --- | ---: | ---: | ---: |
-   | stream `NanoGenerated` | 15.61 us / 22,392 B | **14.31 us / 0 B** | 14.39 us / 0 B |
-   | buffer-writer `NanoGenerated` | 11.26 us / 22,392 B | **9.91 us / 0 B** | 9.97 us / 0 B |
-   | hazard (one 200k graph) | passes | **passes** | 11,680,888 B |
-
-   Gauge-corrected (Google moved -2.5% stream, -0.2% buffer-writer): **-6% and -11.8%**, with
-   the allocation gone entirely. E matches B to within noise on both legs, so it takes the whole
-   win while keeping A's safety.
-
-   **The measurement discipline this needed, after three false starts in one sitting:** the
-   toggle asserts its own effect in BOTH directions (the marker gone, `TrimExcess` present) under
-   `set -e` with no `|| true`, and the code under test is `grep`ed for before any gate or number
-   is believed. Two runs were voided by a toggle that silently no-opped, and a third by
-   `git checkout --` used as an undo idiom, which restored a file whose committed state was still
-   arm A and deleted the implementation - after which the battery passed against the ABSENCE of
-   the change and was reported as confirming it. A suite that goes green without your change in
-   the tree is telling you nothing.
-
-   `PooledWriterRetentionTests` measures the hazard and is the gate; it passes on A and fails on
-   B. Two things about it are load-bearing, and both were wrong in the first cut:
-   - it serializes through an `IBufferWriter`, **not** a stream. The stream backend back-fills,
-     so it never populates the length caches at all - measuring it proved nothing, and both arms
-     read identically because neither was exercising the thing under test;
-   - it has a **control** that builds and drops the same graph without serializing. Without it
-     the graph's own footprint read as retention - the first run reported 10 MB on *both* arms,
-     which was the 200k nodes still rooted by a local, not the writer. The control now reads
-     0 bytes, which is what makes the 11.7 MB trustworthy.
-
-1b. **Audit the rest of Core for the same shape (task #6).** The length caches established a
-   pattern that recurs: pooled state that is `Clear()`ed but whose CAPACITY is either discarded
-   (churn - 22 KB/op and 7-12%) or kept (hogging ~10x the payload forever). Leads already found:
-   `NetObjectCache`'s FEAT_DYNAMIC_REF collections are `Clear()`ed with **no** `TrimExcess`, i.e.
-   already on the hogging side; `StreamProtoWriter.ioBuffer` grows to hold an entire payload
-   because `flushLock` forbids flushing mid-sub-item, then goes back to `ArrayPool` (check it is
-   not above the bucket limit, where it would be dropped rather than pooled); `ReadBufferT` does
-   the same dance on the READ side, which this arc has never measured; and `Pool<T>` sets the
-   multiplier on all of it. Whatever policy the length caches get should be applied once, to all
-   of them - one mechanism, not five.
-
-1c. **`Pool<T>` and `BufferPool` want dedicated investigation (task #7)** - Marc's read is that
-   both are early code that never evolved, and a first look supports it. `Pool<T>` is the
-   multiplier under every other retention question: a **`[ThreadStatic]`** slot holds one
-   instance *per thread, forever* - so a thread that serialized once keeps a writer, its
-   `NetObjectCache` and both length caches for that thread's life - plus a `Queue<T>` capped at
-   a magic `POOL_SIZE = 20` under a plain lock, **never trimmed**. Any per-writer retention is
-   therefore *(threads + 20)* copies that nothing ever reclaims, which is the strongest argument
-   yet that the trim-on-gen2 mechanism belongs on the POOL rather than on each cache.
-   `BufferPool` is now a thin `ArrayPool<byte>.Shared` wrapper, where three things stand out:
-   `ArrayPool` does not pool arrays above 1 MB at all (allocates on rent, drops on return), so
-   the `ioBuffer`-grows-to-hold-the-payload case is pure churn above that, not pooling; `Return`
-   is called without `clearArray`, so buffers come back with stale bytes; and
-   `GetCachedBuffer(...) ?? new byte[...]` is a dead fallback, since `Rent` never returns null
-   and returns *at least* the requested size.
-
-2. **Task #4 - AOT coverage for callback context shapes.** Closes a gap created on this branch:
-   `ISerializationContext` works on the runtime paths but the generator accepts only "no
-   parameter" or `StreamingContext`, so it DROPS the contract - denying `ProtoWriter.IsMeasuring`
-   to exactly the AOT consumer who wants it. Include mixed models (different contracts in one
-   model using different shapes; one contract whose four callbacks differ) and cross-check that
-   the validator, the reflection invoker, the ref-emit path and the generator agree on the
-   accepted set. They demonstrably disagreed once already.
-
-3. ~~**A decision, then the stream span move.**~~ **STALE - there is no decision to make; this
-   is unblocked engineering.** It read: the move requires the stream backend to go measure-first,
-   which doubles serialization callbacks for the majority of users, so *"do not start the surgery
-   before this is answered"*. Every clause of that has since been overtaken, by material in this
-   same document:
-
-   - the premise was withdrawn in "Callbacks must not be an input to strategy selection" above -
-     callback-bearing contracts are not in the cheap-measure set, so they land on back-fill
-     because of what they are, not because anything routed them there. *"The earlier framing
-     ('the callback question gates the stream move') was wrong: there is nothing to decide."*
-   - the gate that follows from it is **in the tree**, not shelved (`ProtoWriter.Stream.cs`);
-   - its one stated prerequisite - prove no contract emits both a `Measure_` static and a
-     serialization callback - is **discharged**, by `AotConformanceTests/MeasurableContractTests`,
-     non-vacuously (110 measurable contracts present, callback-bearing contracts present, the
-     overlap set reported by name if it ever breaks).
-
-   What remains is the buffer half, described under ladder item 1 above. It is internals, and
-   undoable in a branch.
-
-4. **Task #5 - the reflection callback path allocates three times per invocation**
-   (`GetParameters()` returns a fresh array every call, plus the `object[]` args, plus a box for
-   `StreamingContext`). The shapes are fixed at registration, so it resolves to a cached plan or
-   delegate. No-emit path only; ref-emit and generated paths are already clean.
+**Moved to `notes/gaps.md`.** What remains below is the record of what was measured, including
+the length-cache work that came out of this list and landed - that history is the point of this
+file, and is deliberately not duplicated into the gap list.
 
 ### Three optimisations measured and reverted, and what they taught (2026-08-13)
 
