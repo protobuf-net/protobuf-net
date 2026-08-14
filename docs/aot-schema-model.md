@@ -316,6 +316,39 @@ by `AotConformanceTests` over `Schemas/conformance.proto` — not merely "it com
    across every file in the set, but not yet covered by a test with two schemas referring to
    each other.
 
+### Pointed at `descriptor.proto`, and what it found (2026-08-14)
+
+`descriptor.proto` is the best test available: the largest real schema in the tree, and the only
+one whose symbol-derived model is **checked in** — so the two routes can be diffed directly.
+`SchemaSourcedDescriptorProbeTests` builds the plan from the embedded schema and dumps the
+emitted source (opt-in via `PBN_SCHEMA_DUMP`) for comparison against
+`src/protobuf-net.Reflection/Generated/…CustomProtogenSerializer.ProtoModel.g.cs`.
+
+**It built all 27 contracts with no refusal** — nested types, nested enums, maps, repeated,
+`oneof`-free, the lot — which is a much stronger result than the hand-written conformance schema
+gives. Comparing the emitted `WriteRawTag` sequence per contract:
+
+| | |
+| --- | --- |
+| first run | **17 of 21** shared contracts identical |
+| after the ordering fix | **20 of 21** identical |
+| remaining difference | one field, and it is not ours |
+
+**The bug it found: member ORDER.** protobuf-net writes members in field-number order; a schema
+may declare them in any order at all, and the front-end was emitting in declaration order. That
+is a straight byte disagreement for any schema written that way — `DescriptorProto` declares
+field 6 before field 3, `FieldDescriptorProto` declares 3 before 2. The hand-written conformance
+schema had missed it completely by declaring everything ascending, which is exactly the blind
+spot a hand-written fixture has. Fixed by sorting, and now pinned by a deliberately shuffled
+message in `conformance.proto`.
+
+**The remaining difference is a finding about the repo, not the generator.** `FieldOptions` field
+15 (`unverified_lazy`) is present in the embedded `descriptor.proto` and absent from the
+checked-in `Descriptor.cs` — the generated DTOs have **drifted behind their own schema**, because
+protogen has not been re-run since that field was added upstream. Worth knowing on its own, and
+worth noting as an argument for this whole direction: a single-pass model generated from the
+schema cannot drift from it.
+
 ### The gap that is not a feature
 
 **The corpus.** `conformance.proto` is hand-written and deliberately small. The

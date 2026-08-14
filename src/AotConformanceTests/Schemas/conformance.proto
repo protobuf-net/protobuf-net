@@ -90,3 +90,15 @@ message Sample {
     Flavour flavour = 22;
     repeated Node nodes = 23;
 }
+
+// Fields declared OUT of numeric order. protobuf-net writes members in FIELD-NUMBER order
+// regardless of how the schema declares them, so a front-end emitting in declaration order
+// disagrees on the wire - silently, and only for schemas that happen to be written this way.
+// The hand-written schema above missed it by declaring everything ascending; descriptor.proto
+// found it (DescriptorProto declares field 6 before field 3).
+message Shuffled {
+    string last = 9;
+    int32 first = 1;
+    bool middle = 5;
+    Detail nested = 7;
+}

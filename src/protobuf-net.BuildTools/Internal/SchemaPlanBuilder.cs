@@ -228,6 +228,16 @@ namespace ProtoBuf.BuildTools.Internal
                     dataFormat: dataFormat));
             }
 
+            // ORDER BY FIELD NUMBER, not by declaration. protobuf-net writes members in field-number
+            // order, and a schema is free to declare them in any order at all - so emitting in
+            // declaration order is a straight byte disagreement with ref-emit for any schema that
+            // does. Found by pointing this front-end at descriptor.proto and diffing the emitted
+            // tag sequences against the checked-in symbol-derived model: 17 of 21 shared contracts
+            // matched exactly, and every one that did not differed ONLY in order (DescriptorProto
+            // declares 6 before 3, FieldDescriptorProto declares 3 before 2, and so on). The
+            // hand-written conformance schema had missed it entirely by declaring fields ascending
+            members.Sort(static (x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
+
             // CONVENTION: protogen emits `: IExtensible` on every message, with a private
             // __pbn__extensionData field - so the read's default case appends rather than skips
             return new ProtoContractPlan(typeName,

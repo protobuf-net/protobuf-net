@@ -122,6 +122,16 @@ namespace ProtoBuf.AotConformance.SchemaSourced
             // an all-defaults instance writes nothing at all
             new global::Conformance.Sample(),
 
+            // out-of-order field declarations, which must still write in field-number order
+            new global::Conformance.Shuffled
+            {
+                First = 1,
+                Middle = true,
+                Nested = new global::Conformance.Detail { Depth = 2, Note = "x" },
+                Last = "z",
+            },
+            new global::Conformance.Shuffled(),
+
             new global::Conformance.Detail { Depth = 9, Note = "standalone" },
             new global::Conformance.Detail(),
         ];
