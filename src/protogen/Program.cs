@@ -337,6 +337,13 @@ Parse PROTO_FILES and generate output based on the options given:
                               Specify naming convention rules.
   +oneof={default|enum}       Specify whether 'oneof' should generate enums.
   +listset={yes|no}           Specify whether lists should emit setters
+  +subtypes={default|sealed|ignore}
+                              Elide protobuf-net's per-message unknown-sub-type
+                              check, which cannot fire for a generated DTO.
+                              'sealed' emits sealed classes (no behaviour
+                              change, but consumers can no longer derive);
+                              'ignore' keeps them derivable but serializes a
+                              derived instance as the base rather than throwing.
   +services={grpc;wcf}        Semi-colon list of service metadata to support.
   +nullwrappers={yes|no}      Specify whether wrappers.proto should be generated
                               as C# nullable types (int?).

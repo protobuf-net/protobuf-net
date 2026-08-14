@@ -1,4 +1,4 @@
-# Working with .proto files with protobuf-net and protobuf-net.BuildTools
+﻿# Working with .proto files with protobuf-net and protobuf-net.BuildTools
 
 protobuf-net originated as a code-first tool, but sometimes you're working with contract-first .proto files instead, whether because
 the schemas are supplied externally, or because you want to ensure that your schemas are as suitable as they can be for cross-platform usage.
@@ -41,11 +41,25 @@ Additional configuration options can be specified as attributes against each `<A
 - `OneOf` - controls how `oneof` elements are handled (`enum` adds an enum discriminant)
 - `Package` - overrides the namespace to use for the code (which is *broadly speaking* a "package" in .proto terms)
 - `Services` - controls whether to generate services (this is defaulted based on your project references)
+- `SubTypes` - controls how generated messages handle the possibility of unknown sub-types (`default`, `sealed` or `ignore`)
+   - protobuf has no inheritance, so a generated message is never really sub-typed - but it is emitted as a `partial class`,
+     which anyone may derive from, so protobuf-net emits a per-message runtime check that in practice can never fire
+   - `sealed` emits `sealed` classes, which elides the check. This changes **no behaviour at all** (a sub-type becomes
+     impossible rather than tolerated), but it is source-breaking for any consumer deriving from your generated types
+   - `ignore` keeps the types derivable and elides the check via `[ProtoContract(IgnoreUnknownSubTypes = true)]`; note the
+     trade, which is that a derived instance is then silently serialized **as the base type** instead of throwing
+   - `default` (or anything unrecognised) keeps the shipped behaviour. The saving is small - around 0.6% of serialization
+     time on a message-dense payload - so reach for this when you want the tidiness, not expecting a step change
 - `NullWrappers` - controls whether wrappers.proto should be generated as C# nullable types (int?)
 - `CompatLevel` - controls whether well-known types should be marked with CompatibilityLevel instead of DataFormat
 - `NullableValueType` - use `int?` etc for optional value types
 - `RepeatedAsList` - use `List<T>` etc instead of `T[]` for *all* collections (i.e. including primitives)
 - `IncludeInOutput` - controls whether the file is included in the output; this can be useful for adding a file to the virtual file system for importing without generating code as it might be generated elsewhere
+
+A value that isn't recognised is **ignored** rather than failing the build - but it is reported as
+`PBN1900`, naming the option and its accepted spellings, so a typo like `SubTypes="seald"` doesn't just
+quietly do nothing. The free-form options (`LangVersion`, `Package`, `ImportPaths`, `Services`) are not
+checked.
 
 ## That doesn't work for you?
 
