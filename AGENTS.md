@@ -1,4 +1,4 @@
-# protobuf-net — notes for agents
+﻿# protobuf-net — notes for agents
 
 Only non-obvious things live here; the code is the reference for everything else.
 
@@ -19,25 +19,34 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-The active stack is linear, and notes flow downwards as it merges:
+The stack **collapsed onto `v4` on 2026-08-14**: the reader arc, the writer arc, the buffer core,
+`[ProtoSchema]` and the protogen sub-type option are one branch again. So there is currently no
+"which branch is this note current on?" question to answer — everything below is current on `v4`.
+This section stays because that question returns the moment a branch is cut.
 
 ```
-main → v4 → raw-writer → writer-buffer-core → aot-schema-model
+main → v4   (raw-writer, writer-buffer-core and aot-schema-model are folded into it)
 ```
 
-| document | covers | where it is current |
-| --- | --- | --- |
-| `AGENTS.md` (this file) | conventions, traps, gate battery — branch-independent | everywhere |
-| `notes/nano-core.md` | the reader arc: design and the cuts | `v4` onwards |
-| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `writer-buffer-core` (`raw-writer`'s copy predates cut 10 — correctly) |
-| `notes/aot-schema-model.md` | `[ProtoSchema]`: design, the ranked **gap list**, open items | `aot-schema-model` only |
-| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `writer-buffer-core` onwards |
-| `notes/aot-findings.md` | numbered findings from the AOT generator work | `v4` onwards |
-| `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots | `v4` onwards |
+| document | covers |
+| --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
+| `notes/nano-core.md` | the reader arc: design and the cuts |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
+| `notes/aot-findings.md` | numbered findings from the AOT generator work |
+| `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots |
+
+**When a branch is next cut, restore the "where it is current" column.** Its absence is a statement
+that the stack is flat, not that the column was unnecessary: two separate wrong-branch claims were
+shipped while the stack was in flight, one of them in this very table.
 
 Two rules that keep this honest, both learned the hard way here:
 
-- **the parked/owed index in `notes/nano-writer.md` is the entry point**, not a commit log. Anything
+- **`notes/gaps.md` is the entry point for "what is missing"**, and the parked/owed index in
+  `notes/nano-writer.md` for "what is deferred and why" — not a commit log. Anything
   deferred goes there with its reason, because a commit message is not a backlog and does not
   survive a squash;
 - **a change big enough to appear in a handover is big enough to have its own commit.** A gate once
@@ -923,74 +932,13 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 
 ### Not yet supported
 
-Two things are genuinely ours rather than matches:
+**See `notes/gaps.md`** - every gap, with the decision taken against it. As of 2026-08-14 there
+are exactly two the generator refuses that protobuf-net itself would handle, both decided
+*keep omitting*: a collection as a map key, and a hand-written serializer as a map key or value.
 
-- a **nested map key** (`Dictionary<List<int>, List<string>>`) — though note this *matches* the
-  compiled ref-emit path, which throws on use; only the reflection path handles it.
-
-  **The scenario is real, which is why this is an omission rather than a refusal on principle.** A
-  composite value used as an identity key is ordinary in generator-shaped code — this very codebase
-  keys its incremental cache on an `EquatableArray<T>`, for exactly that reason. So "a collection as
-  a dictionary key" is not automatically a mistake in a contract.
-
-  What makes it *hard to use* is orthogonal to us, and worth knowing before anyone builds it: the key
-  needs **intrinsic structural equality**, and the BCL immutable collections do not have it. Probed,
-  because the details are surprising:
-
-  | | `a.Equals(b)` for equal contents |
-  | --- | :-: |
-  | `ImmutableArray<T>` | **false** — compares the *underlying array by reference* |
-  | `ImmutableList<T>` | false — does not override at all |
-  | `ImmutableHashSet<T>` | false — likewise |
-
-  `ImmutableArray<T>` is the ironic one: it is the only one that implements `IEquatable<>`, and it is
-  reference-based, so it *looks* like a structural value type and is not. That is the same trap
-  recorded above for the plan types, which is why `EquatableArray<T>` is hand-written here.
-
-  A `Dictionary<ImmutableArray<int>, string>` therefore misses an equal-but-distinct key today,
-  before serialization enters into it. And supplying an `IEqualityComparer` does not rescue a
-  round-trip either, because protobuf-net **constructs the collection itself** (`ActivatorCreate`), so
-  the comparer is not carried across. The only shape that really works is a key type whose own
-  equality is structural — a consumer's `EquatableArray<Foo>`, not a BCL type.
-
-  So: a fair omission for a first release, and if it is ever built, the reference behaviour to copy is
-  the *reflection* path, since the compiled one throws;
-- a **hand-written serializer as a map key or value** whose category is scalar *or* simply unknown.
-  The unary and *collection* forms both defer the decision to the serializer (below), and a map
-  plausibly could too — `MapSerializer` calls `InheritFrom` on each side exactly as the repeated one
-  does. It is unbuilt rather than impossible: the map plan carries no per-side serializer expression,
-  so it emits `this` for a message side, and adding one is real plumbing for a shape with **zero**
-  occurrences in a 1392-contract corpus. Deferred deliberately, with the mechanism recorded so it is
-  a morning's work if a consumer ever asks.
-
-  **The collection form was refused on a wrong premise, and it is worth knowing why.** The claim was
-  that an element cannot defer because its wire type is baked into the collection's features at the
-  call site. It is baked in only because we chose to bake it in: `WriteRepeated`/`ReadRepeated` both
-  call `features.InheritFrom(serializer.Features)`, and `InheritFrom` fills in the category and wire
-  type **precisely when they were not specified** — so stating no wire type and passing the element
-  serializer defers exactly as `WriteAny` does. Emitting the *message* form regardless is what
-  produced `Invalid wire-type String` on `Issue1083`'s `List<WrappingStruct>`; that contract now
-  emits and matches ref-emit byte-for-byte.
-
-Everything else that is refused either matches ref-emit or is a deliberate AOT decision
-(`System.Type`), and each says which in its diagnostic. Two entries that used to be here went the
-same way, and the way is worth remembering:
-
-- **null-wrapping** was real work, and is now the "Null-wrapping" section above;
-- **interfaces as members** was *already done* — the bullet outlived the work. Probing found the
-  bare-interface cases were refusals that match ref-emit, and the genuinely-untested shapes (a
-  derived interface, a closed generic interface, an interface on either side of a map) already
-  emitted correctly; they just had no fixture. What the probe *did* turn up was a value-type sub-type
-  emitting code that would not compile — a bug, not a gap.
-
-The corpus differential (`src/AotDifferential`) is now the sharper measurement of the two, and it
-reads zero: nothing disagrees on the wire, and no case remains where either model throws and the
-other does not. So widening coverage beats picking another bullet — the `.proto`-generated DTO path
-is the obvious untested half, and `protobuf-net.Reflection` can produce it in-process.
-
-**The ranked candidate list lives in the "Next steps" section of `notes/aot-findings.md`**, with the
-reasoning for the ordering. Keep it there rather than scattering next-step opinions through this
-file, as had started to happen.
+Everything else it refuses is a **match** with protobuf-net rather than a shortfall - see
+"Telling our gaps from protobuf-net's" above, which stays here because it is about how to READ
+a refusal, not about what is outstanding.
 
 ### Golden-file tests
 
