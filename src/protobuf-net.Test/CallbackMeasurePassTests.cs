@@ -28,6 +28,10 @@ namespace ProtoBuf.Test
     /// </remarks>
     public class CallbackMeasurePassTests
     {
+        private readonly ITestOutputHelper _out;
+        public CallbackMeasurePassTests(ITestOutputHelper output) => _out = output;
+        private void _output(string text) => _out.WriteLine(text);
+
         [ProtoContract]
         public class Counted
         {
@@ -78,6 +82,48 @@ namespace ProtoBuf.Test
             Assert.True(obj.BeforeCalls[0], "the first pass should report IsMeasuring == true");
             Assert.False(obj.BeforeCalls[1], "the second pass is the real write");
             Assert.True(ms.Length > 0);
+        }
+
+        [ProtoContract]
+        public class Outer
+        {
+            [ProtoMember(1)] public Counted Inner { get; set; }
+        }
+
+        /// <summary>
+        /// Does a NESTED contract's callback fire twice without anyone asking to measure? The
+        /// answer is per-BACKEND, which is the part that is easy to miss.
+        /// </summary>
+        /// <remarks>
+        /// The stream writer reserves, writes, and back-fills the length (shuffling bytes when the
+        /// varint width changes), so it crawls once. The buffer-writer path computes the length
+        /// first, writes the prefix, then writes for real and asserts the two agree - throwing
+        /// "Length mismatch" if not - so it crawls twice.
+        /// </remarks>
+        [Fact]
+        public void NestedCallbackFiringIsPerBackend()
+        {
+            var model = Model();
+            model.Add(typeof(Outer), true);
+
+            var viaStream = new Outer { Inner = new Counted { Value = 42 } };
+            using (var ms = new MemoryStream()) model.Serialize(ms, viaStream);
+
+            var viaBuffer = new Outer { Inner = new Counted { Value = 42 } };
+            var bw = new System.Buffers.ArrayBufferWriter<byte>();
+            ((IProtoOutput<System.Buffers.IBufferWriter<byte>>)model).Serialize(bw, viaBuffer);
+
+            _output($"stream       : {viaStream.Inner.BeforeCalls.Count} call(s) "
+                + $"[{string.Join(", ", viaStream.Inner.BeforeCalls)}]");
+            _output($"buffer-writer: {viaBuffer.Inner.BeforeCalls.Count} call(s) "
+                + $"[{string.Join(", ", viaBuffer.Inner.BeforeCalls)}]");
+
+            // the stream back-fills the length, so it crawls ONCE and never measures
+            Assert.Equal([false], viaStream.Inner.BeforeCalls);
+
+            // the buffer-writer computes the length first and then validates, so it crawls TWICE -
+            // and the first crawl IS a measuring pass, with nobody having asked to measure
+            Assert.Equal([true, false], viaBuffer.Inner.BeforeCalls);
         }
     }
 }

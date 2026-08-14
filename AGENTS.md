@@ -104,12 +104,32 @@ write-to-count path. When something is unexpectedly slow, check whether it is st
 before looking anywhere else.
 
 **2. A `[ProtoBeforeSerialization]` callback disqualifies a contract, and that is load-bearing.**
-The classic measure pass is a real write to a counting writer, so a callback fires **once per
-pass** — twice for measure+serialize, which `ProtoWriter.IsMeasuring(context)` lets a callback
-detect. That doubling is *required*: both passes must observe the same object, or the measured
-length will not match the bytes written. `Measure_` has no `ISerializationContext` and so cannot
-fire callbacks at all; refusing such contracts is the only thing keeping the length honest.
-`CallbackMeasurePassTests` pins the runtime-model behaviour that any change here has to match.
+`Measure_` has no `ISerializationContext` and so cannot fire callbacks at all; refusing such
+contracts is the only thing keeping the length honest, since firing only in `RawWrite_` would let
+the object change between measuring and writing.
+
+**How often a callback fires is per-BACKEND today**, which is easy to miss and is pinned by
+`CallbackMeasurePassTests`:
+
+| route | `BeforeSerialization` fires | `IsMeasuring` |
+| --- | ---: | --- |
+| plain `Serialize` to a **stream**, nested contract | **once** | `false` |
+| to an **`IBufferWriter`**, nested contract | **twice** | `true`, then `false` |
+| explicit `Measure` + `Serialize` | **twice** | `true`, then `false` |
+
+The stream writer *reserves, writes and back-fills* the length — shuffling bytes when the varint
+width changes — so it crawls once. The buffer-writer path computes the length first, writes the
+prefix, writes for real, and then **validates** (`Length mismatch; calculated 'x', actual 'y'`), so
+it crawls twice. So a consumer's callback side-effect already behaves differently depending on
+which output they serialize to, with nobody having asked to measure.
+
+Where doubling happens it is *required*, not incidental: both passes must observe the same object,
+or the measured length will not match the bytes written — which is exactly what that validation
+catches. `ProtoWriter.IsMeasuring(context)` is how a callback tells the passes apart.
+
+**Decided (Marc, 2026-08-14): twice becomes the consistent normal for both backends**, rather than
+the stream being the odd one out. That is also where measure-first leads anyway, since it *is*
+measure-then-write. See `notes/gaps.md` B17 for what it costs the classic stream path.
 
 **3. The write recursion is depth-guarded on its own, and used not to be.** It was once safe *by
 construction* — every write was preceded by a measure, and the measure carried the budget. A

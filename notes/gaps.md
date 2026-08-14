@@ -583,6 +583,31 @@ to settle first, and only the second is hard:
    and commit a wrong length. `RawMeasurableShape`'s exclusion is the only thing keeping that
    correct today — so relaxing it is not "let callbacks through", it is "fire them per pass in
    `Measure_` too", which is now a settled design rather than an open question.
+
+   **And the doubling is not confined to the explicit `Measure` API — it is already per-backend**,
+   which Marc identified and `CallbackMeasurePassTests` now pins. For a *nested* contract, with
+   nobody asking to measure:
+
+   | route | fires | `IsMeasuring` |
+   | --- | ---: | --- |
+   | `Serialize` to a **stream** | **once** | `false` |
+   | `Serialize` to an **`IBufferWriter`** | **twice** | `true`, then `false` |
+
+   The stream writer reserves, writes and back-fills the length (shuffling bytes when the varint
+   width changes), so it crawls once; the buffer-writer computes the length, writes the prefix,
+   writes for real and then **validates** (`Length mismatch; calculated 'x', actual 'y'`), so it
+   crawls twice. A consumer's callback side-effect therefore already depends on which output they
+   chose — undocumented until now.
+
+   **Decision (Marc, 2026-08-14): make twice the consistent normal for both**, rather than leaving
+   the stream as the exception. It is also where measure-first leads anyway, since that *is*
+   measure-then-write.
+
+   The cost to weigh when doing it: on the **classic** stream path, replacing one back-fill shuffle
+   (a memmove only when the varint width changes) with a full second crawl is a real slowdown. On
+   the **measure-first** path it is not, because the measure is arithmetic rather than a write —
+   which is an argument for converging the two as measure-first widens (see B1, B5) rather than
+   changing the classic stream writer on its own.
 2. **Coupling.** `Measure_` is today a pure arithmetic walk with no writer in sight, which is what
    makes it trivially testable and independently callable. Taking `ref state` ties it to a live
    writer. That is the real trade, and it is a design call rather than a measurement.
