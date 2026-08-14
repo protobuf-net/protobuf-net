@@ -61,7 +61,7 @@ Readings:
   not jump tables) did not materialize: unhit labels stay unpriced even there. net472 shows
   +0.21 µs (+1.4%) for the full pass — real but marginal on the old JIT.
 - **Consequence: tolerant is simply the default; no strict-mode knob is built.** The strict-mode
-  design (a model attribute, natural wire type only) stays recorded in docs/nano-core.md with no
+  design (a model attribute, natural wire type only) stays recorded in notes/nano-core.md with no
   trigger. Packed↔unpacked and length↔group pairs are spec, not tolerance, and would survive
   strict mode anyway.
 - The one tolerance exception: `double` stays fixed64-only — the fixed32 float promotion needs
@@ -70,11 +70,11 @@ Readings:
   (unconditionally — comments are free in every configuration), and the model rewrite retired
   both of the file's earlier abbreviation caveats.
 
-## Milestone gate (docs/nano-core.md)
+## Milestone gate (notes/nano-core.md)
 
 Both halves of the gate are now done: the full-job runs above, and the human top-to-bottom read
 of `DescriptorNano.cs` — whose feedback also produced the forward-only rule for the reader (see
-docs/nano-core.md) and the deferred-construction design note for the inheritance brick.
+notes/nano-core.md) and the deferred-construction design note for the inheritance brick.
 
 ## The generator closes the loop (post-review)
 

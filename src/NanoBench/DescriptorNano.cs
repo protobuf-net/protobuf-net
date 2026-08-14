@@ -7,7 +7,7 @@ using ReaderState = ProtoBuf.ProtoReader.State;
 namespace ProtoBuf.Nano.Bench.DescriptorModel;
 
 // The descriptor.proto object model, hand-written in the shape the nano generator pass emits -
-// this is the north-star milestone artifact (docs/nano-core.md), meant to be read top-to-bottom:
+// this is the north-star milestone artifact (notes/nano-core.md), meant to be read top-to-bottom:
 // value-in/value-out statics, ??= construction, tag-local dispatch, repeated fields as run loops
 // (the tag read as the do-while condition, miss handed back to dispatch via continue), packed
 // scalars as a length scope drained on AtScopeEnd with the unpacked run as a sibling label, the
@@ -26,7 +26,7 @@ namespace ProtoBuf.Nano.Bench.DescriptorModel;
 //   DescriptorParseResults.md. The one exception is double (fixed64 only): a fixed32 float
 //   promotion needs Int32BitsToSingle, which netfx lacks;
 // - ??= construction at method entry is the SEALED-type shape; a [ProtoInclude] hierarchy must
-//   defer construction until the sub-type marker or first member touch (see docs/nano-core.md).
+//   defer construction until the sub-type marker or first member touch (see notes/nano-core.md).
 
 [ProtoContract]
 public sealed class FileDescriptorSet

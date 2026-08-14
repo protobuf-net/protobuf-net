@@ -31,6 +31,18 @@ namespace ProtoBuf.AotConformance
                from index in Enumerable.Range(0, count)
                select new object[] { model.FullName!, index };
 
+        /// <summary>
+        /// Resolves one case to a fresh generated model and its sample, so that a sibling fixture
+        /// can drive the same corpus without duplicating the reflection.
+        /// </summary>
+        internal static (TypeModel Model, object Value) CreateGeneratedCase(string modelTypeName, int index)
+        {
+            var modelType = Fixtures.GetType(modelTypeName);
+            Assert.NotNull(modelType);
+            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType, nonPublic: true));
+            return (generated, GetSamples(modelType)[index]);
+        }
+
         [Theory, MemberData(nameof(GetCases))]
         public void GeneratedSerializerMatchesRuntimeModel(string modelTypeName, int index)
         {

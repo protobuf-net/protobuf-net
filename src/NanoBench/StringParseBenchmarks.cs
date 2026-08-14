@@ -9,7 +9,7 @@ namespace ProtoBuf.Nano.Bench;
 
 /// <summary>
 /// Strings: 64K records of "field 1: string" (a duplicated string field REPLACES - confirmed
-/// against both Google.Protobuf and legacy protobuf-net, see docs/nano-core.md). Memory is
+/// against both Google.Protobuf and legacy protobuf-net, see notes/nano-core.md). Memory is
 /// diagnosed: the materialized string is the unavoidable allocation, and the interesting question
 /// is whether either side allocates anything else.
 ///

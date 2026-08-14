@@ -18,22 +18,46 @@ partial class NestedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Address>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Customer>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Invoice>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Nested.Address global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
             => RawRead_AotFixtures_Nested_Address(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Address>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Address value)
+            => RawWrite_AotFixtures_Nested_Address(ref state, value);
+
+        public static void RawWrite_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Address value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.City;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // City
+                state.WriteRawString(tmp1);
+            }
         }
+
+        public static long Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.City;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // City
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Address>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nested.Address value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Nested_Address(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Nested.Address RawRead_AotFixtures_Nested_Address(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Address value)
         {
@@ -63,19 +87,57 @@ partial class NestedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Nested.Customer global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
             => RawRead_AotFixtures_Nested_Customer(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Customer>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value)
+            => RawWrite_AotFixtures_Nested_Customer(ref state, value);
+
+        public static void RawWrite_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Address;
-            state.WriteMessage<global::AotFixtures.Nested.Address>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Address
+                var lengths2 = state.RawLengths;
+                if (!lengths2.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Nested_Address(tmp2, state.RawDepthBudget, lengths2);
+                    lengths2[tmp2] = len2;
+                }
+                state.WriteRawVarint64((ulong)len2);
+                RawWrite_AotFixtures_Nested_Address(ref state, tmp2);
+            }
         }
+
+        public static long Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            var tmp2 = value.Address;
+            if (tmp2 != null)
+            {
+                if (!lengths.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Nested_Address(tmp2, depth, lengths);
+                    lengths[tmp2] = len2;
+                }
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Address
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Customer>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nested.Customer value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Nested_Customer(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Nested.Customer RawRead_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Customer value)
         {
@@ -116,21 +178,80 @@ partial class NestedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Nested.Invoice global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
             => RawRead_AotFixtures_Nested_Invoice(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Nested.Invoice>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value)
+            => RawWrite_AotFixtures_Nested_Invoice(ref state, value);
+
+        public static void RawWrite_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Customer;
-            state.WriteMessage<global::AotFixtures.Nested.Customer>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Customer
+                var lengths2 = state.RawLengths;
+                if (!lengths2.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Nested_Customer(tmp2, state.RawDepthBudget, lengths2);
+                    lengths2[tmp2] = len2;
+                }
+                state.WriteRawVarint64((ulong)len2);
+                RawWrite_AotFixtures_Nested_Customer(ref state, tmp2);
+            }
             var tmp3 = value.ShipTo;
-            state.WriteMessage<global::AotFixtures.Nested.Address>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // ShipTo
+                var lengths3 = state.RawLengths;
+                if (!lengths3.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Nested_Address(tmp3, state.RawDepthBudget, lengths3);
+                    lengths3[tmp3] = len3;
+                }
+                state.WriteRawVarint64((ulong)len3);
+                RawWrite_AotFixtures_Nested_Address(ref state, tmp3);
+            }
         }
+
+        public static long Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Number;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
+            var tmp2 = value.Customer;
+            if (tmp2 != null)
+            {
+                if (!lengths.TryGetValue(tmp2, out var len2))
+                {
+                    len2 = Measure_AotFixtures_Nested_Customer(tmp2, depth, lengths);
+                    lengths[tmp2] = len2;
+                }
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Customer
+            }
+            var tmp3 = value.ShipTo;
+            if (tmp3 != null)
+            {
+                if (!lengths.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Nested_Address(tmp3, depth, lengths);
+                    lengths[tmp3] = len3;
+                }
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // ShipTo
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Nested.Invoice>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Nested.Invoice value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Nested_Invoice(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Nested.Invoice RawRead_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Nested.Invoice value)
         {

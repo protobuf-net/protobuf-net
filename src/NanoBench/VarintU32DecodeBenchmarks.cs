@@ -21,7 +21,7 @@ namespace ProtoBuf.Nano.Bench;
 ///
 /// Not yet covered, deliberately: buffer offset/alignment variation, the tolerant 10-byte value
 /// path (negative int32 arrives sign-extended; tags are strict-5, values need a rarely-taken
-/// 6-10 byte spill), arm64, and call-shape variants for the winner. See docs/nano-core.md.
+/// 6-10 byte spill), arm64, and call-shape variants for the winner. See notes/nano-core.md.
 ///
 /// The loops hoist the array root ref once per batch: this approximates the intended reader
 /// layout, where the root lives in a C# 11 ref field (.NET 7+) and the position is a byte offset

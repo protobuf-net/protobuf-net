@@ -19,7 +19,7 @@ partial class FormatsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Inner>
     {
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
         {
@@ -77,11 +77,26 @@ partial class FormatsModel
             var tmp6 = value.RequiredInt;
             state.WriteInt32Varint(6, tmp6);
             var tmp7 = value.RequiredString;
-            state.WriteString(7, tmp7);
+            if (tmp7 != null)
+            {
+                state.WriteRawTag((7 << 3) | 2);  // RequiredString
+                state.WriteRawString(tmp7);
+            }
             var tmp8 = value.Grouped;
             state.WriteGroup<global::AotFixtures.Formats.Inner>(8, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, this);
             var tmp9 = value.Plain;
-            state.WriteMessage<global::AotFixtures.Formats.Inner>(9, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp9, this);
+            if (tmp9 != null)
+            {
+                state.WriteRawTag((9 << 3) | 2);  // Plain
+                var lengths9 = state.RawLengths;
+                if (!lengths9.TryGetValue(tmp9, out var len9))
+                {
+                    len9 = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, lengths9);
+                    lengths9[tmp9] = len9;
+                }
+                state.WriteRawVarint64((ulong)len9);
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp9);
+            }
             var tmp10 = value.ZigZagArray;
             if (tmp10 != null)
             {
@@ -238,17 +253,34 @@ partial class FormatsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Formats.Inner global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
             => RawRead_AotFixtures_Formats_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
+            => RawWrite_AotFixtures_Formats_Inner(ref state, value);
+
+        public static void RawWrite_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_Formats_Inner(global::AotFixtures.Formats.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Formats.Inner value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Formats_Inner(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Formats.Inner RawRead_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Inner value)
         {

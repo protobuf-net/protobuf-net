@@ -19,7 +19,7 @@ partial class StructsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -33,7 +33,10 @@ partial class StructsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Location;
-            state.WriteMessage<global::AotFixtures.Structs.Point>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            state.WriteRawTag((1 << 3) | 2);  // Location
+            var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len1);
+            RawWrite_AotFixtures_Structs_Point(ref state, tmp1);
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)
             {
@@ -98,7 +101,7 @@ partial class StructsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Structs.Point global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.Point value)
         {
@@ -127,12 +130,38 @@ partial class StructsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
+            => RawWrite_AotFixtures_Structs_Point(ref state, value);
+
+        public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
         {
             var tmp1 = value.X;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Label;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Label
+                state.WriteRawString(tmp2);
+            }
         }
+
+        public static long Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.X;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
+            var tmp2 = value.Label;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Structs.Point value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Structs_Point(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

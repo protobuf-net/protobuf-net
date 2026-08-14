@@ -39,7 +39,7 @@ Length 1–5 = uniform streams of that encoded length; 0 = shuffled mix of 1–5
    mispredict-dominated costs, and here they did not. The mixed row needs streams long enough (or
    regenerated per iteration) to defeat pattern memorization before any branchy-vs-branchless
    conclusion is drawn. This is exactly the "distribution is a benchmark axis" trap from
-   docs/nano-core.md, one level deeper: *periodicity* is an axis too.
+   notes/nano-core.md, one level deeper: *periodicity* is an axis too.
 4. `EarlyExit2Then8` is the best hybrid where it exits early (0.57 ns at length 2 — the only
    strategy to beat `ByteUnrolled` on any row) and pays ~2.7 ns beyond its exits. If real tag/length
    distributions are as 1–2-byte-heavy as expected, a measured-on-real-corpus version of this hedge

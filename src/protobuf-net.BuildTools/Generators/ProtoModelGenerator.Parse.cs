@@ -200,7 +200,27 @@ namespace ProtoBuf.BuildTools.Generators
                         && rawType.GetMembers("ReadRawTag").Length != 0
                         && rawType.GetMembers("StashTag").Length != 0
                         && rawType.GetMembers("ReadRawTimestamp").Length != 0 // the BCL wrappers wave
-                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly));
+                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly),
+                    // the write side, gated identically (notes/nano-writer.md) - and by the SAME
+                    // ClassicEmit flag, per the whole-emission agreement: one flag, both directions
+                    rawWriter: !classicEmit
+                        && compilation.GetTypeByMetadataName("ProtoBuf.ProtoWriter+State") is { } rawWriteType
+                        && rawWriteType.GetMembers("WriteRawTag").Length != 0
+                        // ALWAYS gate on the newest member this pass emits calls to, so a newer
+                        // BuildTools against an older Core falls back to classic emission rather
+                        // than emitting calls that do not compile - the identical rule (and the
+                        // identical stale-corpus failure) the read side's gate records above
+                        && rawWriteType.GetMembers("ThrowNullRepeatedContents").Length != 0 // the repeated wave
+                        && rawWriteType.GetMembers("MeasureRawString").Length != 0 // the measure wave
+                        && rawWriteType.GetMembers("MeasureRawExtensionData").Length != 0 // the extensible-measure wave
+                        && rawWriteType.GetMembers("RawLengths").Length != 0 // the length-cache wave
+                        && rawWriteType.GetMembers("TryMeasureRaw").Length != 0 // the IMeasuringSerializer wave
+                        && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly),
+                    // net5+ framework capability, probed per compilation like UnsafeAccessor: the
+                    // raw repeated write enumerates a List<T> as a span where it can
+                    listAsSpan: compilation.GetTypeByMetadataName("System.Runtime.InteropServices.CollectionsMarshal")
+                        is { } collectionsMarshal
+                        && collectionsMarshal.GetMembers("AsSpan").Length != 0);
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()));
@@ -2627,10 +2647,20 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates, allowParseableTypes);
 
-                // IReadOnlySet<T> support is conditional on the runtime the library was built for
-                if (repeated.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
+                // IReadOnlySet<T> support is conditional on the runtime the library was built
+                // for - and the correctly-spelled factory is 4.x-and-up (the shipped 3.x name
+                // is the typo'd CreateReadOnySet, kept as an [Obsolete] forwarder), so an older
+                // Core falls back to the old spelling rather than dropping the member, and only
+                // a Core with NEITHER (built below net6) drops it
+                var repeatedPlan = repeated.AsRepeatedPlan();
+                if (repeatedPlan.Factory == "CreateReadOnlySet" && !HasFactory(compilation, "CreateReadOnlySet"))
+                {
+                    if (!HasFactory(compilation, "CreateReadOnySet")) return null;
+                    repeatedPlan = new ProtoRepeatedPlan("CreateReadOnySet",
+                        repeatedPlan.TakesCollectionType, repeatedPlan.IsValueType);
+                }
 
-                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type, surrogates, allowParseableTypes);
+                return AsRepeated(compilation, repeated.Element, repeatedPlan, type, surrogates, allowParseableTypes);
             }
             return null;
         }
@@ -2715,7 +2745,7 @@ namespace ProtoBuf.BuildTools.Generators
             new("System.Collections.Generic.Stack`1", "CreateStack", false, true),
             new("System.Collections.Generic.HashSet`1", "CreateSet", true, true),
             new("System.Collections.Generic.ISet`1", "CreateSet", true, true),
-            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnySet", true, false),
+            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnlySet", true, false),
 
             // the fallback, which is why nearly anything enumerable is a collection
             new("System.Collections.Generic.IEnumerable`1", "CreateEnumerable", false, true),

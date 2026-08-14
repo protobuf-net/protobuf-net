@@ -18,25 +18,70 @@ partial class AbstractLeafModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Shape>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.AbstractLeaf.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
             => RawRead_AotFixtures_AbstractLeaf_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value)
+            => RawWrite_AotFixtures_AbstractLeaf_Holder(ref state, value);
+
+        public static void RawWrite_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            state.WriteMessage<global::AotFixtures.AbstractLeaf.Shape>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Value
+                var lengths1 = state.RawLengths;
+                if (!lengths1.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, state.RawDepthBudget, lengths1);
+                    lengths1[tmp1] = len1;
+                }
+                state.WriteRawVarint64((ulong)len1);
+                RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1);
+            }
             var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Name
+                state.WriteRawString(tmp2);
+            }
         }
+
+        public static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                if (!lengths.TryGetValue(tmp1, out var len1))
+                {
+                    len1 = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth, lengths);
+                    lengths[tmp1] = len1;
+                }
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Value
+            }
+            var tmp2 = value.Name;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Name
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AbstractLeaf.Holder value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_AbstractLeaf_Holder(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
         {
@@ -79,7 +124,7 @@ partial class AbstractLeafModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.AbstractLeaf.Shape global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Shape value)
         {
@@ -103,11 +148,28 @@ partial class AbstractLeafModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value)
+            => RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, value);
+
+        public static void RawWrite_AotFixtures_AbstractLeaf_Shape(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Sides;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Sides;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Sides
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Shape>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AbstractLeaf.Shape value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_AbstractLeaf_Shape(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

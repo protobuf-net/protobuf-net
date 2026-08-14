@@ -15,7 +15,7 @@ namespace ProtoBuf.Nano.Bench;
 /// non-MemoryStream chunk-feeding wrapper BY DESIGN - both stacks special-case MemoryStream and
 /// collapse to their span paths (legacy even reaches the private buffer by reflection), so a
 /// MemoryStream-fed "stream" benchmark measures no streaming at all (Marc's like-for-like catch;
-/// see docs/nano-core.md). Memory rows are the control: what the refill machinery costs when it
+/// see notes/nano-core.md). Memory rows are the control: what the refill machinery costs when it
 /// never fires.
 ///
 /// GlobalSetup is the correctness battery for the refill core, all census-gated against the

@@ -26,7 +26,7 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), x86-64-v4
    header read, and interleaved data misses on every element — while nano raw saves 0.4 ns: the
    tag-local loop condition (`while ((tag = ReadRawTag()) == CONST)` + `continue` to dispatch)
    costs nothing on a miss, because the missed tag is already decoded and flows straight to the
-   switch. There is deliberately no `TryReadRawTag`; see docs/nano-core.md, "Run consumption
+   switch. There is deliberately no `TryReadRawTag`; see notes/nano-core.md, "Run consumption
    needs no API at all".
 2. **The relative win is *largest* on hostile (interleaved) data** — 1.9× (net10) / 2.2× (net472)
    — precisely where speculation-based designs degrade. Real payloads sit between the two shapes.
@@ -43,7 +43,7 @@ BenchmarkDotNet v0.15.8, Windows 11, AMD Ryzen 9 7900X (Zen4), x86-64-v4
    (miss per element), net10: 17.04 ns (rewind) / 17.49 (hybrid) / **16.79 (forward-only)** -
    the correct design beats the original because the miss double-decode was the original's
    hidden tax. Raw rows unchanged throughout: the control that the raw path is untouched (it
-   has no Try member at all; see docs/nano-core.md, "the reader is forward-only").
+   has no Try member at all; see notes/nano-core.md, "the reader is forward-only").
 
 ## Milestone relevance
 

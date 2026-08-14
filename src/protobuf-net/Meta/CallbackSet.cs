@@ -38,6 +38,11 @@ namespace ProtoBuf.Meta
                 if (paramType == typeof(SerializationContext)) { }
                 else if (paramType == typeof(System.Type)) { }
                 else if (paramType == typeof(System.Runtime.Serialization.StreamingContext)) { }
+                // the invoker (TypeSerializer.InvokeCallback) and the ref-emit path have always
+                // handled this one; only this validator disagreed, so declaring it threw. It is
+                // the only context flavour that carries the context OBJECT rather than a copy of
+                // its data, which is what ProtoWriter.IsMeasuring needs
+                else if (paramType == typeof(ISerializationContext)) { }
                 else { return false; }
             }
             return true;

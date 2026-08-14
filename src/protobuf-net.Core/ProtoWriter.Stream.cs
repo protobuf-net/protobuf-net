@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
 using System.Diagnostics;
@@ -44,7 +45,54 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
-            private StreamProtoWriter() { }
+            private StreamProtoWriter()
+            {
+                // share the *same* known objects key, exactly as the buffer-writer does, so a
+                // length measured here serves the write through the shared cache
+                _nullWriter = new NullProtoWriter(netCache);
+            }
+
+            private readonly NullProtoWriter _nullWriter;
+
+            // the null-writer sidecar shares this cache and clears it in its own Cleanup
+            private protected override void ClearKnownObjects() { }
+
+            /// <summary>
+            /// Sub-messages go measure-first ONLY where the serializer can price itself without
+            /// writing; everything else keeps this backend's reserve-and-back-fill.
+            /// </summary>
+            /// <remarks>
+            /// The strategy is chosen on its own merits, PER SERIALIZER - not per backend, and
+            /// emphatically not on whether callbacks are present. Measured on the descriptor
+            /// corpus (notes/nano-writer.md): for a serializer with no arithmetic measure, pricing
+            /// by null-writer traversal costs about 2.3x what back-filling does, which is exactly
+            /// why the buffer-writer - which cannot back-fill at all - is so much slower for
+            /// runtime models. So a model with no <see cref="IMeasuringSerializer{T}"/> takes the
+            /// identical path it always did, and a generated measurable contract skips the
+            /// reserve, the flushLock and the back-fill shuffle.
+            /// </remarks>
+            protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer,
+                PrefixStyle style, bool recursionCheck)
+            {
+                switch (WireType)
+                {
+                    case WireType.String:
+                    case WireType.Fixed32:
+                        var resolved = serializer ?? TypeModel.ResolveSerializer<T>(Model);
+                        if (resolved is IMeasuringSerializer<T>
+                            && resolved.Features.HasFlag(SerializerFeatures.OptionTrySkipWritingWhenMeasuring))
+                        {
+                            PreSubItem(ref state, TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null);
+                            WriteMeasuredWithLengthPrefix<T>(_nullWriter, ref state, value, resolved, style);
+                            PostSubItem(ref state);
+                            return;
+                        }
+                        goto default;
+                    default:
+                        base.WriteMessage<T>(ref state, value, serializer, style, recursionCheck);
+                        return;
+                }
+            }
             internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, object userState)
             {
                 var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
@@ -60,6 +108,7 @@ namespace ProtoBuf
             internal override void Init(TypeModel model, object userState, bool impactCount)
             {
                 base.Init(model, userState, impactCount);
+                _nullWriter.Init(model, userState, impactCount: false);
                 ioIndex = 0;
                 flushLock = 0;
             }
@@ -74,6 +123,7 @@ namespace ProtoBuf
             {
                 base.Cleanup();
                 // importantly, this does **not** own the stream, and does not dispose it
+                _nullWriter.Cleanup();
                 dest = null;
                 BufferPool.ReleaseBufferToPool(ref ioBuffer);
             }
@@ -82,9 +132,14 @@ namespace ProtoBuf
             {
                 Debug.Assert(length >= 0);
                 writer.ioIndex += length;
-                writer.Advance(length);
                 writer.WireType = WireType.None;
             }
+
+            // the deferred-position invariant (notes/nano-writer.md): ioBuffer is this backend's
+            // pending buffer and ioIndex is exactly what it holds uncommitted, so the committed
+            // count only moves where bytes actually leave for the destination stream - a flush,
+            // or one of the write-straight-through arms below
+            private protected override long GetUncommitted(in State state) => ioIndex;
 
             private protected override bool TryFlush(ref State state)
             {
@@ -92,6 +147,7 @@ namespace ProtoBuf
                 if (ioIndex != 0 && dest is not null)
                 {
                     dest.Write(ioBuffer, 0, ioIndex);
+                    Advance(ioIndex);
                     ioIndex = 0;
                 }
                 return true;
@@ -142,6 +198,7 @@ namespace ProtoBuf
 #else
                     WriteFallback(bytes, dest);
 #endif
+                    Advance(length); // straight through: committed without ever being pending
                     // since we've flushed offset etc is 0, and remains
                     // zero since we're writing directly to the stream
                 }
@@ -212,6 +269,7 @@ namespace ProtoBuf
                         }
 #endif
                     }
+                    Advance(length); // straight through: committed without ever being pending
 
                     // since we've flushed offset etc is 0, and remains
                     // zero since we're writing directly to the stream
@@ -282,7 +340,6 @@ namespace ProtoBuf
                 while (space > 0 && (bytesRead = source.Read(buffer, ioIndex, space)) > 0)
                 {
                     ioIndex += bytesRead;
-                    Advance(bytesRead);
                     space -= bytesRead;
                 }
                 if (bytesRead <= 0) return; // all done using just the buffer; stream exhausted
@@ -312,7 +369,6 @@ namespace ProtoBuf
                         {
                             break;
                         }
-                        Advance(bytesRead);
                         ioIndex += bytesRead;
                     }
                 }
@@ -325,7 +381,6 @@ namespace ProtoBuf
                         WireType = WireType.None;
                         DemandSpace(32, this, ref state); // make some space in anticipation...
                         flushLock++;
-                        Advance(1);
                         return new SubItemToken((long)(ioIndex++)); // leave 1 space (optimistic) for length
                     case WireType.Fixed32:
                         DemandSpace(32, this, ref state); // make some space in anticipation...
@@ -385,7 +440,6 @@ namespace ProtoBuf
                                 blob[value++] = (byte)((tmp & 0x7F) | 0x80);
                             } while ((tmp >>= 7) != 0);
                             blob[value - 1] = (byte)(blob[value - 1] & ~0x80);
-                            Advance(offset);
                             ioIndex += offset;
                         }
                         break;

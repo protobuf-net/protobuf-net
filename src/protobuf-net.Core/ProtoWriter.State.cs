@@ -69,6 +69,18 @@ namespace ProtoBuf
                 return val;
             }
 
+            /// <summary>
+            /// A single byte, span-direct: the shape a constant tag for fields 1-15 collapses
+            /// to, which is the dominant case on the raw write path.
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal void LocalWriteByte(byte value)
+            {
+                _span[OffsetInCurrent] = value;
+                OffsetInCurrent++;
+                RemainingInCurrent--;
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void LocalWriteFixed32(uint value)
             {

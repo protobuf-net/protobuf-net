@@ -18,82 +18,119 @@ partial class ScalarsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Scalars.Primitives>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Scalars.Primitives global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
             => RawRead_AotFixtures_Scalars_Primitives(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Scalars.Primitives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
+            => RawWrite_AotFixtures_Scalars_Primitives(ref state, value);
+
+        public static void RawWrite_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Scalars.Primitives value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Bool;
             if (tmp1)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Bool
+                state.WriteRawVarint32(tmp1 ? 1u : 0u);
             }
             var tmp2 = value.SByte;
             if (tmp2 != 0)
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteSByte(tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // SByte
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
             var tmp3 = value.Byte;
             if (tmp3 != 0)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteByte(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Byte
+                state.WriteRawVarint32(tmp3);
             }
             var tmp4 = value.Int16;
             if (tmp4 != 0)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteInt16(tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // Int16
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
             }
             var tmp5 = value.UInt16;
             if (tmp5 != 0)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // UInt16
+                state.WriteRawVarint32(tmp5);
             }
             var tmp6 = value.Int32;
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
             var tmp7 = value.UInt32;
             if (tmp7 != 0)
             {
-                state.WriteFieldHeader(7, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt32(tmp7);
+                state.WriteRawTag((7 << 3) | 0);  // UInt32
+                state.WriteRawVarint32(tmp7);
             }
             var tmp8 = value.Int64;
             if (tmp8 != 0)
             {
-                state.WriteFieldHeader(8, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp8);
+                state.WriteRawTag((8 << 3) | 0);  // Int64
+                state.WriteRawVarint64(unchecked((ulong)tmp8));
             }
             var tmp9 = value.UInt64;
             if (tmp9 != 0)
             {
-                state.WriteFieldHeader(9, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt64(tmp9);
+                state.WriteRawTag((9 << 3) | 0);  // UInt64
+                state.WriteRawVarint64(tmp9);
             }
             var tmp10 = value.Single;
             if (tmp10 != 0f)
             {
-                state.WriteFieldHeader(10, global::ProtoBuf.WireType.Fixed32);
-                state.WriteSingle(tmp10);
+                state.WriteRawTag((10 << 3) | 5);  // Single
+                state.WriteRawSingle(tmp10);
             }
             var tmp11 = value.Double;
             if (tmp11 != 0d)
             {
-                state.WriteFieldHeader(11, global::ProtoBuf.WireType.Fixed64);
-                state.WriteDouble(tmp11);
+                state.WriteRawTag((11 << 3) | 1);  // Double
+                state.WriteRawDouble(tmp11);
             }
         }
+
+        public static long Measure_AotFixtures_Scalars_Primitives(global::AotFixtures.Scalars.Primitives value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Bool;
+            if (tmp1) len += 2;  // Bool
+            var tmp2 = value.SByte;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // SByte
+            var tmp3 = value.Byte;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Byte
+            var tmp4 = value.Int16;
+            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Int16
+            var tmp5 = value.UInt16;
+            if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp5);  // UInt16
+            var tmp6 = value.Int32;
+            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Int32
+            var tmp7 = value.UInt32;
+            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp7);  // UInt32
+            var tmp8 = value.Int64;
+            if (tmp8 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp8));  // Int64
+            var tmp9 = value.UInt64;
+            if (tmp9 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(tmp9);  // UInt64
+            var tmp10 = value.Single;
+            if (tmp10 != 0f) len += 5;  // Single
+            var tmp11 = value.Double;
+            if (tmp11 != 0d) len += 9;  // Double
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Scalars.Primitives>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Scalars.Primitives value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Scalars_Primitives(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Scalars.Primitives RawRead_AotFixtures_Scalars_Primitives(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Scalars.Primitives value)
         {

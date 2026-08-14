@@ -18,7 +18,7 @@ partial class WrappedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Wrapped.Nested>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Wrapped>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Wrapped.Shade?>
@@ -26,17 +26,34 @@ partial class WrappedModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Wrapped.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
             => RawRead_AotFixtures_Wrapped_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Nested value)
+            => RawWrite_AotFixtures_Wrapped_Nested(ref state, value);
+
+        public static void RawWrite_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Nested value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_Wrapped_Nested(global::AotFixtures.Wrapped.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Wrapped.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Wrapped.Nested value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Wrapped_Nested(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Wrapped.Nested RawRead_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Wrapped.Nested value)
         {
@@ -135,7 +152,12 @@ partial class WrappedModel
             var tmp15 = value.Bare;
             if (tmp15 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 15, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp15);
+                foreach (var item15 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp15))
+                {
+                    if (item15 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<int?>();
+                    state.WriteRawTag((15 << 3) | 0);  // Bare
+                    state.WriteRawVarint64(unchecked((ulong)(long)item15.GetValueOrDefault()));
+                }
             }
             var tmp16 = value.WrappedMap;
             if (tmp16 != null)

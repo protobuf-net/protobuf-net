@@ -335,7 +335,7 @@ public ref partial struct State
     /// Advances to the next window: for a Stream, shift the unconsumed tail to the front of the
     /// leased buffer and top up; for a sequence, walk to the next node (TryGetArray in place,
     /// else lease+copy, returning any prior lease first); false at end of data. The contract
-    /// (docs/nano-core.md): owes callers NOTHING before the current offset, and never needs to -
+    /// (notes/nano-core.md): owes callers NOTHING before the current offset, and never needs to -
     /// every straddle is byte-wise consumption, so there is no partial-primitive state to carry.
     /// Recomputing the clamped limit is part of this, which is what keeps the per-field check an
     /// int compare.
@@ -730,7 +730,7 @@ public ref partial struct State
     // repeated fields is the tag read as the do-while condition (miss falls back to dispatch via
     // continue), and fields-in-order speculation is a compare + goto case - both decode each tag
     // exactly once with zero stored state. A Try form would have to decode-and-discard or stash;
-    // see docs/nano-core.md, "Run consumption needs no API at all".
+    // see notes/nano-core.md, "Run consumption needs no API at all".
 
     /// <summary>
     /// Skips the field whose raw tag was just read - the untyped counterpart of the legacy
@@ -976,7 +976,7 @@ public ref partial struct State
 
     /// <summary>
     /// Assembles <paramref name="len"/> straddling bytes into a rented scratch. The allocation
-    /// policy (docs/nano-core.md): where the total is known (Memory/sequence/hinted stream) the
+    /// policy (notes/nano-core.md): where the total is known (Memory/sequence/hinted stream) the
     /// claim is verified up front and rented once; where it is not (a bare stream), the scratch
     /// GROWS AS REAL BYTES ARRIVE - a hostile length prefix costs at most the actual payload,
     /// the eager-allocation problem dissolved rather than capped.
@@ -1234,7 +1234,7 @@ public ref partial struct State
     // Packed reads are one-line helper calls from generated code, and the platform fork lives
     // HERE as ordinary #if - not in the emitted code, not as a generator decision - so every
     // scenario is reviewable in one place, the goldens stay TFM-independent, and the multi-TFM
-    // test legs exercise each arm for free. The rule (docs/nano-core.md): #if in the library for
+    // test legs exercise each arm for free. The rule (notes/nano-core.md): #if in the library for
     // body-shape variants that are perf-only and keyed by BCL availability; the generator decides
     // only where the choice alters the plan or diagnostics. A packed run is not nesting, so these
     // bound by length directly: no scope push/pop, no depth count.
@@ -1347,7 +1347,7 @@ public ref partial struct State
 
     /// <summary>
     /// Reads a length-prefixed bytes field as a fresh array - REPLACE semantics, the decided
-    /// default (docs/nano-core.md, merge semantics): the caller assigns, nothing is appended.
+    /// default (notes/nano-core.md, merge semantics): the caller assigns, nothing is appended.
     /// Same plausible-length guard as <see cref="ReadRawString"/>.
     /// </summary>
     [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]

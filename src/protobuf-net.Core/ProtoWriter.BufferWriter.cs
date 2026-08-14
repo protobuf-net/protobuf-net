@@ -62,6 +62,9 @@ namespace ProtoBuf
                 base.Cleanup();
                 _nullWriter.Cleanup();
                 _writer = default;
+                // the latch is per-destination, so it must not survive into the next use of a
+                // pooled writer - a friendly destination would otherwise inherit the penalty
+                if (_ownedLease is not null) BufferPool.ReleaseBufferToPool(ref _ownedLease);
             }
 
             protected internal override State DefaultState()
@@ -71,6 +74,38 @@ namespace ProtoBuf
             }
 
             private protected override bool ImplDemandFlushOnDispose => true;
+
+            // the deferred-position invariant (notes/nano-writer.md): bytes written into the
+            // leased chunk are uncommitted until TryFlush hands them to the IBufferWriter, and
+            // state.OffsetInCurrent is exactly how many those are - so the per-op writer-object
+            // position advance is pure duplication of a count the span write already maintains
+            private protected override long GetUncommitted(in State state) => state.OffsetInCurrent;
+
+            // ---- when the destination will not give us a usable chunk ----
+            //
+            // The size passed to GetMemory/GetSpan is a HINT. The documented contract is "at
+            // least this much, or throw", but it is a contract we neither control nor can
+            // verify: a simplistic destination may hand back a fixed small block however much
+            // is asked for, and in the limit one byte at a time.
+            //
+            // "Large but not large enough" needs nothing - a chunk at least as wide as the
+            // widest single op can be written into, and the room checks simply re-lease more
+            // often. Only an UNUSABLE chunk is a problem, and the answer is to stop using the
+            // destination's memory: lease our own region, and hand the bytes over on flush via
+            // BuffersExtensions.Write, which loops GetSpan/Advance internally and so copes with
+            // any chunk size the destination cares to offer. The fragmentation becomes its
+            // problem, which is where it belongs.
+            //
+            // The choice LATCHES: a destination that gave an unusable chunk once will do it
+            // again, and re-probing would burn a GetMemory call per chunk to learn nothing.
+
+            /// <summary>
+            /// The narrowest chunk that can be written into at all: the widest single op is a
+            /// 10-byte varint, and the room checks assume that much is available after one test.
+            /// </summary>
+            private const int UsableLease = 16;
+
+            private byte[] _ownedLease; // non-null once the destination proved unusable
 
             private protected override bool TryFlush(ref State state)
             {
@@ -82,7 +117,23 @@ namespace ProtoBuf
                     {
                         bytes = state.ConsiderWritten();
                         step = true;
-                        _writer.Advance(bytes);
+                        Advance(bytes); // uncommitted -> committed; position is unchanged across this
+                        if (_ownedLease is not null)
+                        {
+                            // our memory, not theirs: push it across in whatever sizes they will
+                            // take. Called STATICALLY and by type name, not as an extension
+                            // method, and that is deliberate: `writer.Write(span)` binds to
+                            // whichever identically-shaped extension happens to be in scope, and
+                            // there is at least one in the wild (CommunityToolkit.HighPerformance)
+                            // whose version assumes GetSpan honours the hint - the very thing
+                            // being defended against here. Naming the type pins the BCL's
+                            // multi-segment implementation and makes that unbindable.
+                            if (bytes != 0) BuffersExtensions.Write(_writer, new ReadOnlySpan<byte>(_ownedLease, 0, bytes));
+                        }
+                        else
+                        {
+                            _writer.Advance(bytes);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -147,13 +198,44 @@ namespace ProtoBuf
                 if (writer is null) ThrowNoWriter();
                 TryFlush(ref state);
 
-                int bytes = model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize;
+                // _needFlush at LEASE time, not per tag: once a chunk is out, there is
+                // uncommitted data until something flushes it, and this is the one place a
+                // chunk is taken - which is what lets a span-direct raw op touch no writer
+                // state at all (notes/nano-writer.md, buffer-core step 2)
+                _needFlush = true;
+
+                // the room checks in this backend ("if (RemainingInCurrent < 10) GetBuffer") only
+                // work if the lease is at least as wide as the widest primitive written without
+                // re-checking, so the demand has a floor. TypeModel.BufferSize enforces the same
+                // floor on the way in; this is belt-and-braces for the model-less path, and the
+                // one place that would overrun if the property ever stopped normalising.
+                int bytes = Math.Max(model is null ? BufferPool.BUFFER_LENGTH : model.BufferSize,
+                    Meta.TypeModel.MinimumBufferSize);
                 bool step = false;
                 try
                 {
-                    var buffer = _writer.GetMemory(bytes);
-                    step = true;
-                    state.Init(buffer);
+                    if (_ownedLease is not null)
+                    {
+                        // already latched: never ask the destination for memory again
+                        state.Init(_ownedLease);
+                    }
+                    else
+                    {
+                        var buffer = _writer.GetMemory(bytes);
+                        step = true;
+                        if (buffer.Length >= UsableLease)
+                        {
+                            state.Init(buffer);
+                        }
+                        else
+                        {
+                            // unusable: take our own region and latch (see the note above).
+                            // Nothing was Advance()d, so the chunk we are declining is simply
+                            // abandoned, which is what an IBufferWriter permits.
+                            _ownedLease = BufferPool.GetBuffer(bytes);
+                            state.Init(_ownedLease);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -254,13 +336,14 @@ namespace ProtoBuf
                         long calculatedLength = MeasureAny<T>(_nullWriter, TypeModel.ListItemTag, features, value, serializer);
 
                         // write length-prefix as varint
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
 
                         if (calculatedLength != 0)
                         {
-                            var oldPos = GetPosition(ref state);
+                            var oldPos = GetPosition(in state);
                             state.WriteAny(TypeModel.ListItemTag, features, value, serializer);
-                            var newPos = GetPosition(ref state);
+                            var newPos = GetPosition(in state);
 
                             var actualLength = (newPos - oldPos);
                             if (actualLength != calculatedLength)
@@ -290,13 +373,14 @@ namespace ProtoBuf
                         long calculatedLength = MeasureRepeated<TCollection, TItem>(_nullWriter, TypeModel.ListItemTag, features, values, serializer, valueSerializer);
 
                         // write length-prefix as varint
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
 
                         if (calculatedLength != 0)
                         {
-                            var oldPos = GetPosition(ref state);
+                            var oldPos = GetPosition(in state);
                             serializer.WriteRepeated(ref state, TypeModel.ListItemTag, features, values, valueSerializer);
-                            var newPos = GetPosition(ref state);
+                            var newPos = GetPosition(in state);
 
                             var actualLength = (newPos - oldPos);
                             if (actualLength != calculatedLength)
@@ -325,13 +409,14 @@ namespace ProtoBuf
                         long calculatedLength = MeasureMap<TCollection, TKey, TValue>(_nullWriter, TypeModel.ListItemTag, features, values, serializer, keyFeatures, valueFeatures, keySerializer, valueSerializer);
 
                         // write length-prefix as varint
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
+                        ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                        ResetWireType();
 
                         if (calculatedLength != 0)
                         {
-                            var oldPos = GetPosition(ref state);
+                            var oldPos = GetPosition(in state);
                             serializer.WriteMap(ref state, TypeModel.ListItemTag, features, values, keyFeatures, valueFeatures, keySerializer, valueSerializer);
-                            var newPos = GetPosition(ref state);
+                            var newPos = GetPosition(in state);
 
                             var actualLength = (newPos - oldPos);
                             if (actualLength != calculatedLength)
@@ -368,42 +453,7 @@ namespace ProtoBuf
             }
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style)
-            {
-                serializer ??= TypeModel.ResolveSerializer<T>(Model);
-                long calculatedLength = Measure<T>(_nullWriter, value, serializer);
-
-                switch (style)
-                {
-                    case PrefixStyle.None:
-                        break;
-                    case PrefixStyle.Base128:
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
-                        break;
-                    case PrefixStyle.Fixed32:
-                    case PrefixStyle.Fixed32BigEndian:
-                        ImplWriteFixed32(ref state, checked((uint)calculatedLength));
-                        if (style == PrefixStyle.Fixed32BigEndian)
-                            state.ReverseLast32();
-                        AdvanceAndReset(4);
-                        break;
-                    default:
-                        ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
-                        break;
-                }
-
-                if (calculatedLength != 0) // don't bother serializing if nothing there
-                {
-                    var oldPos = GetPosition(ref state);
-                    serializer.Write(ref state, value);
-                    var newPos = GetPosition(ref state);
-
-                    var actualLength = (newPos - oldPos);
-                    if (actualLength != calculatedLength)
-                    {
-                        ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
-                    }
-                }
-            }
+                => WriteMeasuredWithLengthPrefix<T>(_nullWriter, ref state, value, serializer, style);
 
             private void WriteWithLengthPrefix<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
                 where T : class
@@ -412,10 +462,11 @@ namespace ProtoBuf
                 long calculatedLength = Measure<T>(_nullWriter, value, serializer);
                 
                 // we'll always use varint here
-                AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
-                var oldPos = GetPosition(ref state);
+                ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                ResetWireType();
+                var oldPos = GetPosition(in state);
                 serializer.WriteSubType(ref state, value);
-                var newPos = GetPosition(ref state);
+                var newPos = GetPosition(in state);
 
                 var actualLength = (newPos - oldPos);
                 if (actualLength != calculatedLength)
@@ -439,9 +490,9 @@ namespace ProtoBuf
                 {
                     if (state.RemainingInCurrent == 0) GetBuffer(ref state);
 
-                    int bytes = state.ReadFrom(source);
-                    if (bytes <= 0) break;
-                    Advance(bytes);
+                    // ReadFrom lands in the leased chunk, so it advances the uncommitted
+                    // offset itself; there is nothing to account for here
+                    if (state.ReadFrom(source) <= 0) break;
                 }
             }
         }

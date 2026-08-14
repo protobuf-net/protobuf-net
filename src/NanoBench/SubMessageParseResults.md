@@ -22,7 +22,7 @@ The veneer row's consumer code is character-for-character identical to LegacyRea
 (Re-measured after correcting the child reader to the exact emitted shape - value-in/value-out with
 `??=` construction and assign-back at the call site, rather than a void mutate-in-place that
 drifted from what the generator emits; the correction cost ~0.1 ns/record. The return-vs-`ref`
-design question this surfaced is settled in docs/nano-core.md: return is canonical - `ref` binds
+design question this surfaced is settled in notes/nano-core.md: return is canonical - `ref` binds
 only to fields/locals/elements, never properties, and return matches the interface veneer - with a
 `ref` overload as a targeted future specialization for structs, accessor fields and in-place
 collection merge.)

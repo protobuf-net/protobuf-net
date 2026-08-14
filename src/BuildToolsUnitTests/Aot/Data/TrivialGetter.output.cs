@@ -18,30 +18,68 @@ partial class TrivialGetterModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Backed>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Computed>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.TrivialGetter.Backed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
             => RawRead_AotFixtures_TrivialGetter_Backed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value)
+            => RawWrite_AotFixtures_TrivialGetter_Backed(ref state, value);
+
+        public static void RawWrite_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Text;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Text
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Numbers;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp3);
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    state.WriteRawTag((3 << 3) | 0);  // Numbers
+                    state.WriteRawVarint64(unchecked((ulong)(long)item3));
+                }
             }
         }
+
+        public static long Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            var tmp2 = value.Text;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            var tmp3 = value.Numbers;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item3));
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Backed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Backed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_TrivialGetter_Backed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
@@ -105,17 +143,34 @@ partial class TrivialGetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.TrivialGetter.Computed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
             => RawRead_AotFixtures_TrivialGetter_Computed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value)
+            => RawWrite_AotFixtures_TrivialGetter_Computed(ref state, value);
+
+        public static void RawWrite_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Doubled;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Doubled;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Doubled
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Computed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Computed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_TrivialGetter_Computed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
         {

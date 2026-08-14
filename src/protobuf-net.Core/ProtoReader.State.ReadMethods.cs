@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -67,7 +67,7 @@ namespace ProtoBuf
             }
 
             /// <summary>
-            /// Addition information about this deserialization operation.
+            /// Additional information about this deserialization operation.
             /// </summary>
             public ISerializationContext Context
             {
@@ -133,7 +133,7 @@ namespace ProtoBuf
             {
                 // forward-only, unconditionally: the reader cannot rewind, so a miss parks the
                 // already-decoded tag in the pending slot for the next header read (see
-                // docs/nano-core.md, "the reader is forward-only")
+                // notes/nano-core.md, "the reader is forward-only")
                 if (_wireType == WireType.EndGroup) return false;
                 uint tag = _pendingTag;
                 if (tag != 0)

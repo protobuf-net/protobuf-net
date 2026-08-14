@@ -16,7 +16,7 @@ Two fairness passes are baked into these numbers, each measured on its own:
   and +5–12% on netfx - the per-record push/pop carries the depth counter. An int-compare
   consumption check reclaimed nothing measurable; the cost is the counter and branch structure.
 
-That sub-message cost is precisely the case for the **elision lever** (docs/nano-core.md): the
+That sub-message cost is precisely the case for the **elision lever** (notes/nano-core.md): the
 benchmark's Child is provably non-recursive, so a generator with model cycle analysis would emit
 unchecked pushes here and reclaim all of it, retaining checks only for genuinely self-repeating
 trees (the skip path and open-world paths always check).

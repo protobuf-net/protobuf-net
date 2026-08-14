@@ -18,15 +18,18 @@ partial class ConditionalModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Conditional.Conditional>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Conditional.Conditional global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
             => RawRead_AotFixtures_Conditional_Conditional(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Conditional.Conditional>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
+            => RawWrite_AotFixtures_Conditional_Conditional(ref state, value);
+
+        public static void RawWrite_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Conditional.Conditional value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             if (value.ValueSpecified)
@@ -37,7 +40,11 @@ partial class ConditionalModel
             if (value.ShouldSerializeText())
             {
                 var tmp2 = value.Text;
-                state.WriteString(2, tmp2);
+                if (tmp2 != null)
+                {
+                    state.WriteRawTag((2 << 3) | 2);  // Text
+                    state.WriteRawString(tmp2);
+                }
             }
             if (value.BothSpecified)
             {
@@ -47,14 +54,68 @@ partial class ConditionalModel
             if (value.NamedSpecified)
             {
                 var tmp4 = value.Named;
-                state.WriteString(4, tmp4);
+                if (tmp4 != null)
+                {
+                    state.WriteRawTag((4 << 3) | 2);  // Named
+                    state.WriteRawString(tmp4);
+                }
             }
             if (value.ShouldSerializePresence())
             {
                 var tmp5 = value.Presence;
-                state.WriteString(5, tmp5);
+                if (tmp5 != null)
+                {
+                    state.WriteRawTag((5 << 3) | 2);  // Presence
+                    state.WriteRawString(tmp5);
+                }
             }
         }
+
+        public static long Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (value.ValueSpecified)
+            {
+                var tmp1 = value.Value;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            }
+            if (value.ShouldSerializeText())
+            {
+                var tmp2 = value.Text;
+                if (tmp2 != null)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+                }
+            }
+            if (value.BothSpecified)
+            {
+                var tmp3 = value.Both;
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Both
+            }
+            if (value.NamedSpecified)
+            {
+                var tmp4 = value.Named;
+                if (tmp4 != null)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp4);  // Named
+                }
+            }
+            if (value.ShouldSerializePresence())
+            {
+                var tmp5 = value.Presence;
+                if (tmp5 != null)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // Presence
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Conditional.Conditional>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Conditional.Conditional value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Conditional_Conditional(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Conditional.Conditional RawRead_AotFixtures_Conditional_Conditional(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Conditional.Conditional value)
         {

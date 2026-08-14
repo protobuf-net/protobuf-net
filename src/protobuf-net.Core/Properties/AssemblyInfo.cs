@@ -36,7 +36,7 @@ using System.Runtime.CompilerServices;
     + "0815a096e4483605139a32a76ec2fef196507487329c12047bf6a68bca8ee9354155f4d01daf6e"
     + "ec5ff6bc")]
 
-// the reader-core rewrite (see docs/nano-core.md): the raw surface is internal for now - the
+// the reader-core rewrite (see notes/nano-core.md): the raw surface is internal for now - the
 // real merge makes it public with PublicAPI.Unshipped entries and the [Experimental] ceremony,
 // per the move plan in that doc. IVT lets the benchmark rig keep consuming it meanwhile.
 [assembly: InternalsVisibleTo("NanoBench, PublicKey="

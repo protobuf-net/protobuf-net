@@ -19,8 +19,8 @@ partial class GetterModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Nested>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Point>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -36,7 +36,11 @@ partial class GetterModel
             var tmp1 = value.Numbers;
             if (tmp1 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                {
+                    state.WriteRawTag((1 << 3) | 0);  // Numbers
+                    state.WriteRawVarint64(unchecked((ulong)(long)item1));
+                }
             }
             var tmp2 = value.Map;
             if (tmp2 != null)
@@ -44,22 +48,38 @@ partial class GetterModel
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
             var tmp3 = value.Child;
-            state.WriteMessage<global::AotFixtures.Getter.Nested>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // Child
+                var lengths3 = state.RawLengths;
+                if (!lengths3.TryGetValue(tmp3, out var len3))
+                {
+                    len3 = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget, lengths3);
+                    lengths3[tmp3] = len3;
+                }
+                state.WriteRawVarint64((ulong)len3);
+                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3);
+            }
             var tmp4 = value.Value;
             if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
             var tmp5 = value.Text;
-            state.WriteString(5, tmp5);
+            if (tmp5 != null)
+            {
+                state.WriteRawTag((5 << 3) | 2);  // Text
+                state.WriteRawString(tmp5);
+            }
             var tmp6 = value.Blob;
             if (tmp6 != null)
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp6);
+                state.WriteRawTag((6 << 3) | 2);  // Blob
+                state.WriteRawBytes(tmp6);
             }
             var tmp7 = value.Maybe;
             if (tmp7.HasValue)
             {
                 var val7 = tmp7.GetValueOrDefault();
-                state.WriteInt32Varint(7, val7);
+                state.WriteRawTag((7 << 3) | 0);  // Maybe
+                state.WriteRawVarint64(unchecked((ulong)(long)val7));
             }
             var tmp8 = value.Colour;
             if (tmp8 != default(global::AotFixtures.Getter.Shade)) state.WriteInt32Varint(8, (int)tmp8);
@@ -69,10 +89,17 @@ partial class GetterModel
             var tmp10 = value.Array;
             if (tmp10 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp10);
+                foreach (var item10 in tmp10)
+                {
+                    state.WriteRawTag((10 << 3) | 0);  // Array
+                    state.WriteRawVarint64(unchecked((ulong)(long)item10));
+                }
             }
             var tmp11 = value.Where;
-            state.WriteMessage<global::AotFixtures.Getter.Point>(11, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp11, this);
+            state.WriteRawTag((11 << 3) | 2);  // Where
+            var len11 = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len11);
+            RawWrite_AotFixtures_Getter_Point(ref state, tmp11);
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)
             {
@@ -251,17 +278,34 @@ partial class GetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Getter.Nested global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
             => RawRead_AotFixtures_Getter_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
+            => RawWrite_AotFixtures_Getter_Nested(ref state, value);
+
+        public static void RawWrite_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Nested value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Getter.Nested value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Getter_Nested(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Getter.Nested RawRead_AotFixtures_Getter_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Nested value)
         {
@@ -294,7 +338,7 @@ partial class GetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Getter.Point global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Point value)
         {
@@ -317,10 +361,27 @@ partial class GetterModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
+            => RawWrite_AotFixtures_Getter_Point(ref state, value);
+
+        public static void RawWrite_AotFixtures_Getter_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Point value)
         {
             var tmp1 = value.X;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.X;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // X
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Point>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Getter.Point value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Getter_Point(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 

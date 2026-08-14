@@ -18,22 +18,39 @@ partial class CallbacksModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.AfterOnly>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Hooked>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Standard>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Callbacks.AfterOnly global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)
             => RawRead_AotFixtures_Callbacks_AfterOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
+            => RawWrite_AotFixtures_Callbacks_AfterOnly(ref state, value);
+
+        public static void RawWrite_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.AfterOnly value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_Callbacks_AfterOnly(global::AotFixtures.Callbacks.AfterOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.AfterOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Callbacks.AfterOnly value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Callbacks_AfterOnly(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Callbacks.AfterOnly RawRead_AotFixtures_Callbacks_AfterOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.AfterOnly value)
         {

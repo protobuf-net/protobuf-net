@@ -18,18 +18,21 @@ partial class DefaultsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Declared>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Parsed>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Defaults.Declared global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
             => RawRead_AotFixtures_Defaults_Declared(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
+            => RawWrite_AotFixtures_Defaults_Declared(ref state, value);
+
+        public static void RawWrite_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Declared value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
@@ -37,29 +40,57 @@ partial class DefaultsModel
             var tmp2 = value.Text;
             if (tmp2 != null && tmp2 != "abc")
             {
-                state.WriteString(2, tmp2);
+                state.WriteRawTag((2 << 3) | 2);  // Text
+                state.WriteRawString(tmp2);
             }
             var tmp3 = value.Flag;
             if (tmp3 != true)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteBoolean(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Flag
+                state.WriteRawVarint32(tmp3 ? 1u : 0u);
             }
             var tmp4 = value.Ratio;
             if (tmp4 != 2.5D)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Fixed64);
-                state.WriteDouble(tmp4);
+                state.WriteRawTag((4 << 3) | 1);  // Ratio
+                state.WriteRawDouble(tmp4);
             }
             var tmp5 = value.Big;
             if (tmp5 != 7L)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // Big
+                state.WriteRawVarint64(unchecked((ulong)tmp5));
             }
             var tmp6 = value.Plain;
             if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
         }
+
+        public static long Measure_AotFixtures_Defaults_Declared(global::AotFixtures.Defaults.Declared value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Number;
+            if (tmp1 != 5) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
+            var tmp2 = value.Text;
+            if (tmp2 != null && tmp2 != "abc")
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Text
+            }
+            var tmp3 = value.Flag;
+            if (tmp3 != true) len += 2;  // Flag
+            var tmp4 = value.Ratio;
+            if (tmp4 != 2.5D) len += 9;  // Ratio
+            var tmp5 = value.Big;
+            if (tmp5 != 7L) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp5));  // Big
+            var tmp6 = value.Plain;
+            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Plain
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Declared>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Defaults.Declared value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Defaults_Declared(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Defaults.Declared RawRead_AotFixtures_Defaults_Declared(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Declared value)
         {
@@ -128,45 +159,70 @@ partial class DefaultsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Defaults.Parsed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
             => RawRead_AotFixtures_Defaults_Parsed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Parsed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
+            => RawWrite_AotFixtures_Defaults_Parsed(ref state, value);
+
+        public static void RawWrite_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Defaults.Parsed value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.ByName;
             if (tmp1 != (global::AotFixtures.Defaults.Shade)(2))
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // ByName
+                state.WriteRawVarint32((ushort)tmp1);
             }
             var tmp2 = value.ByValue;
             if (tmp2 != (global::AotFixtures.Defaults.Shade)(4))
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // ByValue
+                state.WriteRawVarint32((ushort)tmp2);
             }
             var tmp3 = value.Letter;
             if (tmp3 != 'x')
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Letter
+                state.WriteRawVarint32(tmp3);
             }
             var tmp4 = value.DirectChar;
             if (tmp4 != 'y')
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16(tmp4);
+                state.WriteRawTag((4 << 3) | 0);  // DirectChar
+                state.WriteRawVarint32(tmp4);
             }
             var tmp5 = value.ByConverter;
             if (tmp5 != (global::AotFixtures.Defaults.Shade)(1))
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Varint);
-                state.WriteUInt16((ushort)tmp5);
+                state.WriteRawTag((5 << 3) | 0);  // ByConverter
+                state.WriteRawVarint32((ushort)tmp5);
             }
         }
+
+        public static long Measure_AotFixtures_Defaults_Parsed(global::AotFixtures.Defaults.Parsed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.ByName;
+            if (tmp1 != (global::AotFixtures.Defaults.Shade)(2)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp1);  // ByName
+            var tmp2 = value.ByValue;
+            if (tmp2 != (global::AotFixtures.Defaults.Shade)(4)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp2);  // ByValue
+            var tmp3 = value.Letter;
+            if (tmp3 != 'x') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Letter
+            var tmp4 = value.DirectChar;
+            if (tmp4 != 'y') len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp4);  // DirectChar
+            var tmp5 = value.ByConverter;
+            if (tmp5 != (global::AotFixtures.Defaults.Shade)(1)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((ushort)tmp5);  // ByConverter
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Parsed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Defaults.Parsed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Defaults_Parsed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Defaults.Parsed RawRead_AotFixtures_Defaults_Parsed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Defaults.Parsed value)
         {

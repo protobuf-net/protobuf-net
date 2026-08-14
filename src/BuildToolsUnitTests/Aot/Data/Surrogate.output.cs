@@ -19,12 +19,12 @@ partial class SurrogateModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Code>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.CodeSurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Holder>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Money>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.MoneySurrogate>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.Tag>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.TagSurrogate>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -65,17 +65,34 @@ partial class SurrogateModel
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Surrogate.CodeSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
             => RawRead_AotFixtures_Surrogate_CodeSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
+            => RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Surrogate.CodeSurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Surrogate_CodeSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Surrogate.CodeSurrogate RawRead_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
         {
@@ -251,29 +268,46 @@ partial class SurrogateModel
             var tmp1 = surrogate.Units;
             if (tmp1 != 0)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Units
+                state.WriteRawVarint64(unchecked((ulong)tmp1));
             }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Surrogate.MoneySurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
             => RawRead_AotFixtures_Surrogate_MoneySurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
+            => RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Units;
             if (tmp1 != 0)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteInt64(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Units
+                state.WriteRawVarint64(unchecked((ulong)tmp1));
             }
         }
+
+        public static long Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Units;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Units
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Surrogate.MoneySurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Surrogate_MoneySurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Surrogate.MoneySurrogate RawRead_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
         {
@@ -337,23 +371,51 @@ partial class SurrogateModel
             var surrogate = (global::AotFixtures.Surrogate.TagSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Text;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Text
+                state.WriteRawString(tmp1);
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Surrogate.TagSurrogate global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)
             => RawRead_AotFixtures_Surrogate_TagSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value)
+            => RawWrite_AotFixtures_Surrogate_TagSurrogate(ref state, value);
+
+        public static void RawWrite_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Text;
-            state.WriteString(1, tmp1);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Text
+                state.WriteRawString(tmp1);
+            }
         }
+
+        public static long Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Text;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Text
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.TagSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Surrogate.TagSurrogate value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Surrogate_TagSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Surrogate.TagSurrogate RawRead_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)
         {

@@ -103,14 +103,51 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, $"=> {Serializers}.SerializerCache.Get<{ServicesTypeName}, T>();");
             sb.AppendLine();
 
+            // write-side: the contracts whose serialized SIZE is computable by pure arithmetic
+            // (a generated Measure_ static), which is what lets a message member emit an exact
+            // length prefix and call the target's RawWrite_ directly, instead of the stateful
+            // engine's reserve-and-patch. Unlike read eligibility this NEEDS a fixed point:
+            // there is no legacy-mode arm inside arithmetic, so one unmeasurable member takes
+            // the whole contract out, and a dropped target takes its referrers' measures with
+            // it (they keep their raw statements; only the measure-first message shape needs
+            // the set). Keyed to the plan rather than a bare name set because the emit sites
+            // need the TARGET's IsValueType to shape the null handling. Computed before the
+            // interface list, because a measurable contract declares IMeasuringSerializer.
+            var measurable = new Dictionary<string, ProtoContractPlan>();
+            if (plan.RawWriter)
+            {
+                foreach (var contract in plan.Contracts)
+                {
+                    if (RawMeasurableShape(contract)) measurable[contract.TypeName] = contract;
+                }
+                bool changed;
+                do
+                {
+                    changed = false;
+                    foreach (var contract in plan.Contracts)
+                    {
+                        if (measurable.ContainsKey(contract.TypeName)
+                            && contract.Members.Any(m => RawMemberMeasureBlocked(m, measurable)))
+                        {
+                            measurable.Remove(contract.TypeName);
+                            changed = true;
+                        }
+                    }
+                } while (changed);
+            }
+
             Line(sb, indent + 1, $"private sealed class {ServicesTypeName}");
             var prefix = ':';
             foreach (var contract in plan.Contracts)
             {
-                // a contract with a hand-written serializer is *proxied*, never implemented
-                Line(sb, indent + 2, contract.ExternalSerializerTypeName is null
-                    ? $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>"
-                    : $"{prefix} {Serializers}.ISerializerProxy<{contract.TypeName}>");
+                // a contract with a hand-written serializer is *proxied*, never implemented;
+                // a measurable one declares the measuring shape (which includes ISerializer),
+                // handing the classic engine's measure hook the Measure_ arithmetic
+                Line(sb, indent + 2, contract.ExternalSerializerTypeName is not null
+                    ? $"{prefix} {Serializers}.ISerializerProxy<{contract.TypeName}>"
+                    : measurable.ContainsKey(contract.TypeName)
+                        ? $"{prefix} {Serializers}.IMeasuringSerializer<{contract.TypeName}>"
+                        : $"{prefix} {Serializers}.ISerializer<{contract.TypeName}>");
                 prefix = ',';
                 if (contract.RootTypeName is not null)
                 {
@@ -206,7 +243,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!first) sb.AppendLine();
                 first = false;
                 var raw = rawSet.Contains(contract.TypeName);
-                EmitContract(sb, indent + 2, contract, raw);
+                EmitContract(sb, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, measurable);
                 if (raw)
                 {
                     EmitRawRead(sb, indent + 2, contract, rawCallable);
@@ -231,7 +268,7 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>
         /// The raw read pass: the optimized read emission against the raw reader surface (see
-        /// docs/nano-core.md), symbol-gated on ProtoReader.State exposing ReadRawTag. This is the
+        /// notes/nano-core.md), symbol-gated on ProtoReader.State exposing ReadRawTag. This is the
         /// LIVE read path for an eligible contract - ISerializer&lt;T&gt;.Read proxies here - and
         /// a sibling NATIVE message member calls the target's static directly, skipping the
         /// interface dispatch. public static deliberately: static IS the direct-call design.
@@ -285,7 +322,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
             // the tag lives in a local and the loop reads at the BOTTOM, so a repeated-field run
             // can make the tag read its own do-while condition and hand a miss straight back to
-            // dispatch via continue - the run-consumption shape, see docs/nano-core.md
+            // dispatch via continue - the run-consumption shape, see notes/nano-core.md
             Line(sb, indent + 1, $"uint tag = {readTag};");
             Line(sb, indent + 1, "while (tag != 0)");
             Line(sb, indent + 1, "{");
@@ -792,7 +829,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // bytes: replace. Only reached for OverwriteList members - a PLAIN bytes member
                 // is special-cased at the emit site to state.AppendBytes (legacy concatenation),
                 // because the generated model must merge identically to RuntimeTypeModel. The
-                // raw surface itself keeps replace as its native default (docs/nano-core.md).
+                // raw surface itself keeps replace as its native default (notes/nano-core.md).
                 ProtoMemberKind.Bytes => [(2, "state.ReadRawBytes()")],
                 _ => [], // unreachable: RawReadEligible already filtered
             };
@@ -1016,7 +1053,8 @@ namespace ProtoBuf.BuildTools.Generators
             return $"non-default DataFormat ({format} on {kind})";
         }
 
-        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false)
+        private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false, bool rawWrite = false,
+            bool listAsSpan = false, Dictionary<string, ProtoContractPlan>? measurable = null)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
 
@@ -1029,9 +1067,14 @@ namespace ProtoBuf.BuildTools.Generators
                 return;
             }
 
+            // the option flag is what makes the classic engine ASK the IMeasuringSerializer
+            // (ProtoWriter.Measure requires flag AND interface); InheritFrom copies only the
+            // masked category and wire-type bits, so it cannot leak into member features
+            var measuring = rawWrite && measurable is not null && measurable.ContainsKey(contract.TypeName);
             Line(sb, indent, $"{Features} {self}.Features");
             Line(sb, indent + 1, $"=> {Features}.CategoryMessage | {Features}."
-                + (contract.IsGroup ? "WireTypeStartGroup" : "WireTypeString") + ";");
+                + (contract.IsGroup ? "WireTypeStartGroup" : "WireTypeString")
+                + (measuring ? $" | {Features}.OptionTrySkipWritingWhenMeasuring" : "") + ";");
             sb.AppendLine();
 
             if (contract.SkipConstructor)
@@ -1043,7 +1086,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (contract.RootTypeName is { } root)
             {
-                EmitSubTypeContract(sb, indent, contract, root, raw);
+                EmitSubTypeContract(sb, indent, contract, root, raw, rawWrite, listAsSpan, measurable);
                 return;
             }
 
@@ -1148,6 +1191,63 @@ namespace ProtoBuf.BuildTools.Generators
             sb.AppendLine();
             }
 
+            if (rawWrite && measurable is not null && measurable.ContainsKey(contract.TypeName))
+            {
+                // the measure-first shape (notes/nano-writer.md): the interface write proxies to a
+                // RawWrite_ static exactly as the read proxies to RawRead_ - the static IS the
+                // direct-call design, letting a native message member in a sibling contract emit
+                // an exact length prefix (Measure_) and call the body directly, with no stateful
+                // sub-message engine in between. Eligibility guarantees no surrogate, hierarchy,
+                // extension data or before-serialize callback reaches here.
+                var san = Sanitise(contract.TypeName);
+                Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+                Line(sb, indent + 1, $"=> RawWrite_{san}(ref state, value);");
+                sb.AppendLine();
+                Line(sb, indent, $"public static void RawWrite_{san}(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+                Line(sb, indent, "{");
+                if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed
+                    && !contract.IgnoreUnknownSubTypes)
+                {
+                    Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                }
+                EmitWriteMembers(sb, indent + 1, contract, "value", raw: true, listAsSpan: listAsSpan, measurable: measurable);
+                EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
+                Line(sb, indent, "}");
+                sb.AppendLine();
+                // pure arithmetic, mirroring RawWrite_'s guards statement for statement: any
+                // divergence between the two is a corrupt stream, which is exactly what the
+                // differential and conformance suites exist to catch. Only the measure recursion
+                // carries the depth budget - the write recursion that follows traverses the graph
+                // the measure just proved finite. The lengths dictionary is the ??= cache
+                // (notes/nano-writer.md): populated post-order here, consumed at the write sites,
+                // so each reference-typed object is measured once per root however deep or
+                // shared it is; struct contracts have no identity and bypass it.
+                // long arithmetic, deliberately: a single message body CAN exceed int.MaxValue
+                // (many large byte[] members, a colossal repeated field), and classic handles it
+                // with its long lengths throughout - int accumulation would overflow silently,
+                // which is a corrupt stream, not an error
+                Line(sb, indent, $"public static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
+                Line(sb, indent + 1, "long len = 0;");
+                EmitMeasureMembers(sb, indent + 1, contract, measurable, listAsSpan);
+                Line(sb, indent + 1, "return len;");
+                Line(sb, indent, "}");
+                sb.AppendLine();
+                // the classic engine's measure hook: any STATEFUL path writing this contract -
+                // a mixed parent, a map entry, a non-native collection element - asks here
+                // first (flag + interface, ProtoWriter.Measure) and gets the arithmetic
+                // instead of a null-writer traversal. A non-writer context answers -1, which
+                // the engine treats as "measure by writing", exactly as before - and so does a
+                // body wider than the interface's int reply, spilling the pathological giant
+                // to the traversal, which is long-capable end to end.
+                Line(sb, indent, $"int {Serializers}.IMeasuringSerializer<{contract.TypeName}>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, {contract.TypeName} value)");
+                Line(sb, indent + 1, "=> global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)");
+                Line(sb, indent + 2, $"&& Measure_{san}(value, depth, lengths) is var len && len <= int.MaxValue");
+                Line(sb, indent + 2, "? (int)len : -1;");
+                return;
+            }
+
             Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
             if (surrogate is not null) Line(sb, indent + 1, $"var {instance} = {ToSurrogate(contract, "value")};");
@@ -1161,7 +1261,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeSerialize);
-            EmitWriteMembers(sb, indent + 1, contract, instance);
+            EmitWriteMembers(sb, indent + 1, contract, instance, raw: rawWrite, listAsSpan: listAsSpan, measurable: measurable);
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
             Line(sb, indent, "}");
         }
@@ -1459,7 +1559,8 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>The member writes shared by <c>Write</c> and <c>WriteSubType</c>.</summary>
         private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
-            string instance = "value")
+            string instance = "value", bool raw = false, bool listAsSpan = false,
+            Dictionary<string, ProtoContractPlan>? measurable = null)
         {
             foreach (var member in contract.Members)
             {
@@ -1495,6 +1596,17 @@ namespace ProtoBuf.BuildTools.Generators
 
                 if (member.Repeated.Factory is not null)
                 {
+                    var repeatedTarget = raw ? RawRepeatedMessageTarget(member, measurable) : null;
+                    if (raw && (RawRepeatedWritable(member) || repeatedTarget is not null))
+                    {
+                        // both eligible shapes (List<T> and T[]) are reference types, so the
+                        // null guard is unconditional; empty falls out of the loop itself
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        EmitRawRepeatedWrite(sb, indent + 1, member, number, listAsSpan, repeatedTarget);
+                        Line(sb, indent, "}");
+                        goto written;
+                    }
                     var writeRepeated = $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});";
                     if (member.Repeated.IsValueType)
                     {
@@ -1530,12 +1642,12 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
                         Line(sb, indent + 1, "{");
-                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 2, member, number, $"val{number}", raw: raw);
                         Line(sb, indent + 1, "}");
                     }
                     else
                     {
-                        EmitScalarWrite(sb, indent + 1, member, number, $"val{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"val{number}", raw: raw);
                     }
                     Line(sb, indent, "}");
                     goto written;
@@ -1546,7 +1658,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (contract.IsTuple && member.Kind is not (ProtoMemberKind.String
                     or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
                 {
-                    EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                    EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                     goto written;
                 }
 
@@ -1558,7 +1670,7 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.DateTime:
                     case ProtoMemberKind.DateOnly:
                     case ProtoMemberKind.TimeOnly:
-                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                         break;
 
                     // int32 has a convenience overload that writes its own field header; everything
@@ -1589,12 +1701,12 @@ namespace ProtoBuf.BuildTools.Generators
                         // IsRequired means field presence, so there is no test to emit at all
                         if (member.IsRequired || member.WriteCondition is not null)
                         {
-                            EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                            EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                             break;
                         }
                         Line(sb, indent, $"if ({ScalarGuard(member, $"tmp{number}")})");
                         Line(sb, indent, "{");
-                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}", raw: raw);
                         Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.String when member.DefaultLiteral is { } declared
@@ -1609,7 +1721,24 @@ namespace ProtoBuf.BuildTools.Generators
                         // through to the plain unguarded WriteString below.
                         Line(sb, indent, $"if (tmp{number} != null && tmp{number} != {declared})");
                         Line(sb, indent, "{");
-                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
+                        if (raw)
+                        {
+                            Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                            Line(sb, indent + 1, $"state.WriteRawString(tmp{number});");
+                        }
+                        else
+                        {
+                            Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");
+                        }
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.String when raw:
+                        // the raw form needs the null test the stateful WriteString(int, string)
+                        // performed internally; the bytes are identical
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                        Line(sb, indent + 1, $"state.WriteRawString(tmp{number});");
                         Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.String:
@@ -1622,19 +1751,27 @@ namespace ProtoBuf.BuildTools.Generators
                         // field-number one does
                         Line(sb, indent, $"if (tmp{number} != null)");
                         Line(sb, indent, "{");
-                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}", raw: raw);
                         Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.Parseable:
                         // a value type is never null, and has no trivial value to compare against
-                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}");
+                        EmitScalarWrite(sb, indent, member, number, $"tmp{number}", raw: raw);
                         break;
                     case ProtoMemberKind.Uri:
                         // the null test is explicit, unlike a plain string: WriteString(int, string)
                         // would skip a null itself, but OriginalString would already have thrown
                         Line(sb, indent, $"if (tmp{number} != null)");
                         Line(sb, indent, "{");
-                        Line(sb, indent + 1, $"state.WriteString({number}, tmp{number}.OriginalString);");
+                        if (raw)
+                        {
+                            Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                            Line(sb, indent + 1, $"state.WriteRawString(tmp{number}.OriginalString);");
+                        }
+                        else
+                        {
+                            Line(sb, indent + 1, $"state.WriteString({number}, tmp{number}.OriginalString);");
+                        }
                         Line(sb, indent, "}");
                         break;
                     // the struct shapes - ArraySegment<byte>, Memory<byte>, ReadOnlyMemory<byte> -
@@ -1643,6 +1780,15 @@ namespace ProtoBuf.BuildTools.Generators
                     case ProtoMemberKind.Bytes when member.MemberIsValueType:
                         Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
                         Line(sb, indent, $"state.WriteBytes(tmp{number});");
+                        break;
+                    case ProtoMemberKind.Bytes when raw && !member.MemberIsValueType:
+                        // byte[] only: the struct storage shapes (Memory and friends) keep the
+                        // classic overload resolution below
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                        Line(sb, indent + 1, $"state.WriteRawBytes(tmp{number});");
+                        Line(sb, indent, "}");
                         break;
                     case ProtoMemberKind.Bytes:
                         // unlike WriteString, WriteBytes(byte[]) neither skips nulls nor writes its
@@ -1665,6 +1811,45 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent, $"state.WriteAny<{member.TypeName}>({number}, tmp{number}, "
                             + $"{SubSerializer(member)});");
                         break;
+                    case ProtoMemberKind.Message when raw && RawNativeMessageTarget(member, measurable) is { } target:
+                    {
+                        // measure-first (notes/nano-writer.md): an exact length prefix from the
+                        // target's Measure_, then its RawWrite_ called directly - no stateful
+                        // sub-message engine, no reserve-and-patch. The null guard is explicit
+                        // where WriteMessage skipped nulls itself; a struct target is never null
+                        // and was always written, so it stays unconditional. Only the measure
+                        // walk is depth-budgeted: the write recursion that follows traverses the
+                        // graph the measure just proved finite.
+                        var targetName = Sanitise(member.TypeName!);
+                        var inner = indent;
+                        if (!target.IsValueType)
+                        {
+                            Line(sb, indent, $"if (tmp{number} != null)");
+                            Line(sb, indent, "{");
+                            inner++;
+                        }
+                        Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
+                        if (target.IsValueType)
+                        {
+                            // a struct has no reference identity to key on
+                            Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
+                        }
+                        else
+                        {
+                            // usually a HIT: an enclosing measure already walked this object and
+                            // recorded it (the ??= cache); the miss arm serves a root write
+                            Line(sb, inner, $"var lengths{number} = state.RawLengths;");
+                            Line(sb, inner, $"if (!lengths{number}.TryGetValue(tmp{number}, out var len{number}))");
+                            Line(sb, inner, "{");
+                            Line(sb, inner + 1, $"len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget, lengths{number});");
+                            Line(sb, inner + 1, $"lengths{number}[tmp{number}] = len{number};");
+                            Line(sb, inner, "}");
+                        }
+                        Line(sb, inner, $"state.WriteRawVarint64((ulong)len{number});");
+                        Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number});");
+                        if (!target.IsValueType) Line(sb, indent, "}");
+                        break;
+                    }
                     case ProtoMemberKind.Message:
                         // likewise WriteMessage/WriteGroup(int, ...) skip nulls themselves. Group
                         // affects the *write* only - its read is an ordinary ReadMessage
@@ -1695,7 +1880,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// members this layer declares.
         /// </remarks>
         private static void EmitSubTypeContract(StringBuilder sb, int indent, ProtoContractPlan contract, string root,
-            bool raw = false)
+            bool raw = false, bool rawWrite = false, bool listAsSpan = false,
+            Dictionary<string, ProtoContractPlan>? measurable = null)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
             var sub = $"{Serializers}.ISubTypeSerializer<{contract.TypeName}>";
@@ -1754,7 +1940,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
-            EmitWriteMembers(sb, indent + 1, contract);
+            EmitWriteMembers(sb, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan, measurable: measurable);
             Line(sb, indent, "}");
             sb.AppendLine();
 
@@ -2379,9 +2565,22 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>
         /// The unguarded write for a scalar: the caller owns whatever test precedes it.
         /// </summary>
-        private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local)
+        private static void EmitScalarWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number, string local,
+            bool raw = false)
         {
             var expression = ScalarValue(member, local);
+            // the raw write forms (notes/nano-writer.md): the tag is a compile-time constant and
+            // the value write names its own encoding, skipping the WireType handshake entirely.
+            // Guards and structure are untouched - only the statement form changes - so this is
+            // safe for EVERY contract shape; writes need no eligibility. Default format only:
+            // formats keep the classic statements for now. Note the signed kinds sign-extend
+            // through 64 bits (a negative int32 is the 10-byte form on the wire).
+            if (raw && member.DataFormat == ProtoDataFormat.Default && RawScalarWrite(member, expression) is { } rawWrite)
+            {
+                Line(sb, indent, $"state.WriteRawTag(({member.FieldNumber} << 3) | {RawScalarWireBits(member.Kind)});  // {member.Name}");
+                Line(sb, indent, rawWrite);
+                return;
+            }
             if (member.Kind == ProtoMemberKind.Parseable)
             {
                 Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.String);");
@@ -2402,6 +2601,478 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, $"state.WriteFieldHeader({number}, global::ProtoBuf.WireType.{ScalarWireType(member)});");
                 Line(sb, indent, $"state.{ScalarSuffix(member.Kind, "Write")}({expression});");
             }
+        }
+
+        /// <summary>The raw write statement for a scalar kind, or null where the classic
+        /// statement stays (BCL kinds, Parseable, and anything not listed).</summary>
+        private static string? RawScalarWrite(ProtoMemberPlan member, string expression) => member.Kind switch
+        {
+            ProtoMemberKind.Bool => $"state.WriteRawVarint32({expression} ? 1u : 0u);",
+            // signed kinds sign-extend through 64 bits: a negative value is the 10-byte form
+            ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
+                => $"state.WriteRawVarint64(unchecked((ulong)(long){expression}));",
+            ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16 or ProtoMemberKind.Char
+                => $"state.WriteRawVarint32({expression});",
+            ProtoMemberKind.Int64 => $"state.WriteRawVarint64(unchecked((ulong){expression}));",
+            ProtoMemberKind.UInt64 => $"state.WriteRawVarint64({expression});",
+            ProtoMemberKind.Single => $"state.WriteRawSingle({expression});",
+            ProtoMemberKind.Double => $"state.WriteRawDouble({expression});",
+            _ => null,
+        };
+
+        /// <summary>The wire-type bits for a raw scalar write's constant tag.</summary>
+        private static int RawScalarWireBits(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Single => 5,
+            ProtoMemberKind.Double => 1,
+            _ => 0,
+        };
+
+        /// <summary>
+        /// Whether a repeated member's write takes the native loop rather than the stateful
+        /// WriteRepeated. Unlike the scalar raw writes - which are unconditionally safe because
+        /// only the statement form changes - a repeated write replaces the ENGINE, so it is
+        /// gated to the shapes whose bytes are provably the classic unpacked default: per-element
+        /// constant tag plus value, nothing for empty, throw on a null element.
+        /// </summary>
+        private static bool RawRepeatedWritable(ProtoMemberPlan member)
+        {
+            // List<T> and T[] exactly; a derived-declared list is out because foreach binds to
+            // the DECLARED type's GetEnumerator, which could be a hiding redeclaration
+            if (member.Repeated.Factory is not ("CreateList" or "CreateVector")
+                || member.Repeated.TakesCollectionType) return false;
+            // packed changes the framing entirely, and needs measure (plus the zero-length
+            // header rules); wrapping moves every element into a presence message
+            if (member.IsPacked || member.WrappedValue || member.WrappedCollection) return false;
+            if (member.DataFormat != ProtoDataFormat.Default) return false;
+            // message elements wait on the measure cut; a hand-written or deferred-category
+            // element serializer frames itself and cannot be second-guessed here
+            if (member.SubSerializer is not null || member.SubSerializerIsScalar
+                || member.SubSerializerDynamic) return false;
+            return member.Kind is ProtoMemberKind.Bool
+                or ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
+                or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16
+                or ProtoMemberKind.Char or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64
+                or ProtoMemberKind.Single or ProtoMemberKind.Double or ProtoMemberKind.String;
+        }
+
+        /// <summary>
+        /// The native write loop for an eligible repeated member (see
+        /// <see cref="RawRepeatedWritable"/> and <see cref="RawRepeatedMessageTarget"/>):
+        /// byte-identical to the stateful unpacked default. A List&lt;T&gt; enumerates as a span
+        /// where the framework offers it (net5+, probed) - no enumerator, no per-step version
+        /// check; serialization already demands the collection not mutate mid-write, which is
+        /// the same contract that check polices. An array's plain foreach is already an indexed
+        /// loop. A message element takes the measure-first shape: exact prefix, direct call.
+        /// </summary>
+        private static void EmitRawRepeatedWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
+            bool listAsSpan, ProtoContractPlan? messageTarget = null)
+        {
+            var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
+                ? 2 : RawScalarWireBits(member.Kind);
+            var source = listAsSpan && member.Repeated.Factory == "CreateList"
+                ? $"global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp{number})"
+                : $"tmp{number}";
+            var item = $"item{number}";
+            if (messageTarget is not null)
+            {
+                // hoisted once per run: every element consults (or feeds) the same cache
+                Line(sb, indent, $"var lengths{number} = state.RawLengths;");
+            }
+            Line(sb, indent, $"foreach (var {item} in {source})");
+            Line(sb, indent, "{");
+            // AsRepeated erases element nullability from the plan (it is an ordinary element on
+            // the wire), so nullability is read off the element type's own spelling, exactly as
+            // the packed read fast path does
+            var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
+            if (member.Kind == ProtoMemberKind.String || nullableElement
+                || (messageTarget is not null && !messageTarget.IsValueType))
+            {
+                Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
+            }
+            Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | {wire});  // {member.Name}");
+            if (messageTarget is not null)
+            {
+                var targetName = Sanitise(member.TypeName!);
+                if (messageTarget.IsValueType)
+                {
+                    Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, state.RawDepthBudget, lengths{number});");
+                }
+                else
+                {
+                    Line(sb, indent + 1, $"if (!lengths{number}.TryGetValue({item}, out var len{number}))");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"len{number} = Measure_{targetName}({item}, state.RawDepthBudget, lengths{number});");
+                    Line(sb, indent + 2, $"lengths{number}[{item}] = len{number};");
+                    Line(sb, indent + 1, "}");
+                }
+                Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len{number});");
+                Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item});");
+            }
+            else if (member.Kind == ProtoMemberKind.String)
+            {
+                Line(sb, indent + 1, $"state.WriteRawString({item});");
+            }
+            else
+            {
+                var local = nullableElement ? $"{item}.GetValueOrDefault()" : item;
+                Line(sb, indent + 1, RawScalarWrite(member, ScalarValue(member, local))!);
+            }
+            Line(sb, indent, "}");
+        }
+
+        /// <summary>
+        /// The contract-shape half of measure eligibility: no surrogate (either direction), no
+        /// hierarchy, not group-framed (a group member is framed by markers, not a length
+        /// prefix), and no before-serialize callback - measure runs before the write pipeline
+        /// would fire it, so a callback that mutates state would falsify the already-computed
+        /// prefix. Extension data is measurable: the blob carries its own headers, so its size
+        /// is its length (MeasureRawExtensionData) - which is what lets the .proto-generated DTO
+        /// trees, IExtensible throughout, take the measure-first shape at all.
+        /// </summary>
+        private static bool RawMeasurableShape(ProtoContractPlan contract)
+            => contract.ExternalSerializerTypeName is null
+            && contract.SurrogateTypeName is null
+            && contract.SurrogateSerializer is null
+            && contract.RootTypeName is null && contract.SubTypes.Count == 0
+            && !contract.IsGroup
+            && !HasCallback(contract, ProtoCallbackKind.BeforeSerialize);
+
+        /// <summary>
+        /// Whether this member stops its contract having a pure-arithmetic measure. This is the
+        /// write-side mirror of size predictability, NOT of write nativeness: a member whose
+        /// statement stays stateful (unary int32 via WriteInt32Varint) is still measurable,
+        /// because the BYTES are fixed by kind, format and value. What blocks: anything whose
+        /// size needs the engine (maps, wrapping, non-default formats, BCL kinds, parseable
+        /// ToString - which would also run twice - inbuilt or hand-written serializers), and a
+        /// message member whose target has no Measure_ of its own.
+        /// </summary>
+        private static bool RawMemberMeasureBlocked(ProtoMemberPlan member, Dictionary<string, ProtoContractPlan> measurable)
+        {
+            if (member.Map.Factory is not null) return true;
+            if (member.WrappedValue || member.WrappedCollection) return true;
+            if (member.DataFormat != ProtoDataFormat.Default) return true;
+            if (member.Repeated.Factory is not null)
+            {
+                if (RawRepeatedWritable(member)) return false;
+                return RawRepeatedMessageTarget(member, measurable) is null;
+            }
+            // a nullable STRUCT message would measure one GetValueOrDefault copy and write
+            // another; the copies are field-identical, but the shape is parked until a fixture
+            // proves it rather than reasoned safe
+            if (member.IsNullable && member.Kind == ProtoMemberKind.Message) return true;
+            return member.Kind switch
+            {
+                ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
+                    or ProtoMemberKind.Int16 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte
+                    or ProtoMemberKind.UInt16 or ProtoMemberKind.Char or ProtoMemberKind.Int64
+                    or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double
+                    or ProtoMemberKind.String or ProtoMemberKind.Uri => false,
+                ProtoMemberKind.Bytes => member.MemberIsValueType,
+                ProtoMemberKind.Message => member.SubSerializerIsScalar || member.SubSerializerDynamic
+                    || member.SubSerializer is not (null or "this")
+                    || member.TypeName is null || !measurable.ContainsKey(member.TypeName),
+                _ => true,
+            };
+        }
+
+        /// <summary>
+        /// The measurable target of a plain unary message member, or null where the classic
+        /// WriteMessage stays. The nullable-struct shape is excluded (it never reaches the kind
+        /// switch anyway); an inbuilt-serialized member has no plan entry, so the dictionary
+        /// lookup excludes it naturally.
+        /// </summary>
+        private static ProtoContractPlan? RawNativeMessageTarget(ProtoMemberPlan member,
+            Dictionary<string, ProtoContractPlan>? measurable)
+            => !member.IsNullable
+                && member.DataFormat == ProtoDataFormat.Default
+                && member.SubSerializer is null or "this"
+                && !member.SubSerializerIsScalar && !member.SubSerializerDynamic
+                && member.TypeName is not null
+                && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
+                ? target : null;
+
+        /// <summary>
+        /// The measurable target of a repeated message member: the cut-2 collection gates plus
+        /// a measurable element. A nullable-struct element is parked with its unary sibling.
+        /// </summary>
+        private static ProtoContractPlan? RawRepeatedMessageTarget(ProtoMemberPlan member,
+            Dictionary<string, ProtoContractPlan>? measurable)
+            => member.Kind == ProtoMemberKind.Message
+                && member.Repeated.Factory is "CreateList" or "CreateVector"
+                && !member.Repeated.TakesCollectionType
+                && !member.IsPacked && !member.WrappedValue && !member.WrappedCollection
+                && member.DataFormat == ProtoDataFormat.Default
+                && member.SubSerializer is null or "this"
+                && member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) != true
+                && member.TypeName is not null
+                && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
+                ? target : null;
+
+        /// <summary>The generator-side varint size, for folding constant tag lengths.</summary>
+        private static int VarintLen(uint value)
+        {
+            int n = 1;
+            while ((value >>= 7) != 0) n++;
+            return n;
+        }
+
+        /// <summary>
+        /// The size expression for a raw scalar's payload - the measure mirror of
+        /// <see cref="RawScalarWrite"/>, byte for byte. A constant ("1", "4", "8") is returned
+        /// as such so the caller can fold it into the tag length.
+        /// </summary>
+        private static string? RawScalarMeasure(ProtoMemberPlan member, string expression) => member.Kind switch
+        {
+            ProtoMemberKind.Bool => "1",
+            ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
+                => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long){expression}))",
+            ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16 or ProtoMemberKind.Char
+                => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32({expression})",
+            ProtoMemberKind.Int64 => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong){expression}))",
+            ProtoMemberKind.UInt64 => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64({expression})",
+            ProtoMemberKind.Single => "4",
+            ProtoMemberKind.Double => "8",
+            _ => null,
+        };
+
+        /// <summary>
+        /// One member's contribution to <c>len</c>, tag length folded as a literal; the payload
+        /// half comes from <see cref="RawScalarMeasure"/> or the caller's own expression.
+        /// </summary>
+        private static string MeasureAdd(ProtoMemberPlan member, int wire, string payload)
+        {
+            var tagLen = VarintLen((uint)((member.FieldNumber << 3) | wire));
+            return int.TryParse(payload, out var constant)
+                ? $"len += {tagLen + constant};  // {member.Name}"
+                : $"len += {tagLen} + {payload};  // {member.Name}";
+        }
+
+        /// <summary>
+        /// The measure mirror of <see cref="EmitWriteMembers"/> for a measurable contract: the
+        /// same member order, the same guards, and payload arithmetic in place of writes. The
+        /// eligibility fixed point guarantees every member here has a form; a kind falling to
+        /// the default arm is a generator bug, thrown at generation time rather than emitted as
+        /// a silently short prefix.
+        /// </summary>
+        private static void EmitMeasureMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
+            Dictionary<string, ProtoContractPlan> measurable, bool listAsSpan)
+        {
+            foreach (var member in contract.Members)
+            {
+                var condition = member.WriteCondition;
+                if (condition is not null)
+                {
+                    Line(sb, baseIndent, $"if (value.{condition})");
+                    Line(sb, baseIndent, "{");
+                }
+                var indent = condition is null ? baseIndent : baseIndent + 1;
+                var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
+                Line(sb, indent, $"var tmp{number} = {MemberAccess(contract, member, "value")};");
+
+                if (member.Repeated.Factory is not null)
+                {
+                    Line(sb, indent, $"if (tmp{number} != null)");
+                    Line(sb, indent, "{");
+                    EmitRawRepeatedMeasure(sb, indent + 1, member, number, listAsSpan,
+                        RawRepeatedMessageTarget(member, measurable));
+                    Line(sb, indent, "}");
+                    goto measured;
+                }
+
+                if (member.IsNullable)
+                {
+                    // presence decides, not value; a declared default nests inside, exactly as
+                    // the write does
+                    Line(sb, indent, $"if (tmp{number}.HasValue)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, $"var val{number} = tmp{number}.GetValueOrDefault();");
+                    var measureNullable = RawScalarMeasure(member, ScalarValue(member, $"val{number}"))!;
+                    if (member.DefaultLiteral is { } nullableDefault)
+                    {
+                        Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
+                        Line(sb, indent + 1, "{");
+                        Line(sb, indent + 2, MeasureAdd(member, RawScalarWireBits(member.Kind), measureNullable));
+                        Line(sb, indent + 1, "}");
+                    }
+                    else
+                    {
+                        Line(sb, indent + 1, MeasureAdd(member, RawScalarWireBits(member.Kind), measureNullable));
+                    }
+                    Line(sb, indent, "}");
+                    goto measured;
+                }
+
+                // a tuple measures every scalar unconditionally, as it writes
+                if (contract.IsTuple && member.Kind is not (ProtoMemberKind.String
+                    or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
+                {
+                    Line(sb, indent, MeasureAdd(member, RawScalarWireBits(member.Kind),
+                        RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
+                    goto measured;
+                }
+
+                switch (member.Kind)
+                {
+                    case ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
+                        or ProtoMemberKind.Int16 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte
+                        or ProtoMemberKind.UInt16 or ProtoMemberKind.Char or ProtoMemberKind.Int64
+                        or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double:
+                        var add = MeasureAdd(member, RawScalarWireBits(member.Kind),
+                            RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!);
+                        // IsRequired means field presence: no guard, as on the write
+                        if (member.IsRequired || member.WriteCondition is not null)
+                        {
+                            Line(sb, indent, add);
+                        }
+                        else
+                        {
+                            Line(sb, indent, $"if ({ScalarGuard(member, $"tmp{number}")}) {add}");
+                        }
+                        break;
+                    case ProtoMemberKind.String when member.DefaultLiteral is { } declared
+                        && !member.IsRequired && member.WriteCondition is null:
+                        Line(sb, indent, $"if (tmp{number} != null && tmp{number} != {declared})");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp{number})"));
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.String:
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp{number})"));
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.Uri:
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp{number}.OriginalString)"));
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.Bytes:
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        Line(sb, indent + 1, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp{number}.Length) + tmp{number}.Length"));
+                        Line(sb, indent, "}");
+                        break;
+                    case ProtoMemberKind.Message:
+                    {
+                        var target = measurable[member.TypeName!];
+                        var targetName = Sanitise(member.TypeName!);
+                        var inner = indent;
+                        if (!target.IsValueType)
+                        {
+                            Line(sb, indent, $"if (tmp{number} != null)");
+                            Line(sb, indent, "{");
+                            inner++;
+                        }
+                        if (target.IsValueType)
+                        {
+                            // a struct has no reference identity to key on
+                            Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, depth, lengths);");
+                        }
+                        else
+                        {
+                            Line(sb, inner, $"if (!lengths.TryGetValue(tmp{number}, out var len{number}))");
+                            Line(sb, inner, "{");
+                            Line(sb, inner + 1, $"len{number} = Measure_{targetName}(tmp{number}, depth, lengths);");
+                            Line(sb, inner + 1, $"lengths[tmp{number}] = len{number};");
+                            Line(sb, inner, "}");
+                        }
+                        Line(sb, inner, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number}"));
+                        if (!target.IsValueType) Line(sb, indent, "}");
+                        break;
+                    }
+                    default:
+                        throw new InvalidOperationException(
+                            $"unmeasurable member slipped eligibility: {contract.TypeName}.{member.Name} ({member.Kind})");
+                }
+
+            measured:
+                if (condition is not null) Line(sb, baseIndent, "}");
+            }
+
+            // the kept-but-unrecognised fields go out after every declared member, and carry
+            // their own headers - so their size is simply the blob's length
+            if (contract.Extensible != ProtoExtensibleKind.None)
+            {
+                Line(sb, baseIndent, $"len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value{ExtensionType(contract)});");
+            }
+        }
+
+        /// <summary>
+        /// The measure mirror of <see cref="EmitRawRepeatedWrite"/>. Fixed-width elements of a
+        /// non-nullable spelling fold to count-times-constant; everything else loops. A null
+        /// element throws HERE, before a single byte is written - the measure runs first, so it
+        /// owns the failure the stateful engine raised mid-write.
+        /// </summary>
+        private static void EmitRawRepeatedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
+            bool listAsSpan, ProtoContractPlan? messageTarget)
+        {
+            var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
+                ? 2 : RawScalarWireBits(member.Kind);
+            var tagLen = VarintLen((uint)((member.FieldNumber << 3) | wire));
+            var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
+            var count = member.Repeated.Factory == "CreateVector" ? $"tmp{number}.Length" : $"tmp{number}.Count";
+            if (!nullableElement && member.Kind is ProtoMemberKind.Bool or ProtoMemberKind.Single or ProtoMemberKind.Double)
+            {
+                var width = member.Kind switch
+                {
+                    ProtoMemberKind.Bool => 1,
+                    ProtoMemberKind.Single => 4,
+                    _ => 8,
+                };
+                // the long literal keeps the count-fold in 64-bit arithmetic: a colossal
+                // collection could overflow an int multiply where the sum is still legal
+                Line(sb, indent, $"len += {count} * {tagLen + width}L;  // {member.Name}");
+                return;
+            }
+            var source = listAsSpan && member.Repeated.Factory == "CreateList"
+                ? $"global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp{number})"
+                : $"tmp{number}";
+            var item = $"item{number}";
+            Line(sb, indent, $"foreach (var {item} in {source})");
+            Line(sb, indent, "{");
+            if (member.Kind == ProtoMemberKind.String || nullableElement
+                || (messageTarget is not null && !messageTarget.IsValueType))
+            {
+                Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
+            }
+            if (messageTarget is not null)
+            {
+                var targetName = Sanitise(member.TypeName!);
+                if (messageTarget.IsValueType)
+                {
+                    Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, depth, lengths);");
+                }
+                else
+                {
+                    Line(sb, indent + 1, $"if (!lengths.TryGetValue({item}, out var len{number}))");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"len{number} = Measure_{targetName}({item}, depth, lengths);");
+                    Line(sb, indent + 2, $"lengths[{item}] = len{number};");
+                    Line(sb, indent + 1, "}");
+                }
+                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number};");
+            }
+            else if (member.Kind == ProtoMemberKind.String)
+            {
+                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawString({item});");
+            }
+            else
+            {
+                var local = nullableElement ? $"{item}.GetValueOrDefault()" : item;
+                var payload = RawScalarMeasure(member, ScalarValue(member, local))!;
+                Line(sb, indent + 1, int.TryParse(payload, out var constant)
+                    ? $"len += {tagLen + constant};"
+                    : $"len += {tagLen} + {payload};");
+            }
+            Line(sb, indent, "}");
         }
 
         /// <summary>

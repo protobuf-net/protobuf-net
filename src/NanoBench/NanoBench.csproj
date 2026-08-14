@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,8 +10,16 @@
          the measured legacy baseline here, not migration debt - benchmarks are the one place
          that advice is deliberately declined -->
     <NoWarn>$(NoWarn);CS1591;PBN9001;PBN2010</NoWarn>
-    <!-- nano-core micro-benchmarks: see docs/nano-core.md - "functionally correct" is step 0 -->
+    <!-- nano-core micro-benchmarks: see notes/nano-core.md - "functionally correct" is step 0 -->
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net472'">
+    <!-- most of the strategies raced here need BitOperations, which net4x does not have - which
+         is precisely why the shipped down-level arm is a shift loop, and why the ladder replaces
+         it. DEBT: the ladder-vs-loop comparison on net472 itself is owed, and wants a net472-only
+         variant of this file carrying only the non-intrinsic strategies. -->
+    <Compile Remove="VarintMeasureBenchmarks.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />

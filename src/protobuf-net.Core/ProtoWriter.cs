@@ -168,6 +168,11 @@ namespace ProtoBuf
             UserState = userState;
         }
 
+        // the raw measure pass's ??= length cache lives on netCache - the codebase's home for
+        // cross-writer measurement state - so the null-writer sidecar and MeasureState's
+        // InitializeFrom hand-off both share it for free; see the notes on the field itself
+        internal System.Collections.Generic.Dictionary<object, long> RawLengths => netCache.RawLengths;
+
         [StructLayout(LayoutKind.Auto)]
         internal readonly struct WriteState
         {
@@ -181,6 +186,11 @@ namespace ProtoBuf
             internal readonly WireType WireType;
             internal readonly int FieldNumber;
         }
+        // note: every caller of this pair is a Measure* static taking a NullProtoWriter, so
+        // the position being snapshotted and zeroed here is always a Null writer's - which
+        // has no pending buffer, so committed IS the position and the zeroing is exact.
+        // (Audited when the deferred-position invariant landed; if a buffered backend ever
+        // needs this, it must zero the uncommitted offset too, not just the committed count.)
         internal WriteState ResetWriteState()
         {
             var state = new WriteState(_position64, fieldNumber, WireType);
@@ -197,13 +207,50 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Addition information about this serialization operation.
+        /// Additional information about this serialization operation.
         /// </summary>
         [Obsolete("Prefer " + nameof(UserState))]
         public SerializationContext Context => SerializationContext.AsSerializationContext(this);
 
         /// <summary>
-        /// Addition information about this serialization operation.
+        /// Indicates whether the current operation is a measuring pass rather than a write, so
+        /// that a serialization callback with side-effects can decline to repeat them.
+        /// </summary>
+        /// <remarks>
+        /// A length-prefixed sub-message is sized before it is written, and the sizing is
+        /// performed by writing to a counting writer - so a callback runs once per pass. That is
+        /// harmless for the common shape, where the callback populates a member which is then
+        /// serialized: both passes must see the same object, so the callback MUST run in both.
+        /// It is wrong for a side-effect that is not part of the message - a counter, a log, an
+        /// audit hook - which wants to happen exactly once.
+        /// <para>
+        /// Only the caller can tell those apart, which is why this is asked rather than decided:
+        /// suppressing callbacks wholesale would measure the object before the callback ran and
+        /// write it after, so the lengths would disagree and serialization would fail outright.
+        /// </para>
+        /// <para>
+        /// Callbacks receive this by declaring an <see cref="ISerializationContext"/>,
+        /// <see cref="SerializationContext"/> or <c>StreamingContext</c> parameter; the first
+        /// carries the context object itself and is what this takes.
+        /// </para>
+        /// </remarks>
+        /// <param name="context">The context supplied to the callback.</param>
+        public static bool IsMeasuring(ISerializationContext context)
+            => context is ProtoWriter writer && writer.IsMeasuringPass;
+
+        /// <summary>
+        /// Whether this writer exists to count bytes rather than to emit them.
+        /// </summary>
+        /// <remarks>
+        /// Named here rather than inferred from the writer's type at the point of asking: the
+        /// question is "is this a measuring pass", not "is this one particular writer", and any
+        /// future counting backend should answer it by overriding rather than by being added to
+        /// a type test somewhere else.
+        /// </remarks>
+        private protected virtual bool IsMeasuringPass => false;
+
+        /// <summary>
+        /// Additional information about this serialization operation.
         /// </summary>
         public object UserState { get; private set; }
 
@@ -254,6 +301,61 @@ namespace ProtoBuf
 
 
         /// <summary>
+        /// Writes a length-prefixed sub-message MEASURE-FIRST: ask for the length, write it, then
+        /// write the body - as opposed to the classic reserve-and-back-fill.
+        /// </summary>
+        /// <remarks>
+        /// Shared by every backend that can use it, which is any backend that cannot (or would
+        /// rather not) reach back into bytes it has already written. The buffer-writer cannot by
+        /// construction - it may already have handed the chunk over - and the stream writer would
+        /// rather not, because back-filling forces `flushLock`, and a writer that cannot flush
+        /// while a sub-item is open has to GROW its buffer instead of draining it.
+        /// <para>
+        /// The calculated-vs-actual check at the end is the free correctness gate under the whole
+        /// measure-first design: it fires on any disagreement between the measure and the write.
+        /// </para>
+        /// </remarks>
+        private protected void WriteMeasuredWithLengthPrefix<T>(NullProtoWriter measureWriter,
+            ref State state, T value, ISerializer<T> serializer, PrefixStyle style)
+        {
+            serializer ??= TypeModel.ResolveSerializer<T>(model);
+            long calculatedLength = Measure<T>(measureWriter, value, serializer);
+
+            switch (style)
+            {
+                case PrefixStyle.None:
+                    break;
+                case PrefixStyle.Base128:
+                    ImplWriteVarint64(ref state, (ulong)calculatedLength);
+                    ResetWireType();
+                    break;
+                case PrefixStyle.Fixed32:
+                case PrefixStyle.Fixed32BigEndian:
+                    ImplWriteFixed32(ref state, checked((uint)calculatedLength));
+                    if (style == PrefixStyle.Fixed32BigEndian)
+                        state.ReverseLast32();
+                    ResetWireType();
+                    break;
+                default:
+                    ThrowHelper.ThrowNotImplementedException($"Sub-object prefix style not implemented: {style}");
+                    break;
+            }
+
+            if (calculatedLength != 0) // don't bother serializing if nothing there
+            {
+                var oldPos = GetPosition(in state);
+                serializer.Write(ref state, value);
+                var newPos = GetPosition(in state);
+
+                var actualLength = (newPos - oldPos);
+                if (actualLength != calculatedLength)
+                {
+                    ThrowHelper.ThrowInvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                }
+            }
+        }
+
+        /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
         protected internal virtual void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
@@ -295,7 +397,8 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.String:
-                    AdvanceAndReset(ImplWriteVarint32(ref state, 0));
+                    ImplWriteVarint32(ref state, 0);
+                    ResetWireType();
                     break;
                 case WireType.StartGroup:
                     state.WriteHeaderCore(state.FieldNumber, WireType.EndGroup);
@@ -335,22 +438,42 @@ namespace ProtoBuf
 
         private bool _needFlush;
 
+        // ---- the position invariant (notes/nano-writer.md, the buffer-core plan) ----
+        //
+        // _position64 counts COMMITTED bytes only - what has left the writer's pending
+        // buffer for the backend - and is advanced at the commit point, never per write
+        // op. The true position is DERIVED: committed + whatever the backend is still
+        // holding uncommitted, which every backend already tracks for its own purposes
+        // (the buffer-writer's state.OffsetInCurrent, the stream writer's ioIndex). That
+        // removes the second half of the per-op double bookkeeping - the span offset AND
+        // a writer-object position advance - which is what lets a raw op become a
+        // span-direct store touching the writer object not at all.
+        //
+        // The Null writer has no buffer, so it commits immediately: its Impl* stores
+        // (which are pure measurement) advance the position themselves, and its
+        // uncommitted count is always zero. The SAME formula answers correctly for it,
+        // so the accessor is uniform.
+
+        [MethodImpl(HotPath)]
+        internal long GetPosition(in State state) => _position64 + GetUncommitted(in state);
+
 #pragma warning disable RCS1163, IDE0060 // Remove unused parameter
-        internal long GetPosition(ref State state) => _position64;
+        /// <summary>
+        /// Bytes written into this backend's pending buffer that have not yet been committed
+        /// (and so are not yet counted by <c>_position64</c>).
+        /// </summary>
+        private protected virtual long GetUncommitted(in State state) => 0;
 #pragma warning restore RCS1163, IDE0060 // Remove unused parameter
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;
-        internal void AdvanceAndReset(int count)
-        {
-            _position64 += count;
-            WireType = WireType.None;
-        }
-        internal void AdvanceAndReset(long count)
-        {
-            _position64 += count;
-            WireType = WireType.None;
-        }
+
+        /// <summary>
+        /// Ends a write op under the stateful convention: the value has been written, so the
+        /// pending field header is discharged. Position is not touched - see the invariant above.
+        /// </summary>
+        [MethodImpl(HotPath)]
+        internal void ResetWireType() => WireType = WireType.None;
 
         /// <summary>
         /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
@@ -364,7 +487,7 @@ namespace ProtoBuf
         [MethodImpl(HotPath)]
         internal void CheckClear(ref State state)
         {
-            if (_depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {_depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.GetPosition()})");
+            if (_depth != 0 || !TryFlush(ref state)) ThrowHelper.ThrowInvalidOperationException($"The writer is in an incomplete state (depth: {_depth}, type: {GetType().Name}, field: {fieldNumber}, wire-type: {WireType}, position: {state.Position64})");
             _needFlush = false; // because we ^^^ *JUST DID*
         }
 

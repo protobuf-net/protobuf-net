@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections;
@@ -85,8 +85,15 @@ namespace ProtoBuf.Serializers
 #if NET6_0_OR_GREATER
         /// <summary>Create a serializer that operates on sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
-        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<T>()
+        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnlySet<T>()
             => SerializerCache<ReadOnlySetSerializer<T>>.InstanceField;
+
+        /// <summary>Create a serializer that operates on sets</summary>
+        [MethodImpl(ProtoReader.HotPath)]
+        [Obsolete("This was a typo, kept for compatibility with previously-generated code; use " + nameof(CreateReadOnlySet) + " instead.")]
+        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<T>()
+            => CreateReadOnlySet<T>();
 #endif
 
         /// <summary>Reverses a range of values</summary>
@@ -184,7 +191,8 @@ namespace ProtoBuf.Serializers
             {   // we only need to write these for exact v2 compatibility
                 state.WriteFieldHeader(fieldNumber, WireType.String);
                 var writer = state.GetWriter();
-                writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, 0UL));
+                writer.ImplWriteVarint64(ref state, 0UL);
+                writer.ResetWireType();
             }
         }
 
@@ -284,7 +292,8 @@ namespace ProtoBuf.Serializers
 
             state.WriteFieldHeader(fieldNumber, WireType.String);
             var writer = state.GetWriter();
-            writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)expectedLength));
+            writer.ImplWriteVarint64(ref state, (ulong)expectedLength);
+            writer.ResetWireType();
             long before = state.GetPosition();
             WritePacked(ref state, values, serializer, wireType);
             long actualLength = state.GetPosition() - before;

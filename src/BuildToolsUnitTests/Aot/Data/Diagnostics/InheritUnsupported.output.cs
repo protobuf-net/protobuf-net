@@ -18,11 +18,11 @@ partial class InheritUnsupportedModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.Unlinked>
     {
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritUnsupported.AbstractLeaf global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
         {
@@ -46,26 +46,60 @@ partial class InheritUnsupportedModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
+            => RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref state, value);
+
+        public static void RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
 
+        public static long Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_InheritUnsupported_AbstractLeaf(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritUnsupported.Unlinked global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
             => RawRead_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
+            => RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
+
+        public static void RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Extra;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
         }
+
+        public static long Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp2 = value.Extra;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Extra
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritUnsupported.Unlinked value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_InheritUnsupported_Unlinked(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {

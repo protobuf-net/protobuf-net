@@ -34,14 +34,20 @@ partial class UrisModel
             var tmp1 = value.Home;
             if (tmp1 != null)
             {
-                state.WriteString(1, tmp1.OriginalString);
+                state.WriteRawTag((1 << 3) | 2);  // Home
+                state.WriteRawString(tmp1.OriginalString);
             }
             var tmp2 = value.Name;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Name
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Relative;
             if (tmp3 != null)
             {
-                state.WriteString(3, tmp3.OriginalString);
+                state.WriteRawTag((3 << 3) | 2);  // Relative
+                state.WriteRawString(tmp3.OriginalString);
             }
             var tmp4 = value.All;
             if (tmp4 != null)
@@ -61,7 +67,8 @@ partial class UrisModel
             var tmp7 = value.Fixed;
             if (tmp7 != null)
             {
-                state.WriteString(7, tmp7.OriginalString);
+                state.WriteRawTag((7 << 3) | 2);  // Fixed
+                state.WriteRawString(tmp7.OriginalString);
             }
         }
 

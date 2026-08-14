@@ -18,7 +18,7 @@ partial class ListOptionsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.NotACollection>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
@@ -42,12 +42,15 @@ partial class ListOptionsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ListOptions.NotACollection global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
             => RawRead_AotFixtures_ListOptions_NotACollection(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.NotACollection>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
+            => RawWrite_AotFixtures_ListOptions_NotACollection(ref state, value);
+
+        public static void RawWrite_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.PackedScalar;
@@ -55,26 +58,66 @@ partial class ListOptionsModel
             var tmp2 = value.OverwriteScalar;
             if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
             var tmp3 = value.BothOnString;
-            state.WriteString(3, tmp3);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // BothOnString
+                state.WriteRawString(tmp3);
+            }
             var tmp4 = value.AppendedBytes;
             if (tmp4 != null)
             {
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp4);
+                state.WriteRawTag((4 << 3) | 2);  // AppendedBytes
+                state.WriteRawBytes(tmp4);
             }
             var tmp5 = value.OverwrittenBytes;
             if (tmp5 != null)
             {
-                state.WriteFieldHeader(5, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp5);
+                state.WriteRawTag((5 << 3) | 2);  // OverwrittenBytes
+                state.WriteRawBytes(tmp5);
             }
             var tmp6 = value.PackedBytes;
             if (tmp6 != null)
             {
-                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp6);
+                state.WriteRawTag((6 << 3) | 2);  // PackedBytes
+                state.WriteRawBytes(tmp6);
             }
         }
+
+        public static long Measure_AotFixtures_ListOptions_NotACollection(global::AotFixtures.ListOptions.NotACollection value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.PackedScalar;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // PackedScalar
+            var tmp2 = value.OverwriteScalar;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OverwriteScalar
+            var tmp3 = value.BothOnString;
+            if (tmp3 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp3);  // BothOnString
+            }
+            var tmp4 = value.AppendedBytes;
+            if (tmp4 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp4.Length) + tmp4.Length;  // AppendedBytes
+            }
+            var tmp5 = value.OverwrittenBytes;
+            if (tmp5 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp5.Length) + tmp5.Length;  // OverwrittenBytes
+            }
+            var tmp6 = value.PackedBytes;
+            if (tmp6 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6.Length) + tmp6.Length;  // PackedBytes
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.NotACollection>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListOptions.NotACollection value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_ListOptions_NotACollection(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ListOptions.NotACollection RawRead_AotFixtures_ListOptions_NotACollection(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.NotACollection value)
         {
@@ -142,7 +185,11 @@ partial class ListOptionsModel
             var tmp1 = value.Default;
             if (tmp1 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1);
+                foreach (var item1 in tmp1)
+                {
+                    state.WriteRawTag((1 << 3) | 0);  // Default
+                    state.WriteRawVarint64(unchecked((ulong)(long)item1));
+                }
             }
             var tmp2 = value.Packed;
             if (tmp2 != null)
@@ -152,7 +199,11 @@ partial class ListOptionsModel
             var tmp3 = value.Overwrite;
             if (tmp3 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 3, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp3);
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    state.WriteRawTag((3 << 3) | 0);  // Overwrite
+                    state.WriteRawVarint64(unchecked((ulong)(long)item3));
+                }
             }
             var tmp4 = value.PackedOverwrite;
             if (tmp4 != null)
@@ -162,7 +213,11 @@ partial class ListOptionsModel
             var tmp5 = value.NotPacked;
             if (tmp5 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5);
+                foreach (var item5 in tmp5)
+                {
+                    state.WriteRawTag((5 << 3) | 0);  // NotPacked
+                    state.WriteRawVarint64(unchecked((ulong)(long)item5));
+                }
             }
             var tmp6 = value.PackedDouble;
             if (tmp6 != null)

@@ -22,7 +22,7 @@ partial class InheritAccessorModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Base>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Derived>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Derived>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Holder>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -51,13 +51,21 @@ partial class InheritAccessorModel
             var tmp1 = Field_AotFixtures_InheritAccessor_Base__count(value);
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
             var tmp2 = value.Label;
-            state.WriteString(2, tmp2);
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);  // Label
+                state.WriteRawString(tmp2);
+            }
             var tmp3 = value.Ordinal;
             if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
             var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
             if (tmp4 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp4);
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                {
+                    state.WriteRawTag((4 << 3) | 0);  // _values
+                    state.WriteRawVarint64(unchecked((ulong)(long)item4));
+                }
             }
         }
 
@@ -149,7 +157,11 @@ partial class InheritAccessorModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp5 = Field_AotFixtures_InheritAccessor_Derived__extra(value);
-            state.WriteString(5, tmp5);
+            if (tmp5 != null)
+            {
+                state.WriteRawTag((5 << 3) | 2);  // _extra
+                state.WriteRawString(tmp5);
+            }
         }
 
         global::AotFixtures.InheritAccessor.Derived global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Derived>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Derived> value)
@@ -188,7 +200,7 @@ partial class InheritAccessorModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritAccessor.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritAccessor.Holder value)
         {
@@ -211,10 +223,27 @@ partial class InheritAccessorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
+            => RawWrite_AotFixtures_InheritAccessor_Holder(ref state, value);
+
+        public static void RawWrite_AotFixtures_InheritAccessor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
         {
             var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
             if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
         }
+
+        public static long Measure_AotFixtures_InheritAccessor_Holder(global::AotFixtures.InheritAccessor.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _n
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritAccessor.Holder value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_InheritAccessor_Holder(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 

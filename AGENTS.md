@@ -43,7 +43,7 @@ If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
 
 ## AOT source generator (work in progress)
 
-> **Picking this up on a new machine?** `docs/aot-findings.md` opens with a **Handover** section
+> **Picking this up on a new machine?** `notes/aot-findings.md` opens with a **Handover** section
 > recording the Windows-only validations and their results — all run and green as of 2026-08-11,
 > including the full-TFM `pack` (note the `dotnet pack`/NU5026 wrinkle recorded there), the win-x64
 > native publish (19 warnings, matching linux-x64), and the net472 test legs.
@@ -385,8 +385,10 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
 - `IProducerConsumerCollection<T>` resolves to a provider, but **reading** one needs a concrete type
   to construct, so ref-emit throws on deserialize. There is nothing to compare against, so it has no
   fixture.
-- `IReadOnlySet<T>` maps to `CreateReadOnySet` (sic), which only exists in the net6.0+ build of the
-  library; the generator checks the symbol is present before emitting a call to it.
+- `IReadOnlySet<T>` maps to `CreateReadOnlySet`, which only exists in the net6.0+ build of the
+  library; the generator checks the symbol is present before emitting a call to it, and falls back
+  to the 3.x spelling `CreateReadOnySet` (sic - now an `[Obsolete]` forwarder, kept because
+  previously-generated code binds to it by name) when only an older Core is referenced.
 
 ### Maps
 
@@ -453,7 +455,7 @@ succeeds and emits the member, then the first use throws *"No serializer for typ
 `ISerializer<KeyValuePair<string,string>>`, so the cast is null and resolution falls back to a model
 with no entry. The reflection path handles all three shapes. So our repeated and nested map **values**
 match reflection and *exceed* the compiled path, and our refused nested **key** matches the compiled
-path and falls short of reflection. Item 9 in `docs/aot-findings.md`.
+path and falls short of reflection. Item 9 in `notes/aot-findings.md`.
 
 That distinction is only visible if you **run** the compiled model. `AotRefGen` compiles and
 decompiles but never executes, so `*.reference.cs` shows the member emitted and says nothing about
@@ -642,7 +644,7 @@ Two of those refusals are newer and worth the detail:
 in addition to the implementation's, so a property declared on both goes on the wire **twice**. That
 is consistent — the interface property and the implementing property genuinely are different members
 — but it is not what anyone writing that contract intends, and it is why the analyzer says
-"supported but not recommended". `docs/aot-findings.md` has the decoded bytes.
+"supported but not recommended". `notes/aot-findings.md` has the decoded bytes.
 
 This also turned up a bug in the *shipped* analyzer: `PBN0012` ("declared as an include, but is not
 a direct sub-type") compared `BaseType` only, so it reported a build **error** for every interface
@@ -702,7 +704,7 @@ each input in isolation, which is exactly what is needed.
 The level-200 `Guid` path used to be recorded here as costing four AOT warnings the other forms did
 not. It never did: those warnings were kept-reflectable members of `System.Enum`, and ILC merely
 attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They are gone, along
-with the rest of that group — see item 4 of `docs/aot-findings.md`, and treat per-feature warning
+with the rest of that group — see item 4 of `notes/aot-findings.md`, and treat per-feature warning
 attributions with suspicion generally.
 
 ### Extensible contracts
@@ -946,7 +948,7 @@ reads zero: nothing disagrees on the wire, and no case remains where either mode
 other does not. So widening coverage beats picking another bullet — the `.proto`-generated DTO path
 is the obvious untested half, and `protobuf-net.Reflection` can produce it in-process.
 
-**The ranked candidate list lives in the "Next steps" section of `docs/aot-findings.md`**, with the
+**The ranked candidate list lives in the "Next steps" section of `notes/aot-findings.md`**, with the
 reasoning for the ordering. Keep it there rather than scattering next-step opinions through this
 file, as had started to happen.
 
@@ -1123,7 +1125,7 @@ which `TypeModel` implements nine instantiations. Nothing reflects over a stream
 `T` on `Deserialize<T>`, and that one was never annotated. Because the mask includes nested types,
 ILC kept **1738 framework members** reflectable (`Task` 520, `Array` 160, `Enum` 99, `Stream` 72, …)
 and *no* protobuf-net members. Removing the three annotations: **34 → 20** warnings and
-**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `docs/aot-findings.md` has the
+**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `notes/aot-findings.md` has the
 measurement and the tracing recipe.
 
 So the standing rule is: **before annotating a type parameter, ask what would reflect over it.** A
@@ -1250,7 +1252,7 @@ warning's clothes, and is where the 808 KB above was found. There are currently 
 publish is incremental and a second run reports nothing at all, and re-measure the *baseline*
 whenever a fixture changes, since the count tracks fixtures. **Watch the binary size too**, not just
 the count: the two do not move together, and the largest win so far was invisible in the count.
-`docs/aot-findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
+`notes/aot-findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
 measurement.
 
 When a warning needs attributing, get the graph rather than guessing —
@@ -1645,7 +1647,7 @@ parseable fixture looks like a generator bug.
 Note the coverage sweep does **not** enable this, deliberately — a real consumer has to opt in, so
 counting these as emittable would overstate what works out of the box.
 
-A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `docs/aot-findings.md` under
+A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `notes/aot-findings.md` under
 "Future ideas" — it is blocked on protobuf-net having no UTF-8 `WriteString` equivalent, and the
 read half of the interface pair is implemented by far fewer types than the write half.
 
@@ -1727,7 +1729,7 @@ orders never having been read in the first place.
 `src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built
 `protobuf-net.Test`, `Examples` and `protobuf-net.Reflection.Test` assemblies and tallies what it
 could and could not handle, grouped by reason. It exists so that "what should the generator support
-next" is answered by counting real contracts rather than by guessing; `docs/aot-coverage.md` is the
+next" is answered by counting real contracts rather than by guessing; `notes/aot-coverage.md` is the
 last snapshot. Build those three projects first — it seeds from **metadata**, not source.
 
 Two artefacts to know about: it can only seed types a `typeof(...)` in another assembly can name, so
@@ -1738,7 +1740,7 @@ under its own "harness artefact" heading rather than counted as a generator bug,
 emitted code compile" line means what it says.
 
 It writes to stdout and the snapshot carries a hand-added header line, so regenerating it is
-`{ header; dotnet run --project src/AotCoverage; } > docs/aot-coverage.md`, not a plain redirect.
+`{ header; dotnet run --project src/AotCoverage; } > notes/aot-coverage.md`, not a plain redirect.
 
 ### Differential sweep (the corpus, on bytes)
 
@@ -1746,7 +1748,7 @@ It writes to stdout and the snapshot carries a hand-added header line, so regene
 **compiles**; this one *runs* it, comparing bytes against `RuntimeTypeModel` for a populated instance
 of every contract. That is the property that actually matters — every serious bug this generator has
 had (the `DataFormat` cast that mis-mapped, the BCL element wire types, `OverwriteList` on a bytes
-member) compiled perfectly and wrote the wrong bytes. `docs/aot-differential.md` is the last snapshot.
+member) compiled perfectly and wrote the wrong bytes. `notes/aot-differential.md` is the last snapshot.
 
 Three things about it are load-bearing:
 
@@ -1779,7 +1781,7 @@ Three things about it are load-bearing:
 
   This is not "more corpus", it is a **different distribution**, and that is the point: people do not
   write `public int @case`, and machine-generated contracts do. It found a bug that broke the
-  consumer's *build* on its first run — item 14 of `docs/aot-findings.md`.
+  consumer's *build* on its first run — item 14 of `notes/aot-findings.md`.
 
   Two things about it are load-bearing. The DTO assembly must be compiled against **the same
   reference set the corpus loads**, or every contract gets a second, incompatible
@@ -1822,7 +1824,7 @@ ref-emit behaviour show up in review.
 direction is an *absence*: a file that was never re-run and a ref-emit that genuinely emitted nothing
 look exactly alike. That has already produced one wrong conclusion — a recorded "the persisted path
 silently drops a map-of-map member" bug that turned out to be a fixture edited without re-running
-`AotRefGen`; see the "Retracted" section of `docs/aot-findings.md`. Regenerate before concluding
+`AotRefGen`; see the "Retracted" section of `notes/aot-findings.md`. Regenerate before concluding
 anything from a member that is missing, and commit the regenerated file in the same commit as the
 fixture change so the two cannot drift.
 

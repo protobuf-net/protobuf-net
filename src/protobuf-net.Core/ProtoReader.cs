@@ -1,4 +1,4 @@
-
+﻿
 using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
@@ -105,12 +105,12 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Addition information about this deserialization operation.
+        /// Additional information about this deserialization operation.
         /// </summary>
         public object UserState => _snapshot.UserState;
 
         /// <summary>
-        /// Addition information about this deserialization operation.
+        /// Additional information about this deserialization operation.
         /// </summary>
         [Obsolete("Prefer " + nameof(UserState))]
         public SerializationContext Context => SerializationContext.AsSerializationContext(this);

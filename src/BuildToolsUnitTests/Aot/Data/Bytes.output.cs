@@ -34,20 +34,20 @@ partial class BytesModel
             var tmp1 = value.Payload;
             if (tmp1 != null)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp1);
+                state.WriteRawTag((1 << 3) | 2);  // Payload
+                state.WriteRawBytes(tmp1);
             }
             var tmp2 = value.Other;
             if (tmp2 != null)
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.String);
-                state.WriteBytes(tmp2);
+                state.WriteRawTag((2 << 3) | 2);  // Other
+                state.WriteRawBytes(tmp2);
             }
             var tmp3 = value.Single;
             if (tmp3 != 0)
             {
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteByte(tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Single
+                state.WriteRawVarint32(tmp3);
             }
             var tmp4 = value.Segment;
             state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);

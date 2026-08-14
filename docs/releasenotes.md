@@ -38,6 +38,10 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   guard, as it always did for other member kinds
 - corrupt-input fidelity: a field-0 tag (including overlong encodings) throws `ProtoException`
   ("Invalid field in source data: 0") exactly as previous releases did
+- `RepeatedSerializer.CreateReadOnySet` (a long-standing typo) is now `CreateReadOnlySet`;
+  the old spelling remains as an `[Obsolete]` forwarder, so previously-generated code keeps
+  working and the warning disappears on the next build (the generator ships with the library,
+  so regeneration is automatic)
 - **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
   the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
   `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected
