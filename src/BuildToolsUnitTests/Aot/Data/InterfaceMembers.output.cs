@@ -49,7 +49,11 @@ partial class InterfaceMembersModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.N;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // N
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.InterfaceMembers.Box global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.Box>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InterfaceMembers.Box> value)
@@ -418,7 +422,11 @@ partial class InterfaceMembersModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.N;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // N
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.InterfaceMembers.Leaf global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.Leaf>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InterfaceMembers.Leaf> value)

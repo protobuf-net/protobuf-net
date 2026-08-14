@@ -1,4 +1,4 @@
-# The writer arc: measure-first, hoisted from the 2023 prototype
+﻿# The writer arc: measure-first, hoisted from the 2023 prototype
 
 The read arc is released (4.0-alpha); this is the writer's planning doc, sibling to
 `notes/nano-core.md`. Step zero, per Marc: hoist the writer shape from the old prototype
@@ -742,6 +742,212 @@ A one-token change with a three-generator-plus-ecosystem audit behind it, buying
 any real payload. The rule this is an instance of: **a convention is cheap to choose and
 expensive to reverse once anything outside the repo can implement it.**
 
+## Two findings from reading a golden (Marc, 2026-08-14)
+
+Both from one look at `Lists.output.cs`, and the second is the more consequential thing found in
+this arc for a while.
+
+### `int32` was bypassing the raw write path entirely — FIXED
+
+The emitted line was `if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);` — a *field number*, not a
+pre-encoded tag. `WriteInt32Varint` goes through the **stateful** `WriteFieldHeader`, which
+encodes the tag from that field number at run time **and sets `WireType` on the writer object**,
+then `ImplWriteVarint32` — the **virtual hop** — then `ResetWireType()`.
+
+So the single commonest member shape in protobuf was getting none of the writer arc: no
+pre-encoded constant tag, no span-direct store, and two writer-object state writes that cut 9
+exists specifically to eliminate.
+
+The cause is a *compact* emit case that ran before `EmitScalarWrite` and so never reached the raw
+branch — `case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default` — added
+as a convenience (one line instead of a block) and never revisited when the raw path landed. It
+is now gated on `!raw`; raw emission takes the general branch, which is `WriteRawTag` +
+`WriteRawVarint64`. 55 goldens changed shape; bytes are unchanged (AotDifferential 3029/3029,
+AotConformanceTests 1382).
+
+**It was expected to be why the tag ladder measured flat. It is not — measured, and also flat.**
+Paired against the commit before it:
+
+| | before | after |
+| --- | ---: | ---: |
+| `NanoGenerated` | 10.192 us | 10.207 us |
+| GoogleProtobuf (gauge) | 13.194 us | 13.530 us |
+
+Raw +0.15%; the gauge moved +2.5% between the two legs, which is larger than the effect either
+way. So: no change, and that is now **five** consecutive write-path micro-optimisations measuring
+flat. The census remains the explanation - the removed work per `int32` field is a runtime tag
+encode, a `WireType` set and reset, and a virtual call, which is real but small against a payload
+that is 71.5% UTF-8 encoding.
+
+**Kept anyway, and not on performance grounds.** The raw path should be the raw path: this is the
+one place a "raw" body was still reaching the stateful writer, and it was doing so *invisibly*.
+It also quietly propped up cut 9's wire-type invariant - that a raw body starts at `None` and
+stays there because "every stateful op resets after itself" - which held here only because
+`WriteInt32Varint` happens to reset. An invariant that depends on the op you were trying not to
+call is not one to leave standing.
+
+The general lesson is the one this file keeps relearning from the other direction: **a
+convenience overload that predates an optimisation will silently opt out of it**, and nothing
+fails. It took reading the generated output to see.
+
+### Three on the `Measure_` statics (Marc, from the same golden) — LOGGED, not yet actioned
+
+1. **`public` is unnecessary.** They sit on `private sealed class ProtoBufGeneratedServices`, so
+   `public` grants nothing a consumer can reach; it reads as API and is not. The one caller that
+   might care is `NanoBench`, which binds to `Measure_` reflectively - and it already passes
+   `BindingFlags.Public | BindingFlags.NonPublic` for both the nested type and the method, so it
+   would not notice the change. Verified rather than assumed.
+2. **They ARE used** - just not from anywhere obvious in a single contract's own body. Six
+   references to `Measure_..._Inner` in `Lists.output.cs`: its own
+   `IMeasuringSerializer<T>.Measure`, and the *enclosing* contracts' measure statics, which is
+   the sub-message recursion (`len9 = Measure_..._Inner(item9, state.RawDepthBudget, lengths9)`).
+   A leaf contract that nothing else references would indeed have exactly one caller.
+3. **Depth is a countdown, never re-incremented, and that is correct.** `depth` is a by-value
+   parameter; each body opens `if (--depth < 0) ThrowRawTooDeep();` and passes its own decremented
+   copy down, so the budget shrinks with nesting and restores on return by virtue of being a
+   local. There is no counter to reset. The root value comes from `state.RawDepthBudget`.
+
+**Marc's suggestion, which is correct in principle and DELIBERATELY NOT BUILT:** a contract with
+no message-typed members - no sub-message, no repeated-of-message, no map with a message side -
+cannot recurse, so its depth check can never usefully fire. Emitting it only where recursion is
+reachable would remove a branch from every leaf contract, on both the measure and write paths.
+Off-by-one is genuinely not a hazard: the check bounds unbounded recursion rather than enforcing
+an exact depth, and every level that *can* nest still checks.
+
+The reasons for not doing it yet, which are about the ratio rather than the idea:
+
+- **the expected gain is ~nothing, on this file's own evidence.** It removes one predictable,
+  never-taken compare per measure call. Four consecutive micro-optimisations in this area have
+  measured flat, and the payload census explains why: per-op cost in this workload is not where
+  the time is. The honest prior is that this joins them;
+- **the failure mode if the predicate is wrong is not a wrong byte, it is a process-killing stack
+  overflow** on a cyclic graph - which was a real bug on this branch, fixed earlier in this arc,
+  and is the one class of failure that takes the test host with it. A predicate that has to be
+  right about "can this contract reach itself" across sub-messages, repeated elements, both map
+  sides, inheritance and surrogates is not a one-liner;
+- so the sequence should be **measure the ceiling first**: price a measure-only benchmark row for
+  a leaf-heavy payload with the check removed by hand. If that shows nothing, the idea is closed
+  cheaply and correctly, exactly as the varint-measure matrix closed its line.
+
+`MeasureRecursionTests` (a self-referencing `Node`) is the gate that would catch a wrong
+predicate, and it should be run explicitly - not merely relied on - if this is ever built.
+
+### `ThrowUnexpectedSubtype` reads as unconditional and is not
+
+`TypeModel.ThrowUnexpectedSubtype(value)` opens nearly every generated write body and looks like
+an unconditional throw. It is a guard: `if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T),
+value.GetType())` — it throws only when the runtime type differs from the declared one. The name
+is an imperative describing the failure, not the test, which is a reasonable thing to trip over
+when reading a golden. Not changed (it is shipped public API and the emitted call is correct),
+but recorded here since it will be read that way again.
+
+## Pre-encoded constant tags: built, measured FLAT, and now explained (2026-08-13)
+
+The fourth primitive-level optimisation in this arc to buy nothing end to end - but the first
+where the null result is *explained* rather than merely observed, which changes what it is worth.
+
+What landed: `WriteRawTag` gains an arm per tag width (all five - field numbers run to 2^29-1),
+each folding at a generated call site to a literal and one or two stores; the room demand
+becomes exact instead of `MaxVarint32`; and `WriteRawTagBool` composes a whole bool field, which
+at a single-byte tag is a select between two folded constants and ONE store. Census afterwards:
+**zero `WriteRawVarint32/64` sites with a constant argument anywhere in the golden corpus**,
+which was the stated goal for the generated write path.
+
+Measured, paired, two runs each side:
+
+| row | before | after | |
+| --- | ---: | ---: | --- |
+| NanoGenerated | 10.286 / 10.163 us | 10.385 / 10.327 us | **+1.4%**, i.e. nothing |
+| GoogleProtobuf (gauge) | 13.084 / 13.154 us | 13.057 / 13.121 us | flat |
+
+**Why - and this is the useful half.** `src/NanoBench/DescriptorPayloadCensus.md` classifies
+every byte of the payload and every varint by width:
+
+- **99.7% of tags written are one byte** (1,056 of 1,059), and that arm has been a single store
+  since cut 9. The generated model has 27 two-byte *call sites*, nine of them field 999
+  (`uninterpreted_option`) - but that field is absent from real data. **Static call-site
+  population and dynamic op population are different distributions**, and only the second pays;
+- **96.7% of length prefixes are one byte**, so that varint is nearly always a single store too;
+- **bools are at most 122 fields** out of ~2,700 write ops;
+- **71.5% of the payload is string/bytes payload** - `UTF8.GetBytes` over 5.5 KB.
+
+So the ceiling on the whole change was about 3 tag ops and 122 bool ops out of ~2,700, against a
+workload whose mass is UTF-8 encoding. It could not have shown, and now we can say that with a
+count instead of a shrug.
+
+**Kept rather than reverted, deliberately, and the distinction from the three that were backed
+out matters**: those bought nothing *and* cost something (the bool collapse put 128 B/op on a
+zero-allocation path; the measure table traded register arithmetic for a memory load). This one
+costs nothing measurable, allocates nothing, leaves the dominant one-byte arm untouched, tightens
+the room demand from 5 bytes to the real width (fewer out-of-line trips near a chunk boundary),
+and is pinned by tests that are verified able to fail. If the judgement is that unmeasurable
+means unwanted regardless, the revert is clean - but it is a different call from the other three.
+
+**THE DECISION IS STILL OPEN, and this is what to revert if the answer is no**: `651be919` (the
+ladder and `WriteRawTagBool`, plus `RawTagEncodingTests` and the API baseline entries) and
+`c03462c2` (the measurement and the census write-up). `src/NanoBench/census.py` and
+`DescriptorPayloadCensus.md` are worth keeping either way - the census is the evidence, not the
+change. Note the goldens move with it, since `WriteRawTagBool` appears in eight of them plus the
+descriptor model.
+
+**What would re-open it**: packed repeated writes measure and write per ELEMENT, so a
+packed-heavy payload has a completely different census. So does anything extension-shaped, where
+field numbers are high by construction and the two-byte arm stops being rare. Re-run the census
+before assuming.
+
+## Cut 10 landed: the stream backend goes span-backed (2026-08-13)
+
+The top of the ladder, and the largest single win of the arc: **-29.2% on `NanoGenerated`, the
+headline serialize row** (14.521 -> 10.286 us), -25.0% against the drift gauge, with the
+generated model moving from **4.7% behind Google.Protobuf to 21.4% ahead** on the stream. Full
+table, both legs and the noise, in `src/NanoBench/DescriptorSerializeResults.md`.
+
+**What moves is the POSITION, not the buffer**, and that distinction is the whole design.
+`ioBuffer` stays the writer's and has to: back-filling a length prefix reaches into bytes
+already written, and growing replaces the array outright - neither is expressible as a
+buffer-writer-style lease that State owns and hands back. But `ioIndex` is exactly what a
+span-direct raw op already maintains as `state.OffsetInCurrent`, so moving *that* is enough for
+cut 9's fast arm to fire here, with no change to the ops themselves.
+
+Shape, following the reader's rather than inventing one (`notes/nano-core.md`):
+
+- **`ioIndex` survives as the SOLID form**, authoritative only while no State is active over the
+  buffer - which is the museum API's world, one State per call. `Pending(in state)` is the ONE
+  place the two forms meet; everything else asks it. Two sources of truth would be the
+  divergence-bug factory this document warns about, so there is exactly one accessor and it is
+  the only thing that knows both.
+- **`DefaultState()` liquifies, `Solidify` writes back** - the bridge, which needed its own
+  commit first (34 mechanical rewrites). The reader arc predicted "~40" for its version.
+- **`MakeSpace` replaces `DemandSpace`/`TryFlushOrResize`**: adopt the buffer, empty it, or grow
+  it, in that order and out of line, since a chunk with room is the case worth being fast.
+- **The growth arm re-takes the span at the same offset**, since `ResizeAndFlushLeft` replaces
+  the array. That is the one hazard this shape introduces, and the rule it implies is that
+  nothing may cache `ioBuffer` across a `DemandSpace` - `ImplCopyRawFromStream` and the Base128
+  back-fill both re-read it, and say so in a comment, because both had a captured local before.
+
+**Why it is three times cut 9's ~9%**: that cut removed the virtual `Impl*` hop from a backend
+that already had a span. This one gives the stream backend a span at all, so every raw op moves
+from `DemandSpace` (two field loads off the writer, then a write through `ioBuffer[ioIndex]`) to
+a register compare against `RemainingInCurrent` and a span-direct store. The runtime-model row
+barely moves (-2.2%), as expected: it takes the stateful path throughout and gains only the
+cheaper room check.
+
+**The coverage hole from cut 9 is now closed, and was probed rather than assumed.** That cut
+found the corpus differential would pass with the span-direct arm completely broken, because
+every gate wrote to a stream and the stream backend had no span. Repeating the identical probe
+here - corrupting the fast tag arm to `LocalWriteByte((byte)(tag ^ 1))` - now takes
+**AotDifferential from 3029/3029 (100%) to 1800/3029 (59%), exit 1**, where cut 9 recorded
+"3023 match, exit 0" for the same corruption. The gate can fail, so its passing means something.
+(`protobuf-net.Test` still passes with the corruption in place: the raw tag path is
+generated-model only, so the runtime-model suite never reaches it.)
+
+**What did NOT have to happen, and was expected to**: nothing about callbacks, and no decision
+from anyone. The handover recorded this work as gated on a product judgement about
+measure-first doubling serialization callbacks; that framing had already been retracted, and the
+buffer half turns out to be orthogonal to it - the back-fill arm is untouched in substance, so a
+contract that back-filled before still back-fills, callbacks and all. See "Three corrections to
+this handover".
+
 ## Cut 9 landed: span-direct raw ops, buffer-core step 2 (2026-08-13)
 
 Every raw write op now has two arms: where the backend holds a leased chunk with room, the
@@ -942,6 +1148,32 @@ lands. The counting-mode idea (legacy bodies against the Null writer) remains fo
 members INSIDE an unmeasurable contract; this cut covers such a contract's measurable
 children.
 
+## Native validation (2026-08-13, cut 10) - and a baseline that had silently drifted
+
+Clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first) with the stream backend
+span-backed: the native executable **PASSES** - the same 559 bytes, round-tripped and verified -
+and the warning count is **19, the recorded baseline**.
+
+It did not start there, and the detour is the useful part. The first publish read **21**, and the
+honest move was to measure rather than to assume the two were mine: publishing the commit
+immediately prior gave **21 as well**, with an identical breakdown, so cut 10 added nothing. The
+recorded "19" had simply gone stale at some point between the last native validation and here.
+
+Both extras came from one omission, in `NullProtoWriter.WriteSubType<T>`: the override did not
+restate the base's `[DynamicallyAccessedMembers(DynamicAccess.ContractType)]`, which is an
+**IL2095** in its own right, and the resulting unannotated `T` then failed **IL2091** on the
+`GetSubTypeSerializer` fallback inside it. Two warnings from one missing attribute - exactly the
+rule AGENTS.md already records for the generated `GetSerializer<T>` override, applied one level
+down. Restating it on both overrides (the buffer-writer's had the same latent mismatch, not yet
+reachable) takes it back to **19**.
+
+Provenance, indicated rather than bisected: `NullProtoWriter.WriteSubType<T>` is only reachable
+under AOT once something measures a sub-type hierarchy, and the stream backend did not touch the
+null writer at all until the measure-first gate landed - which is `94d3b0df`, the same commit
+that carried that gate as an unmentioned passenger. So the *first* consequence of that commit
+being invisible was a stale handover; the second was a native regression nobody attributed. Both
+are arguments for the same discipline.
+
 ## Native validation (2026-08-13, cuts 1-9 + the buffer core so far)
 
 A clean `dotnet publish src/AotSmoke -r win-x64` (obj/bin removed first) with the deferred
@@ -994,25 +1226,8 @@ carries BOTH backends - and the buffer-writer one is the interesting half (the g
 model is ~10% ahead of Google.Protobuf there, against a legacy baseline that is twice as
 slow as its own stream figure). The remaining ladder, in priority order:
 
-1. **The stream backend is not span-backed**, so cut 9's fast arm never fires there - and that
-   backend is what the *headline* benchmark rows use. Moving `ioBuffer`/`ioIndex` onto
-   `State`'s span would let both backends share one fast arm; cut 9 was worth ~9% on the
-   backend that has a span, and the stream backend got none of it. **This is now the top of
-   the ladder**, having overtaken the presized lease on evidence (below). Real surgery - the
-   length back-fill in `ImplEndLengthPrefixedSubItem` is the delicate part.
-
-   **Half of this already landed and the remaining half is smaller than it reads.** The stream
-   backend IS measure-first for arithmetically-measurable serializers (the gate at
-   `ProtoWriter.Stream.cs`), so back-fill survives only for the arm that cannot price itself -
-   runtime models, and callback-bearing contracts, which are excluded from cheap measure as a
-   correctness requirement. What is unbuilt is the buffer half: `StreamProtoWriter` still writes
-   into its own `ioBuffer`/`ioIndex` inside the `Impl*` overrides, and `State._span`/`_memory`
-   are populated only by the buffer-writer, so `RemainingInCurrent` is 0 on the stream backend
-   and every raw op takes the out-of-line arm. The open question is coexistence: can the stream
-   backend hold a State-owned lease for the measure-first arm while keeping the writer-owned
-   `ioBuffer` for the back-fill arm, given this document's own warning against "two regimes with
-   commit barriers - a divergence-bug factory"? The position invariant is already derived
-   (cut 8), which is what makes the question answerable rather than obviously no.
+1. ~~**The stream backend is not span-backed**~~ - **LANDED, see "Cut 10" below: -29% on the
+   headline row, and the generated model goes from 4.7% behind Google.Protobuf to 21.4% ahead.**
 2. **The lengthCache allocates ~22 KB per serialize** on the descriptor tree (identical on
    both backends, so it is not the writer; Google allocates zero, and its whole payload is
    7.6 KB). It won its race on time and was never priced on bytes. The measure hand-off's
@@ -1030,6 +1245,35 @@ slow as its own stream figure). The remaining ladder, in priority order:
    already implemented by measurable contracts, which is what the packed engine keys on).
 6. Maps measure-first (entry = one KV sub-message; both sides already have measure forms
    for the native kinds).
+
+### Everything parked or owed, in one place (2026-08-14)
+
+An index, because the details are spread over two documents and a commit log, and the commit log
+is not a backlog. Each entry says where the detail lives.
+
+**Decisions owed by a human**
+
+| | |
+| --- | --- |
+| the tag ladder: keep or revert? | measured flat but costs nothing; revert is `651be919` + `c03462c2`. See "Pre-encoded constant tags" below |
+| manual review of the write-emitted goldens | 55 changed shape when `int32` moved onto the raw path |
+
+**Parked with a recorded reason**
+
+| | where |
+| --- | --- |
+| leaf contracts could skip the depth check | "Three on the `Measure_` statics", below - correct in principle, ~nothing expected, stack-overflow failure mode if the predicate is wrong. Measure the ceiling first |
+| **packed writes on an empty collection** | `IsPacked` has never been supported on the symbol path, so that arm is largely undriven; an empty packed collection is believed to emit a zero-length field where ref-emit writes nothing. Belongs with "packed repeated writes" on the ladder |
+| the presized lease (buffer core step 3) | its own section - built, measured neutral, parked |
+| `ProtoFileGenerator` is not incremental | it is an `ISourceGenerator` with an empty `Initialize`, so it re-parses every schema on every compilation |
+
+**Still on the writer ladder** — the numbered list under "Where this stands" below: the length
+caches' remaining audit (`Pool<T>`, `BufferPool`), counting mode for mixed contracts, packed
+repeated writes, maps measure-first. Note packed repeated writes and the packed-empty
+disagreement above are the same area, and would sensibly be done together.
+
+**Schema front-end gaps** — enumerated and ranked in `notes/aot-schema-model.md`; the top item is
+not a feature but pointing the existing schema corpus at the new path.
 
 ### Three corrections to this handover, and how each one got there (2026-08-13)
 

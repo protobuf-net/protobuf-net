@@ -35,10 +35,14 @@ partial class CallbacksModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Callbacks_AfterOnly(global::AotFixtures.Callbacks.AfterOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Callbacks_AfterOnly(global::AotFixtures.Callbacks.AfterOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -95,7 +99,11 @@ partial class CallbacksModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             value.BeforeSer();
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             value.AfterSer();
         }
 
@@ -143,7 +151,11 @@ partial class CallbacksModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             value.OnSer(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             value.OnSerd(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
         }
 

@@ -54,9 +54,17 @@ partial class ListOptionsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.PackedScalar;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // PackedScalar
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.OverwriteScalar;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // OverwriteScalar
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp3 = value.BothOnString;
             if (tmp3 != null)
             {
@@ -83,7 +91,7 @@ partial class ListOptionsModel
             }
         }
 
-        public static long Measure_AotFixtures_ListOptions_NotACollection(global::AotFixtures.ListOptions.NotACollection value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ListOptions_NotACollection(global::AotFixtures.ListOptions.NotACollection value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

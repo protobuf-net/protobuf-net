@@ -306,10 +306,14 @@ partial class GroupedElementsModel
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Count;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Count
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
         }
 
-        public static long Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

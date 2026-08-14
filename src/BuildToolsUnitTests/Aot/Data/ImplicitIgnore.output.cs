@@ -34,14 +34,26 @@ partial class ImplicitIgnoreModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Pinned;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Pinned
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp4 = value.ImplicitField;
-            if (tmp4 != 0) state.WriteInt32Varint(4, tmp4);
+            if (tmp4 != 0)
+            {
+                state.WriteRawTag((4 << 3) | 0);  // ImplicitField
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
+            }
             var tmp5 = value.ImplicitProperty;
-            if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
+            if (tmp5 != 0)
+            {
+                state.WriteRawTag((5 << 3) | 0);  // ImplicitProperty
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+            }
         }
 
-        public static long Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -120,14 +132,26 @@ partial class ImplicitIgnoreModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Beta;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Beta
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp10 = value.Alpha;
-            if (tmp10 != 0) state.WriteInt32Varint(10, tmp10);
+            if (tmp10 != 0)
+            {
+                state.WriteRawTag((10 << 3) | 0);  // Alpha
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp10));
+            }
             var tmp11 = value.Gamma;
-            if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+            if (tmp11 != 0)
+            {
+                state.WriteRawTag((11 << 3) | 0);  // Gamma
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+            }
         }
 
-        public static long Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

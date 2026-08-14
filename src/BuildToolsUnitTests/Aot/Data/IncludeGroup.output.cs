@@ -57,8 +57,7 @@ partial class IncludeGroupModel
             var tmp1 = value.Success;
             if (tmp1)
             {
-                state.WriteRawTag((1 << 3) | 0);  // Success
-                state.WriteRawVarint32(tmp1 ? 1u : 0u);
+                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Success
             }
             var tmp2 = value.Error;
             if (tmp2 != null)
@@ -129,7 +128,11 @@ partial class IncludeGroupModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Extra;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Extra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.IncludeGroup.Grouped global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Grouped>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
@@ -177,7 +180,11 @@ partial class IncludeGroupModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Extra;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Extra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         global::AotFixtures.IncludeGroup.Plain global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)

@@ -36,7 +36,11 @@ partial class FieldModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // First
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Second;
             if (tmp2 != null)
             {
@@ -45,7 +49,7 @@ partial class FieldModel
             }
         }
 
-        public static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -129,10 +133,14 @@ partial class FieldModel
         public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
         {
             var tmp1 = value.Number;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -158,7 +166,11 @@ partial class FieldModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Number;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Number
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Text;
             if (tmp2 != null)
             {
@@ -185,7 +197,11 @@ partial class FieldModel
                 state.WriteInt32(tmp4);
             }
             var tmp5 = value.Defaulted;
-            if (tmp5 != 7) state.WriteInt32Varint(5, tmp5);
+            if (tmp5 != 7)
+            {
+                state.WriteRawTag((5 << 3) | 0);  // Defaulted
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+            }
             var tmp6 = value.Nullable;
             if (tmp6.HasValue)
             {
@@ -194,7 +210,11 @@ partial class FieldModel
                 state.WriteRawVarint64(unchecked((ulong)(long)val6));
             }
             var tmp7 = value.Property;
-            if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+            if (tmp7 != 0)
+            {
+                state.WriteRawTag((7 << 3) | 0);  // Property
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+            }
         }
 
         private static global::AotFixtures.Field.Fields RawRead_AotFixtures_Field_Fields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Fields value)
@@ -290,10 +310,14 @@ partial class FieldModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

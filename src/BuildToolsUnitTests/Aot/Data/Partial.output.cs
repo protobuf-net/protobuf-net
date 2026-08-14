@@ -56,12 +56,20 @@ partial class PartialModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Pinned;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Pinned
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.FromPartial;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // FromPartial
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
         }
 
-        public static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -126,7 +134,11 @@ partial class PartialModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Name;
             if (tmp2 != null)
             {
@@ -140,7 +152,8 @@ partial class PartialModel
                 state.WriteInt32(tmp3);
             }
             var tmp4 = value.Always;
-            state.WriteInt32Varint(4, tmp4);
+            state.WriteRawTag((4 << 3) | 0);  // Always
+            state.WriteRawVarint64(unchecked((ulong)(long)tmp4));
             var tmp5 = value.Values;
             if (tmp5 != null)
             {
@@ -260,10 +273,14 @@ partial class PartialModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Kept;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Kept
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -320,12 +337,20 @@ partial class PartialModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.OrderOnly;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // OrderOnly
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp7 = value.Both;
-            if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+            if (tmp7 != 0)
+            {
+                state.WriteRawTag((7 << 3) | 0);  // Both
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+            }
         }
 
-        public static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

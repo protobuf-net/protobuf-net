@@ -74,7 +74,7 @@ partial class TupleMembersModel
             RawWrite__int__string_(ref state, tmp2);
         }
 
-        public static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -143,7 +143,7 @@ partial class TupleMembersModel
             }
         }
 
-        public static long Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -199,7 +199,11 @@ partial class TupleMembersModel
                 state.WriteMessage<(int, string)>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5.GetValueOrDefault(), this);
             }
             var tmp6 = value.Other;
-            if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+            if (tmp6 != 0)
+            {
+                state.WriteRawTag((6 << 3) | 0);  // Other
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+            }
         }
 
         private static global::AotFixtures.TupleMembers.HasTuples RawRead_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleMembers.HasTuples value)
@@ -342,7 +346,7 @@ partial class TupleMembersModel
             }
         }
 
-        public static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

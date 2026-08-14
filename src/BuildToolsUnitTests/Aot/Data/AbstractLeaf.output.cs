@@ -56,7 +56,7 @@ partial class AbstractLeafModel
             }
         }
 
-        public static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -154,10 +154,14 @@ partial class AbstractLeafModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Sides;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Sides
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -33,7 +33,11 @@ partial class SimpleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Name;
             if (tmp2 != null)
             {
@@ -42,7 +46,7 @@ partial class SimpleModel
             }
         }
 
-        public static long Measure_AotFixtures_Simple_Order(global::AotFixtures.Simple.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Simple_Order(global::AotFixtures.Simple.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

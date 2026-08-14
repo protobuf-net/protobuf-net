@@ -7,6 +7,46 @@ Only non-obvious things live here; the code is the reference for everything else
 This project does not exclude LLM etc tool usage under human guidance. All responsibility for
 code-quality rests with the human submitter/reviewer; "slop" will be culled without mercy.
 
+## Where the notes live — and which branch they are on
+
+**`docs/` is the published site** (<https://protobuf-net.github.io/protobuf-net/>), so it holds
+consumer documentation only. Working notes — design, findings, corpus snapshots — live in
+**`notes/`**, which is not published. The test for which is which is `docs/index.md`: everything in
+`docs/` is linked from it. If you add a working note to `docs/`, you have published it.
+
+The notes are deliberately versioned **with the code**, not in one central place: a note that says
+"X is refused" only stays true if changing the refusal also changes the note in the same commit,
+and a note on a branch correctly describes *that branch*. The cost is that you have to know where
+to look while a stack is in flight, which is what this section is for.
+
+The active stack is linear, and notes flow downwards as it merges:
+
+```
+main → v4 → raw-writer → writer-buffer-core → aot-schema-model
+```
+
+| document | covers | where it is current |
+| --- | --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery — branch-independent | everywhere |
+| `notes/nano-core.md` | the reader arc: design and the cuts | `v4` onwards |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `writer-buffer-core` (`raw-writer`'s copy predates cut 10 — correctly) |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design, the ranked **gap list**, open items | `aot-schema-model` only |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `writer-buffer-core` onwards |
+| `notes/aot-findings.md` | numbered findings from the AOT generator work | `v4` onwards |
+| `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots | `v4` onwards |
+
+Two rules that keep this honest, both learned the hard way here:
+
+- **the parked/owed index in `notes/nano-writer.md` is the entry point**, not a commit log. Anything
+  deferred goes there with its reason, because a commit message is not a backlog and does not
+  survive a squash;
+- **a change big enough to appear in a handover is big enough to have its own commit.** A gate once
+  landed as an unmentioned passenger in an unrelated commit, and the handover — assembled from
+  commit messages — recorded it as never having landed. That cost a later session most of a
+  sitting; see "Three corrections to this handover" in `notes/nano-writer.md`.
+
+Refresh the table above when a branch is cut or merged.
+
 ## Layout and build
 
 - The solution is **`protobuf-net.slnx`**. `protobuf-net.sln.old` is a stale leftover — don't use it.

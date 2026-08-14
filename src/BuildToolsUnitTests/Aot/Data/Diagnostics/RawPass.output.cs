@@ -39,11 +39,15 @@ partial class RawPassModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_RawPass_Bag(global::AotFixtures.RawPass.Bag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -143,10 +147,14 @@ partial class RawPassModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_RawPass_Child(global::AotFixtures.RawPass.Child value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -253,7 +261,11 @@ partial class RawPassModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Name;
             if (tmp2 != null)
             {
@@ -263,8 +275,7 @@ partial class RawPassModel
             var tmp3 = value.Active;
             if (tmp3)
             {
-                state.WriteRawTag((3 << 3) | 0);  // Active
-                state.WriteRawVarint32(tmp3 ? 1u : 0u);
+                state.WriteRawTagBool((3 << 3) | 0, tmp3);  // Active
             }
             var tmp4 = value.Total;
             if (tmp4 != 0)
@@ -273,7 +284,11 @@ partial class RawPassModel
                 state.WriteRawVarint64(unchecked((ulong)tmp4));
             }
             var tmp5 = value.Status;
-            if (tmp5 != default(global::AotFixtures.RawPass.Status)) state.WriteInt32Varint(5, (int)tmp5);
+            if (tmp5 != default(global::AotFixtures.RawPass.Status))
+            {
+                state.WriteRawTag((5 << 3) | 0);  // Status
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+            }
             var tmp6 = value.Priority;
             if (tmp6.HasValue)
             {
@@ -344,7 +359,7 @@ partial class RawPassModel
             }
         }
 
-        public static long Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_RawPass_Order(global::AotFixtures.RawPass.Order value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

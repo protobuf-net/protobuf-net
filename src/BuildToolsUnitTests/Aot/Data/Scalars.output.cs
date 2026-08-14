@@ -37,8 +37,7 @@ partial class ScalarsModel
             var tmp1 = value.Bool;
             if (tmp1)
             {
-                state.WriteRawTag((1 << 3) | 0);  // Bool
-                state.WriteRawVarint32(tmp1 ? 1u : 0u);
+                state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Bool
             }
             var tmp2 = value.SByte;
             if (tmp2 != 0)
@@ -65,7 +64,11 @@ partial class ScalarsModel
                 state.WriteRawVarint32(tmp5);
             }
             var tmp6 = value.Int32;
-            if (tmp6 != 0) state.WriteInt32Varint(6, tmp6);
+            if (tmp6 != 0)
+            {
+                state.WriteRawTag((6 << 3) | 0);  // Int32
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+            }
             var tmp7 = value.UInt32;
             if (tmp7 != 0)
             {
@@ -98,7 +101,7 @@ partial class ScalarsModel
             }
         }
 
-        public static long Measure_AotFixtures_Scalars_Primitives(global::AotFixtures.Scalars.Primitives value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Scalars_Primitives(global::AotFixtures.Scalars.Primitives value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

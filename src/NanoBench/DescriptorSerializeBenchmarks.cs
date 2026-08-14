@@ -83,6 +83,20 @@ public class DescriptorSerializeBenchmarks
             .GetProperty("Instance")?.GetValue(null)
             ?? throw new InvalidOperationException("CustomProtogenSerializer.Instance not found"));
 
+        // the UTF-8 floor's inputs: every string in the graph, collected once
+        _strings = CollectStrings(_nanoSet);
+        int widest = 0;
+        long floorBytes = 0;
+        foreach (var s in _strings)
+        {
+            var n = ProtoWriter.UTF8.GetByteCount(s);
+            if (n > widest) widest = n;
+            floorBytes += n;
+        }
+        _utf8Scratch = new byte[widest + 16];
+        Console.WriteLine($"// utf8 floor: {_strings.Length} strings, {floorBytes} bytes "
+            + $"({(100.0 * floorBytes / _data.Length):0.0}% of the payload)");
+
         // gates, before any measurement
         var legacy = Run(LegacyReal);
         if (!legacy.SequenceEqual(_data))
@@ -164,6 +178,25 @@ public class DescriptorSerializeBenchmarks
         return s_generatedMeasure(_nanoSet, 512, _measureScratch);
     }
 
+    /// <summary>
+    /// The runtime model asked for a length first, i.e. the gRPC shape on the incumbent engine.
+    /// </summary>
+    /// <remarks>
+    /// The pair (this and <see cref="NanoGeneratedMeasured"/>) is what a gRPC-style transport
+    /// actually costs: the frame header carries the length, so the payload has to be priced before
+    /// a byte is written. Comparing them against the two plain-serialize rows shows what that
+    /// requirement costs on each engine, which is not the same answer.
+    /// </remarks>
+    [Benchmark]
+    public object LegacyRealMeasured()
+    {
+        _ms.Position = 0;
+        var output = (IMeasuredProtoOutput<Stream>)Meta.RuntimeTypeModel.Default;
+        using var measured = output.Measure(_pbnSet);
+        output.Serialize(measured, _ms);
+        return _ms;
+    }
+
     /// <summary>The measured path, i.e. the one where the presized lease fires; see the
     /// buffer-writer sibling for the reasoning.</summary>
     [Benchmark]
@@ -182,6 +215,81 @@ public class DescriptorSerializeBenchmarks
         _ms.Position = 0;
         GpbExt.WriteTo(_gpbSet, _ms);
         return _ms;
+    }
+
+    /// <summary>
+    /// The floor: UTF-8 encoding every string in the graph, and NOTHING else - no tags, no
+    /// lengths, no traversal, no destination.
+    /// </summary>
+    /// <remarks>
+    /// The payload census (DescriptorPayloadCensus.md) says 71.5% of this document's bytes are
+    /// string payload, so the obvious question is whether the write rows are really just
+    /// measuring <see cref="System.Text.Encoding.GetBytes(string, int, int, byte[], int)"/>.
+    /// This row answers it: it is the irreducible part of any serializer's job for this
+    /// document, and every write row above is bounded below by it.
+    /// <para>
+    /// Both halves are here on purpose - GetByteCount is what the MEASURE pass pays and GetBytes
+    /// is what the WRITE pass pays, and a measure-first serializer pays both.
+    /// </para>
+    /// </remarks>
+    [Benchmark]
+    public long Utf8Floor()
+    {
+        long total = 0;
+        var strings = _strings;
+        var scratch = _utf8Scratch;
+        for (int i = 0; i < strings.Length; i++)
+        {
+            var s = strings[i];
+            total += ProtoWriter.UTF8.GetByteCount(s);
+            total += ProtoWriter.UTF8.GetBytes(s, 0, s.Length, scratch, 0);
+        }
+        return total;
+    }
+
+    private string[] _strings = [];
+    private byte[] _utf8Scratch = [];
+
+    /// <summary>
+    /// Every string reachable from the graph, in traversal order, collected ONCE in setup -
+    /// reflection here costs nothing, since it never runs inside a benchmark.
+    /// </summary>
+    private static string[] CollectStrings(object root)
+    {
+        var found = new System.Collections.Generic.List<string>();
+        var seen = new System.Collections.Generic.HashSet<object>(RefComparer.Instance);
+        void Walk(object obj)
+        {
+            if (obj is null || !seen.Add(obj)) return;
+            foreach (var member in obj.GetType().GetProperties(
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            {
+                if (member.GetIndexParameters().Length != 0) continue;
+                object value;
+                try { value = member.GetValue(obj); }
+                catch { continue; }
+                switch (value)
+                {
+                    case null:
+                        break;
+                    case string s:
+                        if (s.Length != 0) found.Add(s);
+                        break;
+                    case System.Collections.IEnumerable list when value is not string:
+                        foreach (var item in list)
+                        {
+                            if (item is string es) { if (es.Length != 0) found.Add(es); }
+                            else if (item is not null && !item.GetType().IsPrimitive) Walk(item);
+                        }
+                        break;
+                    default:
+                        if (!value.GetType().IsPrimitive && !value.GetType().IsEnum) Walk(value);
+                        break;
+                }
+            }
+        }
+        Walk(root);
+        return found.ToArray();
     }
 
     private static GeneratedMeasure ResolveMeasure()

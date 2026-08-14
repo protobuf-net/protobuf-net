@@ -48,7 +48,11 @@ partial class DynamicCategoryModel
             var tmp2 = value.Message;
             state.WriteAny<global::AotFixtures.DynamicCategory.Label>(2, tmp2, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
             var tmp3 = value.Other;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Other
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
             var tmp4 = value.Scalars;
             if (tmp4 != null)
             {

@@ -1,4 +1,97 @@
-# Descriptor serialize composite (notes/nano-writer.md)
+﻿# Descriptor serialize composite (notes/nano-writer.md)
+
+## Where the write path stands (net10.0, 2026-08-13, cut 10 + the tag ladder)
+
+Both destinations, one sitting, `--job short`. The payload is the 7,670-byte self-describing
+descriptor set.
+
+| engine | stream | buffer-writer | vs Google (stream) | alloc (stream) |
+| --- | ---: | ---: | ---: | ---: |
+| **vanilla protobuf-net** (`RuntimeTypeModel`) | 20.026 us | 40.335 us | +52% | 0 B |
+| **AOT protobuf-net**, shipped protogen model | 11.590 us | 17.831 us | -12% | 0 B |
+| **AOT protobuf-net**, bench DTOs | **10.408 us** | **9.986 us** | **-21%** | 0 B |
+| AOT, explicit `IMeasuredProtoOutput` | 15.313 us | 15.074 us | +16% | 1 B |
+| **Google.Protobuf** (home turf) | 13.213 us | 12.824 us | - | 4232 B |
+| *UTF-8 floor* (see below) | *2.666 us* | *2.666 us* | *-80%* | *0 B* |
+
+As throughput: **737 MB/s** for the AOT model against **580 MB/s** for Google.Protobuf and
+383 MB/s for the runtime model, on the stream.
+
+Readings:
+
+- **The two backends have converged**, which is what cut 10 was for: the AOT model is 10.408 us
+  on the stream and 9.986 on the buffer-writer, where before that cut the same rows read 14.521
+  and ~9.9. The stream was the outlier and no longer is.
+- **The runtime model goes the other way, and dramatically**: 20.0 us on the stream against
+  **40.3** on the buffer-writer. That is not a writer defect - it is measure-first pricing. A
+  buffer-writer cannot back-fill, so a serializer with no arithmetic measure has to be priced by
+  null-writer traversal, which the corpus put at ~2.3x. It is exactly why the stream backend's
+  measure-first gate is conditional on `IMeasuringSerializer`.
+- **AOT beats Google.Protobuf on both destinations** by ~21%, and allocates nothing where Google
+  allocates 4,232 B per serialize on the stream. Against vanilla protobuf-net the engine swap is
+  **-48% on the stream and -75% on the buffer-writer**.
+- **The explicit measure-first API is the slow row**, 15.3/15.1 against 10.4/10.0 for a plain
+  `Serialize`. Asking the root for its length up front costs more than it looks - already
+  recorded in `notes/nano-writer.md` - and this is a standing item rather than a surprise.
+
+### "We're probably just measuring UTF8 at this point" - no, a quarter of it
+
+`Utf8Floor` is a real row now, not an estimate: every string in the graph (393 of them, 5,475
+bytes, **71.4% of the payload**) put through `GetByteCount` *and* `GetBytes` - both halves,
+since a measure-first serializer pays both - and nothing else. No tags, no lengths, no
+traversal, no destination.
+
+**2.666 us**, i.e. **25.6% of the AOT write row** and 20% of Google's. So the encoder is a
+quarter of the job and the other three quarters are still traversal, guards, framing and
+destination. Worth knowing in both directions: it is not the whole story, and it *is* a hard
+floor that no amount of writer work goes below - the remaining headroom above Google is roughly
+7.7 us of non-UTF8 work against their 10.5.
+
+
+## net10.0, 2026-08-13, THE STREAM BACKEND GOES SPAN-BACKED (the buffer core, stream half)
+
+Paired, same machine, same sitting, `--job short`; the "before" leg is the commit immediately
+prior (the museum bridge, which is inert), the "after" leg is measured twice to price the noise.
+
+| row | before | after | after (2nd run) | delta | vs the gauge |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| LegacyReal | 20.776 us | 20.318 us | - | -2.2% | +3.7% |
+| GeneratedProtogen | 14.821 us | 12.590 us | 11.857 us | -15.1% | -9.9% |
+| **NanoGenerated** | **14.521 us** | **10.286 us** | 10.163 us | **-29.2%** | **-25.0%** |
+| NanoGeneratedMeasured | 20.911 us | 15.537 us | 15.326 us | -25.7% | -21.3% |
+| NanoGeneratedMeasure | 3.673 us | 3.635 us | 3.785 us | -1.0% | (writer-free row) |
+| GoogleProtobuf (drift gauge) | 13.873 us | 13.084 us | 13.154 us | -5.7% | - |
+
+**The generated model goes from 4.7% BEHIND Google.Protobuf to 21.4% AHEAD, on the stream** -
+14.521 vs 13.873 before, 10.286 vs 13.084 after. These are the headline rows: everything in the
+serialize battery writes to a `MemoryStream`, which is precisely why cut 9's span-direct arm was
+invisible here until now.
+
+Why it is so much larger than cut 9's ~9% on the buffer-writer: that cut removed the virtual
+`Impl*` hop from a backend that already had a span. This one gives the stream backend a span at
+all, so every raw op moves from `DemandSpace` (two field loads off the writer, then a write
+through `ioBuffer[ioIndex]`) to a register compare against `RemainingInCurrent` and a
+span-direct store. The runtime-model row (`LegacyReal`) barely moves, as expected - it takes the
+stateful path throughout and gains only the cheaper room check.
+
+**The gauge moved -5.7% between the two legs**, which is more drift than any single row's noise,
+so the normalised column is the one to read; the two "after" runs agree to within 1.2%, and the
+writer-free measure row to within 4%.
+
+### Coverage, checked rather than assumed
+
+The lesson from cut 9 was that a path no gate drives is unmeasured, not fine - the corpus
+differential passed with the span-direct arm completely broken, because every gate wrote to a
+stream and the stream backend had no span. That is now the opposite way round, and it was
+probed rather than believed: corrupting the fast tag arm (`LocalWriteByte((byte)(tag ^ 1))`)
+takes **AotDifferential from 3029/3029 (100%) to 1800/3029 (59%), exit 1**, where before this
+change the identical corruption was recorded as *"3023 match, exit 0"*. So the arm is genuinely
+reached, and the green run means something.
+
+Note `protobuf-net.Test` still passes with that corruption in place: the raw tag path is
+generated-model only, so the runtime-model suite never reaches it. AotDifferential is the gate
+for this area.
+
 
 ## net472 leg (2026-08-12, cut 5 in place)
 

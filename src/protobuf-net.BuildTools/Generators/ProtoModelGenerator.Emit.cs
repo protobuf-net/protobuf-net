@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -1226,7 +1226,13 @@ namespace ProtoBuf.BuildTools.Generators
                 // (many large byte[] members, a colossal repeated field), and classic handles it
                 // with its long lengths throughout - int accumulation would overflow silently,
                 // which is a corrupt stream, not an error
-                Line(sb, indent, $"public static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
+                // private, not public: these sit on a private sealed services class, so `public`
+                // grants nothing a consumer can reach and reads as API that is not. Every caller
+                // is either in this same class (the IMeasuringSerializer body, and the enclosing
+                // contracts' measure statics, which is the sub-message recursion) or reflective -
+                // and both reflective binders, NanoBench.ResolveMeasure and
+                // AotConformanceTests.MeasurableContractTests, already pass NonPublic
+                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 Line(sb, indent + 1, "long len = 0;");
@@ -1674,8 +1680,17 @@ namespace ProtoBuf.BuildTools.Generators
                         break;
 
                     // int32 has a convenience overload that writes its own field header; everything
-                    // else needs the header emitting separately, as ref-emit does
-                    case ProtoMemberKind.Int32 when member.DataFormat == ProtoDataFormat.Default:
+                    // else needs the header emitting separately, as ref-emit does.
+                    //
+                    // NOT on the raw path, and this was a real hole (Marc, spotted by reading a
+                    // golden): WriteInt32Varint goes through the STATEFUL WriteFieldHeader - which
+                    // encodes the tag from a field number at run time and sets WireType on the
+                    // writer - and then ImplWriteVarint32, the virtual hop. So the single commonest
+                    // member shape in protobuf was bypassing the whole raw write path: no
+                    // pre-encoded constant tag, no span-direct store, and two writer-object state
+                    // writes that cut 9 exists to eliminate. Raw emission takes the general branch
+                    // below instead, which is WriteRawTag + WriteRawVarint64
+                    case ProtoMemberKind.Int32 when !raw && member.DataFormat == ProtoDataFormat.Default:
                         var int32Write = $"state.WriteInt32Varint({number}, {ScalarValue(member, $"tmp{number}")});";
                         Line(sb, indent, member.IsRequired || member.WriteCondition is not null
                             ? int32Write
@@ -2577,6 +2592,13 @@ namespace ProtoBuf.BuildTools.Generators
             // through 64 bits (a negative int32 is the 10-byte form on the wire).
             if (raw && member.DataFormat == ProtoDataFormat.Default && RawScalarWrite(member, expression) is { } rawWrite)
             {
+                // a bool's whole field is the constant tag plus one byte that is 0 or 1, so it
+                // collapses to a single op - and at the dominant single-byte tag, to one store
+                if (member.Kind == ProtoMemberKind.Bool)
+                {
+                    Line(sb, indent, $"state.WriteRawTagBool(({member.FieldNumber} << 3) | 0, {expression});  // {member.Name}");
+                    return;
+                }
                 Line(sb, indent, $"state.WriteRawTag(({member.FieldNumber} << 3) | {RawScalarWireBits(member.Kind)});  // {member.Name}");
                 Line(sb, indent, rawWrite);
                 return;

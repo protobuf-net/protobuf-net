@@ -39,14 +39,26 @@ partial class ImplicitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // <Ignored>k__BackingField
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Apple;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Apple
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp3 = value.Zebra;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Zebra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
         }
 
-        public static long Measure_AotFixtures_Implicit_AllFields(global::AotFixtures.Implicit.AllFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Implicit_AllFields(global::AotFixtures.Implicit.AllFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -133,12 +145,20 @@ partial class ImplicitModel
                 state.WriteRawString(tmp1);
             }
             var tmp2 = value.Mango;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Mango
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp3 = value.Zebra;
-            if (tmp3 != 0) state.WriteInt32Varint(3, tmp3);
+            if (tmp3 != 0)
+            {
+                state.WriteRawTag((3 << 3) | 0);  // Zebra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
+            }
         }
 
-        public static long Measure_AotFixtures_Implicit_AllPublic(global::AotFixtures.Implicit.AllPublic value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Implicit_AllPublic(global::AotFixtures.Implicit.AllPublic value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -217,12 +237,20 @@ partial class ImplicitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp10 = value.Alpha;
-            if (tmp10 != 0) state.WriteInt32Varint(10, tmp10);
+            if (tmp10 != 0)
+            {
+                state.WriteRawTag((10 << 3) | 0);  // Alpha
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp10));
+            }
             var tmp11 = value.Beta;
-            if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+            if (tmp11 != 0)
+            {
+                state.WriteRawTag((11 << 3) | 0);  // Beta
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+            }
         }
 
-        public static long Measure_AotFixtures_Implicit_FirstTag(global::AotFixtures.Implicit.FirstTag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Implicit_FirstTag(global::AotFixtures.Implicit.FirstTag value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -290,10 +318,14 @@ partial class ImplicitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Kept;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Kept
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Implicit_Ignoring(global::AotFixtures.Implicit.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Implicit_Ignoring(global::AotFixtures.Implicit.Ignoring value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -350,14 +382,26 @@ partial class ImplicitModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Alpha;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Alpha
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Zulu;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Zulu
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp5 = value.Pinned;
-            if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
+            if (tmp5 != 0)
+            {
+                state.WriteRawTag((5 << 3) | 0);  // Pinned
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+            }
         }
 
-        public static long Measure_AotFixtures_Implicit_Mixed(global::AotFixtures.Implicit.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Implicit_Mixed(global::AotFixtures.Implicit.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

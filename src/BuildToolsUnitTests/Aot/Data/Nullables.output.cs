@@ -43,8 +43,7 @@ partial class NullablesModel
             if (tmp2.HasValue)
             {
                 var val2 = tmp2.GetValueOrDefault();
-                state.WriteRawTag((2 << 3) | 0);  // MaybeBool
-                state.WriteRawVarint32(val2 ? 1u : 0u);
+                state.WriteRawTagBool((2 << 3) | 0, val2);  // MaybeBool
             }
             var tmp3 = value.MaybeDouble;
             if (tmp3.HasValue)
@@ -78,10 +77,14 @@ partial class NullablesModel
                 state.WriteRawVarint64(unchecked((ulong)(long)val6));
             }
             var tmp7 = value.Plain;
-            if (tmp7 != 0) state.WriteInt32Varint(7, tmp7);
+            if (tmp7 != 0)
+            {
+                state.WriteRawTag((7 << 3) | 0);  // Plain
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+            }
         }
 
-        public static long Measure_AotFixtures_Nullables_Optional(global::AotFixtures.Nullables.Optional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Nullables_Optional(global::AotFixtures.Nullables.Optional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

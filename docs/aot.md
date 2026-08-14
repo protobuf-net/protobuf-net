@@ -39,6 +39,88 @@ The AOT generator builds those serializers at **compile time** instead. Your mod
 C# in your own project — code you can read, step through, and that ILC can compile like anything
 else.
 
+## And it is about twice as fast
+
+Cold start is the reason to look; throughput is the reason to stay. Same payload — the
+`FileDescriptorSet` for `descriptor.proto`, 7,670 bytes — in both directions:
+
+| | serialize | | deserialize | |
+| --- | ---: | --- | ---: | --- |
+| protobuf-net 3.2.46, as shipped on NuGet | 20.59 µs | `████████████████████` | 22.77 µs | `████████████████████` |
+| protobuf-net v4, runtime model | 20.39 µs | `███████████████████▊` | 17.63 µs | `███████████████▍` |
+| **protobuf-net v4, generated model** | **10.28 µs** | `██████████` | **9.03 µs** | `███████▉` |
+| Google.Protobuf | 13.14 µs | `████████████▊` | 12.66 µs | `███████████` |
+
+*Lower is better; bars are relative to the slowest row in each direction.*
+
+Against the package you have installed today, the generated model is **2.0× faster to serialize and
+2.5× faster to deserialize** — and it is **21% / 29% ahead of Google.Protobuf**, on Google's own
+schema, with their own generated types and their own serializer. Serialization allocates
+**nothing**, against 4,232 bytes for Google.Protobuf.
+
+Two honest notes, because the table invites the questions:
+
+- **the "v4, runtime model" row is the interesting one.** It is barely faster than 3.2.46 at
+  serializing, but meaningfully faster at deserializing — the reader rewrite lifts everyone, while
+  the writer's gains land almost entirely in generated code. So "upgrade to v4" and "generate your
+  model" are two separate wins, and this table is the only place that separates them;
+- **the generated-model figures are measured on an ordinary JIT build**, not a native publish. The
+  code is identical either way — that is the point of generating it — but these are not native-AOT
+  numbers, and a native publish has its own (better) cold-start story above.
+
+### When the length is needed first — the gRPC shape
+
+gRPC frames every message with its length, so the payload has to be **priced before a byte is
+written**. That is a harder question than "serialize this", and the two engines answer it very
+differently:
+
+| | measure + serialize | plain serialize | cost of needing the length |
+| --- | ---: | ---: | ---: |
+| protobuf-net v4, runtime model | 38.19 µs | 20.62 µs | +85% |
+| **protobuf-net v4, generated model** | **15.45 µs** | 10.21 µs | **+51%** |
+
+The runtime model has no way to price a message except to **write it and count** — to a null
+writer, then again for real — so it very nearly serializes twice. A generated model has an
+arithmetic `Measure_` per contract, which walks the object graph doing sums instead of encoding:
+3.76 µs here, against the 17.6 µs a write-to-count pass costs.
+
+The rest of the difference is that the measure's work is *kept*. `Measure` hands back a state
+object, and the sub-message lengths it computed are handed to the write with it — so the write
+does not re-derive them. That hand-off is an O(1) swap of the length caches, not a copy; when it
+*was* a copy it cost an extra 22 KB and 11%.
+
+So this is the shape where the generated model gains most: **2.5× against the runtime model**,
+where plain serialization is 2.0×. If you are on gRPC, that is the number that applies to you.
+
+### What the payload is made of
+
+Ratios travel; absolute microseconds do not. And a single payload cannot speak for yours, so it is
+worth knowing what this one is: of its 7,670 bytes, **71.5% is string/bytes payload**, 13.8% field
+tags, 8.2% length prefixes and 6.6% varint values. Encoding those strings — the irreducible part of
+any serializer's job here — is 2.8 µs on its own, about a quarter of the generated model's serialize
+time.
+
+A payload built from packed numeric columns, or from far deeper nesting, would have a different
+composition and could land differently. `src/NanoBench/DescriptorPayloadCensus.md` has the full
+breakdown and the script that produces it, so the same question can be asked of your own data.
+
+### Reproducing these
+
+Two processes, because the released package and a local build share an assembly name and cannot be
+referenced side by side. Same machine, same payload, same BenchmarkDotNet settings; the payload
+length is printed by both so a divergence cannot pass unnoticed:
+
+``` bash
+# protobuf-net v4 (runtime + generated) and Google.Protobuf
+dotnet run -c Release -f net10.0 --project src/NanoBench -- \
+    --filter "*DescriptorSerializeBenchmarks*" --job short
+dotnet run -c Release -f net10.0 --project src/NanoBench -- \
+    --filter "*DescriptorParseBenchmarks*" --job short
+
+# protobuf-net as shipped on NuGet
+dotnet run -c Release --project src/ReleasedBench -- --filter "*" --job short
+```
+
 ## Opting in
 
 Declare a partial class deriving from `TypeModel`, and tell it what to serialize:

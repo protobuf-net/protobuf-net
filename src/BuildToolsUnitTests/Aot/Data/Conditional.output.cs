@@ -35,7 +35,8 @@ partial class ConditionalModel
             if (value.ValueSpecified)
             {
                 var tmp1 = value.Value;
-                state.WriteInt32Varint(1, tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             if (value.ShouldSerializeText())
             {
@@ -49,7 +50,8 @@ partial class ConditionalModel
             if (value.BothSpecified)
             {
                 var tmp3 = value.Both;
-                state.WriteInt32Varint(3, tmp3);
+                state.WriteRawTag((3 << 3) | 0);  // Both
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
             }
             if (value.NamedSpecified)
             {
@@ -71,7 +73,7 @@ partial class ConditionalModel
             }
         }
 
-        public static long Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Conditional_Conditional(global::AotFixtures.Conditional.Conditional value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -59,7 +59,11 @@ partial class SurrogateModel
             var surrogate = (global::AotFixtures.Surrogate.CodeSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -77,10 +81,14 @@ partial class SurrogateModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -295,7 +303,7 @@ partial class SurrogateModel
             }
         }
 
-        public static long Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -400,7 +408,7 @@ partial class SurrogateModel
             }
         }
 
-        public static long Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -59,7 +59,11 @@ partial class EnumsModel
                 state.WriteRawVarint32((ushort)tmp4);
             }
             var tmp5 = value.Int32Enum;
-            if (tmp5 != default(global::AotFixtures.Enums.AsInt32)) state.WriteInt32Varint(5, (int)tmp5);
+            if (tmp5 != default(global::AotFixtures.Enums.AsInt32))
+            {
+                state.WriteRawTag((5 << 3) | 0);  // Int32Enum
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp5));
+            }
             var tmp6 = value.UInt32Enum;
             if (tmp6 != default(global::AotFixtures.Enums.AsUInt32))
             {
@@ -79,7 +83,11 @@ partial class EnumsModel
                 state.WriteRawVarint64((ulong)tmp8);
             }
             var tmp9 = value.Flags;
-            if (tmp9 != default(global::AotFixtures.Enums.Flagged)) state.WriteInt32Varint(9, (int)tmp9);
+            if (tmp9 != default(global::AotFixtures.Enums.Flagged))
+            {
+                state.WriteRawTag((9 << 3) | 0);  // Flags
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp9));
+            }
             var tmp10 = value.MaybeEnum;
             if (tmp10.HasValue)
             {
@@ -88,7 +96,11 @@ partial class EnumsModel
                 state.WriteRawVarint64(unchecked((ulong)(long)(int)val10));
             }
             var tmp11 = value.EnumWithDefault;
-            if (tmp11 != (global::AotFixtures.Enums.AsInt32)(-70000)) state.WriteInt32Varint(11, (int)tmp11);
+            if (tmp11 != (global::AotFixtures.Enums.AsInt32)(-70000))
+            {
+                state.WriteRawTag((11 << 3) | 0);  // EnumWithDefault
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp11));
+            }
             var tmp12 = value.MaybeFlagsWithDefault;
             if (tmp12.HasValue)
             {
@@ -114,7 +126,7 @@ partial class EnumsModel
             }
         }
 
-        public static long Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Enums_WithEnums(global::AotFixtures.Enums.WithEnums value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

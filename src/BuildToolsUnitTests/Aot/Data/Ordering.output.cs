@@ -38,12 +38,20 @@ partial class OrderingModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.OnlyDataMember;
-            if (tmp2 != 0) state.WriteInt32Varint(2, tmp2);
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // OnlyDataMember
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
             var tmp5 = value.Both;
-            if (tmp5 != 0) state.WriteInt32Varint(5, tmp5);
+            if (tmp5 != 0)
+            {
+                state.WriteRawTag((5 << 3) | 0);  // Both
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
+            }
         }
 
-        public static long Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -111,10 +119,14 @@ partial class OrderingModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // First
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
         }
 
-        public static long Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -215,7 +227,7 @@ partial class OrderingModel
             }
         }
 
-        public static long Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -324,7 +336,11 @@ partial class OrderingModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // First
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Second;
             if (tmp2 != null)
             {
@@ -333,7 +349,7 @@ partial class OrderingModel
             }
         }
 
-        public static long Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -401,7 +417,11 @@ partial class OrderingModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp11 = value.First;
-            if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+            if (tmp11 != 0)
+            {
+                state.WriteRawTag((11 << 3) | 0);  // First
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+            }
             var tmp12 = value.Second;
             if (tmp12 != null)
             {
@@ -410,7 +430,7 @@ partial class OrderingModel
             }
         }
 
-        public static long Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -478,7 +498,11 @@ partial class OrderingModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // First
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Second;
             if (tmp2 != null)
             {
@@ -487,7 +511,7 @@ partial class OrderingModel
             }
         }
 
-        public static long Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

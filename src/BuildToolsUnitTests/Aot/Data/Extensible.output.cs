@@ -51,7 +51,11 @@ partial class ExtensibleModel
                 }
             }
             var tmp1 = value.Shared;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Shared
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.BaseExt));
         }
 
@@ -105,11 +109,15 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -167,7 +175,11 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Extra;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Extra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.DerivedExt));
         }
 
@@ -216,11 +228,15 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value);
         }
 
-        public static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -278,11 +294,15 @@ partial class ExtensibleModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
 
-        public static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

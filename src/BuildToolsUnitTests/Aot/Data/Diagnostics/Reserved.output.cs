@@ -33,7 +33,11 @@ partial class ReservedModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.A;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // A
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.B;
             if (tmp2 != null)
             {
@@ -42,7 +46,7 @@ partial class ReservedModel
             }
         }
 
-        public static long Measure_AotFixtures_Reserved_ReservedButClear(global::AotFixtures.Reserved.ReservedButClear value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Reserved_ReservedButClear(global::AotFixtures.Reserved.ReservedButClear value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;

@@ -58,7 +58,11 @@ partial class ListsModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
-            if (tmp1 != 0) state.WriteInt32Varint(1, tmp1);
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
             var tmp2 = value.Label;
             if (tmp2 != null)
             {
@@ -67,7 +71,7 @@ partial class ListsModel
             }
         }
 
-        public static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -234,7 +238,11 @@ partial class ListsModel
                 }
             }
             var tmp11 = value.Scalar;
-            if (tmp11 != 0) state.WriteInt32Varint(11, tmp11);
+            if (tmp11 != 0)
+            {
+                state.WriteRawTag((11 << 3) | 0);  // Scalar
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp11));
+            }
             var tmp12 = value.Colours;
             if (tmp12 != null)
             {
@@ -254,10 +262,14 @@ partial class ListsModel
                 }
             }
             var tmp14 = value.SingleColour;
-            if (tmp14 != default(global::AotFixtures.Lists.Colour)) state.WriteInt32Varint(14, (int)tmp14);
+            if (tmp14 != default(global::AotFixtures.Lists.Colour))
+            {
+                state.WriteRawTag((14 << 3) | 0);  // SingleColour
+                state.WriteRawVarint64(unchecked((ulong)(long)(int)tmp14));
+            }
         }
 
-        public static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
