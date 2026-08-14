@@ -106,7 +106,7 @@ namespace ProtoBuf.BuildTools.Internal
                     return null;
                 }
 
-                var kind = MapKind(field, out var enumOrMessage);
+                var kind = MapKind(field, out var enumOrMessage, out var dataFormat);
                 if (kind is null)
                 {
                     unsupported = $"{message.Name}.{field.Name}: type {field.type} is outside the spike";
@@ -137,7 +137,8 @@ namespace ProtoBuf.BuildTools.Internal
                 members.Add(new ProtoMemberPlan(field.Number, name, kind.Value,
                     typeName: typeNameForMember,
                     enumTypeName: enumTypeName,
-                    defaultLiteral: defaultLiteral));
+                    defaultLiteral: defaultLiteral,
+                    dataFormat: dataFormat));
             }
 
             // CONVENTION: protogen emits `: IExtensible` on every message, with a private
@@ -147,22 +148,56 @@ namespace ProtoBuf.BuildTools.Internal
                 extensible: ProtoExtensibleKind.Untyped);
         }
 
-        private static ProtoMemberKind? MapKind(FieldDescriptorProto field, out string? typeRef)
+        /// <summary>
+        /// The member's kind AND its <see cref="ProtoDataFormat"/> - which are two questions, not
+        /// one.
+        /// </summary>
+        /// <remarks>
+        /// The .proto scalar spellings encode the WIRE FORM as well as the CLR type:
+        /// <c>int32</c>, <c>sint32</c> and <c>sfixed32</c> are all a C# <c>int</c>, and all three
+        /// go on the wire differently - twos-complement varint, zig-zag varint, and fixed 32 bits.
+        /// <para>
+        /// Collapsing them to the CLR type alone compiles perfectly and writes the wrong bytes,
+        /// which is exactly what the first version of this did: <c>sint32 delta = -17</c> went out
+        /// as a sign-extended ten-byte varint instead of the single byte <c>0x21</c>. The byte
+        /// differential caught it on its first run; nothing else could have.
+        /// </para>
+        /// </remarks>
+        private static ProtoMemberKind? MapKind(FieldDescriptorProto field, out string? typeRef,
+            out ProtoDataFormat format)
         {
             typeRef = null;
+            format = ProtoDataFormat.Default;
             switch (field.type)
             {
                 case FieldDescriptorProto.Type.TypeBool: return ProtoMemberKind.Bool;
-                case FieldDescriptorProto.Type.TypeInt32:
+
+                case FieldDescriptorProto.Type.TypeInt32: return ProtoMemberKind.Int32;
                 case FieldDescriptorProto.Type.TypeSint32:
-                case FieldDescriptorProto.Type.TypeSfixed32: return ProtoMemberKind.Int32;
-                case FieldDescriptorProto.Type.TypeUint32:
-                case FieldDescriptorProto.Type.TypeFixed32: return ProtoMemberKind.UInt32;
-                case FieldDescriptorProto.Type.TypeInt64:
+                    format = ProtoDataFormat.ZigZag;
+                    return ProtoMemberKind.Int32;
+                case FieldDescriptorProto.Type.TypeSfixed32:
+                    format = ProtoDataFormat.FixedSize;
+                    return ProtoMemberKind.Int32;
+
+                case FieldDescriptorProto.Type.TypeUint32: return ProtoMemberKind.UInt32;
+                case FieldDescriptorProto.Type.TypeFixed32:
+                    format = ProtoDataFormat.FixedSize;
+                    return ProtoMemberKind.UInt32;
+
+                case FieldDescriptorProto.Type.TypeInt64: return ProtoMemberKind.Int64;
                 case FieldDescriptorProto.Type.TypeSint64:
-                case FieldDescriptorProto.Type.TypeSfixed64: return ProtoMemberKind.Int64;
-                case FieldDescriptorProto.Type.TypeUint64:
-                case FieldDescriptorProto.Type.TypeFixed64: return ProtoMemberKind.UInt64;
+                    format = ProtoDataFormat.ZigZag;
+                    return ProtoMemberKind.Int64;
+                case FieldDescriptorProto.Type.TypeSfixed64:
+                    format = ProtoDataFormat.FixedSize;
+                    return ProtoMemberKind.Int64;
+
+                case FieldDescriptorProto.Type.TypeUint64: return ProtoMemberKind.UInt64;
+                case FieldDescriptorProto.Type.TypeFixed64:
+                    format = ProtoDataFormat.FixedSize;
+                    return ProtoMemberKind.UInt64;
+
                 case FieldDescriptorProto.Type.TypeFloat: return ProtoMemberKind.Single;
                 case FieldDescriptorProto.Type.TypeDouble: return ProtoMemberKind.Double;
                 case FieldDescriptorProto.Type.TypeString: return ProtoMemberKind.String;

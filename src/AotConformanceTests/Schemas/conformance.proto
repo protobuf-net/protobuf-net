@@ -1,0 +1,54 @@
+// The byte gate for the schema-sourced AOT model (docs/aot-schema-model.md).
+//
+// This file is an <AdditionalFiles> item, so ProtoFileGenerator turns it into DTOs during this
+// project's build, and [ProtoSchema] on the model beside it turns the SAME schema into
+// serializers - the one-project shape. DifferentialTests then discovers that model like any
+// other and compares its bytes against RuntimeTypeModel over the generated DTOs, in both
+// directions.
+//
+// That comparison is the point. The two generators agreeing on NAMES only proves it compiles;
+// only bytes prove the plan's write guards match what protobuf-net does - and a guard is exactly
+// what a compile gate cannot check. Every shape added to SchemaPlanBuilder should gain a field
+// here in the same commit.
+syntax = "proto3";
+package conformance;
+
+enum Grade {
+    GRADE_UNKNOWN = 0;
+    GRADE_LOW = 1;
+    GRADE_HIGH = 2;
+}
+
+message Detail {
+    int32 depth = 1;
+    string note = 2;
+}
+
+message Sample {
+    int32 id = 1;
+
+    // the sharp one: proto3 emits [DefaultValue("")] AND an `= ""` initialiser, so the write
+    // guard is `!= ""` and an EMPTY string writes nothing. Getting that wrong is a silent wire
+    // difference that compiles perfectly - see the samples, which include an empty string
+    string name = 2;
+
+    bool active = 3;
+    double balance = 4;
+    float ratio = 5;
+    int64 ticks = 6;
+    uint32 count = 7;
+    uint64 total = 8;
+    bytes blob = 9;
+
+    // an enum member is its underlying scalar plus a cast
+    Grade grade = 10;
+
+    // a nested message reference: served by another serializer on the same services type
+    Detail detail = 11;
+
+    // sint/fixed spellings: the wire form differs from the plain ones, so a plan that mapped
+    // them all to the same kind would still compile
+    sint32 delta = 12;
+    fixed32 marker = 13;
+    sfixed64 offset = 14;
+}
