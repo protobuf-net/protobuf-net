@@ -179,11 +179,10 @@ partial class CustomProtogenSerializer
             if (tmp7 != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // Options
-                var lengths7 = state.RawLengths;
-                if (!lengths7.TryGetValue(tmp7, out var len7))
+                if (!state.RawLengths.TryGetValue(tmp7, out var len7))
                 {
-                    len7 = Measure_Google_Protobuf_Reflection_MessageOptions(tmp7, state.RawDepthBudget, lengths7);
-                    lengths7[tmp7] = len7;
+                    len7 = Measure_Google_Protobuf_Reflection_MessageOptions(tmp7, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp7] = len7;
                 }
                 state.WriteRawVarint64((ulong)len7);
                 RawWrite_Google_Protobuf_Reflection_MessageOptions(ref state, tmp7, depth);
@@ -524,11 +523,10 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, tmp3, depth);
@@ -747,11 +745,10 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_Google_Protobuf_Reflection_EnumOptions(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_Google_Protobuf_Reflection_EnumOptions(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_Google_Protobuf_Reflection_EnumOptions(ref state, tmp3, depth);
@@ -1167,11 +1164,10 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref state, tmp3, depth);
@@ -1532,11 +1528,10 @@ partial class CustomProtogenSerializer
             if (tmp8 != null)
             {
                 state.WriteRawTag((8 << 3) | 2);  // Options
-                var lengths8 = state.RawLengths;
-                if (!lengths8.TryGetValue(tmp8, out var len8))
+                if (!state.RawLengths.TryGetValue(tmp8, out var len8))
                 {
-                    len8 = Measure_Google_Protobuf_Reflection_FieldOptions(tmp8, state.RawDepthBudget, lengths8);
-                    lengths8[tmp8] = len8;
+                    len8 = Measure_Google_Protobuf_Reflection_FieldOptions(tmp8, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp8] = len8;
                 }
                 state.WriteRawVarint64((ulong)len8);
                 RawWrite_Google_Protobuf_Reflection_FieldOptions(ref state, tmp8, depth);
@@ -2091,11 +2086,10 @@ partial class CustomProtogenSerializer
             if (tmp8 != null)
             {
                 state.WriteRawTag((8 << 3) | 2);  // Options
-                var lengths8 = state.RawLengths;
-                if (!lengths8.TryGetValue(tmp8, out var len8))
+                if (!state.RawLengths.TryGetValue(tmp8, out var len8))
                 {
-                    len8 = Measure_Google_Protobuf_Reflection_FileOptions(tmp8, state.RawDepthBudget, lengths8);
-                    lengths8[tmp8] = len8;
+                    len8 = Measure_Google_Protobuf_Reflection_FileOptions(tmp8, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp8] = len8;
                 }
                 state.WriteRawVarint64((ulong)len8);
                 RawWrite_Google_Protobuf_Reflection_FileOptions(ref state, tmp8, state.RawDepthBudget);
@@ -3058,11 +3052,10 @@ partial class CustomProtogenSerializer
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Options
-                var lengths4 = state.RawLengths;
-                if (!lengths4.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out var len4))
                 {
-                    len4 = Measure_Google_Protobuf_Reflection_MethodOptions(tmp4, state.RawDepthBudget, lengths4);
-                    lengths4[tmp4] = len4;
+                    len4 = Measure_Google_Protobuf_Reflection_MethodOptions(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len4;
                 }
                 state.WriteRawVarint64((ulong)len4);
                 RawWrite_Google_Protobuf_Reflection_MethodOptions(ref state, tmp4, depth);
@@ -3358,11 +3351,10 @@ partial class CustomProtogenSerializer
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Options
-                var lengths2 = state.RawLengths;
-                if (!lengths2.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
                 {
-                    len2 = Measure_Google_Protobuf_Reflection_OneofOptions(tmp2, state.RawDepthBudget, lengths2);
-                    lengths2[tmp2] = len2;
+                    len2 = Measure_Google_Protobuf_Reflection_OneofOptions(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
                 RawWrite_Google_Protobuf_Reflection_OneofOptions(ref state, tmp2, depth);
@@ -3570,11 +3562,10 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref state, tmp3, depth);

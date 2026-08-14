@@ -48,11 +48,10 @@ partial class GenericModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Number
-                var lengths1 = state.RawLengths;
-                if (!lengths1.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
                 {
-                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, lengths1);
-                    lengths1[tmp1] = len1;
+                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1, depth);
@@ -61,11 +60,10 @@ partial class GenericModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Text
-                var lengths2 = state.RawLengths;
-                if (!lengths2.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
                 {
-                    len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, state.RawDepthBudget, lengths2);
-                    lengths2[tmp2] = len2;
+                    len2 = Measure_AotFixtures_Generic_Wrapper_string_(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Generic_Wrapper_string_(ref state, tmp2, depth);
@@ -74,11 +72,10 @@ partial class GenericModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, tmp3, depth);
@@ -87,11 +84,10 @@ partial class GenericModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Deep
-                var lengths4 = state.RawLengths;
-                if (!lengths4.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out var len4))
                 {
-                    len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, state.RawDepthBudget, lengths4);
-                    lengths4[tmp4] = len4;
+                    len4 = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len4;
                 }
                 state.WriteRawVarint64((ulong)len4);
                 RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, tmp4, depth);
@@ -100,11 +96,10 @@ partial class GenericModel
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // Many
-                var lengths5 = state.RawLengths;
-                if (!lengths5.TryGetValue(tmp5, out var len5))
+                if (!state.RawLengths.TryGetValue(tmp5, out var len5))
                 {
-                    len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, state.RawDepthBudget, lengths5);
-                    lengths5[tmp5] = len5;
+                    len5 = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp5, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp5] = len5;
                 }
                 state.WriteRawVarint64((ulong)len5);
                 RawWrite_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(ref state, tmp5, depth);
@@ -580,11 +575,10 @@ partial class GenericModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var lengths1 = state.RawLengths;
-                if (!lengths1.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
                 {
-                    len1 = Measure_AotFixtures_Generic_Nested(tmp1, state.RawDepthBudget, lengths1);
-                    lengths1[tmp1] = len1;
+                    len1 = Measure_AotFixtures_Generic_Nested(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Generic_Nested(ref state, tmp1, depth);
@@ -676,11 +670,10 @@ partial class GenericModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                var lengths1 = state.RawLengths;
-                if (!lengths1.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
                 {
-                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, lengths1);
-                    lengths1[tmp1] = len1;
+                    len1 = Measure_AotFixtures_Generic_Wrapper_int_(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Generic_Wrapper_int_(ref state, tmp1, depth);

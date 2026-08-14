@@ -110,11 +110,10 @@ partial class NestedModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Address
-                var lengths2 = state.RawLengths;
-                if (!lengths2.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
                 {
-                    len2 = Measure_AotFixtures_Nested_Address(tmp2, state.RawDepthBudget, lengths2);
-                    lengths2[tmp2] = len2;
+                    len2 = Measure_AotFixtures_Nested_Address(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Nested_Address(ref state, tmp2, depth);
@@ -206,11 +205,10 @@ partial class NestedModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Customer
-                var lengths2 = state.RawLengths;
-                if (!lengths2.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
                 {
-                    len2 = Measure_AotFixtures_Nested_Customer(tmp2, state.RawDepthBudget, lengths2);
-                    lengths2[tmp2] = len2;
+                    len2 = Measure_AotFixtures_Nested_Customer(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Nested_Customer(ref state, tmp2, depth);
@@ -219,11 +217,10 @@ partial class NestedModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // ShipTo
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_AotFixtures_Nested_Address(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_AotFixtures_Nested_Address(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_AotFixtures_Nested_Address(ref state, tmp3, depth);

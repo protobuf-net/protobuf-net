@@ -98,11 +98,10 @@ partial class FormatsModel
             if (tmp9 != null)
             {
                 state.WriteRawTag((9 << 3) | 2);  // Plain
-                var lengths9 = state.RawLengths;
-                if (!lengths9.TryGetValue(tmp9, out var len9))
+                if (!state.RawLengths.TryGetValue(tmp9, out var len9))
                 {
-                    len9 = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, lengths9);
-                    lengths9[tmp9] = len9;
+                    len9 = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp9] = len9;
                 }
                 state.WriteRawVarint64((ulong)len9);
                 RawWrite_AotFixtures_Formats_Inner(ref state, tmp9, state.RawDepthBudget);

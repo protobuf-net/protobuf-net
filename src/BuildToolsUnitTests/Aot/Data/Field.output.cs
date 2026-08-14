@@ -183,11 +183,10 @@ partial class FieldModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
                 {
-                    len3 = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len3 = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len3;
                 }
                 state.WriteRawVarint64((ulong)len3);
                 RawWrite_AotFixtures_Field_Nested(ref state, tmp3, state.RawDepthBudget);

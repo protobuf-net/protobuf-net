@@ -389,7 +389,7 @@ just not additive across a boundary. The fix is to push `writer.Depth` at the po
 rather than to thread anything further. Recorded rather than done because it wants a fixture that
 actually crosses the boundary deeply, and no existing one does.
 
-### B16. The emitted bodies declare one local per member, and large contracts have a lot of them — **open**
+### B16. Locals in the emitted bodies — **`lengths` done 2026-08-14; `tmpN` folding agreed, for the STACK**
 
 Marc, 2026-08-14, on two shapes in the generated code:
 
@@ -433,10 +433,51 @@ That hoist is **safe today but needs a comment saying why**: `_rawLengths` is ge
 may replace it — but both happen at the boundaries, never mid-body. If the hand-off ever moved,
 a hoisted local would go stale silently.
 
-**Unmeasured, and deliberately so far.** Nothing in this arc has targeted *dependent load chains*
-or *local-count pressure*, so unlike the seven flat micro-experiments there is no census result
-predicting the outcome. Worth measuring on a large contract rather than on the descriptor payload,
-since the effect scales with member count and `descriptor.proto`'s messages are mostly small.
+#### Measured: three arms, and the per-site local is the worst of them
+
+`src/NanoBench/LengthCacheAccessBenchmarks.cs`, 8 sites, mirroring the real three-load chain with
+real `TryGetValue` calls between the sites — without those the JIT hoists everything and all three
+arms measure identically, which would have been a meaningless pass.
+
+| arm | mean | ratio |
+| --- | ---: | ---: |
+| per-site local (as it was) | 43.14 ns | 1.00 |
+| one hoisted local | 38.21 ns | **0.89** |
+| no local, read inline | 38.53 ns | **0.89** |
+
+Hoisting and reading inline are a **dead heat**, so the JIT inlines the property chain perfectly
+well: what costs is materialising a distinct local per site. **Applied: no local at all** — same
+speed as hoisting, simpler to emit, and it removes the staleness hazard a hoisted local would have
+carried across an `InitializeFrom` swap.
+
+**The `tmpN` locals are a different case and must stay** (Marc): `value.Something` is *consumer*
+code, so reading it twice is a **correctness** risk, not merely a cost. `state.RawLengths` is ours
+and known to be a field chain, which is exactly why it needs no local. The distinction is "do we
+know this is cheap and stable", not "is it a property".
+
+#### `tmpN` folding by type — agreed, and the reason is the STACK, not throughput
+
+Marc: *"I am still inclined to do the reuse-thing, if only for the stack problem."* Agreed, and the
+arithmetic supports it over any throughput argument:
+
+- `TypeModel.DefaultMaxDepth` is **512**;
+- a 1000-local body is roughly an **8 KB frame**;
+- 512 × 8 KB ≈ **4 MB**, against a 1 MB default thread stack.
+
+So for large contracts the depth guard **does not bound anything** — the stack dies around 128
+frames, long before 512. `MaxDepth` silently assumes small frames, and the generated bodies for
+big contracts break that assumption. That makes this correctness-adjacent rather than a
+micro-optimisation, and it is the argument for doing it.
+
+Folding by type also brings a 1000-local body back inside RyuJIT's tracked-local limit, past which
+locals are neither enregistered nor lifetime-merged — so the throughput effect, whatever its size,
+points the same way.
+
+**Not a union, though.** Marc floated overlapping the non-reference temporaries (refs cannot be
+unioned — the GC must track them). Legal, but likely counterproductive: a union member is
+address-taken and therefore memory-resident, which **defeats enregistration entirely**, making
+every small body worse to fix the large ones. Folding by type gets most of the reduction while
+leaving ordinary locals the JIT can still keep in registers.
 
 ## C. Schema front-end (`[ProtoSchema]`)
 

@@ -116,11 +116,10 @@ partial class DerivedModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Ambiguous
-                var lengths4 = state.RawLengths;
-                if (!lengths4.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out var len4))
                 {
-                    len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, lengths4);
-                    lengths4[tmp4] = len4;
+                    len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len4;
                 }
                 state.WriteRawVarint64((ulong)len4);
                 RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4, state.RawDepthBudget);

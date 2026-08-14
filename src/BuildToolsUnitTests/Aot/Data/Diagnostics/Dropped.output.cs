@@ -197,11 +197,10 @@ partial class DroppedModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Child
-                var lengths1 = state.RawLengths;
-                if (!lengths1.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
                 {
-                    len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget, lengths1);
-                    lengths1[tmp1] = len1;
+                    len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp1, depth);

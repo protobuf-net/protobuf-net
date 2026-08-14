@@ -127,11 +127,10 @@ partial class KeywordsModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // class
-                var lengths4 = state.RawLengths;
-                if (!lengths4.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out var len4))
                 {
-                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, lengths4);
-                    lengths4[tmp4] = len4;
+                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len4;
                 }
                 state.WriteRawVarint64((ulong)len4);
                 RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4, depth);
@@ -140,11 +139,10 @@ partial class KeywordsModel
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // lock
-                var lengths5 = state.RawLengths;
-                if (!lengths5.TryGetValue(tmp5, out var len5))
+                if (!state.RawLengths.TryGetValue(tmp5, out var len5))
                 {
-                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, lengths5);
-                    lengths5[tmp5] = len5;
+                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp5] = len5;
                 }
                 state.WriteRawVarint64((ulong)len5);
                 RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5, depth);

@@ -189,11 +189,10 @@ partial class OrderingModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // FromDataContract
-                var lengths1 = state.RawLengths;
-                if (!lengths1.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
                 {
-                    len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget, lengths1);
-                    lengths1[tmp1] = len1;
+                    len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len1;
                 }
                 state.WriteRawVarint64((ulong)len1);
                 RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1, depth);
@@ -202,11 +201,10 @@ partial class OrderingModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // FromXmlType
-                var lengths2 = state.RawLengths;
-                if (!lengths2.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
                 {
-                    len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget, lengths2);
-                    lengths2[tmp2] = len2;
+                    len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len2;
                 }
                 state.WriteRawVarint64((ulong)len2);
                 RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2, depth);

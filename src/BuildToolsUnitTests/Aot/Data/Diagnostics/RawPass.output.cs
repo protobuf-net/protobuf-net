@@ -339,11 +339,10 @@ partial class RawPassModel
             if (tmp10 != null)
             {
                 state.WriteRawTag((10 << 3) | 2);  // Favourite
-                var lengths10 = state.RawLengths;
-                if (!lengths10.TryGetValue(tmp10, out var len10))
+                if (!state.RawLengths.TryGetValue(tmp10, out var len10))
                 {
-                    len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget, lengths10);
-                    lengths10[tmp10] = len10;
+                    len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp10] = len10;
                 }
                 state.WriteRawVarint64((ulong)len10);
                 RawWrite_AotFixtures_RawPass_Child(ref state, tmp10, depth);
