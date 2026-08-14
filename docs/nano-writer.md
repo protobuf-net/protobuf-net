@@ -774,6 +774,33 @@ The general lesson is the one this file keeps relearning from the other directio
 convenience overload that predates an optimisation will silently opt out of it**, and nothing
 fails. It took reading the generated output to see.
 
+### Three on the `Measure_` statics (Marc, from the same golden) — LOGGED, not yet actioned
+
+1. **`public` is unnecessary.** They sit on `private sealed class ProtoBufGeneratedServices`, so
+   `public` grants nothing a consumer can reach; it reads as API and is not. The one caller that
+   might care is `NanoBench`, which binds to `Measure_` reflectively - and it already passes
+   `BindingFlags.Public | BindingFlags.NonPublic` for both the nested type and the method, so it
+   would not notice the change. Verified rather than assumed.
+2. **They ARE used** - just not from anywhere obvious in a single contract's own body. Six
+   references to `Measure_..._Inner` in `Lists.output.cs`: its own
+   `IMeasuringSerializer<T>.Measure`, and the *enclosing* contracts' measure statics, which is
+   the sub-message recursion (`len9 = Measure_..._Inner(item9, state.RawDepthBudget, lengths9)`).
+   A leaf contract that nothing else references would indeed have exactly one caller.
+3. **Depth is a countdown, never re-incremented, and that is correct.** `depth` is a by-value
+   parameter; each body opens `if (--depth < 0) ThrowRawTooDeep();` and passes its own decremented
+   copy down, so the budget shrinks with nesting and restores on return by virtue of being a
+   local. There is no counter to reset. The root value comes from `state.RawDepthBudget`.
+
+**Marc's suggestion, which looks right and is not built:** a contract with no message-typed
+members - no sub-message, no repeated-of-message, no map with a message side - cannot recurse, so
+its depth check can never fire and is pure per-call overhead. Emitting it only where recursion is
+reachable would remove a branch from every leaf contract, on both the measure and write paths.
+Off-by-one is not a hazard here: the check exists to stop unbounded recursion, not to enforce an
+exact depth.
+
+Worth pairing with a measurement, since the census says leaf contracts are the common case and
+the check is one predictable compare - so the honest expectation is "small, but free".
+
 ### `ThrowUnexpectedSubtype` reads as unconditional and is not
 
 `TypeModel.ThrowUnexpectedSubtype(value)` opens nearly every generated write body and looks like

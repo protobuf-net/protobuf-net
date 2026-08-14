@@ -2,6 +2,7 @@
 using Google.Protobuf.Reflection;
 using ProtoBuf.BuildTools.Internal.Aot;
 using ProtoBuf.Reflection;
+using System;
 using System.Collections.Generic;
 
 namespace ProtoBuf.BuildTools.Internal
@@ -40,6 +41,25 @@ namespace ProtoBuf.BuildTools.Internal
             var contracts = new List<ProtoContractPlan>();
             var enums = new List<ProtoEnumPlan>();
 
+            // FIRST PASS: every declared type, keyed by its full schema name (".pkg.Outer.Inner"),
+            // mapped to the C# name protogen will emit for it. A type reference in a field arrives
+            // in schema terms, so resolving it by re-deriving names segment by segment would be a
+            // second implementation of protogen's naming; a lookup built by the same walk cannot
+            // disagree with itself
+            var types = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var file in set.Files)
+            {
+                if (!file.IncludeInOutput) continue;
+                var ns = Namespace(file, names);
+                var package = string.IsNullOrEmpty(file.Package) ? "" : "." + file.Package;
+                foreach (var message in file.MessageTypes) IndexMessage(message, ns, package, null, names, types);
+                foreach (var @enum in file.EnumTypes)
+                {
+                    types[package + "." + @enum.Name] = Qualify(ns, names.GetName(@enum));
+                }
+            }
+
+            // SECOND PASS: the contracts themselves
             foreach (var file in set.Files)
             {
                 if (!file.IncludeInOutput) continue;
@@ -47,23 +67,11 @@ namespace ProtoBuf.BuildTools.Internal
 
                 foreach (var message in file.MessageTypes)
                 {
-                    if (message.NestedTypes.Count != 0 || message.EnumTypes.Count != 0)
-                    {
-                        unsupported = $"{message.Name}: nested types are outside the spike";
-                        return null;
-                    }
-                    var contract = TryBuildMessage(message, ns, names, ref unsupported);
-                    if (contract is null) return null;
-                    contracts.Add(contract);
+                    if (!AddMessage(message, ns, null, names, types, contracts, ref unsupported)) return null;
                 }
 
-                foreach (var @enum in file.EnumTypes)
-                {
-                    // an enum reached as a MEMBER is an inline scalar and needs no plan of its own;
-                    // it only becomes a ProtoEnumPlan when it is a model root, which a schema-sourced
-                    // model does not currently produce
-                    _ = @enum;
-                }
+                // an enum reached as a MEMBER is an inline scalar and needs no plan of its own; it
+                // would only become a ProtoEnumPlan as a model root, which this path never produces
             }
 
             if (contracts.Count == 0)
@@ -78,6 +86,71 @@ namespace ProtoBuf.BuildTools.Internal
         }
 
         /// <summary>
+        /// Adds a message and everything nested inside it.
+        /// </summary>
+        /// <remarks>
+        /// CONVENTION: protogen emits a nested message as a nested C# class, so
+        /// <c>Outer.Inner</c> - the enclosing chain is part of the name, which is what
+        /// <paramref name="outer"/> carries.
+        /// <para>
+        /// A <c>map&lt;k,v&gt;</c> compiles to a SYNTHETIC nested entry message
+        /// (<c>options.map_entry</c>) plus a repeated field of it, and protogen emits a
+        /// <c>Dictionary&lt;K,V&gt;</c> and <b>no C# type</b> for the entry. So the entry must be
+        /// skipped here: walking it would emit a contract for a type that does not exist, which
+        /// is a build break in the consumer's project.
+        /// </para>
+        /// </remarks>
+        private static bool AddMessage(DescriptorProto message, string? ns, string? outer,
+            NameNormalizer names, Dictionary<string, string> types,
+            List<ProtoContractPlan> contracts, ref string? unsupported)
+        {
+            // the synthetic map-entry type: real to the descriptor, absent from the C#
+            if (message.Options?.MapEntry == true) return true;
+
+            var localName = names.GetName(message);
+            var qualified = outer is null ? localName : outer + "." + localName;
+
+            var contract = TryBuildMessage(message, ns, qualified, names, types, ref unsupported);
+            if (contract is null) return false;
+            contracts.Add(contract);
+
+            foreach (var nested in message.NestedTypes)
+            {
+                if (!AddMessage(nested, ns, qualified, names, types, contracts, ref unsupported)) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// The first pass: record what C# name each declared type will be emitted as.
+        /// </summary>
+        /// <remarks>
+        /// Two chains are tracked, and conflating them is the easy mistake: the SCHEMA chain
+        /// (<c>.pkg.Outer.Inner</c>, which is how a field's type reference is spelled) and the
+        /// C# chain (<c>Outer.Inner</c>, after normalisation). They differ at every segment.
+        /// </remarks>
+        private static void IndexMessage(DescriptorProto message, string? ns, string schemaOuter,
+            string? csOuter, NameNormalizer names, Dictionary<string, string> types)
+        {
+            if (message.Options?.MapEntry == true) return; // no C# type is emitted for these
+
+            var schemaName = schemaOuter + "." + message.Name;
+            var localName = names.GetName(message);
+            var csName = csOuter is null ? localName : csOuter + "." + localName;
+
+            types[schemaName] = Qualify(ns, csName);
+
+            foreach (var nested in message.NestedTypes)
+            {
+                IndexMessage(nested, ns, schemaName, csName, names, types);
+            }
+            foreach (var @enum in message.EnumTypes)
+            {
+                types[schemaName + "." + @enum.Name] = Qualify(ns, csName + "." + names.GetName(@enum));
+            }
+        }
+
+        /// <summary>
         /// CONVENTION: the package becomes the namespace through the same normalizer the DTO
         /// generator uses; an empty package means the global namespace.
         /// </summary>
@@ -88,16 +161,17 @@ namespace ProtoBuf.BuildTools.Internal
         }
 
         private static ProtoContractPlan? TryBuildMessage(DescriptorProto message, string? ns,
-            NameNormalizer names, ref string? unsupported)
+            string qualifiedName, NameNormalizer names, Dictionary<string, string> types,
+            ref string? unsupported)
         {
-            var typeName = Qualify(ns, names.GetName(message));
+            var typeName = Qualify(ns, qualifiedName);
             var members = new List<ProtoMemberPlan>();
 
             foreach (var field in message.Fields)
             {
                 if (field.label == FieldDescriptorProto.Label.LabelRepeated)
                 {
-                    var repeated = TryBuildRepeated(message, field, ns, names, ref unsupported);
+                    var repeated = TryBuildRepeated(message, field, types, names, ref unsupported);
                     if (repeated is null) return null;
                     members.Add(repeated.Value);
                     continue;
@@ -122,11 +196,11 @@ namespace ProtoBuf.BuildTools.Internal
                 {
                     // an enum member is its underlying scalar plus a cast, so the plan carries the
                     // enum's name and the kind is the underlying scalar (proto enums are int32)
-                    enumTypeName = QualifyTypeRef(enumOrMessage!, ns, names);
+                    enumTypeName = types[enumOrMessage!];
                 }
                 else if (field.type == FieldDescriptorProto.Type.TypeMessage)
                 {
-                    typeNameForMember = QualifyTypeRef(enumOrMessage!, ns, names);
+                    typeNameForMember = types[enumOrMessage!];
                 }
                 else if (field.type == FieldDescriptorProto.Type.TypeString)
                 {
@@ -170,7 +244,8 @@ namespace ProtoBuf.BuildTools.Internal
         /// collection read mutates the instance the property already holds rather than assigning.
         /// </remarks>
         private static ProtoMemberPlan? TryBuildRepeated(DescriptorProto message,
-            FieldDescriptorProto field, string? ns, NameNormalizer names, ref string? unsupported)
+            FieldDescriptorProto field, Dictionary<string, string> types, NameNormalizer names,
+            ref string? unsupported)
         {
             if (field.type == FieldDescriptorProto.Type.TypeEnum)
             {
@@ -190,10 +265,20 @@ namespace ProtoBuf.BuildTools.Internal
                 return null;
             }
 
+            // a map arrives here as a repeated field of the synthetic entry message, and that entry
+            // is deliberately absent from the type index (protogen emits no C# type for it). So an
+            // unresolved message reference IS the map case - and refusing cleanly matters, because
+            // the alternative is a KeyNotFoundException thrown out of a source generator
+            if (typeRef is not null && !types.ContainsKey(typeRef))
+            {
+                unsupported = $"{message.Name}.{field.Name}: map is not supported yet";
+                return null;
+            }
+
             var name = names.GetName(field);
             var isMessage = field.type == FieldDescriptorProto.Type.TypeMessage;
             var elementTypeName = isMessage
-                ? QualifyTypeRef(typeRef!, ns, names)
+                ? types[typeRef!]
                 : ScalarTypeName(elementKind.Value);
 
             // packable scalars take the array shape; everything else the getter-only List<T>

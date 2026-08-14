@@ -123,9 +123,11 @@ message Thing {
         // ordering: `map<k,v>` compiles to a synthetic nested entry message plus a repeated field,
         // so the nested check sees it first. Worth pinning, since it means map support is gated on
         // nested-type support rather than being a separate feature
-        [InlineData("message M { map<string, int32> m = 1; }", "nested")]
+        // a map reaches the builder as a repeated field of the SYNTHETIC entry message, which is
+        // deliberately absent from the type index - so the refusal doubles as the guard against a
+        // KeyNotFoundException escaping a source generator
+        [InlineData("message M { map<string, int32> m = 1; }", "map")]
         [InlineData("message M { oneof choice { int32 a = 1; string b = 2; } }", "oneof")]
-        [InlineData("message Outer { message Nested { int32 x = 1; } Nested n = 1; }", "nested")]
         public void OutOfScopeShapesAreRefused(string body, string because)
         {
             var set = ParseSchema("scope.proto", "syntax = \"proto3\";\npackage scope;\n" + body);

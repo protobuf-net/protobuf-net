@@ -158,7 +158,7 @@ namespace ProtoBuf.BuildTools.Generators
                     continue;
                 }
 
-                var built = SchemaPlanBuilder.TryBuild(set, NameNormalizer.Default,
+                var built = SchemaPlanBuilder.TryBuild(set, CSharpNames(),
                     plan.Namespace, plan.TypeName, out var unsupported);
                 if (built is null)
                 {
@@ -176,6 +176,31 @@ namespace ProtoBuf.BuildTools.Generators
 
             return new ProtoParseResult(plan.WithContracts(new(contracts.ToArray())),
                 new(diagnostics.ToArray()), parsed.SchemaRequests);
+        }
+
+        /// <summary>
+        /// A normalizer configured exactly as the C# DTO generator configures its own.
+        /// </summary>
+        /// <remarks>
+        /// Sharing <see cref="NameNormalizer"/> is not enough on its own - the CONFIGURATION is
+        /// part of the answer, and this cost a real bug. <c>BuildConflicts</c> builds its set with
+        /// <c>OrdinalIgnoreCase</c> unless <c>IsCaseSensitive</c> is set, and
+        /// <c>CodeGenerator.Generate</c> sets it from the generator (true for C#, false for VB).
+        /// With the default (insensitive), a field <c>node</c> beside a nested type <c>Node</c>
+        /// finds BOTH its preferred and its fallback name taken and lands on <c>NodeValue</c>;
+        /// protogen, being case-sensitive, emits <c>node</c>. The two disagreed, and the compile
+        /// gate caught it.
+        /// <para>
+        /// Taken FROM the generator rather than hard-coded to <c>true</c>, so it cannot drift.
+        /// <see cref="NameNormalizer.Default"/> hands out a fresh instance each call, so mutating
+        /// it here affects nobody else.
+        /// </para>
+        /// </remarks>
+        private static NameNormalizer CSharpNames()
+        {
+            var names = NameNormalizer.Default;
+            names.IsCaseSensitive = CSharpCodeGenerator.Default.IsCaseSensitive;
+            return names;
         }
 
         /// <summary>

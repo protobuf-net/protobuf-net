@@ -70,6 +70,27 @@ namespace ProtoBuf.AotConformance.SchemaSourced
             // a single-element packed run, which is where the length prefix is easiest to get wrong
             new global::Conformance.Sample { Id = 3, Nums = [7], Names = { "solo" } },
 
+            // the pluralised member: `repeated int32 tally` is emitted as Tallies
+            new global::Conformance.Sample { Id = 4, Tallies = [11, 22] },
+
+            // nested message and nested enum, emitted as Sample.Node / Sample.Flavour
+            new global::Conformance.Sample
+            {
+                Id = 5,
+                // lowercase: `Node` would collide with the nested TYPE Node, so protogen
+                // keeps the original name. GetName(FieldDescriptorProto) does this for us
+                node = new global::Conformance.Sample.Node { Weight = 8, Tag = "n" },
+                flavour = global::Conformance.Sample.Flavour.FlavourSalt,
+                Nodes =
+                {
+                    new global::Conformance.Sample.Node { Weight = 1 },
+                    new global::Conformance.Sample.Node { Tag = "two" },
+                },
+            },
+
+            new global::Conformance.Sample.Node { Weight = 99, Tag = "standalone nested" },
+            new global::Conformance.Sample.Node(),
+
             // THE guard case: an empty string must write nothing, because proto3 emits
             // [DefaultValue("")]. A plan that omitted the declared default writes two bytes here
             // and disagrees with ref-emit while compiling perfectly

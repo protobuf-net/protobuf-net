@@ -60,4 +60,25 @@ message Sample {
     repeated string names = 17;
     repeated bytes blobs = 18;
     repeated Detail details = 19;
+
+    // a SINGULAR repeated name: protogen pluralises it (tally -> Tallies), so a front-end that
+    // called GetName without the label would emit `Tally` and not compile. Free here only because
+    // NameNormalizer.GetName(FieldDescriptorProto) does it - which is the argument for sharing
+    // protogen's naming rather than reimplementing it
+    repeated int32 tally = 20;
+
+    // a NESTED message and a NESTED enum: protogen emits these as nested C# types, so the name
+    // is Sample.Node / Sample.Flavour rather than a sibling. Two chains have to be tracked to
+    // resolve that - the schema one and the C# one - and they differ at every segment
+    message Node {
+        int32 weight = 1;
+        string tag = 2;
+    }
+    enum Flavour {
+        FLAVOUR_NONE = 0;
+        FLAVOUR_SALT = 1;
+    }
+    Node node = 21;
+    Flavour flavour = 22;
+    repeated Node nodes = 23;
 }
