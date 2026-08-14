@@ -895,6 +895,36 @@ down-level, which costs little given the shape protogen actually emits.
 the descriptor set would show none of this. An in-situ number needs a packed-numeric payload that
 does not exist yet, and that payload is the real prerequisite, not the algorithm.
 
+### B20. Cross-width packed columns: SIMD narrow/widen for the WRITE — **idea, isolatable**
+
+Marc, 2026-08-14: protobuf-net supports cross-targeting widths — a C# `double`/`double[]` member
+can target a `float`/`repeated float` field. Confirmed rather than assumed:
+`ProtoWriter.State.WriteMethods.cs` documents `WriteDouble` as *"supported wire-types: **Fixed32**,
+Fixed64"* and narrows with `float f = (float)value;`. That is the schema-first shape — the `.proto`
+says `float`, the C# member is `double`.
+
+**This is a WRITE-side opportunity, not a sizing one**, which distinguishes it from B19: a packed
+*fixed-width* column needs no measuring at all (`WritePacked` is `count * 4` / `count * 8`). So the
+only work is conversion plus store, which is pure throughput.
+
+**And it splits in two, with only half of it interesting:**
+
+- **matching width** (`float[]` → `repeated float`) is already a straight block copy —
+  `MemoryMarshal.AsBytes` over the span, which `notes/nano-writer.md` records as the fixed-width
+  trick. Nothing to gain;
+- **cross width** (`double[]` → `repeated float`, `long[]` → `repeated sfixed32`) converts per
+  element today. That is where `Vector.Narrow` fits: it takes **two** source vectors and yields one
+  narrowed vector, which is precisely the shape needed. `Vector.Widen` is the read-side mirror.
+
+`Vector.Narrow`/`Widen` live in `System.Numerics.Vector`, so they should be available on every TFM
+via `System.Numerics.Vectors` — **worth confirming on net4x before relying on it**, as that is the
+same class of assumption that made `Vector.ShiftLeft` unusable in B19.
+
+**Isolatable, and easily**: a benchmark of scalar convert-and-store versus vectorised
+narrow-and-store over a span needs no serializer at all, exactly as `PackedSizeBenchmarks` needed
+none. Worth doing *because* it is cheap to answer, but note it ranks below B19 on reach: cross-width
+columns are rarer than same-width ones, and the same-width case is already optimal.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
