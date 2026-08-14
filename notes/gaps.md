@@ -948,7 +948,7 @@ and compaction needs a shuffle. That is the whole difficulty, and it is why the 
 Ordering: tier 1 is cheap, portable and hits the common case; tier 2 comes free with B19; tier 3 is
 a research-shaped piece that should only start once tiers 1–2 have shown what is left to win.
 
-### B20. Cross-width packed columns: SIMD narrow/widen for the WRITE — **idea, isolatable**
+### B20. Cross-width packed columns — **DOWNGRADED: not reachable from `[ProtoMember]`**
 
 Marc, 2026-08-14: protobuf-net supports cross-targeting widths — a C# `double`/`double[]` member
 can target a `float`/`repeated float` field. Confirmed rather than assumed:
@@ -956,7 +956,19 @@ can target a `float`/`repeated float` field. Confirmed rather than assumed:
 Fixed64"* and narrows with `float f = (float)value;`. That is the schema-first shape — the `.proto`
 says `float`, the C# member is `double`.
 
-**This is a WRITE-side opportunity, not a sizing one**, which distinguishes it from B19: a packed
+**First, the thing that decides its priority** (Marc asked whether the floating-point parity
+result covered widen/narrow — it did not, and checking why was instructive): **a C# `double` member
+cannot be narrowed onto a `float` field by any `[ProtoMember]` option.** `ValueMember` consults
+`DataFormat` for a width only through `GetIntWireType`, which is called from the **integer** cases
+alone; `Single` and `Double` assign `Fixed32`/`Fixed64` unconditionally. Pinned by
+`ADoubleMemberIsAlwaysFixed64_EvenWithFixedSize`.
+
+So `WriteDouble`'s documented `Fixed32` support exists for **reading** a payload whose schema says
+`float` into a `double` member, and for models configured by other means — not for anything a
+consumer can express with an attribute. That makes this an interop affordance rather than a shape
+real code produces, and it drops below everything else on the list.
+
+**It is a WRITE-side opportunity, not a sizing one**, which distinguishes it from B19: a packed
 *fixed-width* column needs no measuring at all (`WritePacked` is `count * 4` / `count * 8`). So the
 only work is conversion plus store, which is pure throughput.
 
