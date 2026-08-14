@@ -920,6 +920,20 @@ only work is conversion plus store, which is pure throughput.
 via `System.Numerics.Vectors` — **worth confirming on net4x before relying on it**, as that is the
 same class of assumption that made `Vector.ShiftLeft` unusable in B19.
 
+**Endianness: do NOT assume little-endian, because this codebase does not and it is free not to.**
+`fixed32`/`fixed64` are little-endian *on the wire*, so a block or vector store of native memory is
+only correct where the CPU agrees. The established pattern here is a `BitConverter.IsLittleEndian`
+guard with a `BinaryPrimitives` fallback — `LocalWriteFixed32` already writes through
+`BinaryPrimitives.WriteUInt32LittleEndian`, and the raw reader states the reasoning outright: *"…
+every little-endian platform (**IsLittleEndian is a JIT constant**), so correctness on BE costs
+nothing — and legacy is BE-correct via BinaryPrimitives, so anything less would be"* a regression.
+
+So the vector arm takes the same shape: guard on `IsLittleEndian`, fall back to the existing scalar
+path on big-endian. The JIT eliminates the dead arm on LE, so the guard is genuinely free — which
+means "assume LE" would buy nothing and lose a correctness property the library currently has.
+
+Note this is **specific to B20**: B19 sizes rather than stores, and a *length* is endian-independent.
+
 **Isolatable, and easily**: a benchmark of scalar convert-and-store versus vectorised
 narrow-and-store over a span needs no serializer at all, exactly as `PackedSizeBenchmarks` needed
 none. Worth doing *because* it is cheap to answer, but note it ranks below B19 on reach: cross-width
