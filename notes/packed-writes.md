@@ -138,13 +138,24 @@ setup **asserts they agree byte-for-byte** before any timing.
 
 | category | baseline classic / raw | after | change |
 | --- | ---: | ---: | ---: |
-| **varint unsigned** | 18.92 / 21.67 µs | **15.63 / 15.61** | **−17% / −28%** |
-| **varint signed** | 19.68 / 19.10 | 17.62 / 17.49 | −10% / −8% |
-| zigzag | 18.48 / 19.96 | 18.98 / 18.81 | +3% / −6% |
-| fixed int | 3.64 / 3.79 | 4.03 / 3.84 | untouched |
-| floating | 4.30 / 4.48 | 4.47 / 4.31 | untouched |
-| bool | 4.56 / 4.70 | 4.60 / 4.71 | untouched |
-| enum | 5.14 / 5.07 | 5.08 / 5.17 | untouched |
+| **bool** | 4.56 / 4.70 µs | **2.65 / 2.64** | **−42% / −44%** |
+| **varint unsigned** | 18.92 / 21.67 | **14.77 / 14.67** | **−22% / −32%** |
+| **zigzag** | 18.48 / 19.96 | **15.95 / 15.75** | **−14% / −21%** |
+| **varint signed** | 19.68 / 19.10 | **17.09 / 16.60** | −13% / −13% |
+| fixed int | 3.64 / 3.79 | 4.01 / 3.86 | within noise |
+| floating | 4.30 / 4.48 | 4.26 / 5.19 | within noise |
+| enum | 5.14 / 5.07 | 5.15 / 5.08 | untouched — never packed |
+
+Three passes got there: the **vectorised measure**; then **`bool`** (O(1) sizing plus a blit of the
+span, guarded by a vectorised scan for a non-canonical byte); then a **direct varint write** that
+bypasses the per-element `serializer.Write` — which was a virtual dispatch *and* a wire-type switch
+before any byte was produced. Arrays take all three on every TFM; `List<T>` takes them on net5+
+through `CollectionsMarshal`.
+
+**This harness is adversarial for what remains** (B21 tier 1, the single-byte homogeneous block):
+its values are spread evenly across the width classes, so a block of eight is rarely all-small.
+Real data is the opposite — the census puts almost everything in the single-byte class — so this
+would **understate** tier 1, and a "small" distribution should be added before anyone judges it.
 
 **Three findings from the baseline itself**, before any optimisation:
 
