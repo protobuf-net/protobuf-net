@@ -1210,8 +1210,54 @@ harness artefact — but note it is the **pair**, and neither half alone is slow
 
 This is the call shape `PBN2011` already warns about for AOT reasons; it turns out to carry a large
 throughput and allocation cost as well, on a shape plenty of pre-generic protobuf-net code still
-uses. **Not investigated** — nobody has looked at where the 2.2 KB goes. Worth a look before 4.0
-ships, since "the object API is 40× slower" is the kind of thing consumers find for us.
+uses.
+
+**DIAGNOSED 2026-08-15, and it is a `main` bug, not a v4 one** — `RuntimeTypeModel.cs` is
+byte-identical between this branch and `origin/main`, so it ships in 3.x today.
+
+**Cause: negative serializer lookups are never memoised.** `RuntimeTypeModel.GetServices<T>` is
+
+```csharp
+=> (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T), ambient));
+```
+
+and `GetServicesSlow` ends with `if (service is not null) { … _serviceCache[type] = service; }`. A
+`Hashtable` miss and a cached null are indistinguishable, so a type with **no** service re-runs the
+whole slow path on **every call**: a `lock (_serviceCache)`, `TryGetRepeatedProvider`, and
+`FindOrAddAuto`. `typeof(object)` is exactly that type, and the object API asks for it every time.
+
+Attributed exactly rather than guessed — `src/NanoBench/ObjectDispatchProbe.cs`, run with
+`dotnet run --project src/NanoBench -c Release -- --probe`, using
+`GC.GetAllocatedBytesForCurrentThread()` so it needs no profiler:
+
+| | B/call |
+| --- | ---: |
+| `TryGetSerializer<object>` (never cached) | **2272.0** |
+| `TryGetSerializer<Payload>` (cached) | 0.0 |
+
+i.e. **100% of the cliff is that one lookup**. It is perfectly linear from 1 call to 1000, so it is
+a fixed per-call cost and not a warm-up, and it is identical to a `Stream` and to an
+`IBufferWriter`, so the destination is irrelevant.
+
+**Scale**: 2.2 KB/call is ~22 MB/s of pure GC pressure for a service doing 10k messages/sec through
+the non-generic API, for no work.
+
+**Two candidate fixes**, and they are not the same size:
+
+- **A, minimal and risk-free.** Short-circuit `typeof(T) == typeof(object)` in
+  `TypeModel.TryGetSerializer<T>`. That is a JIT-time constant, so it costs every other `T` nothing
+  and folds away; `object` can never have a serializer, so nothing is lost. Fixes the reported cliff
+  outright.
+- **B, general and needs care.** Memoise negatives with a sentinel. Wider (it helps *any* repeated
+  failed lookup, including the auxiliary-type paths) but it changes behaviour: a type that becomes
+  serializable later would stay negative unless invalidated, and `ResetServiceCache` is called from
+  only two `MetaType` sites — nothing obviously invalidates when a *new* type is added. The cache is
+  also keyed on type alone while `GetServicesSlow` takes an ambient `CompatibilityLevel`; that is
+  already true of positives, but caching negatives widens the exposure.
+
+**Do A on a main-facing branch** (Marc, 2026-08-15: "we might break tradition and fix it on a
+main-facing branch") so 3.x gets it, and let it flow into v4 by merge. B is worth its own change
+with tests, not a rider on A.
 
 ### B25. ~~Doc links in SOURCE still point at `protobuf-net.github.io`~~ — **CLOSED, main #1279**
 
