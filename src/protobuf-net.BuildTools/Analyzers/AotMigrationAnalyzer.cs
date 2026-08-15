@@ -60,7 +60,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             title: "This project publishes AOT or trimmed, but has no AOT model",
             messageFormat: "This project has protobuf-net contracts and asks for {0}, but declares no "
                 + "[ProtoModel]; serializers will be built by reflection, which is exactly what will "
-                + "not survive. See https://protobuf-net.github.io/protobuf-net/aot",
+                + "not survive. See https://docs.protobuf-net.dev/aot",
             category: "ProtoBuf",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -74,7 +74,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             messageFormat: "This project has protobuf-net contracts and no [ProtoModel]. Compile-time "
                 + "serializers are not only for AOT: they skip the metadata inspection and IL emission "
                 + "the runtime model does on first use of each contract, which is typically several "
-                + "times faster to first serialize. See https://protobuf-net.github.io/protobuf-net/aot",
+                + "times faster to first serialize. See https://docs.protobuf-net.dev/aot",
             category: "ProtoBuf",
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);

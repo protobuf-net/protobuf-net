@@ -149,7 +149,7 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             id: "PBN0016",
             title: nameof(DataContractAnalyzer) + "." + nameof(MissingCompatibilityLevel),
             messageFormat: "It is recommended to declare a module or assembly level " + nameof(CompatibilityLevel) + " (or declare it for each contract type); new projects should use the highest currently available - old projects should use " + nameof(CompatibilityLevel.Level200) + " unless fully considered.",
-            helpLinkUri: "https://protobuf-net.github.io/protobuf-net/compatibilitylevel.html",
+            helpLinkUri: "https://docs.protobuf-net.dev/compatibilitylevel",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Info,
             isEnabledByDefault: true);
