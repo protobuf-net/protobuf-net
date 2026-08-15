@@ -1244,10 +1244,19 @@ the non-generic API, for no work.
 
 **Two candidate fixes**, and they are not the same size:
 
-- **A, minimal and risk-free.** Short-circuit `typeof(T) == typeof(object)` in
-  `TypeModel.TryGetSerializer<T>`. That is a JIT-time constant, so it costs every other `T` nothing
-  and folds away; `object` can never have a serializer, so nothing is lost. Fixes the reported cliff
-  outright.
+- **A, minimal.** Short-circuit `typeof(T) == typeof(object)` in `TypeModel.TryGetSerializer<T>`;
+  `object` can never have a serializer, so nothing is lost.
+
+  **This was first written up as "a JIT-time constant, so it folds away and costs every other `T`
+  nothing". That is wrong, and Marc caught it: all reference-type instantiations share a single
+  canonical JIT body (`__Canon`).** So for a reference-type `T` — which is every contract that
+  matters here — the test does *not* fold; it becomes a runtime type-handle load and compare inside
+  the shared code, paid by every caller. It folds only for value-type `T`, which get their own
+  instantiation, and those are not the case in question.
+
+  It is probably still fine, because `TryGetSerializer<T>` is called **per root serialize**, not per
+  member, and one type-handle compare against ~72 ns of existing work is noise. But "probably fine"
+  is a measurement, not an assertion, and the first version of this entry asserted it.
 - **B, general and needs care.** Memoise negatives with a sentinel. Wider (it helps *any* repeated
   failed lookup, including the auxiliary-type paths) but it changes behaviour: a type that becomes
   serializable later would stay negative unless invalidated, and `ResetServiceCache` is called from
@@ -1255,9 +1264,20 @@ the non-generic API, for no work.
   also keyed on type alone while `GetServicesSlow` takes an ambient `CompatibilityLevel`; that is
   already true of positives, but caching negatives widens the exposure.
 
-**Do A on a main-facing branch** (Marc, 2026-08-15: "we might break tradition and fix it on a
-main-facing branch") so 3.x gets it, and let it flow into v4 by merge. B is worth its own change
-with tests, not a rider on A.
+**The `__Canon` correction shifts the balance toward B**, which is worth saying plainly since A was
+recommended on a false premise. B adds **nothing at all** to the generic path — the fast path stays
+a single `Hashtable` hit — whereas A adds a comparison to every reference-type caller to fix a case
+only the object API reaches. B's cost is entirely in invalidation semantics, which is a design
+question with a testable answer, rather than a tax on the hot path.
+
+A third option worth weighing with them: cache the negative **only for `typeof(object)`**, inside
+`GetServices`/`GetServicesSlow` rather than at the generic call site. That has B's zero-overhead
+property and A's zero-risk property — `object` cannot become serializable, so the invalidation
+question does not arise — at the cost of being a special case rather than a general fix.
+
+**Fix on a main-facing branch either way** (Marc, 2026-08-15: "we might break tradition and fix it on
+a main-facing branch") so 3.x gets it, and let it flow into v4 by merge. Whichever is chosen, the
+`--probe` numbers above are the before/after gate.
 
 ### B25. ~~Doc links in SOURCE still point at `protobuf-net.github.io`~~ — **CLOSED, main #1279**
 
