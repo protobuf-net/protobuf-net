@@ -32,6 +32,8 @@ namespace ProtoBuf.Test
         [ProtoContract] public class U64 { [ProtoMember(3, IsPacked = true)] public ulong[] V { get; set; } }
         [ProtoContract] public class I64 { [ProtoMember(3, IsPacked = true)] public long[] V { get; set; } }
         [ProtoContract] public class Bools { [ProtoMember(3, IsPacked = true)] public bool[] V { get; set; } }
+        [ProtoContract] public class S32 { [ProtoMember(3, IsPacked = true, DataFormat = DataFormat.ZigZag)] public int[] V { get; set; } }
+        [ProtoContract] public class S64 { [ProtoMember(3, IsPacked = true, DataFormat = DataFormat.ZigZag)] public long[] V { get; set; } }
         [ProtoContract] public class Floats { [ProtoMember(3, IsPacked = true)] public float[] V { get; set; } }
         [ProtoContract] public class Doubles { [ProtoMember(3, IsPacked = true)] public double[] V { get; set; } }
 
@@ -76,6 +78,74 @@ namespace ProtoBuf.Test
             var punned = System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(values);
             Assert.Equal(Reference<I64>(values), Raw((ref ProtoWriter.State s) => s.WriteRawPackedVarint(Field, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(values))));
             AssertMeasure<I64>(values, ProtoWriter.State.MeasureRawPackedVarint(Field, punned));
+        }
+
+        /// <summary>
+        /// ZigZag, which had no arm here at all until B21 tier 2 touched it - the surface gained
+        /// zigzag after this fixture was written, so the code most recently changed was the code
+        /// least covered.
+        /// </summary>
+        /// <remarks>
+        /// Values straddle zero AND the one-byte zigzag window, which is <b>[-64, 63]</b> rather
+        /// than [0, 127]: the transform doubles magnitude, so 64 already needs two bytes. Getting
+        /// that window wrong is the most likely way to mis-size a zigzag column.
+        /// </remarks>
+        [Theory, MemberData(nameof(Counts))]
+        public void ZigZag32MatchesTheLibrary(int n)
+        {
+            var values = Build(n, i => (i & 1) == 0 ? i % 200 : -(i % 200));
+            Assert.Equal(Reference<S32>(values), Raw((ref ProtoWriter.State s) => s.WriteRawPackedZigZag(Field, values)));
+            AssertMeasure<S32>(values, ProtoWriter.State.MeasureRawPackedZigZag(Field, values));
+        }
+
+        [Theory, MemberData(nameof(Counts))]
+        public void ZigZag64MatchesTheLibrary(int n)
+        {
+            var values = Build(n, i => (i & 1) == 0 ? (long)i * 7 : -((long)i * 1_000_003L));
+            Assert.Equal(Reference<S64>(values), Raw((ref ProtoWriter.State s) => s.WriteRawPackedZigZag(Field, values)));
+            AssertMeasure<S64>(values, ProtoWriter.State.MeasureRawPackedZigZag(Field, values));
+        }
+
+        /// <summary>
+        /// Every column again, but through a sink that leases <b>13 bytes at a time</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is not paranoia about buffer arithmetic; it is the only thing that runs the
+        /// <b>fallback</b> arms. Tier 2 writes a whole packed payload with no per-element room
+        /// check, guarded by <c>payload &lt;= RemainingInCurrent</c> - and with the 64 KB sink the
+        /// other tests use, that guard is ALWAYS true, so the per-element path it falls back to was
+        /// never executed once. The same holds for the fixed-width and bool blits, which take
+        /// <c>ImplWriteBytes</c> rather than a local copy when the span runs out.
+        /// </para>
+        /// <para>
+        /// 17 rather than a rounder number for two reasons. It is coprime with 4, 8 and the vector
+        /// width, so chunk boundaries land mid-element and mid-block rather than tidily between
+        /// them. And it must be at least <c>UsableLease</c> (16): below that the buffer writer
+        /// DECLINES the lease and latches onto its own internal region, never asking the sink
+        /// again - so a 13-byte sink, which is what this was first written with, fragments nothing
+        /// at all and the fallback arms stay unexercised. The lease assertion below is what caught
+        /// that; without it this test passed while testing nothing.
+        /// </para>
+        /// </remarks>
+        [Theory, MemberData(nameof(Counts))]
+        public void EveryColumnSurvivesAFragmentedSink(int n)
+        {
+            var u32 = Build(n, i => (uint)(i % 200));
+            var i32 = Build(n, i => (i & 3) == 3 ? -(i + 1) : i % 200);
+            var zig = Build(n, i => (i & 1) == 0 ? i % 200 : -(i % 200));
+            var f32 = Build(n, i => i * 1.5f);
+            var b = Build(n, i => (i % 3) == 0);
+
+            Assert.Equal(Reference<U32>(u32), Fragmented((ref ProtoWriter.State s) => s.WriteRawPackedVarint(Field, u32), out var leases));
+            // the assertion that keeps this test honest: with a payload well past 13 bytes the sink
+            // MUST have been asked more than once, or nothing here ever left the first chunk and
+            // the fallback arms are still unexercised
+            if (n > 32) Assert.True(leases > 1, $"sink was leased {leases} time(s); not fragmenting");
+            Assert.Equal(Reference<I32>(i32), Fragmented((ref ProtoWriter.State s) => s.WriteRawPackedVarint(Field, i32)));
+            Assert.Equal(Reference<S32>(zig), Fragmented((ref ProtoWriter.State s) => s.WriteRawPackedZigZag(Field, zig)));
+            Assert.Equal(Reference<Floats>(f32), Fragmented((ref ProtoWriter.State s) => s.WriteRawPackedFixed32(Field, global::System.Runtime.InteropServices.MemoryMarshal.Cast<float, uint>(f32))));
+            Assert.Equal(Reference<Bools>(b), Fragmented((ref ProtoWriter.State s) => s.WriteRawPackedBool(Field, b)));
         }
 
         [Theory, MemberData(nameof(Counts))]
@@ -160,6 +230,52 @@ namespace ProtoBuf.Test
             }
             finally { state.Dispose(); }
             return BitConverter.ToString(sink.ToArray());
+        }
+
+        private static string Fragmented(RawWrite write) => Fragmented(write, out _);
+
+        private static string Fragmented(RawWrite write, out int leases)
+        {
+            var sink = new TinySink();
+            var state = ProtoWriter.State.Create(sink, null);
+            try
+            {
+                write(ref state);
+                state.Flush();
+            }
+            finally { state.Dispose(); }
+            leases = sink.Leases;
+            return BitConverter.ToString(sink.ToArray());
+        }
+
+        /// <summary>Leases 13 bytes at a time, so no packed payload ever fits in one chunk.</summary>
+        private sealed class TinySink : IBufferWriter<byte>
+        {
+            private byte[] _buffer = new byte[16];
+            private int _written;
+            /// <summary>How many separate leases were handed out - asserted, so the test cannot
+            /// silently stop fragmenting if the writer starts asking for a larger sizeHint.</summary>
+            public int Leases { get; private set; }
+            public byte[] ToArray()
+            {
+                var result = new byte[_written];
+                Buffer.BlockCopy(_buffer, 0, result, 0, _written);
+                return result;
+            }
+            public void Advance(int count) => _written += count;
+            public Memory<byte> GetMemory(int sizeHint = 0) { Ensure(sizeHint); Leases++; return new(_buffer, _written, Chunk(sizeHint)); }
+            public Span<byte> GetSpan(int sizeHint = 0) { Ensure(sizeHint); Leases++; return new(_buffer, _written, Chunk(sizeHint)); }
+            // deliberately IGNORES a larger hint. GetSpan's contract says "at least sizeHint",
+            // but ProtoWriter explicitly copes with a short lease - it compares against
+            // UsableLease and latches to its own region if the lease is too small - and honouring
+            // a 4 KB hint is precisely what stopped this fragmenting.
+            private int Chunk(int sizeHint) => 17;
+            private void Ensure(int sizeHint)
+            {
+                var need = _written + 17;
+                if (need <= _buffer.Length) return;
+                Array.Resize(ref _buffer, Math.Max(need, _buffer.Length * 2));
+            }
         }
 
         private sealed class Sink : IBufferWriter<byte>

@@ -159,9 +159,9 @@ namespace ProtoBuf
                     WriteRawZigZag32(values[0]);
                     return;
                 }
-                if (!WritePackedHeader(fieldNumber, values.Length,
-                    values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0)) return;
-                foreach (var value in values) WriteRawZigZag32(value);
+                var payload = values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0;
+                if (!WritePackedHeader(fieldNumber, values.Length, payload)) return;
+                WritePackedZigZag32Body(values);
             }
 
             /// <summary>Total bytes for a packed <c>sint64</c> column.</summary>
@@ -179,9 +179,78 @@ namespace ProtoBuf
                     WriteRawZigZag64(values[0]);
                     return;
                 }
-                if (!WritePackedHeader(fieldNumber, values.Length,
-                    values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0)) return;
-                foreach (var value in values) WriteRawZigZag64(value);
+                var payload = values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0;
+                if (!WritePackedHeader(fieldNumber, values.Length, payload)) return;
+                WritePackedZigZag64Body(values);
+            }
+
+            // B21 tier 2, and it has to be CHUNKED rather than all-or-nothing.
+            //
+            // The first cut guarded on `payload <= RemainingInCurrent` and wrote the whole column
+            // unchecked. It never fired: the writer's buffer is `BufferPool.BUFFER_LENGTH` = 1024
+            // bytes, and a packed column large enough to be worth optimising is precisely one that
+            // exceeds it - 999 zigzag values at 1-2 bytes each is ~1500. Measured end-to-end at
+            // exactly zero improvement, which is what sent this back for a second look.
+            //
+            // So: stay unchecked for as long as the current chunk provably has room for one more
+            // WORST-CASE element, and hand only the boundary element to the checked path, which
+            // knows how to spill. That keeps the per-element branch off all but roughly one element
+            // per 1 KB instead of removing it for none of them.
+
+            private void WritePackedZigZag32Body(ReadOnlySpan<int> values)
+            {
+                int i = 0;
+                while (i < values.Length)
+                {
+                    int room = RemainingInCurrent;
+                    if (room < MaxVarint32)
+                    {
+                        WriteRawZigZag32(values[i++]);   // at a boundary: let the checked path spill
+                        continue;
+                    }
+                    var target = Remaining;
+                    int offset = 0, limit = room - MaxVarint32;
+                    while (i < values.Length && offset <= limit)
+                    {
+                        var zig = unchecked((uint)((values[i] << 1) ^ (values[i] >> 31)));
+                        i++;
+                        while (zig >= 0x80)
+                        {
+                            target[offset++] = (byte)((zig & 0x7F) | 0x80);
+                            zig >>= 7;
+                        }
+                        target[offset++] = (byte)zig;
+                    }
+                    LocalAdvance(offset);
+                }
+            }
+
+            private void WritePackedZigZag64Body(ReadOnlySpan<long> values)
+            {
+                int i = 0;
+                while (i < values.Length)
+                {
+                    int room = RemainingInCurrent;
+                    if (room < MaxVarint64)
+                    {
+                        WriteRawZigZag64(values[i++]);
+                        continue;
+                    }
+                    var target = Remaining;
+                    int offset = 0, limit = room - MaxVarint64;
+                    while (i < values.Length && offset <= limit)
+                    {
+                        var zig = unchecked((ulong)((values[i] << 1) ^ (values[i] >> 63)));
+                        i++;
+                        while (zig >= 0x80)
+                        {
+                            target[offset++] = (byte)((zig & 0x7F) | 0x80);
+                            zig >>= 7;
+                        }
+                        target[offset++] = (byte)zig;
+                    }
+                    LocalAdvance(offset);
+                }
             }
 
             // ---- bool ----

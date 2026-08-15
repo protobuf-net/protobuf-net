@@ -161,6 +161,74 @@ public class PackedWriteBenchmarks
         finally { state.Dispose(); _sink.Reset(); }
     }
 
+    // ---- B21 tier 2: what does the per-element room check actually cost? ----
+    //
+    // Every raw varint write tests `RemainingInCurrent >= MaxVarint32` before storing. For a PACKED
+    // column that test is redundant by construction: the payload was just measured, so the room
+    // needed is known exactly and could be checked ONCE. The question is whether removing ~999
+    // predictable branches is worth an API.
+    //
+    // The pair below brackets it. `ScalarZigZag` is what ships today; `CeilingZigZag` encodes the
+    // same values into a raw span with NO checks and NO writer at all - not an implementation, an
+    // upper bound. Anything tier 2 could achieve lies between them, and if the gap is small there
+    // is nothing to build. Measured this way rather than by building it first, which is the lesson
+    // tier 1 taught: an end-to-end harness could not resolve an 8x change, so it will certainly not
+    // resolve this one.
+
+    [Benchmark]
+    public long ScalarZigZag()
+    {
+        var state = ProtoWriter.State.Create(_sink, null);
+        try
+        {
+            foreach (var value in _signed) state.WriteRawZigZag32(value);
+            state.Flush();
+            return state.GetPosition();
+        }
+        finally { state.Dispose(); _sink.Reset(); }
+    }
+
+    /// <summary>The floor: same encoding, straight into a span, no room checks anywhere.</summary>
+    [Benchmark]
+    public long CeilingZigZag()
+    {
+        var span = _scratch.AsSpan();
+        int offset = 0;
+        foreach (var value in _signed)
+        {
+            var zig = unchecked((uint)((value << 1) ^ (value >> 31)));
+            while (zig >= 0x80)
+            {
+                span[offset++] = (byte)(zig | 0x80);
+                zig >>= 7;
+            }
+            span[offset++] = (byte)zig;
+        }
+        return offset;
+    }
+
+    /// <summary>The same bracket for a plain varint column, where tier 1 already covers the
+    /// uniform blocks - so this measures what is left for the ragged and mixed remainder.</summary>
+    [Benchmark]
+    public long CeilingUInt32()
+    {
+        var span = _scratch.AsSpan();
+        int offset = 0;
+        foreach (var value in _values)
+        {
+            var v = value;
+            while (v >= 0x80)
+            {
+                span[offset++] = (byte)(v | 0x80);
+                v >>= 7;
+            }
+            span[offset++] = (byte)v;
+        }
+        return offset;
+    }
+
+    private readonly byte[] _scratch = new byte[1024 * 64];
+
     /// <summary>
     /// Hands back the same oversized buffer every time — the point is to measure encoding, not
     /// the buffer writer. Not <c>ArrayBufferWriter&lt;T&gt;</c>, which is net5+ while this project
