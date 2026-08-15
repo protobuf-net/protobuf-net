@@ -93,7 +93,7 @@ namespace ProtoBuf.CodeFixes
 // reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
 // sub-types - is included automatically.
 //
-// See https://protobuf-net.github.io/protobuf-net/aot
+// See https://docs.protobuf-net.dev/aot
 ";
             var source = string.IsNullOrEmpty(ns)
                 ? $@"using ProtoBuf;
