@@ -158,7 +158,7 @@ partial class PartialModel
             var tmp5 = value.Values;
             if (tmp5 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp5);
+                state.WriteRawPackedVarint(5, tmp5);  // Values
             }
             var tmp6 = value.Replaced;
             if (tmp6 != null)

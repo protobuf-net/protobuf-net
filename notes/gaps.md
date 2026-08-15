@@ -43,7 +43,24 @@ emitted" while *raising* correctness.
 The reasoning is here rather than in `notes/nano-writer.md`, which keeps the *findings* (what was
 tried, measured and reverted) but no longer carries a to-do list.
 
-### B1. Packed writes — **largely LANDED; the enum premise was false (2026-08-15)**
+### B1. Packed writes — **LANDED on the raw path (3.4×–32×); two DataFormat arms remain**
+
+**2026-08-15, second update.** The work moved to where it belongs and the numbers changed
+completely. `RepeatedSerializer`'s fast paths were **backed out** (classic is the control - see
+AGENTS.md, "Don't improve the legacy library or ref-emit"), and the packed primitives are now a raw
+`ProtoWriter.State` surface the generator calls directly. Against a pristine classic baseline:
+bool **32×**, floating point **13.6×**, enum **7.8×**, unsigned varint **4.0×**, signed **3.4×**.
+
+The larger prize was never the throughput, though: `IsPacked` used to make a member
+**measure-blocked**, which by the fixed-point rule removed its whole contract - and every contract
+referencing it - from measure-first. That cascade is closed for these shapes.
+
+**Still open**, and both straightforward: `DataFormat.FixedSize` integer columns (a pure blit, the
+same shape floating point already takes) and `DataFormat.ZigZag` (whose measure is already
+vectorised). Both are excluded by `RawPackedWritable` today. Note the benchmark shows those two
+categories ~6-10% *slower* under the raw model despite running identical code - unexplained, and
+not to be read as evidence about the raw writer until someone establishes what differs.
+
 
 **Status, 2026-08-15.** Tier 1 of B21 has landed for all four varint element types (see B21), and
 the two remaining premises recorded here were both checked rather than carried forward:

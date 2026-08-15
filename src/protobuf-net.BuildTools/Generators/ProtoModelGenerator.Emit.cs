@@ -127,7 +127,7 @@ namespace ProtoBuf.BuildTools.Generators
                     foreach (var contract in plan.Contracts)
                     {
                         if (measurable.ContainsKey(contract.TypeName)
-                            && contract.Members.Any(m => RawMemberMeasureBlocked(m, measurable)))
+                            && contract.Members.Any(m => RawMemberMeasureBlocked(m, measurable, plan.ListAsSpan)))
                         {
                             measurable.Remove(contract.TypeName);
                             changed = true;
@@ -1613,6 +1613,14 @@ namespace ProtoBuf.BuildTools.Generators
                 if (member.Repeated.Factory is not null)
                 {
                     var repeatedTarget = raw ? RawRepeatedMessageTarget(member, measurable) : null;
+                    if (raw && RawPackedWritable(member, listAsSpan))
+                    {
+                        Line(sb, indent, $"if (tmp{number} != null)");
+                        Line(sb, indent, "{");
+                        EmitRawPackedWrite(sb, indent + 1, member, number, listAsSpan);
+                        Line(sb, indent, "}");
+                        goto written;
+                    }
                     if (raw && (RawRepeatedWritable(member) || repeatedTarget is not null))
                     {
                         // both eligible shapes (List<T> and T[]) are reference types, so the
@@ -2710,6 +2718,115 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
+        /// Whether a PACKED repeated member takes the raw path - `notes/packed-writes.md`.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Separate from <see cref="RawRepeatedWritable"/> because it is a different engine, not a
+        /// variation: packed writes ONE tag over a whole payload, and needs the payload measured
+        /// before the length prefix can go down. Until this existed, <c>IsPacked</c> was refused
+        /// outright - which did not merely cost the optimisation, it made the member
+        /// measure-blocked, and by the fixed-point rule that removed the whole contract, and every
+        /// contract referencing it, from measure-first.
+        /// </para>
+        /// <para>
+        /// The element kinds are those the raw surface takes a span of directly. The narrow varint
+        /// kinds (<c>sbyte</c>/<c>byte</c>/<c>short</c>/<c>ushort</c>/<c>char</c>) are absent
+        /// deliberately and are not an oversight: a span pun reinterprets bytes, so a narrower
+        /// element cannot become a wider one without widening work, which is a different shape.
+        /// </para>
+        /// <para>
+        /// <c>TakesCollectionType</c> is excluded, matching the unpacked path - though NOT for the
+        /// same reason, and the difference is recorded because it is a live widening opportunity:
+        /// there, a derived list is out because <c>foreach</c> binds to the DECLARED type's
+        /// <c>GetEnumerator</c>, which could be a hiding redeclaration. <c>AsSpan</c> has no such
+        /// hazard. It stays out here only because nothing yet fixtures a derived packed list, and
+        /// a widening nobody has a test for is not a widening.
+        /// </para>
+        /// </remarks>
+        private static bool RawPackedWritable(ProtoMemberPlan member, bool listAsSpan)
+        {
+            if (!member.IsPacked) return false;
+            if (member.Repeated.Factory is not ("CreateList" or "CreateVector")
+                || member.Repeated.TakesCollectionType) return false;
+            // a List<T> reaches this surface ONLY as a span, so where CollectionsMarshal is absent
+            // (net472, netstandard2.0) the member stays on the stateful path - and, since the
+            // predicate also drives measurability, its contract stays measure-blocked down-level.
+            // A smaller optimisation rather than a broken build, as everywhere else here; caught
+            // by the traversal build, which is the only thing that compiles net472.
+            if (member.Repeated.Factory == "CreateList" && !listAsSpan) return false;
+            if (member.WrappedValue || member.WrappedCollection) return false;
+            // a non-default format re-frames the element (fixed-size ints, zigzag); those are
+            // real packed shapes and want their own arms, but they are not these arms
+            if (member.DataFormat != ProtoDataFormat.Default) return false;
+            if (member.SubSerializer is not null || member.SubSerializerIsScalar
+                || member.SubSerializerDynamic) return false;
+            // a nullable element is not a packed scalar column at all
+            if (member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true) return false;
+            return member.Kind is ProtoMemberKind.Bool
+                or ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64
+                or ProtoMemberKind.Single or ProtoMemberKind.Double;
+        }
+
+        /// <summary>The raw surface method suffix, and the element type its span is of.</summary>
+        private static (string Api, string SpanType) PackedApi(ProtoMemberKind kind) => kind switch
+        {
+            ProtoMemberKind.Bool => ("Bool", "bool"),
+            ProtoMemberKind.Int32 => ("Varint", "int"),
+            ProtoMemberKind.UInt32 => ("Varint", "uint"),
+            ProtoMemberKind.Int64 => ("Varint", "ulong"),      // a negative long IS a large ulong
+            ProtoMemberKind.UInt64 => ("Varint", "ulong"),
+            ProtoMemberKind.Single => ("Fixed32", "uint"),
+            _ => ("Fixed64", "ulong"),
+        };
+
+        /// <summary>
+        /// The span handed to the raw packed surface, produced AT THE CALL SITE - which is the
+        /// whole point of the design: the generator knows the collection shape and the element
+        /// type, so the library needs no overload per collection and no arm per enum.
+        /// </summary>
+        private static string PackedSpan(ProtoMemberPlan member, string number, bool listAsSpan)
+        {
+            var span = listAsSpan && member.Repeated.Factory == "CreateList"
+                ? $"global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp{number})"
+                : $"tmp{number}";
+            var (_, spanType) = PackedApi(member.Kind);
+            // the element's own spelling: an enum's is the enum, not its underlying type
+            var element = member.EnumTypeName ?? member.ElementTypeName ?? spanType;
+            if (element == spanType) return span;
+            return $"global::System.Runtime.InteropServices.MemoryMarshal.Cast<{element}, {spanType}>({span})";
+        }
+
+        /// <summary>The element count, without building a span merely to ask its length.</summary>
+        private static string PackedCount(ProtoMemberPlan member, string number)
+            => member.Repeated.Factory == "CreateVector" ? $"tmp{number}.Length" : $"tmp{number}.Count";
+
+        /// <summary>
+        /// One line: the whole member's contribution, framing included. The bool and fixed-width
+        /// forms are O(1) in the count, so they never touch the payload.
+        /// </summary>
+        private static void EmitRawPackedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member,
+            string number, bool listAsSpan)
+        {
+            var (api, _) = PackedApi(member.Kind);
+            var arg = api == "Varint"
+                ? PackedSpan(member, number, listAsSpan)
+                : PackedCount(member, number);
+            Line(sb, indent,
+                $"len += global::ProtoBuf.ProtoWriter.State.MeasureRawPacked{api}({member.FieldNumber}, {arg});  // {member.Name}");
+        }
+
+        /// <summary>The write mirror: the same span, the same framing decision, one call.</summary>
+        private static void EmitRawPackedWrite(StringBuilder sb, int indent, ProtoMemberPlan member,
+            string number, bool listAsSpan)
+        {
+            var (api, _) = PackedApi(member.Kind);
+            Line(sb, indent,
+                $"state.WriteRawPacked{api}({member.FieldNumber}, {PackedSpan(member, number, listAsSpan)});  // {member.Name}");
+        }
+
+        /// <summary>
         /// The native write loop for an eligible repeated member (see
         /// <see cref="RawRepeatedWritable"/> and <see cref="RawRepeatedMessageTarget"/>):
         /// byte-identical to the stateful unpacked default. A List&lt;T&gt; enumerates as a span
@@ -2801,7 +2918,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// ToString - which would also run twice - inbuilt or hand-written serializers), and a
         /// message member whose target has no Measure_ of its own.
         /// </summary>
-        private static bool RawMemberMeasureBlocked(ProtoMemberPlan member, Dictionary<string, ProtoContractPlan> measurable)
+        private static bool RawMemberMeasureBlocked(ProtoMemberPlan member, Dictionary<string, ProtoContractPlan> measurable, bool listAsSpan)
         {
             if (member.Map.Factory is not null) return true;
             if (member.WrappedValue || member.WrappedCollection) return true;
@@ -2821,7 +2938,7 @@ namespace ProtoBuf.BuildTools.Generators
                     && member.Map.Factory is null)) return true;
             if (member.Repeated.Factory is not null)
             {
-                if (RawRepeatedWritable(member)) return false;
+                if (RawRepeatedWritable(member) || RawPackedWritable(member, listAsSpan)) return false;
                 return RawRepeatedMessageTarget(member, measurable) is null;
             }
             // a nullable STRUCT message would measure one GetValueOrDefault copy and write
@@ -2962,8 +3079,15 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     Line(sb, indent, $"if (tmp{number} != null)");
                     Line(sb, indent, "{");
-                    EmitRawRepeatedMeasure(sb, indent + 1, member, number, listAsSpan,
-                        RawRepeatedMessageTarget(member, measurable));
+                    if (RawPackedWritable(member, listAsSpan))
+                    {
+                        EmitRawPackedMeasure(sb, indent + 1, member, number, listAsSpan);
+                    }
+                    else
+                    {
+                        EmitRawRepeatedMeasure(sb, indent + 1, member, number, listAsSpan,
+                            RawRepeatedMessageTarget(member, measurable));
+                    }
                     Line(sb, indent, "}");
                     goto measured;
                 }

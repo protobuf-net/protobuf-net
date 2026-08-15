@@ -434,6 +434,59 @@ Down-level consumers fall back to the stateful path where a symbol is missing, e
 generator already does for `UnsafeAccessorAttribute`, `CreateReadOnlySet` and `BclHelpers.ReadDateOnly`:
 a smaller optimisation, not a broken build.
 
+
+## LANDED: the raw packed path, and the first honest measurement
+
+2026-08-15. The architecture above is built: `ProtoWriter.State` carries a packed raw surface, the
+generator emits it directly, and `RawPackedWritable` lifts the `IsPacked` refusal for the shapes it
+covers. `RepeatedSerializer` is back to its pre-packed state, so **classic is a true baseline for
+the first time** — which is why the classic column below is much slower than earlier tables in this
+file, and that is the tables being fixed rather than classic regressing.
+
+999 elements per member, `PackedMatrixBenchmarks`:
+
+| category | classic | raw | |
+| --- | ---: | ---: | ---: |
+| **bool** | 4120 ns | **127 ns** | **32×** |
+| **floating point** | 7813 | **575** | **13.6×** |
+| **enum** | 5173 | **661** | **7.8×** |
+| **varint unsigned** | 11666 | **2895** | **4.0×** |
+| **varint signed** | 9977 | **2950** | **3.4×** |
+| fixed integer | 7116 | 7125 | not on the raw path |
+| zigzag | 12128 | 13315 | not on the raw path |
+
+On the adversarial `spread` distribution the varint wins narrow to 1.8× and 1.5× — expected, since
+the tier-1 blit cannot fire — while bool, floating point and enum are distribution-independent and
+hold at 37×, 12.5× and 7.7×.
+
+**The enum row is the design paying off.** 7.8× for a shape with **no enum-specific code anywhere**
+in the library: the generator emits
+`MemoryMarshal.Cast<Level, int>(...)` at the call site and the column is thereafter the `int32`
+column. It also means enums picked up the blit for free, having never been mentioned in it.
+
+### Two categories are NOT on the raw path, and one of them is a puzzle
+
+`fixed integer` and `zigzag` carry a non-default `DataFormat` (`FixedSize`, `ZigZag`), which
+`RawPackedWritable` excludes: both re-frame the element, and both want their own arms. That work is
+straightforward and is the obvious next step — `FixedSize` int columns are a pure blit, exactly as
+floating point already is, and zigzag already has a vectorised measure in `PackedVarintMeasure`.
+
+**What is not explained is that both are ~6–10% SLOWER under the raw model than under classic**,
+consistently and outside the error bars. Neither is on the raw path, so the arms are identical code;
+the difference has to come from the model around them — plausibly code layout or instruction-cache
+pressure, since the raw services type is now substantially larger. Recorded rather than chased,
+because guessing at it is exactly the trap the rest of this file documents. **Do not treat those two
+rows as evidence about the raw writer** until someone has established what actually differs.
+
+### What the shapes cost, and why the varint rows trail the others
+
+bool, floating point and fixed-width are O(1) to measure and a straight block copy to write, so they
+approach memcpy — ~21 GB/s for the floating-point row. The varint rows still make **two passes**: a
+vectorised measure to get the length prefix, then the encode. That is inherent to a length-prefixed
+packed column and is not a defect; it is why B21 tier 2 (write without per-element room checks, now
+that the room is known exactly) is the remaining lever, and why it is worth more on varint than
+anywhere else.
+
 ## Ranked, by value over effort
 
 1. ~~**Block copy for the matching fixed-width cells.**~~ **DONE 2026-08-14.** Portable, no

@@ -19,7 +19,7 @@ partial class ListOptionsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.NotACollection>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.Options>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -183,13 +183,17 @@ partial class ListOptionsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ListOptions.Options global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.Options value)
             => RawRead_AotFixtures_ListOptions_Options(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListOptions.Options>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.Options value)
+            => RawWrite_AotFixtures_ListOptions_Options(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_ListOptions_Options(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListOptions.Options value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Default;
             if (tmp1 != null)
@@ -203,7 +207,7 @@ partial class ListOptionsModel
             var tmp2 = value.Packed;
             if (tmp2 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp2);
+                state.WriteRawPackedVarint(2, tmp2);  // Packed
             }
             var tmp3 = value.Overwrite;
             if (tmp3 != null)
@@ -217,7 +221,7 @@ partial class ListOptionsModel
             var tmp4 = value.PackedOverwrite;
             if (tmp4 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int>().WriteRepeated(ref state, 4, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionClearCollection, tmp4);
+                state.WriteRawPackedVarint(4, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4));  // PackedOverwrite
             }
             var tmp5 = value.NotPacked;
             if (tmp5 != null)
@@ -231,9 +235,60 @@ partial class ListOptionsModel
             var tmp6 = value.PackedDouble;
             if (tmp6 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<double>().WriteRepeated(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp6);
+                state.WriteRawPackedFixed64(6, global::System.Runtime.InteropServices.MemoryMarshal.Cast<double, ulong>(tmp6));  // PackedDouble
             }
         }
+
+        private static long Measure_AotFixtures_ListOptions_Options(global::AotFixtures.ListOptions.Options value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Default;
+            if (tmp1 != null)
+            {
+                foreach (var item1 in tmp1)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
+                }
+            }
+            var tmp2 = value.Packed;
+            if (tmp2 != null)
+            {
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(2, tmp2);  // Packed
+            }
+            var tmp3 = value.Overwrite;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item3));
+                }
+            }
+            var tmp4 = value.PackedOverwrite;
+            if (tmp4 != null)
+            {
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(4, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4));  // PackedOverwrite
+            }
+            var tmp5 = value.NotPacked;
+            if (tmp5 != null)
+            {
+                foreach (var item5 in tmp5)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item5));
+                }
+            }
+            var tmp6 = value.PackedDouble;
+            if (tmp6 != null)
+            {
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(6, tmp6.Length);  // PackedDouble
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.Options>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListOptions.Options value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_ListOptions_Options(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.ListOptions.Options RawRead_AotFixtures_ListOptions_Options(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListOptions.Options value)
         {
