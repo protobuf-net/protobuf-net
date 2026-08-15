@@ -303,6 +303,55 @@ the enum-proxy plumbing, map-of-map, and B1's packed premise. The rule already r
 refusal nobody has tried to trigger, or a limitation nobody has re-read since it was written, is
 worth checking before it is worked* — keeps paying, and the cost of checking is a single test.
 
+
+### The "classic vs raw" axis in this file is VACUOUS — and that is the real headline
+
+Verified by emitting the generator output: **`PackedRawModel` contains zero `Measure_` and zero
+`RawWrite_` methods.** All seven packed contracts fall off measure-first completely, so every
+"raw" number in this file was produced by the classic engine. `NanoDescriptorModel`, for contrast,
+emits 27 `Measure_` methods.
+
+This supersedes the weaker reason recorded earlier ("both models end in the same
+`RepeatedSerializer` code"). The truth is stronger: for a contract with a packed member there is no
+raw code to compare against.
+
+The chain, all confirmed in source:
+
+1. `RawRepeatedWritable` returns false for `member.IsPacked` — *"packed changes the framing
+   entirely, and needs measure (plus the zero-length header rules)"*;
+2. `RawMemberMeasureBlocked` therefore falls through to `RawRepeatedMessageTarget(...) is null`,
+   which for a scalar column is null, so the member is **measure-blocked**;
+3. per the fixed-point rule in `AGENTS.md`, a blocked member removes its **whole contract** from the
+   measurable set — **and that cascades to every contract referencing it**.
+
+So **one packed scalar member silently drops a subtree off measure-first.** That is a far larger
+cost than any element-loop optimisation in this file, and it is the thing to fix next.
+
+**The fix is an architecture, not a patch** (Marc, 2026-08-15): expose the packed primitives as
+**raw writer state APIs** and have the generator call them directly at the raw emit level, rather
+than routing through `RepeatedSerializer`. That dissolves most of the difficulty rather than
+working around it:
+
+- **the runtime `typeof(T)` ladder disappears** — the generator knows the element type at compile
+  time, so there is nothing to dispatch on;
+- **the enum problem disappears with it** — Roslyn knows the underlying type, including the narrow
+  backings that cannot be span-punned at all, so it can widen or decline per case instead of
+  needing reflection cached in `TypeHelper<T>`;
+- **signedness is picked at compile time**, removing the silent-wrong-bytes risk of routing an
+  `int`-backed column to the unsigned arm.
+
+The primitives are already the right shape: `WritePackedUInt32(ref ProtoWriter.State,
+ReadOnlySpan<uint>)` **is** a raw state API, just `internal` and in the wrong class, and
+`PackedVarintMeasure.Measure(ReadOnlySpan<T>)` is already the vectorised measure the length prefix
+needs. Promoting them is close to mechanical.
+
+**What is actually work** is the reason for the original refusal, and it should not be waved past:
+the raw path must reproduce protobuf-net's framing rules exactly, including that a **single**
+element is written *unpacked* (`count == 0 || count > 1` — see
+`ASinglePackedElementIsWrittenUnpacked`) and an empty collection writes a zero-length header. Those
+are byte-visible, so `ClassicVsRawTests` becomes a real gate here for the first time — today it
+compares classic against classic for these contracts.
+
 ## Ranked, by value over effort
 
 1. ~~**Block copy for the matching fixed-width cells.**~~ **DONE 2026-08-14.** Portable, no
