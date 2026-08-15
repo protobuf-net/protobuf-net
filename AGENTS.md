@@ -91,6 +91,47 @@ writing no dll at all. Don't infer from that code that persistence works on mode
 
 If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
 
+## Don't improve the legacy library or ref-emit "while you're in there"
+
+`RepeatedSerializer`, the other `protobuf-net.Core` serializers, and the ref-emit path are
+**deliberately left alone**, and a change there needs a reason beyond "it was easy from here".
+This is not conservatism about old code; the legacy path has three jobs that a well-meaning
+optimisation quietly destroys:
+
+- **it is the CONTROL.** `[ProtoModel(ClassicEmit = true)]` exists so a generated model can be
+  compared against the old engine. If the old engine absorbs the new work, that comparison stops
+  measuring anything;
+- **it is the FALLBACK.** Every shape the generator refuses lands here, so it needs to stay boring
+  and trustworthy rather than clever and new;
+- **it is the BASELINE for perf claims.** A speedup measured against a baseline that already
+  contains the speedup is not a speedup.
+
+**This has already happened once, at full scale.** The packed work put ~130 lines of fast paths
+into `RepeatedSerializer` — block copies, a bool blit, direct varint arms, a vectorised measure —
+and because both models route through that one method, **every "classic vs raw" number in
+`notes/packed-writes.md` was comparing classic against classic**. It looked for weeks like the raw
+writer simply had no advantage on packed data. It was reverted on 2026-08-15 (`a73d6fc0`) and the
+work rebuilt where it belongs, as raw writer state APIs the generator calls directly.
+
+**The diagnostic worth memorising: if a benchmark shows classic tracking raw within ~1%, suspect
+they are the same code before you conclude the optimisation did nothing.** A control that shares
+the code under test is not a control. Confirm it the cheap way — emit the generator output
+(`-p:EmitCompilerGeneratedFiles=true`) and count `Measure_`/`RawWrite_` methods; a model with zero
+of them is not exercising the raw writer at all, whatever its name says. Note this also means
+`ClassicVsRawTests` can pass while comparing a thing to itself.
+
+**When a revert IS the answer, revert to the right point, not to `main`.** That same file had also
+been touched by the writer arc for unrelated reasons (a typo fix with an `[Obsolete]` forwarder,
+and an `AdvanceAndReset` → `ResetWireType` change), so `git checkout main -- <file>` would have
+silently taken those too. Find the last commit before the work being backed out and restore to
+that.
+
+**None of this is "never touch it".** Revisiting the library and ref-emit with what the raw arc
+learned is a genuine future item — but as its own piece of work, measured on its own terms, and
+deliberately *after* the new path is established enough to be the reference. Doing it
+opportunistically, one fast path at a time, is what removes the ability to tell whether any of it
+helped.
+
 ## The writer's measure-first path: three invariants that are easy to break
 
 The generated writer measures a contract arithmetically (`Measure_`) and then writes it
