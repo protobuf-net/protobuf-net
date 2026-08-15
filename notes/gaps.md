@@ -1119,6 +1119,73 @@ guard, `bytes`/`bool`/`float`/`double`, enums as members, nested messages and en
 both protogen shapes, maps including the `bool`-key case, `import`, and the naming rules
 (pluralisation, collision avoidance, package → namespace).
 
+### B22. The raw PACKED path is natively UNMEASURED — `AotSmoke` has no packed member
+
+**Found by audit, 2026-08-15, and it is a hole by this repo's own standard** ("whatever `AotSmoke`
+does not cover is not fine, it is unmeasured" — AGENTS.md). `grep IsPacked src/AotSmoke/*.cs`
+returns nothing, so the entire raw packed surface — six write methods, six measures, the SIMD blit,
+the `MemoryMarshal.Cast` puns — has never run under ILC.
+
+The risk is low rather than nil: it is all managed span work with no reflection, so the failure
+modes that bit before (`MissingMethodException` from a trimmed constructor, "missing native code or
+metadata") do not obviously apply. But `Vector<T>` under ILC and a `MemoryMarshal.Cast` over an enum
+span are both unexercised there, and low-risk-but-unmeasured is exactly what the map members were
+before adding three of them moved the warning count 20 → 29.
+
+**Fix is cheap**: add packed members to `AotSmoke` covering a varint column, a fixed-width column, a
+bool column and an **enum** column (the enum one being the sharp case, since it is the pun). Re-measure
+the warning baseline on both sides when doing it, since the count tracks fixtures.
+
+### B23. Packed columns are limited to `T[]` and `List<T>` — `ImmutableArray<T>` and derived lists are out
+
+`RawPackedWritable` admits `Factory is "CreateList" or "CreateVector"` only, so of the 28 repeated
+factories the generator knows, **two** reach the raw packed path. Two exclusions are worth separating,
+because one is a design decision and the other is unfinished work:
+
+- **`ImmutableArray<T>` — unfinished.** The design note in `notes/packed-writes.md` explicitly lists
+  it as one of the three shapes that yield a span (`.AsSpan()`), and it never got implemented. It is
+  a struct, so it also needs the hazard settled that the design note flags and nobody has checked:
+  **`default(ImmutableArray<T>)` is not null and throws on most access**, so whether `AsSpan()`
+  survives a default instance decides whether the emit needs an `IsDefaultOrEmpty` guard the array
+  case does not.
+- **derived lists (`TakesCollectionType`) — a deliberate hold, with the reasoning already done.** The
+  unpacked path excludes them because `foreach` binds to the DECLARED type's `GetEnumerator`, which
+  could be a hiding redeclaration. `CollectionsMarshal.AsSpan` has no such hazard, so the packed path
+  **could** be wider than the unpacked one. It is not, only because no fixture covers a derived
+  packed list — and a widening nobody has a test for is not a widening.
+
+Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
+span at all and is correctly out.
+
+### B24. `Serialize<object>` on a `RuntimeTypeModel` costs 41× and allocates 2.2 KB per call
+
+Found while disproving the "~1 µs per member" claim, and it is a real user-facing cliff rather than a
+harness artefact — but note it is the **pair**, and neither half alone is slow:
+
+| model | dispatch | per call | allocated |
+| --- | --- | ---: | ---: |
+| generated | generic | 58 ns | 0 |
+| generated | `object` | 76 ns | 0 |
+| `RuntimeTypeModel` | generic | 72 ns | 0 |
+| `RuntimeTypeModel` | **`object`** | **2951 ns** | **2272 B** |
+
+This is the call shape `PBN2011` already warns about for AOT reasons; it turns out to carry a large
+throughput and allocation cost as well, on a shape plenty of pre-generic protobuf-net code still
+uses. **Not investigated** — nobody has looked at where the 2.2 KB goes. Worth a look before 4.0
+ships, since "the object API is 40× slower" is the kind of thing consumers find for us.
+
+### B25. Doc links in SOURCE still point at `protobuf-net.github.io`
+
+Main's move to `docs.protobuf-net.dev` swept `docs/` only; roughly ten links remain in source —
+`ThrowHelper`, `DataContractAnalyzer`, `AotMigrationAnalyzer`, `AddProtoModelCodeFixProvider` and its
+tests, `Issue722`, `NullWrappedValueAttribute`. Two of those are **analyzer `helpLinkUri`s and
+exception messages**, i.e. consumer-visible.
+
+Deliberately not fixed on this branch: every one is present in main with the same URL, so it is
+main's sweep to finish, and doing it here would put unrelated churn in a merge. Marc is handling it
+(2026-08-15). Recorded so it is not lost if that lands after this branch merges — note
+`AotMigrationAnalyzer.cs` is the one file both sides touch, so expect a small conflict there.
+
 ### C1. ~~Point the existing schema corpus at this path~~ — **done, 2026-08-14**
 
 `SchemaSourcedCorpusProbeTests` runs all 268 schemas of `protobuf-net.Reflection.Test/Schemas`
