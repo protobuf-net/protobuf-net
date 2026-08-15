@@ -42,6 +42,10 @@ internal static class ObjectDispatchProbe
 
     private static long Measure(string label, int iterations, Action action)
     {
+#if !NET5_0_OR_GREATER
+        _ = label; _ = iterations; _ = action;
+        return 0;
+#else
         for (int i = 0; i < 50; i++) action();          // settle any one-off caches first
         var before = GC.GetAllocatedBytesForCurrentThread();
         for (int i = 0; i < iterations; i++) action();
@@ -49,10 +53,16 @@ internal static class ObjectDispatchProbe
         var per = total / (double)iterations;
         Console.WriteLine($"{label,-46} {per,10:F1} B/call");
         return (long)per;
+#endif
     }
 
     public static void Run()
     {
+#if !NET5_0_OR_GREATER
+        // GC.GetAllocatedBytesForCurrentThread is net5+; this probe is a diagnostic, not a gate,
+        // so it simply says so down-level rather than the project losing its net472 leg.
+        Console.WriteLine("--probe needs net5.0+ (GC.GetAllocatedBytesForCurrentThread); run -f net10.0");
+#else
         const int N = 2000;
         var runtime = RuntimeTypeModel.Create();
         runtime.Add(typeof(Payload), true);
@@ -111,5 +121,6 @@ internal static class ObjectDispatchProbe
             var total = GC.GetAllocatedBytesForCurrentThread() - before;
             Console.WriteLine($"  {n,5} calls -> {total,9} B  ({total / (double)n,8:F1} B/call)");
         }
+#endif
     }
 }
