@@ -1197,7 +1197,7 @@ throughput and allocation cost as well, on a shape plenty of pre-generic protobu
 uses. **Not investigated** — nobody has looked at where the 2.2 KB goes. Worth a look before 4.0
 ships, since "the object API is 40× slower" is the kind of thing consumers find for us.
 
-### B25. Doc links in SOURCE still point at `protobuf-net.github.io`
+### B25. ~~Doc links in SOURCE still point at `protobuf-net.github.io`~~ — **CLOSED, main #1279**
 
 Main's move to `docs.protobuf-net.dev` swept `docs/` only; roughly ten links remain in source —
 `ThrowHelper`, `DataContractAnalyzer`, `AotMigrationAnalyzer`, `AddProtoModelCodeFixProvider` and its
@@ -1208,6 +1208,12 @@ Deliberately not fixed on this branch: every one is present in main with the sam
 main's sweep to finish, and doing it here would put unrelated churn in a merge. Marc is handling it
 (2026-08-15). Recorded so it is not lost if that lands after this branch merges — note
 `AotMigrationAnalyzer.cs` is the one file both sides touch, so expect a small conflict there.
+
+**Done by main #1279** (`d5324e64`), merged here 2026-08-15. A grep for `protobuf-net.github.io`
+across `*.md`/`*.cs`/`*.csproj` now returns only this heading. The predicted conflict in
+`AotMigrationAnalyzer.cs` did **not** materialise — both sides touched the file but not the same
+lines, so it auto-merged. Leaving it to main was the right call: no unrelated churn in a merge
+commit, and the sweep landed as one coherent change rather than a scattered follow-up.
 
 ### C1. ~~Point the existing schema corpus at this path~~ — **done, 2026-08-14**
 
