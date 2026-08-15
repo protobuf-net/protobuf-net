@@ -1283,12 +1283,12 @@ a main-facing branch") so 3.x gets it, and let it flow into v4 by merge. Whichev
 by the third option: an early return for `typeof(object)` in `GetServicesSlow`, plus
 `ObjectSerializerLookupTests`. **2272 → 0 B/call.**
 
-**It is deliberately NOT on this branch**, which is why `--probe` still reports 2272 here and will
-until `main` is merged in. The fix was cherry-picked to a branch off `main` and the local copy
-dropped, so there is exactly one version of it: a duplicate would have to be reconciled at merge
-time, and — the real reason — any review change to #1280 (a release note, a reworded comment) would
-turn that duplicate into a conflict. Nothing here depends on the fix; it is a throughput issue on a
-path the v4 work does not use.
+**Merged to `main` as `afb97b2d` and merged back here**, 2026-08-15, so `--probe` now reports
+**0 B/call** on this branch too. The route was: cherry-pick onto a branch off `main`, drop the local
+copy so exactly one version existed, then take it back by merge. That avoided reconciling a
+duplicate — and, the real reason for the care, avoided any review change to #1280 turning that
+duplicate into a conflict. In the event #1280 merged unchanged, so the caution cost nothing and
+proved nothing; it was still the right shape for a fix whose review outcome was unknown.
 
 **Still open, and the larger half**: general negative-caching, for the auxiliary-type paths. #1280
 fixes only `typeof(object)`, which is the one type where "never has a service" is guaranteed
