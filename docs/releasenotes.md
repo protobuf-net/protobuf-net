@@ -8,7 +8,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 2.4.*: critical maintenance only (no feature work planned)
 - 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
 - 3.1: adds model depth validation, which may impact some models; see `TypeModel.MaxDepth`
-- 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://protobuf-net.github.io/protobuf-net/aot); build tools included by default
+- 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://docs.protobuf-net.dev/aot); build tools included by default
 - future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - future: protogen support for emitting pre-coded custom serializers
 
@@ -34,7 +34,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## 3.3.0
 
-- **compile-time serializers, for native AOT and trimming** ([docs](https://protobuf-net.github.io/protobuf-net/aot)):
+- **compile-time serializers, for native AOT and trimming** ([docs](https://docs.protobuf-net.dev/aot)):
   opt in with `[ProtoModel] partial class MyModel : TypeModel`, seeded by `[ProtoSerializable(typeof(...))]`;
   the generator builds the serializers at compile time, so publishing native AOT works and cold start
   improves even on an ordinary JIT build. The trigger attributes are `[Experimental]` (`PBN9001`)
@@ -72,7 +72,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## 3.2.16
 
-- implement `[NullWrappedCollection]`, usage [as here](https://protobuf-net.github.io/protobuf-net/nullwrappers#null-collections) (#1044)
+- implement `[NullWrappedCollection]`, usage [as here](https://docs.protobuf-net.dev/nullwrappers#null-collections) (#1044)
 - support `nint` (`IntPtr`) and `nuint` (`UIntPtr`) with layout per `long`/`ulong` (#1043; fixes #1042, fixes grpc 282)
 
 ## 3.2.12
@@ -419,7 +419,7 @@ Other changes:
 ## v2.3.0-alpha
 
 - [further reading](https://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
-- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
+- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protobuf-net.dev/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
 - dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions

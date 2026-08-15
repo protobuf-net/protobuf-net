@@ -191,7 +191,7 @@ move it to a generic overload.
 ### `.proto`-generated DTOs need their own project
 
 If you generate DTOs from a `.proto` using
-[protobuf-net.BuildTools](https://protobuf-net.github.io/protobuf-net/contract_first), you **cannot**
+[protobuf-net.BuildTools](https://docs.protobuf-net.dev/contract_first), you **cannot**
 put `[ProtoModel]` in the same project. Source generators all run against the same input compilation
 and never see each other's output, so the model finds nothing to serialize.
 

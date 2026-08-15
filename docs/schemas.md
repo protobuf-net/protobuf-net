@@ -3,6 +3,9 @@
 In vanilla protobuf/gRPC usage, `protoc` is the tool used to parse .proto schemas for code-generation; protobuf-net provides *managed* tools that provide additional schema analysis tools,
 via the [protobuf-net.Reflection](https://www.nuget.org/packages/protobuf-net.Reflection) package.
 
+If you just want to try these tools without installing anything, [protobuf-net.dev](https://protobuf-net.dev/) runs them in your browser - both code-generation from a
+`.proto` schema, and decoding a raw protobuf payload when you *don't* have a schema.
+
 For example, let's consider the `TimeService.proto` from [the protobuf-net.Grpc examples](https://github.com/protobuf-net/protobuf-net.Grpc/tree/main/examples/grpc/Shared). At the time
 of writing, this file contains:
 
