@@ -376,6 +376,24 @@ is better: Roslyn knows the underlying type, so the narrow backings that **canno
 at all (`sbyte`/`byte`/`short`/`ushort`, whose element widths differ) are declined at compile time
 rather than needing a runtime guard.
 
+**And the library pays nothing for packed enums at all** (Marc) — which is the better argument,
+because it is about cost rather than convenience. A packed enum column is legal but *rare* next to
+a packed integer one, so it is exactly the shape you do not want to fund with a dedicated arm. Punned
+at the call site it does not get one: `MemoryMarshal.Cast<Level, int>(...)` and the column is
+thereafter **indistinguishable** from `int[]`, running the identical code.
+
+Two things follow, and both are worth more than they look:
+
+- **it cannot drift**, because there is no second implementation to drift from — a packed enum is
+  not "the integer path plus handling", it *is* the integer path;
+- **it inherits future work for free.** Tier 2 (no per-element room checks) and tier 3 (vectorised
+  LEB128) land on enums the day they land on integers, with nothing enum-shaped to revisit.
+
+The contrast with the library path is the whole asymmetry: `RepeatedSerializer`'s `T` is
+unconstrained, so doing this *there* means a runtime `IsEnum` test plus `Enum.GetUnderlyingType`
+cached in a `TypeHelper<T>` static — real, permanent marginal cost, carried by every consumer, to
+serve the rare shape. The generator has the type for free and spends nothing.
+
 **So: overloads per element ENCODING, never per collection SHAPE.** The former is necessary and
 small — `ReadOnlySpan<uint>` / `<int>` / `<ulong>`, times varint and zigzag, plus the fixed-width
 blits, so roughly six methods, none of which cares where the span came from. The latter is what
