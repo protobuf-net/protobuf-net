@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 
 namespace ProtoBuf.BuildTools.Internal.Aot
@@ -888,7 +888,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
             EquatableArray<string> aliases = default, bool emitInstance = true,
             bool emitConstructor = false, bool isSealed = false, bool rawReader = false, bool rawWriter = false,
-            bool listAsSpan = false)
+            bool listAsSpan = false, bool immutableArrayAsSpan = false)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -902,6 +902,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             RawReader = rawReader;
             RawWriter = rawWriter;
             ListAsSpan = listAsSpan;
+            ImmutableArrayAsSpan = immutableArrayAsSpan;
         }
 
         /// <summary>
@@ -910,7 +911,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public ProtoModelPlan WithContracts(EquatableArray<ProtoContractPlan> contracts)
             => new(Namespace, TypeName, contracts, AnnotateTrimming, Enums, Aliases, EmitInstance,
-                EmitConstructor, IsSealed, RawReader, RawWriter, ListAsSpan);
+                EmitConstructor, IsSealed, RawReader, RawWriter, ListAsSpan, ImmutableArrayAsSpan);
 
         /// <summary>
         /// Whether the raw reader surface (<c>ProtoReader.State.ReadRawTag</c> and friends) is
@@ -935,6 +936,25 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// inferred from a TFM name.
         /// </summary>
         public bool ListAsSpan { get; }
+
+        /// <summary>
+        /// Whether <c>ImmutableArray&lt;T&gt;.AsSpan()</c> is available to the consumer, letting an
+        /// immutable-array column be reached as a span exactly as an array is.
+        /// </summary>
+        /// <remarks>
+        /// Probed separately from <see cref="ListAsSpan"/> because it is a different capability
+        /// with a different origin: <c>CollectionsMarshal</c> is a net5+ framework type, while this
+        /// comes from <c>System.Collections.Immutable</c>, which is a package down-level - a net472
+        /// consumer can perfectly well have it.
+        /// <para>
+        /// It needs <b>no default-instance guard</b>, which is the point of probing for it at all:
+        /// <c>default(ImmutableArray&lt;T&gt;)</c> throws on <c>Length</c>, the indexer and
+        /// <c>GetEnumerator</c>, but <c>AsSpan()</c> returns an empty span - verified on net472 and
+        /// net8.0 both (<c>ImmutableArraySpanTests</c>) - and protobuf-net already treats a default
+        /// instance exactly as empty, so an empty span produces the right bytes by construction.
+        /// </para>
+        /// </remarks>
+        public bool ImmutableArrayAsSpan { get; }
 
         /// <summary>
         /// Every <c>extern alias</c> declared on a reference in the consumer's compilation.
@@ -1023,7 +1043,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
                 && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
                 && IsSealed == other.IsSealed && RawReader == other.RawReader
-                && RawWriter == other.RawWriter && ListAsSpan == other.ListAsSpan;
+                && RawWriter == other.RawWriter && ListAsSpan == other.ListAsSpan
+                && ImmutableArrayAsSpan == other.ImmutableArrayAsSpan;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 

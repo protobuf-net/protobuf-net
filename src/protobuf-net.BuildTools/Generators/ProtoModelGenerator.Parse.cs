@@ -245,7 +245,13 @@ namespace ProtoBuf.BuildTools.Generators
                     // raw repeated write enumerates a List<T> as a span where it can
                     listAsSpan: compilation.GetTypeByMetadataName("System.Runtime.InteropServices.CollectionsMarshal")
                         is { } collectionsMarshal
-                        && collectionsMarshal.GetMembers("AsSpan").Length != 0);
+                        && collectionsMarshal.GetMembers("AsSpan").Length != 0,
+                    // separate capability, separate origin: this one rides on the
+                    // System.Collections.Immutable package rather than the framework, so a net472
+                    // consumer may well have it while lacking CollectionsMarshal
+                    immutableArrayAsSpan: compilation.GetTypeByMetadataName("System.Collections.Immutable.ImmutableArray`1")
+                        is { } immutableArray
+                        && immutableArray.GetMembers("AsSpan").Length != 0);
             }
 
             return new ProtoParseResult(plan, new(diagnostics.ToArray()),

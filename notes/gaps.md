@@ -1175,7 +1175,40 @@ raw packed surface is pure span work — no `Activator`, no `MakeGenericType`, n
 from the model — so it demands no metadata at all. `Vector<T>` under ILC and a `MemoryMarshal.Cast`
 over an enum span were the two genuinely unknown pieces, and both are free.
 
-### B23. Packed columns are limited to `T[]` and `List<T>` — `ImmutableArray<T>` and derived lists are out
+### B23. ~~Packed columns are limited to `T[]` and `List<T>`~~ — **`ImmutableArray<T>` DONE 2026-08-15; derived lists still a hold**
+
+**`ImmutableArray<T>` now takes the span path**, for packed *and* unpacked, write *and* measure —
+so it also stopped blocking measure-first for its contract. Three findings, in the order they
+turned up:
+
+1. **`AsSpan()` fails safe on a default instance, on both targeted runtimes.**
+   `default(ImmutableArray<T>)` throws on `Length`, the indexer and `GetEnumerator`, but `AsSpan()`
+   returns an **empty span** — checked on net472 *and* net8.0 rather than assumed from one, since
+   the type comes from a package down-level and the shared framework on modern .NET.
+2. **A default serializes exactly as empty**, not as absent: the packed member still writes its
+   zero-length header (`12-00`). That follows from `ImmutableArraySerializer.Initialize` mapping
+   `IsDefault` onto `Empty`. Together with (1) this means the emit needs **no guard at all** — an
+   empty span produces precisely the bytes a default is defined to produce.
+3. **...and the guard that was already there was actively WRONG.** `ImmutableArray<T>` declares
+   lifted equality over `ImmutableArray<T>?`, so the generated `if (tmp != null)` *compiles* for it
+   and evaluates to **false** for a default instance. So a default immutable array was skipped
+   entirely. Invisible for an unpacked member (empty writes nothing anyway); for a **packed** one it
+   dropped the zero-length header — a real wire divergence, and **pre-existing**, not introduced by
+   this work.
+
+That third one is the interesting one, because of how it was found: the corpus differential caught
+it (`99% match`, one contract) on a contract that only existed because the *test* for (1) declared
+one. Nothing in the fixtures had a packed `ImmutableArray`, so the bug had no way to show. The fix
+is `NeedsNullGuard`, keyed on `Repeated.IsValueType`.
+
+**`AsSpan` availability is probed** (`ProtoModelPlan.ImmutableArrayAsSpan`) separately from
+`ListAsSpan`, because it is a different capability with a different origin — `CollectionsMarshal` is
+a net5+ *framework* type, while this rides on the `System.Collections.Immutable` *package*, so a
+net472 consumer can perfectly well have it. Absent it, the member keeps the stateful path.
+
+**Derived lists remain the deliberate hold** described below — still no fixture, still not widened.
+
+### B23 (original entry). Packed columns are limited to `T[]` and `List<T>`
 
 `RawPackedWritable` admits `Factory is "CreateList" or "CreateVector"` only, so of the 28 repeated
 factories the generator knows, **two** reach the raw packed path. Two exclusions are worth separating,

@@ -67,7 +67,11 @@ partial class ExoticModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateStack<global::System.Collections.Generic.Stack<int>, int>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
             }
             var tmp8 = value.ImmutableArray;
-            global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableArray<int>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+            foreach (var item8 in tmp8.AsSpan())
+            {
+                state.WriteRawTag((8 << 3) | 0);  // ImmutableArray
+                state.WriteRawVarint64(unchecked((ulong)(long)item8));
+            }
             var tmp9 = value.ImmutableList;
             if (tmp9 != null)
             {
