@@ -50,7 +50,7 @@ using ProtoBuf.Meta;
 // reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
 // sub-types - is included automatically.
 //
-// See https://protobuf-net.github.io/protobuf-net/aot
+// See https://docs.protobuf-net.dev/aot
 [ProtoModel]
 [ProtoSerializable(typeof(global::Order))]
 internal partial class ProtoModel : TypeModel
@@ -98,7 +98,7 @@ using ProtoBuf.Meta;
 // reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
 // sub-types - is included automatically.
 //
-// See https://protobuf-net.github.io/protobuf-net/aot
+// See https://docs.protobuf-net.dev/aot
 namespace ConsoleApp11
 {
     [ProtoModel]
@@ -141,7 +141,7 @@ using ProtoBuf.Meta;
 // reachable from those - member types, collection elements, map keys and values, [ProtoInclude]
 // sub-types - is included automatically.
 //
-// See https://protobuf-net.github.io/protobuf-net/aot
+// See https://docs.protobuf-net.dev/aot
 namespace Shop.Data
 {
     [ProtoModel]
