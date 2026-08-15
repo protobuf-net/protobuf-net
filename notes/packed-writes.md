@@ -352,6 +352,70 @@ element is written *unpacked* (`count == 0 || count > 1` — see
 are byte-visible, so `ClassicVsRawTests` becomes a real gate here for the first time — today it
 compares classic against classic for these contracts.
 
+
+### Collection shapes: decide at the call site, frame in the API
+
+Settled with Marc, 2026-08-15, as the design for the raw packed path above.
+
+**The generator resolves the collection shape itself, and emits a span.** It has the context
+already — `ProtoRepeatedPlan` carries `Factory`, `TakesCollectionType` and `IsValueType`, and the
+element kind is on the member plan — and there is precedent: `RawRepeatedWritable` already gates on
+`Factory is "CreateList" or "CreateVector"`, so the call site is where this decision is made today.
+The three shapes that matter:
+
+| shape | span | availability |
+| --- | --- | --- |
+| `T[]` | the array itself | everywhere |
+| `List<T>` | `CollectionsMarshal.AsSpan(list)` | net5+ |
+| `ImmutableArray<T>` | `.AsSpan()` | needs probing |
+
+**The enum pun happens at the call site too** — `MemoryMarshal.Cast<Level, int>(span)`, which is
+legal (both are structs) and far clearer than the `Unsafe.As` + `CreateReadOnlySpan` gymnastics the
+library path needs, because there `T` is unconstrained. This is the whole reason the architecture
+is better: Roslyn knows the underlying type, so the narrow backings that **cannot** be span-punned
+at all (`sbyte`/`byte`/`short`/`ushort`, whose element widths differ) are declined at compile time
+rather than needing a runtime guard.
+
+**So: overloads per element ENCODING, never per collection SHAPE.** The former is necessary and
+small — `ReadOnlySpan<uint>` / `<int>` / `<ulong>`, times varint and zigzag, plus the fixed-width
+blits, so roughly six methods, none of which cares where the span came from. The latter is what
+produces shim sprawl and is exactly what the call-site decision avoids.
+
+**The framing rules stay INSIDE the API, and this is the one place not to push to the call site.**
+A single element is written *unpacked* (`count == 0 || count > 1`, pinned by
+`ASinglePackedElementIsWrittenUnpacked`) and an empty collection writes a zero-length header. Both
+are byte-visible and neither is obvious; emitted inline per member they will drift, and every drift
+is a wire bug that only a byte oracle catches. One line at the call site, one tested implementation.
+
+**Hence the API takes a FIELD NUMBER, not a pre-encoded tag** — and the reasoning is worth keeping,
+because it looks like an inconsistency with the rest of this branch and is not. Elsewhere the tag is
+pre-encoded and written through a narrowed ladder, because for a *single scalar* the tag encode can
+cost as much as the value it introduces. A packed column is the opposite case: one tag against a
+whole payload, so the varint encode is irrelevant (Marc). Taking a pre-encoded tag here would
+fragment the surface for nothing, and the API needs the field number anyway to make the
+single-element-unpacked decision — that arm writes a *per-element* header.
+
+**Do not carry the derived-list exclusion over by reflex.** `RawRepeatedWritable` excludes derived
+lists because `foreach` binds to the **declared** type's `GetEnumerator`, which could be a hiding
+redeclaration. `CollectionsMarshal.AsSpan` bypasses the enumerator entirely, so that reasoning does
+not apply and `class MyList : List<int>` is safe here. The packed raw path can be *wider* than the
+unpacked one.
+
+**Two hazards to settle when building it**, neither yet checked:
+
+- **`ImmutableArray<T>` `default` is not null and throws on most access.** It is a struct, and this
+  file's parent notes already record that neither side null-tests it. Whether `AsSpan()` survives a
+  `default` instance needs verifying; if it does not, that shape needs an `IsDefaultOrEmpty` guard
+  the array case does not.
+- **`Measure_` and `RawWrite_` are separate methods**, so the span is acquired twice. That is cheap,
+  and it is already the measure-first contract that the object does not change between passes — but
+  it does mean a mutation between them surfaces as the length cross-check firing rather than as
+  anything more helpful.
+
+Down-level consumers fall back to the stateful path where a symbol is missing, exactly as the
+generator already does for `UnsafeAccessorAttribute`, `CreateReadOnlySet` and `BclHelpers.ReadDateOnly`:
+a smaller optimisation, not a broken build.
+
 ## Ranked, by value over effort
 
 1. ~~**Block copy for the matching fixed-width cells.**~~ **DONE 2026-08-14.** Portable, no
