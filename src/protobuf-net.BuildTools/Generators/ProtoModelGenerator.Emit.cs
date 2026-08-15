@@ -2730,10 +2730,14 @@ namespace ProtoBuf.BuildTools.Generators
         /// contract referencing it, from measure-first.
         /// </para>
         /// <para>
-        /// The element kinds are those the raw surface takes a span of directly. The narrow varint
-        /// kinds (<c>sbyte</c>/<c>byte</c>/<c>short</c>/<c>ushort</c>/<c>char</c>) are absent
-        /// deliberately and are not an oversight: a span pun reinterprets bytes, so a narrower
-        /// element cannot become a wider one without widening work, which is a different shape.
+        /// The element kinds are those the raw surface takes a span of directly. The narrow kinds
+        /// (<c>sbyte</c>/<c>byte</c>/<c>short</c>/<c>ushort</c>/<c>char</c>) are absent deliberately
+        /// and are not an oversight - a span pun reinterprets bytes, so a 1-2 byte element cannot
+        /// become a 4-byte one. Note this excludes them at EVERY format, not just varint:
+        /// <c>FixedSize</c> on those four is legal and gives <c>Fixed32</c> (they pass width 32 to
+        /// <c>ValueMember.GetIntWireType</c>), which is a WIDEN rather than a pun and so wants
+        /// <c>Vector.Widen</c> - the exact inverse of the <c>Vector.Narrow</c> the blit already
+        /// uses. <c>char</c> is the odd one out: it hard-codes varint and ignores the format.
         /// </para>
         /// <para>
         /// <c>TakesCollectionType</c> is excluded, matching the unpacked path - though NOT for the

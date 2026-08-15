@@ -63,9 +63,23 @@ writer.)
 
 **What is left**, in order: a zigzag write blit (its measure is already vectorised, but the write is
 still per element, which is the whole of the gap between 1.5x and the others); B21 tier 2, writing
-without per-element room checks now that the length is known exactly; and the narrow varint kinds
-(`sbyte`/`byte`/`short`/`ushort`/`char`), which a span pun cannot reach because element widths
-differ - they need widening, which is a different shape.
+without per-element room checks now that the length is known exactly; and the **narrow kinds**
+(`sbyte`/`byte`/`short`/`ushort`/`char`) - which this previously called "the narrow *varint* kinds",
+implying the non-varint ones were done. They are not, and the two cases differ:
+
+| | wire form | why it is out | tractable? |
+| --- | --- | --- | --- |
+| narrow, default/zigzag | varint | a span pun reinterprets bytes, so a 1-2 byte element cannot become a 4-byte one; and a varint needs per-element encoding regardless, so there is no blit to reach for | least |
+| narrow, `FixedSize` | **`Fixed32`** | this is a **widen**, not a pun: 2 CLR bytes become 4 wire bytes | **most** - `Vector.Widen` is the exact inverse of the `Vector.Narrow` the blit already uses, and is in the same portable `Vector<T>` family |
+
+`FixedSize` on these is legal and not obscure: `byte`, `sbyte`, `short` and `ushort` all pass
+**width 32** to `ValueMember.GetIntWireType`, so they land on `Fixed32`. **`char` is the exception** -
+it hard-codes `WireType.Varint` and ignores `DataFormat` altogether, so there is no non-varint
+`char` to support.
+
+So the narrow `FixedSize` column is a widen-then-blit, which is a smaller piece of work than the
+narrow varint column and worth doing first if either is done. Sign matters and `Vector.Widen`
+handles it by overload: `short` sign-extends to `int`, `ushort` zero-extends to `uint`.
 
 
 **Status, 2026-08-15.** Tier 1 of B21 has landed for all four varint element types (see B21), and
