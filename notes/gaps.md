@@ -1279,6 +1279,21 @@ question does not arise — at the cost of being a special case rather than a ge
 a main-facing branch") so 3.x gets it, and let it flow into v4 by merge. Whichever is chosen, the
 `--probe` numbers above are the before/after gate.
 
+**FIXED on main — [PR #1280](https://github.com/protobuf-net/protobuf-net/pull/1280)**, 2026-08-15,
+by the third option: an early return for `typeof(object)` in `GetServicesSlow`, plus
+`ObjectSerializerLookupTests`. **2272 → 0 B/call.**
+
+**It is deliberately NOT on this branch**, which is why `--probe` still reports 2272 here and will
+until `main` is merged in. The fix was cherry-picked to a branch off `main` and the local copy
+dropped, so there is exactly one version of it: a duplicate would have to be reconciled at merge
+time, and — the real reason — any review change to #1280 (a release note, a reworded comment) would
+turn that duplicate into a conflict. Nothing here depends on the fix; it is a throughput issue on a
+path the v4 work does not use.
+
+**Still open, and the larger half**: general negative-caching, for the auxiliary-type paths. #1280
+fixes only `typeof(object)`, which is the one type where "never has a service" is guaranteed
+(`Add(typeof(object))` is refused), so it needs no invalidation. Doing it generally does.
+
 ### B25. ~~Doc links in SOURCE still point at `protobuf-net.github.io`~~ — **CLOSED, main #1279**
 
 Main's move to `docs.protobuf-net.dev` swept `docs/` only; roughly ten links remain in source —
