@@ -6,9 +6,9 @@
 
 ## Release Notes
 
-[v3 is here!](https://protobuf-net.github.io/protobuf-net/3_0)
+[v3 is here!](https://docs.protobuf-net.dev/3_0)
 
-[Change history and pending changes are here](https://protobuf-net.github.io/protobuf-net/releasenotes).
+[Change history and pending changes are here](https://docs.protobuf-net.dev/releasenotes).
 
 ---
 
@@ -19,9 +19,9 @@
 
 ## Native AOT and trimming
 
-From 3.3, protobuf-net can generate serializers **at build time** from code-first contracts, making native AOT and trimming work — and improving cold start even on ordinary JIT builds. See [the AOT documentation](https://protobuf-net.github.io/protobuf-net/aot).
+From 3.3, protobuf-net can generate serializers **at build time** from code-first contracts, making native AOT and trimming work — and improving cold start even on ordinary JIT builds. See [the AOT documentation](https://docs.protobuf-net.dev/aot).
 
-The [build tools](https://protobuf-net.github.io/protobuf-net/build_tools) (analyzers that validate contracts, and this generator) are included in the protobuf-net package by default; opt out with `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
+The [build tools](https://docs.protobuf-net.dev/build_tools) (analyzers that validate contracts, and this generator) are included in the protobuf-net package by default; opt out with `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
 
 ## Runtime Installation
 
