@@ -962,7 +962,7 @@ down-level, which costs little given the shape protogen actually emits.
 the descriptor set would show none of this. An in-situ number needs a packed-numeric payload that
 does not exist yet, and that payload is the real prerequisite, not the algorithm.
 
-### B21. SIMD for the packed varint WRITE — **tier 1 LANDED (6.6×–8.7×); tiers 2–3 still open**
+### B21. SIMD for the packed varint WRITE — **tiers 1 and 2 LANDED; tier 3 still open**
 
 Marc, 2026-08-14: can SIMD do something clever for the write — measure a block at once, then
 "scatter/gather, switch, something"? Yes, but it separates into tiers that differ enormously in
@@ -1026,6 +1026,22 @@ uniformity threshold from `0x80` to `0x100` left every case passing, because no 
 in **128–255**, the band the cutoff actually discriminates. With a `justOver` pattern added it
 fails as it should. The differential suite is structurally blind here for the usual reason: both
 sides go through `RepeatedSerializer`, so a wrong blit is wrong identically on both.
+
+**Tier 2 LANDED 2026-08-15**, for zigzag and for the varint blits' scalar tails. It is worth +25%
+on the `spread` distribution and ~nothing on `small` (where tier 1 already took the work), and it is
+zigzag's *only* lever since that has no blit — 1.5× → 2.4×. Two things it taught:
+
+- **"nearly free" was wrong about the shape.** The obvious form — measure the payload, check the
+  room once, write the whole column unchecked — measured at **exactly zero**, because the writer's
+  buffer is `BufferPool.BUFFER_LENGTH` = 1024 and a packed column worth optimising is precisely one
+  that exceeds it. The guard could essentially never be true. The working form is **chunked**: stay
+  unchecked while the current chunk provably holds one more worst-case element, and hand only the
+  boundary element to the checked path.
+- **it is bounded by what tier 1 leaves.** A bracket in `PackedWriteBenchmarks` (scalar loop vs a
+  no-checks ceiling) put the available win at 2.7× for zigzag and 3.8× for a plain varint column;
+  realised is well under that, because the ceiling also drops the writer entirely.
+
+The original sketch follows, for the record:
 
 **Tier 2 — measure, then write without per-element room checks. Nearly free, falls out of B19.**
 SIMD-measure the block for its total length, reserve exactly that, then run the scalar encoder with

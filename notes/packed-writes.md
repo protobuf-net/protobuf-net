@@ -445,31 +445,42 @@ file, and that is the tables being fixed rather than classic regressing.
 
 999 elements per member, `PackedMatrixBenchmarks`:
 
-| category | classic | raw | |
-| --- | ---: | ---: | ---: |
-| **bool** | 4229 ns | **128 ns** | **33×** |
-| **fixed integer** | 7765 | **596** | **13.0×** |
-| **floating point** | 7119 | **585** | **12.2×** |
-| **enum** | 5146 | **680** | **7.6×** |
-| **varint unsigned** | 11792 | **2878** | **4.1×** |
-| **varint signed** | 11514 | **2914** | **4.0×** |
-| **zigzag** | 12152 | **8252** | **1.5×** |
+| category | classic | raw | | spread |
+| --- | ---: | ---: | ---: | ---: |
+| **bool** | 4110 ns | **128 ns** | **32×** | 37× |
+| **fixed integer** | 7161 | **602** | **11.9×** | 13× |
+| **floating point** | 7132 | **598** | **11.9×** | 12× |
+| **enum** | 5103 | **668** | **7.6×** | 7.9× |
+| **varint unsigned** | 13556 | **2930** | **4.6×** | 2.1× |
+| **varint signed** | 10010 | **2904** | **3.4×** | 1.9× |
+| **zigzag** | 12415 | **5226** | **2.4×** | 2.2× |
 
 All seven categories are on the raw path: **zero `WriteRepeated` calls remain** in the generated
-model, and all seven contracts emit `Measure_`/`RawWrite_`. On the adversarial `spread`
-distribution the varint rows narrow to ~1.8× and ~1.5× (the tier-1 blit cannot fire), while bool,
-fixed-width, floating point and enum are distribution-independent.
+model, and all seven contracts emit `Measure_`/`RawWrite_`. The `spread` column is the adversarial
+distribution, where a block of 32 is essentially never uniform so the tier-1 blit cannot fire; bool,
+fixed-width, floating point and enum are distribution-independent because they never needed it.
+
+Read the classic column within a run, not across runs — it wanders by 10-20% between runs on this
+machine, which is why every ratio here comes from a single run.
 
 **The enum row is the design paying off.** 7.6× for a shape with **no enum-specific code anywhere**
 in the library: the generator emits `MemoryMarshal.Cast<Level, int>(...)` at the call site and the
-column is thereafter the `int32` column. Enums also picked up the tier-1 blit for free, having
-never been mentioned in it.
+column is thereafter the `int32` column. Enums also picked up the tier-1 blit for free, having never
+been mentioned in it.
 
-**zigzag is the laggard, and knowably so**: its measure is vectorised but its *write* is still per
-element. A blit is possible in principle - a zigzag value below 128 means an original in [-64, 63] -
-but it needs the transform materialised before the uniformity test, so it is a different shape from
-the plain varint blit rather than a parameter of it. That is the next packed lever, and 1.5× is
-what "drop the enumerator, the virtual dispatch and the wire-type switch" is worth on its own.
+### What each tier bought, separately
+
+Worth keeping apart, because the two tiers help *opposite* distributions and a single before/after
+number hides that:
+
+| | `small` | `spread` |
+| --- | --- | --- |
+| **tier 1** (uniform-block blit) | nearly everything — 8.6× on the primitive | cannot fire; costs +3-6% |
+| **tier 2** (chunked, no per-element room check) | almost nothing — the blit already took it | **+25%**, and it is the whole win there |
+
+So on unsigned varint: `small` is 4.6× and moved not at all when tier 2 landed, while `spread` went
+11723 → 9136 ns. Zigzag is the exception that proves the split — it has no blit at all, so tier 2 is
+its *only* lever and lifted it 1.5× → 2.4×.
 
 ### The format arms nearly landed HALF a fix, silently
 

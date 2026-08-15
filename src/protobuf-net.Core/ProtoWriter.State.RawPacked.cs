@@ -253,6 +253,101 @@ namespace ProtoBuf
                 }
             }
 
+            // The same chunked tier 2 for the plain varint columns - specifically for their
+            // SCALAR TAIL, i.e. everything tier 1's blit did not take. On a `small` column the blit
+            // takes nearly all of it and this sees only the ragged end; on a `spread` one the blit
+            // breaks out of its first mixed block and this handles the entire column, which is
+            // exactly the case that was slowest.
+            //
+            // These live on State rather than beside the blit in PackedVarintMeasure because they
+            // need `Remaining`/`LocalAdvance`, which are State's own; the blit needs the vector
+            // helpers, which are not. So the split is by what each half touches.
+
+            internal void WritePackedVarint32Tail(ReadOnlySpan<uint> values)
+            {
+                int i = 0;
+                while (i < values.Length)
+                {
+                    int room = RemainingInCurrent;
+                    if (room < MaxVarint32)
+                    {
+                        WriteRawVarint32(values[i++]);   // boundary: the checked path spills
+                        continue;
+                    }
+                    var target = Remaining;
+                    int offset = 0, limit = room - MaxVarint32;
+                    while (i < values.Length && offset <= limit)
+                    {
+                        var v = values[i++];
+                        while (v >= 0x80)
+                        {
+                            target[offset++] = (byte)((v & 0x7F) | 0x80);
+                            v >>= 7;
+                        }
+                        target[offset++] = (byte)v;
+                    }
+                    LocalAdvance(offset);
+                }
+            }
+
+            /// <summary>
+            /// Signed 32-bit: sign-extended to the 64-bit form, so it reserves <c>MaxVarint64</c>
+            /// per element rather than <c>MaxVarint32</c> - a negative is ten bytes.
+            /// </summary>
+            internal void WritePackedInt32Tail(ReadOnlySpan<int> values)
+            {
+                int i = 0;
+                while (i < values.Length)
+                {
+                    int room = RemainingInCurrent;
+                    if (room < MaxVarint64)
+                    {
+                        WriteRawVarint64(unchecked((ulong)(long)values[i++]));
+                        continue;
+                    }
+                    var target = Remaining;
+                    int offset = 0, limit = room - MaxVarint64;
+                    while (i < values.Length && offset <= limit)
+                    {
+                        var v = unchecked((ulong)(long)values[i++]);
+                        while (v >= 0x80)
+                        {
+                            target[offset++] = (byte)((v & 0x7F) | 0x80);
+                            v >>= 7;
+                        }
+                        target[offset++] = (byte)v;
+                    }
+                    LocalAdvance(offset);
+                }
+            }
+
+            internal void WritePackedVarint64Tail(ReadOnlySpan<ulong> values)
+            {
+                int i = 0;
+                while (i < values.Length)
+                {
+                    int room = RemainingInCurrent;
+                    if (room < MaxVarint64)
+                    {
+                        WriteRawVarint64(values[i++]);
+                        continue;
+                    }
+                    var target = Remaining;
+                    int offset = 0, limit = room - MaxVarint64;
+                    while (i < values.Length && offset <= limit)
+                    {
+                        var v = values[i++];
+                        while (v >= 0x80)
+                        {
+                            target[offset++] = (byte)((v & 0x7F) | 0x80);
+                            v >>= 7;
+                        }
+                        target[offset++] = (byte)v;
+                    }
+                    LocalAdvance(offset);
+                }
+            }
+
             // ---- bool ----
             //
             // A bool LOOKS like a varint and behaves like a fixed width: false is 0x00 and true is

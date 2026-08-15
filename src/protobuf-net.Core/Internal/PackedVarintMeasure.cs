@@ -298,7 +298,7 @@ namespace ProtoBuf.Internal
                     }
                 }
             }
-            for (; i < values.Length; i++) state.WriteRawVarint32(values[i]);
+            state.WritePackedVarint32Tail(values.Slice(i));
         }
 
         /// <summary>
@@ -355,7 +355,7 @@ namespace ProtoBuf.Internal
                     }
                 }
             }
-            for (; i < values.Length; i++) state.WriteRawVarint64(values[i]);
+            state.WritePackedVarint64Tail(values.Slice(i));
         }
 
         /// <summary>
@@ -401,7 +401,7 @@ namespace ProtoBuf.Internal
                     }
                 }
             }
-            for (; i < values.Length; i++) state.WriteRawVarint64(unchecked((ulong)(long)values[i]));
+            state.WritePackedInt32Tail(values.Slice(i));
         }
 
         /// <summary>
