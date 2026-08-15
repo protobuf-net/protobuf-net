@@ -447,36 +447,49 @@ file, and that is the tables being fixed rather than classic regressing.
 
 | category | classic | raw | |
 | --- | ---: | ---: | ---: |
-| **bool** | 4120 ns | **127 ns** | **32×** |
-| **floating point** | 7813 | **575** | **13.6×** |
-| **enum** | 5173 | **661** | **7.8×** |
-| **varint unsigned** | 11666 | **2895** | **4.0×** |
-| **varint signed** | 9977 | **2950** | **3.4×** |
-| fixed integer | 7116 | 7125 | not on the raw path |
-| zigzag | 12128 | 13315 | not on the raw path |
+| **bool** | 4229 ns | **128 ns** | **33×** |
+| **fixed integer** | 7765 | **596** | **13.0×** |
+| **floating point** | 7119 | **585** | **12.2×** |
+| **enum** | 5146 | **680** | **7.6×** |
+| **varint unsigned** | 11792 | **2878** | **4.1×** |
+| **varint signed** | 11514 | **2914** | **4.0×** |
+| **zigzag** | 12152 | **8252** | **1.5×** |
 
-On the adversarial `spread` distribution the varint wins narrow to 1.8× and 1.5× — expected, since
-the tier-1 blit cannot fire — while bool, floating point and enum are distribution-independent and
-hold at 37×, 12.5× and 7.7×.
+All seven categories are on the raw path: **zero `WriteRepeated` calls remain** in the generated
+model, and all seven contracts emit `Measure_`/`RawWrite_`. On the adversarial `spread`
+distribution the varint rows narrow to ~1.8× and ~1.5× (the tier-1 blit cannot fire), while bool,
+fixed-width, floating point and enum are distribution-independent.
 
-**The enum row is the design paying off.** 7.8× for a shape with **no enum-specific code anywhere**
-in the library: the generator emits
-`MemoryMarshal.Cast<Level, int>(...)` at the call site and the column is thereafter the `int32`
-column. It also means enums picked up the blit for free, having never been mentioned in it.
+**The enum row is the design paying off.** 7.6× for a shape with **no enum-specific code anywhere**
+in the library: the generator emits `MemoryMarshal.Cast<Level, int>(...)` at the call site and the
+column is thereafter the `int32` column. Enums also picked up the tier-1 blit for free, having
+never been mentioned in it.
 
-### Two categories are NOT on the raw path, and one of them is a puzzle
+**zigzag is the laggard, and knowably so**: its measure is vectorised but its *write* is still per
+element. A blit is possible in principle - a zigzag value below 128 means an original in [-64, 63] -
+but it needs the transform materialised before the uniformity test, so it is a different shape from
+the plain varint blit rather than a parameter of it. That is the next packed lever, and 1.5× is
+what "drop the enumerator, the virtual dispatch and the wire-type switch" is worth on its own.
 
-`fixed integer` and `zigzag` carry a non-default `DataFormat` (`FixedSize`, `ZigZag`), which
-`RawPackedWritable` excludes: both re-frame the element, and both want their own arms. That work is
-straightforward and is the obvious next step — `FixedSize` int columns are a pure blit, exactly as
-floating point already is, and zigzag already has a vectorised measure in `PackedVarintMeasure`.
+### The format arms nearly landed HALF a fix, silently
 
-**What is not explained is that both are ~6–10% SLOWER under the raw model than under classic**,
-consistently and outside the error bars. Neither is on the raw path, so the arms are identical code;
-the difference has to come from the model around them — plausibly code layout or instruction-cache
-pressure, since the raw services type is now substantially larger. Recorded rather than chased,
-because guessing at it is exactly the trap the rest of this file documents. **Do not treat those two
-rows as evidence about the raw writer** until someone has established what actually differs.
+Worth keeping, because the symptom was invisible and the shape recurs. Admitting `FixedSize` and
+`ZigZag` to `RawPackedWritable` made their *writes* raw immediately - the throughput appeared, 10×
+on fixed integer - while `Measure_` stayed absent for those two contracts, so the **cascade fix did
+not apply to them**. Both halves ask a different question and only the write dispatch consults
+`RawPackedWritable` directly.
+
+The cause: `RawMemberMeasureBlocked` opens with a blanket `DataFormat != Default` refusal, and it
+sat *above* the repeated arm - so a packed `FixedSize` column was refused there and never reached
+the test that would have admitted it. Asking `RawPackedWritable` first fixes it (it vets its own
+formats). This is the **same bug** as the `Group` note directly above it in that method, which
+already records that a blanket format refusal costs the whole containing contract rather than the
+member.
+
+**The tell was a count, not a failure**: 24 packed members emitted raw, zero `WriteRepeated` left,
+and still only 5 of 7 contracts with a `Measure_`. Every gate passed throughout - because raw
+statements without measure-first are *correct*, just slower. Counting `Measure_`/`RawWrite_` in the
+emitted output is the cheap check, and is the same one that exposed the vacuous benchmark.
 
 ### What the shapes cost, and why the varint rows trail the others
 

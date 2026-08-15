@@ -55,11 +55,17 @@ The larger prize was never the throughput, though: `IsPacked` used to make a mem
 **measure-blocked**, which by the fixed-point rule removed its whole contract - and every contract
 referencing it - from measure-first. That cascade is closed for these shapes.
 
-**Still open**, and both straightforward: `DataFormat.FixedSize` integer columns (a pure blit, the
-same shape floating point already takes) and `DataFormat.ZigZag` (whose measure is already
-vectorised). Both are excluded by `RawPackedWritable` today. Note the benchmark shows those two
-categories ~6-10% *slower* under the raw model despite running identical code - unexplained, and
-not to be read as evidence about the raw writer until someone establishes what differs.
+**Both `DataFormat` arms have since landed too**, so all seven categories are on the raw path -
+`FixedSize` at **13.0x** and `ZigZag` at **1.5x**. (The earlier note here recorded those two as
+~6-10% *slower* under the raw model; that was an artefact of their being the only non-raw contracts
+inside a raw model, and it disappeared when they joined. Nothing was ever wrong with the raw
+writer.)
+
+**What is left**, in order: a zigzag write blit (its measure is already vectorised, but the write is
+still per element, which is the whole of the gap between 1.5x and the others); B21 tier 2, writing
+without per-element room checks now that the length is known exactly; and the narrow varint kinds
+(`sbyte`/`byte`/`short`/`ushort`/`char`), which a span pun cannot reach because element widths
+differ - they need widening, which is a different shape.
 
 
 **Status, 2026-08-15.** Tier 1 of B21 has landed for all four varint element types (see B21), and

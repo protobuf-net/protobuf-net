@@ -134,6 +134,56 @@ namespace ProtoBuf
                 PackedVarintMeasure.WritePackedUInt64(ref this, values);
             }
 
+            // ---- zigzag ----
+            //
+            // The measure is already vectorised (the transform needs no shift instructions: v << 1
+            // is v + v, and the arithmetic v >> 31 IS Vector.LessThan(v, Zero)). The WRITE is still
+            // per element here — it already drops the enumerator, the virtual dispatch and the
+            // wire-type switch that the stateful path pays, which is most of the win. A tier-1
+            // blit is available in principle, since a zigzag value below 128 means an original in
+            // [-64, 63], but it needs the transform materialised before the uniformity test, so it
+            // is a different shape from the plain varint one rather than a parameter of it.
+
+            /// <summary>Total bytes for a packed <c>sint32</c> column.</summary>
+            public static long MeasureRawPackedZigZag(int fieldNumber, ReadOnlySpan<int> values)
+                => PackedTotal(fieldNumber, values.Length,
+                    values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0,
+                    values.Length == 1 ? MeasureUInt32(Zig(values[0])) : 0);
+
+            /// <summary>Writes a packed <c>sint32</c> column.</summary>
+            public void WriteRawPackedZigZag(int fieldNumber, ReadOnlySpan<int> values)
+            {
+                if (values.Length == 1)
+                {
+                    WriteRawTag((uint)fieldNumber << 3);
+                    WriteRawZigZag32(values[0]);
+                    return;
+                }
+                if (!WritePackedHeader(fieldNumber, values.Length,
+                    values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0)) return;
+                foreach (var value in values) WriteRawZigZag32(value);
+            }
+
+            /// <summary>Total bytes for a packed <c>sint64</c> column.</summary>
+            public static long MeasureRawPackedZigZag(int fieldNumber, ReadOnlySpan<long> values)
+                => PackedTotal(fieldNumber, values.Length,
+                    values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0,
+                    values.Length == 1 ? MeasureUInt64(Zig(values[0])) : 0);
+
+            /// <summary>Writes a packed <c>sint64</c> column.</summary>
+            public void WriteRawPackedZigZag(int fieldNumber, ReadOnlySpan<long> values)
+            {
+                if (values.Length == 1)
+                {
+                    WriteRawTag((uint)fieldNumber << 3);
+                    WriteRawZigZag64(values[0]);
+                    return;
+                }
+                if (!WritePackedHeader(fieldNumber, values.Length,
+                    values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0)) return;
+                foreach (var value in values) WriteRawZigZag64(value);
+            }
+
             // ---- bool ----
             //
             // A bool LOOKS like a varint and behaves like a fixed width: false is 0x00 and true is

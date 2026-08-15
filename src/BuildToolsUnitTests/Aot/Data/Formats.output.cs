@@ -114,7 +114,7 @@ partial class FormatsModel
             var tmp11 = value.PackedFixed;
             if (tmp11 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<long>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp11);
+                state.WriteRawPackedFixed64(11, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp11));  // PackedFixed
             }
         }
 

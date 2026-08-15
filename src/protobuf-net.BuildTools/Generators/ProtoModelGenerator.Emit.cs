@@ -2756,9 +2756,25 @@ namespace ProtoBuf.BuildTools.Generators
             // by the traversal build, which is the only thing that compiles net472.
             if (member.Repeated.Factory == "CreateList" && !listAsSpan) return false;
             if (member.WrappedValue || member.WrappedCollection) return false;
-            // a non-default format re-frames the element (fixed-size ints, zigzag); those are
-            // real packed shapes and want their own arms, but they are not these arms
-            if (member.DataFormat != ProtoDataFormat.Default) return false;
+            // the format re-frames the ELEMENT, so each is admitted only on the kinds that can
+            // express it: FixedSize flattens an integer column to 4 or 8 bytes, and ZigZag is
+            // signed-only. Anything else - Group, WellKnown on a scalar column - has nothing to
+            // select here and stays on the stateful path. (TwosComplement needs no case: the
+            // parse normalises it onto Default, being byte-identical for every type we handle.)
+            switch (member.DataFormat)
+            {
+                case ProtoDataFormat.Default:
+                    break;
+                case ProtoDataFormat.FixedSize:
+                    if (member.Kind is not (ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                        or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64)) return false;
+                    break;
+                case ProtoDataFormat.ZigZag:
+                    if (member.Kind is not (ProtoMemberKind.Int32 or ProtoMemberKind.Int64)) return false;
+                    break;
+                default:
+                    return false;
+            }
             if (member.SubSerializer is not null || member.SubSerializerIsScalar
                 || member.SubSerializerDynamic) return false;
             // a nullable element is not a packed scalar column at all
@@ -2769,17 +2785,34 @@ namespace ProtoBuf.BuildTools.Generators
                 or ProtoMemberKind.Single or ProtoMemberKind.Double;
         }
 
-        /// <summary>The raw surface method suffix, and the element type its span is of.</summary>
-        private static (string Api, string SpanType) PackedApi(ProtoMemberKind kind) => kind switch
+        /// <summary>
+        /// The raw surface method suffix, and the element type its span is of. The FORMAT selects
+        /// as much as the kind does: the same <c>int[]</c> is a varint column, a zigzag column or
+        /// a flat four-byte column depending on how the member was declared.
+        /// </summary>
+        private static (string Api, string SpanType) PackedApi(ProtoMemberKind kind, ProtoDataFormat format)
         {
-            ProtoMemberKind.Bool => ("Bool", "bool"),
-            ProtoMemberKind.Int32 => ("Varint", "int"),
-            ProtoMemberKind.UInt32 => ("Varint", "uint"),
-            ProtoMemberKind.Int64 => ("Varint", "ulong"),      // a negative long IS a large ulong
-            ProtoMemberKind.UInt64 => ("Varint", "ulong"),
-            ProtoMemberKind.Single => ("Fixed32", "uint"),
-            _ => ("Fixed64", "ulong"),
-        };
+            if (format == ProtoDataFormat.ZigZag)
+            {
+                // NOT punned to unsigned: the zigzag transform is signed by definition
+                return ("ZigZag", kind == ProtoMemberKind.Int32 ? "int" : "long");
+            }
+            if (format == ProtoDataFormat.FixedSize)
+            {
+                return kind is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                    ? ("Fixed32", "uint") : ("Fixed64", "ulong");
+            }
+            return kind switch
+            {
+                ProtoMemberKind.Bool => ("Bool", "bool"),
+                ProtoMemberKind.Int32 => ("Varint", "int"),
+                ProtoMemberKind.UInt32 => ("Varint", "uint"),
+                ProtoMemberKind.Int64 => ("Varint", "ulong"),  // a negative long IS a large ulong
+                ProtoMemberKind.UInt64 => ("Varint", "ulong"),
+                ProtoMemberKind.Single => ("Fixed32", "uint"),
+                _ => ("Fixed64", "ulong"),
+            };
+        }
 
         /// <summary>
         /// The span handed to the raw packed surface, produced AT THE CALL SITE - which is the
@@ -2791,7 +2824,7 @@ namespace ProtoBuf.BuildTools.Generators
             var span = listAsSpan && member.Repeated.Factory == "CreateList"
                 ? $"global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp{number})"
                 : $"tmp{number}";
-            var (_, spanType) = PackedApi(member.Kind);
+            var (_, spanType) = PackedApi(member.Kind, member.DataFormat);
             // the element's own spelling: an enum's is the enum, not its underlying type
             var element = member.EnumTypeName ?? member.ElementTypeName ?? spanType;
             if (element == spanType) return span;
@@ -2809,8 +2842,10 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitRawPackedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member,
             string number, bool listAsSpan)
         {
-            var (api, _) = PackedApi(member.Kind);
-            var arg = api == "Varint"
+            var (api, _) = PackedApi(member.Kind, member.DataFormat);
+            // Bool and the fixed widths are O(1) in the count and never look at the payload;
+            // Varint and ZigZag must walk it (vectorised) to size the length prefix
+            var arg = api is "Varint" or "ZigZag"
                 ? PackedSpan(member, number, listAsSpan)
                 : PackedCount(member, number);
             Line(sb, indent,
@@ -2821,7 +2856,7 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitRawPackedWrite(StringBuilder sb, int indent, ProtoMemberPlan member,
             string number, bool listAsSpan)
         {
-            var (api, _) = PackedApi(member.Kind);
+            var (api, _) = PackedApi(member.Kind, member.DataFormat);
             Line(sb, indent,
                 $"state.WriteRawPacked{api}({member.FieldNumber}, {PackedSpan(member, number, listAsSpan)});  // {member.Name}");
         }
@@ -2922,6 +2957,17 @@ namespace ProtoBuf.BuildTools.Generators
         {
             if (member.Map.Factory is not null) return true;
             if (member.WrappedValue || member.WrappedCollection) return true;
+            // A packed column vets its OWN format - RawPackedWritable admits FixedSize on the
+            // integer kinds and ZigZag on the signed ones - so it has to be asked BEFORE the
+            // blanket non-default-format block below, or those two are refused there and never
+            // reach the repeated arm at all. That is exactly what happened when the format arms
+            // were added: the writes went raw (the write dispatch asks separately) while the
+            // MEASURE stayed blocked, so the contracts got raw statements and no Measure_ - all
+            // the throughput, none of the cascade fix, and nothing failing to say so.
+            //
+            // Same shape as the Group note below: a blanket format refusal here does not cost the
+            // member, it costs the whole containing contract, to a fixed point.
+            if (RawPackedWritable(member, listAsSpan)) return false;
             // Group is the ONE non-default format that does not need the engine, and blocking it
             // was backwards: a grouped sub-message carries no length prefix, so its size is
             // start-tag + body + end-tag, every part of which is known when the target is
