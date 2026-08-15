@@ -457,28 +457,11 @@ namespace ProtoBuf.Serializers
 
         internal override long Measure(TList values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
-#if NET5_0_OR_GREATER
-            // a List<T>'s backing store is the same shape as an array, so it takes the same
-            // vectorised ladder. Down-level there is no way to reach it and the per-element loop
-            // stands - which costs little, since protogen emits ARRAYS for packable scalars
-            if (values is not null && values.Count != 0 && PackedVarintMeasure.TryMeasure<T>(
-                CollectionsMarshal.AsSpan(values), wireType, out var vectorised))
-            {
-                return vectorised;
-            }
-#endif
             var iter = values.GetEnumerator();
             return Measure(ref iter, serializer, context, wireType);
         }
         internal override void WritePacked(ref ProtoWriter.State state, TList values, IMeasuringSerializer<T> serializer, WireType wireType)
         {
-#if NET5_0_OR_GREATER
-            if (values is not null && values.Count != 0
-                && PackedVarintMeasure.TryWrite<T>(ref state, CollectionsMarshal.AsSpan(values), wireType))
-            {
-                return;
-            }
-#endif
             var iter = values.GetEnumerator();
             WritePacked(ref state, ref iter, serializer, wireType);
         }
@@ -596,127 +579,14 @@ namespace ProtoBuf.Serializers
 
         internal override long Measure(T[] values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
         {
-            if (values is not null
-                && PackedVarintMeasure.TryMeasure<T>(values, values.Length, wireType, out var vectorised))
-            {
-                return vectorised;
-            }
             var iter = new Enumerator(values);
             return Measure(ref iter, serializer, context, wireType);
         }
 
         internal override void WritePacked(ref ProtoWriter.State state, T[] values, IMeasuringSerializer<T> serializer, WireType wireType)
         {
-            if (TryWritePackedBlock(ref state, values, wireType)) return;
             var iter = new Enumerator(values);
             WritePacked(ref state, ref iter, serializer, wireType);
-        }
-
-        /// <summary>
-        /// A packed fixed-width payload whose CLR width already matches the wire is, on a
-        /// little-endian machine, <b>exactly the bytes of the array</b> — so the entire body is one
-        /// copy instead of one virtual serializer call per element.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// The header and the length are already written by the caller, and it validates the
-        /// bytes actually emitted against the length it calculated — so this path is self-checking:
-        /// a mismatch throws <c>packed encoding length miscalculation</c> rather than corrupting
-        /// the payload.
-        /// </para>
-        /// <para>
-        /// <b>Endianness is not assumed.</b> <c>fixed32</c>/<c>fixed64</c> are little-endian on the
-        /// wire, so a raw copy is only correct where the CPU agrees; on big-endian this returns
-        /// false and the per-element loop (which goes through <c>BinaryPrimitives</c>) runs
-        /// instead. <c>BitConverter.IsLittleEndian</c> is a JIT constant, so the guard costs
-        /// nothing on the platforms that take the fast path.
-        /// </para>
-        /// <para>
-        /// Only <b>exact width matches</b> qualify. A cross-width member (a C# <c>double</c>
-        /// targeting a <c>float</c> field, which protobuf-net does support) still converts per
-        /// element; that is a separate narrowing job, see <c>notes/packed-writes.md</c>.
-        /// </para>
-        /// </remarks>
-        private static bool TryWritePackedBlock(ref ProtoWriter.State state, T[] values, WireType wireType)
-        {
-            if (values is null || values.Length == 0 || !BitConverter.IsLittleEndian) return false;
-
-            // every test folds at JIT time: T is a value type here, so exactly one arm survives
-            if (wireType == WireType.Fixed32)
-            {
-                if (typeof(T) == typeof(float)) return Block(ref state, (float[])(object)values);
-                if (typeof(T) == typeof(int)) return Block(ref state, (int[])(object)values);
-                if (typeof(T) == typeof(uint)) return Block(ref state, (uint[])(object)values);
-            }
-            else if (wireType == WireType.Fixed64)
-            {
-                if (typeof(T) == typeof(double)) return Block(ref state, (double[])(object)values);
-                if (typeof(T) == typeof(long)) return Block(ref state, (long[])(object)values);
-                if (typeof(T) == typeof(ulong)) return Block(ref state, (ulong[])(object)values);
-            }
-            else if (wireType == WireType.Varint && typeof(T) == typeof(uint))
-            {
-                // Direct varint encoding, bypassing the per-element `serializer.Write` - which is a
-                // virtual dispatch AND a wire-type switch before any bytes are produced. The raw
-                // surface skips both; the encoding is identical, and WritePacked's own length check
-                // confirms it.
-                PackedVarintMeasure.WritePackedUInt32(ref state, new ReadOnlySpan<uint>((uint[])(object)values));
-                return true;
-            }
-            else if (wireType == WireType.Varint && typeof(T) == typeof(int))
-            {
-                // a negative int32 sign-extends to the ten-byte form, so this is the 64-bit writer
-                PackedVarintMeasure.WritePackedInt32(ref state, new ReadOnlySpan<int>((int[])(object)values));
-                return true;
-            }
-            else if (wireType == WireType.Varint && typeof(T) == typeof(ulong))
-            {
-                PackedVarintMeasure.WritePackedUInt64(ref state, new ReadOnlySpan<ulong>((ulong[])(object)values));
-                return true;
-            }
-            else if (wireType == WireType.Varint && typeof(T) == typeof(long))
-            {
-                // `long` puns onto the unsigned blit: a negative is a large ulong, so it never
-                // passes the < 128 test, and both encode as the same 64-bit two's-complement varint.
-                PackedVarintMeasure.WritePackedUInt64(ref state, MemoryMarshal.Cast<long, ulong>((long[])(object)values));
-                return true;
-            }
-            else if (wireType == WireType.SignedVarint && typeof(T) == typeof(int))
-            {
-                foreach (var value in new ReadOnlySpan<int>((int[])(object)values)) state.WriteRawZigZag32(value);
-                return true;
-            }
-            else if (wireType == WireType.SignedVarint && typeof(T) == typeof(long))
-            {
-                foreach (var value in new ReadOnlySpan<long>((long[])(object)values)) state.WriteRawZigZag64(value);
-                return true;
-            }
-            else if (wireType == WireType.Varint && typeof(T) == typeof(bool))
-            {
-                // A packed bool column IS its own payload - false is 0x00 and true is 0x01, one
-                // byte each - so it blits like a fixed width despite being a varint on paper.
-                //
-                // ...but only if every byte is already CANONICAL. The CLR guarantees `false == 0`
-                // and nothing more: a `true` produced through unsafe or interop can be any non-zero
-                // byte, and protobuf expects 0x01. Rather than normalise into a scratch buffer, the
-                // span is scanned for a non-canonical byte and the per-element loop takes over if
-                // one is found - which never happens for a bool that came from C#, so this is the
-                // common path, and correctness does not depend on that being true.
-                var raw = MemoryMarshal.AsBytes(new ReadOnlySpan<bool>((bool[])(object)values));
-                if (PackedVarintMeasure.AllCanonicalBools(raw))
-                {
-                    state.WriteRawBytesBody(raw);
-                    return true;
-                }
-            }
-            return false;
-
-            static bool Block<TValue>(ref ProtoWriter.State state, TValue[] values) where TValue : unmanaged
-            {
-                state.WriteRawBytesBody(MemoryMarshal.AsBytes(new ReadOnlySpan<TValue>(values)));
-                return true;
-            }
-
         }
 
         internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, T[] values, ISerializer<T> serializer, SerializerFeatures features)
