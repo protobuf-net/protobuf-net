@@ -1229,6 +1229,32 @@ because one is a design decision and the other is unfinished work:
 Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
 span at all and is correctly out.
 
+### B26. Span unrolls cover every collection SHAPE but not every element KIND
+
+Marc, 2026-08-15: *"ensure we use span based unrolls when possible for lists/arrays/immutable arrays
+for regular non-packed writes and measures of all types."* Half done, and the halves are worth
+separating because only one of them is a whitelist.
+
+**Collection shape — done.** `RepeatedSpan` is the single decision point and covers all three:
+`T[]` directly, `List<T>` via `CollectionsMarshal.AsSpan` (net5+, probed), `ImmutableArray<T>` via
+`AsSpan()` (probed). Both `EmitRawRepeatedWrite` and `EmitRawRepeatedMeasure` go through it, so
+wherever the raw path is taken there is no enumerator, packed or unpacked.
+
+**Element kind — still a whitelist.** `RawRepeatedWritable` admits `Bool`, the integer kinds,
+`Char`, `Single`, `Double`, `String`, plus `Message` through `RawRepeatedMessageTarget`. Absent, and
+therefore still on the stateful path *and* still measure-blocking their contract:
+
+| kind | why it is not there yet |
+| --- | --- |
+| `Bytes` (`List<byte[]>`) | **nothing hard** — length-prefixed, and the measure is `tag + varint(len) + len`, exactly as `String` already does through `MeasureRawString`. The easiest remaining win. |
+| `DateTime`, `TimeSpan`, `Guid`, `Decimal` | the write is a `BclHelpers` call, but the **measure has no arithmetic form**: these are length-prefixed messages whose size depends on the value, and `BclHelpers` exposes no sizing. Needs library surface before the generator can emit a measure at all. |
+| `IntPtr`/`UIntPtr`, `DateOnly`/`TimeOnly` | varint or `BclHelpers` under a varint header; measurable in principle, just not wired. |
+
+So the ordering is: `Bytes` first (self-contained), then the varint-framed ones, and the four
+compatibility-level BCL types last, since those need a measuring API in the library rather than
+generator work. Note the payoff is not only throughput — every kind added stops blocking
+measure-first for the contract that holds it, and that exclusion runs to a fixed point.
+
 ### B24. `Serialize<object>` on a `RuntimeTypeModel` costs 41× and allocates 2.2 KB per call
 
 Found while disproving the "~1 µs per member" claim, and it is a real user-facing cliff rather than a
