@@ -68,10 +68,6 @@
     <Project Path="src/protobuf-net/protobuf-net.csproj">
       <BuildType Solution="VS|*" Project="Release" />
     </Project>
-    <Project Path="src/protogen.site.blazor.client/protogen.site.blazor.client.csproj">
-      <BuildType Solution="VS|*" Project="Release" />
-    </Project>
-    <Project Path="src/protogen.site/protogen.site.csproj" />
     <Project Path="src/protogen/protogen.csproj" />
   </Folder>
   <Folder Name="/tests/">

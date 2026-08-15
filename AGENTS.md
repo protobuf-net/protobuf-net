@@ -9,7 +9,7 @@ code-quality rests with the human submitter/reviewer; "slop" will be culled with
 
 ## Where the notes live — and which branch they are on
 
-**`docs/` is the published site** (<https://protobuf-net.github.io/protobuf-net/>), so it holds
+**`docs/` is the published site** (<https://docs.protobuf-net.dev/>, via `docs/CNAME`), so it holds
 consumer documentation only. Working notes — design, findings, corpus snapshots — live in
 **`notes/`**, which is not published. The test for which is which is `docs/index.md`: everything in
 `docs/` is linked from it. If you add a working note to `docs/`, you have published it.

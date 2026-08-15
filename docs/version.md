@@ -18,12 +18,12 @@ is supported: there is only one version, and it is supported.
 ### The Schema Processing Tools
 
 Back a few years ago, protobuf-net's schema-processing tools (which are entirely optional, to support users with `.proto` files) made
-use of `protoc`. However, [the tools have now been re-written using entirely managed code](https://protogen.marcgravell.com/),
+use of `protoc`. However, [the tools have now been re-written using entirely managed code](https://protobuf-net.dev/),
 and as such have no dependency on `protoc` *at all*, and therefore have no versioning relevance to `protoc`.
 
 ### The .proto Syntax
 
-The `.proto` schema language currently has 2 major versions; `"proto2"` and `"proto3"`; [protogen](https://protogen.marcgravell.com/) fully
+The `.proto` schema language currently has 2 major versions; `"proto2"` and `"proto3"`; [protogen](https://protobuf-net.dev/) fully
 supports both syntax versions and has been tested against a wide corpus of available schemas. The generated code includes all conventions
 known up to 3.5.1 (the current version at time of writing), and some not-yet-released post-3.5.1 changes such as the re-addition of unknown
 field support for `"proto3"` messages.

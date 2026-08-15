@@ -17,7 +17,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageIcon>protobuf-net.png</PackageIcon>
         <Product>protobuf-net ($(TargetFramework))</Product>
-        <PackageReleaseNotes>https://protobuf-net.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
+        <PackageReleaseNotes>https://docs.protobuf-net.dev/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
 
         <PackageTags>binary;serialization;protobuf</PackageTags>
 

@@ -327,7 +327,7 @@ move it to a generic overload.
 ### `typeof(...)` cannot name a `.proto`-generated DTO
 
 If you generate DTOs from a `.proto` using
-[protobuf-net.BuildTools](https://protobuf-net.github.io/protobuf-net/contract_first), and put
+[protobuf-net.BuildTools](https://docs.protobuf-net.dev/contract_first), and put
 `[ProtoModel]` in the same project, `[ProtoSerializable(typeof(Order))]` will not resolve: source
 generators all run against the same input compilation and never see each other's output, so the model
 gets an error symbol rather than the contract. The generator reports `PBN2002` naming the fix.
