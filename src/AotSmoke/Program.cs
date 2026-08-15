@@ -1,4 +1,4 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -117,6 +117,26 @@ public class Order
     // native publish exercises
     [ProtoMember(56)] public Dictionary<Status, int> ByStatus { get; set; }
     [ProtoMember(57)] public Dictionary<int, Status> ToStatus { get; set; }
+
+    // PACKED columns, which had NO native coverage at all until 2026-08-15 - gaps.md B22. The
+    // generator emits these as raw state calls (state.WriteRawPackedXxx) rather than through
+    // RepeatedSerializer, so ILC had never seen the surface: the SIMD blit, Vector<T> under ILC,
+    // or the MemoryMarshal.Cast puns. Four columns, because each reaches a different arm:
+    //
+    //   Readings   varint over a span, the tier-1 blit (values deliberately BOTH sides of 128,
+    //              so the uniform-block fast path and the scalar fallback both run)
+    //   Offsets    FixedSize, i.e. a straight block copy under a Fixed32 header
+    //   Flags      bool, whose payload IS the span - a blit guarded by a vectorised scan
+    //   Levels     an ENUM column, the sharp one: it is punned at the CALL SITE via
+    //              MemoryMarshal.Cast<Status, int>, so if that pun is wrong under ILC nothing
+    //              else here would show it
+    //
+    // 40 elements each, deliberately over the 32-element block so the vector path engages and
+    // still leaves a ragged tail; a shorter column would exercise only the scalar fallback.
+    [ProtoMember(58, IsPacked = true)] public int[] Readings { get; set; }
+    [ProtoMember(59, IsPacked = true, DataFormat = DataFormat.FixedSize)] public int[] Offsets { get; set; }
+    [ProtoMember(60, IsPacked = true)] public bool[] Flags { get; set; }
+    [ProtoMember(61, IsPacked = true)] public Status[] Levels { get; set; }
 
     // hand-written serializers, one per category - see the note by their declarations. These are
     // the only members that reach SerializerCache.Get<TProvider, T>(), i.e. the last genuinely
@@ -506,6 +526,9 @@ internal static class Program
     private static readonly DateTime When = new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc);
     private static readonly Guid Id = new Guid("0f8fad5b-d9cb-469f-a165-70867728950e");
 
+    private static string Join<T>(T[] values)
+        => values is null ? "null" : string.Join(",", values);
+
     private static int Main()
     {
         var failures = 0;
@@ -528,6 +551,12 @@ internal static class Program
             Sparse = { 1, null, 0 },
             MaybeNone = [],
             History = [Status.Open, Status.Closed, Status.Unknown],
+            // straddling 128 on purpose: a column entirely below it would never take the scalar
+            // fallback, and one entirely above would never take the blit
+            Readings = [.. Enumerable.Range(0, 40).Select(i => (i % 5 == 0) ? i * 1000 : i)],
+            Offsets = [.. Enumerable.Range(0, 40).Select(i => i * -3)],
+            Flags = [.. Enumerable.Range(0, 40).Select(i => (i % 3) == 0)],
+            Levels = [.. Enumerable.Range(0, 40).Select(i => (Status)(i % 3))],
             Contacts = [new Customer { Id = 1, Name = "ann" }, new Customer { Id = 2, Name = "bob" }],
             Labels = new() { [1] = "one", [2] = "two" },
             Directory = new() { ["ann"] = new Customer { Id = 3, Name = "ann" } },
@@ -625,6 +654,12 @@ internal static class Program
         // the repeated fallback: the enum resolves through the model's proxy, the message through `this`
         Check(ref failures, "History", "Open,Closed,Unknown",
             clone.History is null ? "null" : string.Join(",", clone.History));
+        // joined rather than compared element-wise so a truncated or reordered packed body shows
+        // up as a readable diff rather than a bare "false"
+        Check(ref failures, "Readings", Join(original.Readings), Join(clone.Readings));
+        Check(ref failures, "Offsets", Join(original.Offsets), Join(clone.Offsets));
+        Check(ref failures, "Flags", Join(original.Flags), Join(clone.Flags));
+        Check(ref failures, "Levels", Join(original.Levels), Join(clone.Levels));
         Check(ref failures, "Contacts", "1:ann,2:bob", clone.Contacts is null ? "null"
             : string.Join(",", clone.Contacts.Select(static x => $"{x.Id}:{x.Name}")));
 

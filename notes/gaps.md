@@ -1119,7 +1119,7 @@ guard, `bytes`/`bool`/`float`/`double`, enums as members, nested messages and en
 both protogen shapes, maps including the `bool`-key case, `import`, and the naming rules
 (pluralisation, collision avoidance, package → namespace).
 
-### B22. The raw PACKED path is natively UNMEASURED — `AotSmoke` has no packed member
+### B22. ~~The raw PACKED path is natively UNMEASURED~~ — **CLOSED 2026-08-15, and it cost zero warnings**
 
 **Found by audit, 2026-08-15, and it is a hole by this repo's own standard** ("whatever `AotSmoke`
 does not cover is not fine, it is unmeasured" — AGENTS.md). `grep IsPacked src/AotSmoke/*.cs`
@@ -1135,6 +1135,29 @@ before adding three of them moved the warning count 20 → 29.
 **Fix is cheap**: add packed members to `AotSmoke` covering a varint column, a fixed-width column, a
 bool column and an **enum** column (the enum one being the sharp case, since it is the pun). Re-measure
 the warning baseline on both sides when doing it, since the count tracks fixtures.
+
+**Done.** Four columns on `Order`, 40 elements each — deliberately over the 32-element block so the
+vector path engages *and* leaves a ragged tail; a shorter column would have exercised only the
+scalar fallback and proved nothing about the blit:
+
+| member | reaches |
+| --- | --- |
+| `Readings` (`int[]`) | varint over a span, values straddling 128 so the uniform-block blit **and** the scalar fallback both run |
+| `Offsets` (`int[]`, `FixedSize`) | the flat block copy under a `Fixed32` header |
+| `Flags` (`bool[]`) | the payload-IS-the-span blit, behind its vectorised canonical scan |
+| `Levels` (`Status[]`) | the **enum pun** — `MemoryMarshal.Cast<Status, int>` at the call site, the sharp case, since nothing else here would show it wrong |
+
+`win-x64` native publish **passes**, and the framing is verifiable by eye in the emitted payload:
+field 59 is `DA-03-A0-01` — tag, then a length of 160, i.e. exactly 40 x 4 bytes.
+
+**The warning count did not move: 19 before, 19 after**, with the composition unchanged (6 `IL2067`,
+5 `IL3050`, 3 `IL2091`, 3 `IL2070`, 1 `IL2057`, 1 `IL2055`). Binary 3.44 MB.
+
+That zero is worth recording rather than shrugging at, because the comparable case went the other
+way: adding three *map* members moved the baseline 20 -> 29 on the spot. The difference is that the
+raw packed surface is pure span work — no `Activator`, no `MakeGenericType`, no serializer resolved
+from the model — so it demands no metadata at all. `Vector<T>` under ILC and a `MemoryMarshal.Cast`
+over an enum span were the two genuinely unknown pieces, and both are free.
 
 ### B23. Packed columns are limited to `T[]` and `List<T>` — `ImmutableArray<T>` and derived lists are out
 

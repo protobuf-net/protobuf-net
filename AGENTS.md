@@ -1172,6 +1172,13 @@ Two members earn their place for reasons that are not obvious from reading them:
   the seed — one with a name but no attributes, which used to be reported as "not marked
   `[ProtoContract]`". `PBN2002` now recognises `TypeKind.Error` and names the fix.
 
+**Packed columns** were added 2026-08-15 (`Readings`/`Offsets`/`Flags`/`Levels`) and are the only
+members reaching the raw packed surface — the SIMD blit, `Vector<T>` under ILC, and the
+`MemoryMarshal.Cast` enum pun, none of which any other member touches. 40 elements each so the
+vector path engages with a ragged tail; a short column would exercise only the scalar fallback.
+Adding them moved the warning count by **zero** (19 → 19), which is the opposite of what the map
+members did (20 → 29) and is explained by the surface being pure span work with no metadata demand.
+
 The feature sweep is **complete** as of this branch: every generator feature that was listed as
 natively unexercised now has a member here — the immutable *reference* families, both callback
 families, `Specified`/`ShouldSerialize`, both `ImplicitFields` modes, `DateOnly`/`TimeOnly`/`nint`,
