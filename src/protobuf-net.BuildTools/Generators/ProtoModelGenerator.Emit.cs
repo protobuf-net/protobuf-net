@@ -2893,6 +2893,27 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool NeedsNullGuard(ProtoMemberPlan member) => !member.Repeated.IsValueType;
 
         /// <summary>
+        /// Whether a compatibility-level BCL member has an arithmetic measure — currently the
+        /// level-200 <c>DateTime</c>/<c>TimeSpan</c> pair at the default format, whose body is the
+        /// <c>ScaledTicks</c> message that <c>BclHelpers.Measure*</c> now sizes.
+        /// </summary>
+        /// <remarks>
+        /// Everything else in the family still writes-to-count: level 240+ swaps in
+        /// <c>Timestamp</c>/<c>Duration</c> (a seconds+nanos message, so different arithmetic),
+        /// level 300 swaps <c>Guid</c> and <c>decimal</c> for their string forms, and the
+        /// <c>FixedSize</c> variants carry no length prefix at all. Each needs its own measure and
+        /// its own fixture; `notes/gaps.md` B26 has the order.
+        /// </remarks>
+        private static bool BclMeasurable(ProtoMemberPlan member)
+            => member.DataFormat == ProtoDataFormat.Default
+            && member.CompatibilityLevel < 240
+            && member.Kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan;
+
+        /// <summary>The body length for such a member — the payload, not the framing.</summary>
+        private static string BclMeasureBody(ProtoMemberPlan member, string expression)
+            => $"global::ProtoBuf.BclHelpers.Measure{(member.Kind == ProtoMemberKind.DateTime ? "DateTime" : "TimeSpan")}({expression})";
+
+        /// <summary>
         /// The span expression for a repeated member, or <c>null</c> if this member cannot be
         /// reached as one and must keep the enumerator.
         /// </summary>
@@ -3087,6 +3108,8 @@ namespace ProtoBuf.BuildTools.Generators
             // another; the copies are field-identical, but the shape is parked until a fixture
             // proves it rather than reasoned safe
             if (member.IsNullable && member.Kind == ProtoMemberKind.Message) return true;
+            // the level-200 date/time pair is measurable now that BclHelpers can size the body
+            if (BclMeasurable(member)) return false;
             return member.Kind switch
             {
                 ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
@@ -3255,6 +3278,19 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, $"if (tmp{number}.HasValue)");
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, $"var val{number} = tmp{number}.GetValueOrDefault();");
+                    if (BclMeasurable(member))
+                    {
+                        // a BCL body is length-prefixed, so it is tag + varint(len) + len rather
+                        // than a single expression - and RawScalarMeasure has nothing for these,
+                        // which previously emitted `len += 1 + ;` and failed to compile. Presence
+                        // has already decided, so there is no inner value test either way.
+                        var nullableBody = $"bcl{number}";
+                        Line(sb, indent + 1, $"var {nullableBody} = {BclMeasureBody(member, $"val{number}")};");
+                        Line(sb, indent + 1, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){nullableBody}) + {nullableBody}"));
+                        Line(sb, indent, "}");
+                        goto measured;
+                    }
                     var measureNullable = RawScalarMeasure(member, ScalarValue(member, $"val{number}"))!;
                     if (member.DefaultLiteral is { } nullableDefault)
                     {
@@ -3282,6 +3318,32 @@ namespace ProtoBuf.BuildTools.Generators
 
                 switch (member.Kind)
                 {
+                    // the level-200 date/time pair: a length-prefixed ScaledTicks body, so the
+                    // contribution is tag + varint(bodyLen) + bodyLen. DateTime is written
+                    // UNCONDITIONALLY (zero is a legitimate date) while TimeSpan is guarded against
+                    // Zero, and the measure has to make the same choice or the prefix is wrong.
+                    case ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan when BclMeasurable(member):
+                    {
+                        var body = $"bcl{number}";
+                        var contribution = MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){body}) + {body}");
+                        if (member.Kind == ProtoMemberKind.DateTime
+                            || member.IsRequired || member.WriteCondition is not null)
+                        {
+                            Line(sb, indent, $"var {body} = {BclMeasureBody(member, $"tmp{number}")};");
+                            Line(sb, indent, contribution);
+                        }
+                        else
+                        {
+                            Line(sb, indent, $"if ({ScalarGuard(member, $"tmp{number}")})");
+                            Line(sb, indent, "{");
+                            Line(sb, indent + 1, $"var {body} = {BclMeasureBody(member, $"tmp{number}")};");
+                            Line(sb, indent + 1, contribution);
+                            Line(sb, indent, "}");
+                        }
+                        break;
+                    }
+
                     // DateOnly/TimeOnly are written UNCONDITIONALLY - zero is a legitimate date, so
                     // there is no trivial value to skip - and the measure has to agree exactly or
                     // the length prefix is wrong. Kept as its own arm rather than folded in below,

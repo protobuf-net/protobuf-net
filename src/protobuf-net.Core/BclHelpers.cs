@@ -88,6 +88,31 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// The number of bytes <see cref="WriteTimeSpan(ref ProtoWriter.State, TimeSpan)"/> writes
+        /// as the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>
+        /// For compile-time serializers, which size a contract arithmetically before writing it
+        /// (see <c>notes/nano-writer.md</c>). Only the length-prefixed level-200 form: the
+        /// <c>Fixed64</c> form carries no length prefix and is a flat eight bytes, and level 240+
+        /// uses <c>Duration</c> instead.
+        /// </remarks>
+        public static int MeasureTimeSpan(TimeSpan value)
+            => PrimaryTypeProvider.MeasureScaledTicks(new PrimaryTypeProvider.ScaledTicks(value, DateTimeKind.Unspecified));
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteDateTime(ref ProtoWriter.State, DateTime)"/> writes
+        /// as the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>
+        /// Matches the <c>WriteDateTime</c> overload above, which excludes the <c>Kind</c> — the
+        /// kind-including form is a model option reached through a different entry point, and a
+        /// generated writer never takes it.
+        /// </remarks>
+        public static int MeasureDateTime(DateTime value)
+            => PrimaryTypeProvider.MeasureScaledTicks(PrimaryTypeProvider.ScaledTicks.Create(value, false));
+
+        /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
