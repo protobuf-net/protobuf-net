@@ -1,11 +1,11 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections;
 using System.Collections.Generic;
 
 // a [ProtoContract] that also looks like a list: protobuf-net would serialize it as a *collection*
 // and ignore Label entirely, so we refuse it rather than emit a message and disagree on the wire.
-// The referring contract then drops by cascade, which is what PBN2004 reports.
+// The referring contract then drops by cascade, which is what PBN3004 reports.
 namespace AotFixtures.ListLikeContract;
 
 [ProtoContract]

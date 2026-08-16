@@ -6,7 +6,7 @@
        That separation is a requirement, not tidiness: source generators all run against the same
        input compilation and never observe each other's output, so a model seeded with a type
        generated from a .proto in the *same* project finds nothing. The generator says so now
-       (PBN2002), but the fix is this project layout. -->
+       (PBN3002), but the fix is this project layout. -->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -16,7 +16,7 @@ namespace ProtoBuf.CodeFixes
     /// Writes the <c>[ProtoModel]</c> stub for a project that has contracts and no model.
     /// </summary>
     /// <remarks>
-    /// This is what turns <c>PBN2012</c>/<c>PBN2013</c> from a notification into an action. The
+    /// This is what turns <c>PBN3012</c>/<c>PBN3013</c> from a notification into an action. The
     /// diagnostics are anchored on a contract purely so that this can be offered — a code fix has to
     /// attach to a document — and the new file is added to the project rather than edited into an
     /// existing one, since a model is a declaration about the whole project rather than about the
