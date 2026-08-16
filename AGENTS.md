@@ -19,25 +19,29 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-The stack **collapsed onto `v4` on 2026-08-14**: the reader arc, the writer arc, the buffer core,
-`[ProtoSchema]` and the protogen sub-type option are one branch again. So there is currently no
-"which branch is this note current on?" question to answer — everything below is current on `v4`.
-This section stays because that question returns the moment a branch is cut.
+The stack collapsed onto `v4` on 2026-08-14, and **a branch was cut again on 2026-08-15**:
+`schema-breadth` (PR #1277, *"Additional write-path extensions"*) carries the packed write arc and
+the raw repeated/BCL measure work. So the "which branch is this note current on?" question is live
+again, and the column below is restored — its absence is a statement that the stack is flat, and
+two wrong-branch claims were shipped last time it was left off.
 
 ```
-main → v4   (raw-writer, writer-buffer-core and aot-schema-model are folded into it)
+main → v4 → schema-breadth   (PR #1277)
 ```
 
-| document | covers |
-| --- | --- |
-| `AGENTS.md` (this file) | conventions, traps, gate battery |
-| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
-| `notes/nano-core.md` | the reader arc: design and the cuts |
-| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
-| `notes/packed-writes.md` | the packed-scenario **matrix**: what is a block copy, what is not, and what each needs |
-| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
-| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
-| `notes/aot-findings.md` | numbered findings from the AOT generator work |
+**Every note listed below is current on `schema-breadth`**, not on `v4`: all twelve tracked
+documents were touched there. Read them from that branch, and treat `v4`'s copies as one arc behind.
+
+| document | covers | current on |
+| --- | --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery | `schema-breadth` |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `schema-breadth` |
+| `notes/nano-core.md` | the reader arc: design and the cuts | `schema-breadth` |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `schema-breadth` |
+| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** | `schema-breadth` |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items | `schema-breadth` |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `schema-breadth` |
+| `notes/aot-findings.md` | numbered findings from the AOT generator work | `schema-breadth` |
 | `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots |
 
 **When a branch is next cut, restore the "where it is current" column.** Its absence is a statement
@@ -206,6 +210,45 @@ reachable through a group, and that predicate's failure mode is an uncatchable s
 Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract emits a local
 per member — 1000 in the corpus's worst case — and at roughly 8 KB a frame the stack is exhausted
 around 128 levels, long before the depth guard fires. See `notes/gaps.md` B16.
+
+### Repeated members on the raw path: four predicates, and one trap that has bitten three times
+
+The generator decides per member whether a repeated or BCL member takes the raw path. The decision
+is spread over four small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy to widen
+one at a time without noticing the others:
+
+| predicate | decides |
+| --- | --- |
+| `RawRepeatedWritable` | an **unpacked** repeated member: collection shape and element kind |
+| `RawPackedWritable` | a **packed** one — a different engine, not a variation, since packing needs the payload measured before the prefix goes down |
+| `RepeatedSpan` | how the collection becomes a span: `T[]` directly, `List<T>` via `CollectionsMarshal` (probed), `ImmutableArray<T>` via `AsSpan()` (probed separately — it rides on a *package*, not the framework) |
+| `BclMeasurable` | whether a compatibility-level BCL member has arithmetic sizing (currently: default format, `DateTime`/`TimeSpan` below level 240, `Guid`/`decimal` below 300) |
+
+**Widening any of them without a matching measure arm makes the generator THROW**, and the symptom
+does not name the cause: every model in the compilation loses its generated `Instance`, producing a
+pile of unrelated-looking `CS0117`s (and, in `AotDifferential`, a segfault). The real message is in
+a `CS8785` generator warning — *"unmeasurable member slipped eligibility: …"*. That self-check is
+load-bearing; without it the first symptom would be wrong bytes.
+
+**The measure emitter reaches scalar kinds from THREE branches** — the nullable path, the tuple
+path, and the main switch — and each calls `RawScalarMeasure(...)!`. For a kind that helper has
+nothing for, the `!` turns null into an empty string and emits `len += 1 + ;`, which compiles
+nowhere. Adding a kind means visiting all three. This has bitten **three times**: `DateOnly`
+(main switch), the level-200 BCL pair (nullable), and `Guid`/`decimal` (tuple — surfaced by an
+*unrelated* fixture, `Diagnostics/TupleLevels`). The goldens caught every one; review caught none.
+
+**`NeedsNullGuard` exists because a value-type collection must NOT get one.** `ImmutableArray<T>`
+declares lifted equality over `ImmutableArray<T>?`, so `tmp != null` compiles for it and evaluates
+to **false** for a `default` instance — silently skipping the member. Harmless unpacked (empty
+writes nothing) and a wire divergence packed (it drops the zero-length header). `AsSpan()` on a
+default yields an empty span on every targeted runtime, and protobuf-net treats default as empty,
+so the guard is not merely unnecessary there but wrong.
+
+`BclHelpers.Measure*` is the sizing surface these rely on. Each measure lives **beside its writer**
+(in `PrimaryTypeProvider.*.cs`), not next to the public entry point, because the two must agree
+field-for-field and adjacency is the only cheap way to keep that true; `BclHelpers` forwards. They
+take no `ISerializationContext` — a generated `Measure_` has none. `BclMeasureTests` proves them
+against **bytes protobuf-net actually wrote**, never against restated arithmetic.
 
 ## AOT source generator (work in progress)
 

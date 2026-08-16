@@ -1201,6 +1201,48 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 **Handover note: this section plus "The presized buffer core: the plan" above is the
 entry point for a fresh session.**
 
+### State as of 2026-08-16 — branch `schema-breadth` (PR #1277 → `v4`)
+
+**Read this block first; the 2026-08-13 one below is two branches behind.** Everything is pushed
+and green: traversal clean (incl. net472), protobuf-net.Test 1543, BuildToolsUnitTests 145,
+AotConformanceTests 1580, **AotDifferential 3051 at 100%**, AotSmoke native publish passes at 19
+warnings (unchanged).
+
+**The packed write arc is complete**, and it moved home mid-arc. The fast paths were first built
+inside `RepeatedSerializer` and then **backed out of it** (`a73d6fc0`) — classic emit is the
+control, the fallback and the perf baseline, and it had quietly absorbed the work, making every
+"classic vs raw" number in `notes/packed-writes.md` a comparison of classic against itself. The
+rule that came out of that is now a standing section in `AGENTS.md`. The work was rebuilt as a raw
+`ProtoWriter.State` surface (`ProtoWriter.State.RawPacked.cs`) that the generator calls directly.
+
+Against a pristine classic baseline, all seven categories now on the raw path:
+bool **32×**, fixed integer **11.9×**, floating point **11.9×**, enum **7.6×**, unsigned varint
+**4.6×**, signed varint **3.4×**, zigzag **2.4×**. Tier 1 (uniform-block blit) carries `small`
+data, tier 2 (chunked, no per-element room check) carries `spread`; they help *opposite*
+distributions, which a single before/after number hides.
+
+**Also landed this session**, each its own commit with gates:
+
+- `ImmutableArray<T>` on the span path (packed and unpacked, write and measure) — and a
+  **pre-existing wire bug** it exposed, where the generated `if (tmp != null)` guard is *false* for
+  a default immutable array and silently skipped the member;
+- repeated `bytes`, and `nint`/`nuint`/`DateOnly`/`TimeOnly` — the latter four were blocked as
+  *unary* members too, so each stopped blocking measure-first for its whole contract;
+- `BclHelpers.Measure*` for `DateTime`/`TimeSpan`/`Guid`/`decimal` at the default format, so the
+  level-200/240 tier now measures arithmetically instead of writing to count;
+- native AOT coverage for the packed surface (gaps.md B22) at **zero** warning cost;
+- `Serialize<object>` on a `RuntimeTypeModel` was 41× slower and allocated 2.2 KB per call —
+  diagnosed here, fixed on `main` as **PR #1280**, merged back.
+
+**Retracted this session, so do not act on it:** the "~1 µs per member" overhead this file's
+sibling once ranked as the largest remaining number. It is ~10 ns; the figure was a total divided
+by a member count. `notes/packed-writes.md` carries the measurement and the methodology lesson.
+
+**What is next** is in `notes/gaps.md`: B26's remaining tier (`FixedSize`, level 240+
+`Timestamp`/`Duration`, level 300 string forms, repeated BCL elements), B23's derived-list hold,
+B21 tier 3, and the general negative-caching half of B24. Marc is reviewing ahead of a squash and
+merge of #1277 into `v4`.
+
 **State as of 2026-08-13, end of session.** Everything is pushed to `raw-writer` and green on
 every gate (protobuf-net.Test 1110 x2 TFMs, Examples 679/705, Reflection 556 x2, conformance
 1364, AotDifferential 3028/3028 exit 0, AotSmoke + DownLevelSmoke, native 19 warnings). What

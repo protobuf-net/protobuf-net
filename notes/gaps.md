@@ -1229,7 +1229,7 @@ because one is a design decision and the other is unfinished work:
 Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
 span at all and is correctly out.
 
-### B26. Span unrolls cover every collection SHAPE but not every element KIND
+### B26. Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain
 
 Marc, 2026-08-15: *"ensure we use span based unrolls when possible for lists/arrays/immutable arrays
 for regular non-packed writes and measures of all types."* Half done, and the halves are worth
@@ -1294,7 +1294,7 @@ asks `RawScalarMeasure`, which returns null for these and is dereferenced with `
 exposed the tuple one, via an *unrelated* fixture (`Diagnostics/TupleLevels`). Anyone adding the
 level variants should expect a fourth. The goldens catch it; review did not.
 
-### B24. `Serialize<object>` on a `RuntimeTypeModel` costs 41× and allocates 2.2 KB per call
+### B24. ~~`Serialize<object>` on a `RuntimeTypeModel` costs 41×~~ — **FIXED on main (#1280); the general half remains**
 
 Found while disproving the "~1 µs per member" claim, and it is a real user-facing cliff rather than a
 harness artefact — but note it is the **pair**, and neither half alone is slow:
@@ -1707,6 +1707,6 @@ silent pick.
 
 | question | detail |
 | --- | --- |
-| **manual review of the write-emitted goldens** | 55 changed shape when `int32` moved onto the raw path. **The one item still open** |
+| **manual review of the write-emitted goldens** | **62 changed vs `v4`** as of 2026-08-16, plus **2 new fixtures** (`BclMeasure`, `RepeatedBytes`). Was 55 when `int32` moved onto the raw path; the packed arc, `ImmutableArray`, repeated `bytes`, `nint`/`DateOnly`/`TimeOnly` and the BCL measures have all moved shapes since. Marc is reviewing 2026-08-16 ahead of squashing #1277. **The one item still open** |
 | ~~the tag ladder: keep or revert?~~ | **Settled 2026-08-14: narrowed, not reverted.** Split by *dynamic population* rather than kept or dropped wholesale — the one- and two-byte arms and the bool fold stay, the folded 3/4/5-byte arms go back to the shipped encoder. Two follow-on micro-ideas (`&` for `&&`, hoisting `RemainingInCurrent`) were answered by inspection and need no measurement; the reasoning is in the comment block |
 | ~~when to rewrite `docs/aot.md`'s "needs its own project" advice~~ | **Done**, pre-emptively on `aot-schema-model`, so it arrives with the merge |
