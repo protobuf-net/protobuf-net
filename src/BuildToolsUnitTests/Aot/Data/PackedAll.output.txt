@@ -1,0 +1,3 @@
+Output code has 1 diagnostics from 'Aot/Data/PackedAll.input.cs':
+Warning CS0675 Aot/Data/PackedAll.input.cs L73 C41
+Bitwise-or operator used on a sign-extended operand; consider casting to a smaller unsigned type first
