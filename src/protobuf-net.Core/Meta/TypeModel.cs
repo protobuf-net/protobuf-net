@@ -42,13 +42,30 @@ namespace ProtoBuf.Meta
         // config options
 
         /// <summary>
-        /// Gets or sets the buffer-size to use when writing messages via <see cref="IBufferWriter{T}"/>
+        /// Gets or sets the buffer-size to use when writing messages via <see cref="IBufferWriter{T}"/>.
         /// </summary>
+        /// <remarks>Values below <see cref="MinimumBufferSize"/> are raised to it; non-positive
+        /// values select the default. The property reports the value actually in use.</remarks>
         public int BufferSize
         {
             get => _bufferSize;
-            set => _bufferSize = value <= 0 ? BufferPool.BUFFER_LENGTH : value; // use default if invalid
+            set => _bufferSize = value <= 0 ? BufferPool.BUFFER_LENGTH // use default if invalid
+                : (value < MinimumBufferSize ? MinimumBufferSize : value);
         }
+
+        /// <summary>
+        /// The smallest chunk a writer will lease from an <see cref="IBufferWriter{T}"/>.
+        /// </summary>
+        /// <remarks>
+        /// Two floors in one number. The hard one is correctness: the buffer-writer backend
+        /// checks for room once per op and then writes up to 10 bytes, so a lease narrower than
+        /// that overruns it - an <see cref="IBufferWriter{T}"/> only promises the hint, and a
+        /// strict one gives exactly that. The rest is policy: every lease costs a
+        /// GetMemory/Advance pair, which on a real pipe may rent or allocate, so tiny chunks are
+        /// pathological however correct. 128 is comfortably above the first and cheap against
+        /// the second. See notes/nano-writer.md, the presized buffer core.
+        /// </remarks>
+        public const int MinimumBufferSize = 128;
         /// <summary>
         /// Gets or sets the max serialization/deserialization depth
         /// </summary>
@@ -158,7 +175,9 @@ namespace ProtoBuf.Meta
             }
             return WireType.None;
         }
-        /// <summary>        /// Indicates whether a type is known to the model
+
+        /// <summary>
+        /// Indicates whether a type is known to the model
         /// </summary>
         internal virtual bool IsKnownType<T>(CompatibilityLevel ambient)
             => (TypeHelper<T>.IsReferenceType | !TypeHelper<T>.CanBeNull) // don't claim T?
@@ -364,8 +383,9 @@ namespace ProtoBuf.Meta
         [Obsolete(ProtoReader.PreferStateAPI, false)]
         public void Serialize(ProtoWriter dest, object value)
         {
-            ProtoWriter.State state = dest.DefaultState();
+            var state = dest.DefaultState();
             SerializeRootFallback(ref state, value);
+            dest.Solidify(ref state);
         }
 
         internal static long SerializeImpl<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref ProtoWriter.State state, T value)

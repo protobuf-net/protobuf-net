@@ -887,7 +887,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public ProtoModelPlan(string? nameSpace, string typeName, EquatableArray<ProtoContractPlan> contracts,
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
             EquatableArray<string> aliases = default, bool emitInstance = true,
-            bool emitConstructor = false, bool isSealed = false)
+            bool emitConstructor = false, bool isSealed = false, bool rawReader = false, bool rawWriter = false,
+            bool listAsSpan = false)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -898,7 +899,42 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             EmitInstance = emitInstance;
             EmitConstructor = emitConstructor;
             IsSealed = isSealed;
+            RawReader = rawReader;
+            RawWriter = rawWriter;
+            ListAsSpan = listAsSpan;
         }
+
+        /// <summary>
+        /// The same model with a different contract set — used to fold in schema-derived contracts
+        /// after the symbol-driven parse, which cannot see the compilation's additional files.
+        /// </summary>
+        public ProtoModelPlan WithContracts(EquatableArray<ProtoContractPlan> contracts)
+            => new(Namespace, TypeName, contracts, AnnotateTrimming, Enums, Aliases, EmitInstance,
+                EmitConstructor, IsSealed, RawReader, RawWriter, ListAsSpan);
+
+        /// <summary>
+        /// Whether the raw reader surface (<c>ProtoReader.State.ReadRawTag</c> and friends) is
+        /// visible to the compilation, enabling the optimized read emission (see
+        /// <c>notes/nano-core.md</c>). Symbol-gated rather than configured, so a consumer on an
+        /// older Core keeps the classic emission with no knob to set.
+        /// </summary>
+        public bool RawReader { get; }
+
+        /// <summary>
+        /// Whether the raw writer surface (<c>ProtoWriter.State.WriteRawTag</c> and friends) is
+        /// visible to the compilation, enabling the optimized write emission (see
+        /// <c>notes/nano-writer.md</c>); gated exactly as <see cref="RawReader"/> is, and by the
+        /// same ClassicEmit escape hatch - one flag, both directions.
+        /// </summary>
+        public bool RawWriter { get; }
+
+        /// <summary>
+        /// Whether <c>CollectionsMarshal.AsSpan</c> is available to the consumer (net5+), letting
+        /// the raw repeated write enumerate a <c>List&lt;T&gt;</c> as a span - no enumerator, no
+        /// per-step version check. Probed like every other framework capability rather than
+        /// inferred from a TFM name.
+        /// </summary>
+        public bool ListAsSpan { get; }
 
         /// <summary>
         /// Every <c>extern alias</c> declared on a reference in the consumer's compilation.
@@ -986,12 +1022,14 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
                 && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
-                && IsSealed == other.IsSealed;
+                && IsSealed == other.IsSealed && RawReader == other.RawReader
+                && RawWriter == other.RawWriter && ListAsSpan == other.ListAsSpan;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoModelPlan);
 
         public override int GetHashCode()
             => ((Namespace?.GetHashCode() ?? 0) * 397) ^ (TypeName.GetHashCode() * 31)
-                ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7);
+                ^ Contracts.GetHashCode() ^ (Enums.GetHashCode() * 17) ^ (Aliases.GetHashCode() * 7)
+                ^ (RawReader ? 8191 : 0) ^ (RawWriter ? 16381 : 0) ^ (ListAsSpan ? 131071 : 0);
     }
 }

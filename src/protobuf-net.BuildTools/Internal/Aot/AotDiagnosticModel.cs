@@ -15,6 +15,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         UnsupportedContract,
         UnsupportedOption,
         OmittedCascade,
+
+        /// <summary>No additional file matches a <c>[ProtoSchema]</c> path.</summary>
+        SchemaNotFound,
+
+        /// <summary>More than one additional file matches a <c>[ProtoSchema]</c> path.</summary>
+        SchemaAmbiguous,
+
+        /// <summary>A <c>[ProtoSchema]</c> file did not parse.</summary>
+        SchemaInvalid,
+
+        /// <summary>A schema shape the front-end cannot project into a plan yet.</summary>
+        SchemaUnsupported,
     }
 
     /// <summary>
@@ -106,22 +118,60 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     /// </remarks>
     internal sealed class ProtoParseResult : IEquatable<ProtoParseResult>
     {
-        public ProtoParseResult(ProtoModelPlan? plan, EquatableArray<PlanDiagnostic> diagnostics)
+        public ProtoParseResult(ProtoModelPlan? plan, EquatableArray<PlanDiagnostic> diagnostics,
+            EquatableArray<PlanSchemaRequest> schemaRequests = default)
         {
             Plan = plan;
             Diagnostics = diagnostics;
+            SchemaRequests = schemaRequests;
         }
 
         public ProtoModelPlan? Plan { get; }
 
         public EquatableArray<PlanDiagnostic> Diagnostics { get; }
 
+        /// <summary>
+        /// The <c>[ProtoSchema]</c> declarations on the model, unresolved.
+        /// </summary>
+        /// <remarks>
+        /// They are an INPUT to a later step rather than part of the plan: resolving them needs the
+        /// compilation's additional files, which the syntax-driven parse does not have. Keeping
+        /// them here rather than on the plan also keeps the plan describing only what is emitted.
+        /// </remarks>
+        public EquatableArray<PlanSchemaRequest> SchemaRequests { get; }
+
         public bool Equals(ProtoParseResult? other)
-            => other is not null && Equals(Plan, other.Plan) && Diagnostics.Equals(other.Diagnostics);
+            => other is not null && Equals(Plan, other.Plan) && Diagnostics.Equals(other.Diagnostics)
+                && SchemaRequests.Equals(other.SchemaRequests);
 
         public override bool Equals(object? obj) => Equals(obj as ProtoParseResult);
 
         public override int GetHashCode()
-            => ((Plan?.GetHashCode() ?? 0) * 397) ^ Diagnostics.GetHashCode();
+            => (((Plan?.GetHashCode() ?? 0) * 397) ^ Diagnostics.GetHashCode()) * 397
+                ^ SchemaRequests.GetHashCode();
+    }
+
+    /// <summary>
+    /// One <c>[ProtoSchema("...")]</c> declaration: the path as written, and where it was written,
+    /// so that a resolution failure can point at the attribute.
+    /// </summary>
+    internal readonly struct PlanSchemaRequest : IEquatable<PlanSchemaRequest>
+    {
+        public PlanSchemaRequest(string path, PlanLocation location)
+        {
+            Path = path;
+            Location = location;
+        }
+
+        public string Path { get; }
+
+        public PlanLocation Location { get; }
+
+        public bool Equals(PlanSchemaRequest other)
+            => Path == other.Path && Location.Equals(other.Location);
+
+        public override bool Equals(object? obj) => obj is PlanSchemaRequest other && Equals(other);
+
+        public override int GetHashCode() => ((Path?.GetHashCode() ?? 0) * 397) ^ Location.GetHashCode();
     }
 }

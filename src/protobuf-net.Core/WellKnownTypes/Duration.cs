@@ -21,60 +21,52 @@ namespace ProtoBuf.Internal
 
         internal static Duration ReadDuration(ref ProtoReader.State state, Duration value)
         {
-            if (state.WireType == WireType.String && state.RemainingInCurrent >= 20)
+            if (state.WireType == WireType.String)
             {
-                if (TryReadDurationFast(ref state, ref value)) return value;
+                // the resident fast path lives on State now: peek the canonical
+                // two-varint shape, commit only on a complete match
+                long seconds = value.Seconds;
+                int nanos = value.Nanoseconds;
+                if (state.TryReadWellKnownPairFast(ref seconds, ref nanos))
+                {
+                    return new Duration(seconds, nanos);
+                }
             }
             return ReadDurationFallback(ref state, value);
         }
 
-        private static bool TryReadDurationFast(ref ProtoReader.State state, ref Duration value)
-        {
-            int offset = state.OffsetInCurrent;
-            var span = state.Span;
-            int prefixLength = state.ParseVarintUInt32(span, offset, out var len);
-            offset += prefixLength;
-            if (len == 0) return true;
-
-            if ((prefixLength + len) > state.RemainingInCurrent) return false; // don't have entire submessage
-
-            if (span[offset] != (1 << 3)) return false; // expected field 1
-            var msgOffset = 1 + ProtoReader.State.TryParseUInt64Varint(span, 1 + offset, out var seconds);
-            var nanos = value.Nanoseconds;
-            if (msgOffset < len)
-            {
-                if (span[msgOffset++ + offset] != (2 << 3)) return false; // expected field 2
-                msgOffset += ProtoReader.State.TryParseUInt64Varint(span, msgOffset + offset, out var tmp);
-                nanos = (int)(long)tmp;
-            }
-            if (msgOffset != len) return false; // expected no more fields
-            state.Skip(prefixLength + (int)len);
-            state.Advance(prefixLength + len);
-
-            value = new Duration((long)seconds, nanos);
-            return true;
-        }
-
         private static Duration ReadDurationFallback(ref ProtoReader.State state, Duration value)
+            => ReadRawSecondsNanosBody(ref state, value);
+
+        /// <summary>
+        /// The seconds/nanos loop over the raw surface, reading within the CURRENT scope (the
+        /// caller frames it - ReadMessage on the stateful path, a self-framing raw wrapper on
+        /// the generated path). Wire tolerance per field mirrors the stateful ReadInt64/ReadInt32
+        /// this replaced: varint, fixed64 and fixed32 all accepted, anything else on a known
+        /// field throws exactly as those reads did.
+        /// </summary>
+        internal static Duration ReadRawSecondsNanosBody(ref ProtoReader.State state, Duration value)
         {
             var seconds = value.Seconds;
             var nanos = value.Nanoseconds;
-            int fieldNumber;
-
-            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (fieldNumber)
+                switch (tag)
                 {
-                    case 1:
-                        seconds = state.ReadInt64();
-                        break;
-                    case 2:
-                        nanos = state.ReadInt32();
-                        break;
+                    case (1 << 3) | 0: seconds = unchecked((long)state.ReadRawVarint64()); break;
+                    case (1 << 3) | 1: seconds = unchecked((long)state.ReadRawFixed64()); break;
+                    case (1 << 3) | 5: seconds = unchecked((int)state.ReadRawFixed32()); break;
+                    case (2 << 3) | 0: nanos = unchecked((int)state.ReadRawVarint32()); break;
+                    case (2 << 3) | 5: nanos = unchecked((int)state.ReadRawFixed32()); break;
+                    case (2 << 3) | 1: nanos = checked((int)unchecked((long)state.ReadRawFixed64())); break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return new Duration(seconds, nanos);
+                        if ((tag >> 3) is 1 or 2) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return new Duration(seconds, nanos);
         }

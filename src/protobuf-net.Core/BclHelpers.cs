@@ -56,6 +56,7 @@ namespace ProtoBuf
         {
             var state = dest.DefaultState();
             WriteTimeSpanImpl(ref state, timeSpan, DateTimeKind.Unspecified);
+            dest.Solidify(ref state);
         }
 
         /// <summary>
@@ -147,6 +148,7 @@ namespace ProtoBuf
         {
             var state = dest.DefaultState();
             WriteDuration(ref state, value);
+            dest.Solidify(ref state);
         }
 
         /// <summary>
@@ -186,6 +188,7 @@ namespace ProtoBuf
         {
             var state = dest.DefaultState();
             WriteTimestamp(ref state, value);
+            dest.Solidify(ref state);
         }
 
         /// <summary>
@@ -253,8 +256,9 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
+            var state = dest.DefaultState();
             WriteDateTimeImpl(ref state, value, false);
+            dest.Solidify(ref state);
         }
 
         /// <summary>
@@ -288,8 +292,9 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = dest.DefaultState();
+            var state = dest.DefaultState();
             WriteDateTimeImpl(ref state, value, true);
+            dest.Solidify(ref state);
         }
 
         /// <summary>
@@ -368,8 +373,9 @@ namespace ProtoBuf
         [MethodImpl(ProtoReader.HotPath)]
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
-            ProtoWriter.State state = writer.DefaultState();
+            var state = writer.DefaultState();
             WriteDecimal(ref state, value);
+            writer.Solidify(ref state);
         }
 
         /// <summary>
@@ -408,6 +414,7 @@ namespace ProtoBuf
         {
             var state = dest.DefaultState();
             WriteGuid(ref state, value);
+            dest.Solidify(ref state);
         }
 
         /// <summary>
@@ -621,8 +628,9 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteNetObject(object value, ProtoWriter dest, NetObjectOptions options)
         {
-            ProtoWriter.State state = dest.DefaultState();
+            var state = dest.DefaultState();
             WriteNetObject(ref state, value, options);
+            dest.Solidify(ref state);
         }
 
         /// <summary>

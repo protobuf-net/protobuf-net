@@ -21,8 +21,8 @@ internal sealed class ___PBN_Services___ConditionalModel : ISerializer<Condition
 			{
 			case 1:
 			{
-				int value2 = state.ReadInt32();
-				value.Value = value2;
+				int both = state.ReadInt32();
+				value.Value = both;
 				value.ValueSpecified = true;
 				break;
 			}
@@ -37,8 +37,8 @@ internal sealed class ___PBN_Services___ConditionalModel : ISerializer<Condition
 			}
 			case 3:
 			{
-				int value2 = state.ReadInt32();
-				value.Both = value2;
+				int both = state.ReadInt32();
+				value.Both = both;
 				value.BothSpecified = true;
 				break;
 			}
@@ -50,6 +50,15 @@ internal sealed class ___PBN_Services___ConditionalModel : ISerializer<Condition
 					value.Named = text;
 				}
 				value.NamedSpecified = true;
+				break;
+			}
+			case 5:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Presence = text;
+				}
 				break;
 			}
 			default:
@@ -82,6 +91,11 @@ internal sealed class ___PBN_Services___ConditionalModel : ISerializer<Condition
 		{
 			string text = value.Named;
 			state.WriteString(4, text);
+		}
+		if (value.ShouldSerializePresence())
+		{
+			string text = value.Presence;
+			state.WriteString(5, text);
 		}
 	}
 

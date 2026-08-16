@@ -11,6 +11,37 @@ namespace ProtoBuf.Reflection
     /// <summary>
     /// Abstract root for a general purpose code-generator
     /// </summary>
+    /// <summary>
+    /// How generated messages should deal with the possibility of unknown sub-types.
+    /// </summary>
+    /// <remarks>
+    /// protobuf has no inheritance, so a generated message is never really sub-typed - but a
+    /// generated message is a <c>partial class</c>, so the C# type system cannot know that, and
+    /// protobuf-net emits a per-message runtime check that can never fire. These are the ways to
+    /// say so at generation time.
+    /// </remarks>
+    public enum UnknownSubTypeHandling
+    {
+        /// <summary>
+        /// Generate ordinary (non-sealed) messages, checked at run time. Derived instances are
+        /// rejected with an exception rather than serialized as the base type.
+        /// </summary>
+        Default = 0,
+        /// <summary>
+        /// Generate <c>sealed</c> messages. The check is elided because a sub-type cannot exist,
+        /// so this changes no behaviour at all - but it stops consumers deriving from the
+        /// generated types, which is a source-breaking change for anyone who does.
+        /// </summary>
+        Sealed = 1,
+        /// <summary>
+        /// Generate ordinary messages carrying
+        /// <see cref="ProtoContractAttribute.IgnoreUnknownSubTypes"/>. The check is elided and
+        /// deriving still compiles - but a derived instance is then silently serialized as the
+        /// base type instead of throwing.
+        /// </summary>
+        Ignore = 2,
+    }
+
     public abstract class CodeGenerator
     {
         /// <summary>
@@ -597,6 +628,7 @@ namespace ProtoBuf.Reflection
                 EmitNullWrappers = IsEnabled("nullwrappers", true);
                 EmitCompatibilityLevelAttribute = IsEnabled("compatlevel", true);
                 RepeatedAsList = IsEnabled("repeatedaslist");
+                UnknownSubTypes = ParseUnknownSubTypes(GetCustomOption("subtypes"));
 
                 var s = GetCustomOption("services");
                 void AddServices(string value)
@@ -660,6 +692,32 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Whether a custom option is enabled
             /// </summary>
+            /// <summary>
+            /// How generated messages should deal with the possibility of unknown sub-types.
+            /// </summary>
+            /// <remarks>
+            /// A serializer must decide, per message written, whether the instance it was handed
+            /// is really the type it was declared as - a derived instance would silently write
+            /// the wrong shape. protobuf itself has no inheritance, so for generated DTOs the
+            /// answer is always "it is", but nothing in the C# says so: a generated message is a
+            /// <c>partial class</c>, which anyone may derive from. Hence a per-message runtime
+            /// check that can never fire, unless the consumer says otherwise here.
+            /// </remarks>
+            public UnknownSubTypeHandling UnknownSubTypes { get; }
+
+            private static UnknownSubTypeHandling ParseUnknownSubTypes(string value)
+            {
+                value = value?.Trim();
+                if (string.IsNullOrEmpty(value)) return UnknownSubTypeHandling.Default;
+                if (string.Equals("sealed", value, StringComparison.OrdinalIgnoreCase))
+                    return UnknownSubTypeHandling.Sealed;
+                if (string.Equals("ignore", value, StringComparison.OrdinalIgnoreCase))
+                    return UnknownSubTypeHandling.Ignore;
+                // an unrecognised value is the shipped behaviour rather than an error: this is a
+                // performance hint, and failing a build over a typo in one would be a poor trade
+                return UnknownSubTypeHandling.Default;
+            }
+
             internal bool IsEnabled(string key, bool defaultIfMissing = false)
                 => IsEnabledValue(GetCustomOption(key), defaultIfMissing);
 

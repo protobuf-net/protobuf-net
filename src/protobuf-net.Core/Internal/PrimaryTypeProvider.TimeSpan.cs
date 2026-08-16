@@ -62,41 +62,75 @@ namespace ProtoBuf.Internal
 
         SerializerFeatures ISerializer<ScaledTicks>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         ScaledTicks ISerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
+            => ReadRawScaledTicksBody(ref state);
+
+        /// <summary>
+        /// The bcl.TimeSpan loop over the raw surface, reading within the CURRENT scope (the
+        /// caller frames it - ReadMessage on the stateful path, a self-framing raw wrapper on
+        /// the generated path). Wire fidelity per field is the stateful read's: value was
+        /// Assert(SignedVarint), so it is zigzag wire-0 ONLY (no fixed tolerance - the assert
+        /// threw); scale and kind were ReadInt32, so varint/fixed32/fixed64 all serve, and the
+        /// kind validation is unchanged.
+        /// </summary>
+        internal static ScaledTicks ReadRawScaledTicksBody(ref ProtoReader.State state)
         {
-            int fieldNumber;
             TimeSpanScale scale = TimeSpanScale.Days;
             long value = 0;
             var kind = DateTimeKind.Unspecified;
-            while ((fieldNumber = state.ReadFieldHeader()) > 0)
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
             {
-                switch (fieldNumber)
+                switch (tag)
                 {
-                    case ScaledTicks.FieldTimeSpanScale:
-                        scale = (TimeSpanScale)state.ReadInt32();
+                    case (ScaledTicks.FieldTimeSpanValue << 3) | 0:
+                        value = state.ReadRawZigZag64();
                         break;
-                    case ScaledTicks.FieldTimeSpanValue:
-                        state.Assert(WireType.SignedVarint);
-                        value = state.ReadInt64();
+                    case (ScaledTicks.FieldTimeSpanScale << 3) | 0:
+                        scale = (TimeSpanScale)unchecked((int)state.ReadRawVarint32());
                         break;
-                    case ScaledTicks.FieldTimeSpanKind:
-                        kind = (DateTimeKind)state.ReadInt32();
-                        switch (kind)
-                        {
-                            case DateTimeKind.Unspecified:
-                            case DateTimeKind.Utc:
-                            case DateTimeKind.Local:
-                                break; // fine
-                            default:
-                                ThrowHelper.ThrowProtoException("Invalid date/time kind: " + kind.ToString());
-                                break;
-                        }
+                    case (ScaledTicks.FieldTimeSpanScale << 3) | 5:
+                        scale = (TimeSpanScale)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (ScaledTicks.FieldTimeSpanScale << 3) | 1:
+                        scale = (TimeSpanScale)checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (ScaledTicks.FieldTimeSpanKind << 3) | 0:
+                        kind = CheckKind((DateTimeKind)unchecked((int)state.ReadRawVarint32()));
+                        break;
+                    case (ScaledTicks.FieldTimeSpanKind << 3) | 5:
+                        kind = CheckKind((DateTimeKind)unchecked((int)state.ReadRawFixed32()));
+                        break;
+                    case (ScaledTicks.FieldTimeSpanKind << 3) | 1:
+                        kind = CheckKind((DateTimeKind)checked((int)unchecked((long)state.ReadRawFixed64())));
                         break;
                     default:
-                        state.SkipField();
+                        if (state.IsScopeEnd(tag)) return new ScaledTicks(value, scale, kind);
+                        if ((tag >> 3) is ScaledTicks.FieldTimeSpanValue or ScaledTicks.FieldTimeSpanScale
+                            or ScaledTicks.FieldTimeSpanKind)
+                        {
+                            state.ThrowUnexpectedWireType(tag);
+                        }
+                        state.SkipTag(tag);
                         break;
                 }
+                tag = state.ReadRawTag();
             }
             return new ScaledTicks(value, scale, kind);
+
+            static DateTimeKind CheckKind(DateTimeKind kind)
+            {
+                switch (kind)
+                {
+                    case DateTimeKind.Unspecified:
+                    case DateTimeKind.Utc:
+                    case DateTimeKind.Local:
+                        break; // fine
+                    default:
+                        ThrowHelper.ThrowProtoException("Invalid date/time kind: " + kind.ToString());
+                        break;
+                }
+                return kind;
+            }
         }
 
         [StructLayout(LayoutKind.Auto)]

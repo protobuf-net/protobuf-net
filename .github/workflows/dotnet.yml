@@ -5,9 +5,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "v4" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "v4" ]
 
 jobs:
   build:
@@ -38,3 +38,9 @@ jobs:
     # project above already produces the assemblies it scans.
     - name: AOT differential
       run: dotnet run --project src/AotDifferential/AotDifferential.csproj --no-build
+    # The descriptor model (protobuf-net.Reflection's CustomProtogenSerializer) is generator
+    # output committed to the tree, because BuildTools compiles Reflection's SOURCES in and needs
+    # both halves of the partial on disk. The build above regenerated it; a diff here means the
+    # committed copy has drifted from what the generator now produces - commit the regeneration.
+    - name: Generated model drift
+      run: git diff --exit-code -- src/protobuf-net.Reflection/Generated

@@ -20,6 +20,45 @@ namespace BuildToolsUnitTests
             Assert.Single(result.GeneratedTrees);
         }
 
+        /// <summary>
+        /// PBN1900: a typo in item metadata is reported rather than silently ignored.
+        /// </summary>
+        /// <remarks>
+        /// Every one of these option parsers falls back rather than throwing - which is right for
+        /// a build, but means <c>SubTypes="seald"</c> does nothing and says nothing. The negative
+        /// cases matter as much as the positive: a VALID value must stay silent, or the warning
+        /// becomes noise and gets suppressed wholesale.
+        /// </remarks>
+        [Theory]
+        [InlineData("SubTypes", "sealed", false)]
+        [InlineData("SubTypes", "Sealed", false)]     // case-insensitive, as MSBuild metadata is
+        [InlineData("SubTypes", "seald", true)]
+        [InlineData("OneOf", "enum", false)]
+        [InlineData("OneOf", "enums", true)]
+        [InlineData("Names", "noplural", false)]
+        [InlineData("Names", "no-plural", true)]
+        [InlineData("ListSet", "off", false)]         // IsEnabledValue lumps this with "anything
+        [InlineData("ListSet", "of", true)]           // else"; only PBN1900 can tell them apart
+        [InlineData("LangVersion", "whatever", false)] // free-form: must NOT be second-guessed
+        public async Task UnrecognisedOptionValueIsReported(string key, string value, bool expectWarning)
+        {
+            var (_, diagnostics) = await GenerateAsync(Texts(
+                ("test.proto", @"syntax = ""proto3""; message Foo { int32 id = 1; }",
+                 // the harness adds the build_metadata.AdditionalFiles. prefix itself
+                 new[] { (key, value) })));
+
+            var reported = diagnostics.Where(d => d.Id == "PBN1900").ToArray();
+            Assert.Equal(expectWarning ? 1 : 0, reported.Length);
+            if (expectWarning)
+            {
+                Assert.Equal(DiagnosticSeverity.Warning, reported[0].Severity);
+                // the message has to be actionable: it names the option AND the accepted spellings
+                var text = reported[0].GetMessage();
+                Assert.Contains(key, text);
+                Assert.Contains(value, text);
+            }
+        }
+
         [Fact]
         public async Task GenerateWithImport()
         {

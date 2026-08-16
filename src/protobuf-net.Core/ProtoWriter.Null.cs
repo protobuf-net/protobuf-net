@@ -1,8 +1,9 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -44,6 +45,9 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => false;
 
+            // this writer only ever counts; see ProtoWriter.IsMeasuring
+            private protected override bool IsMeasuringPass => true;
+
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {
                 var buffer = ArrayPool<byte>.Shared.Rent(8 * 1024);
@@ -76,10 +80,24 @@ namespace ProtoBuf
                 if (position > _abortAfter) CheckOversized(_abortAfter, position);
             }
 
+            /// <summary>
+            /// Measuring a sub-message recurses exactly as writing one does, so it needs the same
+            /// depth and recursion guard.
+            /// </summary>
+            /// <remarks>
+            /// Without this, a cyclic graph overflows the STACK here instead of throwing
+            /// "Possible recursion detected": the measure walk re-enters through Measure ->
+            /// serializer.Write -> WriteMessage and never touches PreSubItem, which is where both
+            /// guards live. The classic reserve-and-back-fill path was immune only because it goes
+            /// through StartSubItem, which does call PreSubItem - so the exposure has always been
+            /// specific to the measure-first backends.
+            /// </remarks>
             protected internal override void WriteMessage<T>(ref State state, T value, ISerializer<T> serializer, PrefixStyle style, bool recursionCheck)
             {
+                PreSubItem(ref state, TypeHelper<T>.IsReferenceType & recursionCheck ? (object)value : null);
                 var len = Measure<T>(this, value, serializer ?? TypeModel.ResolveSerializer<T>(Model));
-                AdvanceSubMessage(ref state, len, style);
+                AdvanceSubMessage(ref state, len, style); // leaves WireType = None, which PostSubItem demands
+                PostSubItem(ref state);
             }
 
             internal override void WriteWrappedItem<T>(ref State state, SerializerFeatures features, T value, ISerializer<T> serializer)
@@ -101,6 +119,8 @@ namespace ProtoBuf
 
             private void AdvanceSubMessage(ref State state, long length, PrefixStyle style)
             {
+                // note: the ImplWrite* arms below account for their own preamble (see the
+                // stores above), so only the arms that write nothing contribute here
                 long preamble;
                 switch (WireType)
                 {
@@ -116,7 +136,8 @@ namespace ProtoBuf
                                 preamble = 4;
                                 break;
                             case PrefixStyle.Base128:
-                                preamble = ImplWriteVarint64(ref state, (ulong)length);
+                                ImplWriteVarint64(ref state, (ulong)length);
+                                preamble = 0;
                                 break;
                             default:
                                 state.ThrowInvalidSerializationOperation();
@@ -126,7 +147,8 @@ namespace ProtoBuf
                         break;
                     case WireType.StartGroup:
                         // the start group is already written, so w just need to leave the end group
-                        preamble = ImplWriteVarint32(ref state, (uint)(fieldNumber << 3));
+                        ImplWriteVarint32(ref state, (uint)(fieldNumber << 3));
+                        preamble = 0;
                         break;
                     default:
                         state.ThrowInvalidSerializationOperation();
@@ -137,7 +159,11 @@ namespace ProtoBuf
                 CheckOversized(ref state);
                 WireType = WireType.None;
             }
-            protected internal override void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer)
+            // the override restates the base's annotation exactly, or IL2095 fires and the
+            // unannotated T then fails IL2091 on the GetSubTypeSerializer fallback below - two
+            // warnings from one omission. Same rule the generated GetSerializer<T> override
+            // follows (AGENTS.md); DynamicAccess is internal, so the flags are spelled out
+            protected internal override void WriteSubType<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ref State state, T value, ISubTypeSerializer<T> serializer)
             {
                 serializer ??= TypeModel.GetSubTypeSerializer<T>(Model);
                 var len = Measure<T>(this, value, serializer);
@@ -153,7 +179,7 @@ namespace ProtoBuf
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
             {
                 var len = _position64 - token.value64;
-                int bytes;
+                int bytes; // as above: only the arms that write nothing contribute here
                 switch(style)
                 {
                     case PrefixStyle.Fixed32BigEndian:
@@ -161,7 +187,8 @@ namespace ProtoBuf
                         bytes = 4;
                         break;
                     case PrefixStyle.Base128:
-                        bytes = ImplWriteVarint64(ref state, (ulong)len);
+                        ImplWriteVarint64(ref state, (ulong)len);
+                        bytes = 0;
                         break;
                     default:
                         state.ThrowInvalidSerializationOperation();
@@ -174,21 +201,40 @@ namespace ProtoBuf
                 CheckOversized(ref state);
             }
 
-            private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data) { }
+            // this writer has no pending buffer, so every store commits immediately: the
+            // stores ARE the measurement, and each accounts for itself rather than relying
+            // on the caller to advance (the deferred-position invariant, notes/nano-writer.md)
 
-            private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySpan<byte> data)
+                => Advance(data.Length);
 
-            private protected override void ImplWriteFixed32(ref State state, uint value) { }
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data)
+                => Advance(data.Length);
 
-            private protected override void ImplWriteFixed64(ref State state, ulong value) { }
+            private protected override void ImplWriteFixed32(ref State state, uint value)
+                => Advance(4);
 
-            private protected override void ImplWriteString(ref State state, string value, int expectedBytes) { }
+            private protected override void ImplWriteFixed64(ref State state, ulong value)
+                => Advance(8);
+
+            private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
+                => Advance(expectedBytes);
 
             [MethodImpl(ProtoReader.HotPath)]
-            private protected override int ImplWriteVarint32(ref State state, uint value) => MeasureUInt32(value);
+            private protected override int ImplWriteVarint32(ref State state, uint value)
+            {
+                var count = MeasureUInt32(value);
+                Advance(count);
+                return count;
+            }
 
             [MethodImpl(ProtoReader.HotPath)]
-            internal override int ImplWriteVarint64(ref State state, ulong value) => MeasureUInt64(value);
+            internal override int ImplWriteVarint64(ref State state, ulong value)
+            {
+                var count = MeasureUInt64(value);
+                Advance(count);
+                return count;
+            }
 
             private protected override bool TryFlush(ref State state) => true;
         }

@@ -20,6 +20,23 @@ public class Conditional
     // a reference type with Specified, to see whether the null guard survives
     [ProtoMember(4)] public string Named { get; set; }
     public bool NamedSpecified { get; set; }
+
+    // ShouldSerialize + [DefaultValue] on a string: the condition REPLACES the declared-default
+    // guard, so a present-but-default value IS written when the condition says so. This is the
+    // protogen presence pattern VERBATIM (FieldDescriptorProto.default_value = ""), whose absence
+    // from this fixture let the nested-guard bug live until the descriptor-model swap surfaced it
+    // via SchemaTests. Fixture-authoring note: the condition must be DERIVABLE from serialized
+    // state (here, the null-vs-empty backing field, which the read's setter restores) - a
+    // free-floating presence flag cannot survive the harness's re-serialization equivalence.
+    [ProtoMember(5)]
+    [System.ComponentModel.DefaultValue("")]
+    public string Presence
+    {
+        get => _presence ?? "";
+        set => _presence = value;
+    }
+    public bool ShouldSerializePresence() => _presence != null;
+    private string _presence;
 }
 
 [ProtoModel]
@@ -43,5 +60,8 @@ public static class ConditionalSamples
         new Conditional { Both = 3, BothSpecified = true },
         new Conditional { Named = "b", NamedSpecified = true },
         new Conditional { Named = null, NamedSpecified = true },
+        // the witness: value EQUAL to the declared default, condition true - must go on the wire
+        new Conditional { Presence = "" },
+        new Conditional { Presence = "x" },
     ];
 }

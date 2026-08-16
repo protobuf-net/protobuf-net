@@ -99,7 +99,7 @@ namespace ProtoBuf.Serializers
             Add(typeof(HashSet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateSet), new[] { root, targs[0] }));
             Add(typeof(ISet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateSet), new[] { root, targs[0] }));
 #if NET6_0_OR_GREATER
-            Add(typeof(IReadOnlySet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateReadOnySet), new[] { targs[0] }));
+            Add(typeof(IReadOnlySet<>), (root, current, targs) => Resolve(typeof(RepeatedSerializer), nameof(RepeatedSerializer.CreateReadOnlySet), new[] { targs[0] }));
 #endif
 
             // fallbacks, these should be at the end
