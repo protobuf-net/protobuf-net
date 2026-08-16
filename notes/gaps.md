@@ -1253,44 +1253,46 @@ therefore still on the stateful path *and* still measure-blocking their contract
 Every kind added stops blocking measure-first for the contract that holds it, and that exclusion
 runs to a fixed point — so the reach is wider than the member count suggests.
 
-#### What the last four need — a plan, not a guess
+#### The last four: level 200/240 DONE, the level variants remain
 
-Confirmed by reading the providers rather than assumed: there is **no `IMeasuringSerializer`** for
-`ScaledTicks`, `Guid` or `decimal` anywhere, so there is nothing to delegate to and the measure has
-to be written. The good news is that the shapes are small and conditional, so the arithmetic is
-short — `ScaledTicks`'s writer is three `if`s over one-byte-tagged fields:
+**Landed 2026-08-16** — all four compatibility-level BCL types now measure arithmetically at the
+**default format**, which is the common case since level 200 is the default:
 
-```csharp
-if (value.Value != 0)                       { header(1, SignedVarint); WriteInt64(value.Value); }
-if (value.Scale != TimeSpanScale.Days)      { header(2, Varint);       WriteInt32((int)Scale);  }
-if (value.Kind != DateTimeKind.Unspecified) { header(3, Varint);       WriteInt32((int)Kind);   }
-```
+| type | measure | shape |
+| --- | --- | --- |
+| `DateTime`, `TimeSpan` | `BclHelpers.MeasureDateTime` / `MeasureTimeSpan` | one `MeasureScaledTicks`, since both serialize as that message |
+| `Guid` | `BclHelpers.MeasureGuid` | constant: empty, or two `Fixed64` fields at one-byte tags = **18** |
+| `decimal` | `BclHelpers.MeasureDecimal` | value-dependent: three fields, each omitted when zero, so `0m` has an empty body |
 
-so its measure is about six lines. `Guid` (two fixed64 fields) and `decimal` (lo/hi/signScale) are
-comparable. **The size is value-dependent because default-valued fields are skipped**, which is
-exactly why a constant will not do.
+Each measure sits **beside its writer** rather than in `BclHelpers` with the public entry points —
+the two must agree field-for-field and adjacency is the cheapest way to keep that true.
+`BclHelpers` just forwards. They take no `ISerializationContext`, because a generated `Measure_`
+has none.
 
-The work, in order:
+Proven against **bytes protobuf-net actually wrote** (`BclMeasureTests`, 29 cases): serialize a
+one-member contract, read the length prefix back out, compare. Not against a second copy of the
+arithmetic, which would agree with itself. Verified able to fail.
 
-1. add `IMeasuringSerializer<T>` to `PrimaryTypeProvider` for `ScaledTicks`, `Guid` and `decimal` —
-   mirroring each `Write` in the same file, so a future edit to one is visibly next to the other;
-2. expose them through `BclHelpers` as `MeasureDateTime`/`MeasureTimeSpan`/`MeasureGuid`/`MeasureDecimal`,
-   taking no `ISerializationContext` (a generated `Measure_` has none — see the writer invariants in
-   `AGENTS.md`);
-3. **do not forget the compatibility levels**: 240+ swaps `DateTime`/`TimeSpan` for
-   `Timestamp`/`Duration` (a seconds+nanos message, different arithmetic), and 300 swaps `Guid` for
-   `GuidString`/`GuidBytes` and `decimal` for `DecimalString`. That is 4 types × up to 3 levels, and
-   it is the bulk of the work rather than the measures themselves;
-4. `DataFormat.FixedSize` on `DateTime`/`TimeSpan` is the easy corner — `BclHelpers` writes the flat
-   8-byte form under a `Fixed64` header, so the measure is the constant 8;
-5. then the generator: a `RawScalarMeasure` arm each, remove them from the `RawMemberMeasureBlocked`
-   default, add to the repeated whitelist, and fixtures at **each level**.
+**Still open**, in the order worth doing them:
 
-**The self-check will catch a half-landing**, which is worth knowing before starting: declaring a
-kind measurable without giving it a measure arm makes the generator throw
-`unmeasurable member slipped eligibility: …`, which surfaces as every model losing its `Instance`
-accessor and a pile of unrelated-looking `CS0117`s. The real message is in a `CS8785` generator
-warning. That happened while landing `DateOnly` and cost a few minutes of confusion.
+1. **`DataFormat.FixedSize` on `DateTime`/`TimeSpan`** — the flat eight-byte form under a `Fixed64`
+   header, so the measure is the constant `8` and there is no length prefix at all. Cheap, but it
+   needs the blanket `DataFormat != Default` refusal in `RawMemberMeasureBlocked` relaxing for
+   these kinds — the same shared gate that already carries carve-outs for `Group` and for packed.
+2. **level 240+ `Timestamp`/`Duration`** — a seconds+nanos message, genuinely different arithmetic
+   from `ScaledTicks`; needs its own measure and its own fixture.
+3. **level 300 `GuidString`/`GuidBytes`/`DecimalString`** — string and byte forms; `GuidBytes` is a
+   flat 16 and `GuidString` a flat 36, so only `DecimalString` is value-dependent.
+4. **repeated BCL elements** — `List<DateTime>` and friends. Note the ordering trap found while
+   fixturing this: a repeated member is tested for eligibility **before** the BCL arm, so a single
+   `List<DateTime>` drops its whole contract back to write-to-count.
+
+**The trap to expect, because it has now happened three times:** the measure emitter reaches BCL
+kinds from **three** places — the nullable path, the tuple path, and the main switch — and each
+asks `RawScalarMeasure`, which returns null for these and is dereferenced with `!`, emitting
+`len += 1 + ;`. Landing `DateTime`/`TimeSpan` exposed the nullable one; widening to `Guid`/`decimal`
+exposed the tuple one, via an *unrelated* fixture (`Diagnostics/TupleLevels`). Anyone adding the
+level variants should expect a fourth. The goldens catch it; review did not.
 
 ### B24. `Serialize<object>` on a `RuntimeTypeModel` costs 41× and allocates 2.2 KB per call
 
