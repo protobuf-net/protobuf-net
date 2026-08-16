@@ -97,6 +97,20 @@ namespace ProtoBuf
         /// <c>Fixed64</c> form carries no length prefix and is a flat eight bytes, and level 240+
         /// uses <c>Duration</c> instead.
         /// </remarks>
+        /// <summary>
+        /// The number of bytes <see cref="WriteGuid(ref ProtoWriter.State, Guid)"/> writes as the
+        /// message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>Level 200/240 only; level 300 uses the string or bytes form instead.</remarks>
+        public static int MeasureGuid(Guid value) => PrimaryTypeProvider.MeasureGuidBody(value);
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteDecimal(ref ProtoWriter.State, decimal)"/> writes as
+        /// the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>Level 200/240 only; level 300 uses <c>DecimalString</c> instead.</remarks>
+        public static int MeasureDecimal(decimal value) => PrimaryTypeProvider.MeasureDecimalBody(value);
+
         public static int MeasureTimeSpan(TimeSpan value)
             => PrimaryTypeProvider.MeasureScaledTicks(new PrimaryTypeProvider.ScaledTicks(value, DateTimeKind.Unspecified));
 

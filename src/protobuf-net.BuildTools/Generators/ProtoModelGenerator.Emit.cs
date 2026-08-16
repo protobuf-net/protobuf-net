@@ -2905,13 +2905,21 @@ namespace ProtoBuf.BuildTools.Generators
         /// its own fixture; `notes/gaps.md` B26 has the order.
         /// </remarks>
         private static bool BclMeasurable(ProtoMemberPlan member)
-            => member.DataFormat == ProtoDataFormat.Default
-            && member.CompatibilityLevel < 240
-            && member.Kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan;
+        {
+            if (member.DataFormat != ProtoDataFormat.Default) return false;
+            return member.Kind switch
+            {
+                // 240+ swaps these for Timestamp/Duration, which is different arithmetic
+                ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan => member.CompatibilityLevel < 240,
+                // 300 swaps these for their string forms
+                ProtoMemberKind.Guid or ProtoMemberKind.Decimal => member.CompatibilityLevel < 300,
+                _ => false,
+            };
+        }
 
         /// <summary>The body length for such a member — the payload, not the framing.</summary>
         private static string BclMeasureBody(ProtoMemberPlan member, string expression)
-            => $"global::ProtoBuf.BclHelpers.Measure{(member.Kind == ProtoMemberKind.DateTime ? "DateTime" : "TimeSpan")}({expression})";
+            => $"global::ProtoBuf.BclHelpers.Measure{member.Kind}({expression})";
 
         /// <summary>
         /// The span expression for a repeated member, or <c>null</c> if this member cannot be
@@ -3311,6 +3319,18 @@ namespace ProtoBuf.BuildTools.Generators
                 if (contract.IsTuple && member.Kind is not (ProtoMemberKind.String
                     or ProtoMemberKind.Bytes or ProtoMemberKind.Message))
                 {
+                    if (BclMeasurable(member))
+                    {
+                        // third branch that has to know about the length-prefixed BCL body, after
+                        // the nullable one and the switch below. RawScalarMeasure has nothing for
+                        // these kinds, and the `!` turns that into `len += 1 + ;` - which compiles
+                        // nowhere and is caught by the goldens rather than by review.
+                        var tupleBody = $"bcl{number}";
+                        Line(sb, indent, $"var {tupleBody} = {BclMeasureBody(member, $"tmp{number}")};");
+                        Line(sb, indent, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){tupleBody}) + {tupleBody}"));
+                        goto measured;
+                    }
                     Line(sb, indent, MeasureAdd(member, RawScalarWireBits(member.Kind),
                         RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
                     goto measured;
@@ -3322,7 +3342,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // contribution is tag + varint(bodyLen) + bodyLen. DateTime is written
                     // UNCONDITIONALLY (zero is a legitimate date) while TimeSpan is guarded against
                     // Zero, and the measure has to make the same choice or the prefix is wrong.
-                    case ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan when BclMeasurable(member):
+                    case ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                        or ProtoMemberKind.Guid or ProtoMemberKind.Decimal when BclMeasurable(member):
                     {
                         var body = $"bcl{number}";
                         var contribution = MeasureAdd(member, 2,

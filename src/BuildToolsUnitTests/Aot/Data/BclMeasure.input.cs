@@ -27,8 +27,15 @@ public class Timings
     // drop this whole contract back to write-to-count and the scalar arm this fixture exists to
     // cover would silently not be reached. Repeated BCL is its own step; see notes/gaps.md B26.
 
+    // Guid and decimal complete the level-200 family. Both are guarded (against Guid.Empty and
+    // 0m), unlike DateTime, and decimal's body is value-dependent where Guid's is a constant 18.
+    [ProtoMember(6)] public Guid Id { get; set; }
+    [ProtoMember(7)] public decimal Amount { get; set; }
+    [ProtoMember(8)] public Guid? MaybeId { get; set; }
+    [ProtoMember(9)] public decimal? MaybeAmount { get; set; }
+
     // an ordinary scalar alongside, so the golden shows the BCL contribution next to a plain one
-    [ProtoMember(6)] public int Sequence { get; set; }
+    [ProtoMember(10)] public int Sequence { get; set; }
 }
 
 [ProtoModel]
@@ -49,12 +56,18 @@ public static class BclMeasureSamples
             Elapsed = TimeSpan.FromDays(2),
             MaybeWhen = new DateTime(2026, 8, 16, 13, 45, 30, 123),
             MaybeElapsed = TimeSpan.FromTicks(-1),
+            Id = Guid.Parse("5bad8f0f-cbd9-9f46-a165-708677289505"),
+            Amount = -123456789.987654321m,
+            MaybeId = Guid.Empty,          // present, but an EMPTY body
+            MaybeAmount = 0m,              // ditto: presence without content
             Sequence = 42,
         },
         new Timings
         {
             When = default,                 // the epoch: an EMPTY body, still written
             Elapsed = TimeSpan.Zero,        // guarded away entirely
+            Id = Guid.Empty,                // guarded away
+            Amount = 0m,                    // guarded away
             Sequence = -1,
         },
     ];

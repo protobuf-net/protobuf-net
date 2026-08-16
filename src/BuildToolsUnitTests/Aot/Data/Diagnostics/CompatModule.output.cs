@@ -19,7 +19,7 @@ partial class CompatModuleModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.FromModule>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.CompatModule.OverridesModule>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
@@ -103,13 +103,17 @@ partial class CompatModuleModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.CompatModule.OverridesModule global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.OverridesModule value)
             => RawRead_AotFixtures_CompatModule_OverridesModule(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatModule.OverridesModule>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.CompatModule.OverridesModule value)
+            => RawWrite_AotFixtures_CompatModule_OverridesModule(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_CompatModule_OverridesModule(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.CompatModule.OverridesModule value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
@@ -121,6 +125,27 @@ partial class CompatModuleModel
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp2);
             }
         }
+
+        private static long Measure_AotFixtures_CompatModule_OverridesModule(global::AotFixtures.CompatModule.OverridesModule value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.When;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp1);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // When
+            var tmp2 = value.Id;
+            if (tmp2 != global::System.Guid.Empty)
+            {
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp2);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Id
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.CompatModule.OverridesModule>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.CompatModule.OverridesModule value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_CompatModule_OverridesModule(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.CompatModule.OverridesModule RawRead_AotFixtures_CompatModule_OverridesModule(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatModule.OverridesModule value)
         {

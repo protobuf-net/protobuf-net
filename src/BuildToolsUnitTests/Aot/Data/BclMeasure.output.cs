@@ -56,11 +56,37 @@ partial class BclMeasureModel
                 state.WriteFieldHeader(4, global::ProtoBuf.WireType.String);
                 global::ProtoBuf.BclHelpers.WriteTimeSpan(ref state, val4);
             }
-            var tmp6 = value.Sequence;
-            if (tmp6 != 0)
+            var tmp6 = value.Id;
+            if (tmp6 != global::System.Guid.Empty)
             {
-                state.WriteRawTag((6 << 3) | 0);  // Sequence
-                state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
+                state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp6);
+            }
+            var tmp7 = value.Amount;
+            if (tmp7 != 0m)
+            {
+                state.WriteFieldHeader(7, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp7);
+            }
+            var tmp8 = value.MaybeId;
+            if (tmp8.HasValue)
+            {
+                var val8 = tmp8.GetValueOrDefault();
+                state.WriteFieldHeader(8, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteGuid(ref state, val8);
+            }
+            var tmp9 = value.MaybeAmount;
+            if (tmp9.HasValue)
+            {
+                var val9 = tmp9.GetValueOrDefault();
+                state.WriteFieldHeader(9, global::ProtoBuf.WireType.String);
+                global::ProtoBuf.BclHelpers.WriteDecimal(ref state, val9);
+            }
+            var tmp10 = value.Sequence;
+            if (tmp10 != 0)
+            {
+                state.WriteRawTag((10 << 3) | 0);  // Sequence
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp10));
             }
         }
 
@@ -91,8 +117,34 @@ partial class BclMeasureModel
                 var bcl4 = global::ProtoBuf.BclHelpers.MeasureTimeSpan(val4);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl4) + bcl4;  // MaybeElapsed
             }
-            var tmp6 = value.Sequence;
-            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Sequence
+            var tmp6 = value.Id;
+            if (tmp6 != global::System.Guid.Empty)
+            {
+                var bcl6 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp6);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl6) + bcl6;  // Id
+            }
+            var tmp7 = value.Amount;
+            if (tmp7 != 0m)
+            {
+                var bcl7 = global::ProtoBuf.BclHelpers.MeasureDecimal(tmp7);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl7) + bcl7;  // Amount
+            }
+            var tmp8 = value.MaybeId;
+            if (tmp8.HasValue)
+            {
+                var val8 = tmp8.GetValueOrDefault();
+                var bcl8 = global::ProtoBuf.BclHelpers.MeasureGuid(val8);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl8) + bcl8;  // MaybeId
+            }
+            var tmp9 = value.MaybeAmount;
+            if (tmp9.HasValue)
+            {
+                var val9 = tmp9.GetValueOrDefault();
+                var bcl9 = global::ProtoBuf.BclHelpers.MeasureDecimal(val9);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl9) + bcl9;  // MaybeAmount
+            }
+            var tmp10 = value.Sequence;
+            if (tmp10 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp10));  // Sequence
             return len;
         }
 
@@ -149,13 +201,49 @@ partial class BclMeasureModel
                         value.MaybeElapsed = global::ProtoBuf.BclHelpers.ReadTimeSpan(ref state);
                         break;
                     }
-                    case (6 << 3) | 0:  // Sequence, field 6, varint
+                    case (6 << 3) | 2:  // Id, field 6, length-prefixed
+                        value.Id = state.ReadRawGuidBcl();
+                        break;
+                    case (6 << 3) | 3:  // Id, field 6, group
+                    {
+                        state.StashTag(tag);
+                        value.Id = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    case (7 << 3) | 2:  // Amount, field 7, length-prefixed
+                        value.Amount = state.ReadRawDecimalBcl();
+                        break;
+                    case (7 << 3) | 3:  // Amount, field 7, group
+                    {
+                        state.StashTag(tag);
+                        value.Amount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    case (8 << 3) | 2:  // MaybeId, field 8, length-prefixed
+                        value.MaybeId = state.ReadRawGuidBcl();
+                        break;
+                    case (8 << 3) | 3:  // MaybeId, field 8, group
+                    {
+                        state.StashTag(tag);
+                        value.MaybeId = global::ProtoBuf.BclHelpers.ReadGuid(ref state);
+                        break;
+                    }
+                    case (9 << 3) | 2:  // MaybeAmount, field 9, length-prefixed
+                        value.MaybeAmount = state.ReadRawDecimalBcl();
+                        break;
+                    case (9 << 3) | 3:  // MaybeAmount, field 9, group
+                    {
+                        state.StashTag(tag);
+                        value.MaybeAmount = global::ProtoBuf.BclHelpers.ReadDecimal(ref state);
+                        break;
+                    }
+                    case (10 << 3) | 0:  // Sequence, field 10, varint
                         value.Sequence = unchecked((int)state.ReadRawVarint32());
                         break;
-                    case (6 << 3) | 5:  // Sequence, field 6, fixed32
+                    case (10 << 3) | 5:  // Sequence, field 10, fixed32
                         value.Sequence = unchecked((int)state.ReadRawFixed32());
                         break;
-                    case (6 << 3) | 1:  // Sequence, field 6, fixed64
+                    case (10 << 3) | 1:  // Sequence, field 10, fixed64
                         value.Sequence = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
                     default:
@@ -168,7 +256,7 @@ partial class BclMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 6 or 7 or 8 or 9 or 10;
         }
     }
 }

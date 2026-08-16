@@ -18,13 +18,13 @@ partial class TupleLevelsModel
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<(global::System.Guid, decimal)>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TupleLevels.Agreeing>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         (global::System.Guid, decimal) global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>.Read(ref global::ProtoBuf.ProtoReader.State state, (global::System.Guid, decimal) value)
         {
@@ -57,7 +57,11 @@ partial class TupleLevelsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (global::System.Guid, decimal) value)
+            => RawWrite__global__System_Guid__decimal_(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite__global__System_Guid__decimal_(ref global::ProtoBuf.ProtoWriter.State state, (global::System.Guid, decimal) value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Item1;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
             global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp1);
@@ -66,25 +70,81 @@ partial class TupleLevelsModel
             global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
         }
 
+        private static long Measure__global__System_Guid__decimal_((global::System.Guid, decimal) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Item1;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp1);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // Item1
+            var tmp2 = value.Item2;
+            var bcl2 = global::ProtoBuf.BclHelpers.MeasureDecimal(tmp2);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Item2
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<(global::System.Guid, decimal)>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (global::System.Guid, decimal) value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure__global__System_Guid__decimal_(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.TupleLevels.Agreeing global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleLevels.Agreeing value)
             => RawRead_AotFixtures_TupleLevels_Agreeing(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleLevels.Agreeing>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleLevels.Agreeing value)
+            => RawWrite_AotFixtures_TupleLevels_Agreeing(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_TupleLevels_Agreeing(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleLevels.Agreeing value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.One;
-            state.WriteMessage<(global::System.Guid, decimal)>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            state.WriteRawTag((1 << 3) | 2);  // One
+            var len1 = Measure__global__System_Guid__decimal_(tmp1, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len1);
+            RawWrite__global__System_Guid__decimal_(ref state, tmp1, depth);
             var tmp2 = value.Two;
             if (tmp2 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<(global::System.Guid, decimal)>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
+                var lengths2 = state.RawLengths;
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    state.WriteRawTag((2 << 3) | 2);  // Two
+                    var len2 = Measure__global__System_Guid__decimal_(item2, state.RawDepthBudget, lengths2);
+                    state.WriteRawVarint64((ulong)len2);
+                    RawWrite__global__System_Guid__decimal_(ref state, item2, depth);
+                }
             }
         }
+
+        private static long Measure_AotFixtures_TupleLevels_Agreeing(global::AotFixtures.TupleLevels.Agreeing value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.One;
+            var len1 = Measure__global__System_Guid__decimal_(tmp1, depth, lengths);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // One
+            var tmp2 = value.Two;
+            if (tmp2 != null)
+            {
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    var len2 = Measure__global__System_Guid__decimal_(item2, depth, lengths);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TupleLevels.Agreeing>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TupleLevels.Agreeing value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_TupleLevels_Agreeing(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.TupleLevels.Agreeing RawRead_AotFixtures_TupleLevels_Agreeing(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleLevels.Agreeing value)
         {

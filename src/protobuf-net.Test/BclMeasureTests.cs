@@ -66,6 +66,45 @@ namespace ProtoBuf.Test
             }) yield return [v];
         }
 
+        [ProtoContract]
+        public class HasGuid { [ProtoMember(1)] public Guid Value { get; set; } }
+
+        [ProtoContract]
+        public class HasDecimal { [ProtoMember(1)] public decimal Value { get; set; } }
+
+        public static IEnumerable<object[]> Guids()
+        {
+            foreach (var v in new[]
+            {
+                Guid.Empty,
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff"),
+                Guid.Parse("5bad8f0f-cbd9-9f46-a165-708677289505"),
+            }) yield return [v];
+        }
+
+        public static IEnumerable<object[]> Decimals()
+        {
+            foreach (var v in new[]
+            {
+                0m, 1m, -1m,
+                0.0001m,                 // scale in play, so the signScale field is non-zero
+                -0.0001m,
+                decimal.MaxValue,
+                decimal.MinValue,
+                79228162514264337593543950335m,
+                123456789.987654321m,
+            }) yield return [v];
+        }
+
+        [Theory, MemberData(nameof(Guids))]
+        public void MeasureGuidMatchesTheBytesWritten(Guid value)
+            => AssertBodyLength<HasGuid>(value, BclHelpers.MeasureGuid(value));
+
+        [Theory, MemberData(nameof(Decimals))]
+        public void MeasureDecimalMatchesTheBytesWritten(decimal value)
+            => AssertBodyLength<HasDecimal>(value, BclHelpers.MeasureDecimal(value));
+
         [Theory, MemberData(nameof(TimeSpans))]
         public void MeasureTimeSpanMatchesTheBytesWritten(TimeSpan value)
             => AssertBodyLength<HasTimeSpan>(value, BclHelpers.MeasureTimeSpan(value));
