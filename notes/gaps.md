@@ -1251,7 +1251,7 @@ itself was built in, and to say so when the dll it picks is older than the libra
 
 **Open.** Not touched in the merge that found it, since a merge commit is the wrong place for it.
 
-### B28. Is `Impl*` dispatch a bottleneck on the CLASSIC write path? — **asked and answered "no, where we measure"; open elsewhere**
+### B28. Is `Impl*` dispatch a bottleneck on the CLASSIC write path? — **no on the real write; DEFINITIONALLY yes on the measuring pass**
 
 Marc, 2026-08-16, having read how the two halves differ: the reader's `Impl*` family is **gone**
 (zero occurrences in `ProtoReader*.cs`) — it went with the backend classes, replaced by one
@@ -1278,6 +1278,31 @@ hide behind. The census note is explicit that the descriptor payload cannot spea
 packed results (3.4×–32×) do not answer it either, since packing replaces the loop with a block
 write. `PackedMatrix` already builds the columns, so running them unpacked through classic vs raw
 would isolate per-field write overhead the way `PackedSizeBenchmarks` isolated sizing.
+
+**But there IS one path where it is a bottleneck by construction: the NULL writer** (Marc, asked
+after the above). `NullProtoWriter` never acquires a buffer — `CreateNullProtoWriter` returns
+`new State(obj)`, whose constructor is `this = default; _writer = writer;`, and the file contains
+**no** `state.Init`, `GetMemory`, `GetSpan` or lease anywhere. So `RemainingInCurrent` is
+permanently 0, **every** raw op fails its room check and takes the `[NoInlining]` slow arm, and the
+override counts instead of storing (`ImplWriteVarint32` → `Advance(MeasureUInt32(value))`,
+`ImplWriteString` → `Advance(expectedBytes)`).
+
+That is elegant — the polymorphism *is* the measuring switch, and no branch anywhere asks "am I
+counting?" — and it means the answer to this whole entry sharpens to: **`Impl*` dispatch is not a
+bottleneck on the real write, and is definitionally a per-primitive cost on the MEASURING pass**,
+where the fast arm is unreachable. That is the `+85%` in the gRPC table, and it is exactly the pass
+measure-first deletes. So the dispatch question and B5 are the same question asked twice.
+
+Two details that follow, both checked rather than assumed:
+
+- **the drift check (B16a) stays valid under the null writer**: `GetUncommitted` is overridden only
+  by the buffer-writer and stream backends, so the null writer inherits `=> 0` and `Position64` is
+  just `_position64`, which `Advance` maintains. A counted length is proven exactly as a written one
+  is;
+- **generated measurable contracts do not normally reach it**: `ProtoWriter.cs`'s
+  `IMeasuringSerializer<T>` + `OptionTrySkipWritingWhenMeasuring` interception calls `Measure(...)`
+  and caches the length instead of traversing. The null traversal is the fallback — a
+  non-measurable contract, or `TryMeasureRaw` answering -1 for a non-writer context.
 
 **Ranked low deliberately** (Marc): the raw path already demotes `Impl*` from the hot arm to the
 overflow arm — every raw primitive is a `RemainingInCurrent` room check with a `[NoInlining]`
