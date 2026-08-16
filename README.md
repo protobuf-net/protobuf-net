@@ -4,6 +4,9 @@
 
 [![.NET](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml/badge.svg)](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml)
 
+Recent changes are on [the releases page](https://github.com/protobuf-net/protobuf-net/releases); older
+history is in [the release notes](https://docs.protobuf-net.dev/releasenotes).
+
 ## Online tools: [protobuf-net.dev](https://protobuf-net.dev/)
 
 Free, browser-based, and nothing to install — and **it all runs locally**: it is a static site, so your
@@ -14,14 +17,6 @@ schemas and payloads never leave your machine. You can:
 - **decode a raw protobuf payload**, without needing the schema that produced it
 
 Documentation is at [docs.protobuf-net.dev](https://docs.protobuf-net.dev/).
-
-## Release Notes
-
-[v3 is here!](https://docs.protobuf-net.dev/3_0)
-
-[Change history and pending changes are here](https://docs.protobuf-net.dev/releasenotes).
-
----
 
 ## Supported Runtimes
 - .NET 6.0+ (.NET 5 etc will use .NET Standard 2.1)
