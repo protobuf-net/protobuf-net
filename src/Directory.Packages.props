@@ -19,6 +19,7 @@
     <PackageVersion Include="Google.Protobuf" Version="3.34.1" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="10.1.1.8388" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.80.0" />
+    <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.80.0" />
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.7" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
@@ -36,7 +37,9 @@
     <PackageVersion Include="NodaTime.Serialization.Protobuf" Version="2.0.2" />
     <PackageVersion Include="Pipelines.Sockets.Unofficial" Version="2.2.8" />
     <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.46" />
-    <PackageVersion Include="protobuf-net.Grpc" Version="1.0.21" />
+    <!-- 1.2.2, not 1.0.21: ClientFactory's abstract members (BinderConfiguration, CreateClient<T>)
+         are what the gRPC generator derives from, and 1.0.21 predates that shape -->
+    <PackageVersion Include="protobuf-net.Grpc" Version="1.2.2" />
     <PackageVersion Include="protobuf-net.Grpc.Reflection" Version="1.2.2" />
     <PackageVersion Include="System.Buffers" Version="4.6.1" />
     <PackageVersion Include="System.CodeDom" Version="10.0.7" />

@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
@@ -42,6 +43,42 @@ namespace BuildToolsUnitTests.Aot
         /// </summary>
         protected static string? GetOriginCodeLocation([CallerFilePath] string? path = null) => path;
 
+        /// <summary>
+        /// Overwrite the golden files in the source tree (not the build output), so that changes are
+        /// picked up by git; failures are non-fatal, since the assertions are what actually gate.
+        /// </summary>
+        /// <param name="originFile">
+        /// The calling test file's own path, from <see cref="GetOriginCodeLocation"/>. It has to be
+        /// passed in rather than captured here: a <c>[CallerFilePath]</c> resolved in this base class
+        /// would always name this file, and the goldens live beside whichever test suite wrote them.
+        /// </param>
+        protected static void WriteBack(string? originFile, string outputCodePath, string actualCode, string buildOutput)
+        {
+            if (originFile is null || Path.GetDirectoryName(originFile) is not string originFolder) return;
+
+            // paths are relative to the build output, which mirrors the calling file's own folder
+            var outputFirstDir = outputCodePath.Split(Path.DirectorySeparatorChar).First();
+            if (originFolder.Split(Path.DirectorySeparatorChar).Last() == outputFirstDir)
+            {
+                outputCodePath = outputCodePath.Substring(outputFirstDir.Length + 1);
+            }
+
+            outputCodePath = Path.Combine(originFolder, outputCodePath);
+            WriteOrDelete(outputCodePath, actualCode);
+            WriteOrDelete(Path.ChangeExtension(outputCodePath, "txt"), buildOutput);
+        }
+
+        private static void WriteOrDelete(string path, string content)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(content)) File.Delete(path);
+                else File.WriteAllText(path, content);
+            }
+            catch (IOException) { } // best-effort only
+            catch (UnauthorizedAccessException) { }
+        }
+
         protected sealed class GeneratorResult
         {
             public GeneratorResult(GeneratorDriverRunResult result, string generatedCode, int errorCount)
@@ -73,7 +110,8 @@ namespace BuildToolsUnitTests.Aot
             string? fileName = null,
             Action<TGenerator>? initializer = null,
             LanguageVersion languageVersion = LanguageVersion.Latest,
-            IEnumerable<MetadataReference>? extraReferences = null)
+            IEnumerable<MetadataReference>? extraReferences = null,
+            IEnumerable<(string Path, string Source)>? extraSources = null)
             where TGenerator : class, IIncrementalGenerator, new()
         {
             if (string.IsNullOrWhiteSpace(fileName)) fileName = "input.cs";
@@ -82,9 +120,22 @@ namespace BuildToolsUnitTests.Aot
             var references = MetadataReferenceHelpers.WellKnownReferences
                 .Concat(MetadataReferenceHelpers.ProtoBufReferences)
                 .Concat(extraReferences ?? Enumerable.Empty<MetadataReference>());
+
+            // extraSources exists for the gRPC goldens, which need a snapshot of protobuf-net.Grpc's
+            // surface in the compilation: that package cannot be *referenced* here, because BuildTools
+            // compiles protobuf-net.Core's sources in and every type in Core would become ambiguous
+            var trees = new List<SyntaxTree> { CSharpSyntaxTree.ParseText(source, parseOptions, path: fileName!) };
+            if (extraSources is not null)
+            {
+                foreach (var (path, text) in extraSources)
+                {
+                    trees.Add(CSharpSyntaxTree.ParseText(text, parseOptions, path: path));
+                }
+            }
+
             var inputCompilation = CSharpCompilation.Create(
                 "ProtoBuf.BuildTools.AotGeneratorTests",
-                new[] { CSharpSyntaxTree.ParseText(source, parseOptions, path: fileName!) },
+                trees,
                 references,
                 CompilationOptions);
 

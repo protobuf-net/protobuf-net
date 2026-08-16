@@ -39,6 +39,12 @@
     <Compile Remove="Aot/Data/**/*.*.cs" />
     <None Include="Aot/Data/**/*.*" />
     <None Update="Aot/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- unlike Aot/Data, this glob is unqualified: _ContractSurface.cs has no inner dot, and it must
+         not be compiled into the test assembly - it is a *snapshot* of protobuf-net.Grpc's surface,
+         fed to the golden tests' own in-memory compilation -->
+    <Compile Remove="Grpc/Data/**/*.cs" />
+    <None Include="Grpc/Data/**/*.*" />
+    <None Update="Grpc/Data/**/*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
