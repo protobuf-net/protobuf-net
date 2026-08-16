@@ -2687,6 +2687,16 @@ namespace ProtoBuf.BuildTools.Generators
             ProtoMemberKind.UInt64 => $"state.WriteRawVarint64({expression});",
             ProtoMemberKind.Single => $"state.WriteRawSingle({expression});",
             ProtoMemberKind.Double => $"state.WriteRawDouble({expression});",
+            // nint/nuint are ordinary varints, and ref-emit asks for width 64 REGARDLESS of the
+            // platform - which is the only reason they are safe to support at all, since the wire
+            // form must not vary by architecture
+            ProtoMemberKind.IntPtr => $"state.WriteRawVarint64(unchecked((ulong)(long){expression}));",
+            ProtoMemberKind.UIntPtr => $"state.WriteRawVarint64(unchecked((ulong){expression}));",
+            // BclHelpers.WriteDateOnly/WriteTimeOnly are one-liners over WriteInt32/WriteInt64, so
+            // the raw form writes the same varint directly rather than routing through a helper
+            // that would need the stateful wire-type handshake
+            ProtoMemberKind.DateOnly => $"state.WriteRawVarint64(unchecked((ulong)(long){expression}.DayNumber));",
+            ProtoMemberKind.TimeOnly => $"state.WriteRawVarint64(unchecked((ulong){expression}.Ticks));",
             _ => null,
         };
 
@@ -2731,7 +2741,9 @@ namespace ProtoBuf.BuildTools.Generators
                 or ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
                 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16
                 or ProtoMemberKind.Char or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64
-                or ProtoMemberKind.Single or ProtoMemberKind.Double or ProtoMemberKind.String;
+                or ProtoMemberKind.Single or ProtoMemberKind.Double or ProtoMemberKind.String
+                or ProtoMemberKind.IntPtr or ProtoMemberKind.UIntPtr
+                or ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly;
         }
 
         /// <summary>
@@ -3081,7 +3093,10 @@ namespace ProtoBuf.BuildTools.Generators
                     or ProtoMemberKind.Int16 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte
                     or ProtoMemberKind.UInt16 or ProtoMemberKind.Char or ProtoMemberKind.Int64
                     or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double
-                    or ProtoMemberKind.String or ProtoMemberKind.Uri => false,
+                    or ProtoMemberKind.String or ProtoMemberKind.Uri
+                    // pure varints on the raw path - see RawScalarWrite; no BclHelpers sizing needed
+                    or ProtoMemberKind.IntPtr or ProtoMemberKind.UIntPtr
+                    or ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly => false,
                 ProtoMemberKind.Bytes => member.MemberIsValueType,
                 ProtoMemberKind.Message => member.SubSerializerIsScalar || member.SubSerializerDynamic
                     || member.SubSerializer is not (null or "this")
@@ -3152,6 +3167,10 @@ namespace ProtoBuf.BuildTools.Generators
             ProtoMemberKind.UInt64 => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64({expression})",
             ProtoMemberKind.Single => "4",
             ProtoMemberKind.Double => "8",
+            ProtoMemberKind.IntPtr => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long){expression}))",
+            ProtoMemberKind.UIntPtr => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong){expression}))",
+            ProtoMemberKind.DateOnly => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long){expression}.DayNumber))",
+            ProtoMemberKind.TimeOnly => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong){expression}.Ticks))",
             _ => null,
         };
 
@@ -3263,10 +3282,21 @@ namespace ProtoBuf.BuildTools.Generators
 
                 switch (member.Kind)
                 {
+                    // DateOnly/TimeOnly are written UNCONDITIONALLY - zero is a legitimate date, so
+                    // there is no trivial value to skip - and the measure has to agree exactly or
+                    // the length prefix is wrong. Kept as its own arm rather than folded in below,
+                    // because the difference is the guard, not the sizing.
+                    case ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly:
+                        Line(sb, indent, MeasureAdd(member, RawScalarWireBits(member.Kind),
+                            RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
+                        break;
+
                     case ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
                         or ProtoMemberKind.Int16 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte
                         or ProtoMemberKind.UInt16 or ProtoMemberKind.Char or ProtoMemberKind.Int64
-                        or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double:
+                        or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double
+                        // nint/nuint ARE guarded, unlike the date/time pair above
+                        or ProtoMemberKind.IntPtr or ProtoMemberKind.UIntPtr:
                         var add = MeasureAdd(member, RawScalarWireBits(member.Kind),
                             RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!);
                         // IsRequired means field presence: no guard, as on the write

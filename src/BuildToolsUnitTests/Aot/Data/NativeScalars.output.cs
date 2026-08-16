@@ -34,28 +34,28 @@ partial class NativeScalarsModel
             var tmp1 = value.Handle;
             if (tmp1 != 0)
             {
-                state.WriteFieldHeader(1, global::ProtoBuf.WireType.Varint);
-                state.WriteIntPtr(tmp1);
+                state.WriteRawTag((1 << 3) | 0);  // Handle
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             var tmp2 = value.Size;
             if (tmp2 != 0)
             {
-                state.WriteFieldHeader(2, global::ProtoBuf.WireType.Varint);
-                state.WriteUIntPtr(tmp2);
+                state.WriteRawTag((2 << 3) | 0);  // Size
+                state.WriteRawVarint64(unchecked((ulong)tmp2));
             }
             var tmp3 = value.MaybeHandle;
             if (tmp3.HasValue)
             {
                 var val3 = tmp3.GetValueOrDefault();
-                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Varint);
-                state.WriteIntPtr(val3);
+                state.WriteRawTag((3 << 3) | 0);  // MaybeHandle
+                state.WriteRawVarint64(unchecked((ulong)(long)val3));
             }
             var tmp4 = value.MaybeSize;
             if (tmp4.HasValue)
             {
                 var val4 = tmp4.GetValueOrDefault();
-                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Varint);
-                state.WriteUIntPtr(val4);
+                state.WriteRawTag((4 << 3) | 0);  // MaybeSize
+                state.WriteRawVarint64(unchecked((ulong)val4));
             }
             var tmp5 = value.Fixed;
             if (tmp5 != 0)
@@ -72,12 +72,20 @@ partial class NativeScalarsModel
             var tmp7 = value.Handles;
             if (tmp7 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<nint>().WriteRepeated(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7);
+                foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp7))
+                {
+                    state.WriteRawTag((7 << 3) | 0);  // Handles
+                    state.WriteRawVarint64(unchecked((ulong)(long)item7));
+                }
             }
             var tmp8 = value.More;
             if (tmp8 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<nint>().WriteRepeated(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8);
+                foreach (var item8 in tmp8)
+                {
+                    state.WriteRawTag((8 << 3) | 0);  // More
+                    state.WriteRawVarint64(unchecked((ulong)(long)item8));
+                }
             }
         }
 
