@@ -18,6 +18,13 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## unreleased
 
+- **the AOT generator's diagnostic ids move from `PBN2000+` to `PBN3000+`**, keeping the last three
+  digits (`PBN2001` → `PBN3001`, `PBN2010` → `PBN3010`, and so on). They collided with the gRPC
+  service-contract analyzers, which have owned `PBN2001`–`PBN2010` since long before and ship in the
+  same package: because a severity or suppression is applied by id, `dotnet_diagnostic.PBN2002.severity
+  = none` to quiet an AOT drop **also silenced an unrelated gRPC error**. If you copied a
+  `WarningsAsErrors`, `NoWarn` or `.editorconfig` entry from the 3.3 AOT docs, update it — the old ids
+  are still live and still mean something, just not this, so a stale entry now fails quietly
 - **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
   the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
   `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected
@@ -27,7 +34,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   `protobuf-net.BuildTools` package alongside remains harmless
 - **fix**: `protobuf-net.NodaTime` did not produce a package from a plain build (missing
   `GeneratePackageOnBuild`), and packed with a placeholder description
-- **fix**: `PBN2010`'s example now shows `Model.Instance.Serialize` — the generated accessor that
+- **fix**: `PBN3010`'s example now shows `Model.Instance.Serialize` — the generated accessor that
   actually exists — rather than an imaginary camel-cased local
 - **fix**: the "add an AOT model" code fix now generates the model as `internal` (a fixer should not
   add to the public surface) and inside the project's namespace (or the anchor contract's), rather

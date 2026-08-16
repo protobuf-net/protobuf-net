@@ -1,8 +1,8 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 
 // pinned below the generator's floor by the sidecar LowLangVer.langver; the generator should
-// report PBN2000 and emit no model. Fixtures under Diagnostics/ are golden-tested only - they are
+// report PBN3000 and emit no model. Fixtures under Diagnostics/ are golden-tested only - they are
 // deliberately not linked into AotRefGen or AotConformanceTests.
 namespace AotFixtures.LowLangVer;
 

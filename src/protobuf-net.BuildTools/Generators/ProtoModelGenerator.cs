@@ -54,7 +54,7 @@ namespace ProtoBuf.BuildTools.Generators
         internal const string DiagnosticTrackingName = "ProtoModelDiagnostics";
 
         internal static readonly DiagnosticDescriptor LanguageVersionTooLow = new(
-            id: "PBN2000",
+            id: "PBN3000",
             title: "Language version too low",
             messageFormat: "The protobuf-net AOT generator requires C# {0} or later, but this project uses C# {1}; set <LangVersion> to at least {0}.",
             category: "ProtoBuf",

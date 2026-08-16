@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Generators;
 using System.Collections.Immutable;
@@ -107,13 +107,13 @@ namespace BuildToolsUnitTests.Aot
                 extraReferences: new[] { a, b, work });
 
             var text = diagnostics.ToString();
-            Assert.Contains("PBN2002", text);
+            Assert.Contains("PBN3002", text);
             Assert.Contains("LibA", text);
             Assert.Contains("LibB", text);
             Assert.Contains("extern alias", text);
 
             // and the contract that reaches it goes too, by the usual cascade
-            Assert.Contains("PBN2004", text);
+            Assert.Contains("PBN3004", text);
             Assert.Equal(0, result.ErrorCount);
         }
 

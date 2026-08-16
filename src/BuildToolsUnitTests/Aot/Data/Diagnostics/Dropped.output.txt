@@ -1,5 +1,5 @@
 Generator produced 2 diagnostics:
-Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L31 C14
+Warning PBN3002 Aot/Data/Diagnostics/Dropped.input.cs L31 C14
 Contract 'AotFixtures.Dropped.NoParameterlessConstructor' is omitted from the AOT model: there is no parameterless constructor and SkipConstructor is not set, which protobuf-net refuses too: "No parameterless constructor found".
-Warning PBN2002 Aot/Data/Diagnostics/Dropped.input.cs L69 C14
+Warning PBN3002 Aot/Data/Diagnostics/Dropped.input.cs L69 C14
 Contract 'AotFixtures.Dropped.OpenGeneric<>' is omitted from the AOT model: open generic types are not supported.
