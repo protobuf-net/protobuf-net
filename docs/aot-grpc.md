@@ -3,11 +3,33 @@
 Working notes for the gRPC half of the AOT story, in the same spirit as `aot-findings.md`. The
 serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 
-> **Handover.** Branch `grpc-aot-generator`, draft PR
-> [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Everything below was validated on
-> Windows as of 2026-08-16: `dotnet test src/BuildToolsUnitTests` (327 pass), a JIT run of
-> `src/AotGrpcSmoke`, and a `win-x64` native publish of the same (all five checks pass). The
-> `protobuf-net.BuildTools.Legacy` build is green.
+> **Handover** (2026-08-16). Branch `grpc-aot-generator`, draft PR
+> [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
+> `dotnet test src/BuildToolsUnitTests` (327 pass), a JIT run of `src/AotGrpcSmoke`, and a `win-x64`
+> native publish of the same (all five checks pass). `protobuf-net.BuildTools.Legacy` builds green.
+>
+> **Landed elsewhere, and this branch depends on it:**
+>
+> | | |
+> | --- | --- |
+> | protobuf-net.Grpc **1.3.0** | ships `[ProtoGrpc]` / `[ProtoService]`, the `RuntimeTypeModel` gates, and `BinderConfiguration.Binder` made public |
+> | protobuf-net.Grpc #366 | GitHub Actions CI + trusted-publishing release pipeline (AppVeyor retired) |
+> | protobuf-net.Grpc #367 | release-tag fix; see "Versioning traps" below |
+> | protobuf-net #1284 | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
+> | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
+>
+> **Next steps, in order** — the first two are the ones with a decision attached:
+>
+> 1. **Switch to the shipped attributes.** Bump `protobuf-net.Grpc` to `1.3.0` in
+>    `src/Directory.Packages.props` (currently `1.2.2`), then delete `TriggerAttributesSource` and
+>    the `RegisterPostInitializationOutput` call from `GrpcProxyGenerator.cs` — see "Why the
+>    attributes are generator-owned", which becomes historical once this is done. Regenerate the
+>    golden (it currently contains the emitted attributes file).
+> 2. **`BytesValue.SlowParse`** in protobuf-net.Grpc — the other half of the AOT warning reduction,
+>    and the larger of the two. See "The measurement" below; blocked on a semantics decision.
+> 3. **The one real `IL2091`**, on the generated `__Serialize<T>` — ours, and small.
+> 4. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface.
+> 5. **Compile-time endpoint metadata** — now unblocked by `Binder` being public.
 
 ## What this is
 
@@ -114,18 +136,24 @@ implementation does not implement `GetBufferWriter`), and `Empty` is excluded be
 **Do not pre-register onto `BinderConfiguration.Default`.** It is shared process-wide; when no model
 is named the generated config *is* `Default`, so the pre-registration is skipped in that branch.
 
-### Why the attributes are generator-owned
+### Why the attributes are generator-owned (historical — being removed)
 
-`[ProtoGrpc]` / `[ProtoService]` are emitted per consuming assembly as `internal`, from
+**They now ship in protobuf-net.Grpc 1.3.0, so this is the state to migrate off, not to preserve.**
+Kept because the reasoning explains why the migration is safe.
+
+`[ProtoGrpc]` / `[ProtoService]` are currently emitted per consuming assembly as `internal`, from
 `RegisterPostInitializationOutput`. They **must** be post-init rather than ordinary output, because
-`ForAttributeWithMetadataName` can only see a generator's own post-init sources.
+`ForAttributeWithMetadataName` can only see a generator's own post-init sources — that constraint is
+permanent and worth remembering if a third trigger attribute is ever added.
 
-This is the path `[ProtoModel]` took. Nothing here needs to cross an assembly boundary (unlike
-`[ProtoSurrogate]`, which is what forced `[ProtoModel]` into Core), so there is no urgency. When they
-move into protobuf-net.Grpc, drop the emission: an `internal` copy in the consumer's own assembly
-wins name resolution over a `public` one in a referenced assembly, so the transition is not a break.
+This is the path `[ProtoModel]` took, and it is what kept this work off the critical path of a
+protobuf-net.Grpc release. Dropping it is safe in both directions: an `internal` copy in the
+consumer's own assembly wins name resolution over a `public` one in a referenced assembly, so a
+consumer on an older BuildTools with a newer protobuf-net.Grpc — or the reverse — still compiles.
 
-The upshot is that **this work is not gated on a protobuf-net.Grpc release.**
+The generator matches these by **full name**, not by symbol, and that must stay: the unit-test
+harness declares its own stubs (dodging the `[Experimental]` gate), exactly as the AOT serializer
+generator's trigger attributes do.
 
 ## Layout
 
@@ -228,6 +256,24 @@ Decline and diagnose rather than intercept when: the consumer already passed a `
 `AddCodeFirstGrpc` is deliberately **not** intercepted — it is a one-time call in `Program.cs`,
 easily changed by hand, and intercepting it would fight a consumer who had configured a
 `BinderConfiguration` in the lambda.
+
+## Versioning and release traps (protobuf-net.Grpc)
+
+Recorded because both cost time and neither is visible from the code.
+
+- **`publicReleaseRefSpec` must match how the repo actually tags.** protobuf-net.Grpc has always
+  tagged releases *unprefixed* (`1.3.0`, `1.2.5`, …) but its spec listed only
+  `^refs/tags/v\d+\.\d+`, so a release tag was never a "public release" and NB.GV appended a
+  `-g<commit>` suffix. Invisible for years, because AppVeyor published from `main` — which *does*
+  match — and nothing ever evaluated the version at a tag. `release.yml`'s guard is the first thing
+  that does. Fixed in #367; protobuf-net's spec accepted both forms all along.
+- **NB.GV resets commit height only when the `version` field changes.** Editing any other property
+  of `version.json` does not reset it. So a follow-up commit that touches only
+  `publicReleaseRefSpec` is height *n+1*, and `versionHeightOffset` has to absorb it — which is why
+  that repo went `-1` → `-2` to keep the first release at `x.y.0`. Corollary: **a version-bump PR
+  must be squash-merged and stay one commit**, or the offset is wrong again.
+- `nbgv tag`'s default is `v{version}`; `release.tagName` is set to `{version}` so it emits the
+  unprefixed form the repo uses.
 
 ## Diagnostic IDs
 
