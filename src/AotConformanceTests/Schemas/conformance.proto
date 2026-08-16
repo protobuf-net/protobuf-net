@@ -1,0 +1,122 @@
+﻿// The byte gate for the schema-sourced AOT model (notes/aot-schema-model.md).
+//
+// This file is an <AdditionalFiles> item, so ProtoFileGenerator turns it into DTOs during this
+// project's build, and [ProtoSchema] on the model beside it turns the SAME schema into
+// serializers - the one-project shape. DifferentialTests then discovers that model like any
+// other and compares its bytes against RuntimeTypeModel over the generated DTOs, in both
+// directions.
+//
+// That comparison is the point. The two generators agreeing on NAMES only proves it compiles;
+// only bytes prove the plan's write guards match what protobuf-net does - and a guard is exactly
+// what a compile gate cannot check. Every shape added to SchemaPlanBuilder should gain a field
+// here in the same commit.
+syntax = "proto3";
+package conformance;
+
+enum Grade {
+    GRADE_UNKNOWN = 0;
+    GRADE_LOW = 1;
+    GRADE_HIGH = 2;
+}
+
+message Detail {
+    int32 depth = 1;
+    string note = 2;
+}
+
+message Sample {
+    int32 id = 1;
+
+    // the sharp one: proto3 emits [DefaultValue("")] AND an `= ""` initialiser, so the write
+    // guard is `!= ""` and an EMPTY string writes nothing. Getting that wrong is a silent wire
+    // difference that compiles perfectly - see the samples, which include an empty string
+    string name = 2;
+
+    bool active = 3;
+    double balance = 4;
+    float ratio = 5;
+    int64 ticks = 6;
+    uint32 count = 7;
+    uint64 total = 8;
+    bytes blob = 9;
+
+    // an enum member is its underlying scalar plus a cast
+    Grade grade = 10;
+
+    // a nested message reference: served by another serializer on the same services type
+    Detail detail = 11;
+
+    // sint/fixed spellings: the wire form differs from the plain ones, so a plan that mapped
+    // them all to the same kind would still compile
+    sint32 delta = 12;
+    fixed32 marker = 13;
+    sfixed64 offset = 14;
+
+    // repeated, which protogen emits as TWO different C# shapes: a packable scalar becomes
+    // T[] with IsPacked, while string/bytes/message become a GETTER-ONLY List<T> that is not
+    // packed. Both shapes need covering, and packed-vs-not is itself a wire difference
+    repeated int32 nums = 15;
+    repeated double reals = 16;
+    repeated string names = 17;
+    repeated bytes blobs = 18;
+    repeated Detail details = 19;
+
+    // a SINGULAR repeated name: protogen pluralises it (tally -> Tallies), so a front-end that
+    // called GetName without the label would emit `Tally` and not compile. Free here only because
+    // NameNormalizer.GetName(FieldDescriptorProto) does it - which is the argument for sharing
+    // protogen's naming rather than reimplementing it
+    repeated int32 tally = 20;
+
+    // a NESTED message and a NESTED enum: protogen emits these as nested C# types, so the name
+    // is Sample.Node / Sample.Flavour rather than a sibling. Two chains have to be tracked to
+    // resolve that - the schema one and the C# one - and they differ at every segment
+    message Node {
+        int32 weight = 1;
+        string tag = 2;
+    }
+    enum Flavour {
+        FLAVOUR_NONE = 0;
+        FLAVOUR_SALT = 1;
+    }
+    // maps: a synthetic nested entry message plus a repeated field of it, emitted as a
+    // getter-only Dictionary<K,V>. A bool key is legal proto but is NOT a valid protobuf-net map
+    // key, which flips OptionFailOnDuplicateKey and so changes how reads merge - a behavioural
+    // difference worth pinning rather than a cosmetic one
+    map<string, int32> counts = 24;
+    map<int32, Detail> lookup = 25;
+    map<bool, string> flags = 26;
+
+    Node node = 21;
+    Flavour flavour = 22;
+    repeated Node nodes = 23;
+}
+
+// Fields declared OUT of numeric order. protobuf-net writes members in FIELD-NUMBER order
+// regardless of how the schema declares them, so a front-end emitting in declaration order
+// disagrees on the wire - silently, and only for schemas that happen to be written this way.
+// The hand-written schema above missed it by declaring everything ascending; descriptor.proto
+// found it (DescriptorProto declares field 6 before field 3).
+message Shuffled {
+    string last = 9;
+    int32 first = 1;
+    bool middle = 5;
+    Detail nested = 7;
+}
+
+// Presence-tracked fields. protogen emits BOTH of these as ordinary members with a
+// ShouldSerialize{Name}() alongside - a oneof through a DiscriminatedUnion, a proto3 `optional`
+// through a private nullable field - so both are just a write condition, and that condition
+// REPLACES the trivial-value guard. Which is the whole point: an explicitly-set zero or empty
+// string must round-trip, where an ordinary proto3 field would drop it.
+message Presence {
+    int32 always = 1;
+    oneof choice {
+        int32 pick_number = 2;
+        string pick_text = 3;
+        Detail pick_message = 4;
+    }
+    optional int32 maybe_number = 5;
+    optional string maybe_text = 6;
+    optional bool maybe_flag = 7;
+}
+

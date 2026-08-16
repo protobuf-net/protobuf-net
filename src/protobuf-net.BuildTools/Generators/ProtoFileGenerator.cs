@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Google.Protobuf.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -21,6 +21,16 @@ namespace ProtoBuf.BuildTools.Generators
     [Generator]
     public sealed class ProtoFileGenerator : ISourceGenerator, ILoggingAnalyzer
     {
+        /// <summary>
+        /// The spellings accepted for a boolean item-metadata option.
+        /// </summary>
+        /// <remarks>
+        /// <c>CommonCodeGenerator.IsEnabledValue</c> treats <c>1</c>/<c>yes</c>/<c>true</c>/<c>on</c>
+        /// as true and <b>everything else</b> as false - so it cannot itself tell "no" from a typo.
+        /// Listing the negative spellings here is what lets PBN1900 make that distinction.
+        /// </remarks>
+        private static readonly string[] Bools = ["1", "0", "yes", "no", "true", "false", "on", "off"];
+
         private event Action<string>? Log;
         event Action<string>? ILoggingAnalyzer.Log
         {
@@ -207,25 +217,49 @@ namespace ProtoBuf.BuildTools.Generators
 
                         if (userOptions is not null)
                         {
-                            // copy over any keys that we know the tooling might want
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "ListSet", "listset");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "OneOf", "oneof");
+                            // copy over any keys that we know the tooling might want. The trailing
+                            // values are the accepted spellings, where the option has a closed set:
+                            // see PBN1900 in AddOption. `Bools` is what IsEnabledValue treats as
+                            // true, PLUS the negative spellings it lumps in with "anything else" -
+                            // so `ListSet="off"` is honoured silently and `ListSet="of"` is reported
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "ListSet", "listset", Bools);
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "SubTypes", "subtypes", "default", "sealed", "ignore");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "OneOf", "oneof", "default", "enum");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Services", "services");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "LangVersion", "langver");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Package", "package");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "Names", "names", "auto", "original", "noplural");
                             AddOption(Literals.AdditionalFileMetadataPrefix + "Bytes", "bytes");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullWrappers", "nullwrappers");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "CompatLevel", "compatlevel");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype");
-                            AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist");
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullWrappers", "nullwrappers", Bools);
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "CompatLevel", "compatlevel", Bools);
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "NullableValueType", "nullablevaluetype", Bools);
+                            AddOption(Literals.AdditionalFileMetadataPrefix + "RepeatedAsList", "repeatedaslist", Bools);
 
-                            void AddOption(string readKey, string writeKey)
+                            void AddOption(string readKey, string writeKey, params string[] valid)
                             {
-                                if (userOptions.TryGetValue(readKey, out string? optionValue))
+                                if (!userOptions.TryGetValue(readKey, out string? optionValue)) return;
+                                options[writeKey] = optionValue;
+
+                                // PBN1900: an unrecognised value is SILENTLY IGNORED downstream -
+                                // every one of these parsers falls back rather than throwing, which
+                                // is right for a build but means `SubTypes="seald"` does nothing and
+                                // says nothing. Reported here because this is the one place that
+                                // knows both the key and its accepted spellings.
+                                //
+                                // Only options with a CLOSED value set are checked; LangVersion,
+                                // Package, ImportPaths and Services are free-form or legacy-tolerant,
+                                // and guessing at those would produce false positives.
+                                if (valid.Length == 0 || string.IsNullOrWhiteSpace(optionValue)) return;
+                                foreach (var candidate in valid)
                                 {
-                                    options[writeKey] = optionValue;
+                                    if (string.Equals(candidate, optionValue!.Trim(),
+                                        StringComparison.OrdinalIgnoreCase)) return;
                                 }
+                                var name = readKey.Substring(Literals.AdditionalFileMetadataPrefix.Length);
+                                context.ReportDiagnostic(Diagnostic.Create("PBN1900", "Protobuf",
+                                    $"'{optionValue}' is not a recognised value for '{name}'; it will be ignored. Expected one of: {string.Join(", ", valid)}.",
+                                    DiagnosticSeverity.Warning, DiagnosticSeverity.Warning, true, 2,
+                                    location: Location.Create(schema.Value.Path, default, default)));
                             }
                         }
 

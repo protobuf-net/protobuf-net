@@ -7,11 +7,34 @@ namespace ProtoBuf
 {
     internal sealed class NetObjectCache
     {
-        private
-#if NET
-            readonly
-#endif
-            Dictionary<ObjectKey, long> _knownLengths = new();
+        private Dictionary<ObjectKey, long> _knownLengths = new();
+
+        // the raw measure pass's ??= length cache (notes/nano-writer.md): sub-message lengths
+        // keyed by reference identity, populated post-order by the generated Measure_ statics
+        // and consumed at the write sites. It lives HERE rather than on the writer because this
+        // cache is the codebase's established home for cross-writer measurement state: the
+        // buffer-writer's null-writer sidecar shares the parent's instance by construction
+        // ("share the *same* known objects key"), and MeasureState's Serialize hands the
+        // measuring writer's cache to the writing writer via InitializeFrom - so a length
+        // measured ANYWHERE serves the write EVERYWHERE, captured the first time. Clearing
+        // rides the same lifecycle as _knownLengths, which is what makes a stale entry (a
+        // corrupt stream, not an error) impossible wherever known-lengths were already safe.
+        // long, deliberately, matching _knownLengths: a single message body CAN exceed
+        // int.MaxValue (many large byte[] members, say), and classic handles it - int
+        // arithmetic would overflow silently, which is a corrupt stream, not an error
+        private Dictionary<object, long> _rawLengths = new(RawLengthComparer.Instance);
+
+        internal Dictionary<object, long> RawLengths => _rawLengths;
+
+        // reference identity regardless of user Equals/GetHashCode overrides; the BCL's
+        // ReferenceEqualityComparer is net5+ only, and this must serve every TFM
+        private sealed class RawLengthComparer : IEqualityComparer<object>
+        {
+            internal static readonly RawLengthComparer Instance = new RawLengthComparer();
+            private RawLengthComparer() { }
+            bool IEqualityComparer<object>.Equals(object x, object y) => ReferenceEquals(x, y);
+            int IEqualityComparer<object>.GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+        }
 
         [StructLayout(LayoutKind.Auto)]
         private readonly struct ObjectKey : IEquatable<ObjectKey>
@@ -236,25 +259,88 @@ namespace ProtoBuf
             if (stringKeys is object) stringKeys.Clear();
             if (objectKeys is object) objectKeys.Clear();
 #endif
-#if NET
-            _knownLengths.Clear();
-            _knownLengths.TrimExcess();
-#else
-            _knownLengths = new(); // reinitialize the Dictionary<> to free up all allocated memory
-#endif
+            // RETAIN, BUT NOT FOREVER (notes/nano-writer.md). These writers are pooled, so
+            // discarding capacity on every use meant re-growing a several-hundred-entry
+            // dictionary from empty each time - measured at 22,392 B per serialize and 7-12%.
+            // Retaining it unconditionally is the opposite mistake: one large graph left a
+            // pooled writer holding 11.7 MB forever, ~10x the payload.
+            //
+            // So capacity is kept by default and handed back on either of two signals:
+            //   - a gen2 collection since we last cleared, i.e. actual memory pressure. If no
+            //     GC has run, memory is not scarce and retaining costs nothing; this is the
+            //     cadence ArrayPool trims on, and GC.CollectionCount answers it with a static
+            //     read - no finalizer, no registry, no allocation, every TFM;
+            //   - a size that is not worth retaining regardless, so the single enormous graph
+            //     is dropped on the spot rather than waiting for a gen2 that an idle process
+            //     may not run for a long time.
+            var gen2 = GC.CollectionCount(2);
+            bool pressure = gen2 != _lastGen2;
+            _lastGen2 = gen2;
+
+            ClearAndMaybeTrim(ref _knownLengths, pressure, static () => new());
+            ClearAndMaybeTrim(ref _rawLengths, pressure, static () => new(RawLengthComparer.Instance));
             _hit = _miss = 0;
+        }
+
+        private int _lastGen2;
+
+        /// <summary>Above this many entries the capacity is handed back immediately rather than
+        /// retained: a cache this large is the "one enormous graph" case, and the whole point is
+        /// not to leave a pooled writer holding it.</summary>
+        private const int RetainedEntryCap = 1024;
+
+        private static void ClearAndMaybeTrim<TKey, TValue>(ref Dictionary<TKey, TValue> map,
+            bool pressure, Func<Dictionary<TKey, TValue>> create)
+        {
+            var count = map.Count;
+            map.Clear();
+            if (pressure || count > RetainedEntryCap)
+            {
+#if NET
+                map.TrimExcess();
+#else
+                map = create(); // no TrimExcess down-level; a fresh instance releases it
+#endif
+            }
         }
 
         internal int LengthHits => _hit;
         internal int LengthMisses => _miss;
 
+        /// <summary>
+        /// Takes over another cache's measurements, for the measure-then-write hand-off.
+        /// </summary>
+        /// <remarks>
+        /// EXCHANGES the dictionaries rather than copying them. The measured path measures a
+        /// whole tree and then writes it, so a copy meant building every entry twice and
+        /// allocating a second dictionary to hold them - measurably, exactly twice the
+        /// allocation of a direct write on the descriptor corpus.
+        /// <para>
+        /// A swap, not a share: each cache still owns exactly one dictionary afterwards, so
+        /// disposal and clearing behave as they always did. Sharing one instance between two
+        /// writers would alias caches whose lifetimes merely happen to nest today.
+        /// </para>
+        /// <para>
+        /// The source is left holding this cache's (empty) dictionaries, which is why serializing
+        /// the same measurement twice stays correct: the second pass simply finds nothing cached
+        /// and re-derives, exactly as an unmeasured write does. These are pure caches keyed by
+        /// object identity, and a length is a length whoever computed it.
+        /// </para>
+        /// </remarks>
         internal void InitializeFrom(NetObjectCache obj)
         {
             if (obj is not null)
             {
+                // plain temporaries rather than tuple deconstruction: net462 has no ValueTuple
                 _knownLengths.Clear();
-                foreach (var pair in obj._knownLengths)
-                    _knownLengths.Add(pair.Key, pair.Value);
+                var known = _knownLengths;
+                _knownLengths = obj._knownLengths;
+                obj._knownLengths = known;
+
+                _rawLengths.Clear();
+                var raw = _rawLengths;
+                _rawLengths = obj._rawLengths;
+                obj._rawLengths = raw;
             }
         }
 

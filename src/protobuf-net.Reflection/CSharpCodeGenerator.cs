@@ -246,10 +246,27 @@ namespace ProtoBuf.Reflection
         {
             var name = ctx.NameNormalizer.GetName(message);
             var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
-            if (name != message.Name) tw.Write($@"Name = @""{message.Name}""");
+            var written = false;
+            if (name != message.Name)
+            {
+                tw.Write($@"Name = @""{message.Name}""");
+                written = true;
+            }
+            if (ctx.UnknownSubTypes == UnknownSubTypeHandling.Ignore)
+            {
+                // elides protobuf-net's per-message "is this really a T?" check. Safe for a
+                // generated DTO because protobuf has no inheritance - but note it also means a
+                // consumer's derived instance is serialized as the base rather than rejected
+                if (written) tw.Write(", ");
+                tw.Write("IgnoreUnknownSubTypes = true");
+            }
             tw.WriteLine(")]");
             WriteOptions(ctx, message.Options);
-            tw = ctx.Write($"{GetAccess(GetAccess(message))} partial class {Escape(name)}");
+            // `sealed` elides the same check, and unlike the attribute it cannot change behaviour
+            // (a sub-type becomes impossible rather than tolerated) - at the cost of being
+            // source-breaking for anyone deriving from the generated type
+            var seal = ctx.UnknownSubTypes == UnknownSubTypeHandling.Sealed ? "sealed " : "";
+            tw = ctx.Write($"{GetAccess(GetAccess(message))} {seal}partial class {Escape(name)}");
             tw.Write(" : global::ProtoBuf.IExtensible");
             //if (UsePooledMemory(ctx, message))
             //{

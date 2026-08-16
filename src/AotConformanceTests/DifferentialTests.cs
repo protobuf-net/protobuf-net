@@ -32,6 +32,18 @@ namespace ProtoBuf.AotConformance
                from index in Enumerable.Range(0, count)
                select new object[] { model.FullName!, index };
 
+        /// <summary>
+        /// Resolves one case to a fresh generated model and its sample, so that a sibling fixture
+        /// can drive the same corpus without duplicating the reflection.
+        /// </summary>
+        internal static (TypeModel Model, object Value) CreateGeneratedCase(string modelTypeName, int index)
+        {
+            var modelType = Fixtures.GetType(modelTypeName);
+            Assert.NotNull(modelType);
+            var generated = Assert.IsAssignableFrom<TypeModel>(Activator.CreateInstance(modelType, nonPublic: true));
+            return (generated, GetSamples(modelType)[index]);
+        }
+
         [Theory, MemberData(nameof(GetCases))]
         public void GeneratedSerializerMatchesRuntimeModel(string modelTypeName, int index)
         {
@@ -231,7 +243,7 @@ namespace ProtoBuf.AotConformance
                 var type = declaration.GetType();
                 var underlying = (Type)type.GetProperty("Type")!.GetValue(declaration)!;
                 var surrogate = (Type)type.GetProperty("Surrogate")!.GetValue(declaration)!;
-                var converter = (Type?)type.GetProperty("Converter")!.GetValue(declaration);
+                var converter = (Type)type.GetProperty("Converter")!.GetValue(declaration);
 
                 if (converter is null)
                 {
@@ -360,7 +372,7 @@ namespace ProtoBuf.AotConformance
             // have no parameterless constructor, so they can only be covered by declared samples.
             var defaults = from attribute in modelType.GetCustomAttributes()
                            where attribute.GetType().FullName == ProtoSerializableAttribute
-                           let seed = (Type?)attribute.GetType().GetProperty("Type")?.GetValue(attribute)
+                           let seed = (Type)attribute.GetType().GetProperty("Type")?.GetValue(attribute)
                            where seed is not null
                               && (seed.IsValueType || seed.GetConstructor(Type.EmptyTypes) is not null)
                            select Activator.CreateInstance(seed!)!;

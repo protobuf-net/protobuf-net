@@ -10,7 +10,7 @@ namespace Google.Protobuf.Reflection
 {
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class FileDescriptorSet : global::ProtoBuf.IExtensible
+    public sealed partial class FileDescriptorSet : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -22,7 +22,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class FileDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class FileDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -91,7 +91,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class DescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class DescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -136,7 +136,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<string> ReservedNames { get; } = new global::System.Collections.Generic.List<string>();
 
         [global::ProtoBuf.ProtoContract()]
-        public partial class ExtensionRange : global::ProtoBuf.IExtensible
+        public sealed partial class ExtensionRange : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -168,7 +168,7 @@ namespace Google.Protobuf.Reflection
         }
 
         [global::ProtoBuf.ProtoContract()]
-        public partial class ReservedRange : global::ProtoBuf.IExtensible
+        public sealed partial class ReservedRange : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -199,7 +199,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class ExtensionRangeOptions : global::ProtoBuf.IExtensible
+    public sealed partial class ExtensionRangeOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -211,7 +211,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class FieldDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class FieldDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -382,7 +382,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class OneofDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class OneofDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -405,7 +405,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class EnumDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class EnumDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -435,7 +435,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<string> ReservedNames { get; } = new global::System.Collections.Generic.List<string>();
 
         [global::ProtoBuf.ProtoContract()]
-        public partial class EnumReservedRange : global::ProtoBuf.IExtensible
+        public sealed partial class EnumReservedRange : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -466,7 +466,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class EnumValueDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class EnumValueDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -499,7 +499,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class ServiceDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class ServiceDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -525,7 +525,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class MethodDescriptorProto : global::ProtoBuf.IExtensible
+    public sealed partial class MethodDescriptorProto : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -592,7 +592,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class FileOptions : global::ProtoBuf.IExtensible
+    public sealed partial class FileOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -835,7 +835,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class MessageOptions : global::ProtoBuf.IExtensible
+    public sealed partial class MessageOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -890,7 +890,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class FieldOptions : global::ProtoBuf.IExtensible
+    public sealed partial class FieldOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -938,6 +938,17 @@ namespace Google.Protobuf.Reflection
         public bool ShouldSerializeLazy() => __pbn__Lazy != null;
         public void ResetLazy() => __pbn__Lazy = null;
         private bool? __pbn__Lazy;
+
+        [global::ProtoBuf.ProtoMember(15, Name = @"unverified_lazy")]
+        [global::System.ComponentModel.DefaultValue(false)]
+        public bool UnverifiedLazy
+        {
+            get => __pbn__UnverifiedLazy ?? false;
+            set => __pbn__UnverifiedLazy = value;
+        }
+        public bool ShouldSerializeUnverifiedLazy() => __pbn__UnverifiedLazy != null;
+        public void ResetUnverifiedLazy() => __pbn__UnverifiedLazy = null;
+        private bool? __pbn__UnverifiedLazy;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -989,7 +1000,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class OneofOptions : global::ProtoBuf.IExtensible
+    public sealed partial class OneofOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1001,7 +1012,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class EnumOptions : global::ProtoBuf.IExtensible
+    public sealed partial class EnumOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1034,7 +1045,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class EnumValueOptions : global::ProtoBuf.IExtensible
+    public sealed partial class EnumValueOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1057,7 +1068,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class ServiceOptions : global::ProtoBuf.IExtensible
+    public sealed partial class ServiceOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1080,7 +1091,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class MethodOptions : global::ProtoBuf.IExtensible
+    public sealed partial class MethodOptions : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1125,7 +1136,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class UninterpretedOption : global::ProtoBuf.IExtensible
+    public sealed partial class UninterpretedOption : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1197,7 +1208,7 @@ namespace Google.Protobuf.Reflection
         private string __pbn__AggregateValue;
 
         [global::ProtoBuf.ProtoContract()]
-        public partial class NamePart : global::ProtoBuf.IExtensible
+        public sealed partial class NamePart : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1214,7 +1225,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class SourceCodeInfo : global::ProtoBuf.IExtensible
+    public sealed partial class SourceCodeInfo : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1224,7 +1235,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<Location> Locations { get; } = new global::System.Collections.Generic.List<Location>();
 
         [global::ProtoBuf.ProtoContract()]
-        public partial class Location : global::ProtoBuf.IExtensible
+        public sealed partial class Location : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1266,7 +1277,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
-    public partial class GeneratedCodeInfo : global::ProtoBuf.IExtensible
+    public sealed partial class GeneratedCodeInfo : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -1276,7 +1287,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<Annotation> Annotations { get; } = new global::System.Collections.Generic.List<Annotation>();
 
         [global::ProtoBuf.ProtoContract()]
-        public partial class Annotation : global::ProtoBuf.IExtensible
+        public sealed partial class Annotation : global::ProtoBuf.IExtensible
         {
             private global::ProtoBuf.IExtension __pbn__extensionData;
             global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)

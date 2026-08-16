@@ -1,4 +1,4 @@
-# protobuf-net — notes for agents
+﻿# protobuf-net — notes for agents
 
 Only non-obvious things live here; the code is the reference for everything else.
 
@@ -6,6 +6,55 @@ Only non-obvious things live here; the code is the reference for everything else
 
 This project does not exclude LLM etc tool usage under human guidance. All responsibility for
 code-quality rests with the human submitter/reviewer; "slop" will be culled without mercy.
+
+## Where the notes live — and which branch they are on
+
+**`docs/` is the published site** (<https://protobuf-net.github.io/protobuf-net/>), so it holds
+consumer documentation only. Working notes — design, findings, corpus snapshots — live in
+**`notes/`**, which is not published. The test for which is which is `docs/index.md`: everything in
+`docs/` is linked from it. If you add a working note to `docs/`, you have published it.
+
+The notes are deliberately versioned **with the code**, not in one central place: a note that says
+"X is refused" only stays true if changing the refusal also changes the note in the same commit,
+and a note on a branch correctly describes *that branch*. The cost is that you have to know where
+to look while a stack is in flight, which is what this section is for.
+
+The stack **collapsed onto `v4` on 2026-08-14**: the reader arc, the writer arc, the buffer core,
+`[ProtoSchema]` and the protogen sub-type option are one branch again. So there is currently no
+"which branch is this note current on?" question to answer — everything below is current on `v4`.
+This section stays because that question returns the moment a branch is cut.
+
+```
+main → v4   (raw-writer, writer-buffer-core and aot-schema-model are folded into it)
+```
+
+| document | covers |
+| --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
+| `notes/nano-core.md` | the reader arc: design and the cuts |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
+| `notes/aot-findings.md` | numbered findings from the AOT generator work |
+| `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots |
+
+**When a branch is next cut, restore the "where it is current" column.** Its absence is a statement
+that the stack is flat, not that the column was unnecessary: two separate wrong-branch claims were
+shipped while the stack was in flight, one of them in this very table.
+
+Two rules that keep this honest, both learned the hard way here:
+
+- **`notes/gaps.md` is the entry point for "what is missing"**, and the parked/owed index in
+  `notes/nano-writer.md` for "what is deferred and why" — not a commit log. Anything
+  deferred goes there with its reason, because a commit message is not a backlog and does not
+  survive a squash;
+- **a change big enough to appear in a handover is big enough to have its own commit.** A gate once
+  landed as an unmentioned passenger in an unrelated commit, and the handover — assembled from
+  commit messages — recorded it as never having landed. That cost a later session most of a
+  sitting; see "Three corrections to this handover" in `notes/nano-writer.md`.
+
+Refresh the table above when a branch is cut or merged.
 
 ## Layout and build
 
@@ -43,7 +92,7 @@ If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
 
 ## AOT source generator (work in progress)
 
-> **Picking this up on a new machine?** `docs/aot-findings.md` opens with a **Handover** section
+> **Picking this up on a new machine?** `notes/aot-findings.md` opens with a **Handover** section
 > recording the Windows-only validations and their results — all run and green as of 2026-08-11,
 > including the full-TFM `pack` (note the `dotnet pack`/NU5026 wrinkle recorded there), the win-x64
 > native publish (19 warnings, matching linux-x64), and the net472 test legs.
@@ -385,8 +434,10 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
 - `IProducerConsumerCollection<T>` resolves to a provider, but **reading** one needs a concrete type
   to construct, so ref-emit throws on deserialize. There is nothing to compare against, so it has no
   fixture.
-- `IReadOnlySet<T>` maps to `CreateReadOnySet` (sic), which only exists in the net6.0+ build of the
-  library; the generator checks the symbol is present before emitting a call to it.
+- `IReadOnlySet<T>` maps to `CreateReadOnlySet`, which only exists in the net6.0+ build of the
+  library; the generator checks the symbol is present before emitting a call to it, and falls back
+  to the 3.x spelling `CreateReadOnySet` (sic - now an `[Obsolete]` forwarder, kept because
+  previously-generated code binds to it by name) when only an older Core is referenced.
 
 ### Maps
 
@@ -453,7 +504,7 @@ succeeds and emits the member, then the first use throws *"No serializer for typ
 `ISerializer<KeyValuePair<string,string>>`, so the cast is null and resolution falls back to a model
 with no entry. The reflection path handles all three shapes. So our repeated and nested map **values**
 match reflection and *exceed* the compiled path, and our refused nested **key** matches the compiled
-path and falls short of reflection. Item 9 in `docs/aot-findings.md`.
+path and falls short of reflection. Item 9 in `notes/aot-findings.md`.
 
 That distinction is only visible if you **run** the compiled model. `AotRefGen` compiles and
 decompiles but never executes, so `*.reference.cs` shows the member emitted and says nothing about
@@ -642,7 +693,7 @@ Two of those refusals are newer and worth the detail:
 in addition to the implementation's, so a property declared on both goes on the wire **twice**. That
 is consistent — the interface property and the implementing property genuinely are different members
 — but it is not what anyone writing that contract intends, and it is why the analyzer says
-"supported but not recommended". `docs/aot-findings.md` has the decoded bytes.
+"supported but not recommended". `notes/aot-findings.md` has the decoded bytes.
 
 This also turned up a bug in the *shipped* analyzer: `PBN0012` ("declared as an include, but is not
 a direct sub-type") compared `BaseType` only, so it reported a build **error** for every interface
@@ -702,7 +753,7 @@ each input in isolation, which is exactly what is needed.
 The level-200 `Guid` path used to be recorded here as costing four AOT warnings the other forms did
 not. It never did: those warnings were kept-reflectable members of `System.Enum`, and ILC merely
 attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They are gone, along
-with the rest of that group — see item 4 of `docs/aot-findings.md`, and treat per-feature warning
+with the rest of that group — see item 4 of `notes/aot-findings.md`, and treat per-feature warning
 attributions with suspicion generally.
 
 ### Extensible contracts
@@ -881,74 +932,13 @@ A category sitting in the drop table is evidence of a *diagnostic*, not of missi
 
 ### Not yet supported
 
-Two things are genuinely ours rather than matches:
+**See `notes/gaps.md`** - every gap, with the decision taken against it. As of 2026-08-14 there
+are exactly two the generator refuses that protobuf-net itself would handle, both decided
+*keep omitting*: a collection as a map key, and a hand-written serializer as a map key or value.
 
-- a **nested map key** (`Dictionary<List<int>, List<string>>`) — though note this *matches* the
-  compiled ref-emit path, which throws on use; only the reflection path handles it.
-
-  **The scenario is real, which is why this is an omission rather than a refusal on principle.** A
-  composite value used as an identity key is ordinary in generator-shaped code — this very codebase
-  keys its incremental cache on an `EquatableArray<T>`, for exactly that reason. So "a collection as
-  a dictionary key" is not automatically a mistake in a contract.
-
-  What makes it *hard to use* is orthogonal to us, and worth knowing before anyone builds it: the key
-  needs **intrinsic structural equality**, and the BCL immutable collections do not have it. Probed,
-  because the details are surprising:
-
-  | | `a.Equals(b)` for equal contents |
-  | --- | :-: |
-  | `ImmutableArray<T>` | **false** — compares the *underlying array by reference* |
-  | `ImmutableList<T>` | false — does not override at all |
-  | `ImmutableHashSet<T>` | false — likewise |
-
-  `ImmutableArray<T>` is the ironic one: it is the only one that implements `IEquatable<>`, and it is
-  reference-based, so it *looks* like a structural value type and is not. That is the same trap
-  recorded above for the plan types, which is why `EquatableArray<T>` is hand-written here.
-
-  A `Dictionary<ImmutableArray<int>, string>` therefore misses an equal-but-distinct key today,
-  before serialization enters into it. And supplying an `IEqualityComparer` does not rescue a
-  round-trip either, because protobuf-net **constructs the collection itself** (`ActivatorCreate`), so
-  the comparer is not carried across. The only shape that really works is a key type whose own
-  equality is structural — a consumer's `EquatableArray<Foo>`, not a BCL type.
-
-  So: a fair omission for a first release, and if it is ever built, the reference behaviour to copy is
-  the *reflection* path, since the compiled one throws;
-- a **hand-written serializer as a map key or value** whose category is scalar *or* simply unknown.
-  The unary and *collection* forms both defer the decision to the serializer (below), and a map
-  plausibly could too — `MapSerializer` calls `InheritFrom` on each side exactly as the repeated one
-  does. It is unbuilt rather than impossible: the map plan carries no per-side serializer expression,
-  so it emits `this` for a message side, and adding one is real plumbing for a shape with **zero**
-  occurrences in a 1392-contract corpus. Deferred deliberately, with the mechanism recorded so it is
-  a morning's work if a consumer ever asks.
-
-  **The collection form was refused on a wrong premise, and it is worth knowing why.** The claim was
-  that an element cannot defer because its wire type is baked into the collection's features at the
-  call site. It is baked in only because we chose to bake it in: `WriteRepeated`/`ReadRepeated` both
-  call `features.InheritFrom(serializer.Features)`, and `InheritFrom` fills in the category and wire
-  type **precisely when they were not specified** — so stating no wire type and passing the element
-  serializer defers exactly as `WriteAny` does. Emitting the *message* form regardless is what
-  produced `Invalid wire-type String` on `Issue1083`'s `List<WrappingStruct>`; that contract now
-  emits and matches ref-emit byte-for-byte.
-
-Everything else that is refused either matches ref-emit or is a deliberate AOT decision
-(`System.Type`), and each says which in its diagnostic. Two entries that used to be here went the
-same way, and the way is worth remembering:
-
-- **null-wrapping** was real work, and is now the "Null-wrapping" section above;
-- **interfaces as members** was *already done* — the bullet outlived the work. Probing found the
-  bare-interface cases were refusals that match ref-emit, and the genuinely-untested shapes (a
-  derived interface, a closed generic interface, an interface on either side of a map) already
-  emitted correctly; they just had no fixture. What the probe *did* turn up was a value-type sub-type
-  emitting code that would not compile — a bug, not a gap.
-
-The corpus differential (`src/AotDifferential`) is now the sharper measurement of the two, and it
-reads zero: nothing disagrees on the wire, and no case remains where either model throws and the
-other does not. So widening coverage beats picking another bullet — the `.proto`-generated DTO path
-is the obvious untested half, and `protobuf-net.Reflection` can produce it in-process.
-
-**The ranked candidate list lives in the "Next steps" section of `docs/aot-findings.md`**, with the
-reasoning for the ordering. Keep it there rather than scattering next-step opinions through this
-file, as had started to happen.
+Everything else it refuses is a **match** with protobuf-net rather than a shortfall - see
+"Telling our gaps from protobuf-net's" above, which stays here because it is about how to READ
+a refusal, not about what is outstanding.
 
 ### Golden-file tests
 
@@ -1123,7 +1113,7 @@ which `TypeModel` implements nine instantiations. Nothing reflects over a stream
 `T` on `Deserialize<T>`, and that one was never annotated. Because the mask includes nested types,
 ILC kept **1738 framework members** reflectable (`Task` 520, `Array` 160, `Enum` 99, `Stream` 72, …)
 and *no* protobuf-net members. Removing the three annotations: **34 → 20** warnings and
-**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `docs/aot-findings.md` has the
+**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `notes/aot-findings.md` has the
 measurement and the tracing recipe.
 
 So the standing rule is: **before annotating a type parameter, ask what would reflect over it.** A
@@ -1250,7 +1240,7 @@ warning's clothes, and is where the 808 KB above was found. There are currently 
 publish is incremental and a second run reports nothing at all, and re-measure the *baseline*
 whenever a fixture changes, since the count tracks fixtures. **Watch the binary size too**, not just
 the count: the two do not move together, and the largest win so far was invisible in the count.
-`docs/aot-findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
+`notes/aot-findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
 measurement.
 
 When a warning needs attributing, get the graph rather than guessing —
@@ -1657,7 +1647,7 @@ parseable fixture looks like a generator bug.
 Note the coverage sweep does **not** enable this, deliberately — a real consumer has to opt in, so
 counting these as emittable would overstate what works out of the box.
 
-A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `docs/aot-findings.md` under
+A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `notes/aot-findings.md` under
 "Future ideas" — it is blocked on protobuf-net having no UTF-8 `WriteString` equivalent, and the
 read half of the interface pair is implemented by far fewer types than the write half.
 
@@ -1739,7 +1729,7 @@ orders never having been read in the first place.
 `src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built
 `protobuf-net.Test`, `Examples` and `protobuf-net.Reflection.Test` assemblies and tallies what it
 could and could not handle, grouped by reason. It exists so that "what should the generator support
-next" is answered by counting real contracts rather than by guessing; `docs/aot-coverage.md` is the
+next" is answered by counting real contracts rather than by guessing; `notes/aot-coverage.md` is the
 last snapshot. Build those three projects first — it seeds from **metadata**, not source.
 
 Two artefacts to know about: it can only seed types a `typeof(...)` in another assembly can name, so
@@ -1750,7 +1740,7 @@ under its own "harness artefact" heading rather than counted as a generator bug,
 emitted code compile" line means what it says.
 
 It writes to stdout and the snapshot carries a hand-added header line, so regenerating it is
-`{ header; dotnet run --project src/AotCoverage; } > docs/aot-coverage.md`, not a plain redirect.
+`{ header; dotnet run --project src/AotCoverage; } > notes/aot-coverage.md`, not a plain redirect.
 
 ### Differential sweep (the corpus, on bytes)
 
@@ -1758,7 +1748,7 @@ It writes to stdout and the snapshot carries a hand-added header line, so regene
 **compiles**; this one *runs* it, comparing bytes against `RuntimeTypeModel` for a populated instance
 of every contract. That is the property that actually matters — every serious bug this generator has
 had (the `DataFormat` cast that mis-mapped, the BCL element wire types, `OverwriteList` on a bytes
-member) compiled perfectly and wrote the wrong bytes. `docs/aot-differential.md` is the last snapshot.
+member) compiled perfectly and wrote the wrong bytes. `notes/aot-differential.md` is the last snapshot.
 
 Three things about it are load-bearing:
 
@@ -1791,7 +1781,7 @@ Three things about it are load-bearing:
 
   This is not "more corpus", it is a **different distribution**, and that is the point: people do not
   write `public int @case`, and machine-generated contracts do. It found a bug that broke the
-  consumer's *build* on its first run — item 14 of `docs/aot-findings.md`.
+  consumer's *build* on its first run — item 14 of `notes/aot-findings.md`.
 
   Two things about it are load-bearing. The DTO assembly must be compiled against **the same
   reference set the corpus loads**, or every contract gets a second, incompatible
@@ -1834,7 +1824,7 @@ ref-emit behaviour show up in review.
 direction is an *absence*: a file that was never re-run and a ref-emit that genuinely emitted nothing
 look exactly alike. That has already produced one wrong conclusion — a recorded "the persisted path
 silently drops a map-of-map member" bug that turned out to be a fixture edited without re-running
-`AotRefGen`; see the "Retracted" section of `docs/aot-findings.md`. Regenerate before concluding
+`AotRefGen`; see the "Retracted" section of `notes/aot-findings.md`. Regenerate before concluding
 anything from a member that is missing, and commit the regenerated file in the same commit as the
 fixture change so the two cannot drift.
 

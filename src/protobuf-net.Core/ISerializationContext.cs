@@ -14,7 +14,7 @@ namespace ProtoBuf
         TypeModel Model { get; }
 
         /// <summary>
-        /// Addition information about this serialization operation.
+        /// Additional information about this serialization operation.
         /// </summary>
         object UserState { get; }
     }

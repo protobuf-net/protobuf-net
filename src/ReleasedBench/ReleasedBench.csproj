@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The "what you get today" column for docs/aot.md: protobuf-net exactly as shipped on NuGet.
+
+    This is a SEPARATE PROJECT on purpose, and cannot be merged into NanoBench. The released
+    package and the local build have the same assembly name, so they cannot be referenced side by
+    side - the same constraint AotDifferential documents, and the reason that harness loads its
+    generator reflectively. Two processes, one machine, one payload, identical BenchmarkDotNet
+    settings, is the honest way to get the comparison.
+
+    NOTE there is deliberately NO ProjectReference here. If one is ever added, this project stops
+    measuring the released line and silently starts measuring the local one.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ProtoBuf.Bench.Released</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- the released API surface still exposes the obsolete non-state entry points we do not use -->
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="protobuf-net" />
+    <PackageReference Include="protobuf-net.Reflection" />
+  </ItemGroup>
+
+</Project>

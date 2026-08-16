@@ -9,14 +9,42 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
 - 3.1: adds model depth validation, which may impact some models; see `TypeModel.MaxDepth`
 - 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://protobuf-net.github.io/protobuf-net/aot); build tools included by default
+- 4.0: rewritten reader core; optimized read emission for compile-time serializers (write optimization follows in a later 4.x)
 - future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - future: protogen support for emitting pre-coded custom serializers
 
-## unreleased
+## unreleased (4.0-alpha)
 
+- **the deserialization core is rewritten** — same public surface, new engine. Every consumer
+  benefits without code changes (~29% faster on the descriptor parse benchmark for existing
+  serializers); compile-time serializers additionally get an **optimized read emission** that
+  reaches parity with hand-written readers (~2× the previous release, ~26% faster than
+  Google.Protobuf on the same benchmark). This is why the major version revs: the internals
+  moved substantially, even though the surface did not
+- write optimization is deliberately **not** in this release; reads ship standalone, and the
+  same design will follow for writes in a later 4.x
+- `[ProtoModel(ClassicEmit = true)]` is the escape hatch: it reverts a model to the classic
+  (non-optimized) emission in full. Only for use if you experience problems with the default
+  optimized emit — and if it fixes a symptom, please report that symptom as an issue so the
+  underlying difference can be fixed
+- the new raw reader surface on `ProtoReader.State` is `[Experimental]` (`PBN9002`) while the
+  write side may still reshape it; generated code carries its own suppression, so consumers
+  only see the diagnostic if they call it by hand
+- **protogen's descriptor serializer is now itself generated** by the compile-time model
+  generator (previously a frozen hand-maintained export), so schema parsing rides the new
+  reader and picks up every generator fix automatically
 - add `[ProtoSerializer]` (`[Experimental]`): assembly/model-scoped hand-written serializer
   declarations for the AOT generator, with open-generic mapping — the declarative twin of
-  `MetaType.SerializerType` (#xxxx)
+  `MetaType.SerializerType` (#1275)
+- **fix**: a string member carrying both `[DefaultValue]` and a `ShouldSerialize*()` method
+  silently omitted a present-but-default value; the condition now replaces the declared-default
+  guard, as it always did for other member kinds
+- corrupt-input fidelity: a field-0 tag (including overlong encodings) throws `ProtoException`
+  ("Invalid field in source data: 0") exactly as previous releases did
+- `RepeatedSerializer.CreateReadOnySet` (a long-standing typo) is now `CreateReadOnlySet`;
+  the old spelling remains as an `[Obsolete]` forwarder, so previously-generated code keeps
+  working and the warning disappears on the next build (the generator ships with the library,
+  so regeneration is automatic)
 - **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
   the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
   `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected

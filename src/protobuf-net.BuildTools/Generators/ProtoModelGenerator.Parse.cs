@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -80,6 +80,15 @@ namespace ProtoBuf.BuildTools.Generators
             // form of any member whose type qualifies, so it has to be opted into on both sides
             var allowParseableTypes = false;
 
+            // the escape hatch: suppress the optimized read emission entirely, keeping the classic
+            // bodies - one flag on the plan, and everything downstream (proxies, RawRead_ statics,
+            // breadcrumbs) reverts. Only for use if the optimized emit misbehaves; the attribute's
+            // doc asks anyone who needs it to report the symptom as an issue.
+            var classicEmit = false;
+
+            // [ProtoSchema] declarations, resolved against additional files in a later step
+            var schemaRequests = new List<PlanSchemaRequest>();
+
             foreach (var attribute in model.GetAttributes())
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -93,6 +102,29 @@ namespace ProtoBuf.BuildTools.Generators
                         {
                             allowParseableTypes = true;
                         }
+                        if (named.Key == "ClassicEmit" && named.Value.Value is true)
+                        {
+                            classicEmit = true;
+                        }
+                    }
+                    continue;
+                }
+                if (attributeName == ProtoSchemaAttributeName)
+                {
+                    // resolved later: the syntax-driven parse cannot see additional files, so the
+                    // path is carried out with its location and matched against them downstream
+                    var at = PlanLocation.From(attribute.ApplicationSyntaxReference
+                        ?.GetSyntax(cancellationToken)?.GetLocation());
+                    if (attribute.ConstructorArguments.Length == 0)
+                    {
+                        // the no-argument form: every schema in the project
+                        schemaRequests.Add(new PlanSchemaRequest(null, at));
+                    }
+                    else if (attribute.ConstructorArguments.Length == 1
+                        && attribute.ConstructorArguments[0].Value is string schemaPath
+                        && !string.IsNullOrWhiteSpace(schemaPath))
+                    {
+                        schemaRequests.Add(new PlanSchemaRequest(schemaPath, at));
                     }
                     continue;
                 }
@@ -161,7 +193,10 @@ namespace ProtoBuf.BuildTools.Generators
             DropUnsatisfiable(parsed, locations, diagnostics);
 
             ProtoModelPlan? plan = null;
-            if (parsed.Count != 0 || enums.Count != 0)
+            // a [ProtoSchema] model legitimately has NOTHING at this point: its contracts come from
+            // the schema, which is resolved a step later against the compilation's additional files.
+            // Without this the plan would be null and the whole model silently emitted nothing
+            if (parsed.Count != 0 || enums.Count != 0 || schemaRequests.Count != 0)
             {
                 var contracts = parsed.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
                 var enumPlans = enums.Values.OrderBy(static x => x.TypeName, StringComparer.Ordinal).ToArray();
@@ -175,10 +210,48 @@ namespace ProtoBuf.BuildTools.Generators
                     // and only when they have not written one themselves - a declared constructor is
                     // both the opt-out and the way to keep `new` working
                     emitConstructor: CanEmitInstance(model) && DeclaresNoConstructor(model),
-                    isSealed: model.IsSealed);
+                    isSealed: model.IsSealed,
+                    // the raw read pass is symbol-gated on the raw surface being present: the
+                    // reader IS ProtoReader.State (nested metadata name), and the gate probes
+                    // for RAW members rather than the type - State always exists, but only a
+                    // Core with the raw surface can satisfy emitted calls. Accessibility-checked
+                    // so a future internal surface fails closed rather than emitting broken code.
+                    // The probe names the NEWEST member the emission calls (StashTag, the
+                    // legacy-mode bridge), not the oldest: a consumer mixing a newer BuildTools
+                    // with an older raw-surface Core must fall back to the classic emission
+                    // rather than emit calls that do not compile - which is exactly how this
+                    // gate's insufficiency was discovered (the differential corpus referenced a
+                    // one-wave-stale Core).
+                    rawReader: !classicEmit
+                        && compilation.GetTypeByMetadataName("ProtoBuf.ProtoReader+State") is { } rawType
+                        && rawType.GetMembers("ReadRawTag").Length != 0
+                        && rawType.GetMembers("StashTag").Length != 0
+                        && rawType.GetMembers("ReadRawTimestamp").Length != 0 // the BCL wrappers wave
+                        && compilation.IsSymbolAccessibleWithin(rawType, compilation.Assembly),
+                    // the write side, gated identically (notes/nano-writer.md) - and by the SAME
+                    // ClassicEmit flag, per the whole-emission agreement: one flag, both directions
+                    rawWriter: !classicEmit
+                        && compilation.GetTypeByMetadataName("ProtoBuf.ProtoWriter+State") is { } rawWriteType
+                        && rawWriteType.GetMembers("WriteRawTag").Length != 0
+                        // ALWAYS gate on the newest member this pass emits calls to, so a newer
+                        // BuildTools against an older Core falls back to classic emission rather
+                        // than emitting calls that do not compile - the identical rule (and the
+                        // identical stale-corpus failure) the read side's gate records above
+                        && rawWriteType.GetMembers("ThrowNullRepeatedContents").Length != 0 // the repeated wave
+                        && rawWriteType.GetMembers("MeasureRawString").Length != 0 // the measure wave
+                        && rawWriteType.GetMembers("MeasureRawExtensionData").Length != 0 // the extensible-measure wave
+                        && rawWriteType.GetMembers("RawLengths").Length != 0 // the length-cache wave
+                        && rawWriteType.GetMembers("TryMeasureRaw").Length != 0 // the IMeasuringSerializer wave
+                        && compilation.IsSymbolAccessibleWithin(rawWriteType, compilation.Assembly),
+                    // net5+ framework capability, probed per compilation like UnsafeAccessor: the
+                    // raw repeated write enumerates a List<T> as a span where it can
+                    listAsSpan: compilation.GetTypeByMetadataName("System.Runtime.InteropServices.CollectionsMarshal")
+                        is { } collectionsMarshal
+                        && collectionsMarshal.GetMembers("AsSpan").Length != 0);
             }
 
-            return new ProtoParseResult(plan, new(diagnostics.ToArray()));
+            return new ProtoParseResult(plan, new(diagnostics.ToArray()),
+                new(schemaRequests.ToArray()));
         }
 
         /// <summary>
@@ -2860,10 +2933,20 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates, serializers, allowParseableTypes);
 
-                // IReadOnlySet<T> support is conditional on the runtime the library was built for
-                if (repeated.Factory == "CreateReadOnySet" && !HasFactory(compilation, "CreateReadOnySet")) return null;
+                // IReadOnlySet<T> support is conditional on the runtime the library was built
+                // for - and the correctly-spelled factory is 4.x-and-up (the shipped 3.x name
+                // is the typo'd CreateReadOnySet, kept as an [Obsolete] forwarder), so an older
+                // Core falls back to the old spelling rather than dropping the member, and only
+                // a Core with NEITHER (built below net6) drops it
+                var repeatedPlan = repeated.AsRepeatedPlan();
+                if (repeatedPlan.Factory == "CreateReadOnlySet" && !HasFactory(compilation, "CreateReadOnlySet"))
+                {
+                    if (!HasFactory(compilation, "CreateReadOnySet")) return null;
+                    repeatedPlan = new ProtoRepeatedPlan("CreateReadOnySet",
+                        repeatedPlan.TakesCollectionType, repeatedPlan.IsValueType);
+                }
 
-                return AsRepeated(compilation, repeated.Element, repeated.AsRepeatedPlan(), type, surrogates, serializers, allowParseableTypes);
+                return AsRepeated(compilation, repeated.Element, repeatedPlan, type, surrogates, serializers, allowParseableTypes);
             }
             return null;
         }
@@ -2948,7 +3031,7 @@ namespace ProtoBuf.BuildTools.Generators
             new("System.Collections.Generic.Stack`1", "CreateStack", false, true),
             new("System.Collections.Generic.HashSet`1", "CreateSet", true, true),
             new("System.Collections.Generic.ISet`1", "CreateSet", true, true),
-            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnySet", true, false),
+            new("System.Collections.Generic.IReadOnlySet`1", "CreateReadOnlySet", true, false),
 
             // the fallback, which is why nearly anything enumerable is a collection
             new("System.Collections.Generic.IEnumerable`1", "CreateEnumerable", false, true),

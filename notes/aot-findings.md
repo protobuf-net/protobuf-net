@@ -1,4 +1,4 @@
-# Findings from the AOT generator work
+﻿# Findings from the AOT generator work
 
 Things turned up while building `ProtoModelGenerator` that are **about protobuf-net itself**, not
 about the generator. Kept here so they can become issues rather than being lost in commit messages.
@@ -566,7 +566,7 @@ option that should not survive.
 
 ### 13. The corpus differential's remaining disagreements
 
-**This entry exists because `docs/aot-differential.md` is generated and overwritten on every run.**
+**This entry exists because `notes/aot-differential.md` is generated and overwritten on every run.**
 It is a snapshot, not a backlog. Read the snapshot for current numbers.
 
 **There are none.** Every bucket is either zero or a category where comparison is impossible by
@@ -751,22 +751,9 @@ survives, not as a commitment.
    couple of which look like **protogen** bugs rather than corpus artefacts, `stringEscaping.proto`
    emitting `Unexpected character '\'` being the clearest. Those are protobuf-net.Reflection's to
    answer for, not the AOT generator's, but nobody had run the whole tree through a compiler before.
-8. **Direct emit** — see A2. The remaining 18 warnings need the reflective paths not to exist on the
-   AOT route at all. Note the warning count is now a *poor* motivation for it: those 18 are correct
-   warnings about code that does reflect. The real arguments are one less layer of indirection on the
-   generated path, and possibly size — get a size estimate first.
-9. **The remaining generator gaps** — a hand-written serializer as a map key or value, and a
-   collection as a map key. Both refused with a diagnostic naming the reason; both deliberately
-   deferred, each bounded and each with a known reference behaviour: a
-   nested map key, a `CategoryScalar` hand-written serializer as a collection element or map value,
-   and an external serializer whose category cannot be established.
-
-One loose end, unresolved rather than closed: an intermittent single failure in `Examples` on
-**net472 only**, seen twice in full-traversal runs and never reproducible standalone. Never
-captured by name, but everything points at `PEVerify.AssertValid` — it shells out to `PEVerify.exe`
-with a **20-second timeout** (`src/Examples/PEVerify.cs`), it is inside `#if !COREFX` so it is net472
-only, and a subprocess timeout is exactly what contention in a full run would trip. Tied to
-`Compile(name, path)`, so no AOT path can reach it.
+8. **The still-outstanding items have moved to `notes/gaps.md`** - direct emit, the two
+   remaining generator gaps, and the intermittent net472 `Examples` failure. The struck-through
+   items above are kept here because they are history: what was done, and what it found.
 
 ## Future ideas
 

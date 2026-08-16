@@ -1,4 +1,4 @@
-# Compile-time serializers, for native AOT and trimming
+﻿# Compile-time serializers, for native AOT and trimming
 
 > **Preview.** The attributes described here are marked `[Experimental]`, which is a compile *error*
 > until you suppress it — see [Opting in](#opting-in). The shape may still change.
@@ -39,6 +39,95 @@ The AOT generator builds those serializers at **compile time** instead. Your mod
 C# in your own project — code you can read, step through, and that ILC can compile like anything
 else.
 
+## And it is about twice as fast
+
+Cold start is the reason to look; throughput is the reason to stay. Same payload — the
+`FileDescriptorSet` for `descriptor.proto`, 7,670 bytes — in both directions:
+
+| | serialize | | deserialize | |
+| --- | ---: | --- | ---: | --- |
+| protobuf-net 3.2.46, as shipped on NuGet | 20.59 µs | `████████████████████` | 22.77 µs | `████████████████████` |
+| protobuf-net v4, runtime model | 20.39 µs | `███████████████████▊` | 17.63 µs | `███████████████▍` |
+| **protobuf-net v4, generated model** | **10.28 µs** | `██████████` | **9.03 µs** | `███████▉` |
+| Google.Protobuf | 13.14 µs | `████████████▊` | 12.66 µs | `███████████` |
+
+*Lower is better; bars are relative to the slowest row in each direction.*
+
+Against the package you have installed today, the generated model is **2.0× faster to serialize and
+2.5× faster to deserialize** — and it is **21% / 29% ahead of Google.Protobuf**, on Google's own
+schema, with their own generated types and their own serializer. Serialization allocates
+**nothing**, against 4,232 bytes for Google.Protobuf.
+
+Three honest notes, because the table invites the questions:
+
+- **the "v4, runtime model" row is the interesting one.** It is barely faster than 3.2.46 at
+  serializing, but meaningfully faster at deserializing — the reader rewrite lifts everyone, while
+  the writer's gains land almost entirely in generated code. So "upgrade to v4" and "generate your
+  model" are two separate wins, and this table is the only place that separates them;
+- **the generated-model figures are measured on an ordinary JIT build**, not a native publish. The
+  code is identical either way — that is the point of generating it — but these are not native-AOT
+  numbers, and a native publish has its own (better) cold-start story above.
+- **the benchmark's DTOs are `sealed`, and until recently a `.proto`-first consumer could not get
+  that.** protobuf-net emits a per-message unknown-sub-type check that a generated DTO can never
+  actually trip, and `sealed` is one of the things that elides it — so this row was, in that one
+  respect, a shape contract-first users could not reach. They can now, with
+  [`SubTypes="sealed"`](contract_first.md#additional-options). Do not read much into it: the check
+  measures at **~0.6%**, which is below this benchmark's run-to-run noise. It is noted because the
+  numbers should say what they were measured on, not because it moves them.
+
+### When the length is needed first — the gRPC shape
+
+gRPC frames every message with its length, so the payload has to be **priced before a byte is
+written**. That is a harder question than "serialize this", and the two engines answer it very
+differently:
+
+| | measure + serialize | plain serialize | cost of needing the length |
+| --- | ---: | ---: | ---: |
+| protobuf-net v4, runtime model | 38.19 µs | 20.62 µs | +85% |
+| **protobuf-net v4, generated model** | **15.45 µs** | 10.21 µs | **+51%** |
+
+The runtime model has no way to price a message except to **write it and count** — to a null
+writer, then again for real — so it very nearly serializes twice. A generated model has an
+arithmetic `Measure_` per contract, which walks the object graph doing sums instead of encoding:
+3.76 µs here, against the 17.6 µs a write-to-count pass costs.
+
+The rest of the difference is that the measure's work is *kept*. `Measure` hands back a state
+object, and the sub-message lengths it computed are handed to the write with it — so the write
+does not re-derive them. That hand-off is an O(1) swap of the length caches, not a copy; when it
+*was* a copy it cost an extra 22 KB and 11%.
+
+So this is the shape where the generated model gains most: **2.5× against the runtime model**,
+where plain serialization is 2.0×. If you are on gRPC, that is the number that applies to you.
+
+### What the payload is made of
+
+Ratios travel; absolute microseconds do not. And a single payload cannot speak for yours, so it is
+worth knowing what this one is: of its 7,670 bytes, **71.5% is string/bytes payload**, 13.8% field
+tags, 8.2% length prefixes and 6.6% varint values. Encoding those strings — the irreducible part of
+any serializer's job here — is 2.8 µs on its own, about a quarter of the generated model's serialize
+time.
+
+A payload built from packed numeric columns, or from far deeper nesting, would have a different
+composition and could land differently. `src/NanoBench/DescriptorPayloadCensus.md` has the full
+breakdown and the script that produces it, so the same question can be asked of your own data.
+
+### Reproducing these
+
+Two processes, because the released package and a local build share an assembly name and cannot be
+referenced side by side. Same machine, same payload, same BenchmarkDotNet settings; the payload
+length is printed by both so a divergence cannot pass unnoticed:
+
+``` bash
+# protobuf-net v4 (runtime + generated) and Google.Protobuf
+dotnet run -c Release -f net10.0 --project src/NanoBench -- \
+    --filter "*DescriptorSerializeBenchmarks*" --job short
+dotnet run -c Release -f net10.0 --project src/NanoBench -- \
+    --filter "*DescriptorParseBenchmarks*" --job short
+
+# protobuf-net as shipped on NuGet
+dotnet run -c Release --project src/ReleasedBench -- --filter "*" --job short
+```
+
 ## Opting in
 
 Declare a partial class deriving from `TypeModel`, and tell it what to serialize:
@@ -78,6 +167,53 @@ If you want none of this — no analyzers, no generators — one property turns 
 ``` xml
 <ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>
 ```
+
+### Contract-first: DTOs generated from a `.proto`
+
+If your types come from a `.proto` rather than from hand-written C#, you have nothing to name a
+`typeof(...)` for — the DTOs do not exist until the build runs. `[ProtoSchema]` seeds the model from
+the schema instead:
+
+``` c#
+[ProtoModel]
+[ProtoSchema]
+public partial class MyModel : TypeModel { }
+```
+
+That is the whole thing, and it is the form to reach for by default: no argument means **every
+`.proto` in the project**, which is what almost everyone wants. The `.proto` files, the DTOs
+generated from them, and the model can all live in **one project**.
+
+Serialization is unchanged — the generated model serializes the generated DTOs like any other
+contract:
+
+``` c#
+MyModel.Instance.Serialize(stream, new Order { Id = 1 });
+```
+
+If you want only some of the schemas, name them:
+
+``` c#
+[ProtoSchema("orders.proto")]
+[ProtoSchema("shipping/address.proto")]
+```
+
+A path is matched from the right, a segment at a time, so `address.proto` matches
+`shipping/address.proto` but `billing/address.proto` does not — and an exact match always wins over a
+suffix one. `/` and `\` are interchangeable, and matching ignores case.
+
+Imports are followed automatically: naming a schema pulls in the types it imports, so you list what
+you *serialize*, not everything it depends on.
+
+You can mix the two forms freely — `[ProtoSerializable]` for hand-written contracts and
+`[ProtoSchema]` for generated ones, on the same model.
+
+**Why this exists**: source generators all run against the same input compilation and never see each
+other's output, so `[ProtoSerializable(typeof(Order))]` cannot name a DTO that another generator is
+producing in the same project — the model would find an error symbol where the contract should be.
+`[ProtoSchema]` reads the schema directly, which is the same information the DTO generator works
+from. Before this, the answer was to put the `.proto` in its own project and reference it; that still
+works and is still a perfectly good layout, but it is no longer required.
 
 ## Requirements
 
@@ -188,15 +324,17 @@ move it to a generic overload.
 
 ## Things that catch people out
 
-### `.proto`-generated DTOs need their own project
+### `typeof(...)` cannot name a `.proto`-generated DTO
 
 If you generate DTOs from a `.proto` using
-[protobuf-net.BuildTools](https://protobuf-net.github.io/protobuf-net/contract_first), you **cannot**
-put `[ProtoModel]` in the same project. Source generators all run against the same input compilation
-and never see each other's output, so the model finds nothing to serialize.
+[protobuf-net.BuildTools](https://protobuf-net.github.io/protobuf-net/contract_first), and put
+`[ProtoModel]` in the same project, `[ProtoSerializable(typeof(Order))]` will not resolve: source
+generators all run against the same input compilation and never see each other's output, so the model
+gets an error symbol rather than the contract. The generator reports `PBN2002` naming the fix.
 
-Put the `.proto` and its generated DTOs in one project, and reference it from the project holding the
-model. The generator reports `PBN2002` with this explanation if it cannot resolve a type you listed.
+Use [`[ProtoSchema]`](#contract-first-dtos-generated-from-a-proto) instead, which seeds from the
+schema rather than from a symbol and works in one project. (Putting the `.proto` in a separate project
+and referencing it also still works.)
 
 ### Two references that declare the same type
 
@@ -278,6 +416,11 @@ Two things worth doing before you trust it:
 - **A hand-written serializer as a map key or value** is refused when its category is `CategoryScalar`
   or cannot be determined, as is a **collection as a map key**. Both are reported with a diagnostic
   naming the reason rather than silently mis-emitted.
+- **`[ProtoSchema]` does not yet cover every schema.** Across protobuf-net's 268-schema test corpus it
+  builds 241, and the shortfall is two shapes: a **`repeated` enum** (and an enum as a **map value**),
+  and proto2 **`group`**. Both are refused with a diagnostic rather than mis-emitted, and neither
+  affects `[ProtoSerializable]`, which handles all three. If you hit one, generate the DTOs in a
+  separate project and seed the model with `typeof(...)` as before.
 - **`AppendValue` aside, anything the generator cannot handle is refused, not guessed.** If a contract
   is missing from your model there is a `PBN2001`–`PBN2004` warning saying which and why.
 
@@ -289,7 +432,8 @@ Broadly, the code-first surface: contracts and members (properties *and* fields)
 families), dictionaries and `[ProtoMap]`, `CompatibilityLevel` and the BCL types it governs,
 null-wrapping, extensible contracts, serialization callbacks, `ShouldSerialize`/`Specified`,
 `ImplicitFields`, `[ProtoPartialMember]`/`[ProtoPartialIgnore]`, surrogates, hand-written serializers,
-auto-tuples, and closed generic contracts.
+auto-tuples, and closed generic contracts. Contracts can be seeded from a `typeof(...)` or, with
+`[ProtoSchema]`, straight from a `.proto`.
 
 An **open** generic contract cannot be supported: the generated services type is a single non-generic
 class, so there is nowhere to put the type parameter.
