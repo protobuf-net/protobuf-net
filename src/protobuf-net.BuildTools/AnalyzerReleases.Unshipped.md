@@ -1,4 +1,11 @@
-﻿### New Rules
+﻿; ServiceContractAnalyzer's PBN2001-PBN2010 (the gRPC analyzers) shipped in #735 and were
+; recorded here by NOBODY until 2026-08-16 - which is half of why the AOT generator was later
+; given a "PBN2000+ block of its own" that was nothing of the kind. They are listed below as
+; new rules because that is where a reader will look; they are not new, they are newly tracked.
+; Release tracking is not enforced in this repo (the RS2000 rules are inactive), so this table
+; is documentation - and the ONLY register of which ids are taken. Check it before adding one.
+
+### New Rules
 
 Rule ID  | Category | Severity | Notes
 ---------|----------|----------|--------------------
@@ -25,24 +32,34 @@ PBN0020  | Usage    | Warning  | Member should declare `[DefaultValue]`
 PBN0021  | Usage    | Warning  | Member should update its `[DefaultValue]`
 PBN0022  | Usage    | Warning  | Member should declare `IsRequired`
 PBN0023  | Usage    | Warning  | `[ProtoContract]` on an interface is not recommended
-PBN2000  | ProtoBuf | Error    | Language version too low for the AOT generator
-PBN2001  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported member
-PBN2002  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported declaration
-PBN2003  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported protobuf-net option
-PBN2004  | ProtoBuf | Warning  | Contract omitted from the AOT model: references an omitted contract
-PBN2010  | ProtoBuf | Warning  | Call uses the runtime model, not the AOT model
-PBN2011  | ProtoBuf | Warning  | Call resolves its contract type at run time
-PBN2012  | ProtoBuf | Warning  | Project publishes AOT or trimmed, but has no AOT model
-PBN2013  | ProtoBuf | Info     | Compile-time serializers are available
-PBN3000  | ProtoBuf.Grpc | Warning | Language version too low for build-time gRPC proxies
-PBN3001  | ProtoBuf.Grpc | Warning | Service interface cannot be nested
-PBN3002  | ProtoBuf.Grpc | Warning | Service method shape is not supported by the generator
-PBN3003  | ProtoBuf.Grpc | Warning | Generic service interfaces are not supported
-PBN3004  | ProtoBuf.Grpc | Warning | Service interface inherits an interface that is not a sub-service
-PBN3005  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be partial
-PBN3006  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must derive from ClientFactory
-PBN3007  | ProtoBuf.Grpc | Warning | Named type is not a service contract
-PBN3008  | ProtoBuf.Grpc | Warning | Named implementation does not implement the contract
-PBN3010  | ProtoBuf.Grpc | Warning | No AOT serializer model named for these proxies
-PBN3011  | ProtoBuf.Grpc | Warning | Service contract could not be resolved
+PBN2001  | Usage    | Error    | gRPC: invalid member kind on a service contract
+PBN2002  | Usage    | Error    | gRPC: invalid payload type
+PBN2003  | Usage    | Error    | gRPC: invalid return type
+PBN2004  | Usage    | Error    | gRPC: generic method
+PBN2005  | Usage    | Error    | gRPC: generic service
+PBN2006  | Usage    | Error    | gRPC: invalid context type
+PBN2007  | Usage    | Error    | gRPC: invalid parameters
+PBN2008  | Usage    | Warning  | gRPC: payload possibly not serializable
+PBN2009  | Usage    | Info     | gRPC: prefer an async signature
+PBN2010  | Usage    | Error    | gRPC: streaming method declared synchronously
+PBN3000  | ProtoBuf | Error    | Language version too low for the AOT generator
+PBN3001  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported member
+PBN3002  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported declaration
+PBN3003  | ProtoBuf | Warning  | Contract omitted from the AOT model: unsupported protobuf-net option
+PBN3004  | ProtoBuf | Warning  | Contract omitted from the AOT model: references an omitted contract
+PBN3010  | ProtoBuf | Warning  | Call uses the runtime model, not the AOT model
+PBN3011  | ProtoBuf | Warning  | Call resolves its contract type at run time
+PBN3012  | ProtoBuf | Warning  | Project publishes AOT or trimmed, but has no AOT model
+PBN3013  | ProtoBuf | Info     | Compile-time serializers are available
+PBN4000  | ProtoBuf.Grpc | Warning | Language version too low for build-time gRPC proxies
+PBN4001  | ProtoBuf.Grpc | Warning | Service interface cannot be nested
+PBN4002  | ProtoBuf.Grpc | Warning | Service method shape is not supported by the generator
+PBN4003  | ProtoBuf.Grpc | Warning | Generic service interfaces are not supported
+PBN4004  | ProtoBuf.Grpc | Warning | Service interface inherits an interface that is not a sub-service
+PBN4005  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be partial
+PBN4006  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must derive from ClientFactory
+PBN4007  | ProtoBuf.Grpc | Warning | Named type is not a service contract
+PBN4008  | ProtoBuf.Grpc | Warning | Named implementation does not implement the contract
+PBN4010  | ProtoBuf.Grpc | Warning | No AOT serializer model named for these proxies
+PBN4011  | ProtoBuf.Grpc | Warning | Service contract could not be resolved
 

@@ -135,7 +135,7 @@ The upshot is that **this work is not gated on a protobuf-net.Grpc release.**
 | `Generators/GrpcProxyGenerator.Parse.cs` | the model-level parse (new) |
 | `Generators/GrpcProxyGenerator.ParseContract.cs` | contract/operation shape classification (borrowed, credited) |
 | `Generators/GrpcProxyGenerator.Emit.cs` | emit; per-operation bodies borrowed, placement new |
-| `Generators/GrpcProxyGenerator.Diagnostics.cs` | PBN30xx |
+| `Generators/GrpcProxyGenerator.Diagnostics.cs` | PBN40xx |
 | `Internal/Grpc/GrpcContractModel.cs` | shape models (borrowed, credited) |
 | `Internal/Grpc/GrpcModelPlan.cs` | the plan for one declared partial (new) |
 | `BuildToolsUnitTests/Grpc/` | goldens + the runtime surface snapshot |
@@ -231,10 +231,19 @@ easily changed by hand, and intercepting it would fight a consumer who had confi
 
 ## Diagnostic IDs
 
-`PBN30xx` is this generator's block. **Note the pre-existing collision it was chosen to avoid is
-already present**: `ServiceContractAnalyzer` has shipped `PBN2001`–`PBN2010` since long before the
-AOT work, and #1254 reused `PBN2001`–`PBN2004` and `PBN2010`. They live in one assembly and
-`AnalyzerReleases.Unshipped.md` lists only the AOT half. `aot.md` tells people to write
-`<WarningsAsErrors>…PBN2001;PBN2002…</WarningsAsErrors>`, and silencing an AOT drop with
-`dotnet_diagnostic.PBN2002.severity = none` would also silence *"The data parameter of a gRPC method
-must be…"*, which is an **error**. Not fixed on this branch; it wants doing on its own.
+`PBN40xx` is this generator's block. The blocks, as of #1283:
+
+| block | owner |
+| --- | --- |
+| `PBN0xxx` | `DataContractAnalyzer` |
+| `PBN1xxx` | `ProtoFileGenerator` (schema errors) |
+| `PBN2xxx` | `ServiceContractAnalyzer` — the gRPC *contract* checks |
+| `PBN3xxx` | the AOT serializer generator and its migration analyzer |
+| `PBN4xxx` | this generator |
+| `PBN9001` | the `[Experimental]` gate on the trigger attributes |
+
+**`AnalyzerReleases.Unshipped.md` is the only register of which ids are taken** — check it before
+adding one, and add the id to it. This branch originally claimed `PBN30xx`, chosen to dodge a
+collision between `ServiceContractAnalyzer` and the AOT generator that turned out to already exist;
+#1283 fixed that by moving the *AOT* diagnostics into `PBN3xxx`, which then collided with this
+branch. Renumbering to `PBN4xxx` on the merge is how that was settled.

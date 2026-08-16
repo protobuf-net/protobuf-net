@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -15,7 +15,7 @@ namespace ProtoBuf.BuildTools.Generators
         // wanting strictness can escalate these through WarningsAsErrors.
 
         internal static readonly DiagnosticDescriptor UnsupportedMember = new(
-            id: "PBN2001",
+            id: "PBN3001",
             title: "Contract omitted: unsupported member",
             messageFormat: "Contract '{0}' is omitted from the AOT model: member '{1}' {2}.",
             category: Category,
@@ -23,7 +23,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor UnsupportedContract = new(
-            id: "PBN2002",
+            id: "PBN3002",
             title: "Contract omitted: unsupported declaration",
             messageFormat: "Contract '{0}' is omitted from the AOT model: {1}.",
             category: Category,
@@ -31,7 +31,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor UnsupportedOption = new(
-            id: "PBN2003",
+            id: "PBN3003",
             title: "Contract omitted: unsupported protobuf-net option",
             messageFormat: "Contract '{0}' is omitted from the AOT model: {1} is not supported yet.",
             category: Category,
@@ -39,7 +39,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor OmittedCascade = new(
-            id: "PBN2004",
+            id: "PBN3004",
             title: "Contract omitted: references an omitted contract",
             messageFormat: "Contract '{0}' is omitted from the AOT model because '{1}', which it references, is also omitted.",
             category: Category,

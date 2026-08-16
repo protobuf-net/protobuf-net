@@ -7,14 +7,20 @@ namespace ProtoBuf.BuildTools.Generators
     {
         private const string Category = "ProtoBuf.Grpc";
 
+        // PBN4000+ is this generator's block. The register of what is taken is
+        // AnalyzerReleases.Unshipped.md - check it before adding an id, and add the id to it.
+        // PBN0xxx is DataContractAnalyzer, PBN1xxx ProtoFileGenerator, PBN2xxx ServiceContractAnalyzer
+        // (the gRPC *contract* checks), PBN3xxx the AOT serializer generator, PBN9001 the
+        // [Experimental] gate.
+
         /// <summary>
         /// Whether a contract can be given a build-time proxy is a warning, never an error: an
         /// incomplete set of proxies still builds and still works under JIT, exactly as
-        /// <c>PBN2001</c>-<c>PBN2004</c> do for the serializer model. Anyone wanting strictness can
+        /// <c>PBN3001</c>-<c>PBN3004</c> do for the serializer model. Anyone wanting strictness can
         /// escalate with <c>WarningsAsErrors</c>.
         /// </summary>
         internal static readonly DiagnosticDescriptor LanguageVersionTooLow = new(
-            id: "PBN3000",
+            id: "PBN4000",
             title: "Language version too low for build-time gRPC proxies",
             messageFormat: "'{0}' was not given build-time gRPC proxies because the language version is "
                 + "below C# {1}; the runtime proxy will be used, which is not trim/AOT-friendly",
@@ -23,7 +29,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor InterfaceMustNotBeNested = new(
-            id: "PBN3001",
+            id: "PBN4001",
             title: "Service interface cannot be nested",
             messageFormat: "Interface '{0}' is a service contract but is nested inside another type; "
                 + "build-time proxies are only generated for top-level interfaces. Move the interface out of '{1}'",
@@ -40,7 +46,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// reasoning the serializer generator's <c>DropUnsatisfiable</c> cascade uses.
         /// </remarks>
         internal static readonly DiagnosticDescriptor UnsupportedMethodShape = new(
-            id: "PBN3002",
+            id: "PBN4002",
             title: "Service method shape is not supported by the generator",
             messageFormat: "Method '{0}.{1}' has a signature that is not emitted at build time, so the "
                 + "whole contract is left to the runtime proxy, which is not trim/AOT-friendly",
@@ -49,7 +55,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor GenericInterfaceNotSupported = new(
-            id: "PBN3003",
+            id: "PBN4003",
             title: "Generic service interfaces are not supported",
             messageFormat: "Interface '{0}' is generic; build-time proxies are not generated for "
                 + "generic service contracts, because the generated proxy has nowhere to put the type parameter",
@@ -63,7 +69,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// nothing on the server. Rather than reproduce that, the contract goes to the runtime whole.
         /// </summary>
         internal static readonly DiagnosticDescriptor UnsupportedBaseInterface = new(
-            id: "PBN3004",
+            id: "PBN4004",
             title: "Service interface inherits an interface that is not a sub-service",
             messageFormat: "Interface '{0}' inherits '{1}', which is not marked [SubService]; the "
                 + "runtime proxy will be used for this contract. Mark the base interface [SubService] "
@@ -73,7 +79,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor ModelMustBePartial = new(
-            id: "PBN3005",
+            id: "PBN4005",
             title: "A [ProtoGrpc] type must be partial",
             messageFormat: "'{0}' is marked [ProtoGrpc] but is not declared partial, so there is "
                 + "nowhere to generate the proxies; add the 'partial' modifier",
@@ -82,7 +88,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor ModelMustDeriveClientFactory = new(
-            id: "PBN3006",
+            id: "PBN4006",
             title: "A [ProtoGrpc] type must derive from ClientFactory",
             messageFormat: "'{0}' is marked [ProtoGrpc] but does not derive from '{1}'; deriving from "
                 + "it is what lets 'channel.CreateGrpcService<T>(...)' accept this type",
@@ -91,7 +97,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor NotAServiceContract = new(
-            id: "PBN3007",
+            id: "PBN4007",
             title: "Named type is not a service contract",
             messageFormat: "'{0}' was named by [ProtoService] but is not an interface marked [Service] "
                 + "or [ServiceContract], so protobuf-net.Grpc would not bind it either",
@@ -100,7 +106,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor ImplementationDoesNotImplement = new(
-            id: "PBN3008",
+            id: "PBN4008",
             title: "Named implementation does not implement the contract",
             messageFormat: "'{0}' was named as the implementation of '{1}' but does not implement it; "
                 + "no server bindings were generated for this contract",
@@ -117,7 +123,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// is where it falls over. Naming a <c>[ProtoModel]</c> is the whole fix.
         /// </remarks>
         internal static readonly DiagnosticDescriptor NoModelNamed = new(
-            id: "PBN3010",
+            id: "PBN4010",
             title: "No AOT serializer model named for these proxies",
             messageFormat: "'{0}' generates gRPC proxies but names no Model, so payloads will be "
                 + "marshalled through RuntimeTypeModel.Default, which reflects; the proxies will be "
@@ -128,7 +134,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor UnresolvedContract = new(
-            id: "PBN3011",
+            id: "PBN4011",
             title: "Service contract could not be resolved",
             messageFormat: "The type named '{0}' could not be resolved. If it is generated by another "
                 + "source generator in this same project, move it to a referenced project: generators "
