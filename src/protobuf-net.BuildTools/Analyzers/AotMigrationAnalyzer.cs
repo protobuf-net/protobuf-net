@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -35,7 +35,7 @@ namespace ProtoBuf.BuildTools.Analyzers
     public sealed class AotMigrationAnalyzer : DiagnosticAnalyzer
     {
         internal static readonly DiagnosticDescriptor UsesRuntimeModel = new(
-            id: "PBN2010",
+            id: "PBN3010",
             title: "Call uses the runtime model, not the AOT model",
             messageFormat: "'{0}' serializes through the runtime model, which reflects and so does not "
                 + "work under native AOT; this project declares {1}, so call it on that instead "
@@ -45,7 +45,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor UnresolvableContractType = new(
-            id: "PBN2011",
+            id: "PBN3011",
             title: "Call resolves its contract type at run time",
             messageFormat: "'{0}' takes the type to serialize as a value rather than a type argument, "
                 + "so neither this analyzer nor the AOT generator can tell what it serializes; under "
@@ -56,7 +56,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor NoModelUnderAot = new(
-            id: "PBN2012",
+            id: "PBN3012",
             title: "This project publishes AOT or trimmed, but has no AOT model",
             messageFormat: "This project has protobuf-net contracts and asks for {0}, but declares no "
                 + "[ProtoModel]; serializers will be built by reflection, which is exactly what will "
@@ -66,7 +66,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor NoModel = new(
-            id: "PBN2013",
+            id: "PBN3013",
             title: "Compile-time serializers are available",
             // qualitative deliberately: the measured figure is ~3x on an ordinary build (see
             // notes/aot-findings.md), but a hard number in a diagnostic ages badly and varies by
@@ -161,7 +161,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// argument there is **cold start**, not AOT: the runtime model inspects metadata and emits
         /// IL on first use of each contract, and that cost is real enough to time builds out. It is
         /// a genuine offer rather than an advertisement, which is why it is worth making at all —
-        /// and `dotnet_diagnostic.PBN2013.severity = none` dismisses it permanently.
+        /// and `dotnet_diagnostic.PBN3013.severity = none` dismisses it permanently.
         /// </para>
         /// <para>
         /// Location.None deliberately: this is about the project, not about any one line of it, and

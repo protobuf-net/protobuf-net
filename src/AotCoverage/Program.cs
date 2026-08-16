@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Generators;
 using System;
@@ -335,7 +335,7 @@ internal static class Program
             var subject = Regex.Match(message, @"Contract '([^']+)'");
             if (subject.Success) dropped.Add(subject.Groups[1].Value);
 
-            if (diagnostic.Id == "PBN2004")
+            if (diagnostic.Id == "PBN3004")
             {
                 cascades++;
                 continue; // derivative: something it references failed for its own reason

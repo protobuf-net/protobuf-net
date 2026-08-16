@@ -4,13 +4,19 @@
 
 [![.NET](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml/badge.svg)](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml)
 
-## Release Notes
+Recent changes are on [the releases page](https://github.com/protobuf-net/protobuf-net/releases); older
+history is in [the release notes](https://docs.protobuf-net.dev/releasenotes).
 
-[v3 is here!](https://docs.protobuf-net.dev/3_0)
+## Online tools: [protobuf-net.dev](https://protobuf-net.dev/)
 
-[Change history and pending changes are here](https://docs.protobuf-net.dev/releasenotes).
+Free, browser-based, and nothing to install — and **it all runs locally**: it is a static site, so your
+schemas and payloads never leave your machine. You can:
 
----
+- **generate C#/VB types from a `.proto` schema** — the same code generation as the
+  [`protogen` global tool](https://www.nuget.org/packages/protobuf-net.Protogen)
+- **decode a raw protobuf payload**, without needing the schema that produced it
+
+Documentation is at [docs.protobuf-net.dev](https://docs.protobuf-net.dev/).
 
 ## Supported Runtimes
 - .NET 6.0+ (.NET 5 etc will use .NET Standard 2.1)
@@ -115,7 +121,7 @@ There is no special significance in the 7 above; it is an integer key, just like
 
 As an alternative to writing your classes and decorating them, you can generate your types from a .proto schema using the `protogen` tool,
 [available as a multi-platform "global tool"](https://www.nuget.org/packages/protobuf-net.Protogen), or in your browser at
-[protobuf-net.dev](https://protobuf-net.dev/) - which also decodes raw protobuf payloads without needing a schema.
+[protobuf-net.dev](https://protobuf-net.dev/) (see [Online tools](#online-tools-protobuf-netdev), above).
 
 ### Alternative to attributes
 

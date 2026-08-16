@@ -6,8 +6,12 @@ name: .NET
 on:
   push:
     branches: [ "main", "v4" ]
+  # deliberately NOT filtered by branch: the filter matches the PR's BASE, so any PR
+  # targeting a branch missing from the list gets zero checks - and a PR with no checks
+  # looks clean rather than broken, which is the wrong failure mode. Every PR is a
+  # proposal to merge somewhere, so every PR gets built. The push filter above stays,
+  # since that one genuinely stops each topic-branch push burning a Windows runner.
   pull_request:
-    branches: [ "main", "v4" ]
 
 jobs:
   build:

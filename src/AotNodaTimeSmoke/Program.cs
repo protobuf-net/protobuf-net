@@ -1,4 +1,4 @@
-using NodaTime;
+﻿using NodaTime;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -44,7 +44,7 @@ internal static class Program
         }
         catch (InvalidOperationException ex)
         {
-            // the pairings *are* found - see the PBN2003/PBN2004 chain at build time - but the
+            // the pairings *are* found - see the PBN3003/PBN3004 chain at build time - but the
             // well-known types they point at declare [ProtoContract(Serializer = ...)] naming the
             // internal PrimaryTypeProvider, which a consumer's generated code cannot name. Exposing
             // a public serializer for those types is what would finish this off.

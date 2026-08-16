@@ -1227,6 +1227,30 @@ narrow-and-store over a span needs no serializer at all, exactly as `PackedSizeB
 none. Worth doing *because* it is cheap to answer, but note it ranks below B19 on reach: cross-width
 columns are rarer than same-width ones, and the same-width case is already optimal.
 
+### B27. `AotDifferential` loads the generator from **Debug first**, whatever it was built as
+
+Found 2026-08-16 while merging main into v4: a `-c Release` run reported *"the generated model does
+not compile"* against `WriteRawPackedVarint`, an API that exists on `schema-breadth` and nowhere
+else — while checked out on `v4`, which neither defines nor emits it.
+
+`Corpus.LoadGenerator` walks `new[] { "Debug", "Release" }` and takes the first
+`protobuf-net.BuildTools.dll` it finds, so a **stale Debug build left behind by another branch wins
+over the Release build the run was asked for**. The harness then compares a generator from one
+branch against a library from another and reports the disagreement as a corpus failure, which is
+exactly the wrong place to look.
+
+Note this is *not* what #1264 fixed: that made the **corpus scan** follow the configuration the
+harness was built as, and the generator load was left on its own Debug-first path. So the file
+already contains the right idea, applied to the other half.
+
+It is a sharp edge rather than a wrong answer — the run fails loudly rather than passing falsely,
+and `rm -rf src/protobuf-net.BuildTools/bin/Debug` clears it. But it fails *blaming the corpus*, and
+the same class of mistake ("a control that shares the code under test is not a control") has already
+cost this project weeks once, in the packed arc. The fix is to load the configuration the harness
+itself was built in, and to say so when the dll it picks is older than the library it is testing.
+
+**Open.** Not touched in the merge that found it, since a merge commit is the wrong place for it.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
@@ -1802,7 +1826,7 @@ nobody has tested**. It may want to be a diagnostic instead of a silent preceden
 
 `Path.GetFileName` then `set.Add(name, …)`, so two same-named `.proto` files in different
 directories do not both produce DTOs. Pre-existing and not the model path's, but it means the
-ambiguity `PBN2021` reports is only reachable in a project whose DTO generation is already
+ambiguity `PBN3021` reports is only reachable in a project whose DTO generation is already
 incomplete. The diagnostic still earns its place: it names the problem where the alternative is a
 silent pick.
 
