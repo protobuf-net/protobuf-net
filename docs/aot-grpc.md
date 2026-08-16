@@ -18,29 +18,25 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > | protobuf-net #1284 | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
 > | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
 >
-> **Done:** the generator-owned trigger attributes are gone; the package reference is `1.3.0` and the
+> **Done:** `BytesValue.SlowParse` no longer uses the runtime model (protobuf-net.Grpc#368: 100 -> 5 IL
+> warnings, -543,744 bytes, native binary green). The generator-owned trigger attributes are gone; the package reference is `1.3.0` and the
 > golden no longer contains an emitted attributes file. The unit tests stub the attributes in
 > `Grpc/Data/_ContractSurface.cs`, which is deliberate — matching is by full name, and the real ones
-> are `[Experimental]`, i.e. an *error* by default. **`src/AotGrpcSmoke` was not re-verified against
-> the real 1.3.0 package** (it had not reached nuget.org yet); that is the one thing to re-run first.
+> are `[Experimental]`, i.e. an *error* by default. `src/AotGrpcSmoke` is verified against
+> a 1.3.x package including both fixes: JIT and a win-x64 native publish, all five checks green.
 >
-> **Next steps, in order** — the first has a decision attached, the rest are mechanical:
+> **Next steps, in order** — all mechanical now:
 >
-> 1. **`BytesValue.SlowParse`** in protobuf-net.Grpc — the other half of the AOT warning reduction
->    (100 → 5 needs *both* roots; see "The measurement"). Blocked on a semantics call: what should a
->    repeated field 1 do? Going through the model today, protobuf-net's `AppendBytes` **concatenates**,
->    so a naive hand-rolled "last wins" would silently differ. Also whether a hand-written reader
->    replaces `SlowParse` outright or only takes over when dynamic code is absent.
-> 2. **The one real `IL2091`**, on the generated `__Serialize<T>`: its fallback arm calls
+> 1. **The one real `IL2091`**, on the generated `__Serialize<T>`: its fallback arm calls
 >    `TypeModel.Serialize<T>(Stream, T, object)`, which demands `DynamicAccess.ContractType`. Either
 >    restate the annotation on the emitted helper (terminates immediately — call sites pass concrete
 >    contract types) or drop the fallback arm and write to a pooled buffer instead.
-> 3. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its
+> 2. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its
 >    payload types. `GrpcOperationModel` already carries them as strings.
-> 4. **Compile-time endpoint metadata** — reconstruct the attributes at compile time rather than
+> 3. **Compile-time endpoint metadata** — reconstruct the attributes at compile time rather than
 >    reflecting. Unblocked now that `BinderConfiguration.Binder` is public, which gives the
 >    custom-binder fallback something to test against. See "Known gaps".
-> 5. **More fixtures.** There is still only one (`Basic.input.cs`); every diagnostic path
+> 4. **More fixtures.** There is still only one (`Basic.input.cs`); every diagnostic path
 >    (`PBN4001`–`PBN4011`) is unexercised.
 
 ## What this is
