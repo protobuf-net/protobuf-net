@@ -2722,6 +2722,11 @@ namespace ProtoBuf.BuildTools.Generators
             // element serializer frames itself and cannot be second-guessed here
             if (member.SubSerializer is not null || member.SubSerializerIsScalar
                 || member.SubSerializerDynamic) return false;
+            // `repeated bytes` - which protogen emits as List<byte[]> - is admitted only for the
+            // ARRAY element spelling. The struct storage shapes (Memory<byte>, ReadOnlyMemory<byte>,
+            // ArraySegment<byte>) are "bytes" too, but they are not null-testable the same way and
+            // have no fixture; they keep the stateful path rather than being reasoned about here.
+            if (member.Kind == ProtoMemberKind.Bytes) return member.ElementTypeName == "byte[]";
             return member.Kind is ProtoMemberKind.Bool
                 or ProtoMemberKind.Int32 or ProtoMemberKind.SByte or ProtoMemberKind.Int16
                 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16
@@ -2951,7 +2956,7 @@ namespace ProtoBuf.BuildTools.Generators
             string depth = "state.RawDepthBudget")
         {
             var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
-                ? 2 : RawScalarWireBits(member.Kind);
+                or ProtoMemberKind.Bytes ? 2 : RawScalarWireBits(member.Kind);
             var source = RepeatedSpan(member, number, listAsSpan, immutableAsSpan) ?? $"tmp{number}";
             var item = $"item{number}";
             if (messageTarget is not null)
@@ -2965,7 +2970,7 @@ namespace ProtoBuf.BuildTools.Generators
             // the wire), so nullability is read off the element type's own spelling, exactly as
             // the packed read fast path does
             var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
-            if (member.Kind == ProtoMemberKind.String || nullableElement
+            if (member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes || nullableElement
                 || (messageTarget is not null && !messageTarget.IsValueType))
             {
                 Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
@@ -2992,6 +2997,11 @@ namespace ProtoBuf.BuildTools.Generators
             else if (member.Kind == ProtoMemberKind.String)
             {
                 Line(sb, indent + 1, $"state.WriteRawString({item});");
+            }
+            else if (member.Kind == ProtoMemberKind.Bytes)
+            {
+                // WriteRawBytes emits its own length prefix, exactly as the unary bytes write does
+                Line(sb, indent + 1, $"state.WriteRawBytes({item});");
             }
             else
             {
@@ -3365,7 +3375,7 @@ namespace ProtoBuf.BuildTools.Generators
             bool listAsSpan, bool immutableAsSpan, ProtoContractPlan? messageTarget)
         {
             var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
-                ? 2 : RawScalarWireBits(member.Kind);
+                or ProtoMemberKind.Bytes ? 2 : RawScalarWireBits(member.Kind);
             var tagLen = VarintLen((uint)((member.FieldNumber << 3) | wire));
             var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
             var count = member.Repeated.Factory is "CreateVector" or "CreateImmutableArray"
@@ -3387,7 +3397,7 @@ namespace ProtoBuf.BuildTools.Generators
             var item = $"item{number}";
             Line(sb, indent, $"foreach (var {item} in {source})");
             Line(sb, indent, "{");
-            if (member.Kind == ProtoMemberKind.String || nullableElement
+            if (member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes || nullableElement
                 || (messageTarget is not null && !messageTarget.IsValueType))
             {
                 Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
@@ -3412,6 +3422,11 @@ namespace ProtoBuf.BuildTools.Generators
             else if (member.Kind == ProtoMemberKind.String)
             {
                 Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawString({item});");
+            }
+            else if (member.Kind == ProtoMemberKind.Bytes)
+            {
+                // identical in shape to the unary bytes measure: a length prefix, then the payload
+                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){item}.Length) + {item}.Length;");
             }
             else
             {
