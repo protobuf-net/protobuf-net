@@ -116,12 +116,12 @@ partial class GenericHierarchyModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len))
                 {
-                    len1 = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len1;
+                    len = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len;
                 }
-                state.WriteRawVarint64((ulong)len1);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1, state.RawDepthBudget);
             }
         }
@@ -464,12 +464,12 @@ partial class GenericHierarchyModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len))
                 {
-                    len1 = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len1;
+                    len = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len;
                 }
-                state.WriteRawVarint64((ulong)len1);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1, state.RawDepthBudget);
             }
         }

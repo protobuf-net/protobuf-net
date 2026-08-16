@@ -197,12 +197,12 @@ partial class DroppedModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Child
-                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len))
                 {
-                    len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len1;
+                    len = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len;
                 }
-                state.WriteRawVarint64((ulong)len1);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Dropped_HasUnsupportedMember(ref state, tmp1, depth);
             }
         }
@@ -214,12 +214,12 @@ partial class DroppedModel
             var tmp1 = value.Child;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out var len1))
+                if (!lengths.TryGetValue(tmp1, out var sub))
                 {
-                    len1 = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, lengths);
-                    lengths[tmp1] = len1;
+                    sub = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, lengths);
+                    lengths[tmp1] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Child
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
             return len;
         }

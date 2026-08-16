@@ -102,6 +102,7 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.@case;
             if (tmp1 != 0)
             {
@@ -127,24 +128,24 @@ partial class KeywordsModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // class
-                if (!state.RawLengths.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out len))
                 {
-                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp4] = len4;
+                    len = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len;
                 }
-                state.WriteRawVarint64((ulong)len4);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4, depth);
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // lock
-                if (!state.RawLengths.TryGetValue(tmp5, out var len5))
+                if (!state.RawLengths.TryGetValue(tmp5, out len))
                 {
-                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp5] = len5;
+                    len = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp5] = len;
                 }
-                state.WriteRawVarint64((ulong)len5);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5, depth);
             }
             var tmp6 = value.value;
@@ -159,6 +160,7 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.@case;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // case
             var tmp2 = value.@event;
@@ -177,22 +179,22 @@ partial class KeywordsModel
             var tmp4 = value.@class;
             if (tmp4 != null)
             {
-                if (!lengths.TryGetValue(tmp4, out var len4))
+                if (!lengths.TryGetValue(tmp4, out sub))
                 {
-                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
-                    lengths[tmp4] = len4;
+                    sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
+                    lengths[tmp4] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len4) + len4;  // class
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // class
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
             {
-                if (!lengths.TryGetValue(tmp5, out var len5))
+                if (!lengths.TryGetValue(tmp5, out sub))
                 {
-                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
-                    lengths[tmp5] = len5;
+                    sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
+                    lengths[tmp5] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len5) + len5;  // lock
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // lock
             }
             var tmp6 = value.value;
             if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // value

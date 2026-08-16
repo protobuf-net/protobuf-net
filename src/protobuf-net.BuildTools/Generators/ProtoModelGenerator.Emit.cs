@@ -1218,8 +1218,10 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
                 }
-                EmitWriteMembers(sb, indent + 1, contract, "value", raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth");
-                EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
+                var writeBody = new StringBuilder();
+                EmitWriteMembers(writeBody, indent + 1, contract, "value", raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth");
+                EmitCallback(writeBody, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
+                AppendFoldingLengthTemp(sb, indent + 1, writeBody, "len");
                 Line(sb, indent, "}");
                 sb.AppendLine();
                 // pure arithmetic, mirroring RawWrite_'s guards statement for statement: any
@@ -1244,7 +1246,10 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 Line(sb, indent + 1, "long len = 0;");
-                EmitMeasureMembers(sb, indent + 1, contract, measurable, listAsSpan, immutableAsSpan);
+                // `len` is the accumulator here, so the sub-message temp needs its own name
+                var measureBody = new StringBuilder();
+                EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan);
+                AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");
                 sb.AppendLine();
@@ -1275,8 +1280,10 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({instance});");
             }
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeSerialize);
-            EmitWriteMembers(sb, indent + 1, contract, instance, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable);
-            EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
+            var members = new StringBuilder();
+            EmitWriteMembers(members, indent + 1, contract, instance, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable);
+            EmitCallback(members, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
+            AppendFoldingLengthTemp(sb, indent + 1, members, "len");
             Line(sb, indent, "}");
         }
 
@@ -1888,7 +1895,7 @@ namespace ProtoBuf.BuildTools.Generators
                         if (target.IsValueType)
                         {
                             // a struct has no reference identity to key on
-                            Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
+                            Line(sb, inner, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
                         }
                         else
                         {
@@ -1902,13 +1909,13 @@ namespace ProtoBuf.BuildTools.Generators
                             // swapped _rawLengths mid-body. Contrast tmpN, which must stay a
                             // local - `value.Something` is consumer code, so reading it twice is
                             // a correctness risk, not merely a cost.
-                            Line(sb, inner, $"if (!state.RawLengths.TryGetValue(tmp{number}, out var len{number}))");
+                            Line(sb, inner, $"if (!state.RawLengths.TryGetValue(tmp{number}, out len))");
                             Line(sb, inner, "{");
-                            Line(sb, inner + 1, $"len{number} = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
-                            Line(sb, inner + 1, $"state.RawLengths[tmp{number}] = len{number};");
+                            Line(sb, inner + 1, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
+                            Line(sb, inner + 1, $"state.RawLengths[tmp{number}] = len;");
                             Line(sb, inner, "}");
                         }
-                        Line(sb, inner, $"state.WriteRawVarint64((ulong)len{number});");
+                        Line(sb, inner, $"state.WriteRawVarint64((ulong)len);");
                         Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number}, {depth});");
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
@@ -2003,7 +2010,9 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
-            EmitWriteMembers(sb, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable);
+            var subTypeMembers = new StringBuilder();
+            EmitWriteMembers(subTypeMembers, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable);
+            AppendFoldingLengthTemp(sb, indent + 1, subTypeMembers, "len");
             Line(sb, indent, "}");
             sb.AppendLine();
 
@@ -2974,6 +2983,59 @@ namespace ProtoBuf.BuildTools.Generators
                 $"len += global::ProtoBuf.ProtoWriter.State.MeasureRawPacked{api}({member.FieldNumber}, {arg});  // {member.Name}");
         }
 
+        /// <summary>
+        /// Append an emitted body, folding its sub-message length temporaries onto ONE local
+        /// where there is more than one of them (gap B16).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The temps are all <c>long</c> and each is assigned then consumed immediately, so they
+        /// fold with no type map and no lifetime overlap. Unlike the length-cache reference - which
+        /// is simply read inline at every site, being a trivial property we own - this one cannot be
+        /// eliminated, since it is an <c>out</c> target; but it need not be duplicated.
+        /// </para>
+        /// <para>
+        /// The count is the point rather than the throughput: <c>MaxDepth</c> (512) only bounds
+        /// recursion if frames are SMALL, and a contract with hundreds of message members was
+        /// emitting a local per member. See <c>notes/gaps.md</c> B16 for the arithmetic.
+        /// </para>
+        /// <para>
+        /// <b>One site keeps its declaration AT the site</b> (Marc): hoisting a single use to the
+        /// top widens its scope and buys nothing. The reference-typed shape declares at the
+        /// <c>out</c>, the value-typed one at the assignment, which is exactly what was emitted
+        /// before folding existed.
+        /// </para>
+        /// <para>
+        /// Whether the body needs the local at all is decided by inspecting what was actually
+        /// emitted, rather than by restating the eligibility predicate here - that would be a
+        /// second copy of it, free to drift from the first. It also keeps an unused local out of
+        /// the consumer's build, where it would be CS0168.
+        /// </para>
+        /// </remarks>
+        private static void AppendFoldingLengthTemp(StringBuilder sb, int indent, StringBuilder bodyBuilder, string name)
+        {
+            var body = bodyBuilder.ToString();
+            var assignment = name + " = Measure_";
+            var sites = 0;
+            for (var at = body.IndexOf(assignment, StringComparison.Ordinal); at >= 0;
+                at = body.IndexOf(assignment, at + assignment.Length, StringComparison.Ordinal))
+            {
+                sites++;
+            }
+            if (sites == 1)
+            {
+                var outParameter = "out " + name + ")";
+                body = body.IndexOf(outParameter, StringComparison.Ordinal) >= 0
+                    ? body.Replace(outParameter, "out var " + name + ")")
+                    : body.Replace(assignment, "var " + assignment);
+            }
+            else if (sites > 1)
+            {
+                Line(sb, indent, $"long {name};");
+            }
+            sb.Append(body);
+        }
+
         /// <summary>The write mirror: the same span, the same framing decision, one call.</summary>
         private static void EmitRawPackedWrite(StringBuilder sb, int indent, ProtoMemberPlan member,
             string number, bool listAsSpan, bool immutableAsSpan)
@@ -3000,11 +3062,6 @@ namespace ProtoBuf.BuildTools.Generators
                 or ProtoMemberKind.Bytes ? 2 : RawScalarWireBits(member.Kind);
             var source = RepeatedSpan(member, number, listAsSpan, immutableAsSpan) ?? $"tmp{number}";
             var item = $"item{number}";
-            if (messageTarget is not null)
-            {
-                // hoisted once per run: every element consults (or feeds) the same cache
-                Line(sb, indent, $"var lengths{number} = state.RawLengths;");
-            }
             Line(sb, indent, $"foreach (var {item} in {source})");
             Line(sb, indent, "{");
             // AsRepeated erases element nullability from the plan (it is an ordinary element on
@@ -3022,17 +3079,17 @@ namespace ProtoBuf.BuildTools.Generators
                 var targetName = Sanitise(member.TypeName!);
                 if (messageTarget.IsValueType)
                 {
-                    Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, state.RawDepthBudget, lengths{number});");
+                    Line(sb, indent + 1, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawLengths);");
                 }
                 else
                 {
-                    Line(sb, indent + 1, $"if (!lengths{number}.TryGetValue({item}, out var len{number}))");
+                    Line(sb, indent + 1, $"if (!state.RawLengths.TryGetValue({item}, out len))");
                     Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"len{number} = Measure_{targetName}({item}, state.RawDepthBudget, lengths{number});");
-                    Line(sb, indent + 2, $"lengths{number}[{item}] = len{number};");
+                    Line(sb, indent + 2, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawLengths);");
+                    Line(sb, indent + 2, $"state.RawLengths[{item}] = len;");
                     Line(sb, indent + 1, "}");
                 }
-                Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len{number});");
+                Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len);");
                 Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item}, {depth});");
             }
             else if (member.Kind == ProtoMemberKind.String)
@@ -3435,14 +3492,14 @@ namespace ProtoBuf.BuildTools.Generators
                         if (target.IsValueType)
                         {
                             // a struct has no reference identity to key on
-                            Line(sb, inner, $"var len{number} = Measure_{targetName}(tmp{number}, depth, lengths);");
+                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, lengths);");
                         }
                         else
                         {
-                            Line(sb, inner, $"if (!lengths.TryGetValue(tmp{number}, out var len{number}))");
+                            Line(sb, inner, $"if (!lengths.TryGetValue(tmp{number}, out sub))");
                             Line(sb, inner, "{");
-                            Line(sb, inner + 1, $"len{number} = Measure_{targetName}(tmp{number}, depth, lengths);");
-                            Line(sb, inner + 1, $"lengths[tmp{number}] = len{number};");
+                            Line(sb, inner + 1, $"sub = Measure_{targetName}(tmp{number}, depth, lengths);");
+                            Line(sb, inner + 1, $"lengths[tmp{number}] = sub;");
                             Line(sb, inner, "}");
                         }
                         if (member.DataFormat == ProtoDataFormat.Group)
@@ -3451,12 +3508,12 @@ namespace ProtoBuf.BuildTools.Generators
                             // Both tags carry the same field number and differ only in wire type
                             // (3 vs 4), which cannot change their encoded length - so this is the
                             // body plus two folded constants, and no varint measure at all
-                            Line(sb, inner, MeasureAddGroup(member, $"len{number}"));
+                            Line(sb, inner, MeasureAddGroup(member, "sub"));
                         }
                         else
                         {
                             Line(sb, inner, MeasureAdd(member, 2,
-                                $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number}"));
+                                $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub"));
                         }
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
@@ -3520,17 +3577,17 @@ namespace ProtoBuf.BuildTools.Generators
                 var targetName = Sanitise(member.TypeName!);
                 if (messageTarget.IsValueType)
                 {
-                    Line(sb, indent + 1, $"var len{number} = Measure_{targetName}({item}, depth, lengths);");
+                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, lengths);");
                 }
                 else
                 {
-                    Line(sb, indent + 1, $"if (!lengths.TryGetValue({item}, out var len{number}))");
+                    Line(sb, indent + 1, $"if (!lengths.TryGetValue({item}, out sub))");
                     Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"len{number} = Measure_{targetName}({item}, depth, lengths);");
-                    Line(sb, indent + 2, $"lengths[{item}] = len{number};");
+                    Line(sb, indent + 2, $"sub = Measure_{targetName}({item}, depth, lengths);");
+                    Line(sb, indent + 2, $"lengths[{item}] = sub;");
                     Line(sb, indent + 1, "}");
                 }
-                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len{number}) + len{number};");
+                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
             }
             else if (member.Kind == ProtoMemberKind.String)
             {

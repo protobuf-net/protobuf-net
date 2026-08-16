@@ -33,6 +33,7 @@ partial class GetterModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Getters value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.Numbers;
             if (tmp1 != null)
             {
@@ -51,12 +52,12 @@ partial class GetterModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Child
-                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out len))
                 {
-                    len3 = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len3;
+                    len = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len;
                 }
-                state.WriteRawVarint64((ulong)len3);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Getter_Nested(ref state, tmp3, state.RawDepthBudget);
             }
             var tmp4 = value.Value;
@@ -104,8 +105,8 @@ partial class GetterModel
             }
             var tmp11 = value.Where;
             state.WriteRawTag((11 << 3) | 2);  // Where
-            var len11 = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len11);
+            len = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite_AotFixtures_Getter_Point(ref state, tmp11, state.RawDepthBudget);
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)

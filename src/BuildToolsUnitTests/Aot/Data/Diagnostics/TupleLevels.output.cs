@@ -103,20 +103,20 @@ partial class TupleLevelsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.One;
             state.WriteRawTag((1 << 3) | 2);  // One
-            var len1 = Measure__global__System_Guid__decimal_(tmp1, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len1);
+            len = Measure__global__System_Guid__decimal_(tmp1, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite__global__System_Guid__decimal_(ref state, tmp1, depth);
             var tmp2 = value.Two;
             if (tmp2 != null)
             {
-                var lengths2 = state.RawLengths;
                 foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
                 {
                     state.WriteRawTag((2 << 3) | 2);  // Two
-                    var len2 = Measure__global__System_Guid__decimal_(item2, state.RawDepthBudget, lengths2);
-                    state.WriteRawVarint64((ulong)len2);
+                    len = Measure__global__System_Guid__decimal_(item2, state.RawDepthBudget, state.RawLengths);
+                    state.WriteRawVarint64((ulong)len);
                     RawWrite__global__System_Guid__decimal_(ref state, item2, depth);
                 }
             }
@@ -126,16 +126,17 @@ partial class TupleLevelsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.One;
-            var len1 = Measure__global__System_Guid__decimal_(tmp1, depth, lengths);
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // One
+            sub = Measure__global__System_Guid__decimal_(tmp1, depth, lengths);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // One
             var tmp2 = value.Two;
             if (tmp2 != null)
             {
                 foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
                 {
-                    var len2 = Measure__global__System_Guid__decimal_(item2, depth, lengths);
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;
+                    sub = Measure__global__System_Guid__decimal_(item2, depth, lengths);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             return len;

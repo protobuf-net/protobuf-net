@@ -263,6 +263,7 @@ partial class RawPassModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.Id;
             if (tmp1 != 0)
             {
@@ -321,17 +322,16 @@ partial class RawPassModel
             var tmp9 = value.Items;
             if (tmp9 != null)
             {
-                var lengths9 = state.RawLengths;
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
                     state.WriteRawTag((9 << 3) | 2);  // Items
-                    if (!lengths9.TryGetValue(item9, out var len9))
+                    if (!state.RawLengths.TryGetValue(item9, out len))
                     {
-                        len9 = Measure_AotFixtures_RawPass_Child(item9, state.RawDepthBudget, lengths9);
-                        lengths9[item9] = len9;
+                        len = Measure_AotFixtures_RawPass_Child(item9, state.RawDepthBudget, state.RawLengths);
+                        state.RawLengths[item9] = len;
                     }
-                    state.WriteRawVarint64((ulong)len9);
+                    state.WriteRawVarint64((ulong)len);
                     RawWrite_AotFixtures_RawPass_Child(ref state, item9, depth);
                 }
             }
@@ -339,12 +339,12 @@ partial class RawPassModel
             if (tmp10 != null)
             {
                 state.WriteRawTag((10 << 3) | 2);  // Favourite
-                if (!state.RawLengths.TryGetValue(tmp10, out var len10))
+                if (!state.RawLengths.TryGetValue(tmp10, out len))
                 {
-                    len10 = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp10] = len10;
+                    len = Measure_AotFixtures_RawPass_Child(tmp10, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp10] = len;
                 }
-                state.WriteRawVarint64((ulong)len10);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_RawPass_Child(ref state, tmp10, depth);
             }
             var tmp11 = value.Score;
@@ -365,6 +365,7 @@ partial class RawPassModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
             var tmp2 = value.Name;
@@ -407,23 +408,23 @@ partial class RawPassModel
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
-                    if (!lengths.TryGetValue(item9, out var len9))
+                    if (!lengths.TryGetValue(item9, out sub))
                     {
-                        len9 = Measure_AotFixtures_RawPass_Child(item9, depth, lengths);
-                        lengths[item9] = len9;
+                        sub = Measure_AotFixtures_RawPass_Child(item9, depth, lengths);
+                        lengths[item9] = sub;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len9) + len9;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp10 = value.Favourite;
             if (tmp10 != null)
             {
-                if (!lengths.TryGetValue(tmp10, out var len10))
+                if (!lengths.TryGetValue(tmp10, out sub))
                 {
-                    len10 = Measure_AotFixtures_RawPass_Child(tmp10, depth, lengths);
-                    lengths[tmp10] = len10;
+                    sub = Measure_AotFixtures_RawPass_Child(tmp10, depth, lengths);
+                    lengths[tmp10] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len10) + len10;  // Favourite
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Favourite
             }
             var tmp11 = value.Score;
             if (tmp11 != 0d) len += 9;  // Score

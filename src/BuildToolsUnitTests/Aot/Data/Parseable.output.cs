@@ -118,12 +118,12 @@ partial class ParseableModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Child
-                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len))
                 {
-                    len2 = Measure_AotFixtures_Parseable_NotParseable(tmp2, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp2] = len2;
+                    len = Measure_AotFixtures_Parseable_NotParseable(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len;
                 }
-                state.WriteRawVarint64((ulong)len2);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2, state.RawDepthBudget);
             }
         }

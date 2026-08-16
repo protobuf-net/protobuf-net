@@ -106,12 +106,12 @@ partial class InitModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len))
                 {
-                    len3 = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len3;
+                    len = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len;
                 }
-                state.WriteRawVarint64((ulong)len3);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Init_Nested(ref state, tmp3, depth);
             }
             var tmp4 = value.Mutable;
@@ -136,12 +136,12 @@ partial class InitModel
             var tmp3 = value.Message;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out var len3))
+                if (!lengths.TryGetValue(tmp3, out var sub))
                 {
-                    len3 = Measure_AotFixtures_Init_Nested(tmp3, depth, lengths);
-                    lengths[tmp3] = len3;
+                    sub = Measure_AotFixtures_Init_Nested(tmp3, depth, lengths);
+                    lengths[tmp3] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // Message
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Message
             }
             var tmp4 = value.Mutable;
             if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Mutable

@@ -34,8 +34,8 @@ partial class StructsModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
-            var len1 = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len1);
+            var len = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite_AotFixtures_Structs_Point(ref state, tmp1, state.RawDepthBudget);
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)

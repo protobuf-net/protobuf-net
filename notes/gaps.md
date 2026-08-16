@@ -495,7 +495,7 @@ just not additive across a boundary. The fix is to push `writer.Depth` at the po
 rather than to thread anything further. Recorded rather than done because it wants a fixture that
 actually crosses the boundary deeply, and no existing one does.
 
-### B16. Locals in the emitted bodies — **`lengths` done 2026-08-14; `tmpN` folding agreed, for the STACK**
+### B16. Locals in the emitted bodies — **`lengths` and `len` done (2026-08-14, corrected 2026-08-16); `tmpN` folding still open**
 
 Marc, 2026-08-14, on two shapes in the generated code:
 
@@ -560,6 +560,51 @@ carried across an `InitializeFrom` swap.
 code, so reading it twice is a **correctness** risk, not merely a cost. `state.RawLengths` is ours
 and known to be a field chain, which is exactly why it needs no local. The distinction is "do we
 know this is cheap and stable", not "is it a property".
+
+#### Correction, 2026-08-16: "no local at all" was applied to ONE of the two sites
+
+The sentence above said *Applied: no local at all*, flatly, and that was **not true of the whole
+emitter** — it described the straight-line unary-message site only. A second site survived in
+`EmitRawRepeatedWrite`, hoisting `var lengths{number} = state.RawLengths;` once per repeated
+*message* member, and it was **missed rather than reasoned**: `83b9886f` talks exclusively about
+"per-site" locals and never mentions the loop case, though both sites arrived together in the
+writer arc (`89b535f7`). Marc found it by reading the emitted protogen serializer, where it
+accounted for **26** locals.
+
+It is gone now, per Marc: *"we don't even need to declare `lengths`; literally use
+`state.RawLengths` at every site."* One rule, no exceptions, nothing to go stale — the argument
+that decided the first site decides this one too, and fewer locals is the actual objective.
+
+**The `lenN` family went with it**, which is the part that needed thought rather than deletion: a
+sub-message length is an `out` target, so unlike the cache reference it cannot be eliminated — but
+it need not be *duplicated*. All such temporaries are `long`, and each is assigned then consumed
+immediately, so they fold onto one local with no type map and no lifetime overlap.
+
+**Hoist only what is used more than once** (Marc): a body with a single length site keeps its
+declaration **at** the site (`out var len`), because hoisting one use to the top widens its scope
+and buys nothing. Two or more get `long len;` once. `AppendFoldingLengthTemp` decides this by
+inspecting what was actually emitted rather than by restating the eligibility predicate — a second
+copy of that predicate would be free to drift from the first — which also keeps an unused local out
+of the consumer's build, where it would be CS0168.
+
+In `Measure_` bodies the shared temp is `sub`, since `len` is already the accumulator there.
+
+**Three emit paths needed it, not one**, and the two extra ones are why the first attempt emitted
+`CS0103` across nine fixtures: besides `RawWrite_`, both the classic `ISerializer.Write` body and
+the sub-type write body call `EmitWriteMembers` with `raw:` possibly true. The golden tests caught
+it because they *compile* their output (`Assert.Equal(0, result.ErrorCount)`) rather than only
+diffing it.
+
+Measured on the committed protogen serializer:
+
+| | before | after |
+| --- | ---: | ---: |
+| `lengths{n}` locals | 26 | **0** |
+| `len{n}` locals | 72 | **0** (4 folded declarations, the rest scoped single-site) |
+| worst `RawWrite_` body | 25 locals | **13** |
+
+`tmpN` folding remains open and is now the whole of the remaining work here — it is much the
+largest family (337 in that same file, 21 in one body) and the only one needing a type-keyed map.
 
 #### `tmpN` folding by type — agreed, and the reason is the STACK, not throughput
 

@@ -185,44 +185,44 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.FromDataContract;
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // FromDataContract
-                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out len))
                 {
-                    len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len1;
+                    len = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len;
                 }
-                state.WriteRawVarint64((ulong)len1);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1, depth);
             }
             var tmp2 = value.FromXmlType;
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // FromXmlType
-                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out len))
                 {
-                    len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp2] = len2;
+                    len = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len;
                 }
-                state.WriteRawVarint64((ulong)len2);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2, depth);
             }
             var tmp3 = value.Several;
             if (tmp3 != null)
             {
-                var lengths3 = state.RawLengths;
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
                     state.WriteRawTag((3 << 3) | 2);  // Several
-                    if (!lengths3.TryGetValue(item3, out var len3))
+                    if (!state.RawLengths.TryGetValue(item3, out len))
                     {
-                        len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, state.RawDepthBudget, lengths3);
-                        lengths3[item3] = len3;
+                        len = Measure_AotFixtures_Ordering_ViaDataMember(item3, state.RawDepthBudget, state.RawLengths);
+                        state.RawLengths[item3] = len;
                     }
-                    state.WriteRawVarint64((ulong)len3);
+                    state.WriteRawVarint64((ulong)len);
                     RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, item3, depth);
                 }
             }
@@ -232,25 +232,26 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.FromDataContract;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out var len1))
+                if (!lengths.TryGetValue(tmp1, out sub))
                 {
-                    len1 = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, lengths);
-                    lengths[tmp1] = len1;
+                    sub = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, lengths);
+                    lengths[tmp1] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // FromDataContract
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromDataContract
             }
             var tmp2 = value.FromXmlType;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out var len2))
+                if (!lengths.TryGetValue(tmp2, out sub))
                 {
-                    len2 = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, lengths);
-                    lengths[tmp2] = len2;
+                    sub = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, lengths);
+                    lengths[tmp2] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // FromXmlType
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromXmlType
             }
             var tmp3 = value.Several;
             if (tmp3 != null)
@@ -258,12 +259,12 @@ partial class OrderingModel
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
-                    if (!lengths.TryGetValue(item3, out var len3))
+                    if (!lengths.TryGetValue(item3, out sub))
                     {
-                        len3 = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, lengths);
-                        lengths[item3] = len3;
+                        sub = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, lengths);
+                        lengths[item3] = sub;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             return len;

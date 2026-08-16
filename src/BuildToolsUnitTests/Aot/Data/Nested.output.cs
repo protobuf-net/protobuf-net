@@ -110,12 +110,12 @@ partial class NestedModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Address
-                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out var len))
                 {
-                    len2 = Measure_AotFixtures_Nested_Address(tmp2, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp2] = len2;
+                    len = Measure_AotFixtures_Nested_Address(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len;
                 }
-                state.WriteRawVarint64((ulong)len2);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Nested_Address(ref state, tmp2, depth);
             }
         }
@@ -129,12 +129,12 @@ partial class NestedModel
             var tmp2 = value.Address;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out var len2))
+                if (!lengths.TryGetValue(tmp2, out var sub))
                 {
-                    len2 = Measure_AotFixtures_Nested_Address(tmp2, depth, lengths);
-                    lengths[tmp2] = len2;
+                    sub = Measure_AotFixtures_Nested_Address(tmp2, depth, lengths);
+                    lengths[tmp2] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Address
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Address
             }
             return len;
         }
@@ -195,6 +195,7 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -205,24 +206,24 @@ partial class NestedModel
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Customer
-                if (!state.RawLengths.TryGetValue(tmp2, out var len2))
+                if (!state.RawLengths.TryGetValue(tmp2, out len))
                 {
-                    len2 = Measure_AotFixtures_Nested_Customer(tmp2, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp2] = len2;
+                    len = Measure_AotFixtures_Nested_Customer(tmp2, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp2] = len;
                 }
-                state.WriteRawVarint64((ulong)len2);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Nested_Customer(ref state, tmp2, depth);
             }
             var tmp3 = value.ShipTo;
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // ShipTo
-                if (!state.RawLengths.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out len))
                 {
-                    len3 = Measure_AotFixtures_Nested_Address(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len3;
+                    len = Measure_AotFixtures_Nested_Address(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len;
                 }
-                state.WriteRawVarint64((ulong)len3);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_Nested_Address(ref state, tmp3, depth);
             }
         }
@@ -231,27 +232,28 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.Number;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Number
             var tmp2 = value.Customer;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out var len2))
+                if (!lengths.TryGetValue(tmp2, out sub))
                 {
-                    len2 = Measure_AotFixtures_Nested_Customer(tmp2, depth, lengths);
-                    lengths[tmp2] = len2;
+                    sub = Measure_AotFixtures_Nested_Customer(tmp2, depth, lengths);
+                    lengths[tmp2] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Customer
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Customer
             }
             var tmp3 = value.ShipTo;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out var len3))
+                if (!lengths.TryGetValue(tmp3, out sub))
                 {
-                    len3 = Measure_AotFixtures_Nested_Address(tmp3, depth, lengths);
-                    lengths[tmp3] = len3;
+                    sub = Measure_AotFixtures_Nested_Address(tmp3, depth, lengths);
+                    lengths[tmp3] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // ShipTo
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // ShipTo
             }
             return len;
         }

@@ -38,12 +38,12 @@ partial class ListLikeModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // NotAList
-                if (!state.RawLengths.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len))
                 {
-                    len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len1;
+                    len = Measure_AotFixtures_ListLike_NotAList(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len;
                 }
-                state.WriteRawVarint64((ulong)len1);
+                state.WriteRawVarint64((ulong)len);
                 RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1, depth);
             }
             var tmp2 = value.Other;
@@ -61,12 +61,12 @@ partial class ListLikeModel
             var tmp1 = value.NotAList;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out var len1))
+                if (!lengths.TryGetValue(tmp1, out var sub))
                 {
-                    len1 = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, lengths);
-                    lengths[tmp1] = len1;
+                    sub = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, lengths);
+                    lengths[tmp1] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // NotAList
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // NotAList
             }
             var tmp2 = value.Other;
             if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Other

@@ -70,8 +70,8 @@ partial class TupleMembersModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Item2;
             state.WriteRawTag((2 << 3) | 2);  // Item2
-            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len2);
+            var len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite__int__string_(ref state, tmp2, depth);
         }
 
@@ -82,8 +82,8 @@ partial class TupleMembersModel
             var tmp1 = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
-            var len2 = Measure__int__string_(tmp2, depth, lengths);
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Item2
+            var sub = Measure__int__string_(tmp2, depth, lengths);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Item2
             return len;
         }
 
@@ -175,25 +175,26 @@ partial class TupleMembersModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleMembers.HasTuples value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
-            var len1 = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len1);
+            len = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite__int__string_(ref state, tmp1, state.RawDepthBudget);
             var tmp2 = value.Anonymous;
             state.WriteRawTag((2 << 3) | 2);  // Anonymous
-            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len2);
+            len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite__int__string_(ref state, tmp2, state.RawDepthBudget);
             var tmp3 = value.Deep;
             state.WriteRawTag((3 << 3) | 2);  // Deep
-            var len3 = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len3);
+            len = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite__int___int__string__(ref state, tmp3, state.RawDepthBudget);
             var tmp4 = value.Pair;
             state.WriteRawTag((4 << 3) | 2);  // Pair
-            var len4 = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len4);
+            len = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
             RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4, state.RawDepthBudget);
             var tmp5 = value.MaybePair;
             if (tmp5.HasValue)

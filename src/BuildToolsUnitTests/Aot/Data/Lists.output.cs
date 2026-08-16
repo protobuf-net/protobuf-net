@@ -140,6 +140,7 @@ partial class ListsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
             var tmp1 = value.Int32Array;
             if (tmp1 != null)
             {
@@ -208,34 +209,32 @@ partial class ListsModel
             var tmp9 = value.Messages;
             if (tmp9 != null)
             {
-                var lengths9 = state.RawLengths;
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     state.WriteRawTag((9 << 3) | 2);  // Messages
-                    if (!lengths9.TryGetValue(item9, out var len9))
+                    if (!state.RawLengths.TryGetValue(item9, out len))
                     {
-                        len9 = Measure_AotFixtures_Lists_Inner(item9, state.RawDepthBudget, lengths9);
-                        lengths9[item9] = len9;
+                        len = Measure_AotFixtures_Lists_Inner(item9, state.RawDepthBudget, state.RawLengths);
+                        state.RawLengths[item9] = len;
                     }
-                    state.WriteRawVarint64((ulong)len9);
+                    state.WriteRawVarint64((ulong)len);
                     RawWrite_AotFixtures_Lists_Inner(ref state, item9, depth);
                 }
             }
             var tmp10 = value.MessageArray;
             if (tmp10 != null)
             {
-                var lengths10 = state.RawLengths;
                 foreach (var item10 in tmp10)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     state.WriteRawTag((10 << 3) | 2);  // MessageArray
-                    if (!lengths10.TryGetValue(item10, out var len10))
+                    if (!state.RawLengths.TryGetValue(item10, out len))
                     {
-                        len10 = Measure_AotFixtures_Lists_Inner(item10, state.RawDepthBudget, lengths10);
-                        lengths10[item10] = len10;
+                        len = Measure_AotFixtures_Lists_Inner(item10, state.RawDepthBudget, state.RawLengths);
+                        state.RawLengths[item10] = len;
                     }
-                    state.WriteRawVarint64((ulong)len10);
+                    state.WriteRawVarint64((ulong)len);
                     RawWrite_AotFixtures_Lists_Inner(ref state, item10, depth);
                 }
             }
@@ -275,6 +274,7 @@ partial class ListsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.Int32Array;
             if (tmp1 != null)
             {
@@ -330,12 +330,12 @@ partial class ListsModel
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
-                    if (!lengths.TryGetValue(item9, out var len9))
+                    if (!lengths.TryGetValue(item9, out sub))
                     {
-                        len9 = Measure_AotFixtures_Lists_Inner(item9, depth, lengths);
-                        lengths[item9] = len9;
+                        sub = Measure_AotFixtures_Lists_Inner(item9, depth, lengths);
+                        lengths[item9] = sub;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len9) + len9;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp10 = value.MessageArray;
@@ -344,12 +344,12 @@ partial class ListsModel
                 foreach (var item10 in tmp10)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
-                    if (!lengths.TryGetValue(item10, out var len10))
+                    if (!lengths.TryGetValue(item10, out sub))
                     {
-                        len10 = Measure_AotFixtures_Lists_Inner(item10, depth, lengths);
-                        lengths[item10] = len10;
+                        sub = Measure_AotFixtures_Lists_Inner(item10, depth, lengths);
+                        lengths[item10] = sub;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len10) + len10;
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp11 = value.Scalar;
