@@ -1251,6 +1251,51 @@ itself was built in, and to say so when the dll it picks is older than the libra
 
 **Open.** Not touched in the merge that found it, since a merge commit is the wrong place for it.
 
+### B28. Is `Impl*` dispatch a bottleneck on the CLASSIC write path? — **asked and answered "no, where we measure"; open elsewhere**
+
+Marc, 2026-08-16, having read how the two halves differ: the reader's `Impl*` family is **gone**
+(zero occurrences in `ProtoReader*.cs`) — it went with the backend classes, replaced by one
+`_source switch` in `GetNextBuffer`, i.e. a type test per *refill* instead of a virtual call per
+*primitive*. The writer still has all 11, abstract on `ProtoWriter` and overridden three times
+(`BufferWriter`, `Stream`, `Null`). Reasonable to suspect that of being a write-path bottleneck.
+
+**The closest available measurement says no.** The `int32`-bypass fix (`notes/nano-writer.md`,
+"Two findings from reading a golden") removed exactly that cost — runtime tag encode, `WireType`
+set and reset, **and the `ImplWriteVarint32` virtual hop** — for the commonest member shape in
+protobuf, and measured **10.192 → 10.207 µs (+0.15%)**, with the Google.Protobuf gauge drifting
+2.5% between the same two legs. That was the fifth consecutive write-path micro-optimisation to
+measure flat, and the payload census explains it: the descriptor set is **71.5% UTF-8 string
+payload**, so per-field overhead is diluted.
+
+**What IS costing the classic writer** is length discovery, not dispatch: `docs/aot.md`'s gRPC
+table has the runtime model at **+85%** for measure+serialize over plain serialize (write-to-count
+against the null writer, plus buffer-and-patch back-fill), against +51% for the generated model.
+That is what measure-first replaces, and it is why B5's counting mode and the writer swap are one
+piece of work — `ProtoWriter.Null` exists precisely to implement `Impl*` as "count, don't store".
+
+**Still genuinely untested**: an *unpacked numeric-dense* payload, where there are no strings to
+hide behind. The census note is explicit that the descriptor payload cannot speak for one. The
+packed results (3.4×–32×) do not answer it either, since packing replaces the loop with a block
+write. `PackedMatrix` already builds the columns, so running them unpacked through classic vs raw
+would isolate per-field write overhead the way `PackedSizeBenchmarks` isolated sizing.
+
+**Ranked low deliberately** (Marc): the raw path already demotes `Impl*` from the hot arm to the
+overflow arm — every raw primitive is a `RemainingInCurrent` room check with a `[NoInlining]`
+`Impl*` fallback, so the virtual call fires per *buffer boundary*, exactly as the reader's type
+test does. So the question only characterises the **classic** writer, which is on a deliberate
+go-slow as the control and the fallback. It matters for consumers who have not adopted
+`[ProtoModel]` — and `docs/aot.md` shows that population got nothing from v4 on serialize
+(20.59 → 20.39 µs) while deserialize improved 23%.
+
+### B29. `ProtoReader.cs` cites a `PORTING.md` that does not exist
+
+The "museum bridge" comment — the one that explains liquify/resolidify and is the best short
+statement of how the legacy reader relates to `State` — ends *"Museum API, museum prices - see
+PORTING.md"*. There is no such file anywhere in the repo (`git ls-files` finds nothing).
+
+Either write it or drop the reference. It is the pointer someone follows when they wonder why the
+instance API is slow, so a dangling one costs more than no pointer at all.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
@@ -1834,6 +1879,7 @@ silent pick.
 
 | question | detail |
 | --- | --- |
-| **manual review of the write-emitted goldens** | **63 changed vs `v4`** as of 2026-08-16, plus **3 new fixtures** (`PackedAll`, `BclMeasure`, `RepeatedBytes`). Start with `PackedAll.output.cs`: it is the only file showing all six `WriteRawPacked*` variants, added because three of them (`Bool`, `Fixed32`, `ZigZag`) previously appeared in no golden at all. Was 55 when `int32` moved onto the raw path; the packed arc, `ImmutableArray`, repeated `bytes`, `nint`/`DateOnly`/`TimeOnly` and the BCL measures have all moved shapes since. Marc is reviewing 2026-08-16 ahead of squashing #1277. **The one item still open** |
+| **manual review of the write-emitted goldens** | **63 changed vs `v4`**, plus **3 new fixtures** (`PackedAll`, `BclMeasure`, `RepeatedBytes`). Start with `PackedAll.output.cs`: it is the only file showing all six `WriteRawPacked*` variants, added because three of them (`Bool`, `Fixed32`, `ZigZag`) previously appeared in no golden at all. Was 55 when `int32` moved onto the raw path; the packed arc, `ImmutableArray`, repeated `bytes`, `nint`/`DateOnly`/`TimeOnly` and the BCL measures have all moved shapes since. **The bodies moved twice more on 2026-08-16 after the review began** — B16's local folding (`lengths{n}` gone, `len{n}` folded) and B16a's drift-check calls — so anything read before those two commits is stale; both diffs are uniform and skim quickly. **The one item still open** |
+| **do the two external PRs land before or after #1277?** | #1275 and #1276 are retargeted to `v4`, merged, gated and MERGEABLE (see the handover in `notes/nano-writer.md`). Landing them first means #1277's goldens move again; landing #1277 first means both need another merge-forward. Either is fine — but they *both* need one more forward-merge for the `PBN3000+` renumber regardless |
 | ~~the tag ladder: keep or revert?~~ | **Settled 2026-08-14: narrowed, not reverted.** Split by *dynamic population* rather than kept or dropped wholesale — the one- and two-byte arms and the bool fold stay, the folded 3/4/5-byte arms go back to the shipped encoder. Two follow-on micro-ideas (`&` for `&&`, hoisting `RemainingInCurrent`) were answered by inspection and need no measurement; the reasoning is in the comment block |
 | ~~when to rewrite `docs/aot.md`'s "needs its own project" advice~~ | **Done**, pre-emptively on `aot-schema-model`, so it arrives with the merge |

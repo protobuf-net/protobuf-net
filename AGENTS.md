@@ -209,7 +209,29 @@ reachable through a group, and that predicate's failure mode is an uncatchable s
 
 Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract emits a local
 per member — 1000 in the corpus's worst case — and at roughly 8 KB a frame the stack is exhausted
-around 128 levels, long before the depth guard fires. See `notes/gaps.md` B16.
+around 128 levels, long before the depth guard fires. See `notes/gaps.md` B16, where the
+length-temporary families have since been folded and `tmpN` remains.
+
+**4. A measured length that disagrees with the body is caught in DEBUG, and only in DEBUG.** Every
+length-prefixed raw write is followed by `DebugAssertPosition`, comparing `state.Position64` against
+the prefix that was written; the pair of `[Conditional("DEBUG")]` helpers is emitted onto the
+services type. This is the raw path's answer to the classic buffer-writer's *"Length mismatch;
+calculated 'x', actual 'y'"* validation, and it reaches the consumer's own contracts, which the
+differential corpus never can.
+
+Three things about it are load-bearing:
+
+- **`Debug.Fail` terminates the process on .NET Core.** It is an uncatchable `FailFast`, not a
+  logged warning — so drift cannot be ignored, and equally a **false positive would kill every
+  consumer's Debug build**. Widening what the assert covers demands the same breadth of proof the
+  original did (the whole fixture set under `-c Debug`, plus `AotSmoke -c Debug`).
+- **`Position64` is safe to lean on here despite the raw path not maintaining most writer state**,
+  because it is *derived* — committed bytes plus the backend's uncommitted buffer offset, which is
+  exactly what a raw write advances. Contrast `writer.Depth`, which the raw path genuinely does not
+  maintain.
+- **`ref`, not `out`**: `out` on a conditional member is **CS0685**, precisely because the call may
+  vanish and leave the target unassigned. The capture local costs a Release consumer nothing —
+  measured at 0 IL locals and 2 bytes of IL once both calls are removed.
 
 ### Repeated members on the raw path: four predicates, and one trap that has bitten three times
 
@@ -1142,8 +1164,32 @@ a refusal, not about what is outstanding.
 - a behaviour change shows up as a diff to read, not an assertion to appease;
 - don't hand-edit a golden to make a test pass — fix the generator and re-run.
 
+**They only write back in DEBUG.** `WriteBack` locates the source tree from `[CallerFilePath]`, and
+a Release build stamps deterministic paths (`/_1/...`) that do not exist on disk, so it silently
+returns. Run the golden tests in **Debug** to regenerate; a Release run just fails twice and writes
+nothing, which looks exactly like a generator producing unstable output.
+
+**The goldens COMPILE their output** (`Assert.Equal(0, result.ErrorCount)`), not merely diff it —
+which is the only reason a change that emits a local in one code path but declares it in another is
+caught at all. Worth remembering before "simplifying" that assertion away.
+
+**A `.txt` golden pins diagnostic LINE NUMBERS**, so editing a fixture's header comment moves them
+and fails the test for a reason that has nothing to do with the generator.
+
 `Data/*.cs` files are excluded from compilation via `<Compile Remove="Aot/Data/**/*.*.cs" />` and
 copied to the output directory instead.
+
+### Reading what the generator actually emitted
+
+`-p:EmitCompilerGeneratedFiles=true`, and then look under
+`obj/<config>/<tfm>/generated/protobuf-net.BuildTools/...`. Two traps, both hit on 2026-08-16:
+
+- **without that flag the generated files are never written to disk at all**, so an empty (or
+  absent) `generated` folder is indistinguishable from a generator that emitted nothing. A grep
+  returning zero is not evidence until you have checked the files exist;
+- **the folder survives a branch switch**, so a stale file from another branch reads as current.
+  It is also incremental: if nothing recompiled, nothing is rewritten. `--no-incremental` and a
+  timestamp check are the cheap guards.
 
 Fixture conventions:
 

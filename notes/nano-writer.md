@@ -1201,12 +1201,17 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 **Handover note: this section plus "The presized buffer core: the plan" above is the
 entry point for a fresh session.**
 
-### State as of 2026-08-16 — branch `schema-breadth` (PR #1277 → `v4`)
+### State as of 2026-08-16 (end of day) — branch `schema-breadth` (PR #1277 → `v4`)
 
 **Read this block first; the 2026-08-13 one below is two branches behind.** Everything is pushed
-and green: traversal clean (incl. net472), protobuf-net.Test 1543, BuildToolsUnitTests 145,
-AotConformanceTests 1580, **AotDifferential 3051 at 100%**, AotSmoke native publish passes at 19
-warnings (unchanged).
+and green at `43030db6`: traversal clean (incl. net472), protobuf-net.Test 1543/1542 x2 TFMs,
+Examples 676/702, Reflection 556 x2, BuildToolsUnitTests **405**, AotConformanceTests **1592**,
+**AotDifferential 3051 at 100%** (exit 0), AotSmoke native win-x64 at **19 warnings** with the
+smoke run passing, and `AotSmoke -c Debug` passing too — which now matters, see the drift check
+below.
+
+**The stack is flat again**: `main` → `v4` → `schema-breadth`, all three carrying `PBN3000+`.
+`v4` was 7 commits behind main this morning and is current.
 
 **The packed write arc is complete**, and it moved home mid-arc. The fast paths were first built
 inside `RepeatedSerializer` and then **backed out of it** (`a73d6fc0`) — classic emit is the
@@ -1238,10 +1243,52 @@ distributions, which a single before/after number hides.
 sibling once ranked as the largest remaining number. It is ~10 ns; the figure was a total divided
 by a member count. `notes/packed-writes.md` carries the measurement and the methodology lesson.
 
+**Landed LATER on 2026-08-16, after the block above was first written:**
+
+- **B16 finished.** `lengths{n}` is gone entirely — `state.RawLengths` is read inline at every site,
+  including inside the repeated loop, where a hoist had survived the 2026-08-14 decision by being
+  *missed rather than reasoned*. `len{n}` folds onto one local per body, and a body with a single
+  site keeps its declaration AT the site (hoisting one use widens scope for nothing). Committed
+  protogen serializer: `lengths{n}` 26 → 0, `len{n}` 72 → 0, worst `RawWrite_` body 25 locals → 13.
+  **`tmpN` folding is now the whole of the remaining work in B16**, and is the only family needing
+  a type-keyed map.
+- **B16a: DEBUG-only length-drift detection.** Every measured length is proven against the bytes
+  actually written, through two `[Conditional("DEBUG")]` helpers on the services type. `Debug.Fail`
+  **terminates the process** on .NET Core, so it is a real gate — and a false positive would kill
+  every consumer's Debug build, which is why the no-false-alarm side was proven across the whole
+  fixture set rather than spot-checked, and the firing side by perturbing `Measure_`.
+- **The AOT diagnostic ids moved to `PBN3000+`** (#1283 on main, then forward to `v4` and here).
+  They had collided with `ServiceContractAnalyzer`'s `PBN2001`–`PBN2010`, in the same assembly,
+  since 3.3 shipped. `AGENTS.md` now carries an exhaustive owner table; the paragraph that used to
+  license the collision was the cause.
+- **A CI hole**: the `branches:` filter on `pull_request` matches the PR's *base*, so a PR into any
+  unlisted branch got **zero checks** — which reads as clean rather than broken. Fixed on `main`;
+  the filter is gone from `pull_request` and kept on `push`.
+
+**Two external PRs are in flight, both retargeted to `v4`, both MERGEABLE**, with the merge, the
+gates and a review comment already done — they wait on Marc, not on work:
+
+- **#1276 `[ProtoDataFormat]`** — a cross-cutting per-type `DataFormat` default (18 files). **The
+  thing to know**: an ambient non-default format takes members off measure-first, via
+  `RawMemberMeasureBlocked`/`BclMeasurable`, and one blocked member removes its whole contract to a
+  fixed point. Its own fixture demonstrates it — the golden emits `RawRead_` and **zero**
+  `Measure_`/`RawWrite_`. That is a gap in our measure arms (B26), not in the feature, and the
+  formats it makes common are the cheapest arms to add, being constant-width.
+- **#1275 `[ProtoSerializer]`** — declarative external serializer bindings (23 files). It is *not*
+  `[ProtoSurrogate]`: a surrogate always yields a sub-message, while a hand-written serializer may
+  be `CategoryScalar`, framed by its own wire type. **It contains a separable bug fix** worth
+  extracting to `v4` on its own merits: a `Nullable<TStruct>` member whose serializer is
+  scalar- or undetermined-category currently takes `WriteMessage` — a length prefix over a bare
+  scalar — and that is reachable today via `[ProtoContract(Serializer = …)]`, with no new attribute
+  involved.
+
+Both still need **one more merge-forward from `v4`** to pick up the `PBN3000+` renumber.
+
 **What is next** is in `notes/gaps.md`: B26's remaining tier (`FixedSize`, level 240+
-`Timestamp`/`Duration`, level 300 string forms, repeated BCL elements), B23's derived-list hold,
-B21 tier 3, and the general negative-caching half of B24. Marc is reviewing ahead of a squash and
-merge of #1277 into `v4`.
+`Timestamp`/`Duration`, level 300 string forms, repeated BCL elements) — which a pending feature
+(#1276) now leans on; `tmpN` folding (B16); B23's derived-list hold; B21 tier 3; the general
+negative-caching half of B24; and B27, the differential's Debug-first generator load. Marc is
+reviewing the goldens ahead of a squash and merge of #1277 into `v4`.
 
 **State as of 2026-08-13, end of session.** Everything is pushed to `raw-writer` and green on
 every gate (protobuf-net.Test 1110 x2 TFMs, Examples 679/705, Reflection 556 x2, conformance
