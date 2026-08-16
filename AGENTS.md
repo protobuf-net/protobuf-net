@@ -785,6 +785,19 @@ and the generator — both agree on the refusal — it is simply a consequence o
 applied before the usual per-member checks run, worth knowing before reaching for an assembly-wide
 default.
 
+**On v4 it also costs measure-first, and that is the expensive half.** `RawMemberMeasureBlocked`
+blocks a member on *any* non-default `DataFormat` bar two carve-outs (a packed column, which vets
+its own format, and `Group` on a unary message), and `BclMeasurable` gates on the default format
+outright — so an ambient default reaches members that were measurable and makes them not, and one
+blocked member removes its **whole contract** from the measurable set, to a fixed point through
+every referrer. `[assembly: ProtoDataFormat(typeof(int), DataFormat.ZigZag)]` is therefore enough to
+take essentially a whole model off the raw write path, silently and with no diagnostic. The
+`FormatDefault` golden is the canary: it emits `RawRead_` and **zero** `Measure_`/`RawWrite_`
+methods, which is exactly the "count the methods" diagnostic recorded under "Don't improve the
+legacy library". This is a gap in the measure arms, not in the feature — see `notes/gaps.md` B26,
+and note the formats this attribute makes common are the *easiest* arms to add, being constant-width
+(a level-300 `FixedSize` Guid is 16 bytes; `FixedSize` `DateTime`/`TimeSpan` is 8).
+
 ### Extensible contracts
 
 An extensible contract keeps the fields it does not recognise: the read's `default:` case becomes
@@ -1854,17 +1867,13 @@ fixture change so the two cannot drift.
 
 **Every fixture without a `.reference.cs` now says why, in its own header**, because an absence and a
 genuinely-empty ref-emit output look identical and that has already caused one wrong conclusion.
-Most of the absences are not work — each is a shape ref-emit cannot produce output for. `FormatDefault`
-is different: it is a normal shape ref-emit handles perfectly well, just not yet compared, because
-`AotRefGen` is net472-only and this fixture was added from Linux — so this one genuinely is pending
-work, not a permanent gap:
+None of the absences is work — each is a shape ref-emit cannot produce output for:
 
 | fixture | why |
 | --- | --- |
 | `NonPublicSetter`, `NonPublicCtor`, `InheritAccessor`, `ImplicitPrivate` | ref-emit's *compiled* path refuses the shape outright ("Non-public member cannot be used with full dll compilation"), so there is no output to compare |
 | `TrivialGetter` | no reference behaviour exists — we are strictly more capable there |
 | `DateOnly` | `<Compile Remove>`d from `AotRefGen`, which is net472 and has no `DateOnly` |
-| `FormatDefault` | pending, not permanent: nothing here is refused by ref-emit, so this fixture *should* have a `.reference.cs` — it was added from Linux, where `AotRefGen` (net472) cannot run. Differentially covered by `AotConformanceTests` in the meantime; run `AotRefGen` on Windows and commit the result |
 
 Two artefacts of decompilation are cosmetic, not semantic: `Features` appears as a uniquely-named
 method plus an ILSpy `.override` note (it's really an explicit-interface property), and

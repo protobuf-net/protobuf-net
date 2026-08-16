@@ -4,11 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-// NOTE: no .reference.cs yet - added on Linux, and AotRefGen is net472 so it could not be run.
-// Nothing here is refused by ref-emit, so this fixture *should* have one. Differentially covered
-// by AotConformanceTests - and unlike [ProtoSurrogate]/[ProtoSerializer] there is no replay: the
-// runtime model honours [ProtoDataFormat] itself, so the differential asserts real JIT/AOT parity.
-// Run AotRefGen on Windows and commit the result.
+// Differentially covered by AotConformanceTests - and unlike [ProtoSurrogate] there is no replay:
+// the runtime model honours [ProtoDataFormat] itself, so the differential asserts real JIT/AOT
+// parity. The .reference.cs shows ref-emit reaching BclHelpers.ReadGuidBytes/WriteGuidBytes for
+// members that state no format at all, which is the whole claim of this feature.
 //
 // Type-scoped deliberately: an assembly-scoped declaration would re-format every fixture in the
 // linked assembly - the same trap AGENTS.md records for [module: CompatibilityLevel]. Assembly and
