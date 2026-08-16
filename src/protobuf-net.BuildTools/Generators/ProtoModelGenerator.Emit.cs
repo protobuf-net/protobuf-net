@@ -237,25 +237,32 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
+            var contracts = new StringBuilder();
             var first = true;
             foreach (var contract in plan.Contracts)
             {
-                if (!first) sb.AppendLine();
+                if (!first) contracts.AppendLine();
                 first = false;
                 var raw = rawSet.Contains(contract.TypeName);
-                EmitContract(sb, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, plan.ImmutableArrayAsSpan, measurable);
+                EmitContract(contracts, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, plan.ImmutableArrayAsSpan, measurable);
                 if (raw)
                 {
-                    EmitRawRead(sb, indent + 2, contract, rawCallable);
+                    EmitRawRead(contracts, indent + 2, contract, rawCallable);
                 }
                 else if (plan.RawReader && rawReasons.TryGetValue(contract.TypeName, out var why))
                 {
                     // say WHY in the output itself: an absence and an oversight look identical
                     // otherwise, which this branch has been burned by before
-                    sb.AppendLine();
-                    Line(sb, indent + 2, $"// raw read pass: skipped - {why}");
+                    contracts.AppendLine();
+                    Line(contracts, indent + 2, $"// raw read pass: skipped - {why}");
                 }
             }
+            if (contracts.ToString().IndexOf(DriftAssert, StringComparison.Ordinal) >= 0)
+            {
+                EmitLengthDriftHelpers(sb, indent + 2);
+                sb.AppendLine();
+            }
+            sb.Append(contracts);
 
             EmitEnumProxies(sb, indent + 2, plan);
             EmitCollectionProxies(sb, indent + 2, plan);
@@ -1916,7 +1923,9 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner, "}");
                         }
                         Line(sb, inner, $"state.WriteRawVarint64((ulong)len);");
+                        Line(sb, inner, $"{DriftCapture};");
                         Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number}, {depth});");
+                        Line(sb, inner, $"{DriftAssert}, \"{member.Name}\");");
                         if (!target.IsValueType) Line(sb, indent, "}");
                         break;
                     }
@@ -2983,6 +2992,62 @@ namespace ProtoBuf.BuildTools.Generators
                 $"len += global::ProtoBuf.ProtoWriter.State.MeasureRawPacked{api}({member.FieldNumber}, {arg});  // {member.Name}");
         }
 
+        private const string DriftCapture = "DebugCapturePosition(ref state, ref before)";
+        private const string DriftAssert = "DebugAssertPosition(ref state, before + len";
+
+        /// <summary>
+        /// The DEBUG-only length-drift check: a measured length that disagrees with the bytes
+        /// actually written is a corrupt stream, and it is the one failure this whole arc can
+        /// produce that nothing else would catch.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The classic buffer-writer path already validates ("Length mismatch; calculated 'x',
+        /// actual 'y'") and the raw path had no equivalent. The differential corpus catches a
+        /// <c>Measure_</c>/<c>RawWrite_</c> disagreement only for shapes IN the corpus; this
+        /// catches it in the consumer's own contracts, which the corpus can never reach.
+        /// </para>
+        /// <para>
+        /// <c>Position64</c> is safe to lean on here even though the raw path deliberately does not
+        /// maintain most writer state: it is DERIVED (committed bytes plus the backend's pending
+        /// buffer offset), and the buffer offset is exactly what a raw write advances. A stream
+        /// flush mid-body is fine too - <c>_position64</c> gains what <c>Pending</c> loses.
+        /// </para>
+        /// <para>
+        /// <c>[Conditional]</c> resolves against the CONSUMER's compilation, so their Release build
+        /// drops the calls, and with them the capture local - measured as 0 IL locals and 2 bytes of
+        /// IL, so this does not re-add what gap B16 removed. The bodies are <c>#if DEBUG</c>'d as
+        /// well, so even an explicit call costs nothing there. <c>ref</c> rather than <c>out</c> is
+        /// not a preference: CS0685 makes <c>out</c> illegal on a conditional member, precisely
+        /// because the call may vanish and leave the target unassigned.
+        /// </para>
+        /// </remarks>
+        private static void EmitLengthDriftHelpers(StringBuilder sb, int indent)
+        {
+            Line(sb, indent, "// DEBUG-only: prove each measured length against the bytes actually written.");
+            Line(sb, indent, "// [Conditional] is resolved against YOUR compilation, so a Release build");
+            Line(sb, indent, "// removes both calls and the capture local with them; the bodies are #if DEBUG'd");
+            Line(sb, indent, "// too, so even calling one directly costs nothing there.");
+            Line(sb, indent, "[global::System.Diagnostics.Conditional(\"DEBUG\")]");
+            Line(sb, indent, "private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)");
+            Line(sb, indent, "{");
+            sb.AppendLine("#if DEBUG");
+            Line(sb, indent + 1, "position = state.Position64;");
+            sb.AppendLine("#endif");
+            Line(sb, indent, "}");
+            sb.AppendLine();
+            Line(sb, indent, "[global::System.Diagnostics.Conditional(\"DEBUG\")]");
+            Line(sb, indent, "private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)");
+            Line(sb, indent, "{");
+            sb.AppendLine("#if DEBUG");
+            Line(sb, indent + 1, "var actual = state.Position64;");
+            Line(sb, indent + 1, "// interpolated only on failure: this runs per length-prefixed member in a Debug build");
+            Line(sb, indent + 1, "if (actual != expected) global::System.Diagnostics.Debug.Fail(");
+            Line(sb, indent + 2, "$\"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.\");");
+            sb.AppendLine("#endif");
+            Line(sb, indent, "}");
+        }
+
         /// <summary>
         /// Append an emitted body, folding its sub-message length temporaries onto ONE local
         /// where there is more than one of them (gap B16).
@@ -3032,6 +3097,13 @@ namespace ProtoBuf.BuildTools.Generators
             else if (sites > 1)
             {
                 Line(sb, indent, $"long {name};");
+            }
+            // the drift check's capture target: one per body, and `= 0` because a `ref` argument
+            // demands definite assignment - `out` being illegal on a conditional member (CS0685).
+            // It disappears entirely from a Release build along with the calls that read it.
+            if (body.IndexOf(DriftCapture, StringComparison.Ordinal) >= 0)
+            {
+                Line(sb, indent, "long before = 0;");
             }
             sb.Append(body);
         }
@@ -3090,7 +3162,9 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, "}");
                 }
                 Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len);");
+                Line(sb, indent + 1, $"{DriftCapture};");
                 Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item}, {depth});");
+                Line(sb, indent + 1, $"{DriftAssert}, \"{member.Name}\");");
             }
             else if (member.Kind == ProtoMemberKind.String)
             {

@@ -26,6 +26,29 @@ partial class RawPassModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Bag>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -264,6 +287,7 @@ partial class RawPassModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
+            long before = 0;
             var tmp1 = value.Id;
             if (tmp1 != 0)
             {
@@ -332,7 +356,9 @@ partial class RawPassModel
                         state.RawLengths[item9] = len;
                     }
                     state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
                     RawWrite_AotFixtures_RawPass_Child(ref state, item9, depth);
+                    DebugAssertPosition(ref state, before + len, "Items");
                 }
             }
             var tmp10 = value.Favourite;
@@ -345,7 +371,9 @@ partial class RawPassModel
                     state.RawLengths[tmp10] = len;
                 }
                 state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_RawPass_Child(ref state, tmp10, depth);
+                DebugAssertPosition(ref state, before + len, "Favourite");
             }
             var tmp11 = value.Score;
             if (tmp11 != 0d)

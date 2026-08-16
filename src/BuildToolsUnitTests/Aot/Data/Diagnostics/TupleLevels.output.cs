@@ -23,6 +23,29 @@ partial class TupleLevelsModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(global::System.Guid, decimal)>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -104,11 +127,14 @@ partial class TupleLevelsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
+            long before = 0;
             var tmp1 = value.One;
             state.WriteRawTag((1 << 3) | 2);  // One
             len = Measure__global__System_Guid__decimal_(tmp1, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite__global__System_Guid__decimal_(ref state, tmp1, depth);
+            DebugAssertPosition(ref state, before + len, "One");
             var tmp2 = value.Two;
             if (tmp2 != null)
             {
@@ -117,7 +143,9 @@ partial class TupleLevelsModel
                     state.WriteRawTag((2 << 3) | 2);  // Two
                     len = Measure__global__System_Guid__decimal_(item2, state.RawDepthBudget, state.RawLengths);
                     state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
                     RawWrite__global__System_Guid__decimal_(ref state, item2, depth);
+                    DebugAssertPosition(ref state, before + len, "Two");
                 }
             }
         }

@@ -603,6 +603,64 @@ Measured on the committed protogen serializer:
 | `len{n}` locals | 72 | **0** (4 folded declarations, the rest scoped single-site) |
 | worst `RawWrite_` body | 25 locals | **13** |
 
+#### B16a. DEBUG-only length-drift detection (Marc, 2026-08-16)
+
+Emitted alongside the folding, because the two touch the same statements. A measured length that
+disagrees with the bytes actually written is a **corrupt stream**, and it is the one failure this
+arc can produce that nothing else catches: the classic buffer-writer path already validates
+(*"Length mismatch; calculated 'x', actual 'y'"*) and the raw path validated nothing.
+
+```csharp
+state.WriteRawVarint64((ulong)len);
+DebugCapturePosition(ref state, ref before);
+RawWrite_Foo(ref state, item2, depth);
+DebugAssertPosition(ref state, before + len, "Fields");
+```
+
+**`Position64` is safe to lean on, and it is the exception rather than the rule.** The raw path
+deliberately does not maintain most writer state - `RawWrite_` threads its own depth budget and
+never touches `writer.Depth`. Position needs no maintaining because it is **derived**:
+`_position64 + GetUncommitted(in state)`, and both real backends override `GetUncommitted` with the
+live buffer offset (`state.OffsetInCurrent`, `Pending(in state)`) that a raw write is already
+advancing. A stream flush mid-body is fine too - `_position64` gains exactly what `Pending` loses.
+
+**`ref` rather than `out` is forced, not preferred:** `out` on a conditional member is **CS0685**,
+precisely because the call may vanish and leave the target unassigned.
+
+**It costs a Release consumer nothing at all**, measured rather than assumed - the concern being
+that a capture local per site would re-add what the folding above just removed:
+
+| build | IL locals | IL bytes | warnings |
+| --- | ---: | ---: | --- |
+| Release | **0** | 2 | 0 |
+| Debug | 2 | 27 | 0 |
+
+Roslyn elides the local entirely once both conditional calls are gone, and emits no CS0219 for the
+assigned-never-read `long before = 0;`. The bodies are `#if DEBUG`'d as well (Marc), so even an
+explicit call costs nothing there.
+
+**`Debug.Fail` TERMINATES THE PROCESS on .NET Core** - it is not a logged warning; it is an
+uncatchable `FailFast` printing *"Process terminated. Assertion failed."* That makes it a real gate
+and also means a **false positive would kill every consumer's Debug build**, so the no-false-alarm
+side needed proving broadly rather than spot-checking: `AotConformanceTests` in Debug (1592, with
+**44 live call sites across 19 models** - verified by `-p:EmitCompilerGeneratedFiles=true`, since a
+plain build writes nothing to disk and an empty `generated` folder looks identical to a generator
+that emitted nothing) and `AotSmoke -c Debug`, whose `.proto` descriptor tree is the deepest nesting
+available.
+
+**Proven to fire**, per the precedent set by the services-constructor `IsScalar` assert - by
+perturbing `Measure_` to `return len + 1`, i.e. the real bug class rather than a tautology, then
+reverting:
+
+```
+Process terminated. Assertion failed.
+Length drift writing 'Customer': measured length and bytes written differ by -1.
+```
+
+Note what it does **not** cover: the root length, which is checked by the classic engine's own
+validation via `TryMeasureRaw`. Between the two, every length-prefixed node is covered. Grouped
+members carry no length and so get no check.
+
 `tmpN` folding remains open and is now the whole of the remaining work here — it is much the
 largest family (337 in that same file, 21 in one body) and the only one needing a type-keyed map.
 

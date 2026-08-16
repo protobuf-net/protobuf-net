@@ -23,6 +23,29 @@ partial class FieldModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.Nested>
     {
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -167,6 +190,7 @@ partial class FieldModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Fields value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -189,7 +213,9 @@ partial class FieldModel
                     state.RawLengths[tmp3] = len;
                 }
                 state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Field_Nested(ref state, tmp3, state.RawDepthBudget);
+                DebugAssertPosition(ref state, before + len, "Message");
             }
             var tmp4 = value.Zig;
             if (tmp4 != 0)

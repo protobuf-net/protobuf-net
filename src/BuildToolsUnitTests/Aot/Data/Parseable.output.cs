@@ -24,6 +24,29 @@ partial class ParseableModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Endpoint>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -111,6 +134,7 @@ partial class ParseableModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Parseable.Holder value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.Ratio;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
             state.WriteString(tmp1.ToString());
@@ -124,7 +148,9 @@ partial class ParseableModel
                     state.RawLengths[tmp2] = len;
                 }
                 state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Parseable_NotParseable(ref state, tmp2, state.RawDepthBudget);
+                DebugAssertPosition(ref state, before + len, "Child");
             }
         }
 

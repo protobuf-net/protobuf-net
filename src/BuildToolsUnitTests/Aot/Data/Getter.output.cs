@@ -24,6 +24,29 @@ partial class GetterModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -34,6 +57,7 @@ partial class GetterModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
+            long before = 0;
             var tmp1 = value.Numbers;
             if (tmp1 != null)
             {
@@ -58,7 +82,9 @@ partial class GetterModel
                     state.RawLengths[tmp3] = len;
                 }
                 state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Getter_Nested(ref state, tmp3, state.RawDepthBudget);
+                DebugAssertPosition(ref state, before + len, "Child");
             }
             var tmp4 = value.Value;
             if (tmp4 != 0)
@@ -107,7 +133,9 @@ partial class GetterModel
             state.WriteRawTag((11 << 3) | 2);  // Where
             len = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite_AotFixtures_Getter_Point(ref state, tmp11, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Where");
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)
             {

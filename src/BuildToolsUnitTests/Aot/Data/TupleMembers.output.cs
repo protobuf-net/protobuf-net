@@ -25,6 +25,29 @@ partial class TupleMembersModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -65,6 +88,7 @@ partial class TupleMembersModel
         public static void RawWrite__int___int__string__(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
             var tmp1 = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
@@ -72,7 +96,9 @@ partial class TupleMembersModel
             state.WriteRawTag((2 << 3) | 2);  // Item2
             var len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite__int__string_(ref state, tmp2, depth);
+            DebugAssertPosition(ref state, before + len, "Item2");
         }
 
         private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -176,26 +202,35 @@ partial class TupleMembersModel
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
+            long before = 0;
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
             len = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite__int__string_(ref state, tmp1, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Named");
             var tmp2 = value.Anonymous;
             state.WriteRawTag((2 << 3) | 2);  // Anonymous
             len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite__int__string_(ref state, tmp2, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Anonymous");
             var tmp3 = value.Deep;
             state.WriteRawTag((3 << 3) | 2);  // Deep
             len = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite__int___int__string__(ref state, tmp3, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Deep");
             var tmp4 = value.Pair;
             state.WriteRawTag((4 << 3) | 2);  // Pair
             len = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
             state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
             RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Pair");
             var tmp5 = value.MaybePair;
             if (tmp5.HasValue)
             {

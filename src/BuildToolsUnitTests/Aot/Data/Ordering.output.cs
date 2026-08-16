@@ -25,6 +25,29 @@ partial class OrderingModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.ViaXmlElement>
     {
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -186,6 +209,7 @@ partial class OrderingModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
+            long before = 0;
             var tmp1 = value.FromDataContract;
             if (tmp1 != null)
             {
@@ -196,7 +220,9 @@ partial class OrderingModel
                     state.RawLengths[tmp1] = len;
                 }
                 state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "FromDataContract");
             }
             var tmp2 = value.FromXmlType;
             if (tmp2 != null)
@@ -208,7 +234,9 @@ partial class OrderingModel
                     state.RawLengths[tmp2] = len;
                 }
                 state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, tmp2, depth);
+                DebugAssertPosition(ref state, before + len, "FromXmlType");
             }
             var tmp3 = value.Several;
             if (tmp3 != null)
@@ -223,7 +251,9 @@ partial class OrderingModel
                         state.RawLengths[item3] = len;
                     }
                     state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
                     RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, item3, depth);
+                    DebugAssertPosition(ref state, before + len, "Several");
                 }
             }
         }
