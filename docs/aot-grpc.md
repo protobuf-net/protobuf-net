@@ -18,18 +18,30 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > | protobuf-net #1284 | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
 > | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
 >
-> **Next steps, in order** — the first two are the ones with a decision attached:
+> **Done:** the generator-owned trigger attributes are gone; the package reference is `1.3.0` and the
+> golden no longer contains an emitted attributes file. The unit tests stub the attributes in
+> `Grpc/Data/_ContractSurface.cs`, which is deliberate — matching is by full name, and the real ones
+> are `[Experimental]`, i.e. an *error* by default. **`src/AotGrpcSmoke` was not re-verified against
+> the real 1.3.0 package** (it had not reached nuget.org yet); that is the one thing to re-run first.
 >
-> 1. **Switch to the shipped attributes.** Bump `protobuf-net.Grpc` to `1.3.0` in
->    `src/Directory.Packages.props` (currently `1.2.2`), then delete `TriggerAttributesSource` and
->    the `RegisterPostInitializationOutput` call from `GrpcProxyGenerator.cs` — see "Why the
->    attributes are generator-owned", which becomes historical once this is done. Regenerate the
->    golden (it currently contains the emitted attributes file).
-> 2. **`BytesValue.SlowParse`** in protobuf-net.Grpc — the other half of the AOT warning reduction,
->    and the larger of the two. See "The measurement" below; blocked on a semantics decision.
-> 3. **The one real `IL2091`**, on the generated `__Serialize<T>` — ours, and small.
-> 4. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface.
-> 5. **Compile-time endpoint metadata** — now unblocked by `Binder` being public.
+> **Next steps, in order** — the first has a decision attached, the rest are mechanical:
+>
+> 1. **`BytesValue.SlowParse`** in protobuf-net.Grpc — the other half of the AOT warning reduction
+>    (100 → 5 needs *both* roots; see "The measurement"). Blocked on a semantics call: what should a
+>    repeated field 1 do? Going through the model today, protobuf-net's `AppendBytes` **concatenates**,
+>    so a naive hand-rolled "last wins" would silently differ. Also whether a hand-written reader
+>    replaces `SlowParse` outright or only takes over when dynamic code is absent.
+> 2. **The one real `IL2091`**, on the generated `__Serialize<T>`: its fallback arm calls
+>    `TypeModel.Serialize<T>(Stream, T, object)`, which demands `DynamicAccess.ContractType`. Either
+>    restate the annotation on the emitted helper (terminates immediately — call sites pass concrete
+>    contract types) or drop the fallback arm and write to a pooled buffer instead.
+> 3. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its
+>    payload types. `GrpcOperationModel` already carries them as strings.
+> 4. **Compile-time endpoint metadata** — reconstruct the attributes at compile time rather than
+>    reflecting. Unblocked now that `BinderConfiguration.Binder` is public, which gives the
+>    custom-binder fallback something to test against. See "Known gaps".
+> 5. **More fixtures.** There is still only one (`Basic.input.cs`); every diagnostic path
+>    (`PBN4001`–`PBN4011`) is unexercised.
 
 ## What this is
 

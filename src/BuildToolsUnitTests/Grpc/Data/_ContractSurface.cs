@@ -182,6 +182,32 @@ namespace ProtoBuf.Grpc.Configuration
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
     public sealed class SubServiceAttribute : Attribute { }
 
+    // The trigger attributes, real API in protobuf-net.Grpc 1.3.0+. Stubbed here rather than
+    // referenced for the reason at the top of this file, and because the real ones are
+    // [Experimental("PBN9001")] - which is an *error* by default, so a stub also keeps the fixtures
+    // free of suppression noise. The generator matches these by full name, so a stub is equivalent.
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public sealed class ProtoGrpcAttribute : Attribute
+    {
+        public Type? Model { get; set; }
+        public string? RegistrationMethodName { get; set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public sealed class ProtoServiceAttribute : Attribute
+    {
+        public ProtoServiceAttribute(Type contract) => Contract = contract;
+
+        public ProtoServiceAttribute(Type contract, Type implementation)
+        {
+            Contract = contract;
+            Implementation = implementation;
+        }
+
+        public Type Contract { get; }
+        public Type? Implementation { get; }
+    }
+
     public abstract class MarshallerFactory
     {
         protected MarshallerFactory() { }
