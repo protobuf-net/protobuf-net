@@ -1757,10 +1757,11 @@ orders never having been read in the first place.
   `CanSerialize(typeof(T))`, which reaches `DynamicStub` → `MakeGenericType` and returns **false**
   under AOT. The generator pre-registers marshallers via the public
   `BinderConfiguration.SetMarshaller<T>` to sidestep it; that is load-bearing, not an optimisation;
-- it needs **no** protobuf-net.Grpc changes — `ClientFactory`'s two members are already abstract, and
-  `IServiceMethodProvider<T>` is registered via `TryAddEnumerable` so a generated provider is added
-  alongside. Trigger attributes are generator-owned post-init for now, exactly as `[ProtoModel]`
-  started;
+- the *generated code* needs no protobuf-net.Grpc changes — `ClientFactory`'s two members are already
+  abstract, and `IServiceMethodProvider<T>` is registered via `TryAddEnumerable` so a generated
+  provider is added alongside. `[ProtoGrpc]`/`[ProtoService]` are real API in **protobuf-net.Grpc
+  1.3.0+** (they were generator-owned post-init while the shape moved, as `[ProtoModel]` was), and are
+  matched by **full name** — keep it that way, the tests stub them;
 - `Internal/Grpc/` is subject to the same no-Roslyn-references rule as `Internal/Aot/`, and is
   explicitly `Compile Remove`d from `protobuf-net.BuildTools.Legacy` because `Internal/**` is a glob
   there — the same trap `UseAotModelCodeFixProvider` hit;

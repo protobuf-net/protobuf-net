@@ -12,18 +12,23 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > | | |
 > | --- | --- |
-> | protobuf-net.Grpc **1.3.0** | ships `[ProtoGrpc]` / `[ProtoService]`, the `RuntimeTypeModel` gates, and `BinderConfiguration.Binder` made public |
-> | protobuf-net.Grpc #366 | GitHub Actions CI + trusted-publishing release pipeline (AppVeyor retired) |
-> | protobuf-net.Grpc #367 | release-tag fix; see "Versioning traps" below |
-> | protobuf-net #1284 | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
+> | protobuf-net.Grpc **1.3.0** (released) | ships `[ProtoGrpc]` / `[ProtoService]`, the `RuntimeTypeModel` gates, and `BinderConfiguration.Binder` made public |
+> | protobuf-net.Grpc #366 (merged) | GitHub Actions CI + trusted-publishing release pipeline (AppVeyor retired) |
+> | protobuf-net.Grpc #367 (merged) | release-tag fix; see "Versioning and release traps" below |
+> | protobuf-net.Grpc **#368 (open)** | `BytesValue.SlowParse`; **not** in 1.3.0 — see below |
+> | protobuf-net #1284 (open) | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
 > | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
 >
-> **Done:** `BytesValue.SlowParse` no longer uses the runtime model (protobuf-net.Grpc#368: 100 -> 5 IL
-> warnings, -543,744 bytes, native binary green). The generator-owned trigger attributes are gone; the package reference is `1.3.0` and the
-> golden no longer contains an emitted attributes file. The unit tests stub the attributes in
-> `Grpc/Data/_ContractSurface.cs`, which is deliberate — matching is by full name, and the real ones
-> are `[Experimental]`, i.e. an *error* by default. `src/AotGrpcSmoke` is verified against
-> a 1.3.x package including both fixes: JIT and a win-x64 native publish, all five checks green.
+> **Done here:** the generator-owned trigger attributes are gone, the package floor is `1.3.0`, and
+> the golden no longer contains an emitted attributes file. The unit tests stub the attributes in
+> `Grpc/Data/_ContractSurface.cs` deliberately — matching is by full name, and the real ones are
+> `[Experimental]`, i.e. an *error* by default, so a stub also keeps fixtures free of suppressions.
+>
+> **`src/AotGrpcSmoke` is verified against the genuine 1.3.0 from nuget.org** — build, JIT run and a
+> `win-x64` native run, all five checks green. Note the warning count there is **100, not 5**, and
+> that is expected rather than a regression: 1.3.0 predates #368, and the two `RuntimeTypeModel`
+> roots are an AND (see below). It measured byte-identical to the earlier "marshaller gates only"
+> row, which is a decent cross-check that the local-feed measurements were not an artefact.
 >
 > **Next steps, in order** — all mechanical now:
 >
@@ -144,13 +149,14 @@ implementation does not implement `GetBufferWriter`), and `Empty` is excluded be
 **Do not pre-register onto `BinderConfiguration.Default`.** It is shared process-wide; when no model
 is named the generated config *is* `Default`, so the pre-registration is skipped in that branch.
 
-### Why the attributes are generator-owned (historical — being removed)
+### Why the attributes were generator-owned (historical)
 
-**They now ship in protobuf-net.Grpc 1.3.0, so this is the state to migrate off, not to preserve.**
-Kept because the reasoning explains why the migration is safe.
+**They ship in protobuf-net.Grpc 1.3.0 now, and the emission is gone.** Kept because two parts of the
+reasoning are still live: the post-init constraint, and why the transition was safe in both
+directions.
 
-`[ProtoGrpc]` / `[ProtoService]` are currently emitted per consuming assembly as `internal`, from
-`RegisterPostInitializationOutput`. They **must** be post-init rather than ordinary output, because
+`[ProtoGrpc]` / `[ProtoService]` used to be emitted per consuming assembly as `internal`, from
+`RegisterPostInitializationOutput`. They **had** to be post-init rather than ordinary output, because
 `ForAttributeWithMetadataName` can only see a generator's own post-init sources — that constraint is
 permanent and worth remembering if a third trigger attribute is ever added.
 
@@ -214,7 +220,8 @@ snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it 
 
 - **Only one fixture.** `Basic.input.cs` covers all five method shapes plus client and server. The
   diagnostic fixtures (nested, generic, non-`[SubService]` base, not partial, not deriving
-  `ClientFactory`, no model named) are **not written**, so PBN3001–PBN3011 are unproven code paths.
+  `ClientFactory`, no model named) are **not written**, so `PBN4001`–`PBN4011` are unproven code
+  paths — the messages have never been seen, let alone reviewed for wording.
 - **Seeding is manual.** `AotGrpcSmoke` lists `[ProtoSerializable(typeof(HelloRequest))]` by hand.
   Teaching `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its payload types is
   the obvious next step; `GrpcOperationModel` already carries them as strings.
@@ -222,11 +229,11 @@ snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it 
   `ServiceBinder.Default.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve
   `[Authorize]`-style endpoint metadata. It survives the native publish, but it is a `GetMethod` over
   an interface and wants a non-reflective route.
-- **100 IL warnings on the native publish**, against `AotSmoke`'s 19. All from
-  `RuntimeTypeModel` / `DynamicStub` / surrogate / tuple paths, reachable because
-  `ProtoBufMarshallerFactory.Default` statically names `RuntimeTypeModel.Default`. Road not taken,
-  but unattributed — use `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than
-  guessing, per `aot-findings.md`.
+- **100 IL warnings against a shipped 1.3.0**, dropping to **5** once protobuf-net.Grpc#368 lands —
+  see "The two `RuntimeTypeModel` roots" below for why it is all-or-nothing. Of the residual 5, four
+  are per-assembly rollups and one is the `IL2091` in the handover list. If more ever appear, use
+  `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
+  `aot-findings.md`.
 - **No interceptors yet.** See below.
 
 ## Interceptors (proven mechanism, not yet used)
@@ -264,6 +271,67 @@ Decline and diagnose rather than intercept when: the consumer already passed a `
 `AddCodeFirstGrpc` is deliberately **not** intercepted — it is a one-time call in `Program.cs`,
 easily changed by hand, and intercepting it would fight a consumer who had configured a
 `BinderConfiguration` in the lambda.
+
+## The two `RuntimeTypeModel` roots, and how they were measured
+
+Removing the reflective serializer machinery from a gRPC consumer's AOT graph needed **two** changes
+in protobuf-net.Grpc, and this is the single most useful number in these notes:
+
+| gated | IL warnings | bytes |
+| --- | ---: | ---: |
+| nothing (baseline) | 100 | 15,015,936 |
+| `ProtoBufMarshallerFactory.Default` + `.Create` (#365, shipped in 1.3.0) | 100 | 15,019,520 |
+| `BytesValue.SlowParse` (#368, open) | 100 | 15,017,984 |
+| **both** | **5** | **14,472,192** |
+
+**An AND, not an OR.** Either alone keeps the other's graph alive, so each change measured in
+isolation looks worthless — and the natural conclusion would have been to drop it. Four of the five
+residual warnings are per-assembly rollups; the one real one is the `IL2091` listed in the handover.
+
+The second root is the surprising one: `MarshallerCache` pre-registers `BytesValue.Marshaller` in a
+**field initialiser**, so every consumer — including one that never touches a `Stream`-shaped
+operation — made `RuntimeTypeModel.Default` reachable through `BytesValue.SlowParse`.
+
+Two things about `BytesValue` worth not re-deriving:
+
+- **it is `repeated MessageThatHasBytes`, not `repeated bytes`.** A `Stream` operation becomes a gRPC
+  *streaming call* whose message type is `BytesValue` (the frozen well-known wrapper, one `bytes`
+  field). The repetition is frame-level; there is no protobuf `repeated` field involved. That is why
+  #368 can take **replace** semantics for a duplicated field 1 with no legacy opt-out — `Serialize`
+  writes field 1 exactly once per frame, so the divergence from protobuf-net's concatenating
+  `AppendBytes` is unreachable from anything we produce;
+- **an empty payload reaches the slow path.** A defaulted `BytesValue` is legally zero bytes on the
+  wire; `TryFastParse` reads four zero bytes, matches no case, and declines. Normal outcome, not an
+  error.
+
+**Open question, deliberately not answered:** protobuf-net.Grpc pins `ProtoBufNet2Version = 2.4.8`
+with no comment saying why, and *that pin is the only reason #368 hand-rolls a parser* — v3's
+`ProtoReader.State` would read raw fields directly. The runtime already copes with both (the old
+`SlowParse` literally probed `if (model is IProtoInput<ReadOnlySequence<byte>> v3)`), so the pin is
+about letting consumers on protobuf-net 2.x use protobuf-net.Grpc. If that constituency is still
+real, hand-rolling is correct; if not, raising the pin dissolves this class of problem more cheaply
+than routing around it.
+
+## Measuring: traps that cost time
+
+All four are process, not code, and none is discoverable from the repo.
+
+- **A local `dotnet pack` will not be picked up twice.** NB.GV derives the version from the commit,
+  so two local packs of different code can share a version string, and NuGet never re-extracts.
+  **Identical byte counts between runs are a red flag, not a null result** — that nearly got recorded
+  as "this change does nothing".
+- **The packages folder here is `C:\Code\NugetPackageCache`, not `~/.nuget/packages`.** Clearing the
+  wrong one silently does nothing. Delete
+  `C:\Code\NugetPackageCache\protobuf-net.grpc\<version>` between packs.
+- **Git Bash mangles `/p:Foo=bar` into a path**, so MSBuild reports the baffling
+  `MSB1008: Only one project can be specified`. Use `-p:` locally; the GitHub workflows run under
+  `cmd`/`pwsh`, where `/p:` is fine.
+- **Run the protobuf-net.Grpc tests in Debug as well as Release.** `BytesValue.FastPassMiss` is a
+  process-wide `#if DEBUG` counter that one test asserts against, so a Release run compiles the
+  assertion out and reports green over a real failure.
+
+Also: clear `obj`/`bin` before an AOT publish (it is incremental, and a second run reports nothing),
+and `vswhere.exe` must be on `PATH` or ILC's link step fails with an error naming `link.exe`.
 
 ## Versioning and release traps (protobuf-net.Grpc)
 
