@@ -1,7 +1,7 @@
 Generator produced 3 diagnostics:
-Warning PBN2003 Aot/Data/Diagnostics/InheritUnsupported.input.cs L30 C14
+Warning PBN3003 Aot/Data/Diagnostics/InheritUnsupported.input.cs L30 C14
 Contract 'AotFixtures.InheritUnsupported.ByNameBase' is omitted from the AOT model: this form of [ProtoInclude] is not supported yet.
-Warning PBN2004 Aot/Data/Diagnostics/InheritUnsupported.input.cs L44 C14
+Warning PBN3004 Aot/Data/Diagnostics/InheritUnsupported.input.cs L44 C14
 Contract 'AotFixtures.InheritUnsupported.GoodRoot' is omitted from the AOT model because 'AotFixtures.InheritUnsupported.BadLeaf', which it references, is also omitted.
-Warning PBN2001 Aot/Data/Diagnostics/InheritUnsupported.input.cs L52 C46
+Warning PBN3001 Aot/Data/Diagnostics/InheritUnsupported.input.cs L52 C46
 Contract 'AotFixtures.InheritUnsupported.BadLeaf' is omitted from the AOT model: member 'Unsupported' has unsupported type 'System.Exception'; it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own.

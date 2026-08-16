@@ -1,13 +1,13 @@
 Generator produced 6 diagnostics:
-Warning PBN2002 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L15 C18
+Warning PBN3002 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L15 C18
 Contract 'AotFixtures.InterfaceUnsupported.IShape' is omitted from the AOT model: 'AotFixtures.InterfaceUnsupported.Point' is declared as a [ProtoInclude] but is a value type, and protobuf-net refuses that too: "Unexpected sub-type".
-Warning PBN2004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L21 C14
+Warning PBN3004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L21 C14
 Contract 'AotFixtures.InterfaceUnsupported.HasShape' is omitted from the AOT model because 'AotFixtures.InterfaceUnsupported.IShape', which it references, is also omitted.
-Warning PBN2004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L28 C70
+Warning PBN3004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L28 C70
 Contract 'AotFixtures.InterfaceUnsupported.IFirst' is omitted from the AOT model because 'AotFixtures.InterfaceUnsupported.TwoFaced', which it references, is also omitted.
-Warning PBN2004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L29 C70
+Warning PBN3004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L29 C70
 Contract 'AotFixtures.InterfaceUnsupported.ISecond' is omitted from the AOT model because 'AotFixtures.InterfaceUnsupported.TwoFaced', which it references, is also omitted.
-Warning PBN2002 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L32 C14
+Warning PBN3002 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L32 C14
 Contract 'AotFixtures.InterfaceUnsupported.TwoFaced' is omitted from the AOT model: it is declared as a [ProtoInclude] of both 'AotFixtures.InterfaceUnsupported.IFirst' and 'AotFixtures.InterfaceUnsupported.ISecond', and protobuf-net refuses that too: "can only participate in one inheritance hierarchy".
-Warning PBN2004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L35 C14
+Warning PBN3004 Aot/Data/Diagnostics/InterfaceUnsupported.input.cs L35 C14
 Contract 'AotFixtures.InterfaceUnsupported.HasBoth' is omitted from the AOT model because 'AotFixtures.InterfaceUnsupported.IFirst', which it references, is also omitted.

@@ -1,4 +1,4 @@
-using ProtoBuf.BuildTools.Analyzers;
+﻿using ProtoBuf.BuildTools.Analyzers;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -77,7 +77,7 @@ namespace BuildToolsUnitTests
                 }
                 """);
 
-            var hit = Assert.Single(diagnostics.Where(static x => x.Id == "PBN2010"));
+            var hit = Assert.Single(diagnostics.Where(static x => x.Id == "PBN3010"));
             Assert.Contains("MyModel", hit.GetMessage());
             // the example must name something that exists: the generated static accessor, not a
             // camel-cased local that was never declared
@@ -95,8 +95,8 @@ namespace BuildToolsUnitTests
                 }
                 """);
 
-            Assert.Single(diagnostics.Where(static x => x.Id == "PBN2011"));
-            Assert.Empty(diagnostics.Where(static x => x.Id == "PBN2010"));
+            Assert.Single(diagnostics.Where(static x => x.Id == "PBN3011"));
+            Assert.Empty(diagnostics.Where(static x => x.Id == "PBN3010"));
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace BuildToolsUnitTests
                 }
                 """);
 
-            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN2010" or "PBN2011"));
+            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN3010" or "PBN3011"));
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace BuildToolsUnitTests
                 }
                 """);
 
-            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN2010" or "PBN2011"));
+            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN3010" or "PBN3011"));
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace BuildToolsUnitTests
                 }
                 """);
 
-            Assert.Single(diagnostics.Where(static x => x.Id == "PBN2010"));
+            Assert.Single(diagnostics.Where(static x => x.Id == "PBN3010"));
         }
 
         /// <summary>
@@ -167,9 +167,9 @@ namespace BuildToolsUnitTests
         {
             var diagnostics = await AnalyzeAsync(Preamble);
 
-            var hit = Assert.Single(diagnostics.Where(static x => x.Id == "PBN2013"));
+            var hit = Assert.Single(diagnostics.Where(static x => x.Id == "PBN3013"));
             Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Info, hit.Severity);
-            Assert.Empty(diagnostics.Where(static x => x.Id == "PBN2012"));
+            Assert.Empty(diagnostics.Where(static x => x.Id == "PBN3012"));
         }
 
         /// <summary>...and nothing at all once a model exists, which is the point of announcing.</summary>
@@ -177,7 +177,7 @@ namespace BuildToolsUnitTests
         public async Task SaysNothingOnceAModelExists()
         {
             var diagnostics = await AnalyzeAsync(WithModel);
-            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN2012" or "PBN2013"));
+            Assert.Empty(diagnostics.Where(static x => x.Id is "PBN3012" or "PBN3013"));
         }
 
         [Fact]
@@ -195,7 +195,7 @@ namespace BuildToolsUnitTests
                 }
                 """);
 
-            Assert.Equal(2, diagnostics.Count(static x => x.Id == "PBN2010"));
+            Assert.Equal(2, diagnostics.Count(static x => x.Id == "PBN3010"));
         }
     }
 }

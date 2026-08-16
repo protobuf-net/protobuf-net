@@ -444,7 +444,7 @@ nobody has tested**. It may want to be a diagnostic instead of a silent preceden
 
 `Path.GetFileName` then `set.Add(name, …)`, so two same-named `.proto` files in different
 directories do not both produce DTOs. Pre-existing and not the model path's, but it means the
-ambiguity `PBN2021` reports is only reachable in a project whose DTO generation is already
+ambiguity `PBN3021` reports is only reachable in a project whose DTO generation is already
 incomplete. The diagnostic still earns its place: it names the problem where the alternative is a
 silent pick.
 

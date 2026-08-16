@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -29,7 +29,7 @@ namespace ProtoBuf.CodeFixes
     /// decides where the instance should live.
     /// </para>
     /// <para>
-    /// Only <c>PBN2010</c> is fixable. <c>PBN2011</c> — the <c>object</c>/<c>Type</c> APIs — has no
+    /// Only <c>PBN3010</c> is fixable. <c>PBN3011</c> — the <c>object</c>/<c>Type</c> APIs — has no
     /// mechanical rewrite, because the whole difficulty is that nobody can tell what it serializes.
     /// </para>
     /// </remarks>

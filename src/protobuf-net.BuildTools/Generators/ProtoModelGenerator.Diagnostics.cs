@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -15,7 +15,7 @@ namespace ProtoBuf.BuildTools.Generators
         // wanting strictness can escalate these through WarningsAsErrors.
 
         internal static readonly DiagnosticDescriptor UnsupportedMember = new(
-            id: "PBN2001",
+            id: "PBN3001",
             title: "Contract omitted: unsupported member",
             messageFormat: "Contract '{0}' is omitted from the AOT model: member '{1}' {2}.",
             category: Category,
@@ -23,7 +23,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor UnsupportedContract = new(
-            id: "PBN2002",
+            id: "PBN3002",
             title: "Contract omitted: unsupported declaration",
             messageFormat: "Contract '{0}' is omitted from the AOT model: {1}.",
             category: Category,
@@ -31,7 +31,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor UnsupportedOption = new(
-            id: "PBN2003",
+            id: "PBN3003",
             title: "Contract omitted: unsupported protobuf-net option",
             messageFormat: "Contract '{0}' is omitted from the AOT model: {1} is not supported yet.",
             category: Category,
@@ -39,7 +39,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor OmittedCascade = new(
-            id: "PBN2004",
+            id: "PBN3004",
             title: "Contract omitted: references an omitted contract",
             messageFormat: "Contract '{0}' is omitted from the AOT model because '{1}', which it references, is also omitted.",
             category: Category,
@@ -51,7 +51,7 @@ namespace ProtoBuf.BuildTools.Generators
         // typeof() of a not-yet-generated type could never do
 
         internal static readonly DiagnosticDescriptor SchemaNotFound = new(
-            id: "PBN2020",
+            id: "PBN3020",
             title: "Schema not found",
             messageFormat: "No additional file matches the schema '{0}' ({1}); add it to <AdditionalFiles>.",
             category: Category,
@@ -59,7 +59,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor SchemaAmbiguous = new(
-            id: "PBN2021",
+            id: "PBN3021",
             title: "Schema is ambiguous",
             messageFormat: "The schema '{0}' matches more than one additional file ({1}); include enough of the path to identify one.",
             category: Category,
@@ -67,7 +67,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor SchemaInvalid = new(
-            id: "PBN2022",
+            id: "PBN3022",
             title: "Schema could not be parsed",
             messageFormat: "The schema '{0}' could not be parsed: {1}.",
             category: Category,
@@ -75,7 +75,7 @@ namespace ProtoBuf.BuildTools.Generators
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor SchemaUnsupported = new(
-            id: "PBN2023",
+            id: "PBN3023",
             title: "Schema shape not supported",
             messageFormat: "The schema '{0}' is omitted from the AOT model: {1}.",
             category: Category,

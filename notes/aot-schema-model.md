@@ -12,7 +12,7 @@ A `.proto`-first consumer cannot get the AOT generator's performance without **t
 two builds**. `ProtoFileGenerator` turns schemas into DTOs; `ProtoModelGenerator` turns
 `[ProtoSerializable(typeof(Foo))]` seeds into serializers - and source generators all run against
 the same input compilation and never see each other's output, so a `typeof` naming a generated
-DTO resolves to an **error symbol**. `PBN2002` recognises `TypeKind.Error` and says so; the
+DTO resolves to an **error symbol**. `PBN3002` recognises `TypeKind.Error` and says so; the
 workaround is `src/AotSchemaDtos` plus a separate consumer, which is fine for this repo's own
 smoke test and unreasonable to ask of a consumer.
 

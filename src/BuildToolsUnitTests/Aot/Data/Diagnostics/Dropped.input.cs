@@ -1,4 +1,4 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,7 +14,7 @@ public class HasUnsupportedMember
     [ProtoMember(1)]
     public int Id { get; set; }
 
-    // collections are not handled yet -> PBN2001
+    // collections are not handled yet -> PBN3001
     [ProtoMember(2)]
     public List<string> Tags { get; set; }
 }
@@ -22,7 +22,7 @@ public class HasUnsupportedMember
 [ProtoContract]
 public class ReferencesDropped
 {
-    // fine in itself, but its member type is dropped -> PBN2004
+    // fine in itself, but its member type is dropped -> PBN3004
     [ProtoMember(1)]
     public HasUnsupportedMember Child { get; set; }
 }
@@ -32,7 +32,7 @@ public class NoParameterlessConstructor
 {
     public NoParameterlessConstructor(int id) => Id = id;
 
-    // -> PBN2002
+    // -> PBN3002
     [ProtoMember(1)]
     public int Id { get; set; }
 }
@@ -40,7 +40,7 @@ public class NoParameterlessConstructor
 [ProtoContract]
 public class UsesMemberOptions
 {
-    // named arguments change the wire format -> PBN2003
+    // named arguments change the wire format -> PBN3003
     [ProtoMember(1, IsRequired = true)]
     public int Value { get; set; }
 }
@@ -64,7 +64,7 @@ public class HasCallback
 }
 
 // a *closed* generic is an ordinary contract; only an open one is refused, since the services type
-// is a single non-generic class with nowhere to put the type parameter -> PBN2002
+// is a single non-generic class with nowhere to put the type parameter -> PBN3002
 [ProtoContract]
 public class OpenGeneric<T>
 {

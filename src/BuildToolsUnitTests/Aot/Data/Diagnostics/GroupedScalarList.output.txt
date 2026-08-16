@@ -1,3 +1,3 @@
 Generator produced 1 diagnostics:
-Warning PBN2002 Aot/Data/Diagnostics/GroupedScalarList.input.cs L14 C70
+Warning PBN3002 Aot/Data/Diagnostics/GroupedScalarList.input.cs L14 C70
 Contract 'AotFixtures.GroupedScalarList.GroupedScalars' is omitted from the AOT model: member 'Numbers' has DataFormat.Group on a collection of scalars, which protobuf-net refuses too: "Operation is not valid due to the current state of the object".

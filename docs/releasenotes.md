@@ -1,5 +1,9 @@
 # Release Notes
 
+**From v4 onwards, [the GitHub releases page](https://github.com/protobuf-net/protobuf-net/releases) is the
+primary source of release notes** — that is where each release is described, as it happens. The notes below
+remain as the history for v3 and earlier.
+
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/main/src)
 
 ## Roadmap
@@ -8,7 +12,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - 2.4.*: critical maintenance only (no feature work planned)
 - 3.0: new custom serializer API (message+scalar); "pipelines" support; split core and reflection code-bases into separate libs
 - 3.1: adds model depth validation, which may impact some models; see `TypeModel.MaxDepth`
-- 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://protobuf-net.github.io/protobuf-net/aot); build tools included by default
+- 3.3: build-time serializer generation from code-first contracts, for [native AOT and trimming](https://docs.protobuf-net.dev/aot); build tools included by default
 - 4.0: rewritten reader core; optimized read emission for compile-time serializers (write optimization follows in a later 4.x)
 - future: `Any` support; custom list API support; support for `[ReadOnly]Memory<T>`, `ReadOnlySequence<T>`, `IMemoryOwner<T>`
 - future: protogen support for emitting pre-coded custom serializers
@@ -42,6 +46,13 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   the old spelling remains as an `[Obsolete]` forwarder, so previously-generated code keeps
   working and the warning disappears on the next build (the generator ships with the library,
   so regeneration is automatic)
+- **the AOT generator's diagnostic ids move from `PBN2000+` to `PBN3000+`**, keeping the last three
+  digits (`PBN2001` → `PBN3001`, `PBN2010` → `PBN3010`, and so on). They collided with the gRPC
+  service-contract analyzers, which have owned `PBN2001`–`PBN2010` since long before and ship in the
+  same package: because a severity or suppression is applied by id, `dotnet_diagnostic.PBN2002.severity
+  = none` to quiet an AOT drop **also silenced an unrelated gRPC error**. If you copied a
+  `WarningsAsErrors`, `NoWarn` or `.editorconfig` entry from the 3.3 AOT docs, update it — the old ids
+  are still live and still mean something, just not this, so a stale entry now fails quietly
 - **`protobuf-net.BuildTools` is no longer published** (last standalone version: 3.3.8, deprecated):
   the same tooling ships inside protobuf-net.Core and reaches every consumer by default;
   `protobuf-net.BuildTools.Legacy` (for very old SDKs) is unaffected
@@ -51,7 +62,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
   `protobuf-net.BuildTools` package alongside remains harmless
 - **fix**: `protobuf-net.NodaTime` did not produce a package from a plain build (missing
   `GeneratePackageOnBuild`), and packed with a placeholder description
-- **fix**: `PBN2010`'s example now shows `Model.Instance.Serialize` — the generated accessor that
+- **fix**: `PBN3010`'s example now shows `Model.Instance.Serialize` — the generated accessor that
   actually exists — rather than an imaginary camel-cased local
 - **fix**: the "add an AOT model" code fix now generates the model as `internal` (a fixer should not
   add to the public surface) and inside the project's namespace (or the anchor contract's), rather
@@ -62,7 +73,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## 3.3.0
 
-- **compile-time serializers, for native AOT and trimming** ([docs](https://protobuf-net.github.io/protobuf-net/aot)):
+- **compile-time serializers, for native AOT and trimming** ([docs](https://docs.protobuf-net.dev/aot)):
   opt in with `[ProtoModel] partial class MyModel : TypeModel`, seeded by `[ProtoSerializable(typeof(...))]`;
   the generator builds the serializers at compile time, so publishing native AOT works and cold start
   improves even on an ordinary JIT build. The trigger attributes are `[Experimental]` (`PBN9001`)
@@ -100,7 +111,7 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 ## 3.2.16
 
-- implement `[NullWrappedCollection]`, usage [as here](https://protobuf-net.github.io/protobuf-net/nullwrappers#null-collections) (#1044)
+- implement `[NullWrappedCollection]`, usage [as here](https://docs.protobuf-net.dev/nullwrappers#null-collections) (#1044)
 - support `nint` (`IntPtr`) and `nuint` (`UIntPtr`) with layout per `long`/`ulong` (#1043; fixes #1042, fixes grpc 282)
 
 ## 3.2.12
@@ -447,7 +458,7 @@ Other changes:
 ## v2.3.0-alpha
 
 - [further reading](https://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
-- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
+- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protobuf-net.dev/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
 - dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions
