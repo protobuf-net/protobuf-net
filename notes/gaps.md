@@ -1244,16 +1244,53 @@ wherever the raw path is taken there is no enumerator, packed or unpacked.
 `Char`, `Single`, `Double`, `String`, plus `Message` through `RawRepeatedMessageTarget`. Absent, and
 therefore still on the stateful path *and* still measure-blocking their contract:
 
-| kind | why it is not there yet |
+| kind | state |
 | --- | --- |
-| `Bytes` (`List<byte[]>`) | **nothing hard** — length-prefixed, and the measure is `tag + varint(len) + len`, exactly as `String` already does through `MeasureRawString`. The easiest remaining win. |
-| `DateTime`, `TimeSpan`, `Guid`, `Decimal` | the write is a `BclHelpers` call, but the **measure has no arithmetic form**: these are length-prefixed messages whose size depends on the value, and `BclHelpers` exposes no sizing. Needs library surface before the generator can emit a measure at all. |
-| `IntPtr`/`UIntPtr`, `DateOnly`/`TimeOnly` | varint or `BclHelpers` under a varint header; measurable in principle, just not wired. |
+| `Bytes` (`List<byte[]>`) | **DONE 2026-08-16.** Length-prefixed and shaped exactly like `String`; `WriteRawBytes` emits its own length and the measure is `tag + varint(len) + len`. Admitted for the `byte[]` element spelling only. |
+| `IntPtr`/`UIntPtr`, `DateOnly`/`TimeOnly` | **DONE 2026-08-16**, scalar *and* repeated. All four are plain varints — `WriteDateOnly` is `WriteInt32(DayNumber)`, `WriteTimeOnly` is `WriteInt64(Ticks)` — so no library surface was needed after all. |
+| `DateTime`, `TimeSpan`, `Guid`, `Decimal` | **still open**, and the only ones that genuinely need library work. |
 
-So the ordering is: `Bytes` first (self-contained), then the varint-framed ones, and the four
-compatibility-level BCL types last, since those need a measuring API in the library rather than
-generator work. Note the payoff is not only throughput — every kind added stops blocking
-measure-first for the contract that holds it, and that exclusion runs to a fixed point.
+Every kind added stops blocking measure-first for the contract that holds it, and that exclusion
+runs to a fixed point — so the reach is wider than the member count suggests.
+
+#### What the last four need — a plan, not a guess
+
+Confirmed by reading the providers rather than assumed: there is **no `IMeasuringSerializer`** for
+`ScaledTicks`, `Guid` or `decimal` anywhere, so there is nothing to delegate to and the measure has
+to be written. The good news is that the shapes are small and conditional, so the arithmetic is
+short — `ScaledTicks`'s writer is three `if`s over one-byte-tagged fields:
+
+```csharp
+if (value.Value != 0)                       { header(1, SignedVarint); WriteInt64(value.Value); }
+if (value.Scale != TimeSpanScale.Days)      { header(2, Varint);       WriteInt32((int)Scale);  }
+if (value.Kind != DateTimeKind.Unspecified) { header(3, Varint);       WriteInt32((int)Kind);   }
+```
+
+so its measure is about six lines. `Guid` (two fixed64 fields) and `decimal` (lo/hi/signScale) are
+comparable. **The size is value-dependent because default-valued fields are skipped**, which is
+exactly why a constant will not do.
+
+The work, in order:
+
+1. add `IMeasuringSerializer<T>` to `PrimaryTypeProvider` for `ScaledTicks`, `Guid` and `decimal` —
+   mirroring each `Write` in the same file, so a future edit to one is visibly next to the other;
+2. expose them through `BclHelpers` as `MeasureDateTime`/`MeasureTimeSpan`/`MeasureGuid`/`MeasureDecimal`,
+   taking no `ISerializationContext` (a generated `Measure_` has none — see the writer invariants in
+   `AGENTS.md`);
+3. **do not forget the compatibility levels**: 240+ swaps `DateTime`/`TimeSpan` for
+   `Timestamp`/`Duration` (a seconds+nanos message, different arithmetic), and 300 swaps `Guid` for
+   `GuidString`/`GuidBytes` and `decimal` for `DecimalString`. That is 4 types × up to 3 levels, and
+   it is the bulk of the work rather than the measures themselves;
+4. `DataFormat.FixedSize` on `DateTime`/`TimeSpan` is the easy corner — `BclHelpers` writes the flat
+   8-byte form under a `Fixed64` header, so the measure is the constant 8;
+5. then the generator: a `RawScalarMeasure` arm each, remove them from the `RawMemberMeasureBlocked`
+   default, add to the repeated whitelist, and fixtures at **each level**.
+
+**The self-check will catch a half-landing**, which is worth knowing before starting: declaring a
+kind measurable without giving it a measure arm makes the generator throw
+`unmeasurable member slipped eligibility: …`, which surfaces as every model losing its `Instance`
+accessor and a pile of unrelated-looking `CS0117`s. The real message is in a `CS8785` generator
+warning. That happened while landing `DateOnly` and cost a few minutes of confusion.
 
 ### B24. `Serialize<object>` on a `RuntimeTypeModel` costs 41× and allocates 2.2 KB per call
 
