@@ -1,5 +1,9 @@
 # Release Notes
 
+**From v4 onwards, [the GitHub releases page](https://github.com/protobuf-net/protobuf-net/releases) is the
+primary source of release notes** — that is where each release is described, as it happens. The notes below
+remain as the history for v3 and earlier.
+
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net), or it can be built [from source](https://github.com/protobuf-net/protobuf-net/tree/main/src)
 
 ## Roadmap
