@@ -1722,6 +1722,35 @@ Each turned out to reuse machinery that was already here, which is why they went
 as the contrast — otherwise "only field 3 survives" is indistinguishable from the `[DataMember]`
 orders never having been read in the first place.
 
+### Build-time gRPC proxies (`GrpcProxyGenerator`)
+
+**`docs/aot-grpc.md` is the reference, and opens with a Handover section.** Read it before touching
+`Generators/GrpcProxyGenerator.*` or `Internal/Grpc/`. The short version:
+
+- it is a *second* generator in BuildTools, triggered by `[ProtoGrpc]` on a consumer-declared
+  `partial class X : ClientFactory`, seeded by `[ProtoService(typeof(IContract), typeof(Impl))]`, and
+  linked to a `[ProtoModel]` by `Model = typeof(...)`;
+- **the link to the serializer model is the whole point.** Generated proxies with marshallers left on
+  `BinderConfiguration.Default` are AOT-safe code carrying reflectively-built bytes — the build
+  succeeds and ILC is where it fails. `MarshallerCache.CreateMarshaller<T>` gates on
+  `CanSerialize(typeof(T))`, which reaches `DynamicStub` → `MakeGenericType` and returns **false**
+  under AOT. The generator pre-registers marshallers via the public
+  `BinderConfiguration.SetMarshaller<T>` to sidestep it; that is load-bearing, not an optimisation;
+- it needs **no** protobuf-net.Grpc changes — `ClientFactory`'s two members are already abstract, and
+  `IServiceMethodProvider<T>` is registered via `TryAddEnumerable` so a generated provider is added
+  alongside. Trigger attributes are generator-owned post-init for now, exactly as `[ProtoModel]`
+  started;
+- `Internal/Grpc/` is subject to the same no-Roslyn-references rule as `Internal/Aot/`, and is
+  explicitly `Compile Remove`d from `protobuf-net.BuildTools.Legacy` because `Internal/**` is a glob
+  there — the same trap `UseAotModelCodeFixProvider` hit;
+- `src/AotGrpcSmoke` is the only thing that proves the goal (real client, real server, real socket,
+  real packages, native publish). `Grpc/Data/_ContractSurface.cs` is a *snapshot* for the goldens and
+  can drift — the smoke project is what catches it, and already has once.
+
+Diagnostics are `PBN30xx`. Note `PBN2001`–`PBN2010` are **already double-booked** between
+`ServiceContractAnalyzer` (shipped, gRPC contract errors) and the AOT generator; see the end of
+`docs/aot-grpc.md`.
+
 ### Coverage sweep
 
 `src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built
