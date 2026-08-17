@@ -485,10 +485,10 @@ namespace Google.Protobuf.Reflection
         {
             [global::ProtoBuf.ProtoEnum(Name = @"LABEL_OPTIONAL")]
             LabelOptional = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"LABEL_REQUIRED")]
-            LabelRequired = 2,
             [global::ProtoBuf.ProtoEnum(Name = @"LABEL_REPEATED")]
             LabelRepeated = 3,
+            [global::ProtoBuf.ProtoEnum(Name = @"LABEL_REQUIRED")]
+            LabelRequired = 2,
         }
 
     }
@@ -831,17 +831,6 @@ namespace Google.Protobuf.Reflection
         public void ResetPyGenericServices() => __pbn__PyGenericServices = null;
         private bool? __pbn__PyGenericServices;
 
-        [global::ProtoBuf.ProtoMember(42, Name = @"php_generic_services")]
-        [global::System.ComponentModel.DefaultValue(false)]
-        public bool PhpGenericServices
-        {
-            get => __pbn__PhpGenericServices ?? false;
-            set => __pbn__PhpGenericServices = value;
-        }
-        public bool ShouldSerializePhpGenericServices() => __pbn__PhpGenericServices != null;
-        public void ResetPhpGenericServices() => __pbn__PhpGenericServices = null;
-        private bool? __pbn__PhpGenericServices;
-
         [global::ProtoBuf.ProtoMember(23, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool Deprecated
@@ -1011,6 +1000,7 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__MapEntry;
 
         [global::ProtoBuf.ProtoMember(11, Name = @"deprecated_legacy_json_field_conflicts")]
+        [global::System.Obsolete]
         public bool DeprecatedLegacyJsonFieldConflicts
         {
             get => __pbn__DeprecatedLegacyJsonFieldConflicts.GetValueOrDefault();
@@ -1078,6 +1068,17 @@ namespace Google.Protobuf.Reflection
         public void ResetLazy() => __pbn__Lazy = null;
         private bool? __pbn__Lazy;
 
+        [global::ProtoBuf.ProtoMember(15, Name = @"unverified_lazy")]
+        [global::System.ComponentModel.DefaultValue(false)]
+        public bool UnverifiedLazy
+        {
+            get => __pbn__UnverifiedLazy ?? false;
+            set => __pbn__UnverifiedLazy = value;
+        }
+        public bool ShouldSerializeUnverifiedLazy() => __pbn__UnverifiedLazy != null;
+        public void ResetUnverifiedLazy() => __pbn__UnverifiedLazy = null;
+        private bool? __pbn__UnverifiedLazy;
+
         [global::ProtoBuf.ProtoMember(3, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool Deprecated
@@ -1091,6 +1092,7 @@ namespace Google.Protobuf.Reflection
 
         [global::ProtoBuf.ProtoMember(10, Name = @"weak")]
         [global::System.ComponentModel.DefaultValue(false)]
+        [global::System.Obsolete]
         public bool Weak
         {
             get => __pbn__Weak ?? false;
@@ -1099,17 +1101,6 @@ namespace Google.Protobuf.Reflection
         public bool ShouldSerializeWeak() => __pbn__Weak != null;
         public void ResetWeak() => __pbn__Weak = null;
         private bool? __pbn__Weak;
-
-        [global::ProtoBuf.ProtoMember(15, Name = @"unverified_lazy")]
-        [global::System.ComponentModel.DefaultValue(false)]
-        public bool UnverifiedLazy
-        {
-            get => __pbn__UnverifiedLazy ?? false;
-            set => __pbn__UnverifiedLazy = value;
-        }
-        public bool ShouldSerializeUnverifiedLazy() => __pbn__UnverifiedLazy != null;
-        public void ResetUnverifiedLazy() => __pbn__UnverifiedLazy = null;
-        private bool? __pbn__UnverifiedLazy;
 
         [global::ProtoBuf.ProtoMember(16, Name = @"debug_redact")]
         [global::System.ComponentModel.DefaultValue(false)]
@@ -1244,6 +1235,28 @@ namespace Google.Protobuf.Reflection
         }
 
         [global::ProtoBuf.ProtoContract()]
+        public enum CType
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"STRING")]
+            String = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"CORD")]
+            Cord = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"STRING_PIECE")]
+            StringPiece = 2,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum JSType
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"JS_NORMAL")]
+            JsNormal = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"JS_STRING")]
+            JsString = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"JS_NUMBER")]
+            JsNumber = 2,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
         public enum OptionRetention
         {
             [global::ProtoBuf.ProtoEnum(Name = @"RETENTION_UNKNOWN")]
@@ -1277,28 +1290,6 @@ namespace Google.Protobuf.Reflection
             TargetTypeService = 8,
             [global::ProtoBuf.ProtoEnum(Name = @"TARGET_TYPE_METHOD")]
             TargetTypeMethod = 9,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum CType
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"STRING")]
-            String = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"CORD")]
-            Cord = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"STRING_PIECE")]
-            StringPiece = 2,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum JSType
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"JS_NORMAL")]
-            JsNormal = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"JS_STRING")]
-            JsString = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"JS_NUMBER")]
-            JsNumber = 2,
         }
 
     }
@@ -1347,6 +1338,7 @@ namespace Google.Protobuf.Reflection
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"deprecated_legacy_json_field_conflicts")]
+        [global::System.Obsolete]
         public bool DeprecatedLegacyJsonFieldConflicts
         {
             get => __pbn__DeprecatedLegacyJsonFieldConflicts.GetValueOrDefault();
@@ -1411,6 +1403,9 @@ namespace Google.Protobuf.Reflection
         global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
             => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+        [global::ProtoBuf.ProtoMember(34, Name = @"features")]
+        public FeatureSet Features { get; set; }
+
         [global::ProtoBuf.ProtoMember(33, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool Deprecated
@@ -1421,9 +1416,6 @@ namespace Google.Protobuf.Reflection
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
         public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
-
-        [global::ProtoBuf.ProtoMember(34, Name = @"features")]
-        public FeatureSet Features { get; set; }
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
@@ -1568,6 +1560,268 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract()]
+    public partial class FeatureSet : global::ProtoBuf.IExtensible
+    {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+        [global::ProtoBuf.ProtoMember(1)]
+        [global::System.ComponentModel.DefaultValue(FieldPresence.FieldPresenceUnknown)]
+        public FieldPresence field_presence
+        {
+            get => __pbn__field_presence ?? FieldPresence.FieldPresenceUnknown;
+            set => __pbn__field_presence = value;
+        }
+        public bool ShouldSerializefield_presence() => __pbn__field_presence != null;
+        public void Resetfield_presence() => __pbn__field_presence = null;
+        private FieldPresence? __pbn__field_presence;
+
+        [global::ProtoBuf.ProtoMember(2)]
+        [global::System.ComponentModel.DefaultValue(EnumType.EnumTypeUnknown)]
+        public EnumType enum_type
+        {
+            get => __pbn__enum_type ?? EnumType.EnumTypeUnknown;
+            set => __pbn__enum_type = value;
+        }
+        public bool ShouldSerializeenum_type() => __pbn__enum_type != null;
+        public void Resetenum_type() => __pbn__enum_type = null;
+        private EnumType? __pbn__enum_type;
+
+        [global::ProtoBuf.ProtoMember(3)]
+        [global::System.ComponentModel.DefaultValue(RepeatedFieldEncoding.RepeatedFieldEncodingUnknown)]
+        public RepeatedFieldEncoding repeated_field_encoding
+        {
+            get => __pbn__repeated_field_encoding ?? RepeatedFieldEncoding.RepeatedFieldEncodingUnknown;
+            set => __pbn__repeated_field_encoding = value;
+        }
+        public bool ShouldSerializerepeated_field_encoding() => __pbn__repeated_field_encoding != null;
+        public void Resetrepeated_field_encoding() => __pbn__repeated_field_encoding = null;
+        private RepeatedFieldEncoding? __pbn__repeated_field_encoding;
+
+        [global::ProtoBuf.ProtoMember(4)]
+        [global::System.ComponentModel.DefaultValue(Utf8Validation.Utf8ValidationUnknown)]
+        public Utf8Validation utf8_validation
+        {
+            get => __pbn__utf8_validation ?? Utf8Validation.Utf8ValidationUnknown;
+            set => __pbn__utf8_validation = value;
+        }
+        public bool ShouldSerializeutf8_validation() => __pbn__utf8_validation != null;
+        public void Resetutf8_validation() => __pbn__utf8_validation = null;
+        private Utf8Validation? __pbn__utf8_validation;
+
+        [global::ProtoBuf.ProtoMember(5)]
+        [global::System.ComponentModel.DefaultValue(MessageEncoding.MessageEncodingUnknown)]
+        public MessageEncoding message_encoding
+        {
+            get => __pbn__message_encoding ?? MessageEncoding.MessageEncodingUnknown;
+            set => __pbn__message_encoding = value;
+        }
+        public bool ShouldSerializemessage_encoding() => __pbn__message_encoding != null;
+        public void Resetmessage_encoding() => __pbn__message_encoding = null;
+        private MessageEncoding? __pbn__message_encoding;
+
+        [global::ProtoBuf.ProtoMember(6)]
+        [global::System.ComponentModel.DefaultValue(JsonFormat.JsonFormatUnknown)]
+        public JsonFormat json_format
+        {
+            get => __pbn__json_format ?? JsonFormat.JsonFormatUnknown;
+            set => __pbn__json_format = value;
+        }
+        public bool ShouldSerializejson_format() => __pbn__json_format != null;
+        public void Resetjson_format() => __pbn__json_format = null;
+        private JsonFormat? __pbn__json_format;
+
+        [global::ProtoBuf.ProtoMember(7)]
+        [global::System.ComponentModel.DefaultValue(EnforceNamingStyle.EnforceNamingStyleUnknown)]
+        public EnforceNamingStyle enforce_naming_style
+        {
+            get => __pbn__enforce_naming_style ?? EnforceNamingStyle.EnforceNamingStyleUnknown;
+            set => __pbn__enforce_naming_style = value;
+        }
+        public bool ShouldSerializeenforce_naming_style() => __pbn__enforce_naming_style != null;
+        public void Resetenforce_naming_style() => __pbn__enforce_naming_style = null;
+        private EnforceNamingStyle? __pbn__enforce_naming_style;
+
+        [global::ProtoBuf.ProtoMember(8, Name = @"default_symbol_visibility")]
+        [global::System.ComponentModel.DefaultValue(FeatureSet.VisibilityFeature.DefaultSymbolVisibility.DefaultSymbolVisibilityUnknown)]
+        public FeatureSet.VisibilityFeature.DefaultSymbolVisibility DefaultSymbolVisibility
+        {
+            get => __pbn__DefaultSymbolVisibility ?? FeatureSet.VisibilityFeature.DefaultSymbolVisibility.DefaultSymbolVisibilityUnknown;
+            set => __pbn__DefaultSymbolVisibility = value;
+        }
+        public bool ShouldSerializeDefaultSymbolVisibility() => __pbn__DefaultSymbolVisibility != null;
+        public void ResetDefaultSymbolVisibility() => __pbn__DefaultSymbolVisibility = null;
+        private FeatureSet.VisibilityFeature.DefaultSymbolVisibility? __pbn__DefaultSymbolVisibility;
+
+        [global::ProtoBuf.ProtoContract()]
+        public partial class VisibilityFeature : global::ProtoBuf.IExtensible
+        {
+            private global::ProtoBuf.IExtension __pbn__extensionData;
+            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+            [global::ProtoBuf.ProtoContract()]
+            public enum DefaultSymbolVisibility
+            {
+                [global::ProtoBuf.ProtoEnum(Name = @"DEFAULT_SYMBOL_VISIBILITY_UNKNOWN")]
+                DefaultSymbolVisibilityUnknown = 0,
+                [global::ProtoBuf.ProtoEnum(Name = @"EXPORT_ALL")]
+                ExportAll = 1,
+                [global::ProtoBuf.ProtoEnum(Name = @"EXPORT_TOP_LEVEL")]
+                ExportTopLevel = 2,
+                [global::ProtoBuf.ProtoEnum(Name = @"LOCAL_ALL")]
+                LocalAll = 3,
+                [global::ProtoBuf.ProtoEnum(Name = @"STRICT")]
+                Strict = 4,
+            }
+
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum FieldPresence
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"FIELD_PRESENCE_UNKNOWN")]
+            FieldPresenceUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"EXPLICIT")]
+            Explicit = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"IMPLICIT")]
+            Implicit = 2,
+            [global::ProtoBuf.ProtoEnum(Name = @"LEGACY_REQUIRED")]
+            LegacyRequired = 3,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum EnumType
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"ENUM_TYPE_UNKNOWN")]
+            EnumTypeUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"OPEN")]
+            Open = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"CLOSED")]
+            Closed = 2,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum RepeatedFieldEncoding
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"REPEATED_FIELD_ENCODING_UNKNOWN")]
+            RepeatedFieldEncodingUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"PACKED")]
+            Packed = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"EXPANDED")]
+            Expanded = 2,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum Utf8Validation
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"UTF8_VALIDATION_UNKNOWN")]
+            Utf8ValidationUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"VERIFY")]
+            Verify = 2,
+            [global::ProtoBuf.ProtoEnum(Name = @"NONE")]
+            None = 3,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum MessageEncoding
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"MESSAGE_ENCODING_UNKNOWN")]
+            MessageEncodingUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"LENGTH_PREFIXED")]
+            LengthPrefixed = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"DELIMITED")]
+            Delimited = 2,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum JsonFormat
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"JSON_FORMAT_UNKNOWN")]
+            JsonFormatUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"ALLOW")]
+            Allow = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"LEGACY_BEST_EFFORT")]
+            LegacyBestEffort = 2,
+        }
+
+        [global::ProtoBuf.ProtoContract()]
+        public enum EnforceNamingStyle
+        {
+            [global::ProtoBuf.ProtoEnum(Name = @"ENFORCE_NAMING_STYLE_UNKNOWN")]
+            EnforceNamingStyleUnknown = 0,
+            [global::ProtoBuf.ProtoEnum(Name = @"STYLE2024")]
+            Style2024 = 1,
+            [global::ProtoBuf.ProtoEnum(Name = @"STYLE_LEGACY")]
+            StyleLegacy = 2,
+            [global::ProtoBuf.ProtoEnum(Name = @"STYLE2026")]
+            Style2026 = 3,
+        }
+
+    }
+
+    [global::ProtoBuf.ProtoContract()]
+    public partial class FeatureSetDefaults : global::ProtoBuf.IExtensible
+    {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+        [global::ProtoBuf.ProtoMember(1, Name = @"defaults")]
+        public global::System.Collections.Generic.List<FeatureSetEditionDefault> Defaults { get; } = new global::System.Collections.Generic.List<FeatureSetEditionDefault>();
+
+        [global::ProtoBuf.ProtoMember(4, Name = @"minimum_edition")]
+        [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
+        public Edition MinimumEdition
+        {
+            get => __pbn__MinimumEdition ?? Edition.EditionUnknown;
+            set => __pbn__MinimumEdition = value;
+        }
+        public bool ShouldSerializeMinimumEdition() => __pbn__MinimumEdition != null;
+        public void ResetMinimumEdition() => __pbn__MinimumEdition = null;
+        private Edition? __pbn__MinimumEdition;
+
+        [global::ProtoBuf.ProtoMember(5, Name = @"maximum_edition")]
+        [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
+        public Edition MaximumEdition
+        {
+            get => __pbn__MaximumEdition ?? Edition.EditionUnknown;
+            set => __pbn__MaximumEdition = value;
+        }
+        public bool ShouldSerializeMaximumEdition() => __pbn__MaximumEdition != null;
+        public void ResetMaximumEdition() => __pbn__MaximumEdition = null;
+        private Edition? __pbn__MaximumEdition;
+
+        [global::ProtoBuf.ProtoContract()]
+        public partial class FeatureSetEditionDefault : global::ProtoBuf.IExtensible
+        {
+            private global::ProtoBuf.IExtension __pbn__extensionData;
+            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
+            [global::ProtoBuf.ProtoMember(3, Name = @"edition")]
+            [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
+            public Edition Edition
+            {
+                get => __pbn__Edition ?? Edition.EditionUnknown;
+                set => __pbn__Edition = value;
+            }
+            public bool ShouldSerializeEdition() => __pbn__Edition != null;
+            public void ResetEdition() => __pbn__Edition = null;
+            private Edition? __pbn__Edition;
+
+            [global::ProtoBuf.ProtoMember(4, Name = @"overridable_features")]
+            public FeatureSet OverridableFeatures { get; set; }
+
+            [global::ProtoBuf.ProtoMember(5, Name = @"fixed_features")]
+            public FeatureSet FixedFeatures { get; set; }
+
+        }
+
+    }
+
+    [global::ProtoBuf.ProtoContract()]
     public partial class SourceCodeInfo : global::ProtoBuf.IExtensible
     {
         private global::ProtoBuf.IExtension __pbn__extensionData;
@@ -1670,7 +1924,7 @@ namespace Google.Protobuf.Reflection
             public void ResetEnd() => __pbn__End = null;
             private int? __pbn__End;
 
-            [global::ProtoBuf.ProtoMember(5, Name = @"semantic")]
+            [global::ProtoBuf.ProtoMember(5)]
             [global::System.ComponentModel.DefaultValue(Semantic.None)]
             public Semantic semantic
             {
@@ -1691,268 +1945,6 @@ namespace Google.Protobuf.Reflection
                 [global::ProtoBuf.ProtoEnum(Name = @"ALIAS")]
                 Alias = 2,
             }
-
-        }
-
-    }
-
-    [global::ProtoBuf.ProtoContract()]
-    public partial class FeatureSet : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"field_presence")]
-        [global::System.ComponentModel.DefaultValue(FieldPresence.FieldPresenceUnknown)]
-        public FieldPresence field_presence
-        {
-            get => __pbn__field_presence ?? FieldPresence.FieldPresenceUnknown;
-            set => __pbn__field_presence = value;
-        }
-        public bool ShouldSerializefield_presence() => __pbn__field_presence != null;
-        public void Resetfield_presence() => __pbn__field_presence = null;
-        private FieldPresence? __pbn__field_presence;
-
-        [global::ProtoBuf.ProtoMember(2, Name = @"enum_type")]
-        [global::System.ComponentModel.DefaultValue(EnumType.EnumTypeUnknown)]
-        public EnumType enum_type
-        {
-            get => __pbn__enum_type ?? EnumType.EnumTypeUnknown;
-            set => __pbn__enum_type = value;
-        }
-        public bool ShouldSerializeenum_type() => __pbn__enum_type != null;
-        public void Resetenum_type() => __pbn__enum_type = null;
-        private EnumType? __pbn__enum_type;
-
-        [global::ProtoBuf.ProtoMember(3, Name = @"repeated_field_encoding")]
-        [global::System.ComponentModel.DefaultValue(RepeatedFieldEncoding.RepeatedFieldEncodingUnknown)]
-        public RepeatedFieldEncoding repeated_field_encoding
-        {
-            get => __pbn__repeated_field_encoding ?? RepeatedFieldEncoding.RepeatedFieldEncodingUnknown;
-            set => __pbn__repeated_field_encoding = value;
-        }
-        public bool ShouldSerializerepeated_field_encoding() => __pbn__repeated_field_encoding != null;
-        public void Resetrepeated_field_encoding() => __pbn__repeated_field_encoding = null;
-        private RepeatedFieldEncoding? __pbn__repeated_field_encoding;
-
-        [global::ProtoBuf.ProtoMember(4, Name = @"utf8_validation")]
-        [global::System.ComponentModel.DefaultValue(Utf8Validation.Utf8ValidationUnknown)]
-        public Utf8Validation utf8_validation
-        {
-            get => __pbn__utf8_validation ?? Utf8Validation.Utf8ValidationUnknown;
-            set => __pbn__utf8_validation = value;
-        }
-        public bool ShouldSerializeutf8_validation() => __pbn__utf8_validation != null;
-        public void Resetutf8_validation() => __pbn__utf8_validation = null;
-        private Utf8Validation? __pbn__utf8_validation;
-
-        [global::ProtoBuf.ProtoMember(5, Name = @"message_encoding")]
-        [global::System.ComponentModel.DefaultValue(MessageEncoding.MessageEncodingUnknown)]
-        public MessageEncoding message_encoding
-        {
-            get => __pbn__message_encoding ?? MessageEncoding.MessageEncodingUnknown;
-            set => __pbn__message_encoding = value;
-        }
-        public bool ShouldSerializemessage_encoding() => __pbn__message_encoding != null;
-        public void Resetmessage_encoding() => __pbn__message_encoding = null;
-        private MessageEncoding? __pbn__message_encoding;
-
-        [global::ProtoBuf.ProtoMember(6, Name = @"json_format")]
-        [global::System.ComponentModel.DefaultValue(JsonFormat.JsonFormatUnknown)]
-        public JsonFormat json_format
-        {
-            get => __pbn__json_format ?? JsonFormat.JsonFormatUnknown;
-            set => __pbn__json_format = value;
-        }
-        public bool ShouldSerializejson_format() => __pbn__json_format != null;
-        public void Resetjson_format() => __pbn__json_format = null;
-        private JsonFormat? __pbn__json_format;
-
-        [global::ProtoBuf.ProtoMember(7, Name = @"enforce_naming_style")]
-        [global::System.ComponentModel.DefaultValue(EnforceNamingStyle.EnforceNamingStyleUnknown)]
-        public EnforceNamingStyle enforce_naming_style
-        {
-            get => __pbn__enforce_naming_style ?? EnforceNamingStyle.EnforceNamingStyleUnknown;
-            set => __pbn__enforce_naming_style = value;
-        }
-        public bool ShouldSerializeenforce_naming_style() => __pbn__enforce_naming_style != null;
-        public void Resetenforce_naming_style() => __pbn__enforce_naming_style = null;
-        private EnforceNamingStyle? __pbn__enforce_naming_style;
-
-        [global::ProtoBuf.ProtoMember(8, Name = @"default_symbol_visibility")]
-        [global::System.ComponentModel.DefaultValue(VisibilityFeature.DefaultSymbolVisibility.DefaultSymbolVisibilityUnknown)]
-        public VisibilityFeature.DefaultSymbolVisibility DefaultSymbolVisibility
-        {
-            get => __pbn__DefaultSymbolVisibility ?? VisibilityFeature.DefaultSymbolVisibility.DefaultSymbolVisibilityUnknown;
-            set => __pbn__DefaultSymbolVisibility = value;
-        }
-        public bool ShouldSerializeDefaultSymbolVisibility() => __pbn__DefaultSymbolVisibility != null;
-        public void ResetDefaultSymbolVisibility() => __pbn__DefaultSymbolVisibility = null;
-        private VisibilityFeature.DefaultSymbolVisibility? __pbn__DefaultSymbolVisibility;
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum FieldPresence
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"FIELD_PRESENCE_UNKNOWN")]
-            FieldPresenceUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"EXPLICIT")]
-            Explicit = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"IMPLICIT")]
-            Implicit = 2,
-            [global::ProtoBuf.ProtoEnum(Name = @"LEGACY_REQUIRED")]
-            LegacyRequired = 3,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum EnumType
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"ENUM_TYPE_UNKNOWN")]
-            EnumTypeUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"OPEN")]
-            Open = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"CLOSED")]
-            Closed = 2,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum RepeatedFieldEncoding
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"REPEATED_FIELD_ENCODING_UNKNOWN")]
-            RepeatedFieldEncodingUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"PACKED")]
-            Packed = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"EXPANDED")]
-            Expanded = 2,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum Utf8Validation
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"UTF8_VALIDATION_UNKNOWN")]
-            Utf8ValidationUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"VERIFY")]
-            Verify = 2,
-            [global::ProtoBuf.ProtoEnum(Name = @"NONE")]
-            None = 3,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum MessageEncoding
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"MESSAGE_ENCODING_UNKNOWN")]
-            MessageEncodingUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"LENGTH_PREFIXED")]
-            LengthPrefixed = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"DELIMITED")]
-            Delimited = 2,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum JsonFormat
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"JSON_FORMAT_UNKNOWN")]
-            JsonFormatUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"ALLOW")]
-            Allow = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"LEGACY_BEST_EFFORT")]
-            LegacyBestEffort = 2,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public enum EnforceNamingStyle
-        {
-            [global::ProtoBuf.ProtoEnum(Name = @"ENFORCE_NAMING_STYLE_UNKNOWN")]
-            EnforceNamingStyleUnknown = 0,
-            [global::ProtoBuf.ProtoEnum(Name = @"STYLE2024")]
-            Style2024 = 1,
-            [global::ProtoBuf.ProtoEnum(Name = @"STYLE_LEGACY")]
-            StyleLegacy = 2,
-            [global::ProtoBuf.ProtoEnum(Name = @"STYLE2026")]
-            Style2026 = 3,
-        }
-
-        [global::ProtoBuf.ProtoContract()]
-        public partial class VisibilityFeature : global::ProtoBuf.IExtensible
-        {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
-            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-            [global::ProtoBuf.ProtoContract()]
-            public enum DefaultSymbolVisibility
-            {
-                [global::ProtoBuf.ProtoEnum(Name = @"DEFAULT_SYMBOL_VISIBILITY_UNKNOWN")]
-                DefaultSymbolVisibilityUnknown = 0,
-                [global::ProtoBuf.ProtoEnum(Name = @"EXPORT_ALL")]
-                ExportAll = 1,
-                [global::ProtoBuf.ProtoEnum(Name = @"EXPORT_TOP_LEVEL")]
-                ExportTopLevel = 2,
-                [global::ProtoBuf.ProtoEnum(Name = @"LOCAL_ALL")]
-                LocalAll = 3,
-                [global::ProtoBuf.ProtoEnum(Name = @"STRICT")]
-                Strict = 4,
-            }
-
-        }
-
-    }
-
-    [global::ProtoBuf.ProtoContract()]
-    public partial class FeatureSetDefaults : global::ProtoBuf.IExtensible
-    {
-        private global::ProtoBuf.IExtension __pbn__extensionData;
-        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-        [global::ProtoBuf.ProtoMember(1, Name = @"defaults")]
-        public global::System.Collections.Generic.List<FeatureSetEditionDefault> Defaults { get; } = new global::System.Collections.Generic.List<FeatureSetEditionDefault>();
-
-        [global::ProtoBuf.ProtoMember(4, Name = @"minimum_edition")]
-        [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
-        public Edition MinimumEdition
-        {
-            get => __pbn__MinimumEdition ?? Edition.EditionUnknown;
-            set => __pbn__MinimumEdition = value;
-        }
-        public bool ShouldSerializeMinimumEdition() => __pbn__MinimumEdition != null;
-        public void ResetMinimumEdition() => __pbn__MinimumEdition = null;
-        private Edition? __pbn__MinimumEdition;
-
-        [global::ProtoBuf.ProtoMember(5, Name = @"maximum_edition")]
-        [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
-        public Edition MaximumEdition
-        {
-            get => __pbn__MaximumEdition ?? Edition.EditionUnknown;
-            set => __pbn__MaximumEdition = value;
-        }
-        public bool ShouldSerializeMaximumEdition() => __pbn__MaximumEdition != null;
-        public void ResetMaximumEdition() => __pbn__MaximumEdition = null;
-        private Edition? __pbn__MaximumEdition;
-
-        [global::ProtoBuf.ProtoContract()]
-        public partial class FeatureSetEditionDefault : global::ProtoBuf.IExtensible
-        {
-            private global::ProtoBuf.IExtension __pbn__extensionData;
-            global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-                => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-
-            [global::ProtoBuf.ProtoMember(3, Name = @"edition")]
-            [global::System.ComponentModel.DefaultValue(Edition.EditionUnknown)]
-            public Edition Edition
-            {
-                get => __pbn__Edition ?? Edition.EditionUnknown;
-                set => __pbn__Edition = value;
-            }
-            public bool ShouldSerializeEdition() => __pbn__Edition != null;
-            public void ResetEdition() => __pbn__Edition = null;
-            private Edition? __pbn__Edition;
-
-            [global::ProtoBuf.ProtoMember(4, Name = @"overridable_features")]
-            public FeatureSet OverridableFeatures { get; set; }
-
-            [global::ProtoBuf.ProtoMember(5, Name = @"fixed_features")]
-            public FeatureSet FixedFeatures { get; set; }
 
         }
 
