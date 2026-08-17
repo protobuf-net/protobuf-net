@@ -256,6 +256,37 @@ namespace ProtoBuf.BuildTools.Generators
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        /// <summary>
+        /// A dropped contract stops being a degradation once there is no runtime path to fall back to.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The drop diagnostics say "the runtime proxy will be used", which is true and proportionate on a
+        /// JIT build - the contract keeps working, just reflectively. Under <c>PublishAot</c> there is no
+        /// runtime proxy: <c>ProxyEmitter</c> needs ref-emit and the marshallers need
+        /// <c>MakeGenericType</c>, so the contract does not degrade, it throws on first use.
+        /// </para>
+        /// <para>
+        /// Reported separately rather than by raising the drop's own severity, for two reasons: severity
+        /// belongs to the descriptor, so it cannot vary per report; and a distinct id can be suppressed on
+        /// its own by someone who knows a particular contract is never used on the AOT path.
+        /// </para>
+        /// <para>
+        /// Anchored on the <c>[ProtoGrpc]</c> declaration rather than on the contract, deliberately: that
+        /// is the file the consumer has to change, and the drop diagnostic is already sitting on the
+        /// contract saying why.
+        /// </para>
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor DroppedContractUnderAot = new(
+            id: "PBN4018",
+            title: "A contract has no build-time proxy, and this project publishes AOT or trimmed",
+            messageFormat: "'{0}' got no build-time gRPC proxy, and this project asks for {1} - so there "
+                + "is no runtime proxy to fall back to and calls on it will throw. See the accompanying "
+                + "PBN40xx warning for why it was dropped",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         internal static readonly DiagnosticDescriptor UnresolvedContract = new(
             id: "PBN4011",
             title: "Service contract could not be resolved",

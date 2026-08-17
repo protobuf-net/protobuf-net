@@ -104,6 +104,15 @@ namespace ProtoBuf.BuildTools.Generators
                 var (candidate, caps) = pair;
                 if (candidate is null || caps.Disabled) return;
                 foreach (var diagnostic in candidate.Diagnostics) ctx.ReportDiagnostic(ToDiagnostic(diagnostic));
+
+                // A drop is a degradation under JIT and a failure under AOT; only the second needs saying
+                // twice, and only the capabilities know which build this is.
+                if (caps.AotRequested is not string asked) return;
+                foreach (var contract in candidate.DroppedContracts)
+                {
+                    ctx.ReportDiagnostic(Diagnostic.Create(
+                        DroppedContractUnderAot, candidate.Declaration.ToLocation(), contract, asked));
+                }
             });
 
             context.RegisterSourceOutput(plans.Combine(capabilities), static (ctx, pair) =>
@@ -208,8 +217,9 @@ namespace ProtoBuf.BuildTools.Generators
         private readonly struct Capabilities
         {
             private Capabilities(bool disabled, bool hasAspNetCore, bool annotateTrimming,
-                bool interceptorsEnabled, LanguageVersion languageVersion)
+                bool interceptorsEnabled, string? aotRequested, LanguageVersion languageVersion)
             {
+                AotRequested = aotRequested;
                 Disabled = disabled;
                 HasAspNetCore = hasAspNetCore;
                 AnnotateTrimming = annotateTrimming;
@@ -239,12 +249,18 @@ namespace ProtoBuf.BuildTools.Generators
             /// </summary>
             public bool InterceptorsEnabled { get; }
 
+            /// <summary>
+            /// Which AOT-or-trimming property the project set, or null for none. Shared with the migration
+            /// analyzers via <c>Utils.AsksForAot</c> rather than re-listing the four property names.
+            /// </summary>
+            public string? AotRequested { get; }
+
             public LanguageVersion LanguageVersion { get; }
 
             public static Capabilities From(Compilation compilation, ParseOptions parseOptions,
                 Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptionsProvider configOptions)
             {
-                if (configOptions.BuildToolsDisabled()) return new Capabilities(true, false, false, false, LanguageVersion.Default);
+                if (configOptions.BuildToolsDisabled()) return new Capabilities(true, false, false, false, null, LanguageVersion.Default);
 
                 var hasAspNetCore = compilation.GetTypeByMetadataName(
                     "Grpc.AspNetCore.Server.Model.ServiceMethodProviderContext`1") is not null;
@@ -261,7 +277,8 @@ namespace ProtoBuf.BuildTools.Generators
                 var interceptorsEnabled = InterceptorSupport.IsEnabled(parseOptions as CSharpParseOptions)
                     && InterceptableLocations.IsSupported;
 
-                return new Capabilities(false, hasAspNetCore, annotateTrimming, interceptorsEnabled, languageVersion);
+                return new Capabilities(false, hasAspNetCore, annotateTrimming, interceptorsEnabled,
+                    configOptions.AsksForAot(), languageVersion);
             }
         }
 

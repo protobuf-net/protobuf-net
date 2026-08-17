@@ -576,6 +576,32 @@ moment the SDK grew a fifth. Note that writing this found `PBN3012`'s own AOT-co
 been tested**: `AnalyzerTestBase` had no way to supply build properties at all, so those code paths could
 be read but not run. It has one now.
 
+## PBN4018: a drop means something different under AOT
+
+Every drop diagnostic says "the runtime proxy will be used", which is accurate and proportionate when
+there *is* one: on a JIT build the contract keeps working, just reflectively. Under `PublishAot` there is
+no runtime proxy - `ProxyEmitter` needs ref-emit and the marshallers need `MakeGenericType` - so the same
+contract does not degrade, it throws on first use. `PBN4018` says that, per dropped contract, only when
+the project asks for AOT or trimming.
+
+Three choices in it worth keeping:
+
+- **a separate id rather than raising the drop's severity.** Severity belongs to the descriptor and cannot
+  vary per report, so escalation is not available anyway - but the separate id is better regardless, since
+  it can be suppressed on its own by someone who knows a particular contract is never reached on the AOT
+  path;
+- **it adds rather than replaces.** The original `PBN400x` still fires and still says *why* the contract
+  was dropped; this one says what that now costs. Both, because they answer different questions;
+- **anchored on the `[ProtoGrpc]` declaration**, not the contract - that is the file the consumer has to
+  change, and the drop diagnostic is already sitting on the contract explaining itself.
+
+Mechanically it is a set difference: the parse knows which contracts were *named* and which reached the
+plan, so the rest are dropped whatever the reason - which means new drop reasons are covered without
+touching this. The AOT question cannot be answered there, though, because build properties are a different
+incremental input; so the names travel on the candidate as plain strings and the diagnostics output, which
+has the capabilities, decides. `Utils.AsksForAot` is shared with the two migration analyzers rather than
+re-listing the four property names, and the test covers all four.
+
 ## PBN4017: the DI client path, where the seam is the container
 
 `AddCodeFirstGrpcClient<T>` - the mainstream ASP.NET Core way to get a gRPC client - was the one route

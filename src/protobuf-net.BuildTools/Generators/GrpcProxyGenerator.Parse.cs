@@ -103,6 +103,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var contracts = ImmutableArray.CreateBuilder<GrpcInterfaceModel>();
+            var dropped = ImmutableArray.CreateBuilder<string>();
             var payloads = new System.Collections.Generic.List<ITypeSymbol>();
             var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
             foreach (var attribute in type.GetAttributes())
@@ -122,6 +123,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (contract.TypeKind == TypeKind.Error)
                 {
                     diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.UnresolvedContract, Where(type), contract.Name));
+                    dropped.Add(contract.Name);
                     continue;
                 }
 
@@ -130,6 +132,10 @@ namespace ProtoBuf.BuildTools.Generators
                 if (candidate.Model is { } model && seen.Add(model.InterfaceFullName))
                 {
                     contracts.Add(model);
+                }
+                else if (candidate.Model is null)
+                {
+                    dropped.Add(contract.ToDisplayString());
                 }
             }
 
@@ -150,7 +156,8 @@ namespace ProtoBuf.BuildTools.Generators
                 contracts: contracts.ToImmutable(),
                 downLevel: false);
 
-            return new GrpcModelCandidate(plan, diagnostics.ToImmutable());
+            return new GrpcModelCandidate(plan, diagnostics.ToImmutable(), dropped.ToImmutable(),
+                Internal.Aot.PlanLocation.From(type));
         }
 
         /// <summary>

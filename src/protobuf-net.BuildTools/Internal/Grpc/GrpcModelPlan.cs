@@ -119,15 +119,36 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
     /// </summary>
     internal sealed class GrpcModelCandidate : IEquatable<GrpcModelCandidate>
     {
-        public GrpcModelCandidate(GrpcModelPlan? plan, ImmutableArray<DiagnosticInfo> diagnostics)
+        public GrpcModelCandidate(GrpcModelPlan? plan, ImmutableArray<DiagnosticInfo> diagnostics,
+            ImmutableArray<string> droppedContracts = default, Aot.PlanLocation declaration = default)
         {
             Plan = plan;
             Diagnostics = diagnostics;
+            DroppedContracts = droppedContracts.IsDefault ? ImmutableArray<string>.Empty : droppedContracts;
+            Declaration = declaration;
         }
 
         public GrpcModelPlan? Plan { get; }
 
         public ImmutableArray<DiagnosticInfo> Diagnostics { get; }
+
+        /// <summary>
+        /// Contracts named by <c>[ProtoService]</c> that got no proxy, whatever the reason.
+        /// </summary>
+        /// <remarks>
+        /// Carried separately from the drop diagnostics because it answers a different question. Each drop
+        /// already says *why* it happened, and at the default severity that is the right amount of noise -
+        /// under JIT the runtime path really does take over. But when the project asks for AOT there is no
+        /// runtime path, so the same drop stops being a degradation and becomes a contract that will throw;
+        /// that needs saying separately, because it depends on a build property the parse cannot see.
+        /// </remarks>
+        public ImmutableArray<string> DroppedContracts { get; }
+
+        /// <summary>
+        /// Where the <c>[ProtoGrpc]</c> declaration is, for diagnostics that belong on it rather than on a
+        /// contract. Plain span data, not a <c>Location</c>, for the reason the whole model follows.
+        /// </summary>
+        public Aot.PlanLocation Declaration { get; }
 
         public bool Equals(GrpcModelCandidate? other)
         {
@@ -135,6 +156,15 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             if (Plan is null != other.Plan is null) return false;
             if (Plan is not null && !Plan.Equals(other.Plan)) return false;
             if (Diagnostics.Length != other.Diagnostics.Length) return false;
+            if (DroppedContracts.Length != other.DroppedContracts.Length) return false;
+            if (!Declaration.Equals(other.Declaration)) return false;
+            for (int i = 0; i < DroppedContracts.Length; i++)
+            {
+                if (!string.Equals(DroppedContracts[i], other.DroppedContracts[i], StringComparison.Ordinal))
+                {
+                    return false;
+                }
+            }
             for (int i = 0; i < Diagnostics.Length; i++)
             {
                 if (!Diagnostics[i].Equals(other.Diagnostics[i])) return false;
