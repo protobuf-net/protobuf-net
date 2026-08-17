@@ -564,7 +564,39 @@ moment the SDK grew a fifth. Note that writing this found `PBN3012`'s own AOT-co
 been tested**: `AnalyzerTestBase` had no way to supply build properties at all, so those code paths could
 be read but not run. It has one now.
 
-## Interceptors (proven mechanism, not yet used)
+## PBN4016 and its fixer: the ordinary-C# equivalent
+
+The counterpart of `PBN3010` for the gRPC half, and it exists for the identical reason: declaring a
+`[ProtoGrpc]` does not move existing call sites onto it, and a plain `CreateGrpcService<T>` keeps working
+through `ProxyEmitter`, so nothing complains until a publish.
+
+Two things distinguish it from `PBN4015`:
+
+- **no AOT request is required.** A project that has built a proxy for this contract and is not using it
+  is paying ref-emit for nothing, whatever it publishes as;
+- **it is silent once interceptors are enabled**, because then the generator has taken the call site over
+  and there is nothing to ask for. That check reads the syntax tree's own parse options, which is where
+  the feature lands.
+
+The fix is one argument - `CreateGrpcService<T>()` becomes `CreateGrpcService<T>(MyServices.Instance)` -
+and that is the point rather than a limitation: the explicit form and the interceptor produce the *same
+program*, so the fixer is exactly what interception would have done, available to anyone who has not
+enabled the feature. Which is also what keeps the magic honest.
+
+Three details worth keeping, two of them caught by the test rather than by design:
+
+- **The diagnostic carries two spellings of the same names.** The `factory` property is fully qualified,
+  because the fixer parses it into an expression and cannot know what is in scope at the call site; the
+  *message* uses the readable form, because `global::MyServices` in prose is noise a reader has to
+  mentally strip. The first cut leaked the qualified form into the message.
+- **The fixer appends unless there is an explicit `null` to replace**, which covers all four shapes the
+  call can take. The first cut assumed the reduced (extension) form and replaced the argument list
+  wholesale - so `GrpcClientFactory.CreateGrpcService<T>(invoker)`, the static form, lost its receiver.
+- **It is `Compile Remove`d from `protobuf-net.BuildTools.Legacy`**, because `CodeFixes/**` is a glob
+  there while analyzers are listed by name - the asymmetry that made `UseAotModelCodeFixProvider` a build
+  break. `GrpcMigrationAnalyzer` is not in Legacy, so its fixer must not be either.
+
+## Interceptors
 
 The plan for the zero-code-change half. Probed with a scratch generator before proposing, and every
 clause below was verified rather than recalled:
