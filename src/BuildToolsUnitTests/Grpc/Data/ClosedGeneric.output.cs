@@ -164,6 +164,7 @@ namespace GrpcFixtures.ClosedGeneric
         {
             var __builder = global::Microsoft.Extensions.DependencyInjection.GrpcServicesExtensions.AddGrpc(services);
             global::ProtoBuf.Grpc.Configuration.BinderConfiguration __cfg = ClosedGenericServices.Instance;
+            global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<global::ProtoBuf.Grpc.Configuration.ClientFactory>(services, ClosedGenericServices.Instance);
             global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddEnumerable(services,
                 global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Singleton<global::Grpc.AspNetCore.Server.Model.IServiceMethodProvider<global::GrpcFixtures.ClosedGeneric.RequestBox>>(
                     new ClosedGenericServices.GrpcFixtures_ClosedGeneric_IBox_GrpcFixtures_ClosedGeneric_Request__ServerBindings(__cfg)));

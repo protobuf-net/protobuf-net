@@ -80,18 +80,56 @@ namespace ProtoBuf.BuildTools.Analyzers
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        /// <summary>
+        /// DI-registered clients resolve their factory from the container, and this one has not been put
+        /// there.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <c>AddCodeFirstGrpcClient&lt;T&gt;</c> - all six overloads - funnels through
+        /// <c>ConfigureCodeFirstGrpcClient&lt;T&gt;</c>, whose body is
+        /// <c>CreateGrpcService&lt;T&gt;(callInvoker, services.GetService&lt;ClientFactory&gt;())</c>. So
+        /// unlike a direct call there is no argument to fix and no call site to intercept: the seam is the
+        /// container, and one registration covers every client registered in it.
+        /// </para>
+        /// <para>
+        /// That is the only place protobuf-net.Grpc resolves a <c>ClientFactory</c> from DI, so this
+        /// suggestion has exactly one lever to point at.
+        /// </para>
+        /// <para>
+        /// Whether the registration exists is a *dynamic* question being answered statically, so the check
+        /// is a heuristic and deliberately biased toward silence: anything that looks like a
+        /// <c>ClientFactory</c> registration anywhere in the compilation suppresses it. A registration in
+        /// another assembly, or built by a helper, is invisible - so this can miss, and that is preferable
+        /// to nagging someone who has already done it.
+        /// </para>
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor DiFactoryNotRegistered = new(
+            id: "PBN4017",
+            title: "DI-registered gRPC clients are not using the build-time proxies",
+            messageFormat: "'{0}' has a build-time proxy for '{1}', but clients registered with "
+                + "AddCodeFirstGrpcClient resolve their factory from the container. Add "
+                + "'services.AddSingleton<ClientFactory>({0}.Instance);' so these clients use it",
+            category: "ProtoBuf.Grpc",
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         /// <summary>The factory to pass, for <c>UseGeneratedClientFactoryCodeFixProvider</c>.</summary>
         internal const string FactoryProperty = "factory";
 
         /// <inheritdoc/>
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-            = ImmutableArray.Create(NoProtoGrpcUnderAot, CallDoesNotUseGeneratedFactory);
+            = ImmutableArray.Create(NoProtoGrpcUnderAot, CallDoesNotUseGeneratedFactory,
+                DiFactoryNotRegistered);
 
         private const string ProtoGrpcAttributeName = "ProtoBuf.Grpc.Configuration.ProtoGrpcAttribute";
         private const string ClientFactoryHolder = "ProtoBuf.Grpc.Client.GrpcClientFactory";
         private const string ServerExtensions = "ProtoBuf.Grpc.Server.ServicesExtensions";
         private const string CreateGrpcService = "CreateGrpcService";
         private const string AddCodeFirstGrpc = "AddCodeFirstGrpc";
+        private const string ClientFactoryExtensions = "ProtoBuf.Grpc.ClientFactory.ServicesExtensions";
+        private const string AddCodeFirstGrpcClient = "AddCodeFirstGrpcClient";
+        private const string ClientFactoryTypeName = "ProtoBuf.Grpc.Configuration.ClientFactory";
 
         /// <inheritdoc/>
         public override void Initialize(AnalysisContext ctx)
@@ -157,9 +195,29 @@ namespace ProtoBuf.BuildTools.Analyzers
             }
             if (covered.Count == 0) return;
 
+            // Resolved at most once, and only if a DI-registered client is actually found - so a project
+            // that does not use that path never pays for the scan.
+            var registered = new System.Lazy<bool>(
+                () => HasClientFactoryRegistration(compilation),
+                System.Threading.LazyThreadSafetyMode.ExecutionAndPublication);
+
             compilationStart.RegisterOperationAction(context =>
             {
                 if (context.Operation is not IInvocationOperation invocation) return;
+
+                if (IsDiClientRegistration(invocation)
+                    && invocation.TargetMethod.TypeArguments.Length == 1
+                    && covered.TryGetValue(
+                        invocation.TargetMethod.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        out var diFactory)
+                    && !registered.Value)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiFactoryNotRegistered, invocation.Syntax.GetLocation(),
+                        Readable(diFactory), invocation.TargetMethod.TypeArguments[0].ToDisplayString()));
+                    return;
+                }
+
                 if (!IsPlainCreateGrpcService(invocation)) return;
 
                 if (InterceptorSupport.IsEnabled(
@@ -183,6 +241,71 @@ namespace ProtoBuf.BuildTools.Analyzers
                     Readable(factory), contractSymbol.ToDisplayString()));
             }, OperationKind.Invocation);
         }
+
+        private static bool IsDiClientRegistration(IInvocationOperation invocation)
+        {
+            var declared = invocation.TargetMethod.ReducedFrom ?? invocation.TargetMethod.OriginalDefinition;
+            return declared.ContainingType?.ToDisplayString() == ClientFactoryExtensions
+                && declared.Name == AddCodeFirstGrpcClient;
+        }
+
+        /// <summary>
+        /// Whether anything in this compilation looks like a <c>ClientFactory</c> service registration.
+        /// </summary>
+        /// <remarks>
+        /// Syntax-only on purpose: it is a suppression test for a suggestion, so being cheap and
+        /// generous matters more than being exact. Any <c>Add*</c>/<c>TryAdd*</c> invocation naming
+        /// <c>ClientFactory</c> - as a type argument or in an argument - counts.
+        /// </remarks>
+        private static bool HasClientFactoryRegistration(Compilation compilation)
+        {
+            foreach (var tree in compilation.SyntaxTrees)
+            {
+                // Generated trees are skipped, and that matters rather than being tidiness: the generated
+                // AddXxx() *contains* a ClientFactory registration, so counting it would suppress this
+                // suggestion for every project - including one that never calls AddXxx.
+                if (tree.FilePath.EndsWith(".g.cs", System.StringComparison.OrdinalIgnoreCase)) continue;
+
+                foreach (var node in tree.GetRoot().DescendantNodes())
+                {
+                    if (node is not Microsoft.CodeAnalysis.CSharp.Syntax.InvocationExpressionSyntax invocation)
+                    {
+                        continue;
+                    }
+                    var name = invocation.Expression switch
+                    {
+                        Microsoft.CodeAnalysis.CSharp.Syntax.MemberAccessExpressionSyntax member => member.Name,
+                        _ => null,
+                    };
+                    var identifier = name switch
+                    {
+                        Microsoft.CodeAnalysis.CSharp.Syntax.GenericNameSyntax generic => generic.Identifier.ValueText,
+                        Microsoft.CodeAnalysis.CSharp.Syntax.SimpleNameSyntax simple => simple.Identifier.ValueText,
+                        _ => null,
+                    };
+                    if (identifier is null || !IsRegistrationMethod(identifier)) continue;
+                    if (invocation.ToString().Contains("ClientFactory")) return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The DI registration methods, named explicitly rather than matched by prefix.
+        /// </summary>
+        /// <remarks>
+        /// A prefix test was the first cut and it suppressed the very diagnostic it was guarding:
+        /// <c>AddCodeFirstGrpcClient</c> starts with "Add", and fully qualified its text contains
+        /// "ClientFactory" - because the namespace is literally <c>ProtoBuf.Grpc.ClientFactory</c>. So the
+        /// call being flagged looked like the registration that would excuse it.
+        /// </remarks>
+        private static bool IsRegistrationMethod(string identifier) => identifier switch
+        {
+            "AddSingleton" or "AddScoped" or "AddTransient" => true,
+            "TryAddSingleton" or "TryAddScoped" or "TryAddTransient" => true,
+            "Add" or "TryAdd" or "TryAddEnumerable" => true,
+            _ => false,
+        };
 
         /// <summary>Drops the <c>global::</c> prefix, which belongs in code rather than in prose.</summary>
         private static string Readable(string qualified)

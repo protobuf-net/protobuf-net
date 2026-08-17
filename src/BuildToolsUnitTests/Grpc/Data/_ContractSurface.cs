@@ -148,6 +148,11 @@ namespace Microsoft.Extensions.DependencyInjection.Extensions
     public static class ServiceCollectionDescriptorExtensions
     {
         public static void TryAddEnumerable(this IServiceCollection services, ServiceDescriptor descriptor) { }
+
+        // TryAddSingleton is the single-service form; TryAddEnumerable above is for sets, which is what
+        // the IServiceMethodProvider registrations need and what a ClientFactory registration must not use
+        public static void TryAddSingleton<TService>(this IServiceCollection services, TService instance)
+            where TService : class { }
     }
 }
 

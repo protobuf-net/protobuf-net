@@ -169,6 +169,7 @@ namespace GrpcFixtures.SubService
         {
             var __builder = global::Microsoft.Extensions.DependencyInjection.GrpcServicesExtensions.AddGrpc(services);
             global::ProtoBuf.Grpc.Configuration.BinderConfiguration __cfg = SubServiceServices.Instance;
+            global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<global::ProtoBuf.Grpc.Configuration.ClientFactory>(services, SubServiceServices.Instance);
             global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddEnumerable(services,
                 global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Singleton<global::Grpc.AspNetCore.Server.Model.IServiceMethodProvider<global::GrpcFixtures.SubService.ThingService>>(
                     new SubServiceServices.GrpcFixtures_SubService_IThing_ServerBindings(__cfg)));

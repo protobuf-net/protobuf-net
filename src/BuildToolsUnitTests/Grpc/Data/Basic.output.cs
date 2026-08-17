@@ -252,6 +252,7 @@ namespace GrpcFixtures.Basic
         {
             var __builder = global::Microsoft.Extensions.DependencyInjection.GrpcServicesExtensions.AddGrpc(services);
             global::ProtoBuf.Grpc.Configuration.BinderConfiguration __cfg = BasicServices.Instance;
+            global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<global::ProtoBuf.Grpc.Configuration.ClientFactory>(services, BasicServices.Instance);
             global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddEnumerable(services,
                 global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Singleton<global::Grpc.AspNetCore.Server.Model.IServiceMethodProvider<global::GrpcFixtures.Basic.GreeterService>>(
                     new BasicServices.GrpcFixtures_Basic_IGreeter_ServerBindings(__cfg)));

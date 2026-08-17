@@ -576,6 +576,52 @@ moment the SDK grew a fifth. Note that writing this found `PBN3012`'s own AOT-co
 been tested**: `AnalyzerTestBase` had no way to supply build properties at all, so those code paths could
 be read but not run. It has one now.
 
+## PBN4017: the DI client path, where the seam is the container
+
+`AddCodeFirstGrpcClient<T>` - the mainstream ASP.NET Core way to get a gRPC client - was the one route
+with no coverage *and* no warning, which is the worst combination we had. It turns out to need neither an
+interceptor nor a per-call-site fix, because of what it does:
+
+``` c#
+// ConfigureCodeFirstGrpcClient<T>, which all six AddCodeFirstGrpcClient overloads funnel through
+=> clientBuilder.ConfigureGrpcClientCreator(
+    (services, callInvoker) => CreateGrpcService<T>(callInvoker, services.GetService<ClientFactory>()));
+```
+
+It resolves the factory **from the container**, so one registration covers every client in it. And that is
+the *only* place protobuf-net.Grpc resolves a `ClientFactory` from DI - checked, not assumed - so there is
+exactly one lever:
+
+``` c#
+services.AddSingleton<ClientFactory>(MyServices.Instance);
+```
+
+**The generated `AddMyServices()` now does it for you**, with `TryAddSingleton`. Two details there:
+`TryAddSingleton` and not `TryAddEnumerable` - this is one service, where the `IServiceMethodProvider`
+registrations beside it are a set, and using the collection form for a single service is a semantic
+mistake that happens to compile; and `Try` rather than `Add`, so a consumer who registered their own
+choice keeps it. A server project therefore gets DI-registered clients onto the build-time proxies with
+no second step to remember.
+
+`PBN4017` covers the client-only project, which has no `AddMyServices()` to call. It fires on
+`AddCodeFirstGrpcClient<T>` where a model covers `T` and no registration is visible, and its suppression
+check is worth knowing the shape of, because it is a dynamic question answered statically:
+
+- **it is biased toward silence.** Anything that looks like a `ClientFactory` registration anywhere in the
+  compilation quiets it. A registration in another assembly, or built by a helper, is invisible - so it can
+  miss, which is much better than nagging someone who has already done it;
+- **it skips generated trees**, and that is load-bearing rather than tidy: the generated `AddMyServices()`
+  *contains* a registration, so counting it would suppress the suggestion for every project - including one
+  that never calls `AddMyServices()`;
+- **the registration methods are named explicitly rather than matched by prefix.** The first cut matched
+  `Add*`/`TryAdd*` and suppressed the very diagnostic it was guarding: `AddCodeFirstGrpcClient` starts with
+  "Add" and, fully qualified, contains the string "ClientFactory" - because the namespace *is*
+  `ProtoBuf.Grpc.ClientFactory`. The test caught it; reading would not have.
+
+Note for the parked server-reflection item: `protobuf-net.Grpc.AspNetCore.Reflection` resolves a
+**`BinderConfiguration`** from DI, which is the second and last DI seam. A `[ProtoGrpc]` type converts to
+one implicitly, so the same trick should apply when that is picked up.
+
 ## PBN4016 and its fixer: the ordinary-C# equivalent
 
 The counterpart of `PBN3010` for the gRPC half, and it exists for the identical reason: declaring a

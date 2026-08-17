@@ -693,6 +693,17 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 1, "{");
             Line(sb, indent + 2, "var __builder = global::Microsoft.Extensions.DependencyInjection.GrpcServicesExtensions.AddGrpc(services);");
             Line(sb, indent + 2, $"{BinderConfigurationTypeName} __cfg = {plan.TypeName}.Instance;");
+
+            // Also register the factory as a service, so anything resolving a ClientFactory from the
+            // container gets this one. That is the seam AddCodeFirstGrpcClient uses - its clients call
+            // services.GetService<ClientFactory>() - so a project calling this method gets DI-registered
+            // clients on the build-time proxies for free, with no second step to remember.
+            //
+            // TryAddSingleton, not TryAddEnumerable: this is one service, not a set. TryAddEnumerable is
+            // right for the IServiceMethodProvider registrations above, where several coexist, and wrong
+            // here. And Try rather than Add, so a consumer who registered their own choice keeps it.
+            Line(sb, indent + 2, "global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions"
+                + $".TryAddSingleton<{ClientFactoryFullName}>(services, {plan.TypeName}.Instance);");
             foreach (var contract in plan.Contracts)
             {
                 if (contract.ImplementationTypeFullName is null) continue;

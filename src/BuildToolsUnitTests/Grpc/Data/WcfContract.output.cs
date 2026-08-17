@@ -225,6 +225,7 @@ namespace GrpcFixtures.WcfContract
         {
             var __builder = global::Microsoft.Extensions.DependencyInjection.GrpcServicesExtensions.AddGrpc(services);
             global::ProtoBuf.Grpc.Configuration.BinderConfiguration __cfg = WcfContractServices.Instance;
+            global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<global::ProtoBuf.Grpc.Configuration.ClientFactory>(services, WcfContractServices.Instance);
             global::Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddEnumerable(services,
                 global::Microsoft.Extensions.DependencyInjection.ServiceDescriptor.Singleton<global::Grpc.AspNetCore.Server.Model.IServiceMethodProvider<global::GrpcFixtures.WcfContract.CalculatorService>>(
                     new WcfContractServices.GrpcFixtures_WcfContract_ICalculator_ServerBindings(__cfg)));
