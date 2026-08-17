@@ -1395,6 +1395,55 @@ Three decisions taken when it happens, recorded so they are not re-litigated:
 
 Best done on a quiet tree, i.e. after #1277 squashes into `v4`.
 
+### B34. **BLOCKER: PR #1282 (build-time gRPC proxies) lands before #1277** — measured, and the overlap is small
+
+Marc, 2026-08-17. `grpc-aot-generator` → **`main`**, **+11,500 / −85 across 105 files**, and it will
+land first. So #1277 absorbs it, not the other way round. Trial-merged against `schema-breadth` on
+2026-08-17 rather than guessed at; the estimate below is from that merge, not from the diff size.
+
+**The headline is that it does not go where we go.** Zero changes to `protobuf-net.Core` or
+`protobuf-net` — no library changes at all, as intended. Its own weight is a new gRPC generator
+(19 files under `protobuf-net.BuildTools`), its own test corpus (`Grpc/Data`, ~57 goldens) and a new
+`AotGrpcSmoke` project.
+
+**Nine conflicted files, of which one is interesting:**
+
+| file | shape |
+| --- | --- |
+| `ProtoModelGenerator.Emit.cs` | **the same fix, twice** — see below |
+| `docs/aot.md`, `AnalyzerReleases.Unshipped.md`, `PublicAPI.Unshipped.txt` ×3 | list appends |
+| `Reflection/Descriptor.cs`, `Reflection/Internal/CustomProtogenSerializer.cs` | **generated output**; regenerate, never hand-merge — the latter is CI's "Generated model drift" gate |
+| `src/version.json` | trivial |
+
+**The `Emit.cs` conflict is not divergent work.** Both branches carry the *same* fix — a
+`WriteCondition` (`Specified`/`ShouldSerialize`) must replace the `[DefaultValue]` guard rather than
+compose with it — because it was made on `v4` and independently on `main`. **Ours is a superset**: we
+also gate on `!member.IsRequired`. Resolution is take-ours, then check `#1282`'s new
+`ConditionalDefault` fixture still says what it means to.
+
+**The one shared file that matters auto-merges**: `ProtoModelGenerator.Parse.cs` gains **+17/−0**, a
+call to `GrpcProxyGenerator.CollectPayloadsForModel` that seeds the model from `[ProtoGrpc]`
+declarations. That is the entire functional coupling between the two arcs.
+
+**Golden churn is 1 file, not 57.** Only `ConditionalDefault.{input,output,reference}.cs` touch
+`Aot/Data`, and its `.output.cs` was generated on `main`'s emitter, so it will be stale against ours
+(depth guard, folded length temps, drift asserts). Its ~57 `Grpc/Data` goldens contain no
+`RawWrite_`/`RawRead_`/`Measure_` at all — checked — so our emitter changes cannot touch them.
+
+**No diagnostic-id collision, and this is worth noting as evidence rather than luck**: #1282 takes a
+fresh `PBN4000`–`PBN4018` block and *references* `PBN3000`–`PBN3013`, i.e. it was written against a
+`main` that already had #1283's renumber. The owner table in `AGENTS.md` did its job first time out.
+
+**Estimate**: well under an agent-session — five list-append resolutions, one take-ours, two
+regenerations and one golden. The gate battery dominates the wall-clock, not the merging.
+
+**Two things to watch, neither large:**
+
+- the path is `#1282 → main → v4 → schema-breadth`, two hops, and the `Emit.cs` duplicate-fix
+  conflict surfaces on the **v4** hop rather than ours;
+- `CustomProtogenSerializer.cs` is committed generator output, so it churns on *every* hop; regenerate
+  at each, and expect the final shape to be ours.
+
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration

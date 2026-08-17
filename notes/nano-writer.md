@@ -1290,8 +1290,11 @@ Presence and framing are decided by different switches in the two directions; ge
 produces a build break rather than a wire bug, which is why it sat undiscovered. Recorded in
 `AGENTS.md` beside the hand-written-serializer section.
 
-**Exactly one thing gates the merge back to `v4`: the manual golden review** (`notes/gaps.md`
-section D). 63 changed vs `v4` plus 3 new fixtures — and the bodies moved twice more *after* that
+**Two things gate the merge back to `v4`.** First, **PR #1282** (build-time gRPC proxies,
+`grpc-aot-generator` → `main`, +11,500/−85 over 105 files) **lands first**, so #1277 absorbs it —
+measured as a small overlap, and the detail is **B34**: zero library changes, one shared file that
+auto-merges, one `Emit.cs` conflict that is the same fix twice with ours a superset, and golden churn
+of exactly one fixture. Second, **the manual golden review** (`notes/gaps.md` section D). 63 changed vs `v4` plus 3 new fixtures — and the bodies moved twice more *after* that
 review began (B16's local folding, B16a's drift calls), so anything read before those commits is
 stale; both diffs are uniform and skim quickly.
 
