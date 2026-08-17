@@ -1321,6 +1321,38 @@ PORTING.md"*. There is no such file anywhere in the repo (`git ls-files` finds n
 Either write it or drop the reference. It is the pointer someone follows when they wonder why the
 instance API is slow, so a dangling one costs more than no pointer at all.
 
+### B31. An EXTERNAL serializer takes its member off measure-first — widened by `[ProtoSerializer]`
+
+`RawMemberMeasureBlocked` excludes any member whose sub-serializer is external:
+
+```csharp
+if (member.SubSerializer is not null || member.SubSerializerIsScalar
+    || member.SubSerializerDynamic) return false;   // ...i.e. not raw-writable
+```
+
+and the exclusion runs to a fixed point, so the *containing* contract and everything referencing
+it fall onto the classic write-to-count path with it. The comment at the site states the reason
+and it is a good one: **a hand-written or deferred-category serializer frames itself and cannot be
+second-guessed**, so there is nothing for `Measure_` to do arithmetically.
+
+That has always been true of `[ProtoContract(Serializer = …)]`. What `[ProtoSerializer]` (#1275)
+changes is the *reach*: a serializer can now be bound to a type **you do not own** — a BCL type, or
+anything whose assembly cannot reference protobuf-net — so a single declaration can attach to a
+widely-used value type and demote every contract that contains one. Narrower than B26's blast
+radius (only explicitly-bound types, not every member of a scalar kind across an assembly), but the
+same shape, and equally **silent**: no diagnostic says a contract left the fast path.
+
+**Not a defect in the feature, and probably not fixable in general** — the whole point of a
+hand-written serializer is that we do not know what it emits. Two things could narrow it, neither
+attempted:
+
+- an **`IMeasuringSerializer<T>` external serializer could be asked**, exactly as the classic engine
+  already asks one (`ProtoWriter.cs`'s `OptionTrySkipWritingWhenMeasuring` interception). A
+  hand-written serializer that implements the measuring interface is telling us it can size itself
+  arithmetically; the raw path currently ignores that and blocks anyway;
+- the **info diagnostic** proposed in B26 would cover this case too, since it is the same question
+  from the consumer's side: *why did my model leave the optimised path?*
+
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
