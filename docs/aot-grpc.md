@@ -224,6 +224,17 @@ snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it 
   `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve `[Authorize]`-style
   endpoint metadata. It survives the native publish, but it is a `GetMethod` over an interface and
   wants a non-reflective route — see the parity note below before building that.
+- **Neither of the two rules `ProtoModelGenerator` is held to is enforced here.** There is no
+  incremental-caching test, though `PlanTrackingName` exists to make one possible; and
+  `ProtoModelPlanShapeTests` scopes itself to `ProtoModelPlan`'s namespace, so nothing checks that
+  `Internal/Grpc` holds no Roslyn references. Both failures are silent — a cache that never hits, and
+  a compilation graph pinned alive for as long as the driver holds the plan.
+- **4 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The
+  two `RuntimeTypeModel` roots" below for why it was all-or-nothing. All four are per-assembly
+  rollups; nothing is attributed to generated code. If more ever appear, use
+  `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
+  `aot-findings.md`.
+- **No interceptors yet.** See below.
 
 ### Metadata parity, and protobuf-net.Grpc#369
 
@@ -252,12 +263,6 @@ Two consequences, in order of how easily they are missed:
 That comparison is cheap and mechanical, and it is the only thing standing between "we match the
 runtime" and "we quietly diverge on authorization metadata", which is the failure mode worth fearing:
 `[Authorize]` going missing produces no error, just a more permissive endpoint.
-- **4 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The
-  two `RuntimeTypeModel` roots" below for why it was all-or-nothing. All four are per-assembly
-  rollups; nothing is attributed to generated code. If more ever appear, use
-  `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
-  `aot-findings.md`.
-- **No interceptors yet.** See below.
 
 ## Interceptors (proven mechanism, not yet used)
 
