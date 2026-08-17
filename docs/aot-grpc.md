@@ -5,15 +5,17 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 
 > **Handover** (2026-08-17). Branch `grpc-aot-generator`, draft PR
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
-> `dotnet test src/BuildToolsUnitTests` (**345** pass), a JIT run of `src/AotGrpcSmoke`, and a
-> `win-x64` native publish of the same (all five checks pass). `protobuf-net.BuildTools.Legacy` builds
-> green.
+> `dotnet test src/BuildToolsUnitTests` (**357** pass), a JIT run of `src/AotGrpcSmoke`, and a
+> `win-x64` native publish of the same (all **eight** checks pass). `protobuf-net.BuildTools.Legacy`
+> builds green.
 >
-> **Since the first handover:** every diagnostic is fixtured (`Grpc/Data/Diagnostics/`, twelve of them,
-> plus one recording a hole that is now `PBN4009`); `PBN4000`, `PBN4002` and `PBN4003` are fixed;
-> closed generic contracts are supported; the service-naming port is verified against the real runtime
-> and three silent wire-name bugs are gone; and the two structural generator rules (incremental
-> caching, no Roslyn references in the model) now have tests, both verified able to fail.
+> **Since the first handover:** every diagnostic `PBN4000`-`PBN4012` is fixtured; `PBN4000`, `PBN4002`
+> and `PBN4003` are fixed and `PBN4009` fills a hole where a contract was dropped silently; closed
+> generic contracts are supported; the service-naming port is verified against the real runtime and
+> three silent wire-name bugs are gone; **seeding is done in both directions**, so `AotGrpcSmoke`
+> carries no `[ProtoSerializable]` at all; `Empty`/void, `[SubService]`, disposable bases, overloaded
+> operations and the marshaller's array arm are all covered; and the two structural generator rules
+> (incremental caching, no Roslyn references in the model) have tests, both verified able to fail.
 >
 > **Landed elsewhere, and this branch depends on it:**
 >
@@ -31,9 +33,9 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > `[Experimental]`, i.e. an *error* by default, so a stub also keeps fixtures free of suppressions.
 >
 > **`src/AotGrpcSmoke` is verified against the genuine 1.3.6 from nuget.org** — build, JIT run and a
-> `win-x64` native run, all five checks green, **4 IL warnings and 14,480,384 bytes** (against 100
-> and 15,019,520 on 1.3.0). **All four are per-assembly `IL2104`/`IL3053` rollups; nothing is
-> attributed to generated code.**
+> `win-x64` native run, all eight checks green, **4 IL warnings and 14,492,672 bytes** (against 100
+> and 15,019,520 on 1.3.0; the bytes have grown only with the fixture). **All four are per-assembly
+> `IL2104`/`IL3053` rollups; nothing is attributed to generated code.**
 >
 > **Next steps, in order:**
 >
