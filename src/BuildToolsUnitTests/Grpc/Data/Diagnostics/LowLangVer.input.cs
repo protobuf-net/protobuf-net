@@ -1,13 +1,21 @@
-#nullable enable
 // PBN4000: pinned below the generator's C# 9 floor by the sidecar LowLangVer.langver.
 //
-// Everything here is deliberately C# 8-compatible - a block namespace rather than a file-scoped one,
-// and no target-typed `new` - since the fixture is parsed at the pinned version like any real
-// consumer's source would be.
+// Pinned at 8.0 - below the C# 9 floor, which is what matters here. 7.3 would be the more pointed
+// choice, being the *default* for net4x and netstandard2.0 and so the version these consumers
+// actually have; it cannot be pinned in this harness, because Roslyn rejects a compilation whose
+// trees disagree on language version and _ContractSurface.cs is nullable-annotated. The source below
+// is nonetheless written 7.3-clean, since the emitted code uses nothing above C# 6.
 //
-// Worth reading the .txt golden beside this rather than assuming: declining to emit for a type that
-// derives ClientFactory leaves its two abstract members unimplemented, so the consumer does not get
-// a soft fall back to the runtime proxy - they get CS0534 and a build that fails.
+// The generated file is parsed at the same pinned version, so this fixture does prove the down-level
+// shape compiles below the floor rather than merely looking like it should.
+//
+// What it emits is the reduced shape: the two ClientFactory members, with the client half delegating
+// to ClientFactory.Default, which is the reflective runtime factory - so the warning's promise that
+// "the runtime proxy will be used" is literally true. Emitting nothing (what this used to do) left
+// ClientFactory's two abstract members unimplemented and the consumer with CS0534 twice, which is a
+// failed build rather than a fallback. No registration method is emitted, deliberately: there is no
+// server-side equivalent of ClientFactory.Default to delegate to, and an AddLowLangVerServices() that
+// bound nothing would give a server that starts and serves nothing.
 using ProtoBuf;
 using ProtoBuf.Grpc;
 using ProtoBuf.Grpc.Configuration;
@@ -20,14 +28,14 @@ namespace GrpcFixtures.LowLangVer
     public class Request
     {
         [ProtoMember(1)]
-        public string? Name { get; set; }
+        public string Name { get; set; }
     }
 
     [ProtoContract]
     public class Reply
     {
         [ProtoMember(1)]
-        public string? Message { get; set; }
+        public string Message { get; set; }
     }
 
     [Service]

@@ -111,13 +111,8 @@ namespace ProtoBuf.BuildTools.Generators
                 var (candidate, caps) = pair;
                 if (candidate is null || caps.Disabled || candidate.Plan is not { } plan) return;
 
-                if (caps.LanguageVersion < MinimumLanguageVersion)
-                {
-                    ctx.ReportDiagnostic(new DiagnosticInfo(
-                        LanguageVersionTooLow, null, plan.TypeName, MinimumLanguageVersionDisplay).ToDiagnostic());
-                    return;
-                }
-
+                // the language floor is decided during parse, where the model symbol is in hand and the
+                // diagnostic can be anchored on it; a down-level plan still emits, in a reduced shape
                 ctx.AddSource(HintName(plan), Emit(plan, caps.HasAspNetCore, caps.AnnotateTrimming));
             });
         }

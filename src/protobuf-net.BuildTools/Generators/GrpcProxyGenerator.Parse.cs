@@ -72,6 +72,21 @@ namespace ProtoBuf.BuildTools.Generators
                 diagnostics.Add(new DiagnosticInfo(NoModelNamed, Where(type), type.Name));
             }
 
+            // Below the language floor nothing we would normally emit will parse, so the contracts are
+            // not even inspected - their diagnostics would be noise stacked on the one that matters.
+            // The check lives here rather than in the emit step so that it can be *anchored*: reported
+            // from there it had no location at all, since the plan carries none.
+            var languageVersion = ctx.TargetNode.SyntaxTree.Options is Microsoft.CodeAnalysis.CSharp.CSharpParseOptions options
+                ? options.LanguageVersion
+                : Microsoft.CodeAnalysis.CSharp.LanguageVersion.Default;
+            if (languageVersion < MinimumLanguageVersion)
+            {
+                diagnostics.Add(new DiagnosticInfo(
+                    LanguageVersionTooLow, Where(type), type.Name, MinimumLanguageVersionDisplay));
+                return new GrpcModelCandidate(
+                    DownLevelPlan(type, modelTypeFullName, registrationMethodName), diagnostics.ToImmutable());
+            }
+
             var contracts = ImmutableArray.CreateBuilder<GrpcInterfaceModel>();
             var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
             foreach (var attribute in type.GetAttributes())
@@ -113,10 +128,33 @@ namespace ProtoBuf.BuildTools.Generators
                 emitInstance: !HasMember(type, "Instance"),
                 emitConstructor: !HasExplicitConstructor(type),
                 registrationMethodName: registrationMethodName ?? "Add" + type.Name,
-                contracts: contracts.ToImmutable());
+                contracts: contracts.ToImmutable(),
+                downLevel: false);
 
             return new GrpcModelCandidate(plan, diagnostics.ToImmutable());
         }
+
+        /// <summary>
+        /// What is emitted for a <c>[ProtoGrpc]</c> type below the language floor.
+        /// </summary>
+        /// <remarks>
+        /// Emitting nothing was the obvious answer and the wrong one: <c>ClientFactory</c> has two
+        /// abstract members, so a consumer who was merely too old for us got CS0534 twice and a build
+        /// that failed - where <c>PBN4000</c> promised them the runtime proxy. The down-level shape
+        /// keeps that promise instead, and is the same trade <c>src/DownLevelSmoke</c> pins for the
+        /// serializer generator: a smaller model, not a broken build.
+        /// </remarks>
+        private static GrpcModelPlan DownLevelPlan(INamedTypeSymbol type, string? modelTypeFullName, string? registrationMethodName)
+            => new GrpcModelPlan(
+                namespaceName: type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString(),
+                typeName: type.Name,
+                modelTypeFullName: modelTypeFullName,
+                isSealed: type.IsSealed,
+                emitInstance: !HasMember(type, "Instance"),
+                emitConstructor: !HasExplicitConstructor(type),
+                registrationMethodName: registrationMethodName ?? "Add" + type.Name,
+                contracts: ImmutableArray<GrpcInterfaceModel>.Empty,
+                downLevel: true);
 
         private static bool IsPartial(INamedTypeSymbol type)
         {

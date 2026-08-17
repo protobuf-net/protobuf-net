@@ -211,12 +211,30 @@ protobuf-net.Core's sources, so referencing protobuf-net.Grpc would make every t
 ambiguous. `ServiceContractAnalyzerTests` takes the same approach for the same reason. **Drift in the
 snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it has already caught one.
 
+## The service name is bug-compatible on purpose
+
+`GetDefaultServiceName` is a port of `ServiceBinder.GetDefaultName`, and it has to agree character for
+character: the name is the wire contract, so a generated client that computes it differently from a
+reflection-bound server does not find the service, and the failure surfaces as an
+unimplemented-method error at call time with nothing pointing at the generator.
+
+Every rule below was checked by calling `ServiceBinder.Default.IsServiceContract` against the real
+1.3.6 package, not by reading the source — and three of them were wrong here until then:
+
+| contract | binds as | notes |
+| --- | --- | --- |
+| `IGreeter` | `Ns.Greeter` | the ordinary case |
+| interface named `Item` | `Ns.tem` | the "I" is stripped by a bare `StartsWith("I")` |
+| `IBox<Request>` | `Ns.Box_Request` | arity suffix cut, arguments appended with `_` |
+| `IBox<Renamed>` | `Ns.Box_the_payload` | argument names come from `GetDataContractName`, so `[ProtoContract(Name)]` wins |
+| `[Service("tmpl.{0}.svc")]` on a generic | `tmpl.the_payload.svc` | an explicit name on a generic contract is a **format string** |
+| a contract in the global namespace | `.GlobalNs` | `Type.Namespace` is null and is concatenated regardless |
+
+The first and last look like slips in the runtime and are reproduced deliberately — "more correct"
+here would only mean "does not interop". `ServiceNaming.input.cs` pins all four of the awkward ones.
+
 ## Known gaps
 
-- **Only one fixture.** `Basic.input.cs` covers all five method shapes plus client and server. The
-  diagnostic fixtures (nested, generic, non-`[SubService]` base, not partial, not deriving
-  `ClientFactory`, no model named) are **not written**, so `PBN4001`–`PBN4011` are unproven code
-  paths — the messages have never been seen, let alone reviewed for wording.
 - **Seeding is manual.** `AotGrpcSmoke` lists `[ProtoSerializable(typeof(HelloRequest))]` by hand.
   Teaching `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its payload types is
   the obvious next step; `GrpcOperationModel` already carries them as strings.
@@ -229,6 +247,21 @@ snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it 
   `ProtoModelPlanShapeTests` scopes itself to `ProtoModelPlan`'s namespace, so nothing checks that
   `Internal/Grpc` holds no Roslyn references. Both failures are silent — a cache that never hits, and
   a compilation graph pinned alive for as long as the driver holds the plan.
+
+  The code is currently right on both counts, checked by hand: equality is elementwise throughout
+  (`ImmutableArray<T>` is compared with explicit loops, never `==`), and `DiagnosticInfo` detaches its
+  location at construction via `Location.Create(path, span, lineSpan)`, so no `SyntaxTree` is rooted.
+  Note that last point when writing the shape test: `Internal/Grpc` deliberately *does* hold a
+  `Location`, where `Internal/Aot` uses a `PlanLocation` of plain spans. A test copied across
+  unchanged will fail on it.
+- **A contract with no recognised operations is dropped silently.** It is treated as a presumed marker
+  interface and no diagnostic is reported at all, so nothing at build time says the contract is
+  missing; `CreateClient<T>` then throws at run time telling the consumer to add the
+  `[ProtoService]` they already added. `MarkerInterface.input.cs` records the state (its `.txt` golden
+  is absent because there is nothing to report). Compare `PBN3004`, which exists purely so that a
+  cascade in the serializer generator cannot be silent.
+- **`PBN4002` is per-method but takes the whole contract**, which the message says; what it cannot yet
+  say is anything about *fixing* the method beyond naming why the shape was refused.
 - **4 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The
   two `RuntimeTypeModel` roots" below for why it was all-or-nothing. All four are per-assembly
   rollups; nothing is attributed to generated code. If more ever appear, use

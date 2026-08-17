@@ -163,20 +163,21 @@ namespace ProtoBuf.Grpc.Configuration
     using global::Grpc.Core;
     using global::ProtoBuf.Meta;
 
-    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
+    // Name is get-only on both of these, and the constructor is the only way to set it - so a
+    // fixture writing [Service(Name = "x")] is CS0617 in a real consumer's build. The snapshot had
+    // them settable, which made that spelling compile here and nowhere else.
+    [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false, Inherited = false)]
     public sealed class ServiceAttribute : Attribute
     {
-        public ServiceAttribute() { }
-        public ServiceAttribute(string name) => Name = name;
-        public string? Name { get; set; }
+        public ServiceAttribute(string? name = null) => Name = name;
+        public string? Name { get; }
     }
 
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public sealed class OperationAttribute : Attribute
     {
-        public OperationAttribute() { }
-        public OperationAttribute(string name) => Name = name;
-        public string? Name { get; set; }
+        public OperationAttribute(string? name = null) => Name = name;
+        public string? Name { get; }
     }
 
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]

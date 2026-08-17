@@ -48,17 +48,18 @@ namespace ProtoBuf.BuildTools.Generators
         internal static readonly DiagnosticDescriptor UnsupportedMethodShape = new(
             id: "PBN4002",
             title: "Service method shape is not supported by the generator",
-            messageFormat: "Method '{0}.{1}' has a signature that is not emitted at build time, so the "
-                + "whole contract is left to the runtime proxy, which is not trim/AOT-friendly",
+            messageFormat: "Method '{0}.{1}' is not emitted at build time because {2}; the whole contract "
+                + "is left to the runtime proxy, which is not trim/AOT-friendly",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
         internal static readonly DiagnosticDescriptor GenericInterfaceNotSupported = new(
             id: "PBN4003",
-            title: "Generic service interfaces are not supported",
-            messageFormat: "Interface '{0}' is generic; build-time proxies are not generated for "
-                + "generic service contracts, because the generated proxy has nowhere to put the type parameter",
+            title: "Open generic service interfaces are not supported",
+            messageFormat: "Interface '{0}' is an open generic type; the generated proxy is a non-generic "
+                + "type, so it has nowhere to put the type parameter. Name a closed construction - "
+                + "[ProtoService(typeof(IFoo<Bar>))] - which is emitted like any other contract",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);

@@ -32,7 +32,8 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             bool emitInstance,
             bool emitConstructor,
             string registrationMethodName,
-            ImmutableArray<GrpcInterfaceModel> contracts)
+            ImmutableArray<GrpcInterfaceModel> contracts,
+            bool downLevel)
         {
             NamespaceName = namespaceName;
             TypeName = typeName;
@@ -42,6 +43,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             EmitConstructor = emitConstructor;
             RegistrationMethodName = registrationMethodName;
             Contracts = contracts;
+            DownLevel = downLevel;
         }
 
         /// <summary>The namespace the consumer declared their partial in, or null for the global one.</summary>
@@ -73,6 +75,13 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
 
         public ImmutableArray<GrpcInterfaceModel> Contracts { get; }
 
+        /// <summary>
+        /// Whether the consumer's language version is below the floor, so only the down-level shape
+        /// can be emitted: the two <c>ClientFactory</c> members, with the client half delegating to
+        /// the reflective runtime factory. See <c>DownLevelPlan</c> for why this is not "emit nothing".
+        /// </summary>
+        public bool DownLevel { get; }
+
         public bool Equals(GrpcModelPlan? other)
         {
             if (other is null) return false;
@@ -83,6 +92,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
                 || EmitInstance != other.EmitInstance
                 || EmitConstructor != other.EmitConstructor
                 || !string.Equals(RegistrationMethodName, other.RegistrationMethodName, StringComparison.Ordinal)
+                || DownLevel != other.DownLevel
                 || Contracts.Length != other.Contracts.Length)
             {
                 return false;

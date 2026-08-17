@@ -1,10 +1,14 @@
 #nullable enable
-// PBN4003: a generic service contract.
+// PBN4003: an *open* generic service contract, named as `typeof(IBox<>)`.
 //
-// Both spellings land here - a closed construction as below, and the unbound `typeof(IBox<>)`, which
-// arrives as a generic symbol just the same. The closed one is the interesting case, because it is
-// the one a consumer might reasonably expect to work: `IBox<Request>` names a single concrete
-// contract, and the runtime binds it happily.
+// Only the open form is refused. A closed construction is an ordinary contract and is emitted like
+// any other - see ClosedGeneric.input.cs - so the line is open-versus-closed, the same one the
+// serializer generator draws for [ProtoSerializable].
+//
+// The unbound symbol needs its own test, and this fixture is what pins it: `typeof(IBox<>)` arrives
+// with type *arguments* that are not type parameters, so a recursive contains-a-type-parameter check
+// alone returns false and the contract would fall through to be refused for some unrelated-sounding
+// reason. Exactly the trap ProtoModelGenerator hit with IsUnboundGenericType.
 using ProtoBuf;
 using ProtoBuf.Grpc;
 using ProtoBuf.Grpc.Configuration;
@@ -39,7 +43,7 @@ public partial class GenericInterfaceModel : TypeModel
 }
 
 [ProtoGrpc(Model = typeof(GenericInterfaceModel))]
-[ProtoService(typeof(IBox<Request>))]
+[ProtoService(typeof(IBox<>))]
 public sealed partial class GenericInterfaceServices : ClientFactory
 {
 }

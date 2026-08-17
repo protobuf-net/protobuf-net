@@ -54,7 +54,7 @@ PBN3013  | ProtoBuf | Info     | Compile-time serializers are available
 PBN4000  | ProtoBuf.Grpc | Warning | Language version too low for build-time gRPC proxies
 PBN4001  | ProtoBuf.Grpc | Warning | Service interface cannot be nested
 PBN4002  | ProtoBuf.Grpc | Warning | Service method shape is not supported by the generator
-PBN4003  | ProtoBuf.Grpc | Warning | Generic service interfaces are not supported
+PBN4003  | ProtoBuf.Grpc | Warning | Open generic service interfaces are not supported
 PBN4004  | ProtoBuf.Grpc | Warning | Service interface inherits an interface that is not a sub-service
 PBN4005  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be partial
 PBN4006  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must derive from ClientFactory

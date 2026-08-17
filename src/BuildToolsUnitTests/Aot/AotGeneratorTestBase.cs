@@ -144,6 +144,12 @@ namespace BuildToolsUnitTests.Aot
             var trees = new List<SyntaxTree> { CSharpSyntaxTree.ParseText(source, parseOptions, path: fileName!) };
             if (extraSources is not null)
             {
+                // Parsed at the fixture's language version, and it has to be: Roslyn rejects a
+                // compilation whose trees disagree ("Inconsistent language versions"). So a fixture
+                // pinning a low version pins it for the reference snapshot too, which is why the
+                // snapshot's own floor - C# 8, for its nullable annotations - is also the floor for
+                // anything pinning a version. Compiling the snapshot to a MetadataReference instead
+                // would lift that, and would be a truer stand-in for a referenced package.
                 foreach (var (path, text) in extraSources)
                 {
                     trees.Add(CSharpSyntaxTree.ParseText(text, parseOptions, path: path));

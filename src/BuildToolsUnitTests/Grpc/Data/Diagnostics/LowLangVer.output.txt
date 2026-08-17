@@ -1,8 +1,3 @@
 Generator produced 1 diagnostics:
-Warning PBN4000  L1 C1
+Warning PBN4000 Grpc/Data/Diagnostics/LowLangVer.input.cs L54 C33
 'LowLangVerServices' was not given build-time gRPC proxies because the language version is below C# 9.0; the runtime proxy will be used, which is not trim/AOT-friendly
-Output code has 2 diagnostics from 'Grpc/Data/Diagnostics/LowLangVer.input.cs':
-Error CS0534 Grpc/Data/Diagnostics/LowLangVer.input.cs L46 C33
-'LowLangVerServices' does not implement inherited abstract member 'ClientFactory.BinderConfiguration.get'
-Error CS0534 Grpc/Data/Diagnostics/LowLangVer.input.cs L46 C33
-'LowLangVerServices' does not implement inherited abstract member 'ClientFactory.CreateClient<TService>(CallInvoker)'

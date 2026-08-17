@@ -53,7 +53,12 @@ namespace ProtoBuf.BuildTools.Generators
                     InterfaceMustNotBeNested, Where(iface), iface.Name, iface.ContainingType.ToDisplayString()));
             }
 
-            if (iface.IsGenericType)
+            // Open versus closed, not generic versus not - the same line the serializer generator draws.
+            // A closed construction is an ordinary contract: Roslyn hands us its members already
+            // substituted, so IBox<Request> and IBox<Reply> are simply two contracts that share a
+            // definition. An open one has nowhere to put the type parameter, since the proxy and the
+            // provider are non-generic types.
+            if (IsOpenGeneric(iface))
             {
                 return new GrpcContractCandidate(null, One(GenericInterfaceNotSupported, Where(iface), iface.Name));
             }
@@ -107,7 +112,7 @@ namespace ProtoBuf.BuildTools.Generators
                     if (method.MethodKind != Microsoft.CodeAnalysis.MethodKind.Ordinary) continue;
                     if (method.IsStatic) continue;
 
-                    if (TryParseOperation(method, contract, out var operation) && operation is not null)
+                    if (TryParseOperation(method, contract, out var operation, out var reason) && operation is not null)
                     {
                         operations.Add(operation);
                     }
@@ -115,7 +120,7 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         unsupported = true;
                         diagnostics.Add(new DiagnosticInfo(
-                            UnsupportedMethodShape, Where(method), contract.ToDisplayString(), method.Name));
+                            UnsupportedMethodShape, Where(method), contract.ToDisplayString(), method.Name, reason));
                     }
                 }
             }
@@ -183,15 +188,36 @@ namespace ProtoBuf.BuildTools.Generators
         /// Recognise one operation, mirroring the runtime <c>ContractOperation.TryIdentifySignature</c>
         /// rules for the subset of shapes we emit.
         /// </summary>
-        private static bool TryParseOperation(IMethodSymbol method, INamedTypeSymbol declaringInterface, out GrpcOperationModel? model)
+        /// <param name="reason">
+        /// On failure, a sentence fragment naming what was wrong, for <c>PBN4002</c>. Every exit
+        /// carries one: "this signature is not supported" tells a consumer nothing they can act on,
+        /// and there are six quite different ways to reach it.
+        /// </param>
+        private static bool TryParseOperation(IMethodSymbol method, INamedTypeSymbol declaringInterface,
+            out GrpcOperationModel? model, out string reason)
         {
             model = null;
-            if (method.IsGenericMethod) return false;
+            reason = "";
+            if (method.IsGenericMethod)
+            {
+                reason = "it is generic, so there is no one request or response type to build a Method<,> from";
+                return false;
+            }
             if (method.MethodKind != Microsoft.CodeAnalysis.MethodKind.Ordinary) return false;
-            if (method.Parameters.Length > 3) return false;
+            if (method.Parameters.Length > 3)
+            {
+                reason = $"it takes {method.Parameters.Length} parameters; the supported patterns are "
+                    + "(), (context), (request) and (request, context)";
+                return false;
+            }
 
             var returnInfo = CategorizeReturn(method.ReturnType);
-            if (returnInfo is null) return false;
+            if (returnInfo is null)
+            {
+                reason = $"its return type '{Display(method.ReturnType)}' is a shape only the runtime proxy "
+                    + "handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
+                return false;
+            }
             var (responseShape, impliedKind, responseType, voidResponse) = returnInfo.Value;
 
             GrpcArgShape requestShape;
@@ -215,7 +241,11 @@ namespace ProtoBuf.BuildTools.Generators
                 var firstKind = CategorizeArg(first.Type);
                 if (firstKind == ArgKind.Context)
                 {
-                    if (second is not null) return false; // nothing may follow the context
+                    if (second is not null)
+                    {
+                        reason = $"'{second.Name}' follows the context parameter '{first.Name}', and nothing may";
+                        return false;
+                    }
                     requestShape = GrpcArgShape.Void;
                     requestType = EmptyTypeName;
                     voidRequest = true;
@@ -226,7 +256,12 @@ namespace ProtoBuf.BuildTools.Generators
                 else if (firstKind == ArgKind.Data || firstKind == ArgKind.AsyncEnumerable)
                 {
                     var element = firstKind == ArgKind.AsyncEnumerable ? GetElementType(first.Type) : null;
-                    if (firstKind == ArgKind.AsyncEnumerable && (element is null || IsRuntimeOnlyPayload(element))) return false;
+                    if (firstKind == ArgKind.AsyncEnumerable && (element is null || IsRuntimeOnlyPayload(element)))
+                    {
+                        reason = $"the element type of request stream '{first.Name}' is a shape only the runtime "
+                            + "proxy handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
+                        return false;
+                    }
 
                     requestShape = firstKind == ArgKind.AsyncEnumerable ? GrpcArgShape.AsyncEnumerable : GrpcArgShape.Data;
                     requestType = Display(element ?? first.Type);
@@ -237,13 +272,26 @@ namespace ProtoBuf.BuildTools.Generators
                     }
                     else
                     {
-                        if (CategorizeArg(second.Type) != ArgKind.Context) return false;
-                        if (method.Parameters.Length > 2) return false;
+                        if (CategorizeArg(second.Type) != ArgKind.Context)
+                        {
+                            reason = $"'{second.Name}' follows the request but is not a CallContext or CancellationToken";
+                            return false;
+                        }
+                        if (method.Parameters.Length > 2)
+                        {
+                            reason = $"'{method.Parameters[2].Name}' follows the context parameter, and nothing may";
+                            return false;
+                        }
                         context = MapContext(second.Type);
                     }
                 }
                 else
                 {
+                    reason = $"parameter '{first.Name}' has type '{Display(first.Type)}', which is "
+                        + (IsType(first.Type, "Grpc.Core", "ServerCallContext") || IsType(first.Type, "Grpc.Core", "CallOptions")
+                            ? "a server-side type rather than something a client contract can carry"
+                            : "a shape only the runtime proxy handles - Stream, IObservable<T> and Grpc.Core's own "
+                                + "call types are reshaped at run time");
                     return false;
                 }
             }
@@ -256,8 +304,18 @@ namespace ProtoBuf.BuildTools.Generators
                 _ => impliedKind,
             };
 
-            if (kind == GrpcMethodKind.DuplexStreaming && responseShape != GrpcResultShape.AsyncEnumerable) return false;
-            if (kind == GrpcMethodKind.ClientStreaming && responseShape == GrpcResultShape.AsyncEnumerable) return false;
+            if (kind == GrpcMethodKind.DuplexStreaming && responseShape != GrpcResultShape.AsyncEnumerable)
+            {
+                reason = "a streaming request has to be answered by a streaming response or a single value, "
+                    + $"and '{Display(method.ReturnType)}' is neither";
+                return false;
+            }
+            if (kind == GrpcMethodKind.ClientStreaming && responseShape == GrpcResultShape.AsyncEnumerable)
+            {
+                reason = "a streaming request answered by a stream is a duplex call, which this return "
+                    + "type does not express";
+                return false;
+            }
 
             var parameters = ImmutableArray.CreateBuilder<GrpcParameterModel>(method.Parameters.Length);
             foreach (var parameter in method.Parameters)
@@ -283,9 +341,45 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
+        /// An open generic type, or one closed over a type parameter - either way, not something a
+        /// non-generic proxy type can be emitted for. <c>typeof(IBox&lt;&gt;)</c> arrives as an
+        /// <em>unbound</em> symbol whose type arguments are not type parameters, so it needs its own
+        /// test alongside the recursive one.
+        /// </summary>
+        private static bool IsOpenGeneric(INamedTypeSymbol type)
+        {
+            if (type.IsUnboundGenericType) return true;
+            foreach (var argument in type.TypeArguments)
+            {
+                if (ContainsTypeParameter(argument)) return true;
+            }
+            return false;
+        }
+
+        private static bool ContainsTypeParameter(ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.TypeParameter) return true;
+            if (type is IArrayTypeSymbol array) return ContainsTypeParameter(array.ElementType);
+            if (type is INamedTypeSymbol named)
+            {
+                foreach (var argument in named.TypeArguments)
+                {
+                    if (ContainsTypeParameter(argument)) return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// The logical service name: an explicit <c>Name</c> if given, else the default that the
         /// runtime <c>ServiceBinder.GetDefaultName</c> would produce.
         /// </summary>
+        /// <remarks>
+        /// This has to agree with the runtime exactly, character for character: it is the name on the
+        /// wire, so a generated client that computes it differently from a reflection-bound server
+        /// simply does not find the service - and the failure is an unimplemented-method error at
+        /// call time, not anything that points here.
+        /// </remarks>
         private static string GetServiceName(INamedTypeSymbol iface)
         {
             foreach (var attribute in iface.GetAttributes())
@@ -293,25 +387,104 @@ namespace ProtoBuf.BuildTools.Generators
                 var name = attribute.AttributeClass?.Name;
                 if (name != "ServiceAttribute" && name != "ServiceContractAttribute") continue;
 
+                string? explicitName = null;
                 foreach (var named in attribute.NamedArguments)
                 {
-                    if (named.Key == "Name" && named.Value.Value is string explicitName && !string.IsNullOrWhiteSpace(explicitName))
+                    if (named.Key == "Name" && named.Value.Value is string namedValue && !string.IsNullOrWhiteSpace(namedValue))
                     {
-                        return explicitName;
+                        explicitName = namedValue;
                     }
                 }
-                if (attribute.ConstructorArguments.Length >= 1
+                if (explicitName is null
+                    && attribute.ConstructorArguments.Length >= 1
                     && attribute.ConstructorArguments[0].Value is string ctorName
                     && !string.IsNullOrWhiteSpace(ctorName))
                 {
-                    return ctorName;
+                    explicitName = ctorName;
+                }
+                if (explicitName is null) continue;
+
+                // On a generic contract an explicit name is a *format string*, filled with the same
+                // parts the default name would have used: ServiceBinder does string.Format(name, parts).
+                if (!iface.IsGenericType) return explicitName;
+                try
+                {
+                    return string.Format(explicitName, GetGenericParts(iface));
+                }
+                catch (FormatException)
+                {
+                    // a malformed template throws at bind time in the runtime too; emitting the raw
+                    // string keeps the generator from being the thing that falls over
+                    return explicitName;
                 }
             }
 
+            return GetDefaultServiceName(iface);
+        }
+
+        /// <summary>
+        /// A port of <c>ServiceBinder.GetDefaultName(Type)</c>.
+        /// </summary>
+        /// <remarks>
+        /// Two of its behaviours look like slips and are deliberately reproduced, because the name is
+        /// the wire contract and diverging would rename the service silently:
+        /// <list type="bullet">
+        /// <item>the leading "I" is stripped by a bare <c>StartsWith("I")</c>, with no test that what
+        /// follows is upper-case - so an interface called <c>Item</c> binds as <c>tem</c>;</item>
+        /// <item>the namespace is concatenated unconditionally, and <c>Type.Namespace</c> is
+        /// <c>null</c> in the global namespace - so a contract there binds with a leading dot.</item>
+        /// </list>
+        /// </remarks>
+        private static string GetDefaultServiceName(INamedTypeSymbol iface)
+        {
             var trimmed = iface.Name;
-            if (trimmed.Length > 1 && trimmed[0] == 'I' && char.IsUpper(trimmed[1])) trimmed = trimmed.Substring(1);
-            var ns = Namespace(iface);
-            return ns.Length == 0 ? trimmed : ns + "." + trimmed;
+            if (trimmed.StartsWith("I", StringComparison.Ordinal)) trimmed = trimmed.Substring(1);
+
+            var serviceName = Namespace(iface) + "." + trimmed;
+            if (iface.IsGenericType)
+            {
+                serviceName = serviceName + "_" + string.Join("_", GetGenericParts(iface));
+            }
+            return serviceName;
+        }
+
+        /// <summary>
+        /// The per-argument names a generic contract's service name is built from, per
+        /// <c>ServiceBinder.GetGenericParts</c> - which asks <c>GetDataContractName</c>, so an
+        /// explicit contract name wins over the type's own.
+        /// </summary>
+        private static object[] GetGenericParts(INamedTypeSymbol iface)
+        {
+            var arguments = iface.TypeArguments;
+            var parts = new object[arguments.Length];
+            for (int i = 0; i < parts.Length; i++) parts[i] = GetDataContractName(arguments[i]);
+            return parts;
+        }
+
+        private static string GetDataContractName(ITypeSymbol type)
+        {
+            // ProtoContract first, then DataContract - the order the runtime asks in
+            return TryGetName("ProtoBuf.ProtoContractAttribute")
+                ?? TryGetName("System.Runtime.Serialization.DataContractAttribute")
+                // the *metadata* name, so an argument that is itself generic contributes its arity
+                // exactly as Type.Name would ("List`1")
+                ?? type.MetadataName;
+
+            string? TryGetName(string attributeName)
+            {
+                foreach (var attribute in type.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() != attributeName) continue;
+                    foreach (var named in attribute.NamedArguments)
+                    {
+                        if (named.Key == "Name" && named.Value.Value is string value && !string.IsNullOrWhiteSpace(value))
+                        {
+                            return value;
+                        }
+                    }
+                }
+                return null;
+            }
         }
 
         private static string Namespace(INamedTypeSymbol iface)
@@ -322,8 +495,10 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static string SanitizeTypeName(INamedTypeSymbol iface)
         {
-            var ns = Namespace(iface);
-            var raw = ns.Length == 0 ? iface.Name : ns + "." + iface.Name;
+            // Built from the *constructed* name, so that IBox<Request> and IBox<Reply> get distinct
+            // proxy and provider types rather than colliding on "IBox". For a non-generic contract
+            // this is character-for-character what the namespace-plus-name form produced.
+            var raw = iface.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Replace("global::", "");
             var sb = new StringBuilder(raw.Length);
             foreach (var c in raw)
             {
