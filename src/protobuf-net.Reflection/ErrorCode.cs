@@ -52,5 +52,13 @@
         MessageKindNullWrapperFieldOne = 44,
         InvalidUtf8 = 45,
         UnexpectedField = 46,
+        EditionsDefaultOnImplicit = 47,
+        EditionsPackedOption = 48,
+        FeatureInvalidTarget = 49,
+        FeatureNotIntroduced = 50,
+        OpenEnumFirstValueNotZero = 51,
+        NamingStyle = 52,
+        SymbolNotVisible = 53,
+        FieldPresenceNotAllowed = 54,
     }
 }

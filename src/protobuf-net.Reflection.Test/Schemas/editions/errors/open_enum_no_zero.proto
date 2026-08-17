@@ -1,0 +1,2 @@
+edition = "2023";
+enum E { E_ONE = 1; }

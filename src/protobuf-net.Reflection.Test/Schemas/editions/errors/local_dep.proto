@@ -1,0 +1,2 @@
+edition = "2024";
+local message Hidden { int32 x = 1; }

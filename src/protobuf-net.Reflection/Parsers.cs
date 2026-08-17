@@ -268,14 +268,21 @@ namespace Google.Protobuf.Reflection
             }
             foreach (var file in Files)
             {
+                // note this runs *before* type resolution and the options pass: resolving a
+                // cross-file type reference needs the target file's resolved visibility, and
+                // applying a custom option needs the extension field's resolved features (its
+                // packedness, in particular); feature resolution itself needs neither
+                file.ResolveFeatures();
+            }
+            foreach (var file in Files)
+            {
                 using var ctx = new ParserContext(file, null, Errors);
                 file.ResolveTypes(ctx, false);
             }
             foreach (var file in Files)
             {
-                // note this runs *before* the options pass: applying a custom option needs the
-                // extension field's resolved features (its packedness, in particular)
-                file.ResolveFeatures();
+                using var ctx = new ParserContext(file, null, Errors);
+                file.ValidateFeatures(ctx);
             }
             foreach (var file in Files)
             {
@@ -1242,12 +1249,14 @@ namespace Google.Protobuf.Reflection
         public void Parse(TextReader schema, List<Error> errors, string file)
             => ParseSchema(schema, errors, file);
 
+        internal Token FirstToken { get; private set; }
         internal void ParseSchema(TextReader schema, List<Error> errors, string file)
         {
             Syntax = "";
             using var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace(), errors), errors);
             var tokens = ctx.Tokens;
             tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
+            FirstToken = startOfFile;
 
             // read the file into the object
             ctx.Fill(this);
@@ -2341,13 +2350,16 @@ namespace Google.Protobuf.Reflection
 
         List<EnumValueDescriptorProto> IReserved<EnumReservedRange, EnumValueDescriptorProto>.Fields => Values;
 
+        internal Token SourceLocation { get; set; }
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out EnumDescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
-            ctx.CheckNames(parent, name, ctx.Tokens.Previous);
+            var token = ctx.Tokens.Previous;
+            ctx.CheckNames(parent, name, token);
             if (ctx.TryReadObject(out obj))
             {
                 obj.Name = name;
+                obj.SourceLocation = token;
                 return true;
             }
             return false;
@@ -2995,7 +3007,13 @@ namespace Google.Protobuf.Reflection
                 case "ctype": Ctype = ctx.Tokens.ConsumeEnum<CType>(); return true;
                 case "lazy": Lazy = ctx.Tokens.ConsumeBoolean(); return true;
                 case "unverified_lazy": UnverifiedLazy = ctx.Tokens.ConsumeBoolean(); return true;
-                case "packed": Packed = ctx.Tokens.ConsumeBoolean(); return true;
+                case "packed":
+                    if (ctx.IsEditions)
+                    {
+                        ctx.Errors.Error(ctx.Tokens.Previous, "the [packed] option is not allowed in editions; use features.repeated_field_encoding instead", ErrorCode.EditionsPackedOption);
+                    }
+                    Packed = ctx.Tokens.ConsumeBoolean();
+                    return true;
                 case "weak": Weak = ctx.Tokens.ConsumeBoolean(); return true;
                 case "debug_redact": DebugRedact = ctx.Tokens.ConsumeBoolean(); return true;
                 case "retention": Retention = ctx.Tokens.ConsumeEnum<OptionRetention>(); return true;
@@ -3369,7 +3387,7 @@ namespace ProtoBuf.Reflection
                 errors.Add(new Error(new Token(" ", lineNumber, columnNumber, TokenType.None, "", 0, file), s, isError, code));
             }
         }
-        internal string ToString(bool includeType) => Text.Length == 0
+        internal string ToString(bool includeType) => string.IsNullOrEmpty(Text)
                 ? $"{File}({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
                 : $"{File}({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
         /// <summary>
