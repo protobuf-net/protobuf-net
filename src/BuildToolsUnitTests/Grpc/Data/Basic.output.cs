@@ -139,7 +139,8 @@ namespace GrpcFixtures.Basic
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Basic.Greeter", "SayHello", __m_req, __m_resp);
                     var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("SayHelloAsync")!,
+                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("SayHelloAsync",
+                            new global::System.Type[] { typeof(global::GrpcFixtures.Basic.HelloRequest), typeof(global::ProtoBuf.Grpc.CallContext) })!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddUnaryMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(SayHelloAsync_Server_Unary));
                 }
@@ -153,7 +154,8 @@ namespace GrpcFixtures.Basic
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Basic.Greeter", "Ping", __m_req, __m_resp);
                     var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("PingAsync")!,
+                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("PingAsync",
+                            new global::System.Type[] { typeof(global::GrpcFixtures.Basic.HelloRequest), typeof(global::System.Threading.CancellationToken) })!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddUnaryMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(PingAsync_Server_Unary));
                 }
@@ -167,7 +169,8 @@ namespace GrpcFixtures.Basic
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.ServerStreaming, "GrpcFixtures.Basic.Greeter", "Subscribe", __m_req, __m_resp);
                     var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("Subscribe")!,
+                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("Subscribe",
+                            new global::System.Type[] { typeof(global::GrpcFixtures.Basic.HelloRequest), typeof(global::ProtoBuf.Grpc.CallContext) })!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddServerStreamingMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.ServerStreamingServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(Subscribe_Server_ServerStreaming));
                 }
@@ -181,7 +184,8 @@ namespace GrpcFixtures.Basic
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.ClientStreaming, "GrpcFixtures.Basic.Greeter", "Collect", __m_req, __m_resp);
                     var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("CollectAsync")!,
+                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("CollectAsync",
+                            new global::System.Type[] { typeof(global::System.Collections.Generic.IAsyncEnumerable<global::GrpcFixtures.Basic.HelloRequest>), typeof(global::ProtoBuf.Grpc.CallContext) })!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddClientStreamingMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.ClientStreamingServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(CollectAsync_Server_ClientStreaming));
                 }
@@ -195,7 +199,8 @@ namespace GrpcFixtures.Basic
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.DuplexStreaming, "GrpcFixtures.Basic.Greeter", "Chat", __m_req, __m_resp);
                     var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("Chat")!,
+                        typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("Chat",
+                            new global::System.Type[] { typeof(global::System.Collections.Generic.IAsyncEnumerable<global::GrpcFixtures.Basic.HelloRequest>), typeof(global::ProtoBuf.Grpc.CallContext) })!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddDuplexStreamingMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.DuplexStreamingServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(Chat_Server_DuplexStreaming));
                 }

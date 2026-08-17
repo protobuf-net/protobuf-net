@@ -29,6 +29,15 @@ namespace ProtoBuf.BuildTools.Generators
         private static string Display(ITypeSymbol type) => type.ToDisplayString(s_fullyQualified);
 
         /// <summary>
+        /// As <see cref="Display"/>, but omitting the nullable reference annotation, which is illegal
+        /// inside <c>typeof(...)</c> - see <c>GrpcParameterModel.TypeOfDisplay</c>.
+        /// </summary>
+        private static readonly SymbolDisplayFormat s_typeOf = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
+        private static string TypeOf(ITypeSymbol type) => type.ToDisplayString(s_typeOf);
+
+        /// <summary>
         /// Reduce a candidate service contract to an emittable model, or to the diagnostics explaining
         /// why it was left to the runtime path.
         /// </summary>
@@ -351,7 +360,7 @@ namespace ProtoBuf.BuildTools.Generators
             var parameters = ImmutableArray.CreateBuilder<GrpcParameterModel>(method.Parameters.Length);
             foreach (var parameter in method.Parameters)
             {
-                parameters.Add(new GrpcParameterModel(parameter.Name, Display(parameter.Type)));
+                parameters.Add(new GrpcParameterModel(parameter.Name, Display(parameter.Type), TypeOf(parameter.Type)));
             }
 
             model = new GrpcOperationModel(

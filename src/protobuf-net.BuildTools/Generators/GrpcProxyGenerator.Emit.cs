@@ -506,10 +506,20 @@ namespace ProtoBuf.BuildTools.Generators
                 //
                 // The GetMethod is the one reflective call left on this path; it is bounded to
                 // startup, and is over an interface the generated code already references statically.
-                // Reconstructing the attributes at compile time instead is a known next step - see
-                // docs/aot-grpc.md, including the parity check to run if protobuf-net.Grpc#369 lands.
+                //
+                // The parameter types are passed rather than relying on the by-name overload, and that
+                // is a correctness fix rather than a nicety: Type.GetMethod(string) throws
+                // AmbiguousMatchException as soon as a contract carries two operations of the same name.
+                // That is a legal contract - [Operation] gives them distinct names on the wire - and it
+                // used to compile perfectly and then fail at server startup.
+                //
+                // Reconstructing the attributes at compile time and dropping the call entirely is NOT
+                // simply pending: the list GetMetadata returns contains compiler-synthesized attributes
+                // (NullableContextAttribute) whose types are internal to the declaring assembly, so it
+                // cannot be reproduced exactly from generated code. See docs/aot-grpc.md.
                 Line(sb, indent + 3, "var __meta = __cfg.Binder.GetMetadata(");
-                Line(sb, indent + 4, $"typeof({operation.DeclaringInterfaceFullName}).GetMethod({operationLiteral})!,");
+                Line(sb, indent + 4, $"typeof({operation.DeclaringInterfaceFullName}).GetMethod({operationLiteral},");
+                Line(sb, indent + 5, $"new global::System.Type[] {{ {ParameterTypeOfs(operation)} }})!,");
                 Line(sb, indent + 4, $"typeof({contract.InterfaceFullName}), typeof({impl}));");
 
                 var addMethod = operation.Kind switch
@@ -701,6 +711,21 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static void Line(StringBuilder sb, int indent, string value)
             => sb.Append(' ', indent * 4).AppendLine(value);
+
+        /// <summary>
+        /// The operation's parameter types as a <c>typeof(...)</c> list, for the exact
+        /// <c>GetMethod</c> overload.
+        /// </summary>
+        private static string ParameterTypeOfs(GrpcOperationModel operation)
+        {
+            var sb = new StringBuilder();
+            foreach (var parameter in operation.Parameters)
+            {
+                if (sb.Length != 0) sb.Append(", ");
+                sb.Append("typeof(").Append(parameter.TypeOfDisplay).Append(')');
+            }
+            return sb.ToString();
+        }
 
         /// <summary>Every payload type on the contract, ordered so field names are stable.</summary>
         private static SortedSet<string> PayloadTypes(GrpcInterfaceModel contract)

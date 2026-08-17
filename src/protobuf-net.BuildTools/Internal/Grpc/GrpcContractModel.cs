@@ -63,20 +63,30 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
     /// </remarks>
     internal sealed class GrpcParameterModel : IEquatable<GrpcParameterModel>
     {
-        public GrpcParameterModel(string name, string typeDisplay)
+        public GrpcParameterModel(string name, string typeDisplay, string typeOfDisplay)
         {
             Name = name;
             TypeDisplay = typeDisplay;
+            TypeOfDisplay = typeOfDisplay;
         }
 
         public string Name { get; }
 
+        /// <summary>The declared type as it appears in a signature, nullable annotations included.</summary>
         public string TypeDisplay { get; }
+
+        /// <summary>
+        /// The same type as it must appear inside <c>typeof(...)</c>, which is <em>not</em> the same
+        /// string: <c>typeof(Foo?)</c> does not compile for a reference type (CS8639), while the
+        /// annotation is part of the type for <c>Nullable&lt;T&gt;</c> and has to stay.
+        /// </summary>
+        public string TypeOfDisplay { get; }
 
         public bool Equals(GrpcParameterModel? other)
             => other is not null
             && string.Equals(Name, other.Name, StringComparison.Ordinal)
-            && string.Equals(TypeDisplay, other.TypeDisplay, StringComparison.Ordinal);
+            && string.Equals(TypeDisplay, other.TypeDisplay, StringComparison.Ordinal)
+            && string.Equals(TypeOfDisplay, other.TypeOfDisplay, StringComparison.Ordinal);
 
         public override bool Equals(object? obj) => Equals(obj as GrpcParameterModel);
 

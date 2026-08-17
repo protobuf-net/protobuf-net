@@ -37,16 +37,14 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > **Next steps, in order:**
 >
-> 1. **Compile-time endpoint metadata** — the last reflective call
->    (`__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`). It *works* under AOT today, so this
->    is not a blocker, and it is deliberately last: read the `#369` parity note below first, because
->    building it means owning a union rule that is still moving. `SubService.input.cs` is the contract to
->    run the differential against.
-> 2. **Interceptors** — the zero-code-change story for `CreateGrpcService<T>`. The mechanism is proven
+> 1. **Interceptors** — the zero-code-change story for `CreateGrpcService<T>`. The mechanism is proven
 >    (see below); it is a separate feature rather than a gap in this one.
 >
 > Seeding, the diagnostics, and the `Empty`/`[SubService]` coverage are **done** — see the sections
-> below and the git history on this branch.
+> below and the git history on this branch. **Compile-time endpoint metadata was investigated and is
+> closed rather than pending**: the runtime list cannot be reproduced exactly (see "Compile-time
+> metadata" below), and the reflective call it would have replaced has been made correct for
+> overloads instead.
 
 ## What this is
 
@@ -336,9 +334,9 @@ Note the seeding side is invisible to *both* golden harnesses - the AOT goldens 
 `GrpcSeedingTests` and `GrpcReferencedModelTests`; the latter needs genuinely separate compilations,
 since the whole question is what can be discovered about a model through metadata.
 - **One reflective call left on the server path**:
-  `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve `[Authorize]`-style
-  endpoint metadata. It survives the native publish, but it is a `GetMethod` over an interface and
-  wants a non-reflective route — see the parity note below before building that.
+  `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name, parameterTypes)!, …)`, needed to preserve
+  `[Authorize]`-style endpoint metadata. It survives the native publish. **Replacing it with a
+  compile-time reconstruction is not merely unbuilt — it cannot be done exactly**; see below.
 - ~~Neither of the two rules `ProtoModelGenerator` is held to is enforced here.~~ Both are now:
   `GrpcModelPlanShapeTests` and `GrpcProxyGeneratorIncrementalTests`. Two things worth keeping from
   writing them:
@@ -369,6 +367,54 @@ since the whole question is what can be discovered about a model through metadat
   `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
   `aot-findings.md`.
 - **No interceptors yet.** See below.
+
+### Compile-time metadata: closed, not pending
+
+This was on the next-steps list twice, deferred each time on the grounds that
+[#369](https://github.com/protobuf-net/protobuf-net.Grpc/pull/369) was still moving. That was the wrong
+reason. Probing `ServiceBinder.Default.GetMetadata` against the real 1.3.6 package — rather than reading
+its source — shows the list **cannot be reproduced exactly by generated code at all**:
+
+```
+IThing.GetAsync / IThing / ThingService  (8)
+    ProtoBuf.Grpc.Configuration.ServiceAttribute
+    NotInheritedAttribute
+    MarkAttribute                                    == Mark(contract-iface)
+    MarkAttribute                                    == Mark(contract-method)
+    System.Runtime.CompilerServices.NullableContextAttribute      <-- the blocker
+    MarkAttribute                                    == Mark(impl)
+    MarkAttribute                                    == Mark(impl-method)
+    System.Runtime.CompilerServices.NullableContextAttribute
+```
+
+`NullableContextAttribute` is **synthesised by Roslyn into each assembly as an `internal` type**, so
+generated code in the consuming assembly cannot construct the contract assembly's copy. It appears
+whenever a member carries nullable reference annotations, i.e. in almost all modern code. The metadata
+list holds attribute *instances*, so "emit the list" means emitting `new SomeAttribute(...)` for each
+one — and that is impossible for this one, and for any attribute whose type or constructor is not
+accessible to the consumer.
+
+Gating on constructibility would technically work and is not worth building: the gate would fail on
+nearly every real operation, so the reflective call would remain on the path it was meant to leave.
+
+Two further things the probe settled, both of which a compile-time version would have had to reproduce
+and neither of which is guessable:
+
+- `GetCustomAttributes(inherit: true)` on an **interface** does not walk base interfaces —
+  `IThing : IAudited` yields `Mark(contract-iface)`, `NotInherited`, `Service`, and *not*
+  `Mark(sub-service-iface)`. So the four sources are genuinely four, and "ask the contract type" loses
+  one.
+- on the **implementation** side it resolves through the interface map and then honours virtual
+  inheritance: for the sub-service operation the list carries `Mark(base-virtual)` from the overridden
+  base method, and not `Mark(impl-method)`.
+
+**What came of the investigation instead** is a bug fix. The call was
+`typeof(IFoo).GetMethod(name)`, and `Type.GetMethod(string)` throws `AmbiguousMatchException` as soon as
+a contract carries two operations of the same method name — legal, since `[Operation]` gives them
+distinct names on the wire. That compiled cleanly and failed at server startup. It now passes the
+parameter types, which `GrpcOperationModel` already carried. `Overloads.input.cs` pins it, along with
+the reason the typeof list cannot reuse the signature rendering: `typeof(Foo?)` is CS8639 for a
+reference type, while the annotation is part of the type for `Nullable<T>`.
 
 ### Metadata parity, and protobuf-net.Grpc#369
 
