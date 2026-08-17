@@ -28,6 +28,7 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.GenericInterfaceNotSupported => GenericInterfaceNotSupported,
             GrpcDiagnosticKind.UnsupportedBaseInterface => UnsupportedBaseInterface,
             GrpcDiagnosticKind.ModelMustBePartial => ModelMustBePartial,
+            GrpcDiagnosticKind.ModelShapeNotSupported => ModelShapeNotSupported,
             GrpcDiagnosticKind.ModelMustDeriveClientFactory => ModelMustDeriveClientFactory,
             GrpcDiagnosticKind.NotAServiceContract => NotAServiceContract,
             GrpcDiagnosticKind.NoOperationsFound => NoOperationsFound,
@@ -116,6 +117,27 @@ namespace ProtoBuf.BuildTools.Generators
             title: "A [ProtoGrpc] type must be partial",
             messageFormat: "'{0}' is marked [ProtoGrpc] but is not declared partial, so there is "
                 + "nowhere to generate the proxies; add the 'partial' modifier",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// The declaration's own shape has to be nameable at namespace level.
+        /// </summary>
+        /// <remarks>
+        /// The generated half is emitted as <c>partial class X</c> directly inside the namespace, so a
+        /// nested declaration produced a *stray top-level type* while the consumer's real one was left
+        /// without the two <c>ClientFactory</c> members - four compile errors, none of them pointing
+        /// here. A generic declaration fails the same way, having nowhere to put the type parameter.
+        /// Supporting either means emitting the enclosing chain, which the serializer generator has open
+        /// as a TODO for the same reason; refusing clearly comes first.
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor ModelShapeNotSupported = new(
+            id: "PBN4014",
+            title: "A [ProtoGrpc] type must be top-level and non-generic",
+            messageFormat: "'{0}' is marked [ProtoGrpc] but {1}, and the generated half is emitted as a "
+                + "top-level non-generic partial - so it would not compile. Move the declaration to its "
+                + "own top-level type",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);

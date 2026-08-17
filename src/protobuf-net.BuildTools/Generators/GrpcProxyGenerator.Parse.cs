@@ -29,6 +29,19 @@ namespace ProtoBuf.BuildTools.Generators
 
             var diagnostics = ImmutableArray.CreateBuilder<DiagnosticInfo>();
 
+            // The generated half is a top-level non-generic partial, so anything the consumer declares
+            // that cannot be named that way is refused up front. Emitting anyway put a *stray* type in
+            // the namespace and left theirs without ClientFactory's two abstract members.
+            if (type.ContainingType is not null || type.IsGenericType)
+            {
+                var reason = type.ContainingType is not null
+                    ? $"is nested inside '{type.ContainingType.ToDisplayString()}'"
+                    : "is a generic type";
+                diagnostics.Add(new DiagnosticInfo(
+                    GrpcDiagnosticKind.ModelShapeNotSupported, Where(type), type.Name, reason));
+                return new GrpcModelCandidate(null, diagnostics.ToImmutable());
+            }
+
             // The consumer's half must be partial, or there is nowhere to put our half.
             if (!IsPartial(type))
             {

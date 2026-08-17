@@ -366,6 +366,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
         GenericInterfaceNotSupported,
         UnsupportedBaseInterface,
         ModelMustBePartial,
+        ModelShapeNotSupported,
         ModelMustDeriveClientFactory,
         NotAServiceContract,
         NoOperationsFound,
