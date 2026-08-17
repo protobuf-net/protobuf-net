@@ -368,6 +368,31 @@ since the whole question is what can be discovered about a model through metadat
   `aot-findings.md`.
 - **No interceptors yet.** See below.
 
+### The marshaller's two arms, and the SerializationContext state machine
+
+The generated `__Serialize<T>` measures once, calls `SetPayloadLength`, then tries `GetBufferWriter()` -
+writing straight into it and calling `Complete()` if it gets one, or serializing to an array and calling
+`Complete(byte[])` if it does not.
+
+**Calling `SetPayloadLength` on both arms is valid, and the reason is worth recording** because it looks
+wrong: `SetPayloadLength` is legal only from `Initialized`, and `Complete(byte[])` is *also* legal only
+from `Initialized`. It works because `SetPayloadLength` records the length and **does not advance the
+state** - only `GetBufferWriter()` does, to `IncompleteBufferWriter`, which is in turn the only state
+`Complete()` accepts. Checked against both grpc-dotnet implementations, which have identical state
+machines: `Grpc.Net.Client`'s `GrpcCallSerializationContext` and `Grpc.AspNetCore.Server`'s
+`HttpContextSerializationContext`.
+
+The order also cannot be otherwise: `GetBufferWriter()` consults `_payloadLength` to decide whether
+direct serialization is possible, and where it is, writes the header *immediately* from that value. So
+the length has to be set before asking for the writer, and the bytes written afterwards must match it
+exactly - which they do, since both come from the same `Measure` call.
+
+**Every real context supplies a buffer writer, so the array arm never runs in the smoke test's actual
+calls, on either side.** It is driven directly instead, by a `SerializationContext` that throws
+`NotImplementedException` from `GetBufferWriter` - which is what the base class does, and is the reason
+the generated code catches it. That fake also throws from `Complete()`, so the check fails loudly if the
+wrong arm is taken rather than passing quietly.
+
 ### Compile-time metadata: closed, not pending
 
 This was on the next-steps list twice, deferred each time on the grounds that

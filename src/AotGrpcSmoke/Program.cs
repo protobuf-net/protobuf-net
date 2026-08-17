@@ -81,6 +81,25 @@ try
     var bytes = Measure(SmokeModel.Instance, new HelloRequest { Name = "world", Count = 42 });
     Check("generated model serializes the payload",
         Convert.ToHexString(bytes) == "0A05776F726C64102A", Convert.ToHexString(bytes));
+
+    // The generated marshaller has two arms: write into the context's IBufferWriter, or - if the
+    // context does not offer one - serialize to an array and hand that over. Every real
+    // SerializationContext in grpc-dotnet offers a buffer writer, so the array arm never runs above,
+    // on either side of the call, and would happily rot. Drive it directly with a context that
+    // refuses.
+    //
+    // This also pins the state-machine question: SetPayloadLength is called on both arms, and it is
+    // only valid from Initialized. It leaves the state there (it just records the length), so the
+    // Complete(byte[]) that follows is legal - the same reason Complete() is legal after
+    // GetBufferWriter has moved the state on. Both grpc-dotnet contexts, client and server, agree.
+    var refusing = new RefusesBufferWriter();
+    config.GetMarshaller<HelloRequest>().ContextualSerializer(
+        new HelloRequest { Name = "world", Count = 42 }, refusing);
+    Check("marshaller's array fallback produces the same bytes",
+        refusing.Payload is not null && Convert.ToHexString(refusing.Payload) == "0A05776F726C64102A",
+        refusing.Payload is null ? "no payload" : Convert.ToHexString(refusing.Payload));
+    Check("...and set a payload length matching them",
+        refusing.PayloadLength == bytes.Length, refusing.PayloadLength?.ToString() ?? "unset");
 }
 finally
 {
@@ -101,5 +120,32 @@ static byte[] Measure(ProtoBuf.Meta.TypeModel model, HelloRequest value)
     using var ms = new MemoryStream();
     model.Serialize(ms, value);
     return ms.ToArray();
+}
+
+/// <summary>
+/// A <see cref="Grpc.Core.SerializationContext"/> that declines to supply an
+/// <c>IBufferWriter&lt;byte&gt;</c>, which is what the base class does and what the generated
+/// marshaller's second arm is for.
+/// </summary>
+/// <remarks>
+/// <c>NotImplementedException</c> specifically, because that is what
+/// <c>SerializationContext.GetBufferWriter</c> throws when a derived context has not overridden it -
+/// the generated code catches that and <c>NotSupportedException</c>, since both spellings are in the
+/// wild.
+/// </remarks>
+file sealed class RefusesBufferWriter : Grpc.Core.SerializationContext
+{
+    public byte[]? Payload { get; private set; }
+
+    public int? PayloadLength { get; private set; }
+
+    public override void SetPayloadLength(int payloadLength) => PayloadLength = payloadLength;
+
+    public override System.Buffers.IBufferWriter<byte> GetBufferWriter() => throw new NotImplementedException();
+
+    public override void Complete(byte[] payload) => Payload = payload;
+
+    public override void Complete()
+        => throw new InvalidOperationException("the array arm must not call the parameterless Complete");
 }
 
