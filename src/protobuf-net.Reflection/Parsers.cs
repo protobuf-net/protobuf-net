@@ -1524,11 +1524,13 @@ namespace Google.Protobuf.Reflection
 
         private class OptionHive
         {
-            public OptionHive(string name, bool isExtension, Token token)
+            public OptionHive(string name, bool isExtension, Token token, int ordinal, int? repeatIndex = null)
             {
                 Name = name;
                 IsExtension = isExtension;
                 Token = token;
+                Ordinal = ordinal;
+                RepeatIndex = repeatIndex;
             }
             public override string ToString()
             {
@@ -1555,6 +1557,14 @@ namespace Google.Protobuf.Reflection
             }
             public bool IsExtension { get; }
             public string Name { get; }
+            /// <summary>
+            /// Position of this node among its siblings, in the order they were encountered.
+            /// Used to break ties when sorting sub-fields by field number: the elements of a
+            /// list value are same-named siblings of the same field, and <see cref="List{T}.Sort"/>
+            /// is not stable.
+            /// </summary>
+            public int Ordinal { get; }
+            public int? RepeatIndex { get; }
             public Token Token { get; }
             public List<UninterpretedOption> Options { get; } = new List<UninterpretedOption>();
             public List<OptionHive> Children { get; } = new List<OptionHive>();
@@ -1564,17 +1574,19 @@ namespace Google.Protobuf.Reflection
             {
                 if (options == null || options.Count == 0) return null;
 
-                var root = new OptionHive(null, false, default);
+                var root = new OptionHive(null, false, default, 0);
                 foreach (var option in options)
                 {
                     var level = root;
                     OptionHive nextLevel = null;
                     foreach (var name in option.Names)
                     {
-                        nextLevel = level.Children.Find(x => x.Name == name.name_part && x.IsExtension == name.IsExtension);
+                        nextLevel = level.Children.Find(x => x.Name == name.name_part
+                            && x.IsExtension == name.IsExtension && x.RepeatIndex == name.RepeatIndex);
                         if (nextLevel == null)
                         {
-                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token);
+                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token,
+                                level.Children.Count, name.RepeatIndex);
                             level.Children.Add(nextLevel);
                         }
                         level = nextLevel;
@@ -1591,8 +1603,14 @@ namespace Google.Protobuf.Reflection
 
             if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
             {
-                // ascending field order
-                options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
+                // ascending field order, falling back to encounter order so that same-number
+                // siblings - the elements of a list value - keep the order they were written
+                // in; List<T>.Sort is not stable.
+                options.Sort((x, y) =>
+                {
+                    int byNumber = (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0);
+                    return byNumber != 0 ? byNumber : x.Ordinal.CompareTo(y.Ordinal);
+                });
             }
         }
         private static void AppendOption(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
@@ -2562,6 +2580,14 @@ namespace Google.Protobuf.Reflection
             /// <inheritdoc/>
             public override string ToString() => IsExtension ? ("(" + name_part + ")") : name_part;
             internal Token Token { get; set; }
+
+            /// <summary>
+            /// Position of this element within an explicit list value (`foo: [a, b]`), or
+            /// null when the name did not come from a list. Elements of a list are separate
+            /// values of a repeated field, so they must not be merged together the way
+            /// same-named parts otherwise are.
+            /// </summary>
+            internal int? RepeatIndex { get; set; }
         }
         internal bool Applied { get; set; }
         internal Token Token { get; set; }
@@ -3005,6 +3031,12 @@ namespace ProtoBuf.Reflection
     internal class ParserContext : IDisposable
     {
         public AbortState AbortState { get; set; }
+
+        /// <summary>
+        /// Supplies <see cref="UninterpretedOption.NamePart.RepeatIndex"/> values. Unique per
+        /// list element for the whole parse, so elements never collide across statements.
+        /// </summary>
+        private int nextRepeatIndex;
         private void ReadOne<T>(T obj) where T : class, ISchemaObject
         {
             AbortState oldState = AbortState;
@@ -3118,6 +3150,55 @@ namespace ProtoBuf.Reflection
                     obj.UninterpretedOptions.Add(newOption);
                 }
             }
+            else if (tokens.ConsumeIf(TokenType.Symbol, "["))
+            {
+                // a list value, i.e. the repeated form `foo: [a, b]`, or `foo: [{..}, {..}]`
+                // for a repeated message field. Each element is tagged with its position so
+                // that the option hive keeps the elements apart rather than merging them by name.
+                obj ??= new T();
+                while (!tokens.ConsumeIf(TokenType.Symbol, "]"))
+                {
+                    // Indexes come from a parse-wide counter rather than restarting per
+                    // statement, so that two list statements for the same field append to it
+                    // instead of colliding. Statements *inside* one element share an index,
+                    // which is what lets the hive merge them into a single value.
+                    var elementParts = WithRepeatIndex(nameParts, nextRepeatIndex++);
+                    if (tokens.ConsumeIf(TokenType.Symbol, "{"))
+                    {
+                        bool anyElement = false;
+                        while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
+                        {
+                            ReadOption(ref obj, parent, elementParts);
+                            anyElement = true;
+
+                            // comma between elements is optional; semicolons work too
+                            if (!tokens.ConsumeIf(TokenType.Symbol, ","))
+                            {
+                                tokens.ConsumeIf(TokenType.Symbol, ";");
+                            }
+                        }
+                        if (!anyElement)
+                        {
+                            var emptyOption = new UninterpretedOption();
+                            emptyOption.Names.AddRange(elementParts);
+                            obj.UninterpretedOptions.Add(emptyOption);
+                        }
+                    }
+                    else
+                    {
+                        var scalarOption = new UninterpretedOption
+                        {
+                            AggregateValue = tokens.ConsumeString(true),
+                            Token = tokens.Previous
+                        };
+                        scalarOption.Names.AddRange(elementParts);
+                        obj.UninterpretedOptions.Add(scalarOption);
+                    }
+
+                    // comma between elements is optional
+                    tokens.ConsumeIf(TokenType.Symbol, ",");
+                }
+            }
             else
             {
                 var field = parent as FieldDescriptorProto;
@@ -3157,6 +3238,29 @@ namespace ProtoBuf.Reflection
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Clones the given name parts, marking the final part with its position within a
+        /// list value. Only the final part is marked: it names the repeated field whose
+        /// elements need to stay separate.
+        /// </summary>
+        private static List<UninterpretedOption.NamePart> WithRepeatIndex(
+            List<UninterpretedOption.NamePart> nameParts, int repeatIndex)
+        {
+            var clone = new List<UninterpretedOption.NamePart>(nameParts);
+            if (clone.Count != 0)
+            {
+                var last = clone[clone.Count - 1];
+                clone[clone.Count - 1] = new UninterpretedOption.NamePart
+                {
+                    IsExtension = last.IsExtension,
+                    name_part = last.name_part,
+                    Token = last.Token,
+                    RepeatIndex = repeatIndex,
+                };
+            }
+            return clone;
         }
 
         private void ParseDefault(Token token, FieldDescriptorProto.Type type, ref string defaultValue)
