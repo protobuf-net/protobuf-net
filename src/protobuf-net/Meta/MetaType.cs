@@ -1237,6 +1237,20 @@ namespace ProtoBuf.Meta
             AttributeMap[] attribs = AttributeMap.Create(member, true);
             AttributeMap attrib;
 
+            // the cross-cutting per-type default, applied only where the member states no format itself.
+            // Maps keep their own [ProtoMap] formats, and null-wrapped members would throw on any
+            // non-default format, so both are exempt
+            var dataFormat = normalizedAttribute.DataFormat;
+            if (dataFormat == DataFormat.Default
+                && (repeated is null || !repeated.IsMap)
+                && GetAttribute(attribs, typeof(NullWrappedValueAttribute).FullName) is null
+                && GetAttribute(attribs, typeof(NullWrappedCollectionAttribute).FullName) is null)
+            {
+                var scalarType = repeated?.ItemType ?? effectiveType;
+                scalarType = Nullable.GetUnderlyingType(scalarType) ?? scalarType;
+                dataFormat = TypeDataFormatHelper.GetTypeDataFormat(Type, scalarType);
+            }
+
             object defaultValue = null;
             // implicit zero default
             if (model.UseImplicitZeroDefaults)
@@ -1267,7 +1281,7 @@ namespace ProtoBuf.Meta
                 if (attrib.TryGet("Value", out object tmp)) defaultValue = tmp;
             }
             ValueMember vm = (isEnum || normalizedAttribute.Tag > 0)
-                ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, repeated?.ItemType, null, normalizedAttribute.DataFormat, defaultValue)
+                ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, repeated?.ItemType, null, dataFormat, defaultValue)
                     : null;
             if (vm is not null)
             {

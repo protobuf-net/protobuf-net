@@ -55,6 +55,30 @@ deterministically, which is what let it be diagnosed and closed.** It was a stal
 test class, surfaced or hidden by xUnit's method ordering; see item 5 for the full account. Fixed in
 `Issue1232.cs` (reset the statics in the constructor); the suite is clean with the fix in.
 
+## Re-measurement: the `[ProtoDataFormat]` `Vault` member — 2026-08-13
+
+`AotSmoke` gained a `Vault` contract (`[ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at
+`CompatibilityLevel.Level300`) to exercise the feature under native AOT — a bare `Guid` member taking
+the type-scoped default rather than its own `[ProtoMember(DataFormat = ...)]`. Re-measured on Linux
+after clearing `obj`/`bin`:
+
+- **Warning count unchanged at 19**, the same figure as the win-x64 baseline in the Handover section
+  above. The type-scoped default routes through the same `BclHelpers`/`Guid` path every other
+  compatibility-level member here already exercises, so no new trim annotation was needed.
+- **Binary size 3,798,136 bytes** (linux-x64). No prior linux-x64 figure exists at the 19-warning
+  state to diff against — the win-x64 note above already flags that RID sizes are not comparable to
+  each other, and the last linux-x64 byte figures on record (item 15 / "Next steps" item 1) predate
+  this warning count, from when the fixture set was smaller. Recorded here as the new linux-x64
+  baseline for future deltas.
+- The hex dump was inspected by eye: `Vault.Entry` emits `0A-10` followed by exactly 16 raw bytes
+  (the fixed form), where `Modern`'s undecorated `Guid` at the same compatibility level emits `1A-24`
+  followed by a 36-character string — confirming the type-scoped default, not the member's own
+  declaration, is what picked the format.
+
+The native-published binary was also run directly (not just `dotnet run` under JIT) and passed with
+exit code 0. Windows validation (a win-x64 publish, to confirm the warning count matches as it has
+for every prior round) is still pending per the Handover section's own process.
+
 ## Open
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
