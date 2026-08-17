@@ -125,7 +125,15 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
-            // no recognised operations at all is most likely a marker interface, not a contract
+            // No recognised operations at all is most likely a marker interface rather than a contract -
+            // but "most likely" is not a reason to say nothing, since the consumer named it explicitly.
+            // Only reported where nothing was *refused* either: a contract with an unsupported member
+            // already has PBN4002, which says more.
+            if (operations.Count == 0 && !unsupported)
+            {
+                diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.NoOperationsFound,
+                    Where(iface), iface.ToDisplayString(), iface.Name));
+            }
             if (unsupported || operations.Count == 0)
             {
                 return new GrpcContractCandidate(null, diagnostics.ToImmutable());

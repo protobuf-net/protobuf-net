@@ -358,6 +358,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
         ModelMustBePartial,
         ModelMustDeriveClientFactory,
         NotAServiceContract,
+        NoOperationsFound,
         ImplementationDoesNotImplement,
         NoModelNamed,
         UnresolvedContract,

@@ -66,7 +66,8 @@ namespace GrpcFixtures.Basic
                 return (TService)(object)new GrpcFixtures_Basic_IGreeter_ClientProxy(channel, BinderConfiguration);
             throw new global::System.InvalidOperationException(
                 "No build-time gRPC proxy for " + typeof(TService).FullName + " in BasicServices; "
-                + "add [ProtoService(typeof(" + typeof(TService).Name + "))] to it.");
+                + "either it is not named by [ProtoService], or it was dropped at build time - "
+                + "check the build log for a PBN40xx warning naming it.");
         }
 
         [global::System.CodeDom.Compiler.GeneratedCode("protobuf-net.BuildTools", "1.0")]

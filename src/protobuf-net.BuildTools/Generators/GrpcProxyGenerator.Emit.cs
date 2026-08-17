@@ -328,9 +328,14 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"if (typeof(TService) == typeof({contract.InterfaceFullName}))");
                 Line(sb, indent + 2, $"return (TService)(object)new {contract.ProxyTypeName}(channel, BinderConfiguration);");
             }
+            // Both causes have to be covered, and the original message only covered one: a contract can
+            // be absent because it was never named, or because it *was* named and then dropped with a
+            // build warning. Telling the second consumer to add the attribute they already added is the
+            // worst version of this message, since it sends them looking in the one place that is fine.
             Line(sb, indent + 1, "throw new global::System.InvalidOperationException(");
             Line(sb, indent + 2, $"\"No build-time gRPC proxy for \" + typeof(TService).FullName + \" in {plan.TypeName}; \"");
-            Line(sb, indent + 2, "+ \"add [ProtoService(typeof(\" + typeof(TService).Name + \"))] to it.\");");
+            Line(sb, indent + 2, "+ \"either it is not named by [ProtoService], or it was dropped at build time - \"");
+            Line(sb, indent + 2, "+ \"check the build log for a PBN40xx warning naming it.\");");
             Line(sb, indent, "}");
         }
 

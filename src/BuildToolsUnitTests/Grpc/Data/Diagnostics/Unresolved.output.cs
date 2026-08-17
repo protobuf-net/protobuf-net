@@ -62,7 +62,8 @@ namespace GrpcFixtures.Unresolved
         {
             throw new global::System.InvalidOperationException(
                 "No build-time gRPC proxy for " + typeof(TService).FullName + " in UnresolvedServices; "
-                + "add [ProtoService(typeof(" + typeof(TService).Name + "))] to it.");
+                + "either it is not named by [ProtoService], or it was dropped at build time - "
+                + "check the build log for a PBN40xx warning naming it.");
         }
     }
 }

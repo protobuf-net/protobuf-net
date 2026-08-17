@@ -69,7 +69,8 @@ namespace GrpcFixtures.ClosedGeneric
                 return (TService)(object)new GrpcFixtures_ClosedGeneric_IBox_GrpcFixtures_ClosedGeneric_Renamed__ClientProxy(channel, BinderConfiguration);
             throw new global::System.InvalidOperationException(
                 "No build-time gRPC proxy for " + typeof(TService).FullName + " in ClosedGenericServices; "
-                + "add [ProtoService(typeof(" + typeof(TService).Name + "))] to it.");
+                + "either it is not named by [ProtoService], or it was dropped at build time - "
+                + "check the build log for a PBN40xx warning naming it.");
         }
 
         [global::System.CodeDom.Compiler.GeneratedCode("protobuf-net.BuildTools", "1.0")]

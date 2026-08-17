@@ -1,4 +1,4 @@
-﻿; ServiceContractAnalyzer's PBN2001-PBN2010 (the gRPC analyzers) shipped in #735 and were
+; ServiceContractAnalyzer's PBN2001-PBN2010 (the gRPC analyzers) shipped in #735 and were
 ; recorded here by NOBODY until 2026-08-16 - which is half of why the AOT generator was later
 ; given a "PBN2000+ block of its own" that was nothing of the kind. They are listed below as
 ; new rules because that is where a reader will look; they are not new, they are newly tracked.
@@ -60,6 +60,7 @@ PBN4005  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be partial
 PBN4006  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must derive from ClientFactory
 PBN4007  | ProtoBuf.Grpc | Warning | Named type is not a service contract
 PBN4008  | ProtoBuf.Grpc | Warning | Named implementation does not implement the contract
+PBN4009  | ProtoBuf.Grpc | Warning | Service contract declares no recognised operations
 PBN4010  | ProtoBuf.Grpc | Warning | No AOT serializer model named for these proxies
 PBN4011  | ProtoBuf.Grpc | Warning | Service contract could not be resolved
 

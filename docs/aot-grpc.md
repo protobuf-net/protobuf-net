@@ -327,12 +327,14 @@ warning without needing the serializer generator to run, since the check is on t
     Worth redoing if that file changes shape, and note the first attempt at the sabotage was a no-op
     (`if (other is null) return true` leaves the real comparison intact) and both tests passed — which
     is exactly the false reassurance the exercise is meant to catch.
-- **A contract with no recognised operations is dropped silently.** It is treated as a presumed marker
-  interface and no diagnostic is reported at all, so nothing at build time says the contract is
-  missing; `CreateClient<T>` then throws at run time telling the consumer to add the
-  `[ProtoService]` they already added. `MarkerInterface.input.cs` records the state (its `.txt` golden
-  is absent because there is nothing to report). Compare `PBN3004`, which exists purely so that a
-  cascade in the serializer generator cannot be silent.
+- ~~A contract with no recognised operations is dropped silently.~~ Now `PBN4009`, which took the gap
+  in the middle of the block. It fires only where nothing was *refused* either, since a contract with a
+  bad member already reports the more specific `PBN4002`.
+
+  The run-time message went with it: `CreateClient<T>`'s throw used to say "add
+  `[ProtoService(typeof(X))]` to it", which is the worst possible advice for the consumer who did
+  exactly that and had the contract dropped - it sends them to inspect the one thing that is fine. It
+  now names both causes and points at the build log.
 - **`PBN4002` is per-method but takes the whole contract**, which the message says; what it cannot yet
   say is anything about *fixing* the method beyond naming why the shape was refused.
 - **4 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The

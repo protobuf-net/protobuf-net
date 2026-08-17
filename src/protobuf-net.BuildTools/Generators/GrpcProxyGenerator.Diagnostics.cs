@@ -30,6 +30,7 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.ModelMustBePartial => ModelMustBePartial,
             GrpcDiagnosticKind.ModelMustDeriveClientFactory => ModelMustDeriveClientFactory,
             GrpcDiagnosticKind.NotAServiceContract => NotAServiceContract,
+            GrpcDiagnosticKind.NoOperationsFound => NoOperationsFound,
             GrpcDiagnosticKind.ImplementationDoesNotImplement => ImplementationDoesNotImplement,
             GrpcDiagnosticKind.NoModelNamed => NoModelNamed,
             GrpcDiagnosticKind.UnresolvedContract => UnresolvedContract,
@@ -131,6 +132,28 @@ namespace ProtoBuf.BuildTools.Generators
             title: "Named type is not a service contract",
             messageFormat: "'{0}' was named by [ProtoService] but is not an interface marked [Service] "
                 + "or [ServiceContract], so protobuf-net.Grpc would not bind it either",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// A contract with nothing on it that we recognise as an operation.
+        /// </summary>
+        /// <remarks>
+        /// This was silent until it was fixtured: the contract was dropped as a presumed marker
+        /// interface and nothing said so, leaving the consumer with a run-time throw from
+        /// <c>CreateClient&lt;T&gt;</c> and no build-time hint. Every other drop reason reports, and
+        /// <c>PBN3004</c> exists on the serializer side purely so that a silent cascade is impossible;
+        /// this is the same rule. Note it fires only where <em>no</em> operation was recognised and none
+        /// was refused - a contract with a bad member reports <c>PBN4002</c> instead, which is more
+        /// specific.
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor NoOperationsFound = new(
+            id: "PBN4009",
+            title: "Service contract declares no recognised operations",
+            messageFormat: "'{0}' was named by [ProtoService] but declares no methods recognised as gRPC "
+                + "operations, so no proxy was generated for it and 'CreateClient<{1}>' will throw. "
+                + "Properties, events and static members are not operations",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
