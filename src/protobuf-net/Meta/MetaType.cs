@@ -2217,9 +2217,17 @@ namespace ProtoBuf.Meta
 
                             bool isEditions = syntax >= ProtoSyntax.Edition2023;
                             bool isGrouped = hasGroupModifier || member.DataFormat == DataFormat.Group;
-                            if (isGrouped && syntax == ProtoSyntax.Proto3)
+                            if (isGrouped && !isEditions)
                             {
-                                NewLine(builder, indent + 1).Append("// warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)");
+                                // note that even the proto2 form here is shorthand rather than
+                                // strict syntax: a real proto2 group declares its body inline and
+                                // derives the field name from the group name, which cannot express
+                                // an independently-named member of a separately-declared (and
+                                // possibly shared) type; editions is the first dialect where this
+                                // shape has an exact spelling
+                                NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto3
+                                    ? "// warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)"
+                                    : "// warning: 'group' here is shorthand; strict proto2 requires the group body inline, with the field named after it; edition 2023 or later expresses this exactly (features.message_encoding = DELIMITED)");
                             }
                             string ordinality = member.ItemType is not null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
                             NewLine(builder, indent + 1).Append(ordinality);
