@@ -115,6 +115,76 @@ namespace ProtoBuf.BuildTools.Generators
                 // diagnostic can be anchored on it; a down-level plan still emits, in a reduced shape
                 ctx.AddSource(HintName(plan), Emit(plan, caps.HasAspNetCore, caps.AnnotateTrimming));
             });
+
+            // ---- interceptors ----
+            //
+            // A second trigger, and the only one here that is not attribute-driven: a call site carries no
+            // attribute, so this sees every node in the compilation and the predicate has to be tight.
+            var sites = context.SyntaxProvider
+                .CreateSyntaxProvider(
+                    predicate: static (node, _) => IsCreateGrpcServiceCandidate(node),
+                    transform: static (ctx, ct) => ParseInterceptSite(ctx, ct))
+                .Where(static x => x is not null)
+                .Collect();
+
+            context.RegisterSourceOutput(plans.Combine(capabilities).Combine(sites), static (ctx, triple) =>
+            {
+                var ((candidate, caps), found) = triple;
+                if (candidate is null || caps.Disabled || candidate.Plan is not { } plan) return;
+                if (plan.DownLevel || found.IsDefaultOrEmpty) return;
+
+                // The factory is the [ProtoGrpc] type itself - the thing that derives ClientFactory and
+                // has CreateClient - NOT the serializer model it names. Those are different types, and
+                // conflating them is CS0019 on the `??`, which is how this was caught.
+                //
+                // Emitted whether or not a Model was named: pointing the call at the generated factory is
+                // an improvement either way, since it avoids ProxyEmitter. Whether that factory has a
+                // good marshaller source is a separate question, and PBN4010 is what says so.
+                var factory = FactoryFullName(plan);
+
+                // Nothing is emitted unless the consumer opted in, and that is not a nicety: an
+                // [InterceptsLocation] in a namespace they have not enabled is CS9137, an error. So a
+                // project that never asked for interceptors must see no interceptor at all.
+                if (!caps.InterceptorsEnabled) return;
+
+                // A site is ours only if *this* model covers its contract; a second [ProtoGrpc] in the
+                // same project takes the ones it covers, and a contract nobody covers is left alone.
+                var mine = new System.Collections.Generic.List<GrpcInterceptSite>();
+                foreach (var site in found)
+                {
+                    if (site is null || !Covers(plan, site.ContractFullName)) continue;
+                    mine.Add(new GrpcInterceptSite(site.ContractFullName, factory,
+                        site.Receiver, site.LocationVersion, site.LocationData));
+                }
+                if (mine.Count == 0) return;
+
+                ctx.AddSource(InterceptHintName(plan), EmitInterceptors(factory, plan.TypeName, mine));
+            });
+        }
+
+        /// <summary>The consumer's <c>[ProtoGrpc]</c> type, fully qualified.</summary>
+        private static string FactoryFullName(GrpcModelPlan plan)
+            => string.IsNullOrEmpty(plan.NamespaceName)
+                ? "global::" + plan.TypeName
+                : "global::" + plan.NamespaceName + "." + plan.TypeName;
+
+        /// <summary>Whether a plan emits a proxy for this contract, and so can serve a call site.</summary>
+        private static bool Covers(GrpcModelPlan plan, string contractFullName)
+        {
+            foreach (var contract in plan.Contracts)
+            {
+                if (string.Equals(contract.InterfaceFullName, contractFullName, System.StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static string InterceptHintName(GrpcModelPlan plan)
+        {
+            var prefix = string.IsNullOrEmpty(plan.NamespaceName) ? "" : plan.NamespaceName + ".";
+            return prefix + plan.TypeName + ".grpc.interceptors.g.cs";
         }
 
         private static string HintName(GrpcModelPlan plan)
@@ -137,11 +207,13 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private readonly struct Capabilities
         {
-            private Capabilities(bool disabled, bool hasAspNetCore, bool annotateTrimming, LanguageVersion languageVersion)
+            private Capabilities(bool disabled, bool hasAspNetCore, bool annotateTrimming,
+                bool interceptorsEnabled, LanguageVersion languageVersion)
             {
                 Disabled = disabled;
                 HasAspNetCore = hasAspNetCore;
                 AnnotateTrimming = annotateTrimming;
+                InterceptorsEnabled = interceptorsEnabled;
                 LanguageVersion = languageVersion;
             }
 
@@ -161,12 +233,18 @@ namespace ProtoBuf.BuildTools.Generators
             /// </remarks>
             public bool AnnotateTrimming { get; }
 
+            /// <summary>
+            /// Whether the consumer enabled interceptors for our namespace. Emitting one without this is
+            /// <c>CS9137</c>, an error, so it gates the whole interceptor output.
+            /// </summary>
+            public bool InterceptorsEnabled { get; }
+
             public LanguageVersion LanguageVersion { get; }
 
             public static Capabilities From(Compilation compilation, ParseOptions parseOptions,
                 Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptionsProvider configOptions)
             {
-                if (configOptions.BuildToolsDisabled()) return new Capabilities(true, false, false, LanguageVersion.Default);
+                if (configOptions.BuildToolsDisabled()) return new Capabilities(true, false, false, false, LanguageVersion.Default);
 
                 var hasAspNetCore = compilation.GetTypeByMetadataName(
                     "Grpc.AspNetCore.Server.Model.ServiceMethodProviderContext`1") is not null;
@@ -180,7 +258,10 @@ namespace ProtoBuf.BuildTools.Generators
                 var annotateTrimming = annotations is not null
                     && compilation.IsSymbolAccessibleWithin(annotations, compilation.Assembly);
 
-                return new Capabilities(false, hasAspNetCore, annotateTrimming, languageVersion);
+                var interceptorsEnabled = InterceptorSupport.IsEnabled(parseOptions as CSharpParseOptions)
+                    && InterceptableLocations.IsSupported;
+
+                return new Capabilities(false, hasAspNetCore, annotateTrimming, interceptorsEnabled, languageVersion);
             }
         }
 

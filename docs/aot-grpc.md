@@ -494,6 +494,33 @@ That comparison is cheap and mechanical, and it is the only thing standing betwe
 runtime" and "we quietly diverge on authorization metadata", which is the failure mode worth fearing:
 `[Authorize]` going missing produces no error, just a more permissive endpoint.
 
+### Built, and where it can be tested
+
+The interceptor half is now emitted. Shape as designed: one generic method per *receiver overload*, one
+`[InterceptsLocation]` per call site, and the body is the runtime overload's own line with our factory
+substituted. `AotGrpcSmoke` is the proof - it enables the namespace and calls
+`channel.CreateGrpcService<IGreeter>()` with **no factory argument**, which under a native publish can
+only work if the call was rewritten, since the reflective default is what ILC removed. Eight checks
+became ten, still 4 IL warnings, 14,494,720 bytes.
+
+Two things fell out that are worth keeping:
+
+- **The factory is the `[ProtoGrpc]` type, not the serializer model it names.** These are different types
+  - one derives `ClientFactory` and has `CreateClient`, the other is a `TypeModel` - and conflating them
+  is `CS0019` on the `??`, which is exactly how it was caught on the first run. Emitted whether or not a
+  `Model` was named, since pointing the call at the generated factory avoids `ProxyEmitter` either way;
+  whether that factory has a good marshaller source is `PBN4010`'s business.
+- **The receiver overload is detected, and both are needed.** `GrpcChannel` derives from `ChannelBase`, so
+  the everyday call takes that overload and the emitted body has to add `CreateCallInvoker()`. A test that
+  only exercised `CallInvoker` would have missed the shape people actually write.
+
+**It cannot be golden-tested, and that is a reference-version constraint rather than an oversight.**
+`GetInterceptableLocation` is Roslyn 4.11+, `BuildToolsUnitTests` pins Workspaces at 4.8.0, and
+`InterceptableLocations.IsSupported` is therefore false in-process - so the unit tests see no interceptor
+however they are configured. `AotGrpcSmoke` runs against the real SDK's compiler, which is why it is the
+only place this is exercised at all. If that ever needs to change, raising the *test* project's Roslyn is
+enough; the shipped baseline stays where it is, which is the whole point of the reflective route.
+
 ## PBN4015: you asked for AOT and have not squared the circle
 
 The counterpart of the serializer generator's `PBN3012`, and worth having separately because the gRPC

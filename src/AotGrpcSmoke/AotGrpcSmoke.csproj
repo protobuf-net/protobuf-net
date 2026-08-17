@@ -9,6 +9,12 @@
     <!-- enables trim/AOT analysis at ordinary build time too, so annotation regressions are caught
          without paying for a native publish - the same reason src/AotSmoke sets it -->
     <PublishAot>true</PublishAot>
+    <!-- Opts this project into C# interceptors for the namespace the generator emits into. Without it,
+         the generator emits no interceptor at all - an [InterceptsLocation] in a namespace the consumer
+         has not enabled is CS9137, an error - and the plain CreateGrpcService call below would fall back
+         to the reflective factory, which is exactly what fails under AOT. So this one line is what the
+         "no factory argument" check downstream is really testing. -->
+    <InterceptorsNamespaces>$(InterceptorsNamespaces);ProtoBuf.AOT</InterceptorsNamespaces>
     <InvariantGlobalization>true</InvariantGlobalization>
     <!-- the [ProtoModel]/[ProtoSerializable] trigger attributes are [Experimental] -->
     <NoWarn>$(NoWarn);PBN9001</NoWarn>

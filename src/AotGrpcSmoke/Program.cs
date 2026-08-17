@@ -64,6 +64,21 @@ try
     Check("void round-trip (Empty on the wire)", GreeterService.Nudged == "nudged",
         GreeterService.Nudged);
 
+    // THE INTERCEPTOR CHECK. Note what is missing: no factory argument. Written plainly like this the
+    // call means `ClientFactory.Default`, i.e. the ref-emit proxy - which ILC has removed, so under a
+    // native publish this can only work if the generator rewrote the call to use SmokeServices.Instance.
+    // On JIT it would also work reflectively, which is why the native leg is the one that proves it; the
+    // proxy type name is asserted for that reason rather than just the round-trip.
+    var intercepted = channel.CreateGrpcService<IGreeter>();
+    Check("plain CreateGrpcService was intercepted, not reflective",
+        intercepted.GetType().Name.EndsWith("_ClientProxy", StringComparison.Ordinal),
+        intercepted.GetType().FullName);
+
+    var interceptedReply = await intercepted.SayHelloAsync(new HelloRequest { Name = "intercepted", Count = 7 });
+    Check("intercepted client round-trip",
+        interceptedReply.Message == "hello, intercepted" && interceptedReply.Count == 7,
+        $"{interceptedReply.Message} / {interceptedReply.Count}");
+
     // The payload side is the half that neither source PR closes: proxies can be perfectly static
     // and still marshal through RuntimeTypeModel.Default, which reflects. Two checks, because
     // neither alone is conclusive on a JIT run:
