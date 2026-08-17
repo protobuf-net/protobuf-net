@@ -1,0 +1,3 @@
+edition = "2024";
+import "editions/errors/local_dep.proto";
+message M { Hidden h = 1; }

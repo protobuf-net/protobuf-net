@@ -268,8 +268,21 @@ namespace Google.Protobuf.Reflection
             }
             foreach (var file in Files)
             {
+                // note this runs *before* type resolution and the options pass: resolving a
+                // cross-file type reference needs the target file's resolved visibility, and
+                // applying a custom option needs the extension field's resolved features (its
+                // packedness, in particular); feature resolution itself needs neither
+                file.ResolveFeatures();
+            }
+            foreach (var file in Files)
+            {
                 using var ctx = new ParserContext(file, null, Errors);
                 file.ResolveTypes(ctx, false);
+            }
+            foreach (var file in Files)
+            {
+                using var ctx = new ParserContext(file, null, Errors);
+                file.ValidateFeatures(ctx);
             }
             foreach (var file in Files)
             {
@@ -328,6 +341,41 @@ namespace Google.Protobuf.Reflection
                     }
                 }
             }
+            foreach (var file in Files)
+            {
+                foreach (var message in file.MessageTypes)
+                {
+                    StripSourceRetentionOptions(message);
+                }
+
+                // protoc strips source-retention option fields from descriptor output entirely;
+                // for extension ranges that is 'declaration' and 'verification', and an options
+                // message left empty by the strip is omitted rather than serialized empty
+                // (note: FeatureSet's own source-retention fields get the same treatment when
+                // editions files introduce them)
+                static void StripSourceRetentionOptions(DescriptorProto message)
+                {
+                    foreach (var range in message.ExtensionRanges)
+                    {
+                        var options = range.Options;
+                        if (options is not null)
+                        {
+                            options.Declarations.Clear();
+                            options.ResetVerification();
+                            if (options.Features is null
+                                && options.UninterpretedOptions.Count == 0
+                                && DescriptorProto.GetRawExtensionData(options) is null)
+                            {
+                                range.Options = null;
+                            }
+                        }
+                    }
+                    foreach (var nested in message.NestedTypes)
+                    {
+                        StripSourceRetentionOptions(nested);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -344,6 +392,12 @@ namespace Google.Protobuf.Reflection
 
                 foreach (var dep in file.Dependencies)
                 {
+                    Observe(TryFindFileByName(dep));
+                }
+                foreach (var dep in file.OptionDependencies)
+                {
+                    // option imports are excluded from the dependency list, but still
+                    // precede their importer in --include_imports output
                     Observe(TryFindFileByName(dep));
                 }
                 if (!fileOrder.TryGetValue(file, out _))
@@ -497,6 +551,7 @@ namespace Google.Protobuf.Reflection
 
         internal int MaxField => (Options?.MessageSetWireFormat == true) ? int.MaxValue : FieldDescriptorProto.DefaultMaxField;
         int IMessage.MaxField => MaxField;
+        internal ParsedFeatures ResolvedFeatures { get; set; }
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric, out var token);
@@ -565,12 +620,50 @@ namespace Google.Protobuf.Reflection
             {
                 ParseMap(ctx);
             }
+            else if (ctx.Edition >= Edition.Edition2024 && tokens.ConsumeIf(TokenType.AlphaNumeric, "export"))
+            {
+                // contextual keywords: only editions 2024+ treats these as visibility
+                // modifiers; before that they are ordinary identifiers (e.g. type names)
+                ReadVisibilityScoped(ctx, SymbolVisibility.VisibilityExport);
+            }
+            else if (ctx.Edition >= Edition.Edition2024 && tokens.ConsumeIf(TokenType.AlphaNumeric, "local"))
+            {
+                ReadVisibilityScoped(ctx, SymbolVisibility.VisibilityLocal);
+            }
             else
             {
                 if (FieldDescriptorProto.TryParse(ctx, this, false, out var obj))
                     Fields.Add(obj);
             }
         }
+        /// <summary>
+        /// Handles the editions-2024 symbol visibility modifiers on nested types.
+        /// </summary>
+        private void ReadVisibilityScoped(ParserContext ctx, SymbolVisibility visibility)
+        {
+            var tokens = ctx.Tokens;
+            if (tokens.ConsumeIf(TokenType.AlphaNumeric, "message"))
+            {
+                if (TryParse(ctx, this, out var obj))
+                {
+                    obj.Visibility = visibility;
+                    NestedTypes.Add(obj);
+                }
+            }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "enum"))
+            {
+                if (EnumDescriptorProto.TryParse(ctx, this, out var obj))
+                {
+                    obj.Visibility = visibility;
+                    EnumTypes.Add(obj);
+                }
+            }
+            else
+            {
+                tokens.Read().Throw(ErrorCode.SyntaxErrorUnknownEntity, "expected 'message' or 'enum' after a visibility modifier");
+            }
+        }
+
         private void ParseMap(ParserContext ctx)
         {
             ctx.AbortState = AbortState.Statement;
@@ -668,8 +761,9 @@ namespace Google.Protobuf.Reflection
         {
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
-            tokens.Previous.RequireProto2(ctx);
+            tokens.Previous.RequireProto2OrEditions(ctx);
 
+            var statementRanges = new List<ExtensionRange>();
             while (true)
             {
                 int from = tokens.ConsumeInt32(MaxField), to = from;
@@ -680,11 +774,25 @@ namespace Google.Protobuf.Reflection
                 }
                 // the end is off by one
                 if (to != int.MaxValue) to++;
-                ExtensionRanges.Add(new ExtensionRange { Start = from, End = to });
+                var range = new ExtensionRange { Start = from, End = to };
+                statementRanges.Add(range);
+                ExtensionRanges.Add(range);
 
                 if (tokens.ConsumeIf(TokenType.Symbol, ","))
                 {
                     tokens.Consume();
+                }
+                else if (tokens.ConsumeIf(TokenType.Symbol, "["))
+                {
+                    // extension declarations etc: `extensions 4 to 1000 [declaration = {...}, verification = ...];`
+                    // the options apply to every range in the statement
+                    var options = ctx.ParseOptionBlock<ExtensionRangeOptions>(null);
+                    foreach (var r in statementRanges)
+                    {
+                        r.Options = options;
+                    }
+                    tokens.Consume(TokenType.Symbol, ";");
+                    break;
                 }
                 else if (tokens.ConsumeIf(TokenType.Symbol, ";"))
                 {
@@ -705,67 +813,81 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
             var token = tokens.Read(); // test the first one to determine what we're doing
-            switch (token.Type)
+            bool isEditions = ctx.Syntax == FileDescriptorProto.SyntaxEditions;
+            // editions spells reserved names as bare identifiers; proto2/proto3 as string literals
+            bool isIdentifier = token.Type == TokenType.AlphaNumeric && !char.IsDigit(token.Value[0]);
+            bool isNames = isIdentifier || token.Type == TokenType.StringLiteral;
+            if (isNames)
             {
-                case TokenType.StringLiteral:
-                    while (true)
+                if (isEditions && !isIdentifier)
+                {
+                    ctx.Errors.Error(token, "reserved names must be identifiers in editions, not string literals", ErrorCode.ParseFailReservedRange);
+                }
+                else if (!isEditions && isIdentifier)
+                {
+                    ctx.Errors.Error(token, "reserved names must be string literals outside of editions", ErrorCode.ParseFailReservedRange);
+                }
+                var nameTokenType = token.Type; // whichever form was found; the error above still stands
+                while (true)
+                {
+                    var name = tokens.Consume(nameTokenType);
+                    var conflict = reserved.Fields.Find(x => x.Name == name);
+                    if (conflict != null)
                     {
-                        var name = tokens.Consume(TokenType.StringLiteral);
-                        var conflict = reserved.Fields.Find(x => x.Name == name);
-                        if (conflict != null)
-                        {
-                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by {label} {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
-                        }
-                        reserved.ReservedNames.Add(name);
-
-                        if (tokens.ConsumeIf(TokenType.Symbol, ","))
-                        {
-                        }
-                        else if (tokens.ConsumeIf(TokenType.Symbol, ";"))
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            tokens.Read().Throw(ErrorCode.ParseFailReservedRange, "unable to parse reserved range");
-                        }
+                        ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by {label} {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
                     }
-                    break;
-                case TokenType.AlphaNumeric:
-                    while (true)
+                    reserved.ReservedNames.Add(name);
+
+                    if (tokens.ConsumeIf(TokenType.Symbol, ","))
                     {
-                        int from = tokens.ConsumeInt32(), to = from;
-                        if (tokens.Read().Is(TokenType.AlphaNumeric, "to"))
-                        {
-                            tokens.Consume();
-                            to = tokens.ConsumeInt32(max);
-                        }
-                        var conflict = reserved.Fields.Find(x => x.Number >= from && x.Number <= to);
-                        if (conflict != null)
-                        {
-                            ctx.Errors.Error(tokens.Previous, $"{label} {conflict.Number} is already in use by '{conflict.Name}'", ErrorCode.FieldDuplicatedNumber);
-                        }
-                        if (extendRange) to++; // message are extended (i.e. range is whatever+1); enums are not; because reasons
-                        reserved.ReservedRanges.Add(new TRange { Start = from, End = to });
-
-                        token = tokens.Read();
-                        if (token.Is(TokenType.Symbol, ","))
-                        {
-                            tokens.Consume();
-                        }
-                        else if (token.Is(TokenType.Symbol, ";"))
-                        {
-                            tokens.Consume();
-                            break;
-                        }
-                        else
-                        {
-                            token.Throw(ErrorCode.ParseFailReservedRange);
-                        }
                     }
-                    break;
-                default:
-                    throw token.Throw(ErrorCode.ParseFailReservedRange);
+                    else if (tokens.ConsumeIf(TokenType.Symbol, ";"))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        tokens.Read().Throw(ErrorCode.ParseFailReservedRange, "unable to parse reserved range");
+                    }
+                }
+            }
+            else if (token.Type == TokenType.AlphaNumeric)
+            {
+                while (true)
+                {
+                    int from = tokens.ConsumeInt32(), to = from;
+                    if (tokens.Read().Is(TokenType.AlphaNumeric, "to"))
+                    {
+                        tokens.Consume();
+                        to = tokens.ConsumeInt32(max);
+                    }
+                    var conflict = reserved.Fields.Find(x => x.Number >= from && x.Number <= to);
+                    if (conflict != null)
+                    {
+                        ctx.Errors.Error(tokens.Previous, $"{label} {conflict.Number} is already in use by '{conflict.Name}'", ErrorCode.FieldDuplicatedNumber);
+                    }
+                    if (extendRange) to++; // message are extended (i.e. range is whatever+1); enums are not; because reasons
+                    reserved.ReservedRanges.Add(new TRange { Start = from, End = to });
+
+                    token = tokens.Read();
+                    if (token.Is(TokenType.Symbol, ","))
+                    {
+                        tokens.Consume();
+                    }
+                    else if (token.Is(TokenType.Symbol, ";"))
+                    {
+                        tokens.Consume();
+                        break;
+                    }
+                    else
+                    {
+                        token.Throw(ErrorCode.ParseFailReservedRange);
+                    }
+                }
+            }
+            else
+            {
+                throw token.Throw(ErrorCode.ParseFailReservedRange);
             }
             ctx.AbortState = AbortState.None;
         }
@@ -843,6 +965,74 @@ namespace Google.Protobuf.Reflection
     /// </summary>
     public partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
+        internal ParsedFeatures ResolvedFeatures { get; set; }
+
+        /// <summary>
+        /// Resolves editions features for everything in this file: per-edition defaults, merged
+        /// with explicit features, inherited lexically; the legacy syntaxes join in as the
+        /// placeholder editions with their spellings (required/group/[packed]/proto3-optional)
+        /// inferred onto the same axes. This runs during <see cref="FileDescriptorSet.Process"/>,
+        /// but is also safe to invoke on a file loaded from a compiled descriptor - the inputs
+        /// are all ordinary descriptor data - which is what the code generators rely on.
+        /// </summary>
+        /// <remarks>
+        /// Note that protoc 35.1's descriptor output does NOT map the editions forms back onto
+        /// the legacy spellings: a delimited message field stays TYPE_MESSAGE and
+        /// legacy-required stays LABEL_OPTIONAL, with the features carrying the truth (the
+        /// editions implementation guide describes an older TYPE_GROUP/LABEL_REQUIRED
+        /// representation; measured against protoc 35.1, that is not what descriptor_set_out
+        /// produces). Consumers must therefore ask ResolvedFeatures, not the type/label fields.
+        /// </remarks>
+        internal void ResolveFeatures()
+        {
+            var edition = ShouldSerializeEdition() ? Edition
+                : Syntax == SyntaxProto3 ? Edition.EditionProto3
+                : Edition.EditionProto2;
+            var fileFeatures = ParsedFeatures.Defaults(edition).Apply(Options?.Features);
+            ResolvedFeatures = fileFeatures;
+            foreach (var message in MessageTypes) ApplyFeatures(message, fileFeatures);
+            foreach (var @enum in EnumTypes) ApplyEnumFeatures(@enum, fileFeatures);
+            foreach (var extension in Extensions) ApplyFieldFeatures(extension, fileFeatures);
+
+            static void ApplyFeatures(DescriptorProto message, ParsedFeatures parent)
+            {
+                var msgFeatures = parent.Apply(message.Options?.Features);
+                message.ResolvedFeatures = msgFeatures;
+                foreach (var field in message.Fields) ApplyFieldFeatures(field, msgFeatures);
+                foreach (var extension in message.Extensions) ApplyFieldFeatures(extension, msgFeatures);
+                foreach (var nested in message.NestedTypes) ApplyFeatures(nested, msgFeatures);
+                foreach (var @enum in message.EnumTypes) ApplyEnumFeatures(@enum, msgFeatures);
+            }
+            static void ApplyFieldFeatures(FieldDescriptorProto field, ParsedFeatures parent)
+            {
+                var features = parent.Apply(field.Options?.Features);
+                // legacy inference: the proto2/proto3 spellings land on the same axes
+                if (field.label == FieldDescriptorProto.Label.LabelRequired)
+                {
+                    features = features.With(FeatureSet.FieldPresence.LegacyRequired);
+                }
+                if (field.Proto3Optional)
+                {
+                    features = features.With(FeatureSet.FieldPresence.Explicit);
+                }
+                if (field.type == FieldDescriptorProto.Type.TypeGroup)
+                {
+                    features = features.With(FeatureSet.MessageEncoding.Delimited);
+                }
+                if (field.Options is not null && field.Options.ShouldSerializePacked())
+                {
+                    features = features.With(field.Options.Packed
+                        ? FeatureSet.RepeatedFieldEncoding.Packed
+                        : FeatureSet.RepeatedFieldEncoding.Expanded);
+                }
+                field.ResolvedFeatures = features;
+            }
+            static void ApplyEnumFeatures(EnumDescriptorProto @enum, ParsedFeatures parent)
+            {
+                @enum.ResolvedFeatures = parent.Apply(@enum.Options?.Features);
+            }
+        }
+
         internal static FileDescriptorProto GetFile(IType type)
         {
             while (type != null)
@@ -898,21 +1088,50 @@ namespace Google.Protobuf.Reflection
             return _imports;
         }
         private readonly List<Import> _imports = new List<Import>();
-        internal bool AddImport(string path, bool isPublic, Token token)
+        internal bool AddImport(string path, bool isPublic, Token token, bool isOption = false)
         {
             var existing = _imports.Find(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
             {
                 // we'll allow this to upgrade
                 if (isPublic) existing.IsPublic = true;
+                if (!isOption) existing.IsOption = false; // a full import subsumes an option import
                 return false;
             }
             HasPendingImports = true;
-            _imports.Add(new Import { Path = path, IsPublic = isPublic, Token = token });
+            _imports.Add(new Import { Path = path, IsPublic = isPublic, IsOption = isOption, Token = token });
             return true;
         }
 
-        internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
+        /// <summary>
+        /// Handles the editions-2024 symbol visibility modifiers: 'export message Foo' etc.
+        /// </summary>
+        internal void ReadVisibilityScoped(ParserContext ctx, SymbolVisibility visibility)
+        {
+            var tokens = ctx.Tokens;
+            if (tokens.ConsumeIf(TokenType.AlphaNumeric, "message"))
+            {
+                if (DescriptorProto.TryParse(ctx, this, out var obj))
+                {
+                    obj.Visibility = visibility;
+                    MessageTypes.Add(obj);
+                }
+            }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "enum"))
+            {
+                if (EnumDescriptorProto.TryParse(ctx, this, out var obj))
+                {
+                    obj.Visibility = visibility;
+                    EnumTypes.Add(obj);
+                }
+            }
+            else
+            {
+                tokens.Read().Throw(ErrorCode.SyntaxErrorUnknownEntity, "expected 'message' or 'enum' after a visibility modifier");
+            }
+        }
+
+        internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3", SyntaxEditions = "editions";
 
         void ISchemaObject.ReadOne(ParserContext ctx)
         {
@@ -940,14 +1159,29 @@ namespace Google.Protobuf.Reflection
             {
                 ctx.AbortState = AbortState.Statement;
                 bool isPublic = tokens.ConsumeIf(TokenType.AlphaNumeric, "public");
+                bool isOption = !isPublic && tokens.ConsumeIf(TokenType.AlphaNumeric, "option");
+                if (isOption && ctx.Edition < Edition.Edition2024)
+                {
+                    ctx.Errors.Error(tokens.Previous, "'import option' requires edition 2024 or later", ErrorCode.ProtoSyntaxRequireProto2);
+                }
                 string path = tokens.Consume(TokenType.StringLiteral);
 
-                if (!AddImport(path, isPublic, tokens.Previous))
+                if (!AddImport(path, isPublic, tokens.Previous, isOption))
                 {
                     ctx.Errors.Warn(tokens.Previous, $"duplicate import: '{path}'", ErrorCode.ImportDuplicated);
                 }
                 tokens.Consume(TokenType.Symbol, ";");
                 ctx.AbortState = AbortState.None;
+            }
+            else if (ctx.Edition >= Edition.Edition2024 && tokens.ConsumeIf(TokenType.AlphaNumeric, "export"))
+            {
+                // contextual keywords: only editions 2024+ treats these as visibility
+                // modifiers; before that they are ordinary identifiers (e.g. type names)
+                ReadVisibilityScoped(ctx, SymbolVisibility.VisibilityExport);
+            }
+            else if (ctx.Edition >= Edition.Edition2024 && tokens.ConsumeIf(TokenType.AlphaNumeric, "local"))
+            {
+                ReadVisibilityScoped(ctx, SymbolVisibility.VisibilityLocal);
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "syntax"))
             {
@@ -967,6 +1201,27 @@ namespace Google.Protobuf.Reflection
                         ctx.Errors.Error(tokens.Previous, $"unknown syntax '{Syntax}'", ErrorCode.ProtoSyntaxInvalid);
                         break;
                 }
+                tokens.Consume(TokenType.Symbol, ";");
+                ctx.AbortState = AbortState.None;
+            }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "edition"))
+            {
+                ctx.AbortState = AbortState.Statement;
+                if (MessageTypes.Count > 0 || EnumTypes.Count > 0 || Extensions.Count > 0)
+                {
+                    ctx.Errors.Error(tokens.Previous, "edition must be set before types are defined", ErrorCode.ProtoSyntaxPreceedTypes);
+                }
+                tokens.Consume(TokenType.Symbol, "=");
+                var editionName = tokens.Consume(TokenType.StringLiteral);
+                switch (editionName)
+                {
+                    case "2023": Edition = Edition.Edition2023; break;
+                    case "2024": Edition = Edition.Edition2024; break;
+                    default:
+                        ctx.Errors.Error(tokens.Previous, $"unknown edition '{editionName}'", ErrorCode.ProtoSyntaxInvalid);
+                        break;
+                }
+                Syntax = SyntaxEditions; // protoc records syntax "editions" alongside the edition value
                 tokens.Consume(TokenType.Symbol, ";");
                 ctx.AbortState = AbortState.None;
             }
@@ -994,20 +1249,24 @@ namespace Google.Protobuf.Reflection
         public void Parse(TextReader schema, List<Error> errors, string file)
             => ParseSchema(schema, errors, file);
 
+        internal Token FirstToken { get; private set; }
         internal void ParseSchema(TextReader schema, List<Error> errors, string file)
         {
             Syntax = "";
             using var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace(), errors), errors);
             var tokens = ctx.Tokens;
             tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
+            FirstToken = startOfFile;
 
             // read the file into the object
             ctx.Fill(this);
 
-            // finish up
+            // finish up; note this matches protoc, which still treats a file with no
+            // syntax/edition statement as proto2 (silently, in modern versions; the
+            // warning here is our own advice)
             if (string.IsNullOrWhiteSpace(Syntax))
             {
-                ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
+                ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'edition = \"2023\";' (or 'syntax = \"proto2\";' / 'syntax = \"proto3\";')", ErrorCode.ProtoSyntaxNotSpecified);
             }
 
             if (Syntax == "" || Syntax == SyntaxProto2)
@@ -1458,6 +1717,14 @@ namespace Google.Protobuf.Reflection
                 HashSet<string> publicDependencies = null;
                 foreach (var import in _imports)
                 {
+                    if (import.IsOption)
+                    {
+                        // an option import provides custom options only; it is recorded in
+                        // option_dependency and excluded from the dependency list
+                        if (!OptionDependencies.Contains(import.Path))
+                            OptionDependencies.Add(import.Path);
+                        continue;
+                    }
                     if (!Dependencies.Contains(import.Path))
                         Dependencies.Add(import.Path);
                     if (import.IsPublic)
@@ -1495,30 +1762,62 @@ namespace Google.Protobuf.Reflection
         {
             if (options == null || options.UninterpretedOptions.Count == 0) return;
 
-            var extension = ((IExtensible)options).GetExtensionObject(true);
-            var target = extension.BeginAppend();
+            // language-scoped features - features.(pb.cpp).string_type etc - are extensions of
+            // FeatureSet itself, so they are peeled off and applied to the features message's
+            // own extension data rather than to the options message
+            List<UninterpretedOption> featureExtensions = null;
+            foreach (var pending in options.UninterpretedOptions)
+            {
+                var head = pending.Names.Count > 1 ? pending.Names[0] : null;
+                if (head is { IsExtension: false } && (head.name_part == "features" || head.name_part == "features."))
+                {
+                    pending.Names.RemoveAt(0);
+                    (featureExtensions ??= new List<UninterpretedOption>()).Add(pending);
+                }
+            }
+            if (featureExtensions is not null)
+            {
+                options.UninterpretedOptions.RemoveAll(featureExtensions.Contains);
+                var features = options.Features ??= new FeatureSet();
+                ResolveOptionsImpl(ctx, featureExtensions, features, FileDescriptorSet.Namespace + nameof(FeatureSet));
+                if (featureExtensions.Count != 0)
+                {
+                    // anything unapplied goes back for the regular error handling
+                    options.UninterpretedOptions.AddRange(featureExtensions);
+                }
+            }
+
+            ResolveOptionsImpl(ctx, options.UninterpretedOptions, (IExtensible)options, options.Extendee);
+        }
+
+        private void ResolveOptionsImpl(ParserContext ctx, List<UninterpretedOption> uninterpreted, IExtensible target, string extendee)
+        {
+            if (uninterpreted.Count == 0) return;
+
+            var extension = target.GetExtensionObject(true);
+            var buffer = extension.BeginAppend();
             try
             {
-                var state = ProtoWriter.State.Create(target, null, null);
+                var state = ProtoWriter.State.Create(buffer, null, null);
                 try
                 {
-                    var hive = OptionHive.Build(options.UninterpretedOptions);
+                    var hive = OptionHive.Build(uninterpreted);
 
                     // first pass is used to sort the fields so we write them in the right order
-                    AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, true, 0, false);
+                    AppendOptions(this, ref state, ctx, extendee, hive.Children, true, 0, false);
                     // second pass applies the data
-                    AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, false, 0, false);
+                    AppendOptions(this, ref state, ctx, extendee, hive.Children, false, 0, false);
                     state.Close();
                 }
                 finally
                 {
                     state.Dispose();
                 }
-                options.UninterpretedOptions.RemoveAll(x => x.Applied);
+                uninterpreted.RemoveAll(x => x.Applied);
             }
             finally
             {
-                extension.EndAppend(target, true);
+                extension.EndAppend(buffer, true);
             }
         }
 
@@ -1601,7 +1900,9 @@ namespace Google.Protobuf.Reflection
             foreach (var option in options)
                 AppendOption(file, ref state, ctx, extendee, option, resolveOnly, depth, messageSet);
 
-            if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
+            // fun historical fact: protoc *used to* write root fields in *file* order, but sub-fields in
+            // *field* order (hence we used to only sort when depth != 0); modern protoc sorts both
+            if (resolveOnly && options.Count > 1)
             {
                 // ascending field order, falling back to encounter order so that same-number
                 // siblings - the elements of a list value - keep the order they were written
@@ -1612,6 +1913,19 @@ namespace Google.Protobuf.Reflection
                     return byNumber != 0 ? byNumber : x.Ordinal.CompareTo(y.Ordinal);
                 });
             }
+        }
+        private static byte[] EncodeVarint(long value)
+        {
+            var buffer = new byte[10];
+            ulong raw = (ulong)value;
+            int len = 0;
+            do
+            {
+                buffer[len++] = (byte)((raw & 0x7F) | (raw > 0x7F ? 0x80UL : 0));
+                raw >>= 7;
+            } while (raw != 0);
+            Array.Resize(ref buffer, len);
+            return buffer;
         }
         private static void AppendOption(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
         {
@@ -1891,8 +2205,21 @@ namespace Google.Protobuf.Reflection
                                     {
                                         if (ShouldWrite(field, value.AggregateValue, @enum.Values.FirstOrDefault()?.Name))
                                         {
-                                            state.WriteFieldHeader(field.Number, WireType.Varint);
-                                            state.WriteInt32(found.Number);
+                                            if (field.IsPackedField())
+                                            {
+                                                // modern protoc writes packable repeated option values packed, even
+                                                // unary - but only when the extension field really is packed: e.g.
+                                                // google.api.field_behavior declares [packed = false] (added upstream
+                                                // precisely because the packed switch-over broke older parsers).
+                                                // enums are the only case observed in the corpus so far
+                                                state.WriteFieldHeader(field.Number, WireType.String);
+                                                state.WriteBytes(EncodeVarint(found.Number));
+                                            }
+                                            else
+                                            {
+                                                state.WriteFieldHeader(field.Number, WireType.Varint);
+                                                state.WriteInt32(found.Number);
+                                            }
                                         }
                                     }
                                 }
@@ -2011,6 +2338,8 @@ namespace Google.Protobuf.Reflection
         /// </summary>
         public partial class EnumReservedRange : IReservedRange { }
 
+        internal ParsedFeatures ResolvedFeatures { get; set; }
+
         /// <inheritdoc/>
         public override string ToString() => Name;
         internal IType Parent { get; set; }
@@ -2021,13 +2350,16 @@ namespace Google.Protobuf.Reflection
 
         List<EnumValueDescriptorProto> IReserved<EnumReservedRange, EnumValueDescriptorProto>.Fields => Values;
 
+        internal Token SourceLocation { get; set; }
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out EnumDescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
-            ctx.CheckNames(parent, name, ctx.Tokens.Previous);
+            var token = ctx.Tokens.Previous;
+            ctx.CheckNames(parent, name, token);
             if (ctx.TryReadObject(out obj))
             {
                 obj.Name = name;
+                obj.SourceLocation = token;
                 return true;
             }
             return false;
@@ -2081,6 +2413,16 @@ namespace Google.Protobuf.Reflection
             return syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type);
         }
 
+        /// <summary>
+        /// Indicates whether this field is packed, from the resolved editions features (which
+        /// the legacy syntaxes and the explicit [packed] option are inferred onto); requires
+        /// feature resolution to have run.
+        /// </summary>
+        internal bool IsPackedField()
+            => label == Label.LabelRepeated
+                && CanPack(type)
+                && ResolvedFeatures.RepeatedFieldEncoding == FeatureSet.RepeatedFieldEncoding.Packed;
+
         /// <inheritdoc/>
         public override string ToString() => Name;
         internal const int DefaultMaxField = 536870911;
@@ -2089,6 +2431,7 @@ namespace Google.Protobuf.Reflection
 
         internal IMessage Parent { get; set; }
         internal Token TypeToken { get; set; }
+        internal ParsedFeatures ResolvedFeatures { get; set; }
 
         internal int MaxField => Parent?.MaxField ?? DefaultMaxField;
 
@@ -2117,7 +2460,9 @@ namespace Google.Protobuf.Reflection
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "optional"))
             {
                 if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfOptional);
-                // proto3 now supports optional
+                // proto3 now supports optional; editions prohibits the label (explicit
+                // presence is the default there, so it has nothing left to say)
+                else tokens.Previous.RequireNotEditions(ctx);
                 label = Label.LabelOptional;
                 explicitOptional = true;
             }
@@ -2626,7 +2971,14 @@ namespace Google.Protobuf.Reflection
     public partial class EnumValueOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumValueOptions);
-        bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
+        bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
+        {
+            switch (key)
+            {
+                case "debug_redact": DebugRedact = ctx.Tokens.ConsumeBoolean(); return true;
+                default: return false;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the extension data as a byte-array
@@ -2654,9 +3006,112 @@ namespace Google.Protobuf.Reflection
                 case "jstype": Jstype = ctx.Tokens.ConsumeEnum<JSType>(); return true;
                 case "ctype": Ctype = ctx.Tokens.ConsumeEnum<CType>(); return true;
                 case "lazy": Lazy = ctx.Tokens.ConsumeBoolean(); return true;
-                case "packed": Packed = ctx.Tokens.ConsumeBoolean(); return true;
+                case "unverified_lazy": UnverifiedLazy = ctx.Tokens.ConsumeBoolean(); return true;
+                case "packed":
+                    if (ctx.IsEditions)
+                    {
+                        ctx.Errors.Error(ctx.Tokens.Previous, "the [packed] option is not allowed in editions; use features.repeated_field_encoding instead", ErrorCode.EditionsPackedOption);
+                    }
+                    Packed = ctx.Tokens.ConsumeBoolean();
+                    return true;
                 case "weak": Weak = ctx.Tokens.ConsumeBoolean(); return true;
+                case "debug_redact": DebugRedact = ctx.Tokens.ConsumeBoolean(); return true;
+                case "retention": Retention = ctx.Tokens.ConsumeEnum<OptionRetention>(); return true;
+                case "targets": Targets.Add(ctx.Tokens.ConsumeEnum<OptionTargetType>()); return true;
                 default: return false;
+            }
+        }
+
+        partial class EditionDefault
+        {
+            internal static EditionDefault Parse(ParserContext ctx)
+            {
+                EditionDefault ed = new();
+                ParserContext.ParseAggregate(ctx, (key, tok) =>
+                {
+                    switch (key)
+                    {
+                        case "edition": ed.Edition = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "value": ed.Value = ctx.Tokens.ConsumeString(); break;
+                        default: tok.Throw(ErrorCode.UnexpectedField, "Expected 'edition' or 'value'"); break;
+                    }
+                });
+                return ed;
+            }
+        }
+
+        partial class FeatureSupport
+        {
+            internal static FeatureSupport Parse(ParserContext ctx)
+            {
+                FeatureSupport fs = new();
+                ParserContext.ParseAggregate(ctx, (key, tok) =>
+                {
+                    switch (key)
+                    {
+                        case "edition_introduced": fs.EditionIntroduced = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "edition_deprecated": fs.EditionDeprecated = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "deprecation_warning": fs.DeprecationWarning = ctx.Tokens.ConsumeString(); break;
+                        case "edition_removed": fs.EditionRemoved = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "removal_error": fs.RemovalError = ctx.Tokens.ConsumeString(); break;
+                        default: tok.Throw(ErrorCode.UnexpectedField, "Unexpected field in feature_support"); break;
+                    }
+                });
+                return fs;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
+        }
+    }
+
+    /// <summary>
+    /// Options relating to an extension range
+    /// </summary>
+    public partial class ExtensionRangeOptions : ISchemaOptions
+    {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(ExtensionRangeOptions);
+        bool ISchemaOptions.Deprecated
+        {
+            get => false;
+            set { } // no such field; parse-tolerated only
+        }
+        bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
+        {
+            switch (key)
+            {
+                case "verification": Verification = ctx.Tokens.ConsumeEnum<VerificationState>(); return true;
+                default: return false;
+            }
+        }
+
+        partial class Declaration
+        {
+            internal static Declaration Parse(ParserContext ctx)
+            {
+                Declaration decl = new();
+                ParserContext.ParseAggregate(ctx, (key, tok) =>
+                {
+                    switch (key)
+                    {
+                        case "number": decl.Number = ctx.Tokens.ConsumeInt32(); break;
+                        case "full_name": decl.FullName = ctx.Tokens.ConsumeString(); break;
+                        case "type": decl.Type = ctx.Tokens.ConsumeString(); break;
+                        case "reserved": decl.Reserved = ctx.Tokens.ConsumeBoolean(); break;
+                        case "repeated": decl.Repeated = ctx.Tokens.ConsumeBoolean(); break;
+                        default: tok.Throw(ErrorCode.UnexpectedField, "Unexpected field in declaration"); break;
+                    }
+                });
+                return decl;
             }
         }
 
@@ -2868,6 +3323,7 @@ namespace ProtoBuf.Reflection
         public override string ToString() => Path;
         public string Path { get; set; }
         public bool IsPublic { get; set; }
+        public bool IsOption { get; set; }
         public Token Token { get; set; }
         public bool Used { get; set; }
     }
@@ -2931,7 +3387,7 @@ namespace ProtoBuf.Reflection
                 errors.Add(new Error(new Token(" ", lineNumber, columnNumber, TokenType.None, "", 0, file), s, isError, code));
             }
         }
-        internal string ToString(bool includeType) => Text.Length == 0
+        internal string ToString(bool includeType) => string.IsNullOrEmpty(Text)
                 ? $"{File}({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
                 : $"{File}({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
         /// <summary>
@@ -3017,6 +3473,7 @@ namespace ProtoBuf.Reflection
         bool ReadOne(ParserContext ctx, string key);
         byte[] ExtensionData { get; set; }
         string Extendee { get; }
+        FeatureSet Features { get; set; }
     }
 
     internal interface IHazNames
@@ -3127,6 +3584,31 @@ namespace ProtoBuf.Reflection
 
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
+                // first-class message/aggregate-valued fields on the options types themselves;
+                // these are known shapes rather than extensions, so they bypass the option hive
+                if (nameParts.Count == 1 && !nameParts[0].IsExtension)
+                {
+                    switch (nameParts[0].name_part)
+                    {
+                        case "edition_defaults" when (obj ??= new T()) is FieldOptions fieldOptions:
+                            fieldOptions.EditionDefaults.Add(FieldOptions.EditionDefault.Parse(this));
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                        case "feature_support" when (obj ??= new T()) is FieldOptions fieldOptions:
+                            fieldOptions.feature_support = FieldOptions.FeatureSupport.Parse(this);
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                        case "feature_support" when (obj ??= new T()) is EnumValueOptions enumValueOptions:
+                            enumValueOptions.FeatureSupport = FieldOptions.FeatureSupport.Parse(this);
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                        case "declaration" when (obj ??= new T()) is ExtensionRangeOptions extensionRangeOptions:
+                            extensionRangeOptions.Declarations.Add(ExtensionRangeOptions.Declaration.Parse(this));
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                    }
+                }
+
                 obj ??= new T();
                 bool any = false;
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
@@ -3207,7 +3689,7 @@ namespace ProtoBuf.Reflection
                 if (singleKey == "default" && isField)
                 {
                     string defaultValue = tokens.ConsumeString(field.type == FieldDescriptorProto.Type.TypeBytes);
-                    nameParts[0].Token.RequireProto2(this);
+                    nameParts[0].Token.RequireProto2OrEditions(this);
                     ParseDefault(tokens.Previous, field.type, ref defaultValue);
                     if (defaultValue != null)
                     {
@@ -3226,6 +3708,10 @@ namespace ProtoBuf.Reflection
                     {
                         obj.Deprecated = tokens.ConsumeBoolean();
                     }
+                    else if (singleKey is not null && singleKey.StartsWith("features.") && TryParseFeature(singleKey, obj, nameParts[0].Token))
+                    {
+                        // handled (or error already reported)
+                    }
                     else if (singleKey == null || !obj.ReadOne(this, singleKey))
                     {
                         var newOption = new UninterpretedOption
@@ -3237,6 +3723,54 @@ namespace ProtoBuf.Reflection
                         obj.UninterpretedOptions.Add(newOption);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles the first-class feature options (<c>features.field_presence</c> etc); these
+        /// are ordinary fields of FeatureSet rather than extensions, and only editions files may
+        /// set them. Language-scoped extension features (<c>features.(pb.cpp).*</c>) do not take
+        /// this path: the '(' splits the name into multiple parts, so it is never a single key.
+        /// </summary>
+        private bool TryParseFeature(string key, ISchemaOptions obj, Token token)
+        {
+            var tokens = Tokens;
+            if (!IsEditions)
+            {
+                Errors.Error(token, "features are only valid in editions", ErrorCode.ProtoSyntaxRequireProto2);
+                // still parse the value, so that the error does not cascade
+            }
+            var features = obj.Features ??= new FeatureSet();
+            switch (key)
+            {
+                case "features.field_presence":
+                    features.field_presence = tokens.ConsumeEnum<FeatureSet.FieldPresence>();
+                    return true;
+                case "features.enum_type":
+                    features.enum_type = tokens.ConsumeEnum<FeatureSet.EnumType>();
+                    return true;
+                case "features.repeated_field_encoding":
+                    features.repeated_field_encoding = tokens.ConsumeEnum<FeatureSet.RepeatedFieldEncoding>();
+                    return true;
+                case "features.utf8_validation":
+                    features.utf8_validation = tokens.ConsumeEnum<FeatureSet.Utf8Validation>();
+                    return true;
+                case "features.message_encoding":
+                    features.message_encoding = tokens.ConsumeEnum<FeatureSet.MessageEncoding>();
+                    return true;
+                case "features.json_format":
+                    features.json_format = tokens.ConsumeEnum<FeatureSet.JsonFormat>();
+                    return true;
+                case "features.enforce_naming_style":
+                    features.enforce_naming_style = tokens.ConsumeEnum<FeatureSet.EnforceNamingStyle>();
+                    return true;
+                case "features.default_symbol_visibility":
+                    features.DefaultSymbolVisibility = tokens.ConsumeEnum<FeatureSet.VisibilityFeature.DefaultSymbolVisibility>();
+                    return true;
+                default:
+                    Errors.Error(token, $"unknown feature: '{key}'", ErrorCode.UnexpectedField);
+                    tokens.ConsumeString(true); // best-effort: consume the value and continue
+                    return true;
             }
         }
 
@@ -3384,6 +3918,10 @@ namespace ProtoBuf.Reflection
         private static readonly char[] ExponentChars = { 'e', 'E' };
         private static string Format(float val)
         {
+            if (IsRoundableInteger(val))
+            {
+                return val.ToString("0e+00", CultureInfo.InvariantCulture);
+            }
             string s = val.ToString(CultureInfo.InvariantCulture);
             return s.IndexOfAny(ExponentChars) < 0 ? s
                 : val.ToString("0e+00", CultureInfo.InvariantCulture);
@@ -3391,9 +3929,61 @@ namespace ProtoBuf.Reflection
 
         private static string Format(double val)
         {
+            if (IsRoundableInteger(val))
+            {
+                return val.ToString("0e+00", CultureInfo.InvariantCulture);
+            }
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
             return s.IndexOfAny(ExponentChars) < 0 ? s
                 :  val.ToString("0e+00", CultureInfo.InvariantCulture);
+        }
+
+        private static bool IsRoundableInteger(double val)
+        {
+            // looking for integers that are XXXX00000, such that XXXXe+NN is
+            // shorter; matches modern protoc's rendering of such default values
+            if (Math.Abs(val) > 100000)
+            {
+                try
+                {
+                    checked
+                    {
+                        var i64 = (long)val;
+                        return val == i64 && (i64 % 100000) == 0;
+                    }
+                }
+                catch { }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Parses the body of a text-format aggregate value (the content between '{' and '}',
+        /// with the braces handled by the caller): a sequence of <c>key: value</c> pairs with
+        /// optional comma separators. The callback is positioned to consume the value.
+        /// </summary>
+        internal static void ParseAggregate(ParserContext ctx, Action<string, Token> onField)
+        {
+            var tokens = ctx.Tokens;
+            try
+            {
+                while (!tokens.Is(TokenType.Symbol, "}"))
+                {
+                    var tok = tokens.Read();
+                    var key = tokens.Consume(TokenType.AlphaNumeric);
+                    tokens.Consume(TokenType.Symbol, ":");
+                    onField(key, tok);
+                    if (!tokens.Is(TokenType.Symbol, "}"))
+                    {
+                        tokens.ConsumeIf(TokenType.Symbol, ",");
+                    }
+                }
+            }
+            catch (ParserException ex)
+            {
+                ctx.Errors.Error(ex);
+                tokens.SkipToEndObject();
+            }
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()
@@ -3480,6 +4070,21 @@ namespace ProtoBuf.Reflection
                 return string.IsNullOrEmpty(syntax) ? FileDescriptorProto.SyntaxProto2 : syntax;
             }
         }
+
+        /// <summary>
+        /// The effective edition of the file being parsed; legacy syntaxes map onto the
+        /// placeholder editions so that feature defaults resolve uniformly.
+        /// </summary>
+        public Edition Edition
+        {
+            get
+            {
+                if (_file.ShouldSerializeEdition()) return _file.Edition;
+                return Syntax == FileDescriptorProto.SyntaxProto3 ? Edition.EditionProto3 : Edition.EditionProto2;
+            }
+        }
+
+        internal bool IsEditions => Syntax == FileDescriptorProto.SyntaxEditions;
 
         private readonly FileDescriptorProto _file;
         public Peekable<Token> Tokens { get; }

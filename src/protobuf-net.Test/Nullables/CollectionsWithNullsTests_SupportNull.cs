@@ -42,9 +42,13 @@ message WrappedAsSupportNullstring {
    optional string value = 1;
 }
 message SupportsNullListModel {
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    repeated group WrappedAsSupportNullBar ClassItems = 1;
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    repeated group WrappedAsSupportNullint32 NullableIntItems = 2;
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    repeated group WrappedAsSupportNullstring StringItems = 3;
+   // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
    repeated group WrappedAsSupportNullint32 IntItems = 4 [packed = false];
 }");
 

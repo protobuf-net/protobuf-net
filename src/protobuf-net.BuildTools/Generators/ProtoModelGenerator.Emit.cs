@@ -626,7 +626,9 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, $"if (tmp{number}.HasValue)");
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, $"var val{number} = tmp{number}.GetValueOrDefault();");
-                    if (member.DefaultLiteral is { } nullableDefault)
+                    // a write condition replaces the declared-default test (the HasValue unwrap
+                    // above is not a guard, and stays)
+                    if (member.WriteCondition is null && member.DefaultLiteral is { } nullableDefault)
                     {
                         Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
                         Line(sb, indent + 1, "{");
@@ -697,9 +699,12 @@ namespace ProtoBuf.BuildTools.Generators
                         EmitScalarWrite(sb, indent + 1, member, number, $"tmp{number}");
                         Line(sb, indent, "}");
                         break;
-                    case ProtoMemberKind.String when member.DefaultLiteral is { } declared:
+                    case ProtoMemberKind.String when member.DefaultLiteral is { } declared
+                        && member.WriteCondition is null:
                         // the null test has to be explicit here: WriteString skips nulls itself, but
-                        // we must not compare a null against the declared default
+                        // we must not compare a null against the declared default. A write condition
+                        // replaces this guard entirely (the plain case below), which is the whole
+                        // point of Specified/ShouldSerialize: an explicit default still gets written
                         Line(sb, indent, $"if (tmp{number} != null && tmp{number} != {declared})");
                         Line(sb, indent, "{");
                         Line(sb, indent + 1, $"state.WriteString({number}, tmp{number});");

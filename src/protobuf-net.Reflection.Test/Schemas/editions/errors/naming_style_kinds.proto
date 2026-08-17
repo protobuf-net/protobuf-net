@@ -1,0 +1,5 @@
+edition = "2024";
+package Bad.PackageName;
+enum my_enum { badValue = 0; }
+service my_service { }
+message Ok { oneof BadOneof { int32 a = 1; } }

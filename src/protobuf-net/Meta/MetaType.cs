@@ -2089,6 +2089,24 @@ namespace ProtoBuf.Meta
                     NewLine(builder, indent + 1).Append("option allow_alias = true;");
                 }
 
+                if (syntax >= ProtoSyntax.Edition2023)
+                {
+                    bool hasZero = false;
+                    foreach (var member in enums)
+                    {
+                        if (member.TryGetInt32() == 0)
+                        {
+                            hasZero = true;
+                            break;
+                        }
+                    }
+                    if (!hasZero)
+                    {   // an open enum must start at zero; without one, closed is the
+                        // only valid declaration (which also matches proto2 semantics)
+                        NewLine(builder, indent + 1).Append("option features.enum_type = CLOSED;");
+                    }
+                }
+
                 bool haveWrittenZero = false;
                 // write zero values **first**
                 foreach (var member in enums)
@@ -2197,16 +2215,45 @@ namespace ProtoBuf.Meta
                                 throw new NotSupportedException("Schema generation for null-wrapped collections is not currently implemented; poke @mgravell with a big stick if you need this!");
                             }
 
+                            bool isEditions = syntax >= ProtoSyntax.Edition2023;
+                            bool isGrouped = hasGroupModifier || member.DataFormat == DataFormat.Group;
+                            if (isGrouped && !isEditions)
+                            {
+                                // note that even the proto2 form here is shorthand rather than
+                                // strict syntax: a real proto2 group declares its body inline and
+                                // derives the field name from the group name, which cannot express
+                                // an independently-named member of a separately-declared (and
+                                // possibly shared) type; editions is the first dialect where this
+                                // shape has an exact spelling
+                                NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto3
+                                    ? "// warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)"
+                                    : "// warning: 'group' here is shorthand; strict proto2 requires the group body inline, with the field named after it; edition 2023 or later expresses this exactly (features.message_encoding = DELIMITED)");
+                            }
                             string ordinality = member.ItemType is not null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
                             NewLine(builder, indent + 1).Append(ordinality);
 
-                            if (hasGroupModifier) builder.Append("group ");
-                            else if (member.DataFormat == DataFormat.Group) builder.Append("group ");
+                            // editions spells the group encoding as a feature instead of a keyword
+                            if (isGrouped && !isEditions) builder.Append("group ");
 
                             builder.Append(schemaModelTypeName).Append(' ')
                                  .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
-                            if (syntax == ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
+                            if (isEditions)
+                            {
+                                if (member.IsRequired)
+                                {
+                                    AddOption(builder, ref hasOption).Append("features.field_presence = LEGACY_REQUIRED");
+                                }
+                                if (isGrouped)
+                                {
+                                    AddOption(builder, ref hasOption).Append("features.message_encoding = DELIMITED");
+                                }
+                            }
+
+                            // editions: an implicit (zero-ish) default is exactly what an
+                            // unstated default means, so only declared defaults are emitted
+                            if ((syntax == ProtoSyntax.Proto2 || (isEditions && !IsImplicitDefault(member.DefaultValue)))
+                                && member.DefaultValue is not null && !member.IsRequired)
                             {
                                 if (member.DefaultValue is string)
                                 {
@@ -2246,6 +2293,10 @@ namespace ProtoBuf.Meta
                                 {
                                     if (member.IsPacked) AddOption(builder, ref hasOption).Append("packed = true"); // disabled by default
                                 }
+                                else if (isEditions)
+                                {   // enabled by default; the [packed] option itself is not legal in editions
+                                    if (!member.IsPacked) AddOption(builder, ref hasOption).Append("features.repeated_field_encoding = EXPANDED");
+                                }
                                 else
                                 {
                                     if (!member.IsPacked) AddOption(builder, ref hasOption).Append("packed = false"); // enabled by default
@@ -2262,7 +2313,7 @@ namespace ProtoBuf.Meta
                                 AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
                             }
                             CloseOption(builder, ref hasOption).Append(';');
-                            if (syntax != ProtoSyntax.Proto2 && member.DefaultValue is not null && !member.IsRequired)
+                            if (syntax == ProtoSyntax.Proto3 && member.DefaultValue is not null && !member.IsRequired)
                             {
                                 if (IsImplicitDefault(member.DefaultValue))
                                 {
