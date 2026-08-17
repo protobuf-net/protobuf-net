@@ -1353,6 +1353,48 @@ attempted:
 - the **info diagnostic** proposed in B26 would cover this case too, since it is the same question
   from the consumer's side: *why did my model leave the optimised path?*
 
+### B32. `PublicAPI.Shipped.txt` has drifted from the real signature — 16 warnings on every build
+
+Noticed 2026-08-17 while running `AotRefGen`; **pre-dates both external PRs** and is nobody's recent
+doing. `TypeModel.GetInbuiltSerializer<T>` produces `RS0016` (symbol not part of the declared API)
+and `RS0017` (declared API symbol not found) simultaneously, in `protobuf-net.Core` and again in
+`protobuf-net` via the type-forward — 16 warnings on a plain `v4` build. The declared entry has no
+default values; the real one does.
+
+Note this **contradicts a claim in `AGENTS.md`**, which says release tracking "is not actually
+*enforced* here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so the table is
+documentation rather than a build gate". That is true of the **RS2000** release-tracking rules and
+false of the **RS0016/RS0017** PublicApiAnalyzers rules, which are plainly live and shouting. The
+sentence should be narrowed when this is fixed.
+
+Cheap to clear (update the two `.Shipped.txt` entries to the current signature), and worth clearing
+precisely because 16 standing warnings are how a *new* one goes unnoticed.
+
+### B33. Move the working notes into per-arc sub-folders (Marc, 2026-08-17)
+
+`notes/` is flat and about to gain a second arc — Marc has parallel work on **protobuf editions**
+(C14 here, deferred to 4.1). Proposal: `notes/aot/…` for this arc, `notes/editions/…` for that one.
+Agreed in principle; **unblocked as of #1275 merging**, which was the reason to wait (it edited
+`notes/aot-findings.md`, and a rename against a concurrent edit is the one conflict class worth not
+inviting).
+
+Three decisions taken when it happens, recorded so they are not re-litigated:
+
+- **`gaps.md` moves too**, to `notes/aot/gaps.md`. Its content is entirely this arc, and a *global*
+  gaps file that mixes arcs gets worse as arcs multiply. `AGENTS.md`'s document table is already the
+  real index, so the model becomes per-arc gaps indexed from there. The cost is that AGENTS.md calls
+  `notes/gaps.md` "the entry point for what is missing" in more than one place, and those pointers
+  must move in the *same commit* — a stale pointer to the file that tells you what is missing is
+  exactly the failure this project keeps recording.
+- **Drop the redundant prefix while moving** — `notes/aot/findings.md`, not
+  `notes/aot/aot-findings.md` — but leave the other names alone (`nano-writer.md`,
+  `packed-writes.md`). Renaming path *and* filename for everything doubles the churn for no gain.
+- **It is a sweep, not a `git mv`.** There are ~148 references across ~25 files, and not only in
+  markdown: `.cs` and `.proto` comments cite these paths (`AotDifferential/Program.cs`, several
+  `Aot/Data/*.input.cs`, `SchemaSourcedModelEndToEndTests.cs`, `Schemas/*.proto`).
+
+Best done on a quiet tree, i.e. after #1277 squashes into `v4`.
+
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration

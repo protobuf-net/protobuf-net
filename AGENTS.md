@@ -1630,6 +1630,21 @@ differential, and `AotConformanceTests`) replay a declaration the same way — t
 assert's message now names both routes (the contract's own `Serializer =` and a `[ProtoSerializer]`
 declaration) so a mismatch says which one supplied the serializer.
 
+**A `Nullable<TStruct>` member whose serializer is scalar- or undetermined-category used not to
+compile at all**, and now works. The two switches disagreed about precedence: the *write* tested
+`IsNullable && Kind == Message` **before** the scalar arm and routed to `WriteMessage` — a length
+prefix over a bare scalar — while the *read* tested the scalar arm **first** and emitted
+`ISerializer<T>.Read(ref state, T?)`. Probed rather than reasoned: the generated code failed with
+`CS1503: cannot convert from 'Gauge?' to 'Gauge'`, so the wrong bytes were unreachable — the
+consumer's build broke first. Both sides now unwrap with `GetValueOrDefault()` and the write uses
+`WriteAny`, which takes the framing off the serializer. `AotSmoke`'s `Tally<string>? Bonus` covers
+it under ILC.
+
+Worth keeping as a shape, not just a fix: **presence and framing are decided by different switches
+in the two directions**, so a member kind that is both nullable *and* specially framed has to be
+handled in both, and getting only one produces a build break rather than a wire bug — which is the
+good failure, and the reason this sat undiscovered.
+
 #### `[ProtoSurrogate]` on the model
 
 You cannot put an attribute on `System.Uri`, so the contract-level form cannot reach a type you do

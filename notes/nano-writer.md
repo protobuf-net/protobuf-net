@@ -1277,24 +1277,38 @@ an `AotSmoke` member at **field 58** (their `Vault`, our packed columns), which 
 into a duplicate tag. `PBN0003` caught it at build; `Vault` moved to 62. Worth knowing that the
 analyzer, not a test, is what stands between a clean auto-merge and a corrupt fixture.
 
-**One external PR is still in flight, retargeted to `v4` and MERGEABLE**, with the merge, the gates
-and a review comment already done — it waits on Marc, not on work:
+**#1275 `[ProtoSerializer]` MERGED into `v4` on 2026-08-17** and forward into this branch, so both
+external PRs are in. It is *not* `[ProtoSurrogate]`: a surrogate always yields a sub-message, while
+a hand-written serializer may be `CategoryScalar`, framed by its own wire type. Its parity note for
+us is **B31** — an external serializer takes its member off measure-first, and `[ProtoSerializer]`
+widens that to types you do not own.
 
-- **#1275 `[ProtoSerializer]`** — declarative external serializer bindings (23 files). It is *not*
-  `[ProtoSurrogate]`: a surrogate always yields a sub-message, while a hand-written serializer may
-  be `CategoryScalar`, framed by its own wire type. **It contains a separable bug fix** worth
-  extracting to `v4` on its own merits: a `Nullable<TStruct>` member whose serializer is
-  scalar- or undetermined-category currently takes `WriteMessage` — a length prefix over a bare
-  scalar — and that is reachable today via `[ProtoContract(Serializer = …)]`, with no new attribute
-  involved.
+It also carried a fix worth knowing as a *shape*: a `Nullable<TStruct>` member with a scalar- or
+undetermined-category serializer **used not to compile** (`CS1503`, probed rather than reasoned),
+because the write switch tests nullability before framing and the read switch tests framing first.
+Presence and framing are decided by different switches in the two directions; getting only one
+produces a build break rather than a wire bug, which is why it sat undiscovered. Recorded in
+`AGENTS.md` beside the hand-written-serializer section.
 
-Both still need **one more merge-forward from `v4`** to pick up the `PBN3000+` renumber.
+**Exactly one thing gates the merge back to `v4`: the manual golden review** (`notes/gaps.md`
+section D). 63 changed vs `v4` plus 3 new fixtures — and the bodies moved twice more *after* that
+review began (B16's local folding, B16a's drift calls), so anything read before those commits is
+stale; both diffs are uniform and skim quickly.
 
-**What is next** is in `notes/gaps.md`: B26's remaining tier (`FixedSize`, level 240+
-`Timestamp`/`Duration`, level 300 string forms, repeated BCL elements) — which a pending feature
-(#1276) now leans on; `tmpN` folding (B16); B23's derived-list hold; B21 tier 3; the general
-negative-caching half of B24; and B27, the differential's Debug-first generator load. Marc is
-reviewing the goldens ahead of a squash and merge of #1277 into `v4`.
+**Everything else is post-merge backlog**, in `notes/gaps.md`:
+
+- *arc work with a live consumer* — **B26** (BCL level variants; re-ranked because #1276 shipped and
+  leans on it), **B16** (`tmpN` folding, the last of that entry), **B1** (two `DataFormat` arms),
+  **B23** (derived lists), **B21 tier 3**;
+- *correctness-adjacent, narrow* — **B15** (depth not synced on the raw → stateful transition),
+  **B24** (the general negative-caching half);
+- *housekeeping, each small* — **B27** (the differential's Debug-first generator load, which has
+  bitten twice), **B29** (`ProtoReader.cs` cites a non-existent `PORTING.md`), **B30** (five
+  `[ProtoDataFormat]` follow-ups, none blocking), **B32** (`PublicAPI.Shipped.txt` drift, 16
+  warnings on every build), **B33** (move the notes into per-arc sub-folders — agreed, and best done
+  on a quiet tree after #1277 squashes);
+- *answered, no action* — **B28** (dispatch), **B31** (external serializers), plus the long
+  deferred/parked set (B2–B11, C9–C12, and C14 editions → 4.1).
 
 **State as of 2026-08-13, end of session.** Everything is pushed to `raw-writer` and green on
 every gate (protobuf-net.Test 1110 x2 TFMs, Examples 679/705, Reflection 556 x2, conformance
