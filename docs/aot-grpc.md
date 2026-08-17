@@ -494,6 +494,31 @@ That comparison is cheap and mechanical, and it is the only thing standing betwe
 runtime" and "we quietly diverge on authorization metadata", which is the failure mode worth fearing:
 `[Authorize]` going missing produces no error, just a more permissive endpoint.
 
+## PBN4015: you asked for AOT and have not squared the circle
+
+The counterpart of the serializer generator's `PBN3012`, and worth having separately because the gRPC
+failure is *further* from the developer: switching on `PublishAot` changes nothing at build time, the JIT
+run keeps working, and the first sign of trouble is a native publish or a startup that cannot bind. Both
+halves reach reflection without a model - the proxies through `ProxyEmitter`, the payloads through
+`MarshallerCache` - so there is nothing to fall back to.
+
+**The trigger is consumer-side *usage*, not the presence of service contracts, and that is load-bearing.**
+Shipping `[Service]` interfaces in a shared package is the recommended layout, and such a package needs no
+`[ProtoGrpc]` of its own - its consumers do. Triggering on declarations would nag hardest at exactly the
+project that is laid out correctly. So the two things that mean "this is a client or a server" are what
+count: a **plain `CreateGrpcService<T>`** (one already passing a factory is left alone - that consumer has
+done what we would ask), and the server's **`AddCodeFirstGrpc`**. The server case is the one that
+justifies the diagnostic on its own, since a server-only project has no client call site to flag.
+
+A warning rather than an error, for `PBN3012`'s reason: switching on `PublishAot` should not break a build
+on the spot.
+
+The "does this project ask for AOT" probe is now shared with `AotMigrationAnalyzer`
+(`Utils.AsksForAot`) rather than duplicated - it is a list of four MSBuild properties that would drift the
+moment the SDK grew a fifth. Note that writing this found `PBN3012`'s own AOT-configured path had **never
+been tested**: `AnalyzerTestBase` had no way to supply build properties at all, so those code paths could
+be read but not run. It has one now.
+
 ## Interceptors (proven mechanism, not yet used)
 
 The plan for the zero-code-change half. Probed with a scratch generator before proposing, and every
@@ -602,7 +627,8 @@ namespace ProtoBuf.AOT
         public static global::Some.IGreeter Create_IGreeter(
             this global::Grpc.Core.CallInvoker client,
             global::ProtoBuf.Grpc.Configuration.ClientFactory? clientFactory = null)
-            => global::Some.MyServices.Instance.CreateClient<global::Some.IGreeter>(client);
+            => (clientFactory ?? global::Some.MyServices.Instance)
+                    .CreateClient<global::Some.IGreeter>(client);
     }
 }
 ```
@@ -617,9 +643,17 @@ compile error in the consumer's project:
 - an `internal static class` at namespace level is fine - extension methods need a non-generic
   non-nested static class, and `internal` satisfies the call site without `file` scoping.
 
-For the `ChannelBase` overload the body becomes
-`Model.Instance.CreateClient<T>(client.CreateCallInvoker())`, which is exactly what the runtime overload
-does - keeping the rule that an interceptor only ever swaps the factory and never reimplements anything.
+For the `ChannelBase` overload the body adds `client.CreateCallInvoker()`, which is exactly what the
+runtime overload does - keeping the rule that an interceptor only ever swaps the factory and never
+reimplements anything.
+
+**The `??` is a real null check, not defensive noise, and it is there instead of a `Debug.Assert`.** The
+matcher only intercepts call sites that pass no factory, so `clientFactory` is provably null at every
+site we emit for - which makes an assert a check on *our own* matcher rather than on anything a consumer
+did. The coalesce is strictly better: it costs one token, needs no `DEBUG` conditional, mirrors the
+runtime overload's own `(clientFactory ?? ClientFactory.Default)`, and makes the dangerous failure
+impossible rather than merely detectable. That failure being: silently discarding a factory the consumer
+explicitly configured, which is exactly what a widened matcher plus a forgotten argument would do.
 
 ### The namespace: `ProtoBuf.AOT`
 

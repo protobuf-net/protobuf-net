@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.BuildTools.Internal;
@@ -19,6 +19,12 @@ namespace BuildToolsUnitTests
         // utility anaylzer data, with thanks to Samo Prelog
         private readonly ITestOutputHelper? _testOutputHelper;
         protected AnalyzerTestBase(ITestOutputHelper? testOutputHelper = null) => _testOutputHelper = testOutputHelper;
+
+        /// <summary>
+        /// MSBuild properties to expose to the analyzer, as <c>build_property.X</c> keys. Empty by
+        /// default, which is the same as a project that sets none of them.
+        /// </summary>
+        protected Dictionary<string, string> GlobalOptions { get; } = new();
 
         protected virtual TAnalyzer Analyzer
         {
@@ -45,7 +51,17 @@ namespace BuildToolsUnitTests
             _ = callerMemberName;
             var (project, compilation) = await ObtainProjectAndCompilationAsync(projectModifier);
             var analyzers = project.AnalyzerReferences.SelectMany(x => x.GetAnalyzers(project.Language)).ToImmutableArray();
-            var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, project.AnalyzerOptions);
+
+            // Global options exist so that the analyzers keyed on MSBuild properties can be exercised at
+            // all - PublishAot and friends for the two "you asked for AOT" announcements, and
+            // ProtoBufDisableBuildTools. Without this, those code paths could only be read, not run.
+            var analyzerOptions = GlobalOptions.Count == 0
+                ? project.AnalyzerOptions
+                : new AnalyzerOptions(project.AnalyzerOptions.AdditionalFiles,
+                    TestAnalyzeConfigOptionsProvider.Empty.WithGlobalOptions(
+                        new TestAnalyzerConfigOptions(GlobalOptions.ToImmutableDictionary())));
+
+            var compilationWithAnalyzers = compilation.WithAnalyzers(analyzers, analyzerOptions);
             var diagnostics = await compilationWithAnalyzers.GetAllDiagnosticsAsync();
             if (ignoreCompatibilityLevelAdvice)
             {

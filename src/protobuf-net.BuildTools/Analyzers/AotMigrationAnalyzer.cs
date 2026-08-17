@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -170,17 +170,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// </remarks>
         private static void Announce(SymbolAnalysisContext context, INamedTypeSymbol anchor)
         {
-            var options = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
-            string? asked = null;
-            foreach (var property in new[] { "PublishAot", "PublishTrimmed", "IsAotCompatible", "IsTrimmable" })
-            {
-                if (options.TryGetValue("build_property." + property, out var value)
-                    && string.Equals(value, "true", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    asked = property;
-                    break;
-                }
-            }
+            var asked = context.Options.AnalyzerConfigOptionsProvider.AsksForAot();
 
             // Anchored on a contract rather than at Location.None, which is where this started: a
             // code fix has to attach to a document, and an actionable lightbulb offering to write the

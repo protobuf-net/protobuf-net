@@ -66,4 +66,5 @@ PBN4011  | ProtoBuf.Grpc | Warning | Service contract could not be resolved
 PBN4012  | ProtoBuf.Grpc | Warning | The named serializer model is not marked [ProtoModel]
 PBN4013  | ProtoBuf.Grpc | Warning | The named serializer model has no serializer for a payload type
 PBN4014  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be top-level and non-generic
+PBN4015  | ProtoBuf.Grpc | Warning | Project publishes AOT or trimmed, but has no build-time gRPC proxies
 
