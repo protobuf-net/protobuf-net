@@ -24,22 +24,18 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > `[Experimental]`, i.e. an *error* by default, so a stub also keeps fixtures free of suppressions.
 >
 > **`src/AotGrpcSmoke` is verified against the genuine 1.3.6 from nuget.org** — build, JIT run and a
-> `win-x64` native run, all five checks green, **5 IL warnings and 14,480,384 bytes** (against 100
-> and 15,019,520 on 1.3.0). Four of the five are per-assembly rollups; the one real warning is the
-> `IL2091` in the next-steps list below, which is ours.
+> `win-x64` native run, all five checks green, **4 IL warnings and 14,480,384 bytes** (against 100
+> and 15,019,520 on 1.3.0). **All four are per-assembly `IL2104`/`IL3053` rollups; nothing is
+> attributed to generated code.**
 >
 > **Next steps, in order** — all mechanical now:
 >
-> 1. **The one real `IL2091`**, on the generated `__Serialize<T>`: its fallback arm calls
->    `TypeModel.Serialize<T>(Stream, T, object)`, which demands `DynamicAccess.ContractType`. Either
->    restate the annotation on the emitted helper (terminates immediately — call sites pass concrete
->    contract types) or drop the fallback arm and write to a pooled buffer instead.
-> 2. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its
+> 1. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its
 >    payload types. `GrpcOperationModel` already carries them as strings.
-> 3. **Compile-time endpoint metadata** — reconstruct the attributes at compile time rather than
+> 2. **Compile-time endpoint metadata** — reconstruct the attributes at compile time rather than
 >    reflecting. Unblocked now that `BinderConfiguration.Binder` is public, which gives the
 >    custom-binder fallback something to test against. See "Known gaps".
-> 4. **More fixtures.** There is still only one (`Basic.input.cs`); every diagnostic path
+> 3. **More fixtures.** There is still only one (`Basic.input.cs`); every diagnostic path
 >    (`PBN4001`–`PBN4011`) is unexercised.
 
 ## What this is
@@ -117,8 +113,7 @@ Nothing resolves by `Type` at run time: no registry, no `[ModuleInitializer]`, n
   the real package; the first emitter got this wrong.
 - **`BinderConfiguration.Binder` was `internal`**, so generated code could not reach the metadata
   pipeline through it and had to use the public `ServiceBinder.Default` — which silently ignores a
-  consumer's custom binder. It is **public from 1.3.6**, so the emitter should now use `__cfg.Binder`;
-  that is still outstanding. See "Known gaps".
+  consumer's custom binder. It is **public from 1.3.6**, and the emitter now uses `__cfg.Binder`.
 - **`BinderConfiguration.SetMarshaller<T>` is public**, and `GetMarshaller<T>` checks the cache
   first. That is what lets the generator sidestep `CanSerialize(Type)` entirely.
 - **protobuf-net.Grpc 1.0.21 predates the `ClientFactory` shape** — its `CreateClient<TService>` is
@@ -226,14 +221,40 @@ snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it 
   Teaching `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its payload types is
   the obvious next step; `GrpcOperationModel` already carries them as strings.
 - **One reflective call left on the server path**:
-  `ServiceBinder.Default.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve
-  `[Authorize]`-style endpoint metadata. It survives the native publish, but it is a `GetMethod` over
-  an interface and wants a non-reflective route. Note it also names `ServiceBinder.Default` rather
-  than the configured binder, so a consumer's custom `GetMetadata` override is ignored — that half is
-  a one-word fix now `BinderConfiguration.Binder` is public (1.3.6).
-- **5 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The
-  two `RuntimeTypeModel` roots" below for why it was all-or-nothing. Of the residual 5, four
-  are per-assembly rollups and one is the `IL2091` in the handover list. If more ever appear, use
+  `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve `[Authorize]`-style
+  endpoint metadata. It survives the native publish, but it is a `GetMethod` over an interface and
+  wants a non-reflective route — see the parity note below before building that.
+
+### Metadata parity, and protobuf-net.Grpc#369
+
+We deliberately delegate metadata to `GetMetadata` rather than computing it, so whatever the runtime
+does, we do. **That equivalence is the thing to re-check if
+[protobuf-net.Grpc#369](https://github.com/protobuf-net/protobuf-net.Grpc/pull/369) lands**, because
+it changes what `GetMetadata` returns for operations inherited from a `[SubService]` base.
+
+As proposed it *swaps* which type-level attributes are collected — sub-service interface instead of
+top-level service contract — and the likely landing shape is a **union of both**, plus the
+implementation method's. Either way the set moves.
+
+Two consequences, in order of how easily they are missed:
+
+1. **While we delegate, we inherit the change for free** — including any bug in it. Nothing here needs
+   to change, but a fixture with a `[SubService]` base and an attribute at each level would pin it,
+   and there is currently no such fixture.
+2. **The moment compile-time metadata is built (next-steps item 3), we own the reconstruction**, and
+   the union rule has to be reproduced exactly. Attributes on an interface do **not** inherit —
+   `GetCustomAttributes(inherit: true)` does not walk base interfaces, probed rather than assumed —
+   so "just ask the contract type" silently loses one side of the union. The check to run before
+   trusting a compile-time implementation is a differential: for a contract with a `[SubService]`
+   base, compare our reconstructed list against `binder.GetMetadata(...)` item by item, on the same
+   contract, at all three levels (top-level interface, sub-service interface, implementation method).
+
+That comparison is cheap and mechanical, and it is the only thing standing between "we match the
+runtime" and "we quietly diverge on authorization metadata", which is the failure mode worth fearing:
+`[Authorize]` going missing produces no error, just a more permissive endpoint.
+- **4 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The
+  two `RuntimeTypeModel` roots" below for why it was all-or-nothing. All four are per-assembly
+  rollups; nothing is attributed to generated code. If more ever appear, use
   `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
   `aot-findings.md`.
 - **No interceptors yet.** See below.
@@ -287,8 +308,8 @@ in protobuf-net.Grpc, and this is the single most useful number in these notes:
 | **both** — i.e. shipped 1.3.6 | **5** | **14,480,384** |
 
 **An AND, not an OR.** Either alone keeps the other's graph alive, so each change measured in
-isolation looks worthless — and the natural conclusion would have been to drop it. Four of the five
-residual warnings are per-assembly rollups; the one real one is the `IL2091` listed in the handover.
+isolation looks worthless — and the natural conclusion would have been to drop it. The residual four
+are per-assembly rollups, with nothing attributed to generated code.
 
 The second root is the surprising one: `MarshallerCache` pre-registers `BytesValue.Marshaller` in a
 **field initialiser**, so every consumer — including one that never touches a `Stream`-shaped

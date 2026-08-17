@@ -234,6 +234,9 @@ namespace ProtoBuf.Grpc.Configuration
         public Marshaller<T> GetMarshaller<T>() => null!;
         // public, and the reason the generated config can sidestep CanSerialize(Type) entirely
         public void SetMarshaller<T>(Marshaller<T>? marshaller) { }
+        // public from 1.3.6; before that the generated bindings had to use ServiceBinder.Default,
+        // which silently ignores a consumer's custom binder
+        public ServiceBinder Binder { get; } = ServiceBinder.Default;
     }
 
     // the seam this whole approach hangs off: already abstract, already public, already accepted by

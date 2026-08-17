@@ -118,7 +118,7 @@ namespace ProtoBuf.BuildTools.Generators
                     return;
                 }
 
-                ctx.AddSource(HintName(plan), Emit(plan, caps.HasAspNetCore));
+                ctx.AddSource(HintName(plan), Emit(plan, caps.HasAspNetCore, caps.AnnotateTrimming));
             });
         }
 
@@ -142,10 +142,11 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private readonly struct Capabilities
         {
-            private Capabilities(bool disabled, bool hasAspNetCore, LanguageVersion languageVersion)
+            private Capabilities(bool disabled, bool hasAspNetCore, bool annotateTrimming, LanguageVersion languageVersion)
             {
                 Disabled = disabled;
                 HasAspNetCore = hasAspNetCore;
+                AnnotateTrimming = annotateTrimming;
                 LanguageVersion = languageVersion;
             }
 
@@ -155,12 +156,22 @@ namespace ProtoBuf.BuildTools.Generators
             /// <summary>Whether the server half can be emitted; see <see cref="GrpcModelPlan.HasAspNetCore"/>.</summary>
             public bool HasAspNetCore { get; }
 
+            /// <summary>
+            /// Whether <c>[DynamicallyAccessedMembers]</c> can be used in the emitted code.
+            /// </summary>
+            /// <remarks>
+            /// Probed rather than assumed from a TFM, exactly as <c>ProtoModelGenerator</c> does: it
+            /// ships in the BCL from net5 onwards, and protobuf-net's own down-level copy is
+            /// internal, so it is not usable from the consumer's assembly even where it exists.
+            /// </remarks>
+            public bool AnnotateTrimming { get; }
+
             public LanguageVersion LanguageVersion { get; }
 
             public static Capabilities From(Compilation compilation, ParseOptions parseOptions,
                 Microsoft.CodeAnalysis.Diagnostics.AnalyzerConfigOptionsProvider configOptions)
             {
-                if (configOptions.BuildToolsDisabled()) return new Capabilities(true, false, LanguageVersion.Default);
+                if (configOptions.BuildToolsDisabled()) return new Capabilities(true, false, false, LanguageVersion.Default);
 
                 var hasAspNetCore = compilation.GetTypeByMetadataName(
                     "Grpc.AspNetCore.Server.Model.ServiceMethodProviderContext`1") is not null;
@@ -169,7 +180,12 @@ namespace ProtoBuf.BuildTools.Generators
                     ? csharp.LanguageVersion
                     : LanguageVersion.Default;
 
-                return new Capabilities(false, hasAspNetCore, languageVersion);
+                var annotations = compilation.GetTypeByMetadataName(
+                    "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute");
+                var annotateTrimming = annotations is not null
+                    && compilation.IsSymbolAccessibleWithin(annotations, compilation.Assembly);
+
+                return new Capabilities(false, hasAspNetCore, annotateTrimming, languageVersion);
             }
         }
 

@@ -28,10 +28,10 @@ namespace GrpcFixtures.Basic
             return config;
         }
 
-        private static global::Grpc.Core.Marshaller<T> __CreateMarshaller<T>()
+        private static global::Grpc.Core.Marshaller<T> __CreateMarshaller<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
             => new global::Grpc.Core.Marshaller<T>(__Serialize<T>, __Deserialize<T>);
 
-        private static void __Serialize<T>(T value, global::Grpc.Core.SerializationContext ctx)
+        private static void __Serialize<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>(T value, global::Grpc.Core.SerializationContext ctx)
         {
             var measurer = (global::ProtoBuf.IMeasuredProtoOutput<global::System.Buffers.IBufferWriter<byte>>)global::GrpcFixtures.Basic.BasicModel.Instance;
             using var measured = measurer.Measure(value);
@@ -137,7 +137,7 @@ namespace GrpcFixtures.Basic
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloRequest>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Basic.Greeter", "SayHello", __m_req, __m_resp);
-                    var __meta = global::ProtoBuf.Grpc.Configuration.ServiceBinder.Default.GetMetadata(
+                    var __meta = __cfg.Binder.GetMetadata(
                         typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("SayHelloAsync")!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddUnaryMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(SayHelloAsync_Server_Unary));
@@ -151,7 +151,7 @@ namespace GrpcFixtures.Basic
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloRequest>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Basic.Greeter", "Ping", __m_req, __m_resp);
-                    var __meta = global::ProtoBuf.Grpc.Configuration.ServiceBinder.Default.GetMetadata(
+                    var __meta = __cfg.Binder.GetMetadata(
                         typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("PingAsync")!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddUnaryMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(PingAsync_Server_Unary));
@@ -165,7 +165,7 @@ namespace GrpcFixtures.Basic
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloRequest>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.ServerStreaming, "GrpcFixtures.Basic.Greeter", "Subscribe", __m_req, __m_resp);
-                    var __meta = global::ProtoBuf.Grpc.Configuration.ServiceBinder.Default.GetMetadata(
+                    var __meta = __cfg.Binder.GetMetadata(
                         typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("Subscribe")!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddServerStreamingMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.ServerStreamingServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(Subscribe_Server_ServerStreaming));
@@ -179,7 +179,7 @@ namespace GrpcFixtures.Basic
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloRequest>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.ClientStreaming, "GrpcFixtures.Basic.Greeter", "Collect", __m_req, __m_resp);
-                    var __meta = global::ProtoBuf.Grpc.Configuration.ServiceBinder.Default.GetMetadata(
+                    var __meta = __cfg.Binder.GetMetadata(
                         typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("CollectAsync")!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddClientStreamingMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.ClientStreamingServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(CollectAsync_Server_ClientStreaming));
@@ -193,7 +193,7 @@ namespace GrpcFixtures.Basic
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloRequest>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Basic.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(global::Grpc.Core.MethodType.DuplexStreaming, "GrpcFixtures.Basic.Greeter", "Chat", __m_req, __m_resp);
-                    var __meta = global::ProtoBuf.Grpc.Configuration.ServiceBinder.Default.GetMetadata(
+                    var __meta = __cfg.Binder.GetMetadata(
                         typeof(global::GrpcFixtures.Basic.IGreeter).GetMethod("Chat")!,
                         typeof(global::GrpcFixtures.Basic.IGreeter), typeof(global::GrpcFixtures.Basic.GreeterService));
                     context.AddDuplexStreamingMethod<global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.DuplexStreamingServerMethod<global::GrpcFixtures.Basic.GreeterService, global::GrpcFixtures.Basic.HelloRequest, global::GrpcFixtures.Basic.HelloReply>(Chat_Server_DuplexStreaming));
