@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4004 Grpc/Data/Diagnostics/BaseInterface.input.cs L40 C18
+Interface 'IThing' inherits 'GrpcFixtures.BaseInterface.IAudited', which is not marked [SubService]; the runtime proxy will be used for this contract. Mark the base interface [SubService] to have it bound as part of this contract

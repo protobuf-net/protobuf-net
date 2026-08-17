@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace BuildToolsUnitTests.Aot
@@ -77,6 +78,22 @@ namespace BuildToolsUnitTests.Aot
             }
             catch (IOException) { } // best-effort only
             catch (UnauthorizedAccessException) { }
+        }
+
+        /// <summary>
+        /// A fixture can pin its language version with a sibling <c>.langver</c> file, so that a
+        /// generator's minimum-version handling can be exercised. Shared, because both generators
+        /// have a floor and both need to prove it fires.
+        /// </summary>
+        protected static LanguageVersion ReadPinnedLanguageVersion(string path)
+        {
+            var langVerPath = Regex.Replace(path, @"\.input\.cs$", ".langver", RegexOptions.IgnoreCase);
+            if (!File.Exists(langVerPath)) return LanguageVersion.Latest;
+
+            var text = File.ReadAllText(langVerPath).Trim();
+            Assert.True(LanguageVersionFacts.TryParse(text, out var langVersion),
+                $"unable to parse language version '{text}' from {langVerPath}");
+            return langVersion;
         }
 
         protected sealed class GeneratorResult

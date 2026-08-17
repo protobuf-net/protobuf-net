@@ -1,4 +1,3 @@
-using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Generators;
 using System.Collections.Generic;
 using System.IO;
@@ -46,21 +45,6 @@ namespace BuildToolsUnitTests.Aot
             Assert.Equal(0, result.ErrorCount);
             Assert.Equal(expectedCode.Trim(), actualCode.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
             Assert.Equal(expectedBuildOutput.Trim(), buildOutput.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
-        }
-
-        /// <summary>
-        /// A fixture can pin its language version with a sibling <c>.langver</c> file, so that the
-        /// generator's minimum-version handling can be exercised.
-        /// </summary>
-        private static LanguageVersion ReadPinnedLanguageVersion(string path)
-        {
-            var langVerPath = Regex.Replace(path, @"\.input\.cs$", ".langver", RegexOptions.IgnoreCase);
-            if (!File.Exists(langVerPath)) return LanguageVersion.Latest;
-
-            var text = File.ReadAllText(langVerPath).Trim();
-            Assert.True(LanguageVersionFacts.TryParse(text, out var langVersion),
-                $"unable to parse language version '{text}' from {langVerPath}");
-            return langVersion;
         }
     }
 }

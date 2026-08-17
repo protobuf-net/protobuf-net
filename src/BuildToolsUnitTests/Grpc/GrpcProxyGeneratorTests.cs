@@ -42,6 +42,7 @@ namespace BuildToolsUnitTests.Grpc
 
             var sb = new StringBuilder();
             var result = Execute<GrpcProxyGenerator>(source, sb, fileName: path,
+                languageVersion: ReadPinnedLanguageVersion(path),
                 extraSources: new[] { (SurfacePath, File.ReadAllText(SurfacePath)) });
 
             var actualCode = result.GeneratedCode;
@@ -49,10 +50,17 @@ namespace BuildToolsUnitTests.Grpc
 
             WriteBack(GetOriginCodeLocation(), outputCodePath, actualCode, buildOutput);
 
-            // the whole point of the surface snapshot: the generated code is *compiled*, so a
+            // The whole point of the surface snapshot: the generated code is *compiled*, so a
             // signature that does not line up with protobuf-net.Grpc fails here rather than in a
-            // consumer's build
-            Assert.Equal(0, result.ErrorCount);
+            // consumer's build.
+            //
+            // Some fixtures legitimately do not compile, and that is the finding rather than a flaw
+            // in the fixture: PBN4011's entire cause is a type name that does not resolve, and
+            // anywhere we decline to emit for a `[ProtoGrpc] : ClientFactory` type the consumer is
+            // left with CS0534 for the two abstract members we would have supplied. Those errors are
+            // pinned exactly by the .txt golden, so what is checked here is that no *new* one
+            // appeared - and because the golden is a reviewable diff, one that does is visible.
+            if (!expectedBuildOutput.Contains("Error CS")) Assert.Equal(0, result.ErrorCount);
             Assert.Equal(expectedCode.Trim(), actualCode.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
             Assert.Equal(expectedBuildOutput.Trim(), buildOutput.Trim(), ignoreLineEndingDifferences: true, ignoreWhiteSpaceDifferences: true);
         }

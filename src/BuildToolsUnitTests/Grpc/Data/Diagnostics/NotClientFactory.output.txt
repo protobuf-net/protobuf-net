@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4006 Grpc/Data/Diagnostics/NotClientFactory.input.cs L42 C29
+'NotClientFactoryServices' is marked [ProtoGrpc] but does not derive from 'ProtoBuf.Grpc.Configuration.ClientFactory'; deriving from it is what lets 'channel.CreateGrpcService<T>(...)' accept this type

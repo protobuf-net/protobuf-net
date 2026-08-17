@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN4002 Grpc/Data/Diagnostics/MethodShape.input.cs L40 C18
+Method 'GrpcFixtures.MethodShape.IThing.DownloadAsync' has a signature that is not emitted at build time, so the whole contract is left to the runtime proxy, which is not trim/AOT-friendly
+Warning PBN4002 Grpc/Data/Diagnostics/MethodShape.input.cs L42 C13
+Method 'GrpcFixtures.MethodShape.IThing.EchoAsync' has a signature that is not emitted at build time, so the whole contract is left to the runtime proxy, which is not trim/AOT-friendly

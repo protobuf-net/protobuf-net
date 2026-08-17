@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4008 Grpc/Data/Diagnostics/BadImplementation.input.cs L37 C14
+'GrpcFixtures.BadImplementation.ThingService' was named as the implementation of 'GrpcFixtures.BadImplementation.IThing' but does not implement it; no server bindings were generated for this contract

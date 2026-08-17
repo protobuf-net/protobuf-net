@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4005 Grpc/Data/Diagnostics/NotPartial.input.cs L42 C21
+'NotPartialServices' is marked [ProtoGrpc] but is not declared partial, so there is nowhere to generate the proxies; add the 'partial' modifier

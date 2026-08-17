@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4003 Grpc/Data/Diagnostics/GenericInterface.input.cs L31 C18
+Interface 'IBox' is generic; build-time proxies are not generated for generic service contracts, because the generated proxy has nowhere to put the type parameter
