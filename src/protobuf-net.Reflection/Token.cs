@@ -66,6 +66,23 @@ namespace ProtoBuf.Reflection
             return true;
         }
 
+        internal void RequireProto2OrEditions(ParserContext ctx)
+        {
+            if (ctx.Syntax != FileDescriptorProto.SyntaxProto2
+                && ctx.Syntax != FileDescriptorProto.SyntaxEditions)
+            {
+                var msg = "'" + Value + "' requires " + FileDescriptorProto.SyntaxProto2 + " or editions syntax";
+                ctx.Errors.Error(this, msg, ErrorCode.ProtoSyntaxRequireProto2);
+            }
+        }
+        internal void RequireNotEditions(ParserContext ctx)
+        {
+            if (ctx.Syntax == FileDescriptorProto.SyntaxEditions)
+            {
+                var msg = "'" + Value + "' is not supported in editions";
+                ctx.Errors.Error(this, msg, ErrorCode.ProtoSyntaxRequireProto2);
+            }
+        }
         internal void RequireProto2(ParserContext ctx)
         {
             if(ctx.Syntax != FileDescriptorProto.SyntaxProto2)

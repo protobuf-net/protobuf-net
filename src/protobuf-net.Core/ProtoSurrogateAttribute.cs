@@ -1,4 +1,5 @@
 using System;
+using ProtoBuf.Internal;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ProtoBuf
@@ -21,7 +22,7 @@ namespace ProtoBuf
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
-    [Experimental(ProtoModelAttribute.DiagnosticId)]
+    [Experimental(Experiments.CompileTimeModel, UrlFormat = Experiments.UrlFormat)]
     public sealed class ProtoSurrogateAttribute : Attribute
     {
         /// <summary>

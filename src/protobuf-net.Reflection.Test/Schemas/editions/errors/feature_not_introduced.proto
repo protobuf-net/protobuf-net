@@ -1,0 +1,3 @@
+edition = "2023";
+option features.enforce_naming_style = STYLE2024;
+message M { int32 x = 1; }

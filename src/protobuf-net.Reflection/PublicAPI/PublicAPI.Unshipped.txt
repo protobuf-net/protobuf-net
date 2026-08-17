@@ -1,0 +1,260 @@
+Google.Protobuf.Reflection.DescriptorProto.ResetVisibility() -> void
+Google.Protobuf.Reflection.DescriptorProto.ShouldSerializeVisibility() -> bool
+Google.Protobuf.Reflection.DescriptorProto.Visibility.get -> Google.Protobuf.Reflection.SymbolVisibility
+Google.Protobuf.Reflection.DescriptorProto.Visibility.set -> void
+Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition1TestOnly = 1 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition2023 = 1000 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition2024 = 1001 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition2026 = 1002 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition2TestOnly = 2 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition99997TestOnly = 99997 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition99998TestOnly = 99998 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.Edition99999TestOnly = 99999 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.EditionLegacy = 900 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.EditionMax = 2147483647 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.EditionProto2 = 998 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.EditionProto3 = 999 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.EditionUnknown = 0 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.Edition.EditionUnstable = 9999 -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.EnumDescriptorProto.ResetVisibility() -> void
+Google.Protobuf.Reflection.EnumDescriptorProto.ShouldSerializeVisibility() -> bool
+Google.Protobuf.Reflection.EnumDescriptorProto.Visibility.get -> Google.Protobuf.Reflection.SymbolVisibility
+Google.Protobuf.Reflection.EnumDescriptorProto.Visibility.set -> void
+Google.Protobuf.Reflection.EnumOptions.DeprecatedLegacyJsonFieldConflicts.get -> bool
+Google.Protobuf.Reflection.EnumOptions.DeprecatedLegacyJsonFieldConflicts.set -> void
+Google.Protobuf.Reflection.EnumOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.EnumOptions.Features.set -> void
+Google.Protobuf.Reflection.EnumOptions.ResetDeprecatedLegacyJsonFieldConflicts() -> void
+Google.Protobuf.Reflection.EnumOptions.ShouldSerializeDeprecatedLegacyJsonFieldConflicts() -> bool
+Google.Protobuf.Reflection.EnumValueOptions.DebugRedact.get -> bool
+Google.Protobuf.Reflection.EnumValueOptions.DebugRedact.set -> void
+Google.Protobuf.Reflection.EnumValueOptions.FeatureSupport.get -> Google.Protobuf.Reflection.FieldOptions.FeatureSupport
+Google.Protobuf.Reflection.EnumValueOptions.FeatureSupport.set -> void
+Google.Protobuf.Reflection.EnumValueOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.EnumValueOptions.Features.set -> void
+Google.Protobuf.Reflection.EnumValueOptions.ResetDebugRedact() -> void
+Google.Protobuf.Reflection.EnumValueOptions.ShouldSerializeDebugRedact() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Declaration() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.FullName.get -> string
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.FullName.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Number.get -> int
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Number.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Repeated.get -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Repeated.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Reserved.get -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Reserved.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ResetFullName() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ResetNumber() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ResetRepeated() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ResetReserved() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ResetType() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ShouldSerializeFullName() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ShouldSerializeNumber() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ShouldSerializeRepeated() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ShouldSerializeReserved() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ShouldSerializeType() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Type.get -> string
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Type.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Declarations.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>
+Google.Protobuf.Reflection.ExtensionRangeOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.ExtensionRangeOptions.ExtensionData.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.ExtensionRangeOptions.Features.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.ResetVerification() -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.ShouldSerializeVerification() -> bool
+Google.Protobuf.Reflection.ExtensionRangeOptions.Verification.get -> Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState
+Google.Protobuf.Reflection.ExtensionRangeOptions.Verification.set -> void
+Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState
+Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState.Declaration = 0 -> Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState
+Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState.Unverified = 1 -> Google.Protobuf.Reflection.ExtensionRangeOptions.VerificationState
+Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.FeatureSet.DefaultSymbolVisibility.get -> Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.DefaultSymbolVisibility.set -> void
+Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle
+Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle.EnforceNamingStyleUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle
+Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle.Style2024 = 1 -> Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle
+Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle.Style2026 = 3 -> Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle
+Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle.StyleLegacy = 2 -> Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle
+Google.Protobuf.Reflection.FeatureSet.EnumType
+Google.Protobuf.Reflection.FeatureSet.EnumType.Closed = 2 -> Google.Protobuf.Reflection.FeatureSet.EnumType
+Google.Protobuf.Reflection.FeatureSet.EnumType.EnumTypeUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.EnumType
+Google.Protobuf.Reflection.FeatureSet.EnumType.Open = 1 -> Google.Protobuf.Reflection.FeatureSet.EnumType
+Google.Protobuf.Reflection.FeatureSet.FeatureSet() -> void
+Google.Protobuf.Reflection.FeatureSet.FieldPresence
+Google.Protobuf.Reflection.FeatureSet.FieldPresence.Explicit = 1 -> Google.Protobuf.Reflection.FeatureSet.FieldPresence
+Google.Protobuf.Reflection.FeatureSet.FieldPresence.FieldPresenceUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.FieldPresence
+Google.Protobuf.Reflection.FeatureSet.FieldPresence.Implicit = 2 -> Google.Protobuf.Reflection.FeatureSet.FieldPresence
+Google.Protobuf.Reflection.FeatureSet.FieldPresence.LegacyRequired = 3 -> Google.Protobuf.Reflection.FeatureSet.FieldPresence
+Google.Protobuf.Reflection.FeatureSet.JsonFormat
+Google.Protobuf.Reflection.FeatureSet.JsonFormat.Allow = 1 -> Google.Protobuf.Reflection.FeatureSet.JsonFormat
+Google.Protobuf.Reflection.FeatureSet.JsonFormat.JsonFormatUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.JsonFormat
+Google.Protobuf.Reflection.FeatureSet.JsonFormat.LegacyBestEffort = 2 -> Google.Protobuf.Reflection.FeatureSet.JsonFormat
+Google.Protobuf.Reflection.FeatureSet.MessageEncoding
+Google.Protobuf.Reflection.FeatureSet.MessageEncoding.Delimited = 2 -> Google.Protobuf.Reflection.FeatureSet.MessageEncoding
+Google.Protobuf.Reflection.FeatureSet.MessageEncoding.LengthPrefixed = 1 -> Google.Protobuf.Reflection.FeatureSet.MessageEncoding
+Google.Protobuf.Reflection.FeatureSet.MessageEncoding.MessageEncodingUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.MessageEncoding
+Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding
+Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding.Expanded = 2 -> Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding
+Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding.Packed = 1 -> Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding
+Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding.RepeatedFieldEncodingUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding
+Google.Protobuf.Reflection.FeatureSet.ResetDefaultSymbolVisibility() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetenforce_naming_style() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetenum_type() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetfield_presence() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetjson_format() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetmessage_encoding() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetrepeated_field_encoding() -> void
+Google.Protobuf.Reflection.FeatureSet.Resetutf8_validation() -> void
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializeDefaultSymbolVisibility() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializeenforce_naming_style() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializeenum_type() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializefield_presence() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializejson_format() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializemessage_encoding() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializerepeated_field_encoding() -> bool
+Google.Protobuf.Reflection.FeatureSet.ShouldSerializeutf8_validation() -> bool
+Google.Protobuf.Reflection.FeatureSet.Utf8Validation
+Google.Protobuf.Reflection.FeatureSet.Utf8Validation.None = 3 -> Google.Protobuf.Reflection.FeatureSet.Utf8Validation
+Google.Protobuf.Reflection.FeatureSet.Utf8Validation.Utf8ValidationUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.Utf8Validation
+Google.Protobuf.Reflection.FeatureSet.Utf8Validation.Verify = 2 -> Google.Protobuf.Reflection.FeatureSet.Utf8Validation
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility.DefaultSymbolVisibilityUnknown = 0 -> Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility.ExportAll = 1 -> Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility.ExportTopLevel = 2 -> Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility.LocalAll = 3 -> Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility.Strict = 4 -> Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.DefaultSymbolVisibility
+Google.Protobuf.Reflection.FeatureSet.VisibilityFeature.VisibilityFeature() -> void
+Google.Protobuf.Reflection.FeatureSet.enforce_naming_style.get -> Google.Protobuf.Reflection.FeatureSet.EnforceNamingStyle
+Google.Protobuf.Reflection.FeatureSet.enforce_naming_style.set -> void
+Google.Protobuf.Reflection.FeatureSet.enum_type.get -> Google.Protobuf.Reflection.FeatureSet.EnumType
+Google.Protobuf.Reflection.FeatureSet.enum_type.set -> void
+Google.Protobuf.Reflection.FeatureSet.field_presence.get -> Google.Protobuf.Reflection.FeatureSet.FieldPresence
+Google.Protobuf.Reflection.FeatureSet.field_presence.set -> void
+Google.Protobuf.Reflection.FeatureSet.json_format.get -> Google.Protobuf.Reflection.FeatureSet.JsonFormat
+Google.Protobuf.Reflection.FeatureSet.json_format.set -> void
+Google.Protobuf.Reflection.FeatureSet.message_encoding.get -> Google.Protobuf.Reflection.FeatureSet.MessageEncoding
+Google.Protobuf.Reflection.FeatureSet.message_encoding.set -> void
+Google.Protobuf.Reflection.FeatureSet.repeated_field_encoding.get -> Google.Protobuf.Reflection.FeatureSet.RepeatedFieldEncoding
+Google.Protobuf.Reflection.FeatureSet.repeated_field_encoding.set -> void
+Google.Protobuf.Reflection.FeatureSet.utf8_validation.get -> Google.Protobuf.Reflection.FeatureSet.Utf8Validation
+Google.Protobuf.Reflection.FeatureSet.utf8_validation.set -> void
+Google.Protobuf.Reflection.FeatureSetDefaults
+Google.Protobuf.Reflection.FeatureSetDefaults.Defaults.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault>
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetDefaults() -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.Edition.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.Edition.set -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.FeatureSetEditionDefault() -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.FixedFeatures.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.FixedFeatures.set -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.OverridableFeatures.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.OverridableFeatures.set -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.ResetEdition() -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.FeatureSetEditionDefault.ShouldSerializeEdition() -> bool
+Google.Protobuf.Reflection.FeatureSetDefaults.MaximumEdition.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FeatureSetDefaults.MaximumEdition.set -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.MinimumEdition.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FeatureSetDefaults.MinimumEdition.set -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.ResetMaximumEdition() -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.ResetMinimumEdition() -> void
+Google.Protobuf.Reflection.FeatureSetDefaults.ShouldSerializeMaximumEdition() -> bool
+Google.Protobuf.Reflection.FeatureSetDefaults.ShouldSerializeMinimumEdition() -> bool
+Google.Protobuf.Reflection.FieldOptions.DebugRedact.get -> bool
+Google.Protobuf.Reflection.FieldOptions.DebugRedact.set -> void
+Google.Protobuf.Reflection.FieldOptions.EditionDefault
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.Edition.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.Edition.set -> void
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.EditionDefault() -> void
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.ResetEdition() -> void
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.ResetValue() -> void
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.ShouldSerializeEdition() -> bool
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.ShouldSerializeValue() -> bool
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.Value.get -> string
+Google.Protobuf.Reflection.FieldOptions.EditionDefault.Value.set -> void
+Google.Protobuf.Reflection.FieldOptions.EditionDefaults.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FieldOptions.EditionDefault>
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.DeprecationWarning.get -> string
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.DeprecationWarning.set -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.EditionDeprecated.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.EditionDeprecated.set -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.EditionIntroduced.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.EditionIntroduced.set -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.EditionRemoved.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.EditionRemoved.set -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.FeatureSupport() -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.RemovalError.get -> string
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.RemovalError.set -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ResetDeprecationWarning() -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ResetEditionDeprecated() -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ResetEditionIntroduced() -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ResetEditionRemoved() -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ResetRemovalError() -> void
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ShouldSerializeDeprecationWarning() -> bool
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ShouldSerializeEditionDeprecated() -> bool
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ShouldSerializeEditionIntroduced() -> bool
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ShouldSerializeEditionRemoved() -> bool
+Google.Protobuf.Reflection.FieldOptions.FeatureSupport.ShouldSerializeRemovalError() -> bool
+Google.Protobuf.Reflection.FieldOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.FieldOptions.Features.set -> void
+Google.Protobuf.Reflection.FieldOptions.OptionRetention
+Google.Protobuf.Reflection.FieldOptions.OptionRetention.RetentionRuntime = 1 -> Google.Protobuf.Reflection.FieldOptions.OptionRetention
+Google.Protobuf.Reflection.FieldOptions.OptionRetention.RetentionSource = 2 -> Google.Protobuf.Reflection.FieldOptions.OptionRetention
+Google.Protobuf.Reflection.FieldOptions.OptionRetention.RetentionUnknown = 0 -> Google.Protobuf.Reflection.FieldOptions.OptionRetention
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeEnum = 6 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeEnumEntry = 7 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeExtensionRange = 2 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeField = 4 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeFile = 1 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeMessage = 3 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeMethod = 9 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeOneof = 5 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeService = 8 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.OptionTargetType.TargetTypeUnknown = 0 -> Google.Protobuf.Reflection.FieldOptions.OptionTargetType
+Google.Protobuf.Reflection.FieldOptions.ResetDebugRedact() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetRetention() -> void
+Google.Protobuf.Reflection.FieldOptions.ResetUnverifiedLazy() -> void
+Google.Protobuf.Reflection.FieldOptions.Retention.get -> Google.Protobuf.Reflection.FieldOptions.OptionRetention
+Google.Protobuf.Reflection.FieldOptions.Retention.set -> void
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeDebugRedact() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeRetention() -> bool
+Google.Protobuf.Reflection.FieldOptions.ShouldSerializeUnverifiedLazy() -> bool
+Google.Protobuf.Reflection.FieldOptions.Targets.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.FieldOptions.OptionTargetType>
+Google.Protobuf.Reflection.FieldOptions.UnverifiedLazy.get -> bool
+Google.Protobuf.Reflection.FieldOptions.UnverifiedLazy.set -> void
+Google.Protobuf.Reflection.FieldOptions.feature_support.get -> Google.Protobuf.Reflection.FieldOptions.FeatureSupport
+Google.Protobuf.Reflection.FieldOptions.feature_support.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.Edition.get -> Google.Protobuf.Reflection.Edition
+Google.Protobuf.Reflection.FileDescriptorProto.Edition.set -> void
+Google.Protobuf.Reflection.FileDescriptorProto.OptionDependencies.get -> System.Collections.Generic.List<string>
+Google.Protobuf.Reflection.FileDescriptorProto.ResetEdition() -> void
+Google.Protobuf.Reflection.FileDescriptorProto.ShouldSerializeEdition() -> bool
+Google.Protobuf.Reflection.FileOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.FileOptions.Features.set -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Resetsemantic() -> void
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic.Alias = 2 -> Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic.None = 0 -> Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic.Set = 1 -> Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.ShouldSerializesemantic() -> bool
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.semantic.get -> Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.Semantic
+Google.Protobuf.Reflection.GeneratedCodeInfo.Annotation.semantic.set -> void
+Google.Protobuf.Reflection.MessageOptions.DeprecatedLegacyJsonFieldConflicts.get -> bool
+Google.Protobuf.Reflection.MessageOptions.DeprecatedLegacyJsonFieldConflicts.set -> void
+Google.Protobuf.Reflection.MessageOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.MessageOptions.Features.set -> void
+Google.Protobuf.Reflection.MessageOptions.ResetDeprecatedLegacyJsonFieldConflicts() -> void
+Google.Protobuf.Reflection.MessageOptions.ShouldSerializeDeprecatedLegacyJsonFieldConflicts() -> bool
+Google.Protobuf.Reflection.MethodOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.MethodOptions.Features.set -> void
+Google.Protobuf.Reflection.OneofOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.OneofOptions.Features.set -> void
+Google.Protobuf.Reflection.ServiceOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
+Google.Protobuf.Reflection.ServiceOptions.Features.set -> void
+Google.Protobuf.Reflection.SymbolVisibility
+Google.Protobuf.Reflection.SymbolVisibility.VisibilityExport = 2 -> Google.Protobuf.Reflection.SymbolVisibility
+Google.Protobuf.Reflection.SymbolVisibility.VisibilityLocal = 1 -> Google.Protobuf.Reflection.SymbolVisibility
+Google.Protobuf.Reflection.SymbolVisibility.VisibilityUnset = 0 -> Google.Protobuf.Reflection.SymbolVisibility

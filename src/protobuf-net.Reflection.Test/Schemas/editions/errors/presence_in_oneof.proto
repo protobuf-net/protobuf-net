@@ -1,0 +1,2 @@
+edition = "2023";
+message M { oneof o { int32 a = 1 [features.field_presence = IMPLICIT]; } }
