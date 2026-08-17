@@ -1,0 +1,7 @@
+Generator produced 3 diagnostics:
+Warning PBN3002 Aot/Data/Diagnostics/SerializerDeclaration.input.cs L45 C22
+Contract 'AotFixtures.SerializerDeclaration.Pair<,>' is omitted from the AOT model: [ProtoSerializer] pairs an open generic definition with a closed type; declare both open with the same arity, or both closed.
+Warning PBN3002 Aot/Data/Diagnostics/SerializerDeclaration.input.cs L45 C22
+Contract 'AotFixtures.SerializerDeclaration.Pair<,>' is omitted from the AOT model: [ProtoSerializer] pairs AotFixtures.SerializerDeclaration.Pair<,> (arity 2) with AotFixtures.SerializerDeclaration.OneArgSerializer<> (arity 1); an open mapping needs the same arity on both sides.
+Warning PBN3002 Aot/Data/Diagnostics/SerializerDeclaration.input.cs L45 C22
+Contract 'AotFixtures.SerializerDeclaration.Pair<int, int>' is omitted from the AOT model: [ProtoSerializer] is declared more than once for the same type at the same scope.

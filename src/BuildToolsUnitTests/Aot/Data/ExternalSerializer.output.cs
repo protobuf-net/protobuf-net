@@ -30,19 +30,19 @@ partial class ExternalSerializerModel
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
                 "AotFixtures.ExternalSerializer.Stamp is generated as CategoryScalar, but its serializer disagrees; "
-                    + "set [ProtoContract(IsScalar = false)] on it, or correct the serializer.");
+                    + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
             global::System.Diagnostics.Debug.Assert(
                 (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.ThingSerializer, global::AotFixtures.ExternalSerializer.Thing>().Features
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage,
                 "AotFixtures.ExternalSerializer.Thing is generated as CategoryMessage, but its serializer disagrees; "
-                    + "set [ProtoContract(IsScalar = true)] on it, or correct the serializer.");
+                    + "set IsScalar = true on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
             global::System.Diagnostics.Debug.Assert(
                 (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.TicketSerializer, global::AotFixtures.ExternalSerializer.Ticket>().Features
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
                     == global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar,
                 "AotFixtures.ExternalSerializer.Ticket is generated as CategoryScalar, but its serializer disagrees; "
-                    + "set [ProtoContract(IsScalar = false)] on it, or correct the serializer.");
+                    + "set IsScalar = false on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
         }
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();

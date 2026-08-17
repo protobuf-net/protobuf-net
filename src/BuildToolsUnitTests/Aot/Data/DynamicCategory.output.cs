@@ -63,6 +63,11 @@ partial class DynamicCategoryModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.DynamicCategory.Label>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.LabelSerializer, global::AotFixtures.DynamicCategory.Label>());
             }
+            var tmp6 = value.NullableScalar;
+            if (tmp6.HasValue)
+            {
+                state.WriteAny<global::AotFixtures.DynamicCategory.Measure>(6, tmp6.GetValueOrDefault(), global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+            }
         }
 
         private static global::AotFixtures.DynamicCategory.Reading RawRead_AotFixtures_DynamicCategory_Reading(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.DynamicCategory.Reading value)
@@ -134,6 +139,19 @@ partial class DynamicCategoryModel
                         if (tmp5 != null) value.Messages = tmp5;
                         break;
                     }
+                    // raw read pass: legacy-mode - member NullableScalar: hand-written serializer
+                    case (6 << 3) | 0:
+                    case (6 << 3) | 1:
+                    case (6 << 3) | 2:  // NullableScalar, field 6
+                    case (6 << 3) | 3:
+                    case (6 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp6 = value.NullableScalar.GetValueOrDefault();
+                        tmp6 = state.ReadAny<global::AotFixtures.DynamicCategory.Measure>(default, tmp6, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.DynamicCategory.MeasureSerializer, global::AotFixtures.DynamicCategory.Measure>());
+                        value.NullableScalar = tmp6;
+                        break;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -144,7 +162,7 @@ partial class DynamicCategoryModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
         }
     }
 }

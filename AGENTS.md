@@ -1618,6 +1618,18 @@ which a consumer's generated code cannot reference. Those are inbuilt types that
 "inbuilt": the member passes `null` (which is what resolution does anyway) and the type is not pulled
 into the model at all.
 
+`[ProtoSerializer]` externalizes `Serializer = …` exactly as `[ProtoSurrogate]` externalizes
+`Surrogate = …`: a declaration on an assembly or the model, for a type you cannot put the attribute
+on directly, with the same three-scope gathering (referenced assemblies, then this assembly, then
+the model, most specific wins), the same full-name matching, and the same closed-beats-open
+precedence — a declaration naming a closed type wins over one naming the open generic definition it
+would otherwise map through, and a type's own `[ProtoContract(Serializer = …)]` beats a declaration
+from its assembly but not one from the model. All three harnesses (`AotRefGen`, the corpus
+differential, and `AotConformanceTests`) replay a declaration the same way — through
+`MetaType.SerializerType` — rather than teaching each harness a second mechanism, and the category
+assert's message now names both routes (the contract's own `Serializer =` and a `[ProtoSerializer]`
+declaration) so a mismatch says which one supplied the serializer.
+
 #### `[ProtoSurrogate]` on the model
 
 You cannot put an attribute on `System.Uri`, so the contract-level form cannot reach a type you do

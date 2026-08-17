@@ -55,6 +55,46 @@ deterministically, which is what let it be diagnosed and closed.** It was a stal
 test class, surfaced or hidden by xUnit's method ordering; see item 5 for the full account. Fixed in
 `Issue1232.cs` (reset the statics in the constructor); the suite is clean with the fix in.
 
+**New since 2026-08-11, still pending: `ModelSerializer.input.cs` (and `SerializerValidation` if
+applicable) need an `AotRefGen` run on Windows to produce `.reference.cs`; the fixture headers say
+so.** `ModelSerializer.input.cs` has none yet — its header explains why (added on Linux, and
+`AotRefGen` is net472 so it could not be run there) and that `AotConformanceTests` covers it
+differentially in the meantime by replaying `[ProtoSerializer]` onto the reference model.
+`SerializerValidation` lives under `Data/Diagnostics/`, which `AotRefGen` deliberately excludes from
+its glob (it exists to produce diagnostics, not working code), so it needs no `.reference.cs`
+regardless of platform — "if applicable" resolves to "not applicable" for that one. Building
+`AotRefGen` itself was verified on Linux (`dotnet build -p:DelaySign=true`, against the
+`Microsoft.NETFramework.ReferenceAssemblies` package), which confirms the new `ApplySerializers`
+replay compiles; a Mono run was also tried and discarded as evidence — it regenerated every
+`*.reference.cs` with a diff (missing the "Error decoding local variables" decompiler artifact this
+file's own conventions record as a genuine .NET Framework signature), which is exactly the kind of
+divergence that makes Mono output untrustworthy here. Run `AotRefGen` on real Windows and commit the
+result.
+
+**New since 2026-08-13 ([ProtoSerializer] plan, Task 11): `AotSmoke` gained an open-mapping member —
+re-measured, no regression.** `Tally<T>`/`TallySerializer<T>` is a declaration-served hand-written
+scalar serializer (`[ProtoSerializer(typeof(Tally<>), typeof(TallySerializer<>), IsScalar = true)]`
+on the model, rather than `[ProtoContract(Serializer = ...)]` on the type), closed over two
+instantiations: `Order.Score` (`Tally<int>`) and `Order.Bonus` (`Tally<string>?`, the nullable-of-an-
+externally-scalar-serialized-struct shape Task 6 landed). Re-measured on Linux (clean
+`src/AotSmoke/obj`/`bin`, `dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r linux-x64
+-p:DelaySign=true`): **still exactly 19 warnings**, the identical id breakdown recorded above (6
+`IL2067`, 5 `IL3050`, 3 `IL2091`, 3 `IL2070`, 1 `IL2057`, 1 `IL2055`) — the open mapping introduced no
+new reflective demand. Binary: **3,818,904 bytes (3.64 MB)**, down from the **4,032,072 bytes**
+recorded in the "Next steps" section's coverage-widening round (item 1) — a decrease of **213,168
+bytes**, measured the same way (linux-x64, `-c Release`) so the two numbers are comparable. This
+member alone would not be expected to shrink the binary; the interim decrease is almost certainly the
+trim-annotation-removal work recorded elsewhere in this file (the transport, `MapSerializer`,
+element-type and `ThrowUnexpectedSubtype<T>` annotation removals, several of them multi-hundred-KB),
+which landed between that measurement and this one and was not previously re-measured against a
+linux-x64 binary containing this round's map/generic members. This is now the current linux-x64
+baseline; diff the next `AotSmoke` change against **3,818,904 bytes**. The published binary
+was also run directly (not just built): exit code 0, "AOT smoke test PASSED", and the payload hex was
+inspected by eye for both new fields — `D0-03-A5-03` (field 58, `Score` = 421) and
+`D8-03-F7-FF-FF-FF-FF-FF-FF-FF-FF-01` (field 59, `Bonus` = −9) — both bare varints (tag then value,
+no length prefix), confirming ILC resolved `SerializerCache<TallySerializer<int>, Tally<int>>` and
+the `Tally<string>` instantiation as scalar rather than falling back to a message framing.
+
 ## Re-measurement: the `[ProtoDataFormat]` `Vault` member — 2026-08-13
 
 `AotSmoke` gained a `Vault` contract (`[ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at
