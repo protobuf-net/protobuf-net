@@ -561,6 +561,35 @@ synthesis pins us to v1 and bets on v1 remaining readable. Versioning exists to 
 and v1 strings are baked into shipped assemblies' metadata, so that bet looks safe for a long time — but
 it is a bet, and the reflective route does not take it.
 
+### Proven end to end, by hand, on SDK 10.0.302
+
+A scratch project settled the remaining questions by *doing* it rather than by reading: a call site, and
+an interceptor whose `data` was synthesised by the encoder above with **no Roslyn interceptor API
+involved at all**. It printed `INTERCEPTED: hello world`. So the synthesis route works, and the three
+failure modes are all worth knowing because each is loud:
+
+| situation | result |
+| --- | --- |
+| correct data, `<InterceptorsNamespaces>` set | intercepted |
+| **feature not enabled** | **error CS9137**, naming `<InterceptorsNamespaces>` in the message |
+| **stale/wrong checksum** (file edited after generation) | **error CS9234**, "a matching file was not found in the compilation" |
+
+Two consequences for the design:
+
+- **`InterceptorsNamespaces` is the current spelling, non-preview** — the compiler's own CS9137 text
+  names it. `InterceptorsPreviewNamespaces` was the older form (DapperAOT's getting-started still shows
+  it), and accepting either is the gracious thing to do when detecting enablement.
+- **Enablement has to be detected, not assumed.** CS9137 is an *error*, so emitting an interceptor into
+  a project that has not opted in breaks the build - which is exactly why DapperAOT checks. So the
+  behaviour splits: with interceptors configured, intercept; without, emit **no** interceptor and instead
+  warn, with a fix that rewrites the call to pass the factory explicitly - the same shape as
+  `UseAotModelCodeFixProvider` does for `Serializer`/`RuntimeTypeModel.Default`, and the warning should
+  link a docs page saying what to add.
+
+That second point is also what keeps the feature honest: the interceptor is an optimisation of a call
+the consumer could always have written by hand, and when we cannot apply it we say so rather than
+silently leaving them on the reflective path.
+
 **The design rule, which is what keeps "zero magic" true where it counts:** an interceptor may only
 ever swap the factory argument — never inline a proxy, never do anything the explicit form does not.
 The body is one line, `=> MyServices.Instance.CreateClient<TService>(c)`, which is exactly what the
