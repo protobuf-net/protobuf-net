@@ -511,11 +511,52 @@ clause below was verified rather than recalled:
   needs **nothing** from protobuf-net.Grpc.
 
 Two gotchas that cost time: `m.Parameters[0]` on a *reduced* extension method is the first real
-parameter, not the receiver (use `ReducedFrom`), and the v1
-`[InterceptsLocation(path, line, char)]` form is gone — you need
-`SemanticModel.GetInterceptableLocation()` plus `GetInterceptsLocationAttributeSyntax()`, which is
-**Roslyn 4.11+**. That is a genuine reason to raise the baseline (`aot-findings.md`'s rule is "only
-if we need a modern API we cannot work around" — this qualifies), and Legacy must stay pinned.
+parameter, not the receiver (use `ReducedFrom`), and the `[InterceptsLocation(path, line, char)]` form
+is gone — replaced by `[InterceptsLocation(int version, string data)]`, produced by
+`SemanticModel.GetInterceptableLocation()` + `GetInterceptsLocationAttributeSyntax()`, which are
+**Roslyn 4.11+**.
+
+### ...but the baseline does not have to move
+
+Recorded here because the first read of this was "raise the Roslyn reference", which would give up what
+keeps `protobuf-net.BuildTools.Legacy` serving old SDKs.
+
+**The version-1 `data` encoding is fully specified, and was reproduced exactly.** Per
+[`docs/features/interceptors.md`](https://github.com/dotnet/roslyn/blob/main/docs/features/interceptors.md#interceptslocationattribute)
+it is base64 of three fields, and
+[`InterceptableLocation1`](https://github.com/dotnet/roslyn/blob/main/src/Compilers/CSharp/Portable/Utilities/InterceptableLocation.cs)
+writes them in order: the 16-byte checksum, an `int32` position, then the UTF-8 display file name.
+Verified against the real API by building both and comparing strings, which pinned the two details the
+spec leaves implicit — and got both wrong on the first attempt:
+
+| field | what it actually is |
+| --- | --- |
+| checksum | `xxHash128` of the text as **UTF-16 code units**, *not* UTF-8 — "content checksum of the file" reads like bytes-on-disk and is not |
+| position | the **name node's** `Position` (i.e. `FullSpan.Start`), not the invocation's — for `"x".Trim()` it is `Trim`'s position, and the invocation's is 4-12 characters earlier |
+| display name | `Path.GetFileName(tree.FilePath)`, checked across an absolute, a nested and a relative path |
+
+Only the **checksum and position** have to be right: the compiler decodes the data and matches on those,
+using the display name for diagnostics alone. And a wrong value is a *compile error* in the consumer's
+project, not a silent miss — an unpleasant failure but a loud one.
+
+`xxHash128` is the only piece Roslyn 4.3.1 does not give us, and **Roslyn vendors its own copy** —
+`src/Compilers/Core/Portable/Hashing/XxHash128.cs` with `XxHashShared.cs` and `XxHash64.State.cs`, MIT,
+already building for netstandard-targeting assemblies. Lifting those three is the "borrow a few lines"
+route, and avoids a `System.IO.Hashing` package reference, which for an analyzer means shipping a dll
+alongside — the pain that made BuildTools compile Core's sources in to begin with.
+
+**Better still, reflection is probably sufficient, and the version numbers are why.** Interceptors need
+a modern compiler regardless, and the `(version, data)` attribute form and
+`GetInterceptableLocation` arrived *together* in 4.11 — so any host that would accept what we emit
+already has the API. The analyzer binds to the **host's** Roslyn at run time (the same reason
+`ProtoModelGenerator` spells `LanguageVersion.CSharp12` numerically), so it can call the new API
+reflectively when present and fall back to synthesis otherwise. Reflection at build time costs nothing
+and carries none of AOT's constraints.
+
+That ordering matters for risk: calling the API tracks whatever encoding the compiler prefers, whereas
+synthesis pins us to v1 and bets on v1 remaining readable. Versioning exists to let the format evolve,
+and v1 strings are baked into shipped assemblies' metadata, so that bet looks safe for a long time — but
+it is a bet, and the reflective route does not take it.
 
 **The design rule, which is what keeps "zero magic" true where it counts:** an interceptor may only
 ever swap the factory argument — never inline a proxy, never do anything the explicit form does not.
