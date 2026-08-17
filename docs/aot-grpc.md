@@ -586,6 +586,30 @@ Two consequences for the design:
   `UseAotModelCodeFixProvider` does for `Serializer`/`RuntimeTypeModel.Default`, and the warning should
   link a docs page saying what to add.
 
+### The namespace: `ProtoBuf.AOT`
+
+What the consumer types into `<InterceptorsNamespaces>`, so it is effectively public API and wants to be
+short, memorable and stable. `ProtoBuf.AOT` mirrors `Dapper.AOT`, which is the same author's precedent
+and the shape anyone who has done DapperAOT already recognises.
+
+**It matches by prefix, which is what makes it an umbrella rather than one name among many.** Probed the
+cheap way, exploiting the two error codes: declare an interceptor in `ProtoBuf.AOT.Grpc` with a
+deliberately bogus `data`, enable only `ProtoBuf.AOT`, and see which error comes back - `CS9137` would
+mean the namespace was not enabled, `CS9234` means it *was* and only the location was bad. It reported
+**CS9234**.
+
+So one line in the consumer's project file covers `ProtoBuf.AOT` and everything under it: a future
+`ProtoBuf.AOT.Grpc`, or interceptors for protobuf-net's own APIs, need no second opt-in. That argues for
+scoping the umbrella at the family (`ProtoBuf.AOT`) rather than at this feature
+(`ProtoBuf.Grpc.AOT`), even though the generated code today is entirely gRPC's - the generator lives in
+`protobuf-net.BuildTools`, which ships with protobuf-net, so the family is the honest scope.
+
+Inside it, an `internal static class` holding the `[InterceptsLocation]`-attributed methods. One caveat to
+settle when it is built: two `[ProtoGrpc]` models mean two generated files, so the holder needs a
+per-model name (or `static partial`, or `file` scoping) or the second one is `CS0101`. `file` scoping is
+proven to work for interceptors - the hand-built proof used it, with the call site in another file
+entirely - so all three options are open.
+
 That second point is also what keeps the feature honest: the interceptor is an optimisation of a call
 the consumer could always have written by hand, and when we cannot apply it we say so rather than
 silently leaving them on the reflective path.
