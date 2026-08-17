@@ -5,49 +5,53 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 
 > **Handover** (2026-08-17). Branch `grpc-aot-generator`, draft PR
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
-> `dotnet test src/BuildToolsUnitTests` (**392** pass), a JIT run of `src/AotGrpcSmoke`, and a
-> `win-x64` native publish of the same (all **twelve** checks pass, 4 IL warnings, 14,585,856 bytes).
+> `dotnet test src/BuildToolsUnitTests` (**400** pass), the full traversal build, `AotConformanceTests`
+> (667), `AotDifferential` (**3080 contracts compared, 0 differing**), a JIT run of `src/AotGrpcSmoke`,
+> and a `win-x64` native publish of the same — **twelve checks, 4 IL warnings, 14,585,856 bytes**.
 > `protobuf-net.BuildTools.Legacy` builds green. **`linux-x64` has not been measured on this branch.**
 >
-> **Since the first handover:** every diagnostic `PBN4000`-`PBN4012` is fixtured; `PBN4000`, `PBN4002`
-> and `PBN4003` are fixed and `PBN4009` fills a hole where a contract was dropped silently; closed
-> generic contracts are supported; the service-naming port is verified against the real runtime and
-> three silent wire-name bugs are gone; **seeding is done in both directions**, so `AotGrpcSmoke`
-> carries no `[ProtoSerializable]` at all; `Empty`/void, `[SubService]`, disposable bases, overloaded
-> operations and the marshaller's array arm are all covered; and the two structural generator rules
-> (incremental caching, no Roslyn references in the model) have tests, both verified able to fail.
+> **This is feature-complete for the routes people actually use.** Every consumer entry point is covered
+> — a direct `CreateGrpcService`, an intercepted one, a DI-registered client, and the server — and
+> anything unsupported says so, differently when AOT has been asked for. Specifically done:
+>
+> | | |
+> | --- | --- |
+> | proxies + server bindings | all five method shapes, `[SubService]`, disposable bases, void/`Empty`, overloads, closed generics, WCF markers |
+> | payloads | seeded from `[ProtoService]`, so a gRPC-only `[ProtoModel]` needs no `[ProtoSerializable]`; checked instead when the model is in a referenced assembly |
+> | call sites | interceptors (opt-in), `PBN4016` + code fix when not; DI clients via `TryAddSingleton` in the generated `AddXxx`, `PBN4017` otherwise |
+> | diagnostics | `PBN4000`–`PBN4018`, every one exercised by a fixture or test |
+> | version | `version.json` revved to **3.4**; `get-version` computes `3.4.0`, which is what the docs now claim |
 >
 > **Landed elsewhere, and this branch depends on it:**
 >
 > | | |
 > | --- | --- |
 > | protobuf-net.Grpc **1.3.6** (released) | everything this branch needs; `[ProtoGrpc]`/`[ProtoService]`, both `RuntimeTypeModel` roots gone, `BinderConfiguration.Binder` public |
-> | protobuf-net.Grpc #365–#372 (merged) | the above, plus the Actions CI + trusted-publishing pipeline, the release-tag fix, and the `get-version` scripts |
-> | protobuf-net.Grpc #369 (open) | not ours — a contributor's `[SubService]` metadata fix, under discussion |
-> | protobuf-net #1284 (merged) | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page; arrived with the merge below |
-> | protobuf-net #1287 (merged) | editions. Merged in on 2026-08-17: no file overlap, no conflicts, and the corpus differential reads **3080 compared / 0 differing** afterwards, which is the check that matters since editions touches `MetaType` and this generator mirrors `ApplyDefaultBehaviour` |
-> | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
+> | protobuf-net.Grpc #373, #374 (merged) | the AOT docs page, brought current and led with interceptors |
+> | protobuf-net.Grpc `aot-docs-versions` (**pushed, PR not raised**) | states the protobuf-net 3.4.0 floor and stops naming the tooling package. `gh pr create` was 503ing during a GitHub incident — the branch is on the remote, so raising it is one command |
+> | protobuf-net #1284, #1287 (merged) | `[Experimental]` help links; editions. #1287 merged in here cleanly with no file overlap, and the corpus differential read 3080/0 afterwards |
 >
-> **Done here:** the generator-owned trigger attributes are gone, the package floor is `1.3.6`, and
-> the golden no longer contains an emitted attributes file. The unit tests stub the attributes in
-> `Grpc/Data/_ContractSurface.cs` deliberately — matching is by full name, and the real ones are
-> `[Experimental]`, i.e. an *error* by default, so a stub also keeps fixtures free of suppressions.
+> **What is left, in the order I would take it:**
 >
-> **`src/AotGrpcSmoke` is verified against the genuine 1.3.6 from nuget.org** — build, JIT run and a
-> `win-x64` native run, all eight checks green, **4 IL warnings and 14,492,672 bytes** (against 100
-> and 15,019,520 on 1.3.0; the bytes have grown only with the fixture). **All four are per-assembly
-> `IL2104`/`IL3053` rollups; nothing is attributed to generated code.**
+> 1. **`linux-x64` native publish.** Unmeasured here; the serializer side historically matched win-x64
+>    warning-for-warning, so this is confirmation rather than discovery. Byte sizes are not comparable
+>    across RIDs.
+> 2. **Server reflection.** `protobuf-net.Grpc.AspNetCore.Reflection` builds schemas at run time and is
+>    untouched — almost certainly reflective. Note it resolves a **`BinderConfiguration`** from DI, which
+>    is the second and last DI seam in protobuf-net.Grpc, and a `[ProtoGrpc]` type converts to one
+>    implicitly, so the trick that fixed the DI client path should apply.
+> 3. **Nested/generic `[ProtoGrpc]` declarations** are refused (`PBN4014`) rather than supported.
+>    Deliberate — "does not work today, continues not to work" — and `ProtoModelGenerator` has the same
+>    case open as a TODO, so if it is ever built it should be built for both.
 >
-> **Next steps, in order:**
+> **Closed rather than pending**, so nobody re-opens them by accident:
 >
-> 1. **Interceptors** — the zero-code-change story for `CreateGrpcService<T>`. The mechanism is proven
->    (see below); it is a separate feature rather than a gap in this one.
->
-> Seeding, the diagnostics, and the `Empty`/`[SubService]` coverage are **done** — see the sections
-> below and the git history on this branch. **Compile-time endpoint metadata was investigated and is
-> closed rather than pending**: the runtime list cannot be reproduced exactly (see "Compile-time
-> metadata" below), and the reflective call it would have replaced has been made correct for
-> overloads instead.
+> - **compile-time endpoint metadata.** Cannot be done exactly: the list `GetMetadata` returns contains
+>   compiler-synthesised `NullableContextAttribute`, whose type is `internal` to the declaring assembly,
+>   so generated code cannot construct it. The reflective `GetMethod` it would have replaced is now
+>   correct for overloaded operations instead. Details below.
+> - **vendoring `xxHash128`** to synthesise interceptor locations. ~2,000 lines from Roslyn's own copy;
+>   reflection into the host is 80. The synthesis route is proven and recorded as the fallback.
 
 ## What this is
 

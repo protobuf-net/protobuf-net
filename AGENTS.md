@@ -301,6 +301,14 @@ it.
 | **`PBN2001`–`PBN2010`** | **`ServiceContractAnalyzer`** (the gRPC analyzers, since #735) |
 | `PBN3000`–`PBN3004` | `ProtoModelGenerator` — the language floor and the four drop reasons |
 | `PBN3010`–`PBN3013` | `AotMigrationAnalyzer` |
+| `PBN4000`–`PBN4014`, `PBN4018` | `GrpcProxyGenerator` — the language floor, the drop reasons, and the AOT escalation |
+| **`PBN4015`–`PBN4017`** | **`GrpcMigrationAnalyzer`** — a *different owner inside the same block* |
+
+**Note the `PBN40xx` block has two owners**, and the numbering is interleaved rather than split at a
+boundary: `PBN4018` belongs to the generator even though `PBN4015`–`PBN4017` sit below it on the
+analyzer. That is not an accident to tidy — the ids were assigned in the order the features landed, and
+renumbering a shipped id is worse than an untidy table. It does mean "the 4000 block is the generator's"
+is *false*, which is the assumption the story below is about.
 
 **The AOT block was `PBN2000+` until 2026-08-16 and collided with the gRPC analyzers on five ids**
 (`PBN2001`–`PBN2004`, `PBN2010`), which shipped that way in 3.3. They are one assembly, so a
@@ -1770,8 +1778,29 @@ orders never having been read in the first place.
   can drift — the smoke project is what catches it, and already has once.
 
 Diagnostics are `PBN40xx` — `PBN3xxx` is the AOT serializer generator's since #1283, and `PBN2xxx` is
-`ServiceContractAnalyzer`'s. `AnalyzerReleases.Unshipped.md` is the only register of what is taken;
+`ServiceContractAnalyzer`'s. **The block has two owners**: `PBN4000`–`PBN4014` and `PBN4018` are the
+generator's, `PBN4015`–`PBN4017` are `GrpcMigrationAnalyzer`'s. See the id table earlier in this file,
+which is the only exhaustive one. `AnalyzerReleases.Unshipped.md` is the register of what is taken;
 check it before adding an id, and add the id to it.
+
+Beyond the generator, three pieces are worth knowing about before touching this area:
+
+- **`GrpcMigrationAnalyzer`** is the gRPC counterpart of `AotMigrationAnalyzer`, and its trigger is
+  *consumer-side usage* rather than the presence of service contracts — shipping `[Service]` interfaces
+  in a shared package is the recommended layout and needs no `[ProtoGrpc]`, so triggering on
+  declarations would nag hardest at the project laid out correctly. `Utils.AsksForAot` is shared with
+  the serializer analyzer rather than re-listing the four MSBuild properties.
+- **`UseGeneratedClientFactoryCodeFixProvider`** fixes `PBN4016` by inserting the factory argument, and
+  is `Compile Remove`d from Legacy — `CodeFixes/**` is a glob there while analyzers are listed by name,
+  the same asymmetry that made `UseAotModelCodeFixProvider` a build break.
+- **the interceptor half** (`GrpcProxyGenerator.ParseIntercept.cs` / `.EmitIntercept.cs`,
+  `Internal/Grpc/InterceptorSupport.cs`, `InterceptableLocations.cs`) rewrites plain
+  `CreateGrpcService<T>` calls. Two constraints there are easy to break: the location payload is
+  obtained by **reflecting** into the host's `GetInterceptableLocation` (Roslyn 4.11+) so the shipped
+  baseline can stay at 4.3.1 — `BuildToolsUnitTests` overrides Roslyn to 4.11 *only* so this is
+  testable in-process; and nothing may be emitted unless the consumer enabled the namespace, because
+  `CS9137` is an **error**. `docs/aot-grpc.md` records the encoding, which was reverse-engineered and
+  proven by hand, as the fallback if that reflection ever stops working.
 
 ### Coverage sweep
 
