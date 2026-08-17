@@ -64,6 +64,20 @@ try
     Check("void round-trip (Empty on the wire)", GreeterService.Nudged == "nudged",
         GreeterService.Nudged);
 
+    // Client-streaming and duplex: the two of the five shapes the goldens compile but never ran, so
+    // until now they were unmeasured under ILC rather than known-good. Each reaches its own Reshape
+    // helper on the client and its own AddXxxMethod on the server.
+    var summed = await greeter.SumAsync(Requests());
+    Check("client-streaming round-trip", summed.Message == "a+b+c" && summed.Count == 6,
+        $"{summed.Message} / {summed.Count}");
+
+    var echoed = new List<int>();
+    await foreach (var item in greeter.EchoAsync(Requests()))
+    {
+        echoed.Add(item.Count);
+    }
+    Check("duplex round-trip", echoed.SequenceEqual(new[] { 2, 4, 6 }), string.Join(",", echoed));
+
     // THE INTERCEPTOR CHECK. Note what is missing: no factory argument. Written plainly like this the
     // call means `ClientFactory.Default`, i.e. the ref-emit proxy - which ILC has removed, so under a
     // native publish this can only work if the generator rewrote the call to use SmokeServices.Instance.
@@ -130,6 +144,16 @@ return failures.Count == 0 ? 0 : 1;
 // TypeModel.Serialize<T>'s [DynamicallyAccessedMembers] demand, which is a claim about reflection
 // this path does not make. Same "which axis does the annotation belong on" question the AOT notes
 // in AGENTS.md record.
+// the request stream for the two streaming checks; deliberately three distinct values, so a shape that
+// dropped or duplicated one is visible in the totals rather than merely plausible
+static async IAsyncEnumerable<HelloRequest> Requests()
+{
+    yield return new HelloRequest { Name = "a", Count = 1 };
+    yield return new HelloRequest { Name = "b", Count = 2 };
+    yield return new HelloRequest { Name = "c", Count = 3 };
+    await Task.CompletedTask;
+}
+
 static byte[] Measure(ProtoBuf.Meta.TypeModel model, HelloRequest value)
 {
     using var ms = new MemoryStream();

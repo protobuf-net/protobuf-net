@@ -50,12 +50,46 @@ public interface IGreeter
     /// </para>
     /// </remarks>
     Task NudgeAsync(HelloRequest request, CallContext context = default);
+
+    /// <summary>Client-streaming: an IAsyncEnumerable in, a single value out.</summary>
+    /// <remarks>
+    /// Here because the golden fixtures <em>compile</em> all five method shapes but only run three -
+    /// and "not covered" is not the same as "fine", it is unmeasured. Client-streaming and duplex each
+    /// reach a distinct Reshape helper and a distinct AddXxxMethod on the server, so neither was
+    /// exercised under ILC until now.
+    /// </remarks>
+    Task<HelloReply> SumAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
+
+    /// <summary>Duplex: streams both ways.</summary>
+    IAsyncEnumerable<HelloReply> EchoAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
 }
 
 public class GreeterService : IGreeter
 {
     public Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default)
         => Task.FromResult(new HelloReply { Message = "hello, " + request.Name, Count = request.Count });
+
+    public async Task<HelloReply> SumAsync(IAsyncEnumerable<HelloRequest> requests,
+        CallContext context = default)
+    {
+        var total = 0;
+        var names = new List<string>();
+        await foreach (var request in requests)
+        {
+            total += request.Count;
+            if (request.Name is not null) names.Add(request.Name);
+        }
+        return new HelloReply { Message = string.Join("+", names), Count = total };
+    }
+
+    public async IAsyncEnumerable<HelloReply> EchoAsync(IAsyncEnumerable<HelloRequest> requests,
+        CallContext context = default)
+    {
+        await foreach (var request in requests)
+        {
+            yield return new HelloReply { Message = request.Name, Count = request.Count * 2 };
+        }
+    }
 
     public Task NudgeAsync(HelloRequest request, CallContext context = default)
     {

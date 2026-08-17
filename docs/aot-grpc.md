@@ -5,9 +5,9 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 
 > **Handover** (2026-08-17). Branch `grpc-aot-generator`, draft PR
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
-> `dotnet test src/BuildToolsUnitTests` (**357** pass), a JIT run of `src/AotGrpcSmoke`, and a
-> `win-x64` native publish of the same (all **eight** checks pass). `protobuf-net.BuildTools.Legacy`
-> builds green.
+> `dotnet test src/BuildToolsUnitTests` (**392** pass), a JIT run of `src/AotGrpcSmoke`, and a
+> `win-x64` native publish of the same (all **twelve** checks pass, 4 IL warnings, 14,585,856 bytes).
+> `protobuf-net.BuildTools.Legacy` builds green. **`linux-x64` has not been measured on this branch.**
 >
 > **Since the first handover:** every diagnostic `PBN4000`-`PBN4012` is fixtured; `PBN4000`, `PBN4002`
 > and `PBN4003` are fixed and `PBN4009` fills a hole where a contract was dropped silently; closed
@@ -538,6 +538,18 @@ compiler.
 The snapshot gained `GrpcClientFactory` and `ChannelBase` to make that possible - and deliberately both
 overloads, since a snapshot carrying only `CallInvoker` would let a generator that never matched real code
 pass its goldens.
+
+### All five method shapes now run natively
+
+The goldens *compile* unary, server-streaming, client-streaming, duplex and void; for a while
+`AotGrpcSmoke` only *ran* three of them. Client-streaming and duplex each reach their own `Reshape`
+helper on the client and their own `AddXxxMethod` on the server, so neither was known-good under ILC -
+merely unmeasured, which is the distinction `aot-findings.md` insists on for `AotSmoke` and which applies
+just as much here.
+
+Both are now exercised, with three distinct values in the request stream so that a shape which dropped or
+duplicated one shows up in the totals rather than passing plausibly: `a+b+c / 6` for the client-streaming
+sum, `2,4,6` for the duplex echo. Twelve checks, still 4 IL warnings, 14,585,856 bytes.
 
 ## PBN4015: you asked for AOT and have not squared the circle
 
