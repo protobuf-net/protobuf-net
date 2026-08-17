@@ -32,3 +32,5 @@ profile.arm.json
 .DS_Store
 # transient BenchmarkDotNet artifact dirs (NanoBench runs)
 bench-*/
+# local worktree location for subagent-driven development
+.worktrees/

@@ -1321,6 +1321,41 @@ PORTING.md"*. There is no such file anywhere in the repo (`git ls-files` finds n
 Either write it or drop the reference. It is the pointer someone follows when they wonder why the
 instance API is slow, so a dangling one costs more than no pointer at all.
 
+### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
+
+Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
+anywhere the resolver returns `Default` and the emitted bytes are identical, so the blast radius for
+existing consumers is zero rather than small), wire-correct where used (AotDifferential 100%, its
+fixture covering nullable / repeated-nullable / map exemption / explicit-member-wins / `WellKnown`
+promoting 200→240), and in the right layer — `Parse.cs`, the plan rather than the emit, so
+`ClassicEmit` and raw both inherit it and neither engine diverges from the other.
+
+Its measure-first cost is recorded in **B26**, which is where the work is. The rest:
+
+1. **Generator-side caching and an early-out.** The runtime helper gained a cache after the
+   contributor's own final review; `GetDataFormatDefault` did not. It walks the contract's base
+   chain plus module plus assembly attributes **per member**, and builds a `Qualified` key before
+   checking whether any declaration exists at all. This is the only cost that falls on compilations
+   that never use the feature, which is what makes it grate against the `ProtoBufDisableBuildTools`
+   promise that unwanted tooling costs one dictionary lookup. **Unmeasured** — the magnitude is not
+   asserted here, only the shape.
+2. **A refusal should name the ambient source.** `PBN3001: "DataFormat.ZigZag on a BCL type"`
+   reported against a member carrying no format attribute is baffling, and it costs the whole
+   contract plus its referrers.
+3. **A declaration that can never match is a silent no-op** — `typeof(Guid?)`, `typeof(List<Guid>)`
+   — because both sides unwrap the *member* but never the declared type. Analyzer-shaped.
+4. **No `GetSchema` test.** The attribute rewrites the emitted `.proto` (`fixed64` vs `int64`,
+   `bytes` vs `string` for a `Guid`), which is arguably its most user-visible consequence and is
+   covered nowhere.
+5. **`decimal` + `ZigZag` is a live JIT/AOT divergence, and PRE-DATES this feature.** The generator
+   drops any BCL-kind member with `ZigZag`; the runtime *ignores* the format for `decimal` entirely
+   (`ValueMember.cs`'s `ProtoTypeCode.Decimal` arm sets `WireType.String` unconditionally and calls
+   `DecimalSerializer.Create(compatibilityLevel)` with no `dataFormat` argument). So the runtime
+   model serializes and the generated model drops the contract and cascades. Reachable today with a
+   plain `[ProtoMember(1, DataFormat = ZigZag)]`; `[ProtoDataFormat]` only widens the aperture.
+   AGENTS.md already calls the refusal "a small deliberate over-reach" — the one-line fix is to
+   exempt `decimal` from it.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
@@ -1426,7 +1461,29 @@ because one is a design decision and the other is unfinished work:
 Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
 span at all and is correctly out.
 
-### B26. Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain
+### B26. Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain — **and a SHIPPED FEATURE now leans on the remainder**
+
+**Priority note, 2026-08-17.** `[ProtoDataFormat]` merged into `v4` (#1276), and its headline use —
+`[assembly: ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at level 300 — lands squarely on
+the tier this entry still owes. `RawMemberMeasureBlocked` blocks a member on *any* non-default
+`DataFormat` (bar a packed column and `Group` on a unary message) and `BclMeasurable` gates on the
+default format outright, so an ambient declaration takes members off measure-first and **one blocked
+member removes its whole contract, to a fixed point through every referrer**. The feature's own
+fixture demonstrates it: `FormatDefault.output.cs` emits `RawRead_` and **zero**
+`Measure_`/`RawWrite_`.
+
+That is a gap here, not a defect there — but it changes the ranking twice over. The consequence is
+**silent**: a consumer who turns the attribute on loses write throughput with no diagnostic and no
+way to discover why, and the symptom is "it got slower". And the arms it needs are the *cheapest*
+ones outstanding, because the formats this attribute makes common are constant-width — a level-300
+`FixedSize` `Guid` is 16 bytes, `FixedSize` `DateTime`/`TimeSpan` is 8. Doing the constant-width
+cases alone would cover the motivating use.
+
+Worth considering alongside them: an **info-level diagnostic** when an ambient format demotes
+contracts off measure-first. Nothing else tells the consumer, and "your model got slower for a
+reason you cannot see" is precisely the failure this codebase keeps writing notes about.
+
+
 
 Marc, 2026-08-15: *"ensure we use span based unrolls when possible for lists/arrays/immutable arrays
 for regular non-packed writes and measures of all types."* Half done, and the halves are worth

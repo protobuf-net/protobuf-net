@@ -1265,15 +1265,21 @@ by a member count. `notes/packed-writes.md` carries the measurement and the meth
   unlisted branch got **zero checks** — which reads as clean rather than broken. Fixed on `main`;
   the filter is gone from `pull_request` and kept on `push`.
 
-**Two external PRs are in flight, both retargeted to `v4`, both MERGEABLE**, with the merge, the
-gates and a review comment already done — they wait on Marc, not on work:
+**#1276 `[ProtoDataFormat]` MERGED into `v4` on 2026-08-17** and forward into this branch. **The
+thing to know**: an ambient non-default format takes members off measure-first, via
+`RawMemberMeasureBlocked`/`BclMeasurable`, and one blocked member removes its whole contract to a
+fixed point. Its own fixture demonstrates it — the golden emits `RawRead_` and **zero**
+`Measure_`/`RawWrite_`. That is a gap in our measure arms, not in the feature; **B26 is re-ranked
+for it** and the remaining follow-ups are **B30**.
 
-- **#1276 `[ProtoDataFormat]`** — a cross-cutting per-type `DataFormat` default (18 files). **The
-  thing to know**: an ambient non-default format takes members off measure-first, via
-  `RawMemberMeasureBlocked`/`BclMeasurable`, and one blocked member removes its whole contract to a
-  fixed point. Its own fixture demonstrates it — the golden emits `RawRead_` and **zero**
-  `Measure_`/`RawWrite_`. That is a gap in our measure arms (B26), not in the feature, and the
-  formats it makes common are the cheapest arms to add, being constant-width.
+Merging it forward produced the one failure a textual merge cannot catch: both branches had added
+an `AotSmoke` member at **field 58** (their `Vault`, our packed columns), which git merged cleanly
+into a duplicate tag. `PBN0003` caught it at build; `Vault` moved to 62. Worth knowing that the
+analyzer, not a test, is what stands between a clean auto-merge and a corrupt fixture.
+
+**One external PR is still in flight, retargeted to `v4` and MERGEABLE**, with the merge, the gates
+and a review comment already done — it waits on Marc, not on work:
+
 - **#1275 `[ProtoSerializer]`** — declarative external serializer bindings (23 files). It is *not*
   `[ProtoSurrogate]`: a surrogate always yields a sub-message, while a hand-written serializer may
   be `CategoryScalar`, framed by its own wire type. **It contains a separable bug fix** worth

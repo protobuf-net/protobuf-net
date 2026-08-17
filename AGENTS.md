@@ -969,6 +969,48 @@ attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They
 with the rest of that group — see item 4 of `notes/aot-findings.md`, and treat per-feature warning
 attributions with suspicion generally.
 
+`[ProtoDataFormat(type, format)]` rides the same machinery as the level: it resolves **type → module
+→ assembly**, exactly like `CompatibilityLevel`, and an explicit member format always wins over the
+default. `Default` is the zero sentinel, so "explicit `Default`" cannot be distinguished from
+"unstated" — **at member scope**: a member cannot state `DataFormat.Default` to opt itself back out
+of a default declared above it, because that is indistinguishable from the member saying nothing at
+all. **At type scope this is not true**: a type carrying its own `[ProtoDataFormat(typeof(X),
+DataFormat.Default)]` genuinely does shadow an assembly- or module-level default for `X` on its own
+members, because type beats module/assembly in the walk regardless of which value the type declared —
+first match wins, even when the matched value is `Default`. It keys on the
+**Nullable-unwrapped scalar or element type** — a `Guid?` member picks up a `Guid` default exactly as
+a bare `Guid` does — and deliberately never reaches **maps** or **null-wrapped** members, both of
+which have their own per-side format story already. Both the runtime (`TypeDataFormatHelper` plus the
+`MetaType.ApplyDefaultBehaviour` hook) and the generator (`GetDataFormatDefault`, alongside
+`GetCompatibilityLevel`) honour it, so the differential suite covers it with no replay needed. Note
+the fixture-assembly trap applies to it exactly as to `[module: CompatibilityLevel]`: an assembly- or
+module-scoped declaration would re-level every fixture linked into the same compilation, so an
+assembly/module-scoped golden fixture belongs under `Data/Diagnostics/` for the same reason —
+`AotRefGen`/`AotConformanceTests` link every fixture into one.
+
+The ambient default is applied **exactly as if the member had stated it explicitly** — including
+triggering whatever refusal that combination would produce. Maps and null-wrapped members are exempt
+because the injection never reaches them at all (above), but everything else is not: an assembly
+declaring `[assembly: ProtoDataFormat(typeof(int), DataFormat.Group)]` makes every bare `List<int>`
+member in that assembly newly throw while building the model, exactly as `DataFormat.Group` on an
+explicitly-stated scalar collection member already does. That is not a parity bug between the runtime
+and the generator — both agree on the refusal — it is simply a consequence of the default being
+applied before the usual per-member checks run, worth knowing before reaching for an assembly-wide
+default.
+
+**On v4 it also costs measure-first, and that is the expensive half.** `RawMemberMeasureBlocked`
+blocks a member on *any* non-default `DataFormat` bar two carve-outs (a packed column, which vets
+its own format, and `Group` on a unary message), and `BclMeasurable` gates on the default format
+outright — so an ambient default reaches members that were measurable and makes them not, and one
+blocked member removes its **whole contract** from the measurable set, to a fixed point through
+every referrer. `[assembly: ProtoDataFormat(typeof(int), DataFormat.ZigZag)]` is therefore enough to
+take essentially a whole model off the raw write path, silently and with no diagnostic. The
+`FormatDefault` golden is the canary: it emits `RawRead_` and **zero** `Measure_`/`RawWrite_`
+methods, which is exactly the "count the methods" diagnostic recorded under "Don't improve the
+legacy library". This is a gap in the measure arms, not in the feature — see `notes/gaps.md` B26,
+and note the formats this attribute makes common are the *easiest* arms to add, being constant-width
+(a level-300 `FixedSize` Guid is 16 bytes; `FixedSize` `DateTime`/`TimeSpan` is 8).
+
 ### Extensible contracts
 
 An extensible contract keeps the fields it does not recognise: the read's `default:` case becomes

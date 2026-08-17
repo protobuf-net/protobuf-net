@@ -83,6 +83,11 @@ public class Order
     [ProtoMember(11)] public Legacy Legacy { get; set; }
     [ProtoMember(12)] public Modern Modern { get; set; }
 
+    // [ProtoDataFormat]: a type-scoped default that promotes Vault's undecorated Guid to the
+    // 16-byte fixed form, rather than the 36-character string Modern's bare Guid takes at the same
+    // compatibility level - worth checking by eye in the hex dump for exactly that reason
+    [ProtoMember(62)] public Vault Vault { get; set; }
+
     // null-wrapping: a lone value goes through ReadAny/WriteAny, and a wrapped enum resolves its
     // serializer through the model's proxy - neither of which any other member here exercises
     [ProtoMember(13), NullWrappedValue] public int? Optional { get; set; }
@@ -255,6 +260,18 @@ public class Modern
     [ProtoMember(2)] public TimeSpan How { get; set; }
     [ProtoMember(3)] public Guid Id { get; set; }
     [ProtoMember(4)] public decimal Amount { get; set; }
+}
+
+/// <summary>
+/// A type-scoped <see cref="ProtoDataFormatAttribute"/> default: the bare <see cref="Guid"/> member
+/// takes <see cref="DataFormat.FixedSize"/> - the 16-byte form - purely from the declaration below,
+/// with no <c>[ProtoMember(DataFormat = ...)]</c> on the member itself.
+/// </summary>
+[ProtoContract, CompatibilityLevel(CompatibilityLevel.Level300)]
+[ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]
+public class Vault
+{
+    [ProtoMember(1)] public Guid Entry { get; set; }
 }
 
 [ProtoContract]
@@ -612,6 +629,7 @@ internal static class Program
                 Id = Id,
                 Amount = 1.25m,
             },
+            Vault = new Vault { Entry = Guid.Parse("c416e4af-455e-414c-948c-f27873326547") },
         };
 
         original.Note.Stamp(11);
@@ -759,6 +777,10 @@ internal static class Program
         Check(ref failures, "Modern.How", original.Modern.How, clone.Modern?.How);
         Check(ref failures, "Modern.Id", original.Modern.Id, clone.Modern?.Id);
         Check(ref failures, "Modern.Amount", original.Modern.Amount, clone.Modern?.Amount);
+
+        // [ProtoDataFormat]: the type-scoped default alone must be enough to pick FixedSize - see
+        // the printed hex dump for the 16-byte proof (0A-10 + 16 bytes, not 0A-24 + a 36-char string)
+        Check(ref failures, "Vault.Entry", original.Vault.Entry, clone.Vault?.Entry);
 
         // an unknown field must survive being read into a contract that does not declare it and
         // written back out. Producing it via NoteV2 keeps this on the generic, generated path -
