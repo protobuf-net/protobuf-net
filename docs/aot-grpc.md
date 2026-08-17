@@ -24,7 +24,8 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > | protobuf-net.Grpc **1.3.6** (released) | everything this branch needs; `[ProtoGrpc]`/`[ProtoService]`, both `RuntimeTypeModel` roots gone, `BinderConfiguration.Binder` public |
 > | protobuf-net.Grpc #365–#372 (merged) | the above, plus the Actions CI + trusted-publishing pipeline, the release-tag fix, and the `get-version` scripts |
 > | protobuf-net.Grpc #369 (open) | not ours — a contributor's `[SubService]` metadata fix, under discussion |
-> | protobuf-net #1284 (open) | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
+> | protobuf-net #1284 (merged) | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page; arrived with the merge below |
+> | protobuf-net #1287 (merged) | editions. Merged in on 2026-08-17: no file overlap, no conflicts, and the corpus differential reads **3080 compared / 0 differing** afterwards, which is the check that matters since editions touches `MetaType` and this generator mirrors `ApplyDefaultBehaviour` |
 > | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
 >
 > **Done here:** the generator-owned trigger attributes are gone, the package floor is `1.3.6`, and
