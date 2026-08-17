@@ -328,6 +328,41 @@ namespace Google.Protobuf.Reflection
                     }
                 }
             }
+            foreach (var file in Files)
+            {
+                foreach (var message in file.MessageTypes)
+                {
+                    StripSourceRetentionOptions(message);
+                }
+
+                // protoc strips source-retention option fields from descriptor output entirely;
+                // for extension ranges that is 'declaration' and 'verification', and an options
+                // message left empty by the strip is omitted rather than serialized empty
+                // (note: FeatureSet's own source-retention fields get the same treatment when
+                // editions files introduce them)
+                static void StripSourceRetentionOptions(DescriptorProto message)
+                {
+                    foreach (var range in message.ExtensionRanges)
+                    {
+                        var options = range.Options;
+                        if (options is not null)
+                        {
+                            options.Declarations.Clear();
+                            options.ResetVerification();
+                            if (options.Features is null
+                                && options.UninterpretedOptions.Count == 0
+                                && DescriptorProto.GetRawExtensionData(options) is null)
+                            {
+                                range.Options = null;
+                            }
+                        }
+                    }
+                    foreach (var nested in message.NestedTypes)
+                    {
+                        StripSourceRetentionOptions(nested);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -670,6 +705,7 @@ namespace Google.Protobuf.Reflection
             var tokens = ctx.Tokens;
             tokens.Previous.RequireProto2(ctx);
 
+            var statementRanges = new List<ExtensionRange>();
             while (true)
             {
                 int from = tokens.ConsumeInt32(MaxField), to = from;
@@ -680,11 +716,25 @@ namespace Google.Protobuf.Reflection
                 }
                 // the end is off by one
                 if (to != int.MaxValue) to++;
-                ExtensionRanges.Add(new ExtensionRange { Start = from, End = to });
+                var range = new ExtensionRange { Start = from, End = to };
+                statementRanges.Add(range);
+                ExtensionRanges.Add(range);
 
                 if (tokens.ConsumeIf(TokenType.Symbol, ","))
                 {
                     tokens.Consume();
+                }
+                else if (tokens.ConsumeIf(TokenType.Symbol, "["))
+                {
+                    // extension declarations etc: `extensions 4 to 1000 [declaration = {...}, verification = ...];`
+                    // the options apply to every range in the statement
+                    var options = ctx.ParseOptionBlock<ExtensionRangeOptions>(null);
+                    foreach (var r in statementRanges)
+                    {
+                        r.Options = options;
+                    }
+                    tokens.Consume(TokenType.Symbol, ";");
+                    break;
                 }
                 else if (tokens.ConsumeIf(TokenType.Symbol, ";"))
                 {
@@ -2651,7 +2701,14 @@ namespace Google.Protobuf.Reflection
     public partial class EnumValueOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumValueOptions);
-        bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
+        bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
+        {
+            switch (key)
+            {
+                case "debug_redact": DebugRedact = ctx.Tokens.ConsumeBoolean(); return true;
+                default: return false;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the extension data as a byte-array
@@ -2679,9 +2736,106 @@ namespace Google.Protobuf.Reflection
                 case "jstype": Jstype = ctx.Tokens.ConsumeEnum<JSType>(); return true;
                 case "ctype": Ctype = ctx.Tokens.ConsumeEnum<CType>(); return true;
                 case "lazy": Lazy = ctx.Tokens.ConsumeBoolean(); return true;
+                case "unverified_lazy": UnverifiedLazy = ctx.Tokens.ConsumeBoolean(); return true;
                 case "packed": Packed = ctx.Tokens.ConsumeBoolean(); return true;
                 case "weak": Weak = ctx.Tokens.ConsumeBoolean(); return true;
+                case "debug_redact": DebugRedact = ctx.Tokens.ConsumeBoolean(); return true;
+                case "retention": Retention = ctx.Tokens.ConsumeEnum<OptionRetention>(); return true;
+                case "targets": Targets.Add(ctx.Tokens.ConsumeEnum<OptionTargetType>()); return true;
                 default: return false;
+            }
+        }
+
+        partial class EditionDefault
+        {
+            internal static EditionDefault Parse(ParserContext ctx)
+            {
+                EditionDefault ed = new();
+                ParserContext.ParseAggregate(ctx, (key, tok) =>
+                {
+                    switch (key)
+                    {
+                        case "edition": ed.Edition = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "value": ed.Value = ctx.Tokens.ConsumeString(); break;
+                        default: tok.Throw(ErrorCode.UnexpectedField, "Expected 'edition' or 'value'"); break;
+                    }
+                });
+                return ed;
+            }
+        }
+
+        partial class FeatureSupport
+        {
+            internal static FeatureSupport Parse(ParserContext ctx)
+            {
+                FeatureSupport fs = new();
+                ParserContext.ParseAggregate(ctx, (key, tok) =>
+                {
+                    switch (key)
+                    {
+                        case "edition_introduced": fs.EditionIntroduced = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "edition_deprecated": fs.EditionDeprecated = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "deprecation_warning": fs.DeprecationWarning = ctx.Tokens.ConsumeString(); break;
+                        case "edition_removed": fs.EditionRemoved = ctx.Tokens.ConsumeEnum<Edition>(); break;
+                        case "removal_error": fs.RemovalError = ctx.Tokens.ConsumeString(); break;
+                        default: tok.Throw(ErrorCode.UnexpectedField, "Unexpected field in feature_support"); break;
+                    }
+                });
+                return fs;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the extension data as a byte-array
+        /// </summary>
+        /// <remarks>This is required for equivalence tests vs 'protoc'</remarks>
+        [Obsolete(FileDescriptorSet.NotIntendedForPublicUse, false)]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetRawExtensionData(this); }
+            set { DescriptorProto.SetRawExtensionData(this, value); }
+        }
+    }
+
+    /// <summary>
+    /// Options relating to an extension range
+    /// </summary>
+    public partial class ExtensionRangeOptions : ISchemaOptions
+    {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(ExtensionRangeOptions);
+        bool ISchemaOptions.Deprecated
+        {
+            get => false;
+            set { } // no such field; parse-tolerated only
+        }
+        bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
+        {
+            switch (key)
+            {
+                case "verification": Verification = ctx.Tokens.ConsumeEnum<VerificationState>(); return true;
+                default: return false;
+            }
+        }
+
+        partial class Declaration
+        {
+            internal static Declaration Parse(ParserContext ctx)
+            {
+                Declaration decl = new();
+                ParserContext.ParseAggregate(ctx, (key, tok) =>
+                {
+                    switch (key)
+                    {
+                        case "number": decl.Number = ctx.Tokens.ConsumeInt32(); break;
+                        case "full_name": decl.FullName = ctx.Tokens.ConsumeString(); break;
+                        case "type": decl.Type = ctx.Tokens.ConsumeString(); break;
+                        case "reserved": decl.Reserved = ctx.Tokens.ConsumeBoolean(); break;
+                        case "repeated": decl.Repeated = ctx.Tokens.ConsumeBoolean(); break;
+                        default: tok.Throw(ErrorCode.UnexpectedField, "Unexpected field in declaration"); break;
+                    }
+                });
+                return decl;
             }
         }
 
@@ -3152,6 +3306,31 @@ namespace ProtoBuf.Reflection
 
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
+                // first-class message/aggregate-valued fields on the options types themselves;
+                // these are known shapes rather than extensions, so they bypass the option hive
+                if (nameParts.Count == 1 && !nameParts[0].IsExtension)
+                {
+                    switch (nameParts[0].name_part)
+                    {
+                        case "edition_defaults" when (obj ??= new T()) is FieldOptions fieldOptions:
+                            fieldOptions.EditionDefaults.Add(FieldOptions.EditionDefault.Parse(this));
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                        case "feature_support" when (obj ??= new T()) is FieldOptions fieldOptions:
+                            fieldOptions.feature_support = FieldOptions.FeatureSupport.Parse(this);
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                        case "feature_support" when (obj ??= new T()) is EnumValueOptions enumValueOptions:
+                            enumValueOptions.FeatureSupport = FieldOptions.FeatureSupport.Parse(this);
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                        case "declaration" when (obj ??= new T()) is ExtensionRangeOptions extensionRangeOptions:
+                            extensionRangeOptions.Declarations.Add(ExtensionRangeOptions.Declaration.Parse(this));
+                            tokens.Consume(TokenType.Symbol, "}");
+                            return;
+                    }
+                }
+
                 obj ??= new T();
                 bool any = false;
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
@@ -3446,6 +3625,35 @@ namespace ProtoBuf.Reflection
                 catch { }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Parses the body of a text-format aggregate value (the content between '{' and '}',
+        /// with the braces handled by the caller): a sequence of <c>key: value</c> pairs with
+        /// optional comma separators. The callback is positioned to consume the value.
+        /// </summary>
+        internal static void ParseAggregate(ParserContext ctx, Action<string, Token> onField)
+        {
+            var tokens = ctx.Tokens;
+            try
+            {
+                while (!tokens.Is(TokenType.Symbol, "}"))
+                {
+                    var tok = tokens.Read();
+                    var key = tokens.Consume(TokenType.AlphaNumeric);
+                    tokens.Consume(TokenType.Symbol, ":");
+                    onField(key, tok);
+                    if (!tokens.Is(TokenType.Symbol, "}"))
+                    {
+                        tokens.ConsumeIf(TokenType.Symbol, ",");
+                    }
+                }
+            }
+            catch (ParserException ex)
+            {
+                ctx.Errors.Error(ex);
+                tokens.SkipToEndObject();
+            }
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()

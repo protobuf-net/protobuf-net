@@ -58,6 +58,8 @@ Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.ShouldSerializeType
 Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Type.get -> string
 Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration.Type.set -> void
 Google.Protobuf.Reflection.ExtensionRangeOptions.Declarations.get -> System.Collections.Generic.List<Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>
+Google.Protobuf.Reflection.ExtensionRangeOptions.ExtensionData.get -> byte[]
+Google.Protobuf.Reflection.ExtensionRangeOptions.ExtensionData.set -> void
 Google.Protobuf.Reflection.ExtensionRangeOptions.Features.get -> Google.Protobuf.Reflection.FeatureSet
 Google.Protobuf.Reflection.ExtensionRangeOptions.Features.set -> void
 Google.Protobuf.Reflection.ExtensionRangeOptions.ResetVerification() -> void
