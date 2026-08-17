@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using System;
 using System.Collections.Generic;
 
 namespace ProtoBuf.Meta
@@ -9,6 +10,42 @@ namespace ProtoBuf.Meta
     public sealed class SchemaGenerationOptions
     {
         internal static readonly SchemaGenerationOptions Default = new SchemaGenerationOptions();
+
+        /// <summary>
+        /// Create a new instance
+        /// </summary>
+        public SchemaGenerationOptions() { }
+
+        /// <summary>
+        /// Create a new instance, copying the state of an existing instance
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The collections are copied by <em>content</em>, not by reference, so the two instances can
+        /// be mutated independently - which is the entire point: callers that hold configuration on a
+        /// long-lived object need a per-operation copy to add to, and sharing the lists would simply
+        /// move the problem.
+        /// </para>
+        /// <para>
+        /// This exists because the alternative is a hand-rolled copy in the caller, which silently
+        /// stops being complete the moment a property is added here. <c>SchemaGenerationOptionsTests</c>
+        /// guards that by reflecting over the properties rather than trusting this to be updated.
+        /// </para>
+        /// </remarks>
+        /// <param name="source">The instance to copy.</param>
+        public SchemaGenerationOptions(SchemaGenerationOptions source)
+        {
+            if (source is null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+
+            Syntax = source.Syntax;
+            Flags = source.Flags;
+            Package = source.Package;
+            Origin = source.Origin;
+
+            // via the backing fields, so copying an untouched instance does not allocate the lists
+            if (source.HasServices) Services.AddRange(source._services);
+            if (source.HasTypes) Types.AddRange(source._types);
+        }
 
         /// <summary>
         /// Indiate the variant of the protobuf .proto DSL syntax to use

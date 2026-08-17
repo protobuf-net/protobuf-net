@@ -1,0 +1,1 @@
+ProtoBuf.Meta.SchemaGenerationOptions.SchemaGenerationOptions(ProtoBuf.Meta.SchemaGenerationOptions source) -> void
