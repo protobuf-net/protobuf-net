@@ -6,7 +6,7 @@ They come from **two different upstreams** — do not assume one refresh covers 
 | folder | upstream | how to refresh |
 | --- | --- | --- |
 | `google/protobuf/**` (well-known types, descriptor.proto, `compiler/plugin.proto`, the `*_features.proto` set) | [protocolbuffers/protobuf](https://github.com/protocolbuffers/protobuf) | copy verbatim from the **include set** of the protoc release bundled in `src/protobuf-net.Reflection.Test` (`windows/protoc.exe --version`), so the corpus and the compiler agree |
-| `google/api/*`, `google/type/*` | [googleapis/googleapis](https://github.com/googleapis/googleapis) (`google/api`, `google/type`) | copy verbatim from the repo head; record the commit in the refresh commit message |
+| `google/api/*`, `google/type/*`, `google/rpc/*`, `google/longrunning/*` | [googleapis/googleapis](https://github.com/googleapis/googleapis) | copy verbatim from the repo head; record the commit in the refresh commit message |
 
 Last refreshed: 2026-08-17 — `google/protobuf` from protoc **35.1**; `google/api` + `google/type`
 from googleapis `ca91093129b6744ee1dbb062381cdf63dcec669b`.

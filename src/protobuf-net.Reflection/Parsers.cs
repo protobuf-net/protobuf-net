@@ -273,6 +273,12 @@ namespace Google.Protobuf.Reflection
             }
             foreach (var file in Files)
             {
+                // note this runs *before* the options pass: applying a custom option needs the
+                // extension field's resolved features (its packedness, in particular)
+                file.ResolveFeatures();
+            }
+            foreach (var file in Files)
+            {
                 using var ctx = new ParserContext(file, null, Errors);
                 file.ResolveTypes(ctx, true);
             }
@@ -327,10 +333,6 @@ namespace Google.Protobuf.Reflection
                         PreProcessMessage(subMessage, ctx);
                     }
                 }
-            }
-            foreach (var file in Files)
-            {
-                file.ResolveFeatures();
             }
             foreach (var file in Files)
             {
@@ -2194,9 +2196,12 @@ namespace Google.Protobuf.Reflection
                                     {
                                         if (ShouldWrite(field, value.AggregateValue, @enum.Values.FirstOrDefault()?.Name))
                                         {
-                                            if (field.label == FieldDescriptorProto.Label.LabelRepeated)
+                                            if (field.IsPackedField())
                                             {
-                                                // modern protoc writes packable repeated option values packed, even unary;
+                                                // modern protoc writes packable repeated option values packed, even
+                                                // unary - but only when the extension field really is packed: e.g.
+                                                // google.api.field_behavior declares [packed = false] (added upstream
+                                                // precisely because the packed switch-over broke older parsers).
                                                 // enums are the only case observed in the corpus so far
                                                 state.WriteFieldHeader(field.Number, WireType.String);
                                                 state.WriteBytes(EncodeVarint(found.Number));
