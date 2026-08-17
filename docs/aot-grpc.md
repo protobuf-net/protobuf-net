@@ -235,9 +235,62 @@ here would only mean "does not interop". `ServiceNaming.input.cs` pins all four 
 
 ## Known gaps
 
+- **No fixture has a void or no-arg operation**, so the one place `ProtoBuf.Grpc.Internal.Empty`
+  appears is unmeasured. The handling is right — `PayloadTypes` does `payloads.Remove(EmptyTypeName)`,
+  and `MarshallerCache` pre-seeds `[typeof(Empty)] = Empty.Marshaller`, a hand-written marshaller that
+  writes zero bytes and never touches a `TypeModel` — but nothing proves it.
 - **Seeding is manual.** `AotGrpcSmoke` lists `[ProtoSerializable(typeof(HelloRequest))]` by hand.
-  Teaching `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its payload types is
-  the obvious next step; `GrpcOperationModel` already carries them as strings.
+  The design settled on is below.
+
+### Seeding, in both directions (designed, not built)
+
+The principle, which is worth keeping wider than the payload set: **if a consumer says "use this
+model", we should check that we think it is going to work.** Naming a model is a claim about
+something in another file - possibly another assembly - and every part of that claim is checkable at
+compile time. The failure it prevents is the one this whole feature exists for: a build that succeeds,
+a JIT run that succeeds, and a native publish or a first call that does not.
+
+`ProtoModelGenerator` cannot read this generator's *output* — no generator sees another's — but
+`[ProtoGrpc]` and `[ProtoService]` are ordinary symbols, so it can re-derive the payload set itself: a
+second `ForAttributeWithMetadataName` on `[ProtoGrpc]`, filtered to declarations whose
+`Model = typeof(...)` names this model, then the unique set of request and response types across their
+contracts' operations. Both generators are in **one assembly**, so the payload extraction can and
+should be *shared code* — if the two ever disagree, the proxy calls `SetMarshaller<T>` for a `T` the
+model does not have, and the build stays green while the marshaller goes reflective.
+
+Two directions, depending on where the model lives:
+
+- **In this compilation** — infer the seeds, i.e. behave as though `[ProtoSerializable(T)]` were
+  written for each payload type; and warn if the named model is not marked `[ProtoModel]` at all,
+  which today fails as a bare CS0117 on the generated `Instance`.
+- **In a referenced assembly** — nothing can be added to it, so *check* it instead, and warn per
+  payload type it cannot serialize.
+
+**For the second direction, read the emitted `ISerializer<T>` set, not `[ProtoSerializable]`.** A
+generated model contains a nested `private sealed class ProtoBufGeneratedServices : ISerializer<T1>,
+ISerializer<T2>, …`, and Roslyn sees private nested types through metadata. That set is what the model
+*can actually do*, where the attribute is only what it was *asked* to do — the two differ in both
+directions, and the attribute gets both wrong:
+
+- a seed that was dropped (`PBN3001`) still carries its attribute, so an attribute check passes for a
+  type that will throw at run time;
+- a payload reached transitively as a *member* of another seed needs no attribute of its own, so an
+  attribute check **false-positives** on a model that is completely fine.
+
+Match on the interface rather than the type name, since `ProtoBufGeneratedServices` is a private
+implementation detail; and accept `ISerializerProxy<T>` too, which is what enums and hand-written
+serializers get instead. Stay silent when the model carries no `[ProtoModel]`, since a hand-written
+`TypeModel` cannot be inspected this way and is not ours to judge; warn when it has `[ProtoModel]` but
+no services type, which means the generator did not run there.
+
+`Empty` is excluded from all of this, per the gap noted above.
+
+Neither `ProtoModelAttribute` nor `ProtoSerializableAttribute` is `[Conditional]`, so both reach
+metadata today — but that is now load-bearing rather than incidental, and is recorded as such in
+`ProtoModelAttributes.cs`.
+
+Two ids needed, and note `PBN4009` is an unexplained gap in the existing block that should be used or
+documented.
 - **One reflective call left on the server path**:
   `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve `[Authorize]`-style
   endpoint metadata. It survives the native publish, but it is a `GetMethod` over an interface and

@@ -36,6 +36,12 @@ namespace ProtoBuf
     /// Declares a root type that the associated model can serialize; every contract reachable from a
     /// root is included in the model automatically.
     /// </summary>
+    /// <remarks>
+    /// Deliberately <em>not</em> <c>[Conditional]</c>: it has to survive into metadata, so that a
+    /// consumer in another assembly can be told at compile time whether a model they are pointing at
+    /// declares the types they need. Adding <c>[Conditional]</c> would be invisible here and would
+    /// silently remove that check.
+    /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     [Experimental(ProtoModelAttribute.DiagnosticId)]
     public sealed class ProtoSerializableAttribute : Attribute
