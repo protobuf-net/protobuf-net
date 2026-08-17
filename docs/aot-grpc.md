@@ -586,6 +586,41 @@ Two consequences for the design:
   `UseAotModelCodeFixProvider` does for `Serializer`/`RuntimeTypeModel.Default`, and the warning should
   link a docs page saying what to add.
 
+### The emit shape, pinned against the compiler
+
+Probed with a scratch project mirroring `CreateGrpcService`'s real signature -
+`static TService CreateGrpcService<TService>(this CallInvoker client, ClientFactory? clientFactory = null)
+where TService : class`, in `ProtoBuf.Grpc.Client.GrpcClientFactory`, with a `ChannelBase` overload
+alongside. The interceptor below was accepted and ran, so this is the shape to emit rather than a guess:
+
+``` c#
+namespace ProtoBuf.AOT
+{
+    internal static class GrpcInterceptors            // naming: see the caveat above
+    {
+        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "<synthesised data>")]
+        public static global::Some.IGreeter Create_IGreeter(
+            this global::Grpc.Core.CallInvoker client,
+            global::ProtoBuf.Grpc.Configuration.ClientFactory? clientFactory = null)
+            => global::Some.MyServices.Instance.CreateClient<global::Some.IGreeter>(client);
+    }
+}
+```
+
+Four details that had to be checked rather than assumed, because getting any of them wrong is a
+compile error in the consumer's project:
+
+- the interceptor is **extension-shaped** (`this` on the receiver), matching how the call site binds;
+- the return type is the **substituted** one - `IGreeter`, not a generic `TService`. The intercepted
+  call has its type argument fixed at that site, which is also why an *open* `T` cannot be intercepted;
+- the **optional parameter is retained** even though the call site omits it;
+- an `internal static class` at namespace level is fine - extension methods need a non-generic
+  non-nested static class, and `internal` satisfies the call site without `file` scoping.
+
+For the `ChannelBase` overload the body becomes
+`Model.Instance.CreateClient<T>(client.CreateCallInvoker())`, which is exactly what the runtime overload
+does - keeping the rule that an interceptor only ever swaps the factory and never reimplements anything.
+
 ### The namespace: `ProtoBuf.AOT`
 
 What the consumer types into `<InterceptorsNamespaces>`, so it is effectively public API and wants to be
