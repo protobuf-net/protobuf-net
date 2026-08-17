@@ -1,5 +1,8 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Generators;
 using System.IO;
+using System.Linq;
 using Xunit;
 
 namespace BuildToolsUnitTests.Grpc
@@ -108,8 +111,123 @@ namespace BuildToolsUnitTests.Grpc
             Assert.DoesNotContain("ISerializer<global::Seeded.HelloRequest>", generated);
         }
 
+        /// <summary>
+        /// Several declarations may share one model, and their payloads union rather than the last one
+        /// winning.
+        /// </summary>
+        [Fact]
+        public void PayloadsFromSeveralDeclarationsNamingOneModelAreUnioned()
+        {
+            var generated = Run(Source("""
+                [ProtoContract]
+                public class OtherRequest
+                {
+                    [ProtoMember(1)] public int Id { get; set; }
+                }
+
+                [Service]
+                public interface IOther
+                {
+                    Task<OtherRequest> EchoAsync(OtherRequest request, CallContext context = default);
+                }
+
+                [ProtoGrpc(Model = typeof(SeededModel))]
+                [ProtoService(typeof(IGreeter))]
+                public sealed partial class FirstServices : ClientFactory { }
+
+                [ProtoGrpc(Model = typeof(SeededModel))]
+                [ProtoService(typeof(IOther))]
+                public sealed partial class SecondServices : ClientFactory { }
+                """));
+
+            Assert.Contains("ISerializer<global::Seeded.HelloRequest>", generated);
+            Assert.Contains("ISerializer<global::Seeded.OtherRequest>", generated);
+        }
+
+        /// <summary>
+        /// The shape a real consumer has: the service contract and its payload types live in a shared
+        /// package, and only the model and the <c>[ProtoGrpc]</c> declaration are local.
+        /// </summary>
+        /// <remarks>
+        /// Needs real separate compilations, so it cannot go through <see cref="Run"/>. It also exercises
+        /// the by-full-name attribute matching for real: the <c>[Service]</c> the contract carries comes
+        /// from a *different assembly* than anything this test compiles, exactly as the genuine package
+        /// would.
+        /// </remarks>
+        [Fact]
+        public void PayloadsAreSeededWhenTheContractIsInAReferencedAssembly()
+        {
+            var surface = Compile("ProtoBuf.Grpc.Stub", File.ReadAllText(SurfacePath));
+            var contracts = Compile("Contracts", """
+                #nullable enable
+                using ProtoBuf;
+                using ProtoBuf.Grpc;
+                using ProtoBuf.Grpc.Configuration;
+                using System.Threading.Tasks;
+
+                namespace Shared;
+
+                [ProtoContract]
+                public class Ping
+                {
+                    [ProtoMember(1)] public string? Note { get; set; }
+                }
+
+                [ProtoContract]
+                public class Pong
+                {
+                    [ProtoMember(1)] public string? Note { get; set; }
+                }
+
+                [Service]
+                public interface IRemote
+                {
+                    Task<Pong> ExchangeAsync(Ping request, CallContext context = default);
+                }
+                """, surface);
+
+            var generated = Execute<ProtoModelGenerator>("""
+                using ProtoBuf;
+                using ProtoBuf.Grpc.Configuration;
+                using ProtoBuf.Meta;
+                using Shared;
+
+                namespace Local;
+
+                [ProtoModel]
+                public partial class LocalModel : TypeModel { }
+
+                [ProtoGrpc(Model = typeof(LocalModel))]
+                [ProtoService(typeof(IRemote))]
+                public sealed partial class LocalServices : ClientFactory { }
+                """, fileName: "local.cs",
+                extraReferences: new[] { surface, contracts }).GeneratedCode;
+
+            Assert.Contains("ISerializer<global::Shared.Ping>", generated);
+            Assert.Contains("ISerializer<global::Shared.Pong>", generated);
+        }
+
         private string Run(string source)
             => Execute<ProtoModelGenerator>(source, fileName: "seeded.cs",
                 extraSources: new[] { (SurfacePath, File.ReadAllText(SurfacePath)) }).GeneratedCode;
+
+        private static MetadataReference Compile(string assemblyName, string source,
+            params MetadataReference[] references)
+        {
+            var compilation = CSharpCompilation.Create(assemblyName,
+                new[] { CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest)) },
+                MetadataReferenceHelpers.WellKnownReferences
+                    .Concat(MetadataReferenceHelpers.ProtoBufReferences)
+                    .Concat(references),
+                CompilationOptions);
+
+            using var peStream = new MemoryStream();
+            var emitted = compilation.Emit(peStream);
+            Assert.True(emitted.Success, string.Join("\n", emitted.Diagnostics
+                .Where(static x => x.Severity == DiagnosticSeverity.Error)
+                .Select(static x => x.ToString())));
+
+            return MetadataReference.CreateFromImage(peStream.ToArray());
+        }
     }
 }

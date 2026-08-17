@@ -37,14 +37,16 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > **Next steps, in order:**
 >
-> 1. **Seeding, in both directions** — designed in detail below, not built. This is the one that makes
->    the feature feel finished: `AotGrpcSmoke` still hand-lists every payload type, and the proof it
->    works is deleting those two `[ProtoSerializable]` lines and watching the native publish still pass.
-> 2. **A fixture with a void or no-arg operation** — the one path `ProtoBuf.Grpc.Internal.Empty`
->    appears on, currently unmeasured, and something seeding has to get right anyway.
-> 3. **Compile-time endpoint metadata** — the last reflective call. It *works* under AOT today, so this
->    is not a blocker; read the `#369` parity note before starting, since it means owning a union rule
->    that is still moving.
+> 1. **Compile-time endpoint metadata** — the last reflective call
+>    (`__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`). It *works* under AOT today, so this
+>    is not a blocker, and it is deliberately last: read the `#369` parity note below first, because
+>    building it means owning a union rule that is still moving. `SubService.input.cs` is the contract to
+>    run the differential against.
+> 2. **Interceptors** — the zero-code-change story for `CreateGrpcService<T>`. The mechanism is proven
+>    (see below); it is a separate feature rather than a gap in this one.
+>
+> Seeding, the diagnostics, and the `Empty`/`[SubService]` coverage are **done** — see the sections
+> below and the git history on this branch.
 
 ## What this is
 
@@ -243,10 +245,6 @@ here would only mean "does not interop". `ServiceNaming.input.cs` pins all four 
 
 ## Known gaps
 
-- **No fixture has a void or no-arg operation**, so the one place `ProtoBuf.Grpc.Internal.Empty`
-  appears is unmeasured. The handling is right — `PayloadTypes` does `payloads.Remove(EmptyTypeName)`,
-  and `MarshallerCache` pre-seeds `[typeof(Empty)] = Empty.Marshaller`, a hand-written marshaller that
-  writes zero bytes and never touches a `TypeModel` — but nothing proves it.
 - **Seeding is manual.** `AotGrpcSmoke` lists `[ProtoSerializable(typeof(HelloRequest))]` by hand.
   The design settled on is below.
 
