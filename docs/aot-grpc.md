@@ -542,8 +542,11 @@ project, not a silent miss — an unpleasant failure but a loud one.
 `xxHash128` is the only piece Roslyn 4.3.1 does not give us, and **Roslyn vendors its own copy** —
 `src/Compilers/Core/Portable/Hashing/XxHash128.cs` with `XxHashShared.cs` and `XxHash64.State.cs`, MIT,
 already building for netstandard-targeting assemblies. Lifting those three is the "borrow a few lines"
-route, and avoids a `System.IO.Hashing` package reference, which for an analyzer means shipping a dll
-alongside — the pain that made BuildTools compile Core's sources in to begin with.
+route. `System.IO.Hashing` would supply the same algorithm from a package, and is the wrong shape here:
+NuGet packages and analyzers do not mix well - the dll has to be shipped inside the analyzer folder and
+loaded in the analyzer load context, which is the pain that made BuildTools compile Core's sources in to
+begin with. Note **Roslyn made the same call**: the compiler could reference that package and instead
+carries its own copy, which is about as good a corroboration as this decision gets.
 
 **Better still, reflection is probably sufficient, and the version numbers are why.** Interceptors need
 a modern compiler regardless, and the `(version, data)` attribute form and
