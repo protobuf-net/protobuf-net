@@ -5,8 +5,15 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 
 > **Handover** (2026-08-17). Branch `grpc-aot-generator`, draft PR
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
-> `dotnet test src/BuildToolsUnitTests` (327 pass), a JIT run of `src/AotGrpcSmoke`, and a `win-x64`
-> native publish of the same (all five checks pass). `protobuf-net.BuildTools.Legacy` builds green.
+> `dotnet test src/BuildToolsUnitTests` (**345** pass), a JIT run of `src/AotGrpcSmoke`, and a
+> `win-x64` native publish of the same (all five checks pass). `protobuf-net.BuildTools.Legacy` builds
+> green.
+>
+> **Since the first handover:** every diagnostic is fixtured (`Grpc/Data/Diagnostics/`, twelve of them,
+> plus one recording a hole that is now `PBN4009`); `PBN4000`, `PBN4002` and `PBN4003` are fixed;
+> closed generic contracts are supported; the service-naming port is verified against the real runtime
+> and three silent wire-name bugs are gone; and the two structural generator rules (incremental
+> caching, no Roslyn references in the model) now have tests, both verified able to fail.
 >
 > **Landed elsewhere, and this branch depends on it:**
 >
@@ -28,15 +35,16 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > and 15,019,520 on 1.3.0). **All four are per-assembly `IL2104`/`IL3053` rollups; nothing is
 > attributed to generated code.**
 >
-> **Next steps, in order** — all mechanical now:
+> **Next steps, in order:**
 >
-> 1. **Seeding**: teach `[ProtoSerializable]` to accept a `[Service]` interface and enqueue its
->    payload types. `GrpcOperationModel` already carries them as strings.
-> 2. **Compile-time endpoint metadata** — reconstruct the attributes at compile time rather than
->    reflecting. Unblocked now that `BinderConfiguration.Binder` is public, which gives the
->    custom-binder fallback something to test against. See "Known gaps".
-> 3. **More fixtures.** There is still only one (`Basic.input.cs`); every diagnostic path
->    (`PBN4001`–`PBN4011`) is unexercised.
+> 1. **Seeding, in both directions** — designed in detail below, not built. This is the one that makes
+>    the feature feel finished: `AotGrpcSmoke` still hand-lists every payload type, and the proof it
+>    works is deleting those two `[ProtoSerializable]` lines and watching the native publish still pass.
+> 2. **A fixture with a void or no-arg operation** — the one path `ProtoBuf.Grpc.Internal.Empty`
+>    appears on, currently unmeasured, and something seeding has to get right anyway.
+> 3. **Compile-time endpoint metadata** — the last reflective call. It *works* under AOT today, so this
+>    is not a blocker; read the `#369` parity note before starting, since it means owning a union rule
+>    that is still moving.
 
 ## What this is
 
