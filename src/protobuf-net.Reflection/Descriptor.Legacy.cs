@@ -17,9 +17,7 @@ namespace Google.Protobuf.Reflection
             get => __pbn__PhpGenericServices ?? false;
             set => __pbn__PhpGenericServices = value;
         }
-        [global::System.Obsolete("php_generic_services has been removed from descriptor.proto; modern protoc rejects it")]
         public bool ShouldSerializePhpGenericServices() => __pbn__PhpGenericServices != null;
-        [global::System.Obsolete("php_generic_services has been removed from descriptor.proto; modern protoc rejects it")]
         public void ResetPhpGenericServices() => __pbn__PhpGenericServices = null;
         private bool? __pbn__PhpGenericServices;
     }
