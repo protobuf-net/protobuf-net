@@ -1,4 +1,4 @@
-using BuildToolsUnitTests.CodeFixes.Abstractions;
+﻿using BuildToolsUnitTests.CodeFixes.Abstractions;
 using Microsoft.CodeAnalysis.Testing;
 using ProtoBuf.BuildTools.Analyzers;
 using ProtoBuf.CodeFixes;
@@ -8,7 +8,7 @@ using Xunit;
 namespace BuildToolsUnitTests.CodeFixes
 {
     /// <summary>
-    /// The `PBN2010` fixer: swap the receiver for a model that is already in scope.
+    /// The `PBN3010` fixer: swap the receiver for a model that is already in scope.
     /// </summary>
     public class UseAotModelCodeFixProviderTests : CodeFixProviderTestsBase<UseAotModelCodeFixProvider>
     {

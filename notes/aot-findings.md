@@ -95,6 +95,30 @@ inspected by eye for both new fields — `D0-03-A5-03` (field 58, `Score` = 421)
 no length prefix), confirming ILC resolved `SerializerCache<TallySerializer<int>, Tally<int>>` and
 the `Tally<string>` instantiation as scalar rather than falling back to a message framing.
 
+## Re-measurement: the `[ProtoDataFormat]` `Vault` member — 2026-08-13
+
+`AotSmoke` gained a `Vault` contract (`[ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at
+`CompatibilityLevel.Level300`) to exercise the feature under native AOT — a bare `Guid` member taking
+the type-scoped default rather than its own `[ProtoMember(DataFormat = ...)]`. Re-measured on Linux
+after clearing `obj`/`bin`:
+
+- **Warning count unchanged at 19**, the same figure as the win-x64 baseline in the Handover section
+  above. The type-scoped default routes through the same `BclHelpers`/`Guid` path every other
+  compatibility-level member here already exercises, so no new trim annotation was needed.
+- **Binary size 3,798,136 bytes** (linux-x64). No prior linux-x64 figure exists at the 19-warning
+  state to diff against — the win-x64 note above already flags that RID sizes are not comparable to
+  each other, and the last linux-x64 byte figures on record (item 15 / "Next steps" item 1) predate
+  this warning count, from when the fixture set was smaller. Recorded here as the new linux-x64
+  baseline for future deltas.
+- The hex dump was inspected by eye: `Vault.Entry` emits `0A-10` followed by exactly 16 raw bytes
+  (the fixed form), where `Modern`'s undecorated `Guid` at the same compatibility level emits `1A-24`
+  followed by a 36-character string — confirming the type-scoped default, not the member's own
+  declaration, is what picked the format.
+
+The native-published binary was also run directly (not just `dotnet run` under JIT) and passed with
+exit code 0. Windows validation (a win-x64 publish, to confirm the warning count matches as it has
+for every prior round) is still pending per the Handover section's own process.
+
 ## Open
 
 Several entries below are resolved and kept for the reasoning rather than the status, so here is the
@@ -630,7 +654,7 @@ Two things came out of it.
 generators run against the same input compilation, so a `[ProtoModel]` seeded with a type that
 `ProtoFileGenerator` produces from a `.proto` in the *same* project finds nothing. Worse, the seed
 arrives as an **error symbol with a name but no attributes**, so the old diagnostic said "it is not
-marked `[ProtoContract]`" about a type whose generated source says exactly that. `PBN2002` now
+marked `[ProtoContract]`" about a type whose generated source says exactly that. `PBN3002` now
 recognises `TypeKind.Error` and says what is really wrong, naming the project-layout fix. Probed by
 building it that way, not assumed.
 
@@ -683,9 +707,9 @@ survives, not as a commitment.
 
    The binary grew 3,727,688 → 4,032,072 bytes (linux-x64) across both rounds, which is the cost of
    the new generic instantiations rather than a regression; the immutable pair alone was 225 KB of it.
-2. ~~**Turning the generator on does not make existing code use it.**~~ **Done** — `PBN2010`/`PBN2011`
+2. ~~**Turning the generator on does not make existing code use it.**~~ **Done** — `PBN3010`/`PBN3011`
    flag the call sites, `UseAotModelCodeFixProvider` rewrites the fixable ones onto `Model.Instance`,
-   and `PBN2012`/`PBN2013` announce the feature to a project that has contracts and no model, with
+   and `PBN3012`/`PBN3013` announce the feature to a project that has contracts and no model, with
    `AddProtoModelCodeFixProvider` offering to write the stub. The reasoning behind the severity split
    is under "Future ideas".
 3. ~~**Ship `protobuf-net.BuildTools` by default.**~~ **Done** — packed into `protobuf-net.Core` as
@@ -722,8 +746,8 @@ survives, not as a commitment.
    Note the generator itself is not exercised by this: those projects have no `[ProtoModel]`, so
    `ForAttributeWithMetadataName` never fires. That is the right thing to have measured, since a
    consumer who has not opted in is exactly who pays by default.
-4. ~~**An "announce" diagnostic for discoverability.**~~ **Done** — `PBN2012` (warning, for a project
-   that has asked for AOT) and `PBN2013` (info, on cold-start grounds, for everyone else).
+4. ~~**An "announce" diagnostic for discoverability.**~~ **Done** — `PBN3012` (warning, for a project
+   that has asked for AOT) and `PBN3013` (info, on cold-start grounds, for everyone else).
 5. ~~**The sibling sub-type stack overflow.**~~ **Fixed** — it was a four-line guard once the
    ping-pong was understood; see item 1.
 6. ~~**Establish whether CI is actually red on `main`.**~~ **Done: it is green**, and the corpus
@@ -757,7 +781,7 @@ survives, not as a commitment.
 
 ## Future ideas
 
-### ~~An "announce" diagnostic~~ — built, as `PBN2012`/`PBN2013`
+### ~~An "announce" diagnostic~~ — built, as `PBN3012`/`PBN3013`
 
 Kept for the reasoning, since the severity split is the whole design and it is not the one I first
 proposed.
@@ -767,33 +791,33 @@ The generator is invisible: nothing tells a consumer it exists. The obvious answ
 What makes this defensible is that **there are two different statements to make, and only one of them
 is an offer**:
 
-- **`PBN2012`, a warning.** The project has contracts, asks for AOT or trimming (`PublishAot`,
+- **`PBN3012`, a warning.** The project has contracts, asks for AOT or trimming (`PublishAot`,
   `PublishTrimmed`, `IsAotCompatible`, `IsTrimmable`, read through `CompilerVisibleProperty` in
   `protobuf-net.BuildTools.props`), and declares no `[ProtoModel]`. That is not an advertisement, it
   is a **defect report**: they have asked for AOT and their serializers are going to be built by
   reflection. Info would be under-calling it; an error is arguable, and a consumer who wants that can
   escalate. The default stays a warning so that switching `PublishAot` on does not break a build on
   the spot.
-- **`PBN2013`, info.** Everyone else. And the argument here is *not* AOT, which is what makes it
+- **`PBN3013`, info.** Everyone else. And the argument here is *not* AOT, which is what makes it
   worth making at all: the runtime model inspects metadata and emits IL on **first use** of each
   contract, and that cold-start cost is real enough to time CI out. So there is something in it for a
   consumer who will never publish native, and the offer is honest.
 
 Both are reported **once per compilation** at `Location.None` — this is a property of the project, not
 of any one line, and a squiggle on an arbitrarily-chosen contract would be worse than none. Neither
-fires once a `[ProtoModel]` exists. `dotnet_diagnostic.PBN2013.severity = none` dismisses the quiet
+fires once a `[ProtoModel]` exists. `dotnet_diagnostic.PBN3013.severity = none` dismisses the quiet
 one permanently, in the standard way.
 
 Verified in a real build rather than only in tests, because the property plumbing is the part that
 could silently do nothing: a project with `PublishAot=true`, a contract and no model reports
-`PBN2012` naming `PublishAot`; with it false, nothing appears in normal build output.
+`PBN3012` naming `PublishAot`; with it false, nothing appears in normal build output.
 
-Still open: pairing `PBN2012` with a fix that writes the `[ProtoModel]` stub. That is what would turn
+Still open: pairing `PBN3012` with a fix that writes the `[ProtoModel]` stub. That is what would turn
 it from a notification into an action, and it is the obvious next piece.
 
 ### Cold start, measured: 51 ms → 17 ms → 0.4 ms
 
-`PBN2013` tells a non-AOT consumer that compile-time serializers help cold start. That claim was
+`PBN3013` tells a non-AOT consumer that compile-time serializers help cold start. That claim was
 being made on reasoning alone, so `src/AotColdStart` measures it — a three-horse race over the
 `descriptor.proto` contract closure, median of 30 **process launches**:
 
@@ -810,7 +834,7 @@ equivalent work rather than one of them cheating.
 
 Read net of the baseline: first serialize costs **51.6 ms** vanilla, **16.3 ms** generated on the same
 runtime, **0.5 ms** native. So the claim holds — **~3× on an ordinary JIT build, ~100× native** — and
-B is the number that matters for `PBN2013`, since that consumer is not publishing native at all.
+B is the number that matters for `PBN3013`, since that consumer is not publishing native at all.
 
 Why B is not near-zero: it still pays **JIT for the generated serializer code**. What it no longer
 pays is metadata inspection and ref-emit. C removes the remaining JIT as well, which is why it is

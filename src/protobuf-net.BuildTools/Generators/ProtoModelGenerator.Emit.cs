@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -68,7 +68,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             // A shared instance, because a TypeModel is a cache: it is meant to be built once and
             // reused, and without somewhere obvious to put it people write `new MyModel()` per call.
-            // It also gives PBN2010's fixer something to name when nothing is in scope, which is the
+            // It also gives PBN3010's fixer something to name when nothing is in scope, which is the
             // common case for a codebase part-way through migrating.
             //
             // Suppressed if the consumer's half of the partial already declares `Instance` (CS0102),

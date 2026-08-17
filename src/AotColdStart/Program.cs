@@ -1,4 +1,4 @@
-using Google.Protobuf.Reflection;
+﻿using Google.Protobuf.Reflection;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -86,11 +86,11 @@ internal static class Program
     private static long RunSynthetic<T>(T value)
     {
         using var ms = new MemoryStream();
-        // PBN2010 is *correct* here and suppressed deliberately: the runtime model is the thing being
+        // PBN3010 is *correct* here and suppressed deliberately: the runtime model is the thing being
         // measured. Pleasingly, the analyzer found this by itself while the harness was being written.
-#pragma warning disable PBN2010
+#pragma warning disable PBN3010
         RuntimeTypeModel.Default.Serialize(ms, value);
-#pragma warning restore PBN2010
+#pragma warning restore PBN3010
         return ms.Length;
     }
 

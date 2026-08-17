@@ -217,7 +217,7 @@ works and is still a perfectly good layout, but it is no longer required.
 
 ## Requirements
 
-- **C# 12 or later.** Below that the generator reports `PBN2000` and emits nothing, rather than
+- **C# 12 or later.** Below that the generator reports `PBN3000` and emits nothing, rather than
   emitting code that will not compile. Note `netstandard2.0` and `net4x` projects default to C# 7.3,
   so those need an explicit `<LangVersion>12.0</LangVersion>`.
 - **net8.0 or later** for a few member shapes — `init`-only setters, non-public setters, getter-only
@@ -246,22 +246,29 @@ So **the build warnings are your inventory**. If you want the model to be comple
 fail, escalate them:
 
 ``` xml
-<WarningsAsErrors>$(WarningsAsErrors);PBN2001;PBN2002;PBN2003;PBN2004</WarningsAsErrors>
+<WarningsAsErrors>$(WarningsAsErrors);PBN3001;PBN3002;PBN3003;PBN3004</WarningsAsErrors>
 ```
 
 | id | meaning |
 | --- | --- |
-| `PBN2000` | the language version is below C# 12; nothing was generated |
-| `PBN2001` | a contract was dropped because of one of its members |
-| `PBN2002` | a contract was dropped because of how it is declared |
-| `PBN2003` | a contract was dropped because of a protobuf-net option not yet supported |
-| `PBN2004` | a contract was dropped because something it references was dropped |
-| `PBN2010` | a call site still goes through the runtime model — see below |
-| `PBN2011` | a call site takes its contract type as a value, so nothing can check it |
+| `PBN3000` | the language version is below C# 12; nothing was generated |
+| `PBN3001` | a contract was dropped because of one of its members |
+| `PBN3002` | a contract was dropped because of how it is declared |
+| `PBN3003` | a contract was dropped because of a protobuf-net option not yet supported |
+| `PBN3004` | a contract was dropped because something it references was dropped |
+| `PBN3010` | a call site still goes through the runtime model — see below |
+| `PBN3011` | a call site takes its contract type as a value, so nothing can check it |
 
-`PBN2004` matters more than it looks: dropping cascades. A contract whose member type was dropped
+`PBN3004` matters more than it looks: dropping cascades. A contract whose member type was dropped
 cannot be emitted either, so one unsupported type can take a subtree with it. Fix the ones that are
-*not* `PBN2004` first, and the cascade usually clears.
+*not* `PBN3004` first, and the cascade usually clears.
+
+> **Upgrading from 3.3?** These ids used to be `PBN2000`–`PBN2004` and `PBN2010`–`PBN2013`, which
+> collided with the gRPC service-contract analyzers in the same package — so silencing an AOT
+> warning could also silence a gRPC **error**. The whole block moved to `PBN3000+`, keeping the last
+> three digits, so `PBN2001` is now `PBN3001`. Update any `WarningsAsErrors`, `NoWarn` or
+> `dotnet_diagnostic.*` entry you copied from the old docs: the old ids still exist and still mean
+> something, just not this, so a stale entry fails quietly rather than loudly.
 
 ### Not every refusal is a gap
 
@@ -282,10 +289,10 @@ facade — go through `RuntimeTypeModel.Default`, which builds serializers **by 
 `[ProtoModel]` does not change that. And those call sites keep working on an ordinary JIT runtime, so
 nothing goes wrong until you publish for native AOT, a long way from the change.
 
-Once your project declares a `[ProtoModel]`, `PBN2010` flags each such call and names your model:
+Once your project declares a `[ProtoModel]`, `PBN3010` flags each such call and names your model:
 
 ``` c#
-Serializer.Serialize(stream, order);   // PBN2010
+Serializer.Serialize(stream, order);   // PBN3010
 model.Serialize(stream, order);        // what it is asking for
 ```
 
@@ -293,11 +300,11 @@ Nothing is reported if you have no `[ProtoModel]` — the runtime model is a per
 protobuf-net, and this has nothing to say to anyone using it. Calls on a model *you* named, including
 a `RuntimeTypeModel.Create()` you configured deliberately, are left alone.
 
-`PBN2010` comes with a code fix. It offers anything of your model's type already in scope, and
+`PBN3010` comes with a code fix. It offers anything of your model's type already in scope, and
 otherwise the generated shared instance:
 
 ``` c#
-Serializer.Serialize(stream, order);        // PBN2010
+Serializer.Serialize(stream, order);        // PBN3010
 MyModel.Instance.Serialize(stream, order);  // what the fix writes
 ```
 
@@ -317,7 +324,7 @@ replaces the implicit public one and points you at `Instance`. Two consequences 
   and everything behaves as before — the generator only does this when you have expressed no
   intention about construction.
 
-`PBN2011` is the other half, and it has no mechanical fix: the non-generic APIs take the thing to
+`PBN3011` is the other half, and it has no mechanical fix: the non-generic APIs take the thing to
 serialize as an `object` or a `Type`, so neither the analyzer nor the generator can tell what will be
 serialized. Under AOT that call will take the reflection path. If it needs to work when published,
 move it to a generic overload.
@@ -327,10 +334,10 @@ move it to a generic overload.
 ### `typeof(...)` cannot name a `.proto`-generated DTO
 
 If you generate DTOs from a `.proto` using
-[protobuf-net.BuildTools](https://protobuf-net.github.io/protobuf-net/contract_first), and put
+[protobuf-net.BuildTools](https://docs.protobuf-net.dev/contract_first), and put
 `[ProtoModel]` in the same project, `[ProtoSerializable(typeof(Order))]` will not resolve: source
 generators all run against the same input compilation and never see each other's output, so the model
-gets an error symbol rather than the contract. The generator reports `PBN2002` naming the fix.
+gets an error symbol rather than the contract. The generator reports `PBN3002` naming the fix.
 
 Use [`[ProtoSchema]`](#contract-first-dtos-generated-from-a-proto) instead, which seeds from the
 schema rather than from a symbol and works in one project. (Putting the `.proto` in a separate project
@@ -356,7 +363,7 @@ at the point of use:
 
 The generator honours an alias that exists — you do not need to do anything else. If *neither* of a
 colliding pair is aliased, no C# syntax can name the type at all, so the contract is refused with
-`PBN2002` naming both assemblies. Aliasing **one** of them is enough.
+`PBN3002` naming both assemblies. Aliasing **one** of them is enough.
 
 ### Types you do not own
 
@@ -422,7 +429,7 @@ Two things worth doing before you trust it:
   affects `[ProtoSerializable]`, which handles all three. If you hit one, generate the DTOs in a
   separate project and seed the model with `typeof(...)` as before.
 - **`AppendValue` aside, anything the generator cannot handle is refused, not guessed.** If a contract
-  is missing from your model there is a `PBN2001`–`PBN2004` warning saying which and why.
+  is missing from your model there is a `PBN3001`–`PBN3004` warning saying which and why.
 
 ## What is supported
 

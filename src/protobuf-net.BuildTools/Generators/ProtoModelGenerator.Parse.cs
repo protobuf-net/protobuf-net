@@ -25,6 +25,7 @@ namespace ProtoBuf.BuildTools.Generators
         private const string NullWrappedCollectionAttributeName = "ProtoBuf.NullWrappedCollectionAttribute";
         private const string ProtoIgnoreAttributeName = "ProtoBuf.ProtoIgnoreAttribute";
         private const string CompatibilityLevelAttributeName = "ProtoBuf.CompatibilityLevelAttribute";
+        private const string ProtoDataFormatAttributeName = "ProtoBuf.ProtoDataFormatAttribute";
         private const string ExtensibleTypeName = "ProtoBuf.Extensible";
         private const string ExtensibleInterfaceName = "ProtoBuf.IExtensible";
         private const string TypedExtensibleInterfaceName = "ProtoBuf.ITypedExtensible";
@@ -1232,6 +1233,29 @@ namespace ProtoBuf.BuildTools.Generators
                     return Option(diagnostics, atMember, name, "[ProtoMap] on a non-dictionary member");
                 }
 
+                // the cross-cutting per-type default: only where the member states no format itself,
+                // never for maps (whose per-side formats belong to [ProtoMap]) and never for
+                // null-wrapped members (protobuf-net throws on that combination, and an ambient
+                // default must not newly break it). Mirrors MetaType.ApplyDefaultBehaviour's
+                // `repeated?.ItemType ?? effectiveType` *then* Nullable-unwrapped - select first,
+                // unwrap second, so a `List<Guid?>` element keys on Guid rather than Guid? (the
+                // element itself is never Nullable-wrapped when it's the *member* that is nullable,
+                // but a collection's element can be, and only the unwrap-after-select order handles
+                // that). Must see the effective value before the compatibility-level and
+                // ZigZag/Group checks below do
+                if (dataFormat == ProtoDataFormat.Default && !isMap && !wrappedValue && !wrappedCollection)
+                {
+                    var selected = isCollection && ResolveRepeated(memberType) is { Element: { } element }
+                        ? element : memberType;
+                    var scalarType = selected is INamedTypeSymbol { IsGenericType: true } nullableSelected
+                        && nullableSelected.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T
+                        ? nullableSelected.TypeArguments[0] : selected;
+                    if (GetDataFormatDefault(compilation, memberSource, scalarType) is { } ambient)
+                    {
+                        dataFormat = ambient;
+                    }
+                }
+
                 // the compatibility level chooses the encoding for the four BCL types, and nothing
                 // else; resolving it for every member would be wasted work. A map counts: its key or
                 // value may be one, and its own Kind is Map rather than the element's
@@ -2015,6 +2039,55 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
+        /// The cross-cutting DataFormat default for a scalar type: the contract type (walking base
+        /// types), then the module, then the assembly — a sibling of <see cref="GetCompatibilityLevel"/>,
+        /// keyed per scalar type because <c>[ProtoDataFormat]</c> is <c>AllowMultiple</c>.
+        /// </summary>
+        private static ProtoDataFormat? GetDataFormatDefault(
+            Compilation compilation, INamedTypeSymbol contract, ITypeSymbol scalarType)
+        {
+            var key = Qualified(compilation, scalarType);
+            for (INamedTypeSymbol? current = contract; current is not null; current = current.BaseType)
+            {
+                if (GetDeclaredFormat(compilation, current, key) is { } declared)
+                {
+                    return GetDataFormat(declared); // never a cast: the ordinals differ
+                }
+            }
+            // the contract's OWN module/assembly, not the compilation's - a contract declared in a
+            // referenced assembly must resolve its ambient default against that assembly, exactly as
+            // the runtime does (TypeDataFormatHelper.GetTypeDataFormat: declaringType.Module). For a
+            // contract in the current compilation these are identical, so this is strictly more
+            // correct and changes nothing for that (overwhelmingly common) case.
+            if (GetDeclaredFormat(compilation, contract.ContainingModule, key) is { } fromModule)
+            {
+                return GetDataFormat(fromModule);
+            }
+            if (GetDeclaredFormat(compilation, contract.ContainingAssembly, key) is { } fromAssembly)
+            {
+                return GetDataFormat(fromAssembly);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The <c>[ProtoDataFormat]</c> declared for a given scalar type directly on this symbol, if
+        /// any - <c>AllowMultiple</c>, so every declaration is checked rather than just the first.
+        /// </summary>
+        private static int? GetDeclaredFormat(Compilation compilation, ISymbol symbol, string scalarKey)
+        {
+            foreach (var attribute in symbol.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != ProtoDataFormatAttributeName) continue;
+                if (attribute.ConstructorArguments.Length != 2) continue;
+                if (attribute.ConstructorArguments[0].Value is not ITypeSymbol type) continue;
+                if (attribute.ConstructorArguments[1].Value is not int format) continue;
+                if (Qualified(compilation, type) == scalarKey) return format;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// The level a symbol declares directly, if any; <c>NotSpecified</c> (zero) counts as absent.
         /// </summary>
         /// <summary>
@@ -2678,6 +2751,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 // read directly wherever it is relevant, rather than acted on here
                 case CompatibilityLevelAttributeName:
+                case ProtoDataFormatAttributeName:
                 case DataContractAttributeName:
                 case DataMemberAttributeName:
                 case XmlTypeAttributeName:

@@ -48,7 +48,7 @@ This tool uses the .NET 5 SDK; if you don't *have* the .NET 5 SDK, there is also
     IncludeAssets="runtime;build;native;contentfiles;analyzers;buildtransitive" />
 ```
 
-(the `protobuf-net.BuildTools.Legacy` package does not include "generator" support, [discussed here](http://protobuf-net.github.io/protobuf-net/contract_first))
+(the `protobuf-net.BuildTools.Legacy` package does not include "generator" support, [discussed here](https://docs.protobuf-net.dev/contract_first))
 
 ## Usage
 

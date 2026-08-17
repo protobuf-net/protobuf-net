@@ -4,13 +4,19 @@
 
 [![.NET](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml/badge.svg)](https://github.com/protobuf-net/protobuf-net/actions/workflows/dotnet.yml)
 
-## Release Notes
+Recent changes are on [the releases page](https://github.com/protobuf-net/protobuf-net/releases); older
+history is in [the release notes](https://docs.protobuf-net.dev/releasenotes).
 
-[v3 is here!](https://protobuf-net.github.io/protobuf-net/3_0)
+## Online tools: [protobuf-net.dev](https://protobuf-net.dev/)
 
-[Change history and pending changes are here](https://protobuf-net.github.io/protobuf-net/releasenotes).
+Free, browser-based, and nothing to install — and **it all runs locally**: it is a static site, so your
+schemas and payloads never leave your machine. You can:
 
----
+- **generate C#/VB types from a `.proto` schema** — the same code generation as the
+  [`protogen` global tool](https://www.nuget.org/packages/protobuf-net.Protogen)
+- **decode a raw protobuf payload**, without needing the schema that produced it
+
+Documentation is at [docs.protobuf-net.dev](https://docs.protobuf-net.dev/).
 
 ## Supported Runtimes
 - .NET 6.0+ (.NET 5 etc will use .NET Standard 2.1)
@@ -19,9 +25,9 @@
 
 ## Native AOT and trimming
 
-From 3.3, protobuf-net can generate serializers **at build time** from code-first contracts, making native AOT and trimming work — and improving cold start even on ordinary JIT builds. See [the AOT documentation](https://protobuf-net.github.io/protobuf-net/aot).
+From 3.3, protobuf-net can generate serializers **at build time** from code-first contracts, making native AOT and trimming work — and improving cold start even on ordinary JIT builds. See [the AOT documentation](https://docs.protobuf-net.dev/aot).
 
-The [build tools](https://protobuf-net.github.io/protobuf-net/build_tools) (analyzers that validate contracts, and this generator) are included in the protobuf-net package by default; opt out with `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
+The [build tools](https://docs.protobuf-net.dev/build_tools) (analyzers that validate contracts, and this generator) are included in the protobuf-net package by default; opt out with `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
 
 ## Runtime Installation
 
@@ -114,7 +120,8 @@ There is no special significance in the 7 above; it is an integer key, just like
 ### .proto file
 
 As an alternative to writing your classes and decorating them, you can generate your types from a .proto schema using the `protogen` tool,
-[available as a multi-platform "global tool"](https://www.nuget.org/packages/protobuf-net.Protogen).
+[available as a multi-platform "global tool"](https://www.nuget.org/packages/protobuf-net.Protogen), or in your browser at
+[protobuf-net.dev](https://protobuf-net.dev/) (see [Online tools](#online-tools-protobuf-netdev), above).
 
 ### Alternative to attributes
 

@@ -6,10 +6,10 @@
     <RootNamespace>ProtoBuf.Nano.Bench</RootNamespace>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- PBN9001: [ProtoModel] is [Experimental]; PBN2010: the runtime-model calls it flags ARE
+    <!-- PBN9001: [ProtoModel] is [Experimental]; PBN3010: the runtime-model calls it flags ARE
          the measured legacy baseline here, not migration debt - benchmarks are the one place
          that advice is deliberately declined -->
-    <NoWarn>$(NoWarn);CS1591;PBN9001;PBN2010</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;PBN9001;PBN3010</NoWarn>
     <!-- nano-core micro-benchmarks: see notes/nano-core.md - "functionally correct" is step 0 -->
   </PropertyGroup>
 

@@ -236,12 +236,12 @@ Design constraints that are settled, and should not be quietly relaxed:
   the enum by looking the field up on the symbol — since `Convert.ToUInt16("green")` throws and the
   member was previously dropped. `nint`/`nuint` need a cast rather than a suffix, having no literal
   form of their own.
-- Every dropped contract must **say why**: `PBN2001` unsupported member, `PBN2002` unsupported
-  declaration, `PBN2003` unsupported protobuf-net option, `PBN2004` dropped by cascade. All are
+- Every dropped contract must **say why**: `PBN3001` unsupported member, `PBN3002` unsupported
+  declaration, `PBN3003` unsupported protobuf-net option, `PBN3004` dropped by cascade. All are
   **warnings**, not errors — an incomplete model still builds, and the runtime "no serializer" throw
   is the backstop; erroring would make the generator unusable while coverage is partial. Anyone
   wanting strictness can escalate via `WarningsAsErrors`.
-- **C# 12 is a hard floor.** Below it the generator reports `PBN2000` and emits nothing, rather than
+- **C# 12 is a hard floor.** Below it the generator reports `PBN3000` and emits nothing, rather than
   emitting code that won't compile. Do not add down-level fallbacks: supporting multiple language
   versions multiplies every emitted construct for no benefit to anyone doing AOT. (netstandard2.0
   and net4x default to C# 7.3, so those consumers must set `<LangVersion>` — accepted deliberately.)
@@ -264,7 +264,7 @@ honouring the switch completely rather than about cost.
 
 ### The migration analyzer
 
-`AotMigrationAnalyzer` (`PBN2010`/`PBN2011`) exists because turning the generator on **moves no
+`AotMigrationAnalyzer` (`PBN3010`/`PBN3011`) exists because turning the generator on **moves no
 existing code onto it**: `Serializer.Serialize(...)` and friends go through `RuntimeTypeModel.Default`,
 which reflects. Worse, those call sites keep working under JIT, so the failure lands at publish time.
 
@@ -275,13 +275,13 @@ Three decisions worth keeping:
   would be turned off by everyone.
 - **The announcements are reported from a *symbol* action, and that is load-bearing.** A diagnostic
   reported from `RegisterCompilationEndAction` is "non-local", and Roslyn will not offer a code fix
-  for one however good its location is — which defeats the point, since `PBN2012`'s value is the
+  for one however good its location is — which defeats the point, since `PBN3012`'s value is the
   lightbulb that writes the model. They are anchored on the ordinal-first `[ProtoContract]` in the
   compilation (deterministic, so the squiggle does not wander) and fire exactly once because the
   action tests for that one symbol. The first cut used `Location.None` and an end action, and both
   had to go.
-- **Two diagnostics, split on whether the contract type is knowable.** `PBN2010` is the generic case,
-  where the fix is mechanical (name the model). `PBN2011` is the `object`/`Type` API, where nothing —
+- **Two diagnostics, split on whether the contract type is knowable.** `PBN3010` is the generic case,
+  where the fix is mechanical (name the model). `PBN3011` is the `object`/`Type` API, where nothing —
   analyzer or generator — can tell what will be serialized. That one is deliberately *reported rather
   than passed over*: a call site nobody can resolve statically is exactly the kind that fails only
   once ILC has trimmed.
@@ -295,7 +295,7 @@ verified in a real build; that dependency is gone with the move.) The unit tests
 stub dodges the `[Experimental]` gate, and the test harness references Core (through BuildTools),
 which has `TypeModel` but not the other two.
 
-`UseAotModelCodeFixProvider` fixes `PBN2010` by swapping the receiver. It offers anything of the
+`UseAotModelCodeFixProvider` fixes `PBN3010` by swapping the receiver. It offers anything of the
 model's type already in scope (field, property, local, parameter), and then the generated
 **`Model.Instance`** — which is why that accessor exists: a codebase part-way through migrating has
 no model in scope *anywhere*, so without it the fixer would be useless in exactly the situation it
@@ -329,7 +329,7 @@ at the call site; `Simplifier.Annotation` is what reduces it to `MyModel.Instanc
 leaves `global::` only where it is genuinely needed. That annotation lives in Workspaces — available
 here, see below.
 
-`PBN2011` is not fixable and never will be; the whole difficulty there is that nobody can tell what
+`PBN3011` is not fixable and never will be; the whole difficulty there is that nobody can tell what
 it serializes.
 
 **A note recorded because I got it wrong first:** there is no packaging obstacle to a fixer here.
@@ -341,13 +341,34 @@ is inert at compile time. Verified by building an analyzer and a fixer in one as
 the analyzer ran and there was no `CS8032`/`CS8034`. Do not pack the Workspaces dll; the IDE supplies
 it.
 
-AOT generator diagnostics use their own **`PBN2000+`** block: `PBN0001`–`PBN0023` belong to
-`DataContractAnalyzer` and `PBN1000+` to `ProtoFileGenerator`'s schema errors. `PBN2010`/`PBN2011` are
-the migration analyzer's, and are the only ones in the 2000 block that are *not* the generator's. New IDs should be
-added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not actually *enforced*
-here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so the table is
-documentation rather than a build gate, and it *had* drifted; it is current as of this branch, which
-means nothing but review will keep it that way.
+**Every diagnostic id in this assembly, by owner — check this before claiming a block is free:**
+
+| block | owner |
+| --- | --- |
+| `PBN0001`–`PBN0023` | `DataContractAnalyzer` |
+| `PBN1000+` | `ProtoFileGenerator`'s schema errors |
+| **`PBN2001`–`PBN2010`** | **`ServiceContractAnalyzer`** (the gRPC analyzers, since #735) |
+| `PBN3000`–`PBN3004` | `ProtoModelGenerator` — the language floor and the four drop reasons |
+| `PBN3010`–`PBN3013` | `AotMigrationAnalyzer` |
+
+**The AOT block was `PBN2000+` until 2026-08-16 and collided with the gRPC analyzers on five ids**
+(`PBN2001`–`PBN2004`, `PBN2010`), which shipped that way in 3.3. They are one assembly, so a
+severity or suppression is by id and cannot tell the two apart: `dotnet_diagnostic.PBN2002.severity
+= none`, to quiet an AOT drop, also silenced *"The data parameter of a gRPC method must be…"* — an
+**error** downgraded to nothing. The whole AOT block moved to `PBN3000+` rather than only the five,
+keeping the last three digits, so `PBN2001`→`PBN3001` and the mapping needs no table.
+
+**The cause was this very paragraph**, which used to read "AOT generator diagnostics use their own
+`PBN2000+` block", enumerate `DataContractAnalyzer` and `ProtoFileGenerator`, and never mention
+`ServiceContractAnalyzer` at all — the file had zero occurrences of that name. A list of *some* of
+the owners reads exactly like a list of all of them, which is why the table above is exhaustive and
+names the assembly rather than the feature.
+
+New IDs should be added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not
+actually *enforced* here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so
+the table is documentation rather than a build gate, and it *had* drifted: it listed only the AOT
+half, while `ServiceContractAnalyzer`'s ten shipped ids were recorded nowhere at all — which is the
+other half of how this happened.
 
 Separately, `PBN9001` is not an analyzer diagnostic at all: it is the `[Experimental]` id on
 `ProtoModelAttribute`/`ProtoSurrogateAttribute`, so it is an **error** by default and a consumer
@@ -597,7 +618,7 @@ The division of labour is the part worth remembering, and every clause was probe
 - aliasing **one** of a colliding pair is enough, since `global::` then names the other.
 
 When neither is aliased the type cannot be named by *any* C# syntax, so the contract is refused with
-`PBN2002` naming both assemblies and the `<Aliases>` fix. That is a limitation of C#, not of the
+`PBN3002` naming both assemblies and the `<Aliases>` fix. That is a limitation of C#, not of the
 generator — and refusing beats the alternative, which is CS0433 in a file the consumer never wrote.
 
 **The corpus cannot catch any of this**, which is why it needs its own test: `AotDifferential`
@@ -755,6 +776,48 @@ not. It never did: those warnings were kept-reflectable members of `System.Enum`
 attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They are gone, along
 with the rest of that group — see item 4 of `notes/aot-findings.md`, and treat per-feature warning
 attributions with suspicion generally.
+
+`[ProtoDataFormat(type, format)]` rides the same machinery as the level: it resolves **type → module
+→ assembly**, exactly like `CompatibilityLevel`, and an explicit member format always wins over the
+default. `Default` is the zero sentinel, so "explicit `Default`" cannot be distinguished from
+"unstated" — **at member scope**: a member cannot state `DataFormat.Default` to opt itself back out
+of a default declared above it, because that is indistinguishable from the member saying nothing at
+all. **At type scope this is not true**: a type carrying its own `[ProtoDataFormat(typeof(X),
+DataFormat.Default)]` genuinely does shadow an assembly- or module-level default for `X` on its own
+members, because type beats module/assembly in the walk regardless of which value the type declared —
+first match wins, even when the matched value is `Default`. It keys on the
+**Nullable-unwrapped scalar or element type** — a `Guid?` member picks up a `Guid` default exactly as
+a bare `Guid` does — and deliberately never reaches **maps** or **null-wrapped** members, both of
+which have their own per-side format story already. Both the runtime (`TypeDataFormatHelper` plus the
+`MetaType.ApplyDefaultBehaviour` hook) and the generator (`GetDataFormatDefault`, alongside
+`GetCompatibilityLevel`) honour it, so the differential suite covers it with no replay needed. Note
+the fixture-assembly trap applies to it exactly as to `[module: CompatibilityLevel]`: an assembly- or
+module-scoped declaration would re-level every fixture linked into the same compilation, so an
+assembly/module-scoped golden fixture belongs under `Data/Diagnostics/` for the same reason —
+`AotRefGen`/`AotConformanceTests` link every fixture into one.
+
+The ambient default is applied **exactly as if the member had stated it explicitly** — including
+triggering whatever refusal that combination would produce. Maps and null-wrapped members are exempt
+because the injection never reaches them at all (above), but everything else is not: an assembly
+declaring `[assembly: ProtoDataFormat(typeof(int), DataFormat.Group)]` makes every bare `List<int>`
+member in that assembly newly throw while building the model, exactly as `DataFormat.Group` on an
+explicitly-stated scalar collection member already does. That is not a parity bug between the runtime
+and the generator — both agree on the refusal — it is simply a consequence of the default being
+applied before the usual per-member checks run, worth knowing before reaching for an assembly-wide
+default.
+
+**On v4 it also costs measure-first, and that is the expensive half.** `RawMemberMeasureBlocked`
+blocks a member on *any* non-default `DataFormat` bar two carve-outs (a packed column, which vets
+its own format, and `Group` on a unary message), and `BclMeasurable` gates on the default format
+outright — so an ambient default reaches members that were measurable and makes them not, and one
+blocked member removes its **whole contract** from the measurable set, to a fixed point through
+every referrer. `[assembly: ProtoDataFormat(typeof(int), DataFormat.ZigZag)]` is therefore enough to
+take essentially a whole model off the raw write path, silently and with no diagnostic. The
+`FormatDefault` golden is the canary: it emits `RawRead_` and **zero** `Measure_`/`RawWrite_`
+methods, which is exactly the "count the methods" diagnostic recorded under "Don't improve the
+legacy library". This is a gap in the measure arms, not in the feature — see `notes/gaps.md` B26,
+and note the formats this attribute makes common are the *easiest* arms to add, being constant-width
+(a level-300 `FixedSize` Guid is 16 bytes; `FixedSize` `DateTime`/`TimeSpan` is 8).
 
 ### Extensible contracts
 
@@ -961,7 +1024,7 @@ Fixture conventions:
 - `<Name>.input.cs` declares model type `<Name>Model`, and may declare `<Name>Samples.Values`
   (a `public static object[]`) supplying the values the differential tests exercise.
 - A sibling `<Name>.langver` file pins the parse language version for that fixture — used to prove
-  the `PBN2000` floor fires.
+  the `PBN3000` floor fires.
 - **A fixture member with `[DefaultValue(x)]` must also be initialised to `x`.** `[DefaultValue]`
   affects writing only, so without the initialiser an empty payload deserializes to the CLR default
   and the round-trip assertion fails — correctly. This has caught out two fixtures so far; it is a
@@ -1001,7 +1064,7 @@ available, and the property being pinned is *path of least surprise* —
 - a dropped contract then throws `InvalidOperationException` on use — `TypeModel`'s "no serializer"
   backstop — which the smoke test asserts, so the failure is loud rather than silent.
 
-Note the project needs `<LangVersion>12.0</LangVersion>` (net4x defaults to 7.3, below the `PBN2000`
+Note the project needs `<LangVersion>12.0</LangVersion>` (net4x defaults to 7.3, below the `PBN3000`
 floor) and its own `IsExternalInit` polyfill, since net472 cannot even *compile* `init` without one.
 
 An in-memory test was tried first and abandoned: the test process is net8.0, so its reference set
@@ -1043,7 +1106,7 @@ Two members earn their place for reasons that are not obvious from reading them:
   simplify it: source generators all run against the same input compilation and never see each
   other's output, so a `[ProtoModel]` in the same project as the `.proto` gets an *error symbol* for
   the seed — one with a name but no attributes, which used to be reported as "not marked
-  `[ProtoContract]`". `PBN2002` now recognises `TypeKind.Error` and names the fix.
+  `[ProtoContract]`". `PBN3002` now recognises `TypeKind.Error` and names the fix.
 
 The feature sweep is **complete** as of this branch: every generator feature that was listed as
 natively unexercised now has a member here — the immutable *reference* families, both callback

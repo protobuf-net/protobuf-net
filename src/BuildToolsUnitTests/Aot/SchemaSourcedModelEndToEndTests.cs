@@ -242,7 +242,7 @@ message Widget { int32 size = 1; }";
 
             var (_, diagnostics) = await RunAsync(consumer, Texts(files));
 
-            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN2023"));
+            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN3023"));
             Assert.Contains("IncludeInOutput", reported.GetMessage());
         }
 
@@ -251,7 +251,7 @@ message Widget { int32 size = 1; }";
         {
             var (_, diagnostics) = await RunAsync(ConsumerSource.Replace(@"""shop.proto""", @"""nope.proto"""));
 
-            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN2020"));
+            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN3020"));
             Assert.Contains("nope.proto", reported.GetMessage());
             Assert.Contains("shop.proto", reported.GetMessage()); // says what IS available
         }
@@ -262,7 +262,7 @@ message Widget { int32 size = 1; }";
             // a second shop.proto in a different directory: the bare leaf now identifies neither
             var (_, diagnostics) = await RunAsync(ConsumerSource, (OtherPath, OtherSchema));
 
-            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN2021"));
+            var reported = Assert.Single(diagnostics.Where(d => d.Id == "PBN3021"));
             var message = reported.GetMessage().Replace('\\', '/');
             Assert.Contains("C:/proj/shop.proto", message);
             Assert.Contains("C:/proj/other/shop.proto", message);
@@ -282,7 +282,7 @@ message Widget { int32 size = 1; }";
             var consumer = ConsumerSource.Replace(@"""shop.proto""", "\"" + requested.Replace(@"\", @"\\") + "\"");
             var (compilation, diagnostics) = await RunAsync(consumer, (WidgetPath, OtherSchema));
 
-            Assert.DoesNotContain(diagnostics, d => d.Id is "PBN2020" or "PBN2021");
+            Assert.DoesNotContain(diagnostics, d => d.Id is "PBN3020" or "PBN3021");
             var errors = compilation.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
             foreach (var error in errors) _output.WriteLine(error.ToString());
             Assert.Empty(errors);

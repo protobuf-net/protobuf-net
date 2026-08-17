@@ -1,0 +1,3 @@
+Output code has 1 diagnostics from 'Aot/Data/FormatDefault.input.cs':
+Warning CS0618 Aot/Data/FormatDefault.input.cs L42 C36
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'

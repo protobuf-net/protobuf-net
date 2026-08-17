@@ -12,40 +12,40 @@ of which dropped only by cascade: 28
 
 | count | reason |
 | ---: | --- |
-| 11 | PBN2002 there is no parameterless constructor and SkipConstructor is not set, which protobuf-net refuses too: "No parameterless constructor found" |
-| 9 | PBN2001 member '…' has unsupported type '…'; it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
-| 7 | PBN2001 member '…' has unsupported type '…'; System.Type is deliberately not supported, because ref-emit serializes it through Type.GetType, which native AOT cannot do |
-| 7 | PBN2001 member '…' is not public |
-| 6 | PBN2002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
-| 4 | PBN2001 member '…' has unsupported type '…'; it has a ToString() and a static Parse(string), so [ProtoModel(AllowParseableTypes = true)] would include it - off by default, matching RuntimeTypeModel |
-| 3 | PBN2002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
-| 3 | PBN2002 it is reached at more than one compatibility level, and protobuf-net refuses that too: "must use a single compatibility level ... this usually means it is being used in different contexts in the same model" |
-| 2 | PBN2002 the type could not be resolved. If it is produced by another source generator in this same project - a .proto compiled by protobuf-net.BuildTools, say - then it is not visible here: generators do not see each other's output. Move the generated types to a referenced project |
-| 2 | PBN2002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
-| 2 | PBN2003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
-| 1 | PBN2001 member '…' has unsupported type '…' |
-| 1 | PBN2002 it declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
-| 1 | PBN2002 member '…' declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
-| 1 | PBN2002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
-| 1 | PBN2002 member '…' combines [NullWrappedValue] with a DataFormat, which protobuf-net refuses: "NullWrappedValue can only be used with DataFormat.Default" |
-| 1 | PBN2002 member '…' combines [NullWrappedValue] with IsPacked, which protobuf-net refuses: "NullWrappedValue cannot be used with packed values" |
-| 1 | PBN2002 member '…' combines [NullWrappedValue] with IsRequired, which protobuf-net refuses: "NullWrappedValue cannot be used with required values" |
-| 1 | PBN2002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
-| 1 | PBN2002 Field 31 is reserved and cannot be used for data member '…' (iz 31), which protobuf-net refuses too |
-| 1 | PBN2002 Field 32 is reserved and cannot be used for data member '…' (iz 32), which protobuf-net refuses too |
-| 1 | PBN2002 Field '…' is reserved and cannot be used for data member 33 (iz B), which protobuf-net refuses too |
-| 1 | PBN2002 Field 31 is reserved and cannot be used for sub-type '…' (iz 31), which protobuf-net refuses too |
-| 1 | PBN2002 Field 32 is reserved and cannot be used for sub-type '…' (iz 32), which protobuf-net refuses too |
-| 1 | PBN2002 Field '…' is reserved and cannot be used for sub-type 33 (iz B), which protobuf-net refuses too |
-| 1 | PBN2003 this form of [ProtoAfterDeserialization] is not supported yet |
-| 1 | PBN2003 this form of [ProtoBeforeSerialization] is not supported yet |
-| 1 | PBN2001 member '…' has no public getter |
-| 1 | PBN2003 this form of [DefaultValue] is not supported yet |
-| 1 | PBN2001 member '…' has unsupported type '…'; its element '…' is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
-| 1 | PBN2002 member '…' has DataFormat.Group on a collection of scalars, which protobuf-net refuses too: "Operation is not valid due to the current state of the object" |
-| 1 | PBN2002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
-| 1 | PBN2002 an interface contract needs [ProtoInclude] for its implementations |
-| 1 | PBN2002 member '…' and [ProtoInclude] share field number 2 |
+| 11 | PBN3002 there is no parameterless constructor and SkipConstructor is not set, which protobuf-net refuses too: "No parameterless constructor found" |
+| 9 | PBN3001 member '…' has unsupported type '…'; it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
+| 7 | PBN3001 member '…' has unsupported type '…'; System.Type is deliberately not supported, because ref-emit serializes it through Type.GetType, which native AOT cannot do |
+| 7 | PBN3001 member '…' is not public |
+| 6 | PBN3002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
+| 4 | PBN3001 member '…' has unsupported type '…'; it has a ToString() and a static Parse(string), so [ProtoModel(AllowParseableTypes = true)] would include it - off by default, matching RuntimeTypeModel |
+| 3 | PBN3002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
+| 3 | PBN3002 it is reached at more than one compatibility level, and protobuf-net refuses that too: "must use a single compatibility level ... this usually means it is being used in different contexts in the same model" |
+| 2 | PBN3002 the type could not be resolved. If it is produced by another source generator in this same project - a .proto compiled by protobuf-net.BuildTools, say - then it is not visible here: generators do not see each other's output. Move the generated types to a referenced project |
+| 2 | PBN3002 member '…' has [NullWrappedCollection] on a non-collection, which protobuf-net refuses: "NullWrappedCollection can only be used with collection types" |
+| 2 | PBN3003 [ProtoContract(Serializer = typeof(ProtoBuf.Internal.PrimaryTypeProvider))], because that serializer is not accessible here is not supported yet |
+| 1 | PBN3001 member '…' has unsupported type '…' |
+| 1 | PBN3002 it declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
+| 1 | PBN3002 member '…' declares [CompatibilityLevel(42)], which protobuf-net refuses too: "Compatiblity level '…' is not recognized" |
+| 1 | PBN3002 member '…' combines [NullWrappedValue] with [DefaultValue], which protobuf-net refuses |
+| 1 | PBN3002 member '…' combines [NullWrappedValue] with a DataFormat, which protobuf-net refuses: "NullWrappedValue can only be used with DataFormat.Default" |
+| 1 | PBN3002 member '…' combines [NullWrappedValue] with IsPacked, which protobuf-net refuses: "NullWrappedValue cannot be used with packed values" |
+| 1 | PBN3002 member '…' combines [NullWrappedValue] with IsRequired, which protobuf-net refuses: "NullWrappedValue cannot be used with required values" |
+| 1 | PBN3002 member '…' has [NullWrappedValue] on a non-nullable value, which protobuf-net refuses: "NullWrappedValue cannot be used with non-nullable values" |
+| 1 | PBN3002 Field 31 is reserved and cannot be used for data member '…' (iz 31), which protobuf-net refuses too |
+| 1 | PBN3002 Field 32 is reserved and cannot be used for data member '…' (iz 32), which protobuf-net refuses too |
+| 1 | PBN3002 Field '…' is reserved and cannot be used for data member 33 (iz B), which protobuf-net refuses too |
+| 1 | PBN3002 Field 31 is reserved and cannot be used for sub-type '…' (iz 31), which protobuf-net refuses too |
+| 1 | PBN3002 Field 32 is reserved and cannot be used for sub-type '…' (iz 32), which protobuf-net refuses too |
+| 1 | PBN3002 Field '…' is reserved and cannot be used for sub-type 33 (iz B), which protobuf-net refuses too |
+| 1 | PBN3003 this form of [ProtoAfterDeserialization] is not supported yet |
+| 1 | PBN3003 this form of [ProtoBeforeSerialization] is not supported yet |
+| 1 | PBN3001 member '…' has no public getter |
+| 1 | PBN3003 this form of [DefaultValue] is not supported yet |
+| 1 | PBN3001 member '…' has unsupported type '…'; its element '…' is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
+| 1 | PBN3002 member '…' has DataFormat.Group on a collection of scalars, which protobuf-net refuses too: "Operation is not valid due to the current state of the object" |
+| 1 | PBN3002 protobuf-net would serialize it as a collection rather than a message, ignoring its members; use [ProtoContract(IgnoreListHandling = true)] if it should be a message |
+| 1 | PBN3002 an interface contract needs [ProtoInclude] for its implementations |
+| 1 | PBN3002 member '…' and [ProtoInclude] share field number 2 |
 
 Member types we could not handle:
 

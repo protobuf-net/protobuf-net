@@ -15,16 +15,11 @@
   <ItemGroup>
     <PackageVersion Include="FSharp.Core" Version="10.1.203" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="BlazorInputFile" Version="0.2.0" />
     <PackageVersion Include="coverlet.collector" Version="10.0.0" />
     <PackageVersion Include="Google.Protobuf" Version="3.34.1" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="10.1.1.8388" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.80.0" />
     <PackageVersion Include="Iesi.Collections" Version="4.1.1" />
-    <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.1" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.1" PrivateAssets="all" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.7" />
     <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.5.1" />
@@ -58,7 +53,6 @@
     <PackageVersion Include="System.Runtime.Serialization.Formatters" Version="10.0.7" />
     <PackageVersion Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageVersion Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
-    <PackageVersion Include="System.Text.Json" Version="10.0.7" />
     <PackageVersion Include="System.Threading" Version="4.3.0" />
     <PackageVersion Include="System.Threading.Channels" Version="10.0.7" />
     <PackageVersion Include="System.Threading.Thread" Version="4.3.0" />

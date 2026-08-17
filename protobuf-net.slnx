@@ -68,10 +68,6 @@
     <Project Path="src/protobuf-net/protobuf-net.csproj">
       <BuildType Solution="VS|*" Project="Release" />
     </Project>
-    <Project Path="src/protogen.site.blazor.client/protogen.site.blazor.client.csproj">
-      <BuildType Solution="VS|*" Project="Release" />
-    </Project>
-    <Project Path="src/protogen.site/protogen.site.csproj" />
     <Project Path="src/protogen/protogen.csproj" />
   </Folder>
   <Folder Name="/tests/">
@@ -106,6 +102,9 @@
     </Project>
     <Project Path="src/protobuf-net.Test/protobuf-net.Test.csproj" />
     <Project Path="src/protobuf-net.TestCompatibilityLevel/protobuf-net.TestCompatibilityLevel.csproj">
+      <BuildType Solution="VS|*" Project="Debug" />
+    </Project>
+    <Project Path="src/protobuf-net.TestDataFormat/protobuf-net.TestDataFormat.csproj">
       <BuildType Solution="VS|*" Project="Debug" />
     </Project>
     <Project Path="src/protobuf-net.TestWeb/protobuf-net.TestWeb.csproj">
