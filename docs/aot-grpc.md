@@ -300,22 +300,33 @@ misreporting.
 
 Two ids needed, and note `PBN4009` is an unexplained gap in the existing block that should be used or
 documented.
+
+**Expect the golden fixtures to light up, and treat that as the proof rather than as breakage.** Every
+`Grpc/Data` fixture declares a hand-written stand-in model — `public partial class BasicModel :
+TypeModel` with an `Instance` and no `[ProtoModel]` — because only `GrpcProxyGenerator` runs in that
+harness. So the "should be `[ProtoModel]`" warning will fire on all ~15 of them, not just `Basic`, and
+the goldens will show it as a reviewable diff. The decision to make then is per fixture rather than
+wholesale: keeping it in `Basic` demonstrates the check on the canonical shape, while a fixture that is
+about something else entirely is better off adding `[ProtoModel]` to its stand-in (which silences the
+warning without needing the serializer generator to run, since the check is on the attribute).
 - **One reflective call left on the server path**:
   `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve `[Authorize]`-style
   endpoint metadata. It survives the native publish, but it is a `GetMethod` over an interface and
   wants a non-reflective route — see the parity note below before building that.
-- **Neither of the two rules `ProtoModelGenerator` is held to is enforced here.** There is no
-  incremental-caching test, though `PlanTrackingName` exists to make one possible; and
-  `ProtoModelPlanShapeTests` scopes itself to `ProtoModelPlan`'s namespace, so nothing checks that
-  `Internal/Grpc` holds no Roslyn references. Both failures are silent — a cache that never hits, and
-  a compilation graph pinned alive for as long as the driver holds the plan.
+- ~~Neither of the two rules `ProtoModelGenerator` is held to is enforced here.~~ Both are now:
+  `GrpcModelPlanShapeTests` and `GrpcProxyGeneratorIncrementalTests`. Two things worth keeping from
+  writing them:
 
-  The code is currently right on both counts, checked by hand: equality is elementwise throughout
-  (`ImmutableArray<T>` is compared with explicit loops, never `==`), and `DiagnosticInfo` detaches its
-  location at construction via `Location.Create(path, span, lineSpan)`, so no `SyntaxTree` is rooted.
-  Note that last point when writing the shape test: `Internal/Grpc` deliberately *does* hold a
-  `Location`, where `Internal/Aot` uses a `PlanLocation` of plain spans. A test copied across
-  unchanged will fail on it.
+  - the shape test **found something**. `Internal/Grpc` was holding a `DiagnosticDescriptor` and a
+    `Location` where `Internal/Aot` holds neither. Neither was actually harmful — descriptors are
+    static singletons, and the location was detached at construction — but "harmless for reasons you
+    have to reconstruct" is what drifts, so the model now stores a `GrpcDiagnosticKind` and a
+    `PlanLocation` like the serializer generator's, and the test needs no exceptions.
+  - the incremental pair was **verified able to fail**, in both directions, by sabotaging
+    `GrpcModelPlan.Equals`: always-false breaks the cached test, always-true breaks the not-cached one.
+    Worth redoing if that file changes shape, and note the first attempt at the sabotage was a no-op
+    (`if (other is null) return true` leaves the real comparison intact) and both tests passed — which
+    is exactly the false reassurance the exercise is meant to catch.
 - **A contract with no recognised operations is dropped silently.** It is treated as a presumed marker
   interface and no diagnostic is reported at all, so nothing at build time says the contract is
   missing; `CreateClient<T>` then throws at run time telling the consumer to add the

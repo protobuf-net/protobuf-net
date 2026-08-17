@@ -340,36 +340,64 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
     }
 
     /// <summary>
+    /// Why a contract, or a whole <c>[ProtoGrpc]</c> declaration, was left to the runtime path.
+    /// </summary>
+    /// <remarks>
+    /// A <em>kind</em> rather than a <see cref="DiagnosticDescriptor"/>, so that nothing in the cached
+    /// model is a Roslyn object at all; the descriptor is looked up at report time. Same shape as the
+    /// serializer generator's <c>ProtoDiagnosticKind</c>, and the names line up with the descriptor
+    /// fields on the generator so the mapping needs no table to read.
+    /// </remarks>
+    internal enum GrpcDiagnosticKind
+    {
+        LanguageVersionTooLow,
+        InterfaceMustNotBeNested,
+        UnsupportedMethodShape,
+        GenericInterfaceNotSupported,
+        UnsupportedBaseInterface,
+        ModelMustBePartial,
+        ModelMustDeriveClientFactory,
+        NotAServiceContract,
+        ImplementationDoesNotImplement,
+        NoModelNamed,
+        UnresolvedContract,
+    }
+
+    /// <summary>
     /// A diagnostic reduced to value-comparable data.
     /// </summary>
     /// <remarks>
-    /// <see cref="Diagnostic"/> holds a <see cref="Location"/>, which roots a <see cref="SyntaxTree"/>;
-    /// keeping one in the incremental model would both defeat caching and retain compilations. Same
-    /// rule the AOT serializer generator's <c>PlanLocation</c> follows.
+    /// Neither a <see cref="Diagnostic"/> nor a <see cref="Location"/> can live in an incremental
+    /// model: a location roots a <see cref="SyntaxTree"/>, so it never compares equal across runs and
+    /// keeps the whole compilation alive. <c>PlanLocation</c> is the plain-data stand-in, shared with
+    /// the serializer generator's model rather than duplicated.
     /// </remarks>
     internal sealed class DiagnosticInfo : IEquatable<DiagnosticInfo>
     {
-        public DiagnosticInfo(DiagnosticDescriptor descriptor, Location? location, params string[] messageArgs)
+        public DiagnosticInfo(GrpcDiagnosticKind kind, Location? location, params string[] messageArgs)
         {
-            Descriptor = descriptor;
-            Location = location is null || location.Kind != LocationKind.SourceFile
-                ? null
-                : Location.Create(location.SourceTree!.FilePath, location.SourceSpan, location.GetLineSpan().Span);
+            Kind = kind;
+            Location = Aot.PlanLocation.From(location);
             MessageArgs = messageArgs;
         }
 
-        public DiagnosticDescriptor Descriptor { get; }
+        public GrpcDiagnosticKind Kind { get; }
 
-        public Location? Location { get; }
+        public Aot.PlanLocation Location { get; }
 
         public string[] MessageArgs { get; }
 
-        public Diagnostic ToDiagnostic() => Diagnostic.Create(Descriptor, Location, MessageArgs);
+        public object[] ToMessageArgs()
+        {
+            var result = new object[MessageArgs.Length];
+            for (int i = 0; i < result.Length; i++) result[i] = MessageArgs[i];
+            return result;
+        }
 
         public bool Equals(DiagnosticInfo? other)
         {
-            if (other is null || !ReferenceEquals(Descriptor, other.Descriptor)) return false;
-            if (Location != other.Location) return false;
+            if (other is null || Kind != other.Kind) return false;
+            if (!Location.Equals(other.Location)) return false;
             if (MessageArgs.Length != other.MessageArgs.Length) return false;
             for (int i = 0; i < MessageArgs.Length; i++)
             {
@@ -380,6 +408,6 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
 
         public override bool Equals(object? obj) => Equals(obj as DiagnosticInfo);
 
-        public override int GetHashCode() => Descriptor.Id.GetHashCode() + MessageArgs.Length;
+        public override int GetHashCode() => (int)Kind + MessageArgs.Length;
     }
 }

@@ -1,11 +1,40 @@
 #nullable enable
 using Microsoft.CodeAnalysis;
+using ProtoBuf.BuildTools.Internal.Grpc;
 
 namespace ProtoBuf.BuildTools.Generators
 {
     public sealed partial class GrpcProxyGenerator
     {
         private const string Category = "ProtoBuf.Grpc";
+
+        /// <summary>
+        /// Turn a cached <see cref="DiagnosticInfo"/> back into a reportable diagnostic.
+        /// </summary>
+        /// <remarks>
+        /// The model stores a <see cref="GrpcDiagnosticKind"/> and a <c>PlanLocation</c> rather than a
+        /// descriptor and a <c>Location</c>, so that nothing in it is a Roslyn object; this is where the
+        /// two are resolved. Mirrors <c>ProtoModelGenerator.ToDiagnostic</c>.
+        /// </remarks>
+        private static Diagnostic ToDiagnostic(DiagnosticInfo diagnostic)
+            => Diagnostic.Create(GetDescriptor(diagnostic.Kind), diagnostic.Location.ToLocation(),
+                diagnostic.ToMessageArgs());
+
+        private static DiagnosticDescriptor GetDescriptor(GrpcDiagnosticKind kind) => kind switch
+        {
+            GrpcDiagnosticKind.LanguageVersionTooLow => LanguageVersionTooLow,
+            GrpcDiagnosticKind.InterfaceMustNotBeNested => InterfaceMustNotBeNested,
+            GrpcDiagnosticKind.UnsupportedMethodShape => UnsupportedMethodShape,
+            GrpcDiagnosticKind.GenericInterfaceNotSupported => GenericInterfaceNotSupported,
+            GrpcDiagnosticKind.UnsupportedBaseInterface => UnsupportedBaseInterface,
+            GrpcDiagnosticKind.ModelMustBePartial => ModelMustBePartial,
+            GrpcDiagnosticKind.ModelMustDeriveClientFactory => ModelMustDeriveClientFactory,
+            GrpcDiagnosticKind.NotAServiceContract => NotAServiceContract,
+            GrpcDiagnosticKind.ImplementationDoesNotImplement => ImplementationDoesNotImplement,
+            GrpcDiagnosticKind.NoModelNamed => NoModelNamed,
+            GrpcDiagnosticKind.UnresolvedContract => UnresolvedContract,
+            _ => throw new System.ArgumentOutOfRangeException(nameof(kind)),
+        };
 
         // PBN4000+ is this generator's block. The register of what is taken is
         // AnalyzerReleases.Unshipped.md - check it before adding an id, and add the id to it.

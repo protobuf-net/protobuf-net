@@ -103,7 +103,7 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 var (candidate, caps) = pair;
                 if (candidate is null || caps.Disabled) return;
-                foreach (var diagnostic in candidate.Diagnostics) ctx.ReportDiagnostic(diagnostic.ToDiagnostic());
+                foreach (var diagnostic in candidate.Diagnostics) ctx.ReportDiagnostic(ToDiagnostic(diagnostic));
             });
 
             context.RegisterSourceOutput(plans.Combine(capabilities), static (ctx, pair) =>

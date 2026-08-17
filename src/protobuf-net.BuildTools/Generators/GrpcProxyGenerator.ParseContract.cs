@@ -36,13 +36,13 @@ namespace ProtoBuf.BuildTools.Generators
         {
             if (iface.TypeKind != TypeKind.Interface)
             {
-                return new GrpcContractCandidate(null, One(NotAServiceContract, Where(iface), iface.ToDisplayString()));
+                return new GrpcContractCandidate(null, One(GrpcDiagnosticKind.NotAServiceContract, Where(iface), iface.ToDisplayString()));
             }
 
             // a contract has to carry one of the two markers, or the runtime would not bind it either
             if (!HasAttribute(iface, ServiceAttributeName) && !HasAttribute(iface, ServiceContractAttributeName))
             {
-                return new GrpcContractCandidate(null, One(NotAServiceContract, Where(iface), iface.ToDisplayString()));
+                return new GrpcContractCandidate(null, One(GrpcDiagnosticKind.NotAServiceContract, Where(iface), iface.ToDisplayString()));
             }
 
             // nested and generic contracts are both about the *shape of the generated type*, not any
@@ -50,7 +50,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (iface.ContainingType is not null)
             {
                 return new GrpcContractCandidate(null, One(
-                    InterfaceMustNotBeNested, Where(iface), iface.Name, iface.ContainingType.ToDisplayString()));
+                    GrpcDiagnosticKind.InterfaceMustNotBeNested, Where(iface), iface.Name, iface.ContainingType.ToDisplayString()));
             }
 
             // Open versus closed, not generic versus not - the same line the serializer generator draws.
@@ -60,7 +60,7 @@ namespace ProtoBuf.BuildTools.Generators
             // provider are non-generic types.
             if (IsOpenGeneric(iface))
             {
-                return new GrpcContractCandidate(null, One(GenericInterfaceNotSupported, Where(iface), iface.Name));
+                return new GrpcContractCandidate(null, One(GrpcDiagnosticKind.GenericInterfaceNotSupported, Where(iface), iface.Name));
             }
 
             // Emit only when EVERY operation on the interface (and its bases) is in a shape we handle:
@@ -97,7 +97,7 @@ namespace ProtoBuf.BuildTools.Generators
                 else if (DeclaresOperations(inherited))
                 {
                     diagnostics.Add(new DiagnosticInfo(
-                        UnsupportedBaseInterface, Where(iface), iface.Name, inherited.ToDisplayString()));
+                        GrpcDiagnosticKind.UnsupportedBaseInterface, Where(iface), iface.Name, inherited.ToDisplayString()));
                     return new GrpcContractCandidate(null, diagnostics.ToImmutable());
                 }
             }
@@ -120,7 +120,7 @@ namespace ProtoBuf.BuildTools.Generators
                     {
                         unsupported = true;
                         diagnostics.Add(new DiagnosticInfo(
-                            UnsupportedMethodShape, Where(method), contract.ToDisplayString(), method.Name, reason));
+                            GrpcDiagnosticKind.UnsupportedMethodShape, Where(method), contract.ToDisplayString(), method.Name, reason));
                     }
                 }
             }
@@ -135,7 +135,7 @@ namespace ProtoBuf.BuildTools.Generators
             // not compile; saying so here is much clearer than the CS0311 the consumer would get.
             if (implementation is not null && !ImplementsContract(implementation, iface))
             {
-                return new GrpcContractCandidate(null, One(ImplementationDoesNotImplement,
+                return new GrpcContractCandidate(null, One(GrpcDiagnosticKind.ImplementationDoesNotImplement,
                     Where(implementation), implementation.ToDisplayString(), iface.ToDisplayString()));
             }
 

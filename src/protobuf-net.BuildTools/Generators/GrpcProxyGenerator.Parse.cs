@@ -32,7 +32,7 @@ namespace ProtoBuf.BuildTools.Generators
             // The consumer's half must be partial, or there is nowhere to put our half.
             if (!IsPartial(type))
             {
-                diagnostics.Add(new DiagnosticInfo(ModelMustBePartial, Where(type), type.Name));
+                diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.ModelMustBePartial, Where(type), type.Name));
                 return new GrpcModelCandidate(null, diagnostics.ToImmutable());
             }
 
@@ -41,7 +41,7 @@ namespace ProtoBuf.BuildTools.Generators
             // members we override (BinderConfiguration, CreateClient<T>) are already abstract.
             if (!DerivesFromClientFactory(type))
             {
-                diagnostics.Add(new DiagnosticInfo(ModelMustDeriveClientFactory, Where(type), type.Name, ClientFactoryTypeName));
+                diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.ModelMustDeriveClientFactory, Where(type), type.Name, ClientFactoryTypeName));
                 return new GrpcModelCandidate(null, diagnostics.ToImmutable());
             }
 
@@ -69,7 +69,7 @@ namespace ProtoBuf.BuildTools.Generators
             // fails. Say so rather than let it through silently.
             if (modelTypeFullName is null)
             {
-                diagnostics.Add(new DiagnosticInfo(NoModelNamed, Where(type), type.Name));
+                diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.NoModelNamed, Where(type), type.Name));
             }
 
             // Below the language floor nothing we would normally emit will parse, so the contracts are
@@ -82,7 +82,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (languageVersion < MinimumLanguageVersion)
             {
                 diagnostics.Add(new DiagnosticInfo(
-                    LanguageVersionTooLow, Where(type), type.Name, MinimumLanguageVersionDisplay));
+                    GrpcDiagnosticKind.LanguageVersionTooLow, Where(type), type.Name, MinimumLanguageVersionDisplay));
                 return new GrpcModelCandidate(
                     DownLevelPlan(type, modelTypeFullName, registrationMethodName), diagnostics.ToImmutable());
             }
@@ -105,7 +105,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // generator can see - the same trap [ProtoModel] documents for .proto DTOs
                 if (contract.TypeKind == TypeKind.Error)
                 {
-                    diagnostics.Add(new DiagnosticInfo(UnresolvedContract, Where(type), contract.Name));
+                    diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.UnresolvedContract, Where(type), contract.Name));
                     continue;
                 }
 
@@ -190,7 +190,7 @@ namespace ProtoBuf.BuildTools.Generators
             return false;
         }
 
-        private static ImmutableArray<DiagnosticInfo> One(DiagnosticDescriptor descriptor, Location? location, params string[] args)
-            => ImmutableArray.Create(new DiagnosticInfo(descriptor, location, args));
+        private static ImmutableArray<DiagnosticInfo> One(GrpcDiagnosticKind kind, Location? location, params string[] args)
+            => ImmutableArray.Create(new DiagnosticInfo(kind, location, args));
     }
 }
