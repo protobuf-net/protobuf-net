@@ -143,15 +143,27 @@ All four goals landed on `editions_new`, each protoc-35.1-pinned by tests:
    (never-valid) `group` member. Found and fixed en route: the writer emitted `[default = 0]`
    against enums with no zero member (invalid in every dialect).
 
-Known gaps / deferred (deliberately):
+Completed in the ship-readiness pass (second working day):
 
-- **Validation-error parity** with protoc is partial: we accept some things protoc rejects (e.g.
-  no open-enum-must-start-at-zero check for editions, no naming-style STYLE2024 enforcement, no
-  feature target/support-window checks, no symbol-visibility import enforcement). The comparison
-  harness only pins *valid* files; error parity is follow-up work.
-- **Descriptor.cs regeneration audit**: the DTOs were hand-extended in protogen style; a
-  protogen-regeneration diff against the new descriptor.proto would confirm no drift.
-- Edition 2026 remains parse-tolerated only, per scope.
+- **Error parity** (probed against protoc 35.1, matched in gist): implicit-presence defaults,
+  [packed] in editions, presence on repeated/oneof fields, feature targets, feature support
+  windows (2024-only features in 2023), open-enum zero-first (proto3 *and* editions, keyed on the
+  resolved feature), STYLE2024 naming (with per-element opt-outs honoured), and symbol visibility
+  (explicit `local`, and 2024's local-by-default for nested types). Twelve fixtures under
+  `Schemas/editions/errors/` pin it via the harness's "protoc rejects ⇒ we reject" arm.
+- **Descriptor.cs regeneration audit**: `Descriptor.cs` is now the *unedited* protogen output
+  over the embedded descriptor.proto (procedure in `google/README.md`); the one removed-upstream
+  member (`php_generic_services`) lives in `Descriptor.Legacy.cs`, `[Obsolete]`, for binary
+  compat.
+- **Serializer bootstrap**: `CustomProtogenSerializer`'s services are the committed output of the
+  `[ProtoModel]` generator (seeds on the wrapper class) — which caught and fixed a real generator
+  bug (conditional + `[DefaultValue]` compose by *replacement*, not nesting; pinned by the
+  `ConditionalDefault` AOT fixture).
+- **Harness tightened**: the historical skip list is down to one entry
+  (`unittest_custom_options`, genuinely different valid layouts) — the float-format and
+  option-ordering fixes retired the rest.
+
+Still deferred (deliberately): edition 2026 is parse-tolerated only, per scope.
 
 ## Work map (where each piece lands)
 
