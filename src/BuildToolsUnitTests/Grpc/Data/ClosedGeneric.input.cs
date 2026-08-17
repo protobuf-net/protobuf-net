@@ -52,6 +52,7 @@ public class RequestBox : IBox<Request>
     public Task<Reply> GetAsync(Request request, CallContext context = default) => null!;
 }
 
+[ProtoModel]
 public partial class ClosedGenericModel : TypeModel
 {
     public static ClosedGenericModel Instance { get; } = new ClosedGenericModel();

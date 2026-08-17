@@ -34,6 +34,7 @@ public interface IThing
     event EventHandler? Changed;
 }
 
+[ProtoModel]
 public partial class MarkerInterfaceModel : TypeModel
 {
     public static MarkerInterfaceModel Instance { get; } = new MarkerInterfaceModel();

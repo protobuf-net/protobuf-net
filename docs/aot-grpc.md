@@ -250,7 +250,7 @@ here would only mean "does not interop". `ServiceNaming.input.cs` pins all four 
 - **Seeding is manual.** `AotGrpcSmoke` lists `[ProtoSerializable(typeof(HelloRequest))]` by hand.
   The design settled on is below.
 
-### Seeding, in both directions (designed, not built)
+### Seeding, in both directions
 
 The principle, which is worth keeping wider than the payload set: **if a consumer says "use this
 model", we should check that we think it is going to work.** Naming a model is a claim about
@@ -306,17 +306,37 @@ not ours to judge" from "a generated model whose generator did not run" — and 
 being visible, the fallback is to stay silent in both cases, losing one warning rather than
 misreporting.
 
-Two ids needed, and note `PBN4009` is an unexplained gap in the existing block that should be used or
-documented.
+`PBN4012` and `PBN4013` are the two ids.
 
-**Expect the golden fixtures to light up, and treat that as the proof rather than as breakage.** Every
-`Grpc/Data` fixture declares a hand-written stand-in model — `public partial class BasicModel :
-TypeModel` with an `Instance` and no `[ProtoModel]` — because only `GrpcProxyGenerator` runs in that
-harness. So the "should be `[ProtoModel]`" warning will fire on all ~15 of them, not just `Basic`, and
-the goldens will show it as a reviewable diff. The decision to make then is per fixture rather than
-wholesale: keeping it in `Basic` demonstrates the check on the canonical shape, while a fixture that is
-about something else entirely is better off adding `[ProtoModel]` to its stand-in (which silences the
-warning without needing the serializer generator to run, since the check is on the attribute).
+**Built, and the proof is `src/AotGrpcSmoke` having no `[ProtoSerializable]` at all.** Its model is
+seeded entirely from `[ProtoService]`, and the native publish still passes all five checks at 4 IL
+warnings and 14,480,384 bytes - both unchanged, so seeding costs nothing. A JIT run would not have
+proved it; if seeding regressed, the marshallers would fall back to the reflective model and only the
+native leg would fail.
+
+Two things about the implementation worth keeping:
+
+- **The compilation walk is gated on `[ProtoGrpc]` existing at all**
+  (`compilation.GetTypeByMetadataName(...) is null` returns immediately), so a consumer who has never
+  heard of protobuf-net.Grpc - which is most of them - pays one lookup. Same principle as
+  `ProtoBufDisableBuildTools`.
+- **It walks only this assembly's types.** A `[ProtoGrpc]` in a referenced assembly names its own model
+  and has nothing to say about this one, so the walk is bounded by the project rather than by its
+  dependency graph.
+
+**The golden fixtures lit up, exactly as predicted, and that is the check working.** Every `Grpc/Data`
+fixture declares a hand-written stand-in model, because only `GrpcProxyGenerator` runs in that harness -
+so `PBN4012` fired on all thirteen of them. Resolved per fixture rather than wholesale: `Basic.input.cs`
+**keeps** its warning, as the demonstration on the canonical shape, and its golden `.txt` records the
+message; every other fixture marks its stand-in `[ProtoModel]`, so its goldens stay about whatever it is
+testing. Marking the stand-in is enough on its own - the check is on the attribute, so the serializer
+generator does not need to have run.
+
+Note the seeding side is invisible to *both* golden harnesses - the AOT goldens run
+`ProtoModelGenerator` with no protobuf-net.Grpc surface in the compilation, and the gRPC goldens run
+`GrpcProxyGenerator` against a stand-in model. Seeding is the seam between them, hence
+`GrpcSeedingTests` and `GrpcReferencedModelTests`; the latter needs genuinely separate compilations,
+since the whole question is what can be discovered about a model through metadata.
 - **One reflective call left on the server path**:
   `__cfg.Binder.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve `[Authorize]`-style
   endpoint metadata. It survives the native publish, but it is a `GetMethod` over an interface and

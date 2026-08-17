@@ -40,6 +40,7 @@ public interface IUnmarked
     Task<Reply> GetAsync(Request request, CallContext context = default);
 }
 
+[ProtoModel]
 public partial class NotAContractModel : TypeModel
 {
     public static NotAContractModel Instance { get; } = new NotAContractModel();

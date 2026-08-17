@@ -9,13 +9,19 @@ namespace AotGrpcSmoke;
 /// already ships.
 /// </summary>
 /// <remarks>
-/// Seeded by hand here. Teaching <c>[ProtoSerializable]</c> to accept a service contract - and pull
-/// in every request/response type from its operations - is the obvious next ergonomic step, and is
-/// not done yet; this project is what would prove it.
+/// <para>
+/// **There is deliberately no <c>[ProtoSerializable]</c> here**, and that absence is the test. The
+/// payload types are seeded from <see cref="SmokeServices"/> below: it names this model, so every
+/// request and response type of every contract it binds is pulled into the model automatically.
+/// </para>
+/// <para>
+/// Which makes this project the proof of that feature, not just a beneficiary of it - if seeding
+/// regressed, the marshallers would fall back to the reflective model and the native publish would
+/// fail exactly as it did before any of this existed. A JIT run would still pass, so the native leg
+/// is the one that matters here.
+/// </para>
 /// </remarks>
 [ProtoModel]
-[ProtoSerializable(typeof(HelloRequest))]
-[ProtoSerializable(typeof(HelloReply))]
 public partial class SmokeModel : TypeModel { }
 
 /// <summary>

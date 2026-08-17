@@ -35,6 +35,7 @@ public static class Outer
     }
 }
 
+[ProtoModel]
 public partial class NestedInterfaceModel : TypeModel
 {
     public static NestedInterfaceModel Instance { get; } = new NestedInterfaceModel();

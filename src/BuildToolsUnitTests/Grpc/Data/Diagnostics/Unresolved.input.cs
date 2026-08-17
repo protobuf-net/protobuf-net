@@ -22,6 +22,7 @@ public class Request
     public string? Name { get; set; }
 }
 
+[ProtoModel]
 public partial class UnresolvedModel : TypeModel
 {
     public static UnresolvedModel Instance { get; } = new UnresolvedModel();

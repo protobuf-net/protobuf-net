@@ -32,6 +32,7 @@ public interface IThing
     Task<Reply> GetAsync(Request request, CallContext context = default);
 }
 
+[ProtoModel]
 public partial class NotPartialModel : TypeModel
 {
     public static NotPartialModel Instance { get; } = new NotPartialModel();

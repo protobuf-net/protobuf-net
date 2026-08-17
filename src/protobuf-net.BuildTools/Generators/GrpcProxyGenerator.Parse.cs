@@ -46,6 +46,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             string? modelTypeFullName = null;
+            INamedTypeSymbol? modelSymbol = null;
             string? registrationMethodName = null;
             foreach (var attribute in type.GetAttributes())
             {
@@ -55,6 +56,7 @@ namespace ProtoBuf.BuildTools.Generators
                     switch (named.Key)
                     {
                         case "Model" when named.Value.Value is INamedTypeSymbol model:
+                            modelSymbol = model;
                             modelTypeFullName = model.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             break;
                         case "RegistrationMethodName" when named.Value.Value is string name && name.Length != 0:
@@ -88,6 +90,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var contracts = ImmutableArray.CreateBuilder<GrpcInterfaceModel>();
+            var payloads = new System.Collections.Generic.List<ITypeSymbol>();
             var seen = new System.Collections.Generic.HashSet<string>(System.StringComparer.Ordinal);
             foreach (var attribute in type.GetAttributes())
             {
@@ -109,13 +112,16 @@ namespace ProtoBuf.BuildTools.Generators
                     continue;
                 }
 
-                var candidate = ParseContract(contract, implementation, cancellationToken);
+                var candidate = ParseContract(contract, implementation, cancellationToken, payloads);
                 diagnostics.AddRange(candidate.Diagnostics);
                 if (candidate.Model is { } model && seen.Add(model.InterfaceFullName))
                 {
                     contracts.Add(model);
                 }
             }
+
+            // "if you say use this model, we check that we think it will work" - see CheckModelLink
+            if (modelSymbol is not null) CheckModelLink(type, modelSymbol, payloads, diagnostics);
 
             var plan = new GrpcModelPlan(
                 namespaceName: type.ContainingNamespace.IsGlobalNamespace

@@ -361,6 +361,8 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
         NoOperationsFound,
         ImplementationDoesNotImplement,
         NoModelNamed,
+        ModelIsNotAProtoModel,
+        ModelCannotSerializePayload,
         UnresolvedContract,
     }
 

@@ -32,6 +32,7 @@ public interface IThing
     Task<Reply> GetAsync(Request request, CallContext context = default);
 }
 
+[ProtoModel]
 public partial class NotClientFactoryModel : TypeModel
 {
     public static NotClientFactoryModel Instance { get; } = new NotClientFactoryModel();

@@ -13,6 +13,7 @@
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal.Grpc;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 using System.Threading;
@@ -31,8 +32,20 @@ namespace ProtoBuf.BuildTools.Generators
         /// Reduce a candidate service contract to an emittable model, or to the diagnostics explaining
         /// why it was left to the runtime path.
         /// </summary>
+        /// <param name="payloadSink">
+        /// When supplied, receives every request and response payload <em>symbol</em> of the operations
+        /// that were recognised - which is how <c>ProtoModelGenerator</c> seeds a model from a service
+        /// contract without reimplementing any of the shape rules below.
+        /// </param>
+        /// <remarks>
+        /// The sink is an out-of-band parameter rather than part of the returned candidate on purpose:
+        /// the candidate is a cached incremental model and must hold no symbols, per
+        /// <c>GrpcModelPlanShapeTests</c>. Void requests and responses contribute nothing, since
+        /// <c>Empty</c> carries its own hand-written marshaller and is never serialized by a TypeModel.
+        /// </remarks>
         private static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
-            INamedTypeSymbol? implementation, CancellationToken cancellationToken)
+            INamedTypeSymbol? implementation, CancellationToken cancellationToken,
+            List<ITypeSymbol>? payloadSink = null)
         {
             if (iface.TypeKind != TypeKind.Interface)
             {
@@ -112,7 +125,8 @@ namespace ProtoBuf.BuildTools.Generators
                     if (method.MethodKind != Microsoft.CodeAnalysis.MethodKind.Ordinary) continue;
                     if (method.IsStatic) continue;
 
-                    if (TryParseOperation(method, contract, out var operation, out var reason) && operation is not null)
+                    if (TryParseOperation(method, contract, out var operation, out var reason, payloadSink)
+                        && operation is not null)
                     {
                         operations.Add(operation);
                     }
@@ -202,7 +216,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// and there are six quite different ways to reach it.
         /// </param>
         private static bool TryParseOperation(IMethodSymbol method, INamedTypeSymbol declaringInterface,
-            out GrpcOperationModel? model, out string reason)
+            out GrpcOperationModel? model, out string reason, List<ITypeSymbol>? payloadSink = null)
         {
             model = null;
             reason = "";
@@ -226,10 +240,12 @@ namespace ProtoBuf.BuildTools.Generators
                     + "handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time";
                 return false;
             }
-            var (responseShape, impliedKind, responseType, voidResponse) = returnInfo.Value;
+            var (responseShape, impliedKind, responseSymbol, voidResponse) = returnInfo.Value;
+            var responseType = responseSymbol is null ? EmptyTypeName : Display(responseSymbol);
 
             GrpcArgShape requestShape;
             string requestType;
+            ITypeSymbol? requestSymbol = null;
             bool voidRequest;
             GrpcContextKind context;
 
@@ -272,7 +288,8 @@ namespace ProtoBuf.BuildTools.Generators
                     }
 
                     requestShape = firstKind == ArgKind.AsyncEnumerable ? GrpcArgShape.AsyncEnumerable : GrpcArgShape.Data;
-                    requestType = Display(element ?? first.Type);
+                    requestSymbol = element ?? first.Type;
+                    requestType = Display(requestSymbol);
                     voidRequest = false;
                     if (second is null)
                     {
@@ -323,6 +340,12 @@ namespace ProtoBuf.BuildTools.Generators
                 reason = "a streaming request answered by a stream is a duplex call, which this return "
                     + "type does not express";
                 return false;
+            }
+
+            if (payloadSink is not null)
+            {
+                if (requestSymbol is not null) payloadSink.Add(requestSymbol);
+                if (responseSymbol is not null) payloadSink.Add(responseSymbol);
             }
 
             var parameters = ImmutableArray.CreateBuilder<GrpcParameterModel>(method.Parameters.Length);
@@ -594,19 +617,19 @@ namespace ProtoBuf.BuildTools.Generators
             return GrpcContextKind.None;
         }
 
-        private static (GrpcResultShape Shape, GrpcMethodKind ImpliedKind, string DataType, bool Void)? CategorizeReturn(ITypeSymbol returnType)
+        private static (GrpcResultShape Shape, GrpcMethodKind ImpliedKind, ITypeSymbol? Data, bool Void)? CategorizeReturn(ITypeSymbol returnType)
         {
             if (returnType.SpecialType == SpecialType.System_Void)
             {
-                return (GrpcResultShape.Sync, GrpcMethodKind.Unary, EmptyTypeName, true);
+                return (GrpcResultShape.Sync, GrpcMethodKind.Unary, null, true);
             }
 
             if (returnType is INamedTypeSymbol named)
             {
                 if (!named.IsGenericType)
                 {
-                    if (IsType(named, "System.Threading.Tasks", "Task")) return (GrpcResultShape.Task, GrpcMethodKind.Unary, EmptyTypeName, true);
-                    if (IsType(named, "System.Threading.Tasks", "ValueTask")) return (GrpcResultShape.ValueTask, GrpcMethodKind.Unary, EmptyTypeName, true);
+                    if (IsType(named, "System.Threading.Tasks", "Task")) return (GrpcResultShape.Task, GrpcMethodKind.Unary, null, true);
+                    if (IsType(named, "System.Threading.Tasks", "ValueTask")) return (GrpcResultShape.ValueTask, GrpcMethodKind.Unary, null, true);
                 }
                 else
                 {
@@ -616,15 +639,15 @@ namespace ProtoBuf.BuildTools.Generators
                     // Task<Stream>, IAsyncEnumerable<IObservable<T>>, ... are all runtime-path shapes
                     if (IsRuntimeOnlyPayload(payload)) return null;
 
-                    if (IsType(definition, "System.Threading.Tasks", "Task")) return (GrpcResultShape.Task, GrpcMethodKind.Unary, Display(payload), false);
-                    if (IsType(definition, "System.Threading.Tasks", "ValueTask")) return (GrpcResultShape.ValueTask, GrpcMethodKind.Unary, Display(payload), false);
-                    if (IsType(definition, "System.Collections.Generic", "IAsyncEnumerable")) return (GrpcResultShape.AsyncEnumerable, GrpcMethodKind.ServerStreaming, Display(payload), false);
+                    if (IsType(definition, "System.Threading.Tasks", "Task")) return (GrpcResultShape.Task, GrpcMethodKind.Unary, payload, false);
+                    if (IsType(definition, "System.Threading.Tasks", "ValueTask")) return (GrpcResultShape.ValueTask, GrpcMethodKind.Unary, payload, false);
+                    if (IsType(definition, "System.Collections.Generic", "IAsyncEnumerable")) return (GrpcResultShape.AsyncEnumerable, GrpcMethodKind.ServerStreaming, payload, false);
                 }
             }
 
             // a bare synchronous return value
             if (IsRuntimeOnlyPayload(returnType)) return null;
-            return (GrpcResultShape.Sync, GrpcMethodKind.Unary, Display(returnType), false);
+            return (GrpcResultShape.Sync, GrpcMethodKind.Unary, returnType, false);
         }
 
         private static ITypeSymbol? GetElementType(ITypeSymbol type)

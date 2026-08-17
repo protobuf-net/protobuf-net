@@ -55,8 +55,17 @@ public class GreeterService : IGreeter
     public IAsyncEnumerable<HelloReply> Chat(IAsyncEnumerable<HelloRequest> requests, CallContext context = default) => null!;
 }
 
-// stands in for the [ProtoModel]-generated model; the gRPC generator only needs `Instance`, and the
-// two generators never see each other's output, so the golden tests supply it by hand
+// Stands in for the [ProtoModel]-generated model. The gRPC generator only needs `Instance`, and only
+// GrpcProxyGenerator runs in these golden tests, so there is no generated model to point at and the
+// harness supplies one by hand. Do NOT read this as evidence that payload types are discovered
+// automatically - the stand-in serializes nothing at all. Real seeding is ProtoModelGenerator's job and
+// is covered by GrpcSeedingTests and src/AotGrpcSmoke.
+//
+// This one deliberately carries no [ProtoModel], so PBN4012 fires and the golden .txt beside this file
+// records it. That is the check working: naming a model that has no compile-time serializers is exactly
+// the mistake that otherwise surfaces as a bare CS0117 on the generated Instance, or as a green build
+// whose payloads are all marshalled reflectively. Every other fixture marks its stand-in, so that its
+// own goldens stay about what it is testing.
 public partial class BasicModel : TypeModel
 {
     public static BasicModel Instance { get; } = new BasicModel();

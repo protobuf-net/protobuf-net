@@ -33,6 +33,8 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.NoOperationsFound => NoOperationsFound,
             GrpcDiagnosticKind.ImplementationDoesNotImplement => ImplementationDoesNotImplement,
             GrpcDiagnosticKind.NoModelNamed => NoModelNamed,
+            GrpcDiagnosticKind.ModelIsNotAProtoModel => ModelIsNotAProtoModel,
+            GrpcDiagnosticKind.ModelCannotSerializePayload => ModelCannotSerializePayload,
             GrpcDiagnosticKind.UnresolvedContract => UnresolvedContract,
             _ => throw new System.ArgumentOutOfRangeException(nameof(kind)),
         };
@@ -182,6 +184,52 @@ namespace ProtoBuf.BuildTools.Generators
                 + "marshalled through RuntimeTypeModel.Default, which reflects; the proxies will be "
                 + "AOT-safe and the serializers will not. Set [ProtoGrpc(Model = typeof(YourModel))] "
                 + "naming a [ProtoModel] type",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// The named model is in this compilation but is not a compile-time model.
+        /// </summary>
+        /// <remarks>
+        /// Today this fails as a bare <c>CS0117</c> on the generated <c>Model.Instance</c> reference,
+        /// which points at generated code and says nothing about the cause. It also means seeding cannot
+        /// happen, so every payload would be marshalled reflectively even though the proxies are static.
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor ModelIsNotAProtoModel = new(
+            id: "PBN4012",
+            title: "The named serializer model is not marked [ProtoModel]",
+            messageFormat: "'{0}' names '{1}' as its serializer model, but that type is declared in this "
+                + "project without [ProtoModel], so it has no compile-time serializers and no 'Instance'. "
+                + "Add [ProtoModel] to it",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// The named model lives in another assembly and cannot serialize a payload we need.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Nothing can be added to a model in a referenced assembly, so this is the only direction
+        /// available there: check, and say so at build time. Otherwise the mismatch surfaces as a
+        /// run-time marshalling failure, or - worse - as a silent fall back to the reflective model that
+        /// only fails once published.
+        /// </para>
+        /// <para>
+        /// Decided from the emitted <c>ISerializer&lt;T&gt;</c>/<c>ISerializerProxy&lt;T&gt;</c> set
+        /// rather than from the model's <c>[ProtoSerializable]</c> attributes, deliberately: the
+        /// attributes are what it was <em>asked</em> to serialize, and the two differ both ways - a
+        /// dropped seed keeps its attribute, and a payload reached as a member of another seed never had
+        /// one.
+        /// </para>
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor ModelCannotSerializePayload = new(
+            id: "PBN4013",
+            title: "The named serializer model has no serializer for a payload type",
+            messageFormat: "'{0}' needs to marshal '{1}', but the model '{2}' - which is in another "
+                + "assembly, so nothing can be added to it here - has no serializer for that type. Add "
+                + "[ProtoSerializable(typeof({1}))] to it, or name a model that covers this contract",
             category: Category,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);

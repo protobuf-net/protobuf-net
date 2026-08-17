@@ -63,4 +63,6 @@ PBN4008  | ProtoBuf.Grpc | Warning | Named implementation does not implement the
 PBN4009  | ProtoBuf.Grpc | Warning | Service contract declares no recognised operations
 PBN4010  | ProtoBuf.Grpc | Warning | No AOT serializer model named for these proxies
 PBN4011  | ProtoBuf.Grpc | Warning | Service contract could not be resolved
+PBN4012  | ProtoBuf.Grpc | Warning | The named serializer model is not marked [ProtoModel]
+PBN4013  | ProtoBuf.Grpc | Warning | The named serializer model has no serializer for a payload type
 

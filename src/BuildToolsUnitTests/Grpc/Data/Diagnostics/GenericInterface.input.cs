@@ -37,6 +37,7 @@ public interface IBox<T> where T : class
     Task<Reply> GetAsync(T request, CallContext context = default);
 }
 
+[ProtoModel]
 public partial class GenericInterfaceModel : TypeModel
 {
     public static GenericInterfaceModel Instance { get; } = new GenericInterfaceModel();

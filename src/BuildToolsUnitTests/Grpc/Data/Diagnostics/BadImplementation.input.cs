@@ -39,6 +39,7 @@ public class ThingService
     public Task<Reply> GetAsync(Request request, CallContext context = default) => null!;
 }
 
+[ProtoModel]
 public partial class BadImplementationModel : TypeModel
 {
     public static BadImplementationModel Instance { get; } = new BadImplementationModel();

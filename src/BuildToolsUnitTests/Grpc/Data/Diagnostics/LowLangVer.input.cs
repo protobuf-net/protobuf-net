@@ -44,6 +44,7 @@ namespace GrpcFixtures.LowLangVer
         Task<Reply> GetAsync(Request request, CallContext context = default);
     }
 
+    [ProtoModel]
     public partial class LowLangVerModel : TypeModel
     {
         public static LowLangVerModel Instance { get; } = new LowLangVerModel();

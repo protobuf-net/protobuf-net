@@ -42,6 +42,7 @@ public interface IThing : IAudited
     Task<Reply> GetAsync(Request request, CallContext context = default);
 }
 
+[ProtoModel]
 public partial class BaseInterfaceModel : TypeModel
 {
     public static BaseInterfaceModel Instance { get; } = new BaseInterfaceModel();

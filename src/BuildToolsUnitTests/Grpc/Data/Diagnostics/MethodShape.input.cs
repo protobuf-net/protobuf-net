@@ -42,6 +42,7 @@ public interface IThing
     Task<T> EchoAsync<T>(T request, CallContext context = default) where T : class;
 }
 
+[ProtoModel]
 public partial class MethodShapeModel : TypeModel
 {
     public static MethodShapeModel Instance { get; } = new MethodShapeModel();

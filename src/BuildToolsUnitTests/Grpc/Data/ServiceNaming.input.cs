@@ -63,6 +63,7 @@ namespace GrpcFixtures.ServiceNaming
         Task<Reply> GetAsync(T request, CallContext context = default);
     }
 
+    [ProtoModel]
     public partial class ServiceNamingModel : TypeModel
     {
         public static ServiceNamingModel Instance { get; } = new ServiceNamingModel();
