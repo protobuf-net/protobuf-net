@@ -285,9 +285,18 @@ no services type, which means the generator did not run there.
 
 `Empty` is excluded from all of this, per the gap noted above.
 
-Neither `ProtoModelAttribute` nor `ProtoSerializableAttribute` is `[Conditional]`, so both reach
-metadata today — but that is now load-bearing rather than incidental, and is recorded as such in
-`ProtoModelAttributes.cs`.
+A further point in the interface check's favour, and the reason the `[Conditional]` question below
+turned out to be moot: **it takes no dependency on attribute retention.** An attribute-based check
+would have needed `[ProtoSerializable]` to survive into metadata, and would then have quietly relied
+on that forever. Reading the emitted interfaces relies only on the code the generator actually wrote.
+
+For the record, since it was asked and the answer is easy to mis-remember: neither
+`ProtoModelAttribute` nor `ProtoSerializableAttribute` is `[Conditional]`, so both do reach metadata —
+but **nothing in this design relies on that**, and no comment in the source claims otherwise. The one
+place metadata survival buys anything is `[ProtoModel]`, used to tell "a hand-written `TypeModel`,
+not ours to judge" from "a generated model whose generator did not run" — and if that ever stopped
+being visible, the fallback is to stay silent in both cases, losing one warning rather than
+misreporting.
 
 Two ids needed, and note `PBN4009` is an unexplained gap in the existing block that should be used or
 documented.
