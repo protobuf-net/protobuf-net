@@ -39,8 +39,10 @@
     <PackageVersion Include="protobuf-net.BuildTools" Version="3.2.46" />
     <!-- 1.3.0 is the floor for the gRPC generator: it ships [ProtoGrpc]/[ProtoService], and the
          ClientFactory shape the generated proxies derive from (1.0.21 predates that entirely - its
-         CreateClient<T> is not even virtual) -->
-    <PackageVersion Include="protobuf-net.Grpc" Version="1.3.0" />
+         CreateClient<T> is not even virtual). 1.3.6 is what src/AotGrpcSmoke is measured against:
+         it also stops rooting RuntimeTypeModel, which is what takes that publish from 100 IL
+         warnings to 5 -->
+    <PackageVersion Include="protobuf-net.Grpc" Version="1.3.6" />
     <PackageVersion Include="protobuf-net.Grpc.Reflection" Version="1.2.2" />
     <PackageVersion Include="System.Buffers" Version="4.6.1" />
     <PackageVersion Include="System.CodeDom" Version="10.0.7" />

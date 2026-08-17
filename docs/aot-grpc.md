@@ -3,7 +3,7 @@
 Working notes for the gRPC half of the AOT story, in the same spirit as `aot-findings.md`. The
 serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 
-> **Handover** (2026-08-16). Branch `grpc-aot-generator`, draft PR
+> **Handover** (2026-08-17). Branch `grpc-aot-generator`, draft PR
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
 > `dotnet test src/BuildToolsUnitTests` (327 pass), a JIT run of `src/AotGrpcSmoke`, and a `win-x64`
 > native publish of the same (all five checks pass). `protobuf-net.BuildTools.Legacy` builds green.
@@ -12,23 +12,21 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > | | |
 > | --- | --- |
-> | protobuf-net.Grpc **1.3.0** (released) | ships `[ProtoGrpc]` / `[ProtoService]`, the `RuntimeTypeModel` gates, and `BinderConfiguration.Binder` made public |
-> | protobuf-net.Grpc #366 (merged) | GitHub Actions CI + trusted-publishing release pipeline (AppVeyor retired) |
-> | protobuf-net.Grpc #367 (merged) | release-tag fix; see "Versioning and release traps" below |
-> | protobuf-net.Grpc **#368 (open)** | `BytesValue.SlowParse`; **not** in 1.3.0 — see below |
+> | protobuf-net.Grpc **1.3.6** (released) | everything this branch needs; `[ProtoGrpc]`/`[ProtoService]`, both `RuntimeTypeModel` roots gone, `BinderConfiguration.Binder` public |
+> | protobuf-net.Grpc #365–#372 (merged) | the above, plus the Actions CI + trusted-publishing pipeline, the release-tag fix, and the `get-version` scripts |
+> | protobuf-net.Grpc #369 (open) | not ours — a contributor's `[SubService]` metadata fix, under discussion |
 > | protobuf-net #1284 (open) | `[Experimental]` help links + the shared `docs/exp/PBN9001.md` page |
 > | docs | `grpc.protobuf-net.dev` is live; protobuf-net's is `docs.protobuf-net.dev` |
 >
-> **Done here:** the generator-owned trigger attributes are gone, the package floor is `1.3.0`, and
+> **Done here:** the generator-owned trigger attributes are gone, the package floor is `1.3.6`, and
 > the golden no longer contains an emitted attributes file. The unit tests stub the attributes in
 > `Grpc/Data/_ContractSurface.cs` deliberately — matching is by full name, and the real ones are
 > `[Experimental]`, i.e. an *error* by default, so a stub also keeps fixtures free of suppressions.
 >
-> **`src/AotGrpcSmoke` is verified against the genuine 1.3.0 from nuget.org** — build, JIT run and a
-> `win-x64` native run, all five checks green. Note the warning count there is **100, not 5**, and
-> that is expected rather than a regression: 1.3.0 predates #368, and the two `RuntimeTypeModel`
-> roots are an AND (see below). It measured byte-identical to the earlier "marshaller gates only"
-> row, which is a decent cross-check that the local-feed measurements were not an artefact.
+> **`src/AotGrpcSmoke` is verified against the genuine 1.3.6 from nuget.org** — build, JIT run and a
+> `win-x64` native run, all five checks green, **5 IL warnings and 14,480,384 bytes** (against 100
+> and 15,019,520 on 1.3.0). Four of the five are per-assembly rollups; the one real warning is the
+> `IL2091` in the next-steps list below, which is ours.
 >
 > **Next steps, in order** — all mechanical now:
 >
@@ -117,15 +115,17 @@ Nothing resolves by `Type` at run time: no registry, no `[ModuleInitializer]`, n
 - **The three-arity server-method delegates are `Grpc.AspNetCore.Server.Model`'s, not
   `Grpc.Core`'s** — `Grpc.Core`'s own are two-arity, with no `TService`. Probed with reflection over
   the real package; the first emitter got this wrong.
-- **`BinderConfiguration.Binder` is `internal`**, so generated code cannot reach the metadata
-  pipeline through it — hence the public `ServiceBinder.Default`. See "Known gaps".
+- **`BinderConfiguration.Binder` was `internal`**, so generated code could not reach the metadata
+  pipeline through it and had to use the public `ServiceBinder.Default` — which silently ignores a
+  consumer's custom binder. It is **public from 1.3.6**, so the emitter should now use `__cfg.Binder`;
+  that is still outstanding. See "Known gaps".
 - **`BinderConfiguration.SetMarshaller<T>` is public**, and `GetMarshaller<T>` checks the cache
   first. That is what lets the generator sidestep `CanSerialize(Type)` entirely.
 - **protobuf-net.Grpc 1.0.21 predates the `ClientFactory` shape** — its `CreateClient<TService>` is
   not even virtual, and the abstract member is
   `CreateClient<TBase, TService, TChannel>(TChannel)`. `Directory.Packages.props` was pinned there;
-  bumped to **1.2.2**. Found within minutes of building against the real package, and not findable
-  from the surface snapshot.
+  the floor is **1.3.6** now. Found within minutes of building against the real package, and not
+  findable from the surface snapshot — which is the argument for `AotGrpcSmoke` existing at all.
 
 ### Why naming the implementation matters
 
@@ -228,9 +228,11 @@ snapshot is caught by `AotGrpcSmoke`, which uses the real packages** — and it 
 - **One reflective call left on the server path**:
   `ServiceBinder.Default.GetMetadata(typeof(IFoo).GetMethod(name)!, …)`, needed to preserve
   `[Authorize]`-style endpoint metadata. It survives the native publish, but it is a `GetMethod` over
-  an interface and wants a non-reflective route.
-- **100 IL warnings against a shipped 1.3.0**, dropping to **5** once protobuf-net.Grpc#368 lands —
-  see "The two `RuntimeTypeModel` roots" below for why it is all-or-nothing. Of the residual 5, four
+  an interface and wants a non-reflective route. Note it also names `ServiceBinder.Default` rather
+  than the configured binder, so a consumer's custom `GetMetadata` override is ignored — that half is
+  a one-word fix now `BinderConfiguration.Binder` is public (1.3.6).
+- **5 IL warnings** on a native publish against protobuf-net.Grpc 1.3.6, down from 100 — see "The
+  two `RuntimeTypeModel` roots" below for why it was all-or-nothing. Of the residual 5, four
   are per-assembly rollups and one is the `IL2091` in the handover list. If more ever appear, use
   `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
   `aot-findings.md`.
@@ -280,9 +282,9 @@ in protobuf-net.Grpc, and this is the single most useful number in these notes:
 | gated | IL warnings | bytes |
 | --- | ---: | ---: |
 | nothing (baseline) | 100 | 15,015,936 |
-| `ProtoBufMarshallerFactory.Default` + `.Create` (#365, shipped in 1.3.0) | 100 | 15,019,520 |
-| `BytesValue.SlowParse` (#368, open) | 100 | 15,017,984 |
-| **both** | **5** | **14,472,192** |
+| `ProtoBufMarshallerFactory.Default` + `.Create` (#365) | 100 | 15,019,520 |
+| `BytesValue.SlowParse` (#368) | 100 | 15,017,984 |
+| **both** — i.e. shipped 1.3.6 | **5** | **14,480,384** |
 
 **An AND, not an OR.** Either alone keeps the other's graph alive, so each change measured in
 isolation looks worthless — and the natural conclusion would have been to drop it. Four of the five
