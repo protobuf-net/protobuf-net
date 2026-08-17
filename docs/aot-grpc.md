@@ -621,24 +621,45 @@ alongside. The interceptor below was accepted and ran, so this is the shape to e
 ``` c#
 namespace ProtoBuf.AOT
 {
-    internal static class GrpcInterceptors            // naming: see the caveat above
+    internal static class GrpcInterceptors
     {
-        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "<synthesised data>")]
-        public static global::Some.IGreeter Create_IGreeter(
+        // one attribute per intercepted call site, however many contracts they name
+        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "<site 1>")]
+        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "<site 2>")]
+        public static TService CreateGrpcService<TService>(
             this global::Grpc.Core.CallInvoker client,
             global::ProtoBuf.Grpc.Configuration.ClientFactory? clientFactory = null)
-            => (clientFactory ?? global::Some.MyServices.Instance)
-                    .CreateClient<global::Some.IGreeter>(client);
+            where TService : class
+            => (clientFactory ?? global::Some.MyServices.Instance).CreateClient<TService>(client);
     }
 }
 ```
+
+**The interceptor may be generic, and that is the shape to emit.** Checked by intercepting two call
+sites - `IGreeter` and `ICalculator` - with a *single* `<TService>` method carrying two
+`[InterceptsLocation]` attributes, and having the body report `typeof(TService).Name`: it printed
+`INTERCEPTED via IGreeter` and `INTERCEPTED via ICalculator`, so each site got its own substitution.
+
+That is worth more than the code it saves, because it removes three problems rather than one:
+
+- **one method per model instead of one per contract**, with `AllowMultiple = true` doing the work;
+- **the per-model naming question disappears** - there is one method, named after the intercepted one,
+  so nothing has to be uniquified and the `CS0101` caveat evaporates;
+- **the body needs no substitution at all**: `CreateClient<TService>(client)` is generic already, and our
+  generated `CreateClient` dispatches on `typeof(TService)` internally. So the emitted line is
+  *identical* for every consumer and every contract - there is exactly one shape to review, and it is
+  the runtime overload's own body with one identifier swapped.
+
+An earlier note here said the return type had to be the substituted one; that was true of the
+non-generic form I probed first, and is not a constraint.
 
 Four details that had to be checked rather than assumed, because getting any of them wrong is a
 compile error in the consumer's project:
 
 - the interceptor is **extension-shaped** (`this` on the receiver), matching how the call site binds;
-- the return type is the **substituted** one - `IGreeter`, not a generic `TService`. The intercepted
-  call has its type argument fixed at that site, which is also why an *open* `T` cannot be intercepted;
+- a **generic** interceptor is legal and preferred (above); the non-generic substituted form also works,
+  which is what the first probe established. An *open* `T` at the call site still cannot be intercepted,
+  since there is no location to name;
 - the **optional parameter is retained** even though the call site omits it;
 - an `internal static class` at namespace level is fine - extension methods need a non-generic
   non-nested static class, and `internal` satisfies the call site without `file` scoping.
