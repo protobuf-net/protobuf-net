@@ -134,6 +134,12 @@ the mechanism — future work, noted and parked.
 | **Corpus / protoc** | **done: bundled protoc bumped 3.21.12 → 35.1** (edition 2024 needs ≥ v32). The churn was three protoc-behaviour quirks, all fixed in `Parsers.cs` to match modern protoc: (1) options extension fields now sorted by field number at *every* depth, root included; (2) packable repeated option values written packed even when unary (enum case, e.g. `google.api.field_behavior`); (3) large round integer float/double defaults rendered in exponent form (`2e+08`, not `200000000`). Still to do: refresh `google/*` corpus protos — blocked on parser capability (latest descriptor.proto does not parse yet, see #1211); add editions schemas incl. upstream `edition_unittest.proto`. |
 | **Runtime library** | **no changes expected.** |
 
+## Shipping checklist
+
+- Any release with editions support should also update
+  [protobuf-net.dev](https://github.com/protobuf-net/protobuf-net.dev) — *should* just be a NuGet
+  package bump there, plus possibly some new editions sample files.
+
 ## Tracking issues
 
 - [#1231](https://github.com/protobuf-net/protobuf-net/issues/1231) — editions support (the umbrella ask; this work).
