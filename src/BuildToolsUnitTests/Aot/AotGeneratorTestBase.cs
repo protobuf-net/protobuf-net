@@ -128,7 +128,8 @@ namespace BuildToolsUnitTests.Aot
             Action<TGenerator>? initializer = null,
             LanguageVersion languageVersion = LanguageVersion.Latest,
             IEnumerable<MetadataReference>? extraReferences = null,
-            IEnumerable<(string Path, string Source)>? extraSources = null)
+            IEnumerable<(string Path, string Source)>? extraSources = null,
+            ImmutableDictionary<string, string>? globalOptions = null)
             where TGenerator : class, IIncrementalGenerator, new()
         {
             if (string.IsNullOrWhiteSpace(fileName)) fileName = "input.cs";
@@ -170,8 +171,14 @@ namespace BuildToolsUnitTests.Aot
             var generator = new TGenerator();
             initializer?.Invoke(generator);
 
+            // global options exist so the ProtoBufDisableBuildTools switch can be exercised; without one
+            // supplied, the provider is empty and every generator takes its normal path
+            var optionsProvider = TestAnalyzeConfigOptionsProvider.Empty.WithGlobalOptions(
+                new TestAnalyzerConfigOptions(globalOptions ?? ImmutableDictionary<string, string>.Empty));
+
             GeneratorDriver driver = CSharpGeneratorDriver.Create(
-                new[] { generator.AsSourceGenerator() }, parseOptions: parseOptions);
+                new[] { generator.AsSourceGenerator() }, parseOptions: parseOptions,
+                optionsProvider: optionsProvider);
             driver = driver.RunGeneratorsAndUpdateCompilation(inputCompilation, out var outputCompilation, out var diagnostics);
 
             var runResult = driver.GetRunResult();
