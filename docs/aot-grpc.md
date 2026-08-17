@@ -653,6 +653,16 @@ That is worth more than the code it saves, because it removes three problems rat
 An earlier note here said the return type had to be the substituted one; that was true of the
 non-generic form I probed first, and is not a constraint.
 
+**And because `TService` is constrained `: class`, every instantiation shares one body.** Reference-type
+generics canonicalise, so `CreateGrpcService<IGreeter>` and `CreateGrpcService<ICalculator>` are one
+method at run time rather than two - and ILC canonicalises the same way, so the native image carries one
+body plus the small per-type dictionaries, not a copy per contract. The one-method-per-contract shape
+would have put N distinct bodies in the image, each rooted, for no benefit.
+
+The cost that remains is the `typeof(TService)` chain inside the generated `CreateClient`, which shared
+generics make a real lookup rather than a compile-time pick - but that was always there, it is a handful
+of reference comparisons, and it runs once per client construction rather than per call.
+
 Four details that had to be checked rather than assumed, because getting any of them wrong is a
 compile error in the consumer's project:
 
