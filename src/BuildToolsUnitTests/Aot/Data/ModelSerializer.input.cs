@@ -1,18 +1,12 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System.Runtime.Serialization;
 
-// NOTE: no .reference.cs yet - added on Linux, and AotRefGen is net472 so it could not be run.
-// Nothing here is refused by ref-emit once the harness replays the declarations, so this fixture
-// *should* have one. Differentially covered in the meantime by AotConformanceTests, which replays
-// [ProtoSerializer] onto the reference model through MetaType.SerializerType. Run AotRefGen on
-// Windows and commit the result.
-//
-// [ProtoSerializer] on the model is the compile-time equivalent of MetaType.SerializerType: a
-// hand-written serializer for a type that cannot carry [ProtoContract(Serializer = ...)] itself -
-// because you do not own it, or because the serializer lives in an assembly the type cannot
-// reference back (a domain type whose serializer ships in an infrastructure assembly).
+// Differentially covered by AotConformanceTests, which replays the [ProtoSerializer]
+// declarations onto the reference model. The .reference.cs shows ref-emit closing the
+// OPEN-GENERIC mapping per use site - ISerializerProxy<Wrapped<byte|int|long|string>> -
+// which is the part of this feature with no prior art to copy.
 namespace AotFixtures.ModelSerializer;
 
 // a scalar union shape: the wire form is the payload's own, with no message wrapper. The type
