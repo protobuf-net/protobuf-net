@@ -1,0 +1,19 @@
+# Embedded google schemas: provenance
+
+These `.proto` files are embedded resources, used to resolve imports when parsing user schemas.
+They come from **two different upstreams** — do not assume one refresh covers both:
+
+| folder | upstream | how to refresh |
+| --- | --- | --- |
+| `google/protobuf/**` (well-known types, descriptor.proto, `compiler/plugin.proto`, the `*_features.proto` set) | [protocolbuffers/protobuf](https://github.com/protocolbuffers/protobuf) | copy verbatim from the **include set** of the protoc release bundled in `src/protobuf-net.Reflection.Test` (`windows/protoc.exe --version`), so the corpus and the compiler agree |
+| `google/api/*`, `google/type/*` | [googleapis/googleapis](https://github.com/googleapis/googleapis) (`google/api`, `google/type`) | copy verbatim from the repo head; record the commit in the refresh commit message |
+
+Last refreshed: 2026-08-17 — `google/protobuf` from protoc **35.1**; `google/api` + `google/type`
+from googleapis `ca91093129b6744ee1dbb062381cdf63dcec669b`.
+
+When refreshing, also update any copies of the same files under
+`src/protobuf-net.Reflection.Test/Schemas/google/**`, which the protoc comparison suite pins —
+the two trees must not drift from each other.
+
+The sibling `protobuf-net/` folder (`bcl.proto`, `protogen.proto`) is protobuf-net's own schema
+set; this repository *is* its source of truth.
