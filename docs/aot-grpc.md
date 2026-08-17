@@ -27,8 +27,8 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > | | |
 > | --- | --- |
 > | protobuf-net.Grpc **1.3.6** (released) | everything this branch needs; `[ProtoGrpc]`/`[ProtoService]`, both `RuntimeTypeModel` roots gone, `BinderConfiguration.Binder` public |
-> | protobuf-net.Grpc #373, #374 (merged) | the AOT docs page, brought current and led with interceptors |
-> | protobuf-net.Grpc `aot-docs-versions` (**pushed, PR not raised**) | states the protobuf-net 3.4.0 floor and stops naming the tooling package. `gh pr create` was 503ing during a GitHub incident — the branch is on the remote, so raising it is one command |
+> | protobuf-net.Grpc #373, #374, #375 (merged) | the AOT docs page: brought current, led with interceptors, and given the protobuf-net 3.4.0 floor |
+> | protobuf-net.Grpc #369 (merged) | a contributor's `[SubService]` metadata fix. **Needed no change here** — our emit already passes the declaring interface's `MethodInfo`, which is what it keys on; see the parity section below |
 > | protobuf-net #1284, #1287 (merged) | `[Experimental]` help links; editions. #1287 merged in here cleanly with no file overlap, and the corpus differential read 3080/0 afterwards |
 >
 > **What is left, in the order I would take it:**
@@ -470,33 +470,52 @@ parameter types, which `GrpcOperationModel` already carried. `Overloads.input.cs
 the reason the typeof list cannot reuse the signature rendering: `typeof(Foo?)` is CS8639 for a
 reference type, while the annotation is part of the type for `Nullable<T>`.
 
-### Metadata parity, and protobuf-net.Grpc#369
+### Metadata parity, and protobuf-net.Grpc#369 — landed, and we needed nothing
 
 We deliberately delegate metadata to `GetMetadata` rather than computing it, so whatever the runtime
-does, we do. **That equivalence is the thing to re-check if
-[protobuf-net.Grpc#369](https://github.com/protobuf-net/protobuf-net.Grpc/pull/369) lands**, because
-it changes what `GetMetadata` returns for operations inherited from a `[SubService]` base.
+does, we do. The thing to re-check was
+[protobuf-net.Grpc#369](https://github.com/protobuf-net/protobuf-net.Grpc/pull/369), which changed what
+`GetMetadata` returns for an operation inherited from a `[SubService]` base. **It merged on 2026-08-17
+and required no change here** — but the reason is worth keeping, because it is a property of our emit
+rather than luck.
 
-As proposed it *swaps* which type-level attributes are collected — sub-service interface instead of
-top-level service contract — and the likely landing shape is a **union of both**, plus the
-implementation method's. Either way the set moves.
+What it actually landed as is narrower than the version reviewed earlier, and better: it touches only
+`GetMethodImplementation`, changing `GetMap(contractType, serviceType)` to
+`GetMap(serviceMethod.DeclaringType ?? contractType, serviceType)`. `GetMetadata`'s
+`contractTypeAtt = contractType.GetCustomAttributes(...)` is untouched, so implementation attributes are
+**added** rather than the contract type's being swapped away — which was the regression worth fearing.
+`Issue330.cs` pins it: all three expectations begin with `ContractType`.
 
-Two consequences, in order of how easily they are missed:
+**Why our emit is already correct, on both axes.** The fixed lookup keys on the method's
+`DeclaringType`, and the generated bindings pass exactly that, while keeping the *top-level* contract as
+`contractType`:
 
-1. **While we delegate, we inherit the change for free** — including any bug in it. Nothing here needs
-   to change, but a fixture with a `[SubService]` base and an attribute at each level would pin it,
-   and there is currently no such fixture.
-2. **The moment compile-time metadata is built (next-steps item 3), we own the reconstruction**, and
-   the union rule has to be reproduced exactly. Attributes on an interface do **not** inherit —
-   `GetCustomAttributes(inherit: true)` does not walk base interfaces, probed rather than assumed —
-   so "just ask the contract type" silently loses one side of the union. The check to run before
-   trusting a compile-time implementation is a differential: for a contract with a `[SubService]`
-   base, compare our reconstructed list against `binder.GetMetadata(...)` item by item, on the same
-   contract, at all three levels (top-level interface, sub-service interface, implementation method).
+``` c#
+var __meta = __cfg.Binder.GetMetadata(
+    typeof(IAudited).GetMethod("WhoAmIAsync", …)!,   // the DECLARING interface
+    typeof(IThing), typeof(ThingService));            // the top-level contract, and the implementation
+```
 
-That comparison is cheap and mechanical, and it is the only thing standing between "we match the
-runtime" and "we quietly diverge on authorization metadata", which is the failure mode worth fearing:
-`[Authorize]` going missing produces no error, just a more permissive endpoint.
+Pass the declaring type as `contractType` instead and the top-level attributes would be lost; pass the
+top-level type as the method's owner and the map would not resolve. Both are right, and
+`SubService.output.cs` is what pins them — every emitted `GetMethod` in the golden set uses its declaring
+type, checked across all fixtures rather than for the one that motivated it.
+
+The package floor stays at **1.3.6**: we do not depend on the fix, we benefit from it, so a consumer who
+wants implementation-level attributes on sub-service operations wants whatever release carries it, and
+everyone else is unaffected.
+
+One deliberate limit, recorded so it is not mistaken for a bug: the sub-service interface's own
+*type-level* attribute is still not collected. That is consistent with
+`GetCustomAttributes(inherit: true)` not walking base interfaces — probed rather than assumed — so it is
+existing semantics rather than something #369 introduced.
+
+**If compile-time metadata is ever revisited** (it is closed as impossible-as-specified, above), this is
+the union that has to be reproduced exactly, and the differential to run is: for a contract with a
+`[SubService]` base carrying an attribute at each of the three levels — top-level interface, sub-service
+interface, implementation method — compare the reconstructed list against `binder.GetMetadata(...)` item
+by item. The failure mode is worth the care: `[Authorize]` going missing produces no error, just a more
+permissive endpoint.
 
 ### Built, and where it can be tested
 
