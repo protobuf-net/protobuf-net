@@ -330,60 +330,7 @@ namespace Google.Protobuf.Reflection
             }
             foreach (var file in Files)
             {
-                // resolve editions features: per-edition defaults, merged with explicit
-                // features, inherited lexically; the legacy syntaxes join in as the
-                // placeholder editions with their spellings (required/group/[packed])
-                // inferred onto the same axes
-                var edition = file.ShouldSerializeEdition() ? file.Edition
-                    : file.Syntax == FileDescriptorProto.SyntaxProto3 ? Edition.EditionProto3
-                    : Edition.EditionProto2;
-                bool isEditions = file.Syntax == FileDescriptorProto.SyntaxEditions;
-                var fileFeatures = ParsedFeatures.Defaults(edition).Apply(file.Options?.Features);
-                file.ResolvedFeatures = fileFeatures;
-                foreach (var message in file.MessageTypes) ApplyFeatures(message, fileFeatures, isEditions);
-                foreach (var @enum in file.EnumTypes) ApplyEnumFeatures(@enum, fileFeatures);
-                foreach (var extension in file.Extensions) ApplyFieldFeatures(extension, fileFeatures, isEditions);
-
-                static void ApplyFeatures(DescriptorProto message, ParsedFeatures parent, bool isEditions)
-                {
-                    var msgFeatures = parent.Apply(message.Options?.Features);
-                    message.ResolvedFeatures = msgFeatures;
-                    foreach (var field in message.Fields) ApplyFieldFeatures(field, msgFeatures, isEditions);
-                    foreach (var extension in message.Extensions) ApplyFieldFeatures(extension, msgFeatures, isEditions);
-                    foreach (var nested in message.NestedTypes) ApplyFeatures(nested, msgFeatures, isEditions);
-                    foreach (var @enum in message.EnumTypes) ApplyEnumFeatures(@enum, msgFeatures);
-                }
-                static void ApplyFieldFeatures(FieldDescriptorProto field, ParsedFeatures parent, bool isEditions)
-                {
-                    var features = parent.Apply(field.Options?.Features);
-                    // legacy inference: the proto2/proto3 spellings land on the same axes
-                    if (field.label == FieldDescriptorProto.Label.LabelRequired)
-                    {
-                        features = features.With(FeatureSet.FieldPresence.LegacyRequired);
-                    }
-                    if (field.type == FieldDescriptorProto.Type.TypeGroup)
-                    {
-                        features = features.With(FeatureSet.MessageEncoding.Delimited);
-                    }
-                    if (field.Options is not null && field.Options.ShouldSerializePacked())
-                    {
-                        features = features.With(field.Options.Packed
-                            ? FeatureSet.RepeatedFieldEncoding.Packed
-                            : FeatureSet.RepeatedFieldEncoding.Expanded);
-                    }
-                    // note: protoc 35.1's descriptor output does NOT map the editions forms
-                    // back onto the legacy spellings - a delimited message field stays
-                    // TYPE_MESSAGE and legacy-required stays LABEL_OPTIONAL, with the features
-                    // carrying the truth (the editions implementation guide describes the older
-                    // TYPE_GROUP/LABEL_REQUIRED representation; measured against protoc 35.1,
-                    // that is no longer what descriptor_set_out produces) - so consumers must
-                    // ask ResolvedFeatures, not the type/label fields
-                    field.ResolvedFeatures = features;
-                }
-                static void ApplyEnumFeatures(EnumDescriptorProto @enum, ParsedFeatures parent)
-                {
-                    @enum.ResolvedFeatures = parent.Apply(@enum.Options?.Features);
-                }
+                file.ResolveFeatures();
             }
             foreach (var file in Files)
             {
@@ -1010,6 +957,73 @@ namespace Google.Protobuf.Reflection
     public partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
         internal ParsedFeatures ResolvedFeatures { get; set; }
+
+        /// <summary>
+        /// Resolves editions features for everything in this file: per-edition defaults, merged
+        /// with explicit features, inherited lexically; the legacy syntaxes join in as the
+        /// placeholder editions with their spellings (required/group/[packed]/proto3-optional)
+        /// inferred onto the same axes. This runs during <see cref="FileDescriptorSet.Process"/>,
+        /// but is also safe to invoke on a file loaded from a compiled descriptor - the inputs
+        /// are all ordinary descriptor data - which is what the code generators rely on.
+        /// </summary>
+        /// <remarks>
+        /// Note that protoc 35.1's descriptor output does NOT map the editions forms back onto
+        /// the legacy spellings: a delimited message field stays TYPE_MESSAGE and
+        /// legacy-required stays LABEL_OPTIONAL, with the features carrying the truth (the
+        /// editions implementation guide describes an older TYPE_GROUP/LABEL_REQUIRED
+        /// representation; measured against protoc 35.1, that is not what descriptor_set_out
+        /// produces). Consumers must therefore ask ResolvedFeatures, not the type/label fields.
+        /// </remarks>
+        internal void ResolveFeatures()
+        {
+            var edition = ShouldSerializeEdition() ? Edition
+                : Syntax == SyntaxProto3 ? Edition.EditionProto3
+                : Edition.EditionProto2;
+            var fileFeatures = ParsedFeatures.Defaults(edition).Apply(Options?.Features);
+            ResolvedFeatures = fileFeatures;
+            foreach (var message in MessageTypes) ApplyFeatures(message, fileFeatures);
+            foreach (var @enum in EnumTypes) ApplyEnumFeatures(@enum, fileFeatures);
+            foreach (var extension in Extensions) ApplyFieldFeatures(extension, fileFeatures);
+
+            static void ApplyFeatures(DescriptorProto message, ParsedFeatures parent)
+            {
+                var msgFeatures = parent.Apply(message.Options?.Features);
+                message.ResolvedFeatures = msgFeatures;
+                foreach (var field in message.Fields) ApplyFieldFeatures(field, msgFeatures);
+                foreach (var extension in message.Extensions) ApplyFieldFeatures(extension, msgFeatures);
+                foreach (var nested in message.NestedTypes) ApplyFeatures(nested, msgFeatures);
+                foreach (var @enum in message.EnumTypes) ApplyEnumFeatures(@enum, msgFeatures);
+            }
+            static void ApplyFieldFeatures(FieldDescriptorProto field, ParsedFeatures parent)
+            {
+                var features = parent.Apply(field.Options?.Features);
+                // legacy inference: the proto2/proto3 spellings land on the same axes
+                if (field.label == FieldDescriptorProto.Label.LabelRequired)
+                {
+                    features = features.With(FeatureSet.FieldPresence.LegacyRequired);
+                }
+                if (field.Proto3Optional)
+                {
+                    features = features.With(FeatureSet.FieldPresence.Explicit);
+                }
+                if (field.type == FieldDescriptorProto.Type.TypeGroup)
+                {
+                    features = features.With(FeatureSet.MessageEncoding.Delimited);
+                }
+                if (field.Options is not null && field.Options.ShouldSerializePacked())
+                {
+                    features = features.With(field.Options.Packed
+                        ? FeatureSet.RepeatedFieldEncoding.Packed
+                        : FeatureSet.RepeatedFieldEncoding.Expanded);
+                }
+                field.ResolvedFeatures = features;
+            }
+            static void ApplyEnumFeatures(EnumDescriptorProto @enum, ParsedFeatures parent)
+            {
+                @enum.ResolvedFeatures = parent.Apply(@enum.Options?.Features);
+            }
+        }
+
         internal static FileDescriptorProto GetFile(IType type)
         {
             while (type != null)
@@ -2379,6 +2393,16 @@ namespace Google.Protobuf.Reflection
 
             return syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type);
         }
+
+        /// <summary>
+        /// Indicates whether this field is packed, from the resolved editions features (which
+        /// the legacy syntaxes and the explicit [packed] option are inferred onto); requires
+        /// feature resolution to have run.
+        /// </summary>
+        internal bool IsPackedField()
+            => label == Label.LabelRepeated
+                && CanPack(type)
+                && ResolvedFeatures.RepeatedFieldEncoding == FeatureSet.RepeatedFieldEncoding.Packed;
 
         /// <inheritdoc/>
         public override string ToString() => Name;
