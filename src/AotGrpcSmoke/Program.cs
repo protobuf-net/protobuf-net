@@ -56,6 +56,14 @@ try
     Check("server-streaming round-trip", seen.SequenceEqual(new[] { 0, 1, 2 }),
         string.Join(",", seen));
 
+    // A void response, i.e. ProtoBuf.Grpc.Internal.Empty on the wire. Worth its own check because its
+    // marshaller comes from MarshallerCache's pre-seeded entry rather than from the generated
+    // SetMarshaller block - and because it must NOT have been seeded into the model, which carries no
+    // [ProtoSerializable] at all. Asserted on the server's own state, since there is nothing to return.
+    await greeter.NudgeAsync(new HelloRequest { Name = "nudged" });
+    Check("void round-trip (Empty on the wire)", GreeterService.Nudged == "nudged",
+        GreeterService.Nudged);
+
     // The payload side is the half that neither source PR closes: proxies can be perfectly static
     // and still marshal through RuntimeTypeModel.Default, which reflects. Two checks, because
     // neither alone is conclusive on a JIT run:
