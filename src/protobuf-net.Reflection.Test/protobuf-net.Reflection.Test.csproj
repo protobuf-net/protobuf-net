@@ -78,6 +78,9 @@
     <None Update="Schemas\nanopb\**\nanopb.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Schemas\editions\**\*.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Schemas\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
