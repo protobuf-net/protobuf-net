@@ -106,6 +106,28 @@ app.MapGrpcService<GreeterService>();
 Nothing resolves by `Type` at run time: no registry, no `[ModuleInitializer]`, no
 `MakeGenericMethod`.
 
+### There is no protobuf-net version matrix here, and that is structural
+
+protobuf-net.Grpc references protobuf-net **2.4.8**, which NuGet reads as a floor rather than a pin, so
+nothing holds a consumer on v2. BuildTools ships inside protobuf-net v3+ rather than separately, so the
+generator only arrives with a modern protobuf-net in the first place.
+
+But the reason no guard is needed is better than that, and worth keeping because it is easy to
+re-litigate: **the surface gates itself**, in both directions.
+
+- **With a `Model`**, the emitted marshaller uses `IMeasuredProtoOutput<IBufferWriter<byte>>` and
+  `IProtoInput<ReadOnlySequence<byte>>`, which are v3-only. Reaching that emit at all requires the
+  consumer to have written `[ProtoModel]` on a type and named it - and `[ProtoModel]` only exists in the
+  protobuf-net that ships it. The gate is the consumer's own source, so it cannot be missing at the
+  moment the generated code depends on it.
+- **Without a `Model`**, the emitted code references **no protobuf-net API whatsoever** - not
+  `IMeasuredProtoOutput`, not `IProtoInput`, not even `TypeModel`. It is `Grpc.Core` plus
+  protobuf-net.Grpc's own `BinderConfiguration.Default`. Check `Diagnostics/NoModel.output.cs`: it
+  compiles against any protobuf-net that protobuf-net.Grpc itself accepts.
+
+So there is nothing to probe for and no down-level emit shape to maintain, unlike the C# language floor
+(`PBN4000`), where a down-level consumer genuinely does reach code we would otherwise fail to emit.
+
 ### Facts verified against the real assemblies, not assumed
 
 - **`ClientFactory` is already the seam.** It declares no constructor of its own, so an abstract
