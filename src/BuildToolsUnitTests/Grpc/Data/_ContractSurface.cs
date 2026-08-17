@@ -146,6 +146,29 @@ namespace Microsoft.Extensions.DependencyInjection.Extensions
     }
 }
 
+namespace System.ServiceModel
+{
+    // The WCF markers, which protobuf-net.Grpc honours as service-contract markers alongside its own.
+    // Stubbed rather than referenced: System.ServiceModel.Primitives is not in the test reference set,
+    // and the generator matches these by name anyway.
+    //
+    // Note Name is settable on both of these, where ProtoBuf.Grpc's own ServiceAttribute/
+    // OperationAttribute have it get-only - so the named-argument route in GetServiceName and
+    // TryGetOperationName is reachable only through these two, and this is the only place it gets tested.
+    [AttributeUsage(AttributeTargets.Interface | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public sealed class ServiceContractAttribute : Attribute
+    {
+        public string? Name { get; set; }
+        public string? Namespace { get; set; }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class OperationContractAttribute : Attribute
+    {
+        public string? Name { get; set; }
+    }
+}
+
 namespace ProtoBuf.Grpc
 {
     using global::Grpc.Core;
