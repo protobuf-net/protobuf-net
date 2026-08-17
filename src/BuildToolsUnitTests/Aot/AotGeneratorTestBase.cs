@@ -129,12 +129,20 @@ namespace BuildToolsUnitTests.Aot
             LanguageVersion languageVersion = LanguageVersion.Latest,
             IEnumerable<MetadataReference>? extraReferences = null,
             IEnumerable<(string Path, string Source)>? extraSources = null,
-            ImmutableDictionary<string, string>? globalOptions = null)
+            ImmutableDictionary<string, string>? globalOptions = null,
+            string? interceptorNamespaces = null)
             where TGenerator : class, IIncrementalGenerator, new()
         {
             if (string.IsNullOrWhiteSpace(fileName)) fileName = "input.cs";
 
             var parseOptions = new CSharpParseOptions(languageVersion, DocumentationMode.Parse, SourceCodeKind.Regular);
+            if (interceptorNamespaces is not null)
+            {
+                // what <InterceptorsNamespaces> becomes by the time a generator sees it: the Csc task
+                // passes it as a compiler feature, so the fixture route is the same one real builds take
+                parseOptions = parseOptions.WithFeatures(
+                    new[] { new KeyValuePair<string, string>("InterceptorsNamespaces", interceptorNamespaces) });
+            }
             var references = MetadataReferenceHelpers.WellKnownReferences
                 .Concat(MetadataReferenceHelpers.ProtoBufReferences)
                 .Concat(extraReferences ?? Enumerable.Empty<MetadataReference>());

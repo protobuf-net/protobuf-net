@@ -30,6 +30,18 @@ namespace BuildToolsUnitTests.Grpc
                orderby path
                select new object[] { path };
 
+        /// <summary>
+        /// A fixture opts into interceptors with a sidecar <c>.interceptors</c> file holding the namespace
+        /// list, which is what <c>&lt;InterceptorsNamespaces&gt;</c> becomes by the time a generator sees
+        /// it. Same convention as <c>.langver</c>, and for the same reason: the switch is per-project, so
+        /// it cannot be expressed inside the fixture source.
+        /// </summary>
+        private static string? ReadInterceptorNamespaces(string path)
+        {
+            var sidecar = Regex.Replace(path, @"\.input\.cs$", ".interceptors", RegexOptions.IgnoreCase);
+            return File.Exists(sidecar) ? File.ReadAllText(sidecar).Trim() : null;
+        }
+
         [Theory, MemberData(nameof(GetFiles))]
         public void Test(string path)
         {
@@ -43,7 +55,8 @@ namespace BuildToolsUnitTests.Grpc
             var sb = new StringBuilder();
             var result = Execute<GrpcProxyGenerator>(source, sb, fileName: path,
                 languageVersion: ReadPinnedLanguageVersion(path),
-                extraSources: new[] { (SurfacePath, File.ReadAllText(SurfacePath)) });
+                extraSources: new[] { (SurfacePath, File.ReadAllText(SurfacePath)) },
+                interceptorNamespaces: ReadInterceptorNamespaces(path));
 
             var actualCode = result.GeneratedCode;
             var buildOutput = sb.ToString();

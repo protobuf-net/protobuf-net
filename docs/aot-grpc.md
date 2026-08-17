@@ -514,12 +514,30 @@ Two things fell out that are worth keeping:
   the everyday call takes that overload and the emitted body has to add `CreateCallInvoker()`. A test that
   only exercised `CallInvoker` would have missed the shape people actually write.
 
-**It cannot be golden-tested, and that is a reference-version constraint rather than an oversight.**
-`GetInterceptableLocation` is Roslyn 4.11+, `BuildToolsUnitTests` pins Workspaces at 4.8.0, and
-`InterceptableLocations.IsSupported` is therefore false in-process - so the unit tests see no interceptor
-however they are configured. `AotGrpcSmoke` runs against the real SDK's compiler, which is why it is the
-only place this is exercised at all. If that ever needs to change, raising the *test* project's Roslyn is
-enough; the shipped baseline stays where it is, which is the whole point of the reflective route.
+**Which route: reflection, not synthesis - and the distinction is worth being precise about.** Proving the
+encoding by hand settled the question that mattered, which was whether the *shipped* Roslyn reference had
+to move: it does not. The implementation then calls `GetInterceptableLocation` reflectively off the host
+anyway, because it is ~80 lines against ~2,000 for a vendored `xxHash128`, and because it tracks whatever
+encoding the compiler prefers rather than pinning version 1. Synthesis stays the recorded fallback, proven
+to work, if that ever fails.
+
+The one cost of reflection was testability - `GetInterceptableLocation` is Roslyn 4.11+, and
+`InterceptableLocations.IsSupported` is false below it, so the unit tests saw no interceptor however they
+were configured. The lever for that is the **test** project's own Roslyn override, which already existed
+purely so the tests could parse C# 12; it is now 4.11.0. The shipped baseline is untouched, which is the
+whole point of going through reflection.
+
+So the interceptor path *is* golden-tested, by `Intercept.input.cs` plus a `.interceptors` sidecar holding
+the namespace list - the same convention as `.langver`, and for the same reason: the switch is
+per-project, so it cannot be expressed inside the fixture. The golden pins the two things that matter:
+two methods, one per receiver overload with `CreateCallInvoker()` on the `ChannelBase` one, and **two**
+`[InterceptsLocation]` attributes across three call sites, because the one already passing a factory is
+left alone. It also *compiles*, which is the check that the namespace and feature detection agree with the
+compiler.
+
+The snapshot gained `GrpcClientFactory` and `ChannelBase` to make that possible - and deliberately both
+overloads, since a snapshot carrying only `CallInvoker` would let a generator that never matched real code
+pass its goldens.
 
 ## PBN4015: you asked for AOT and have not squared the circle
 

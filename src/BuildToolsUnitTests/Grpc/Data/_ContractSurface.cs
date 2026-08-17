@@ -53,6 +53,11 @@ namespace Grpc.Core
 
     public abstract class CallInvoker { }
 
+    public abstract class ChannelBase
+    {
+        public virtual CallInvoker CreateCallInvoker() => null!;
+    }
+
     public abstract class ClientBase
     {
         protected ClientBase(CallInvoker callInvoker) => CallInvoker = callInvoker;
@@ -271,6 +276,24 @@ namespace ProtoBuf.Grpc.Configuration
         protected abstract BinderConfiguration BinderConfiguration { get; }
         public static implicit operator BinderConfiguration(ClientFactory? value) => null!;
         public abstract TService CreateClient<TService>(CallInvoker channel) where TService : class;
+    }
+}
+
+namespace ProtoBuf.Grpc.Client
+{
+    using global::Grpc.Core;
+    using global::ProtoBuf.Grpc.Configuration;
+
+    // The client entry point the interceptors take over. Both overloads, because the everyday one is
+    // ChannelBase (GrpcChannel derives from it) rather than CallInvoker - a snapshot carrying only the
+    // latter would let a generator that never matched real code pass its goldens.
+    public static class GrpcClientFactory
+    {
+        public static TService CreateGrpcService<TService>(this ChannelBase client,
+            ClientFactory? clientFactory = null) where TService : class => null!;
+
+        public static TService CreateGrpcService<TService>(this CallInvoker client,
+            ClientFactory? clientFactory = null) where TService : class => null!;
     }
 }
 

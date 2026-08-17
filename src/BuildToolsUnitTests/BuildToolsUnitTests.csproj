@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- the compile-time model attributes are [Experimental] while the shape settles -->
@@ -22,9 +22,13 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <!-- the shipped analyzer still compiles against the low Roslyn baseline; the tests need a
-         newer one purely so they can parse C# 12, which is the generator's declared floor -->
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.8.0" />
+    <!-- The shipped analyzer still compiles against the low Roslyn baseline (4.3.1); the tests need a
+         newer one for two reasons, and neither touches what ships:
+           * to parse C# 12, which is the serializer generator's declared floor;
+           * 4.11+ for SemanticModel.GetInterceptableLocation, which the interceptor emit reaches
+             reflectively off the host. Below it, InterceptableLocations.IsSupported is false and the
+             interceptor path could not be tested in-process at all. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="4.11.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
 
