@@ -75,8 +75,8 @@ The trigger attributes are `[Experimental]` with the id `PBN9001`, so you must s
 </PropertyGroup>
 ```
 
-If you want none of this — no analyzers, no generators — one property turns off everything
-`protobuf-net.BuildTools` does, and is checked before any work happens:
+If you want none of this — no analyzers, no generators — one property turns off all of protobuf-net's
+build-time tooling, and is checked before any work happens:
 
 ``` xml
 <ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>
@@ -238,8 +238,8 @@ move it to a generic overload.
 
 ### `.proto`-generated DTOs need their own project
 
-If you generate DTOs from a `.proto` using
-[protobuf-net.BuildTools](https://docs.protobuf-net.dev/contract_first), you **cannot**
+If you generate DTOs from a `.proto`
+[at build time](https://docs.protobuf-net.dev/contract_first), you **cannot**
 put `[ProtoModel]` in the same project. Source generators all run against the same input compilation
 and never see each other's output, so the model finds nothing to serialize.
 
