@@ -1735,30 +1735,62 @@ namespace Google.Protobuf.Reflection
         {
             if (options == null || options.UninterpretedOptions.Count == 0) return;
 
-            var extension = ((IExtensible)options).GetExtensionObject(true);
-            var target = extension.BeginAppend();
+            // language-scoped features - features.(pb.cpp).string_type etc - are extensions of
+            // FeatureSet itself, so they are peeled off and applied to the features message's
+            // own extension data rather than to the options message
+            List<UninterpretedOption> featureExtensions = null;
+            foreach (var pending in options.UninterpretedOptions)
+            {
+                var head = pending.Names.Count > 1 ? pending.Names[0] : null;
+                if (head is { IsExtension: false } && (head.name_part == "features" || head.name_part == "features."))
+                {
+                    pending.Names.RemoveAt(0);
+                    (featureExtensions ??= new List<UninterpretedOption>()).Add(pending);
+                }
+            }
+            if (featureExtensions is not null)
+            {
+                options.UninterpretedOptions.RemoveAll(featureExtensions.Contains);
+                var features = options.Features ??= new FeatureSet();
+                ResolveOptionsImpl(ctx, featureExtensions, features, FileDescriptorSet.Namespace + nameof(FeatureSet));
+                if (featureExtensions.Count != 0)
+                {
+                    // anything unapplied goes back for the regular error handling
+                    options.UninterpretedOptions.AddRange(featureExtensions);
+                }
+            }
+
+            ResolveOptionsImpl(ctx, options.UninterpretedOptions, (IExtensible)options, options.Extendee);
+        }
+
+        private void ResolveOptionsImpl(ParserContext ctx, List<UninterpretedOption> uninterpreted, IExtensible target, string extendee)
+        {
+            if (uninterpreted.Count == 0) return;
+
+            var extension = target.GetExtensionObject(true);
+            var buffer = extension.BeginAppend();
             try
             {
-                var state = ProtoWriter.State.Create(target, null, null);
+                var state = ProtoWriter.State.Create(buffer, null, null);
                 try
                 {
-                    var hive = OptionHive.Build(options.UninterpretedOptions);
+                    var hive = OptionHive.Build(uninterpreted);
 
                     // first pass is used to sort the fields so we write them in the right order
-                    AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, true, 0, false);
+                    AppendOptions(this, ref state, ctx, extendee, hive.Children, true, 0, false);
                     // second pass applies the data
-                    AppendOptions(this, ref state, ctx, options.Extendee, hive.Children, false, 0, false);
+                    AppendOptions(this, ref state, ctx, extendee, hive.Children, false, 0, false);
                     state.Close();
                 }
                 finally
                 {
                     state.Dispose();
                 }
-                options.UninterpretedOptions.RemoveAll(x => x.Applied);
+                uninterpreted.RemoveAll(x => x.Applied);
             }
             finally
             {
-                extension.EndAppend(target, true);
+                extension.EndAppend(buffer, true);
             }
         }
 

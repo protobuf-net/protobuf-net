@@ -60,19 +60,21 @@ interaction either way. We must *parse and round-trip* third-party feature exten
 through the ordinary custom-option machinery); protobuf-net's own features would need a FeatureSet
 slot allocated upstream — deliberately deferred until there is a concrete need.
 
-## Descriptor representation: the facts that make this cheap
+## Descriptor representation — **corrected by measurement (2026-08-17)**
 
-From the implementation guide, deliberately kept for downstream migration ease:
+The implementation guide claims the legacy spellings are kept in descriptors (delimited →
+`TYPE_GROUP`, legacy-required → `LABEL_REQUIRED`) "to make downstream migrations easier".
+**protoc 35.1's `descriptor_set_out` does not do this**: measured against real fixtures, a
+delimited message field stays `TYPE_MESSAGE` and a legacy-required field stays `LABEL_OPTIONAL`,
+with the features (explicit ones only — resolution is consumer-side) carrying the truth. The
+guide describes an older representation.
 
-- A field with `features.message_encoding = DELIMITED` is **still recorded as `TYPE_GROUP`** in
-  `FieldDescriptorProto`.
-- A field with `features.field_presence = LEGACY_REQUIRED` **still gets `LABEL_REQUIRED`**.
-
-Our codegen already maps `TYPE_GROUP` → `DataFormat.Group` (`CSharpCodeGenerator.cs:960`) and
-`LABEL_REQUIRED` → `IsRequired = true` (`CSharpCodeGenerator.cs:498`). So for the two features
-with real wire impact, **the descriptor→codegen half already works**; the work is in the parser
-producing protoc-identical descriptors (and in flipping the remaining syntax-string checks onto
-resolved features).
+Consequence: codegen must consult **resolved features** (`ResolvedFeatures`, populated during
+`Process()` on file/message/field/enum), never the raw `type`/`label` fields, for editions files.
+The existing `TYPE_GROUP` → `DataFormat.Group` and `LABEL_REQUIRED` → `IsRequired` codegen paths
+still work for *proto2* files, whose spellings genuinely are in those fields — and the resolver's
+legacy inference maps them onto the same feature axes, so `ResolvedFeatures` is the one true
+answer for every syntax.
 
 ## Cross-language features
 
