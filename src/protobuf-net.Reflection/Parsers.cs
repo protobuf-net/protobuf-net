@@ -1250,10 +1250,12 @@ namespace Google.Protobuf.Reflection
             // read the file into the object
             ctx.Fill(this);
 
-            // finish up
+            // finish up; note this matches protoc, which still treats a file with no
+            // syntax/edition statement as proto2 (silently, in modern versions; the
+            // warning here is our own advice)
             if (string.IsNullOrWhiteSpace(Syntax))
             {
-                ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
+                ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'edition = \"2023\";' (or 'syntax = \"proto2\";' / 'syntax = \"proto3\";')", ErrorCode.ProtoSyntaxNotSpecified);
             }
 
             if (Syntax == "" || Syntax == SyntaxProto2)
