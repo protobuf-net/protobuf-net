@@ -1601,7 +1601,9 @@ namespace Google.Protobuf.Reflection
             foreach (var option in options)
                 AppendOption(file, ref state, ctx, extendee, option, resolveOnly, depth, messageSet);
 
-            if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
+            // fun historical fact: protoc *used to* write root fields in *file* order, but sub-fields in
+            // *field* order (hence we used to only sort when depth != 0); modern protoc sorts both
+            if (resolveOnly && options.Count > 1)
             {
                 // ascending field order, falling back to encounter order so that same-number
                 // siblings - the elements of a list value - keep the order they were written
@@ -1612,6 +1614,19 @@ namespace Google.Protobuf.Reflection
                     return byNumber != 0 ? byNumber : x.Ordinal.CompareTo(y.Ordinal);
                 });
             }
+        }
+        private static byte[] EncodeVarint(long value)
+        {
+            var buffer = new byte[10];
+            ulong raw = (ulong)value;
+            int len = 0;
+            do
+            {
+                buffer[len++] = (byte)((raw & 0x7F) | (raw > 0x7F ? 0x80UL : 0));
+                raw >>= 7;
+            } while (raw != 0);
+            Array.Resize(ref buffer, len);
+            return buffer;
         }
         private static void AppendOption(FileDescriptorProto file, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
         {
@@ -1891,8 +1906,18 @@ namespace Google.Protobuf.Reflection
                                     {
                                         if (ShouldWrite(field, value.AggregateValue, @enum.Values.FirstOrDefault()?.Name))
                                         {
-                                            state.WriteFieldHeader(field.Number, WireType.Varint);
-                                            state.WriteInt32(found.Number);
+                                            if (field.label == FieldDescriptorProto.Label.LabelRepeated)
+                                            {
+                                                // modern protoc writes packable repeated option values packed, even unary;
+                                                // enums are the only case observed in the corpus so far
+                                                state.WriteFieldHeader(field.Number, WireType.String);
+                                                state.WriteBytes(EncodeVarint(found.Number));
+                                            }
+                                            else
+                                            {
+                                                state.WriteFieldHeader(field.Number, WireType.Varint);
+                                                state.WriteInt32(found.Number);
+                                            }
                                         }
                                     }
                                 }
@@ -3384,6 +3409,10 @@ namespace ProtoBuf.Reflection
         private static readonly char[] ExponentChars = { 'e', 'E' };
         private static string Format(float val)
         {
+            if (IsRoundableInteger(val))
+            {
+                return val.ToString("0e+00", CultureInfo.InvariantCulture);
+            }
             string s = val.ToString(CultureInfo.InvariantCulture);
             return s.IndexOfAny(ExponentChars) < 0 ? s
                 : val.ToString("0e+00", CultureInfo.InvariantCulture);
@@ -3391,9 +3420,32 @@ namespace ProtoBuf.Reflection
 
         private static string Format(double val)
         {
+            if (IsRoundableInteger(val))
+            {
+                return val.ToString("0e+00", CultureInfo.InvariantCulture);
+            }
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
             return s.IndexOfAny(ExponentChars) < 0 ? s
                 :  val.ToString("0e+00", CultureInfo.InvariantCulture);
+        }
+
+        private static bool IsRoundableInteger(double val)
+        {
+            // looking for integers that are XXXX00000, such that XXXXe+NN is
+            // shorter; matches modern protoc's rendering of such default values
+            if (Math.Abs(val) > 100000)
+            {
+                try
+                {
+                    checked
+                    {
+                        var i64 = (long)val;
+                        return val == i64 && (i64 % 100000) == 0;
+                    }
+                }
+                catch { }
+            }
+            return false;
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()

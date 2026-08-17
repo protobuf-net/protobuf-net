@@ -52,10 +52,13 @@ predicates (`HasPresence`, `IsPacked`, `IsDelimited`, `IsRequired`, `IsClosed`) 
 three-way branching instead of adding a third arm to every site.
 
 **Custom features**: `FeatureSet` has an extension range (1000–9994) with declared slots for
-`.pb.cpp`, `.pb.java`, `.pb.go`, `.pb.python` — and, notably, **`.pb.csharp` at 1004**
-(no `csharp_features.proto` exists upstream yet; the slot is reserved). We must *parse and
-round-trip* third-party feature extensions (they arrive through the ordinary custom-option
-machinery); defining protobuf-net's own features is a possible future, not this pass.
+`.pb.cpp`, `.pb.java`, `.pb.go`, `.pb.python` — and **`.pb.csharp` at 1004**, which is Google's
+(for their C# runtime): `c_sharp_features.proto` ships in the protoc include set declaring
+`CSharpFeatures` as an *empty* placeholder message. Note this numbering space is separate from the
+old `*Options` extension registry (`docs/options.md`), where protobuf-net holds **1037** — no
+interaction either way. We must *parse and round-trip* third-party feature extensions (they arrive
+through the ordinary custom-option machinery); protobuf-net's own features would need a FeatureSet
+slot allocated upstream — deliberately deferred until there is a concrete need.
 
 ## Descriptor representation: the facts that make this cheap
 
@@ -81,7 +84,7 @@ brand-new capability, or a re-skin of an existing protobuf-net concept.
 | `field_presence` | EXPLICIT, IMPLICIT, LEGACY_REQUIRED | EXPLICIT / IMPLICIT / EXPLICIT / EXPLICIT | write-guard semantics (presence vs default-suppression) | existing: presence tracking (`TrackFieldPresence`, currently keyed on syntax + `proto3_optional`); LEGACY_REQUIRED ⇒ existing `IsRequired` via `LABEL_REQUIRED` | **existing, default flip** — editions defaults to proto2-style explicit presence; proto3's implicit becomes the opt-in |
 | `message_encoding` | LENGTH_PREFIXED, DELIMITED | LP / LP / LP / LP | **yes** — start/end group tags vs length prefix | `DataFormat.Group`, supported for ~two decades; descriptor still says `TYPE_GROUP`, codegen path already emits it | **exact 1:1 to existing** — the headline match |
 | `repeated_field_encoding` | PACKED, EXPANDED | EXPANDED / PACKED / PACKED / PACKED | **yes** — packed encoding | `IsPacked` (currently `IsPackedField(syntax)` + `[packed]` option) | **existing, default flip** vs proto2 |
-| `enum_type` | OPEN, CLOSED | CLOSED / OPEN / OPEN / OPEN | no (affects *reader* handling of unknown values) | none: protobuf-net deliberately **removed** enum validity checking (open behaviour always); CLOSED parses, resolves, round-trips, but is not enforced at runtime | **parse-only; documented divergence** — do not reintroduce enum checking |
+| `enum_type` | OPEN, CLOSED | CLOSED / OPEN / OPEN / OPEN | no (affects *reader* handling of unknown values) | protobuf-net removed enum validity checking with v3; Marc is open to re-adding **known-value checking** (never value *mapping*, which is not coming back). The protobuf-defined semantic is **read-side**: a closed enum treats an unrecognised value as an unknown field (retained via unknown-field/extension data where possible, field left default) — *not* a throw. Write-side checking is optional strictness no other runtime effectively has (their type systems prevent it); C# enums being raw ints makes it possible here. | **candidate runtime feature** — read-side retention for conformance; write-side strictness a separate opt-in decision |
 | `utf8_validation` | VERIFY, NONE | NONE / VERIFY / VERIFY / VERIFY | no (validation, not encoding) | none: protobuf-net encodes via .NET UTF-8 without a verify mode | **parse-only; documented gap** — a runtime VERIFY option would be a new library feature; not planned this pass |
 | `json_format` | ALLOW, LEGACY_BEST_EFFORT | LBE / ALLOW / ALLOW / ALLOW | no | protobuf-net.Reflection does no canonical-JSON; ALLOW implies protoc-side JSON-name conflict checks we may mirror in validation | **parse-only** |
 | `enforce_naming_style` (2024, `RETENTION_SOURCE`) | STYLE_LEGACY, STYLE2024, (STYLE2026) | legacy / legacy / legacy / **STYLE2024** | no | **new parser validation**: style-guide naming enforced as errors (lower_snake fields, PascalCase messages, etc.) to match protoc behaviour | **brand new (parser-only)** |
@@ -128,8 +131,18 @@ the mechanism — future work, noted and parked.
 | **Parser** (`Parsers.cs`, `Token.cs`) | `edition` statement; label prohibitions; reserved-identifier form; features option parsing (it's mostly ordinary option syntax onto known messages); feature resolution engine + per-edition defaults; target/support-window validation; 2024 import/visibility/naming-style; migrate `ctx.Syntax` checks onto resolved features via legacy-inference (proto2/proto3 as legacy editions). |
 | **Codegen** (`CSharpCodeGenerator.cs`, `VBCodeGenerator.cs`, `CodeGenerator.cs`) | consume helper predicates instead of syntax: `TrackFieldPresence` (`CodeGenerator.cs:394-398`), `IsPackedField(syntax)` (`:494`), proto2 enum-default branch (`CSharpCodeGenerator.cs:428`). `TYPE_GROUP`/`LABEL_REQUIRED` paths already correct. |
 | **Schema-writer** (stretch) | emit `edition = …`; write features as diffs against resolved defaults; delimited ⇒ feature not group syntax. |
-| **Corpus / protoc** | bump bundled protoc (3.21.12 → latest stable; edition 2024 needs ≥ v32, current stable is the v34/v35 line — pick at bump time) as its own golden-churn commit; refresh `google/*` protos; add editions schemas incl. upstream `edition_unittest.proto`; mine old `origin/editions` branch for recorded protoc quirks (repeated unary written packed; root extended fields sorted). |
+| **Corpus / protoc** | **done: bundled protoc bumped 3.21.12 → 35.1** (edition 2024 needs ≥ v32). The churn was three protoc-behaviour quirks, all fixed in `Parsers.cs` to match modern protoc: (1) options extension fields now sorted by field number at *every* depth, root included; (2) packable repeated option values written packed even when unary (enum case, e.g. `google.api.field_behavior`); (3) large round integer float/double defaults rendered in exponent form (`2e+08`, not `200000000`). Still to do: refresh `google/*` corpus protos — blocked on parser capability (latest descriptor.proto does not parse yet, see #1211); add editions schemas incl. upstream `edition_unittest.proto`. |
 | **Runtime library** | **no changes expected.** |
+
+## Tracking issues
+
+- [#1231](https://github.com/protobuf-net/protobuf-net/issues/1231) — editions support (the umbrella ask; this work).
+- [#1211](https://github.com/protobuf-net/protobuf-net/issues/1211) — bundled descriptor.proto badly outdated; parser fails on the modern one ("annotations on
+  extensions" = the `declaration`/`verification` machinery on extension ranges). Resolved by the
+  descriptor-DTO + parser steps; also confirms the `google/*` corpus refresh must come *after*
+  parser capability, not with the protoc bump.
+- [#594](https://github.com/protobuf-net/protobuf-net/issues/594) — `reserved` inside enums rejected by the parser; same code the editions reserved-identifier
+  change touches, so fold the fix into the parser step.
 
 ## To verify empirically (against the bumped protoc, before relying on them)
 
