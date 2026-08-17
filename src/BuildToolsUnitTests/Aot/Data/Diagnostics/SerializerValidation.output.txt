@@ -1,0 +1,11 @@
+Generator produced 5 diagnostics:
+Warning PBN3003 Aot/Data/Diagnostics/SerializerValidation.input.cs L10 C24
+Contract 'AotFixtures.SerializerValidation.Alpha' is omitted from the AOT model: [ProtoSerializer(..., typeof(AotFixtures.SerializerValidation.AlphaSerializer))], because a custom serializer must be a concrete class is not supported yet.
+Warning PBN3003 Aot/Data/Diagnostics/SerializerValidation.input.cs L11 C24
+Contract 'AotFixtures.SerializerValidation.Beta' is omitted from the AOT model: [ProtoSerializer(..., typeof(AotFixtures.SerializerValidation.BetaSerializer))], because that serializer has no parameterless constructor is not supported yet.
+Warning PBN3003 Aot/Data/Diagnostics/SerializerValidation.input.cs L12 C24
+Contract 'AotFixtures.SerializerValidation.Gamma' is omitted from the AOT model: [ProtoSerializer(..., typeof(AotFixtures.SerializerValidation.GammaSerializer))], because that serializer does not implement ISerializer<AotFixtures.SerializerValidation.Gamma> is not supported yet.
+Warning PBN3003 Aot/Data/Diagnostics/SerializerValidation.input.cs L13 C24
+Contract 'AotFixtures.SerializerValidation.Delta' is omitted from the AOT model: [ProtoSerializer(IsScalar = true)], which contradicts the serializer: AotFixtures.SerializerValidation.DeltaSerializer.Features declares CategoryMessage is not supported yet.
+Warning PBN3004 Aot/Data/Diagnostics/SerializerValidation.input.cs L49 C14
+Contract 'AotFixtures.SerializerValidation.Carrier' is omitted from the AOT model because 'AotFixtures.SerializerValidation.Alpha', which it references, is also omitted.

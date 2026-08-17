@@ -19,6 +19,7 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoPartialIgnoreAttributeName = "ProtoBuf.ProtoPartialIgnoreAttribute";
         private const string ProtoPartialMemberAttributeName = "ProtoBuf.ProtoPartialMemberAttribute";
         private const string ProtoSurrogateAttributeName = "ProtoBuf.ProtoSurrogateAttribute";
+        private const string ProtoSerializerAttributeName = "ProtoBuf.ProtoSerializerAttribute";
         private const string ProtoMapAttributeName = "ProtoBuf.ProtoMapAttribute";
         private const string NullWrappedValueAttributeName = "ProtoBuf.NullWrappedValueAttribute";
         private const string NullWrappedCollectionAttributeName = "ProtoBuf.NullWrappedCollectionAttribute";
@@ -59,6 +60,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             var diagnostics = new List<PlanDiagnostic>();
             var surrogates = GetSurrogates(compilation, model, diagnostics);
+            var serializers = GetExternalSerializers(compilation, model, diagnostics);
             var parsed = new Dictionary<string, ProtoContractPlan>(StringComparer.Ordinal);
             var enums = new Dictionary<string, ProtoEnumPlan>(StringComparer.Ordinal);
             var visited = new HashSet<string>(StringComparer.Ordinal);
@@ -171,7 +173,7 @@ namespace ProtoBuf.BuildTools.Generators
                     continue;
                 }
 
-                var contract = ParseContract(compilation, type, diagnostics, surrogates,
+                var contract = ParseContract(compilation, type, diagnostics, surrogates, serializers,
                     allowParseableTypes, out var reachable, tupleLevels, tupleConflicts, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
                 foreach (var next in reachable) pending.Enqueue(next);
@@ -329,6 +331,7 @@ namespace ProtoBuf.BuildTools.Generators
             INamedTypeSymbol type,
             List<PlanDiagnostic> diagnostics,
             Dictionary<string, SurrogateDeclaration> surrogates,
+            ExternalSerializers serializers,
             bool allowParseableTypes,
             out List<INamedTypeSymbol> reachable,
             Dictionary<string, int> tupleLevels,
@@ -357,10 +360,30 @@ namespace ProtoBuf.BuildTools.Generators
             surrogates.TryGetValue(Qualified(compilation, type),
                 out var declaredSurrogate);
 
+            // a [ProtoSerializer] declaration is the same kind of stand-in: the type contributes
+            // nothing but its identity, so it too has to be resolved before any "is this even a
+            // contract" check. The type's own [ProtoContract(Serializer = ...)] wins over anything
+            // short of model scope - that mirrors GetSurrogates' specificity ordering, applied per type
+            // rather than across scopes.
+            var externalDeclaration = ResolveSerializerDeclaration(compilation, serializers, type,
+                out var declaredSerializer);
+            if (externalDeclaration is not null && externalDeclaration.Scope != SerializerScope.Model
+                && HasExternalSerializer(type))
+            {
+                // the type's own [ProtoContract(Serializer = ...)] wins over anything short of the model
+                externalDeclaration = null;
+                declaredSerializer = null;
+            }
+            if (externalDeclaration is not null && declaredSurrogate is not null)
+            {
+                return Contract(diagnostics, at, name,
+                    "the type is declared with both [ProtoSurrogate] and [ProtoSerializer]; remove one");
+            }
+
             // auto-tuple detection applies only when the type carries no contract family at all
             // (MetaType.GetContractFamily), and has to be tried before the shape checks below -
             // a tuple is commonly a closed generic, which they would otherwise reject
-            if (declaredSurrogate is null && !HasContractFamily(type))
+            if (declaredSurrogate is null && externalDeclaration is null && !HasContractFamily(type))
             {
                 if (ParseTuple(compilation, type, diagnostics, out reachable, cancellationToken) is { } tuple) return tuple;
                 reachable = new List<INamedTypeSymbol>();
@@ -386,6 +409,15 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 return Contract(diagnostics, at, name, "open generic types are not supported");
             }
+
+            // a declared serializer replaces the body entirely, exactly as [ProtoContract(Serializer = ...)]
+            // does: the type contributes nothing but its identity, so nothing further is parsed
+            if (externalDeclaration is not null)
+            {
+                return ExternalContract(compilation, diagnostics, at, name, type,
+                    externalDeclaration, declaredSerializer!);
+            }
+
             if (type.DeclaredAccessibility != Accessibility.Public)
             {
                 // full ref-emit compilation only reaches public API, and we match that for now
@@ -674,7 +706,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // when the surrogate has a serializer of its own there are no members to inline, so
                 // the body converts and then *delegates* to it - which is what lets a well-known
                 // type serve as a surrogate, as protobuf-net.NodaTime does
-                surrogateSerializer = GetSubSerializer(compilation, surrogateType);
+                surrogateSerializer = GetSubSerializer(compilation, surrogateType, serializers);
                 if (surrogateSerializer == "null")
                 {
                     // inbuilt: obtainable without naming the (internal) provider
@@ -1051,7 +1083,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // they *replace* the trivial-value write guard rather than adding to it
                 var writeCondition = GetConditionalPattern(memberSource, symbol.Name, out var specifiedMember);
 
-                if (GetMemberShape(compilation, memberType, surrogates, allowParseableTypes) is not { } shape)
+                if (GetMemberShape(compilation, memberType, surrogates, serializers, allowParseableTypes) is not { } shape)
                 {
                     return Member(diagnostics, atMember, name, symbol.Name,
                         $"has unsupported type '{memberType.ToDisplayString()}'{WhyUnsupported()}");
@@ -1075,7 +1107,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // would it resolve with the model option turned on? asked rather than
                         // pattern-matched, so it stays true to ParseableSerializer.TryCreate
                         if (!allowParseableTypes
-                            && GetMemberShape(compilation, memberType, surrogates, allowParseableTypes: true)
+                            && GetMemberShape(compilation, memberType, surrogates, serializers, allowParseableTypes: true)
                                 is not null)
                         {
                             return "; it has a ToString() and a static Parse(string), so "
@@ -1341,7 +1373,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // reason and this contract is dropped by cascade with a message that chains
                     // an inbuilt type (see GetSubSerializer) is served by protobuf-net itself, so it
                     // is neither ours to emit nor a reason to drop anything by cascade
-                    var subSerializer = GetSubSerializer(compilation, message!);
+                    var subSerializer = GetSubSerializer(compilation, message!, serializers);
                     if (subSerializer != "null") reachable.Add(message!);
 
                     // a hand-written serializer may present the type as a *scalar*, which frames the
@@ -1349,12 +1381,12 @@ namespace ProtoBuf.BuildTools.Generators
                     // problem here: the referenced contract refuses itself for the same reason, and
                     // this member is dropped by cascade
                     var hasExternal = subSerializer is not null && subSerializer != "null";
-                    var subCategory = hasExternal ? ResolveExternalScalar(compilation, message!) : null;
+                    var subCategory = hasExternal ? ResolveExternalScalar(compilation, message!, serializers) : null;
                     var subScalar = hasExternal && subCategory == true;
                     // the category could not be established - Features is a property, and this
                     // serializer's declaration is not in this compilation. Rather than refuse, defer
                     // the framing to WriteAny/ReadAny, which switch on it at run time
-                    var subDynamic = hasExternal && subCategory is null && HasExternalSerializer(message!);
+                    var subDynamic = hasExternal && subCategory is null && HasExternalSerializer(compilation, message!, serializers);
                     // A *collection* element can defer its wire type after all - RepeatedFeatures
                     // states none and WriteRepeated/ReadRepeated inherit it from the element
                     // serializer. A map cannot yet: its key and value features are separate
@@ -1582,10 +1614,17 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         /// <summary>
         /// Is the type's hand-written serializer a scalar one? The same two routes the contract's own
-        /// parse uses, for a type reached as a <em>member</em>.
+        /// parse uses, for a type reached as a <em>member</em> - either its own attribute, or a
+        /// [ProtoSerializer] declaration that applies to it.
         /// </summary>
-        private static bool? ResolveExternalScalar(Compilation compilation, INamedTypeSymbol type)
+        private static bool? ResolveExternalScalar(Compilation compilation, INamedTypeSymbol type, ExternalSerializers serializers)
         {
+            var declaration = ResolveSerializerDeclaration(compilation, serializers, type, out var closedSerializer);
+            if (DeclarationApplies(declaration, type))
+            {
+                return declaration!.IsScalar ?? ReadCategoryFromSource(compilation, closedSerializer!);
+            }
+
             foreach (var attribute in type.GetAttributes())
             {
                 if (attribute.AttributeClass?.ToDisplayString() != ProtoContractAttributeName) continue;
@@ -1645,6 +1684,13 @@ namespace ProtoBuf.BuildTools.Generators
             }
             return false;
         }
+
+        /// <summary>
+        /// Whether the type is served by a hand-written serializer at all, from either route: its own
+        /// attribute, or a [ProtoSerializer] declaration that reaches it.
+        /// </summary>
+        private static bool HasExternalSerializer(Compilation compilation, INamedTypeSymbol type, ExternalSerializers serializers)
+            => HasExternalSerializer(type) || ResolveSerializerDeclaration(compilation, serializers, type, out _) is not null;
 
         private static bool? ReadCategoryFromSource(Compilation compilation, INamedTypeSymbol serializer)
         {
@@ -2204,6 +2250,207 @@ namespace ProtoBuf.BuildTools.Generators
             }
         }
 
+        private enum SerializerScope { Referenced, Assembly, Model }
+
+        /// <summary>
+        /// A [ProtoSerializer] declaration: a hand-written serializer for a type that cannot carry
+        /// [ProtoContract(Serializer = ...)] itself.
+        /// </summary>
+        private sealed class SerializerDeclaration
+        {
+            public SerializerDeclaration(INamedTypeSymbol serializer, bool? isScalar, SerializerScope scope)
+            {
+                Serializer = serializer;
+                IsScalar = isScalar;
+                Scope = scope;
+            }
+
+            public INamedTypeSymbol Serializer { get; }
+
+            /// <summary>Null when the declaration did not state a category.</summary>
+            public bool? IsScalar { get; }
+
+            public SerializerScope Scope { get; }
+        }
+
+        /// <summary>
+        /// The [ProtoSerializer] declarations visible to this model, closed instantiations and open
+        /// generic mappings separately; a closed declaration wins over the open mapping for its type.
+        /// </summary>
+        private sealed class ExternalSerializers
+        {
+            public Dictionary<string, SerializerDeclaration> Closed { get; } = new(StringComparer.Ordinal);
+            public Dictionary<string, SerializerDeclaration> Open { get; } = new(StringComparer.Ordinal);
+            public bool IsEmpty => Closed.Count == 0 && Open.Count == 0;
+        }
+
+        /// <summary>
+        /// Gather [ProtoSerializer] declarations: referenced assemblies, then this assembly, then the
+        /// model, so the most specific wins - the identical walk GetSurrogates does, and assembly
+        /// attributes only, for the same cost reason.
+        /// </summary>
+        private static ExternalSerializers GetExternalSerializers(
+            Compilation compilation, INamedTypeSymbol model, List<PlanDiagnostic> diagnostics)
+        {
+            var result = new ExternalSerializers();
+            foreach (var reference in compilation.SourceModule.ReferencedAssemblySymbols)
+            {
+                Collect(reference.GetAttributes(), SerializerScope.Referenced);
+            }
+            Collect(compilation.Assembly.GetAttributes(), SerializerScope.Assembly);
+            Collect(model.GetAttributes(), SerializerScope.Model);
+            return result;
+
+            void Collect(IEnumerable<AttributeData> attributes, SerializerScope scope)
+            {
+                foreach (var attribute in attributes)
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() != ProtoSerializerAttributeName) continue;
+                    if (attribute.ConstructorArguments.Length != 2) continue;
+                    if (attribute.ConstructorArguments[0].Value is not INamedTypeSymbol type) continue;
+                    if (attribute.ConstructorArguments[1].Value is not INamedTypeSymbol serializer) continue;
+
+                    bool? isScalar = null;
+                    foreach (var argument in attribute.NamedArguments)
+                    {
+                        // only named arguments actually written appear here, so "omitted" and
+                        // "IsScalar = false" are distinguishable
+                        if (argument.Key == "IsScalar" && argument.Value.Value is bool scalar)
+                        {
+                            isScalar = scalar;
+                        }
+                    }
+
+                    var at = PlanLocation.From(model);
+                    var name = Simplify(Qualified(compilation, type));
+                    if (type.IsUnboundGenericType != serializer.IsUnboundGenericType)
+                    {
+                        Contract(diagnostics, at, name,
+                            "[ProtoSerializer] pairs an open generic definition with a closed type; "
+                            + "declare both open with the same arity, or both closed");
+                        continue;
+                    }
+                    if (type.IsUnboundGenericType && type.Arity != serializer.Arity)
+                    {
+                        Contract(diagnostics, at, name,
+                            $"[ProtoSerializer] pairs {name} (arity {type.Arity}) with "
+                            + $"{Simplify(Qualified(compilation, serializer))} (arity {serializer.Arity}); "
+                            + "an open mapping needs the same arity on both sides");
+                        continue;
+                    }
+
+                    var map = type.IsUnboundGenericType ? result.Open : result.Closed;
+                    var key = type.IsUnboundGenericType
+                        ? Qualified(compilation, type.OriginalDefinition)
+                        : Qualified(compilation, type);
+                    if (map.TryGetValue(key, out var existing) && existing.Scope == scope)
+                    {
+                        // across scopes the more specific wins silently; *within* a scope there is no
+                        // defined winner, so say so and keep the first
+                        Contract(diagnostics, at, name,
+                            "[ProtoSerializer] is declared more than once for the same type at the same scope");
+                        continue;
+                    }
+                    map[key] = new SerializerDeclaration(serializer, isScalar, scope);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The [ProtoSerializer] declaration serving a type, if any: an exact closed declaration first,
+        /// then the open mapping for its generic definition, closed with the use site's arguments.
+        /// </summary>
+        private static SerializerDeclaration? ResolveSerializerDeclaration(
+            Compilation compilation, ExternalSerializers serializers, INamedTypeSymbol type,
+            out INamedTypeSymbol? closedSerializer)
+        {
+            closedSerializer = null;
+            if (serializers.IsEmpty) return null;
+            if (serializers.Closed.TryGetValue(Qualified(compilation, type), out var declaration))
+            {
+                closedSerializer = declaration.Serializer;
+                return declaration;
+            }
+            if (type.IsGenericType && !type.IsUnboundGenericType
+                && serializers.Open.TryGetValue(Qualified(compilation, type.OriginalDefinition), out declaration))
+            {
+                // close the serializer over the use site's arguments; arity was validated at gathering
+                closedSerializer = declaration.Serializer.OriginalDefinition
+                    .Construct(type.TypeArguments.ToArray());
+                return declaration;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Whether a [ProtoSerializer] declaration actually governs a type: the type's own
+        /// [ProtoContract(Serializer = ...)] wins over anything short of model scope.
+        /// </summary>
+        private static bool DeclarationApplies(SerializerDeclaration? declaration, INamedTypeSymbol type)
+            => declaration is not null && (declaration.Scope == SerializerScope.Model || !HasExternalSerializer(type));
+
+        /// <summary>
+        /// The plan for a type served by a [ProtoSerializer] declaration: validation the runtime twin
+        /// (MetaType.SerializerType) performs by throwing, then the same three-route category resolution
+        /// [ProtoContract(Serializer = ...)] gets.
+        /// </summary>
+        private static ProtoContractPlan? ExternalContract(
+            Compilation compilation, List<PlanDiagnostic> diagnostics, PlanLocation at, string name,
+            INamedTypeSymbol type, SerializerDeclaration declaration, INamedTypeSymbol serializer)
+        {
+            var display = Simplify(serializer.ToDisplayString());
+            if (!compilation.IsSymbolAccessibleWithin(serializer, compilation.Assembly))
+            {
+                return Option(diagnostics, at, name,
+                    $"[ProtoSerializer(..., typeof({display}))], because that serializer is not accessible here");
+            }
+            if (serializer.TypeKind != TypeKind.Class || serializer.IsAbstract)
+            {
+                return Option(diagnostics, at, name,
+                    $"[ProtoSerializer(..., typeof({display}))], because a custom serializer must be a concrete class");
+            }
+            if (!serializer.InstanceConstructors.Any(static ctor => ctor.Parameters.Length == 0))
+            {
+                // SerializerCache activates it with nonPublic: true, so any parameterless constructor will do
+                return Option(diagnostics, at, name,
+                    $"[ProtoSerializer(..., typeof({display}))], because that serializer has no parameterless constructor");
+            }
+            if (!ImplementsSerializerFor(compilation, serializer, type))
+            {
+                return Option(diagnostics, at, name,
+                    $"[ProtoSerializer(..., typeof({display}))], because that serializer does not implement "
+                    + $"ISerializer<{Simplify(Qualified(compilation, type))}>");
+            }
+
+            var fromSource = ReadCategoryFromSource(compilation, serializer);
+            if (declaration.IsScalar is { } stated && fromSource is { } observed && stated != observed)
+            {
+                return Option(diagnostics, at, name,
+                    $"[ProtoSerializer(IsScalar = {(stated ? "true" : "false")})], which contradicts "
+                    + $"the serializer: {display}.Features declares Category{(observed ? "Scalar" : "Message")}");
+            }
+            var isScalar = declaration.IsScalar ?? fromSource;
+            return new ProtoContractPlan(
+                Qualified(compilation, type),
+                default, type.IsValueType,
+                externalSerializerTypeName: Qualified(compilation, serializer),
+                externalSerializerIsScalar: isScalar == true,
+                externalSerializerCategoryKnown: isScalar is not null);
+        }
+
+        private static bool ImplementsSerializerFor(
+            Compilation compilation, INamedTypeSymbol serializer, INamedTypeSymbol type)
+        {
+            var wanted = Qualified(compilation, type);
+            foreach (var iface in serializer.AllInterfaces)
+            {
+                if (iface.Arity != 1) continue;
+                if (iface.OriginalDefinition.ToDisplayString() != "ProtoBuf.Serializers.ISerializer<T>") continue;
+                if (Qualified(compilation, iface.TypeArguments[0]) == wanted) return true;
+            }
+            return false;
+        }
+
         /// <summary>The fully-qualified call, if a matching public static one-argument method exists.</summary>
         private static string? FindConverter(Compilation compilation, INamedTypeSymbol converter, string? methodName,
             ITypeSymbol from, ITypeSymbol to)
@@ -2231,10 +2478,22 @@ namespace ProtoBuf.BuildTools.Generators
         /// <summary>
         /// The expression a *member* of this contract's type must pass as its sub-serializer: null
         /// for the usual case (<c>this</c>), or the hand-written serializer when the contract
-        /// declares one, since we never implement <c>ISerializer&lt;T&gt;</c> for those.
+        /// declares one - via its own attribute, or a [ProtoSerializer] declaration that reaches it -
+        /// since we never implement <c>ISerializer&lt;T&gt;</c> for those.
         /// </summary>
-        private static string? GetSubSerializer(Compilation compilation, INamedTypeSymbol type)
+        private static string? GetSubSerializer(Compilation compilation, INamedTypeSymbol type, ExternalSerializers serializers)
         {
+            var declaration = ResolveSerializerDeclaration(compilation, serializers, type, out var closedSerializer);
+            if (DeclarationApplies(declaration, type))
+            {
+                // unlike the own-attribute route below, an inaccessible serializer here is not
+                // treated as "inbuilt" - it is a refusal from ExternalContract when that type is
+                // itself parsed, and this member cascades along with it
+                return $"global::ProtoBuf.Serializers.SerializerCache.Get<"
+                    + Qualified(compilation, closedSerializer!) + ", "
+                    + Qualified(compilation, type) + ">()";
+            }
+
             foreach (var attribute in type.GetAttributes())
             {
                 if (attribute.AttributeClass?.ToDisplayString() != ProtoContractAttributeName) continue;
@@ -2666,7 +2925,8 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         private static MemberShape? GetMemberShape(Compilation compilation, ITypeSymbol type,
-            Dictionary<string, SurrogateDeclaration>? surrogates = null, bool allowParseableTypes = false)
+            Dictionary<string, SurrogateDeclaration>? surrogates = null, ExternalSerializers? serializers = null,
+            bool allowParseableTypes = false)
         {
             var isNullable = false;
             if (type is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
@@ -2715,7 +2975,7 @@ namespace ProtoBuf.BuildTools.Generators
             type = EraseTupleNames(compilation, type);
 
             // a struct contract can be Nullable<T>; a reference-type one cannot
-            if (GetMessageKind(compilation, type, surrogates, out var message) is { } messageKind)
+            if (GetMessageKind(compilation, type, surrogates, serializers, out var message) is { } messageKind)
             {
                 if (isNullable && message is not { IsValueType: true }) return null;
                 return new MemberShape(messageKind, isNullable, message: message);
@@ -2745,7 +3005,7 @@ namespace ProtoBuf.BuildTools.Generators
             // resulting shape *describes the element* - Repeated says how it is stored
             if (ResolveRepeated(type) is { Factory: not null, Element: not null } repeated)
             {
-                if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates, allowParseableTypes);
+                if (repeated.IsMap) return AsMap(compilation, repeated, type, surrogates, serializers, allowParseableTypes);
 
                 // IReadOnlySet<T> support is conditional on the runtime the library was built
                 // for - and the correctly-spelled factory is 4.x-and-up (the shipped 3.x name
@@ -2760,7 +3020,7 @@ namespace ProtoBuf.BuildTools.Generators
                         repeatedPlan.TakesCollectionType, repeatedPlan.IsValueType);
                 }
 
-                return AsRepeated(compilation, repeated.Element, repeatedPlan, type, surrogates, allowParseableTypes);
+                return AsRepeated(compilation, repeated.Element, repeatedPlan, type, surrogates, serializers, allowParseableTypes);
             }
             return null;
         }
@@ -2993,12 +3253,12 @@ namespace ProtoBuf.BuildTools.Generators
         /// their wire types passed alongside.
         /// </summary>
         private static MemberShape? AsMap(Compilation compilation, RepeatedMatch match, ITypeSymbol declared,
-            Dictionary<string, SurrogateDeclaration>? surrogates, bool allowParseableTypes)
+            Dictionary<string, SurrogateDeclaration>? surrogates, ExternalSerializers? serializers, bool allowParseableTypes)
         {
             var key = match.Element!;
             var value = match.Value!;
-            if (GetMemberShape(compilation, key, surrogates, allowParseableTypes) is not { } keyShape) return null;
-            if (GetMemberShape(compilation, value, surrogates, allowParseableTypes) is not { } valueShape) return null;
+            if (GetMemberShape(compilation, key, surrogates, serializers, allowParseableTypes) is not { } keyShape) return null;
+            if (GetMemberShape(compilation, value, surrogates, serializers, allowParseableTypes) is not { } valueShape) return null;
 
             // An enum on either side resolves an ISerializer<TEnum> *from the model* rather than
             // taking one inline, exactly as a repeated enum does - so it needs the same
@@ -3107,10 +3367,10 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static MemberShape? AsRepeated(Compilation compilation, ITypeSymbol element,
             ProtoRepeatedPlan repeated, ITypeSymbol declared,
-            Dictionary<string, SurrogateDeclaration>? surrogates, bool allowParseableTypes)
+            Dictionary<string, SurrogateDeclaration>? surrogates, ExternalSerializers? serializers, bool allowParseableTypes)
         {
             // nested collections would need a repeated-of-repeated shape, which the plan cannot carry
-            if (GetMemberShape(compilation, element, surrogates, allowParseableTypes) is not { Repeated.Factory: null } shape) return null;
+            if (GetMemberShape(compilation, element, surrogates, serializers, allowParseableTypes) is not { Repeated.Factory: null } shape) return null;
 
             // a nullable element is an ordinary element as far as the encoding goes - it only throws
             // at runtime if a null actually turns up, unless [NullWrappedValue] is on the member,
@@ -3128,7 +3388,8 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         private static ProtoMemberKind? GetMessageKind(Compilation compilation, ITypeSymbol type,
-            Dictionary<string, SurrogateDeclaration>? surrogates, out INamedTypeSymbol? message)
+            Dictionary<string, SurrogateDeclaration>? surrogates, ExternalSerializers? serializers,
+            out INamedTypeSymbol? message)
         {
             message = null;
             if (type is not INamedTypeSymbol named) return null;
@@ -3149,6 +3410,14 @@ namespace ProtoBuf.BuildTools.Generators
             // becomes serializable despite never being able to carry the attribute itself
             if (surrogates is not null
                 && surrogates.ContainsKey(Qualified(compilation, named)))
+            {
+                message = named;
+                return ProtoMemberKind.Message;
+            }
+
+            // ...and so does a type a [ProtoSerializer] declaration serves, the same way
+            if (serializers is not null
+                && ResolveSerializerDeclaration(compilation, serializers, named, out _) is not null)
             {
                 message = named;
                 return ProtoMemberKind.Message;

@@ -81,6 +81,12 @@ public class Reading
     // from it - the same deferral the unary members above get from WriteAny/ReadAny.
     [ProtoMember(4)] public List<Measure> Scalars { get; set; }
     [ProtoMember(5)] public List<Label> Messages { get; set; }
+
+    // Nullable<TStruct> where TStruct's serializer's category is undetermined at compile time - the
+    // one shape DynamicCategory otherwise had no member for. On read, member.IsNullable steers the
+    // GetValueOrDefault() unwrap before ReadAny; on write, HasValue decides presence (the struct
+    // itself is never null) and then WriteAny takes the framing off the serializer's real Features.
+    [ProtoMember(6)] public Measure? NullableScalar { get; set; }
 }
 
 [ProtoModel]
@@ -99,12 +105,16 @@ public static class DynamicCategorySamples
         new Reading { Scalar = new Measure(-1), Message = new Label { Text = "" }, Other = -2 },
         new Reading { Scalars = [new Measure(1), new Measure(0), new Measure(-3)] },
         new Reading { Messages = [new Label { Text = "a" }, new Label { Text = "b" }] },
+        // NullableScalar present - the HasValue-guarded WriteAny/ReadAny path
+        new Reading { NullableScalar = new Measure(17) },
         new Reading
         {
             Scalar = new Measure(5),
             Scalars = [new Measure(9)],
             Message = new Label { Text = "m" },
             Messages = [new Label { Text = "n" }],
+            // NullableScalar deliberately left null here, so the "everything else set" sample also
+            // pins the absent case alongside a fully populated instance
             Other = 11,
         },
     ];

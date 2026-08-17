@@ -1513,13 +1513,20 @@ namespace ProtoBuf.BuildTools.Generators
                     // switches to ReadMessage for a message and serializer.Read for a scalar, which
                     // is exactly the branch we would otherwise have had to bake in
                     case ProtoMemberKind.Message when member.SubSerializerDynamic:
-                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        // a Nullable<TStruct> target cannot seed the read directly - Read/ReadAny
+                        // take the bare T, since the struct itself is never null - so unwrap here and
+                        // let Assign() convert the (always non-null) result back on the way out
+                        Line(sb, indent + 3, member.IsNullable
+                            ? $"var tmp{number} = {target}.GetValueOrDefault();"
+                            : $"var tmp{number} = {target};");
                         Line(sb, indent + 3, $"tmp{number} = state.ReadAny<{member.TypeName}>(default, tmp{number}, "
                             + $"{SubSerializer(member, self)});");
                         Line(sb, indent + 3, Assign(contract, member, instance, target, $"tmp{number}"));
                         break;
                     case ProtoMemberKind.Message when member.SubSerializerIsScalar:
-                        Line(sb, indent + 3, $"var tmp{number} = {target};");
+                        Line(sb, indent + 3, member.IsNullable
+                            ? $"var tmp{number} = {target}.GetValueOrDefault();"
+                            : $"var tmp{number} = {target};");
                         Line(sb, indent + 3, $"tmp{number} = {SubSerializer(member, self)}.Read(ref state, tmp{number});");
                         Line(sb, indent + 3, Assign(contract, member, instance, target, $"tmp{number}"));
                         break;
@@ -1628,11 +1635,22 @@ namespace ProtoBuf.BuildTools.Generators
 
                 if (member.IsNullable && member.Kind == ProtoMemberKind.Message)
                 {
-                    // a nullable struct message: presence decides, and the unwrapped value goes
-                    // straight to WriteMessage
                     Line(sb, indent, $"if (tmp{number}.HasValue)");
                     Line(sb, indent, "{");
-                    Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
+                    if (member.SubSerializerIsScalar || member.SubSerializerDynamic)
+                    {
+                        // a scalar-category (or undetermined-category) hand-written serializer:
+                        // WriteAny takes the framing off the serializer itself, exactly as the
+                        // non-nullable case does - the struct is never null, so presence has to be
+                        // decided here instead
+                        Line(sb, indent + 1, $"state.WriteAny<{member.TypeName}>({number}, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
+                    }
+                    else
+                    {
+                        // a nullable struct message: presence decides, and the unwrapped value goes
+                        // straight to WriteMessage
+                        Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
+                    }
                     Line(sb, indent, "}");
                     goto written;
                 }
@@ -2242,7 +2260,8 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 3, $"== {Features}.{expected},");
                 Line(sb, indent + 2, $"\"{Simplify(contract.TypeName)} is generated as {expected}, but its "
                     + $"serializer disagrees; \"");
-                Line(sb, indent + 3, $"+ \"set [ProtoContract(IsScalar = {fix})] on it, or correct the serializer.\");");
+                Line(sb, indent + 3, $"+ \"set IsScalar = {fix} on its [ProtoContract] or [ProtoSerializer] "
+                    + $"declaration, or correct the serializer.\");");
             }
             Line(sb, indent, "}");
             sb.AppendLine();

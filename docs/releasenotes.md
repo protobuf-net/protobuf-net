@@ -40,6 +40,9 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - add `[ProtoDataFormat(type, format)]`: a per-type DataFormat default (assembly/module/type
   scoped, explicit member format wins), honoured by both the runtime model and the AOT
   generator — e.g. fixed 16-byte Guids at CompatibilityLevel 300 without editing members (#1276)
+- add `[ProtoSerializer]` (`[Experimental]`): assembly/model-scoped hand-written serializer
+  declarations for the AOT generator, with open-generic mapping — the declarative twin of
+  `MetaType.SerializerType` (#1275)
 - **fix**: a string member carrying both `[DefaultValue]` and a `ShouldSerialize*()` method
   silently omitted a present-but-default value; the condition now replaces the declared-default
   guard, as it always did for other member kinds

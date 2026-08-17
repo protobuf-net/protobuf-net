@@ -4,6 +4,12 @@
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.Path.get -> string
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.ProtoSchemaAttribute() -> void
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.ProtoSchemaAttribute(string path) -> void
+[PBN9001]ProtoBuf.ProtoSerializerAttribute
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.ProtoSerializerAttribute(System.Type type, System.Type serializer) -> void
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.Type.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.Serializer.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.IsScalar.get -> bool
+[PBN9001]ProtoBuf.ProtoSerializerAttribute.IsScalar.set -> void
 [PBN9002]ProtoBuf.ProtoReader.ReadScope
 [PBN9002]ProtoBuf.ProtoReader.ReadScope.ReadScope() -> void
 [PBN9002]ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.IExtensible instance) -> void
