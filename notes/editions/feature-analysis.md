@@ -125,6 +125,34 @@ the mechanism — future work, noted and parked.
   as "accept in ≤2023, reject in 2024" validation.
 - Naming style and symbol visibility defaults flip on (table above).
 
+## Status (2026-08-17, end of first working day)
+
+All four goals landed on `editions_new`, each protoc-35.1-pinned by tests:
+
+1. **Parser** — editions 2023/2024 files parse byte-equivalent to protoc 35.1, including the
+   1957-line upstream `edition_unittest.proto` (2024: delimited, legacy-required, closed enums,
+   `features.(pb.cpp).*`, option imports, visibility). `ParsedFeatures` resolution runs for every
+   syntax, with legacy inference (required/group/[packed]/proto3-optional).
+2. **Corpus** — protoc 35.1 bundled; descriptor.proto + WKTs + cpp_features.proto refreshed;
+   editions fixtures under `Schemas/editions/`. #1211 resolved in substance.
+3. **Codegen** — C# and VB consult `ResolvedFeatures` at every decision point (presence, packed,
+   delimited→`DataFormat.Group`, required, closed-enum defaults); pinned by `EditionsCodeGenTests`.
+4. **Schema-writer** (stretch) — `GetSchema(type, ProtoSyntax.Edition2023/2024)` emits valid
+   editions files (protoc-accepted, asserted by `EditionsSchemaWriterTests`); groups finally have
+   a legal spelling (`features.message_encoding = DELIMITED`), and proto3 output warns above each
+   (never-valid) `group` member. Found and fixed en route: the writer emitted `[default = 0]`
+   against enums with no zero member (invalid in every dialect).
+
+Known gaps / deferred (deliberately):
+
+- **Validation-error parity** with protoc is partial: we accept some things protoc rejects (e.g.
+  no open-enum-must-start-at-zero check for editions, no naming-style STYLE2024 enforcement, no
+  feature target/support-window checks, no symbol-visibility import enforcement). The comparison
+  harness only pins *valid* files; error parity is follow-up work.
+- **Descriptor.cs regeneration audit**: the DTOs were hand-extended in protogen style; a
+  protogen-regeneration diff against the new descriptor.proto would confirm no drift.
+- Edition 2026 remains parse-tolerated only, per scope.
+
 ## Work map (where each piece lands)
 
 | area | work |
