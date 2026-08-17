@@ -331,6 +331,12 @@ namespace ProtoBuf.Meta
                 case ProtoSyntax.Proto3:
                     headerBuilder.AppendLine(@"syntax = ""proto3"";");
                     break;
+                case ProtoSyntax.Edition2023:
+                    headerBuilder.AppendLine(@"edition = ""2023"";");
+                    break;
+                case ProtoSyntax.Edition2024:
+                    headerBuilder.AppendLine(@"edition = ""2024"";");
+                    break;
                 default:
 #pragma warning disable CA2208 // param name - for clarity
                     throw new ArgumentOutOfRangeException(nameof(syntax));
@@ -340,6 +346,13 @@ namespace ProtoBuf.Meta
             if (!string.IsNullOrEmpty(package))
             {
                 headerBuilder.Append("package ").Append(package).Append(';').AppendLine();
+            }
+
+            if (syntax == ProtoSyntax.Edition2024)
+            {
+                // edition 2024 enforces the style guide's naming conventions by default; the
+                // names here come from .NET members, which follow different conventions
+                headerBuilder.AppendLine("option features.enforce_naming_style = STYLE_LEGACY;");
             }
 
             // check for validity

@@ -24,14 +24,23 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
                 import ""google/protobuf/wrappers.proto"";
 
                 message FieldsMarkedWithNullWrappedAsGroupPoco {
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.DoubleValue Item1 = 1;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.FloatValue Item2 = 2;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.Int64Value Item3 = 3;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.UInt64Value Item4 = 4;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.Int32Value Item5 = 5;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.UInt32Value Item6 = 6;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.BoolValue Item7 = 7;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.StringValue Item8 = 8;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.BytesValue Item9 = 9;
                 }");
         
@@ -62,14 +71,23 @@ namespace ProtoBuf.Test.Nullables.WrappersProto
                 import ""google/protobuf/wrappers.proto"";
 
                 message FieldsMarkedWithSupportsNullPoco {
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.DoubleValue Item1 = 1;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.FloatValue Item2 = 2;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.Int64Value Item3 = 3;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.UInt64Value Item4 = 4;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.Int32Value Item5 = 5;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.UInt32Value Item6 = 6;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.BoolValue Item7 = 7;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.StringValue Item8 = 8;
+                    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
                     group .google.protobuf.BytesValue Item9 = 9;
                 }");
         
