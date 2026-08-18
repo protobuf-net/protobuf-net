@@ -23,10 +23,12 @@ and as such have no dependency on `protoc` *at all*, and therefore have no versi
 
 ### The .proto Syntax
 
-The `.proto` schema language currently has 2 major versions; `"proto2"` and `"proto3"`; [protogen](https://protobuf-net.dev/) fully
-supports both syntax versions and has been tested against a wide corpus of available schemas. The generated code includes all conventions
-known up to 3.5.1 (the current version at time of writing), and some not-yet-released post-3.5.1 changes such as the re-addition of unknown
-field support for `"proto3"` messages.
+The `.proto` schema language has two legacy dialects - `"proto2"` and `"proto3"` - and, since 2023, a rolling
+series of [editions](https://docs.protobuf-net.dev/editions) that replaces them. [protogen](https://protobuf-net.dev/)
+fully supports both legacy dialects and editions 2023/2024, and has been tested against a wide corpus of
+available schemas; parsing and code generation are pinned against `protoc` 35.1 (the current version at time
+of writing), which is used in the test suite as the reference implementation - it is not a dependency of the
+shipped tools.
 
 ### The Library/Runtime
 

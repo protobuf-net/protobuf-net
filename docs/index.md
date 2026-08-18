@@ -17,6 +17,7 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 - [Build Tools for protobuf-net and protobuf-net.Grpc](https://docs.protobuf-net.dev/build_tools)
 - [Compile-time serializers, for native AOT and trimming](https://docs.protobuf-net.dev/aot)
 - [Generating code from .proto files at build-time](https://docs.protobuf-net.dev/contract_first)
+- [Editions, and delimited encoding](https://docs.protobuf-net.dev/editions)
 - [Schema analysis tools](https://docs.protobuf-net.dev/schemas)
 - [protobuf-net.dev](https://protobuf-net.dev/) - generate code from a `.proto` schema, or decode a raw protobuf payload, in your browser
 - [Memory use and message size limits](https://docs.protobuf-net.dev/memory_and_size_limits)
