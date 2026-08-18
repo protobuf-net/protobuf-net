@@ -42,6 +42,24 @@ namespace BuildToolsUnitTests.Grpc
             return File.Exists(sidecar) ? File.ReadAllText(sidecar).Trim() : null;
         }
 
+        /// <summary>
+        /// Replaces the <c>[InterceptsLocation]</c> payload with a placeholder before comparing.
+        /// </summary>
+        /// <remarks>
+        /// That payload embeds an <c>xxHash128</c> of the fixture file's bytes - the compiler requires it,
+        /// so a stale one is CS9234 - which makes it <b>machine-specific</b>: a checkout whose line endings
+        /// differ produces a different hash, and the golden written on one machine cannot match another.
+        /// That failed CI while passing locally.
+        /// <para>
+        /// Nothing under test is lost. The shape is what matters - one method per receiver overload, the
+        /// body, and the *number* of attributes, which is what pins "three call sites, two intercepted".
+        /// The one value dropped is the only one that could never be portable.
+        /// </para>
+        /// </remarks>
+        private static string Redact(string generated)
+            => Regex.Replace(generated, @"InterceptsLocation\(1, ""[^""]*""\)",
+                @"InterceptsLocation(1, ""<location>"")");
+
         [Theory, MemberData(nameof(GetFiles))]
         public void Test(string path)
         {
@@ -58,7 +76,7 @@ namespace BuildToolsUnitTests.Grpc
                 extraSources: new[] { (SurfacePath, File.ReadAllText(SurfacePath)) },
                 interceptorNamespaces: ReadInterceptorNamespaces(path));
 
-            var actualCode = result.GeneratedCode;
+            var actualCode = Redact(result.GeneratedCode);
             var buildOutput = sb.ToString();
 
             WriteBack(GetOriginCodeLocation(), outputCodePath, actualCode, buildOutput);

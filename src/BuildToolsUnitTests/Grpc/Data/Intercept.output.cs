@@ -118,7 +118,7 @@ namespace ProtoBuf.AOT
         /// Replaces 1 call site(s) of <c>CreateGrpcService&lt;TService&gt;</c> on <c>Grpc.Core.CallInvoker</c>,
         /// pointing them at <c>GrpcFixtures.Intercept.InterceptServices</c> instead of the reflective default.
         /// </summary>
-        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "tUcOuy2h2h9uIL0g3MDzvwoIAABJbnRlcmNlcHQuaW5wdXQuY3M=")]
+        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "<location>")]
         public static TService CreateGrpcService<TService>(
             this global::Grpc.Core.CallInvoker client,
             global::ProtoBuf.Grpc.Configuration.ClientFactory? clientFactory = null)
@@ -129,7 +129,7 @@ namespace ProtoBuf.AOT
         /// Replaces 1 call site(s) of <c>CreateGrpcService&lt;TService&gt;</c> on <c>Grpc.Core.ChannelBase</c>,
         /// pointing them at <c>GrpcFixtures.Intercept.InterceptServices</c> instead of the reflective default.
         /// </summary>
-        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "tUcOuy2h2h9uIL0g3MDzv5IHAABJbnRlcmNlcHQuaW5wdXQuY3M=")]
+        [global::System.Runtime.CompilerServices.InterceptsLocation(1, "<location>")]
         public static TService CreateGrpcService<TService>(
             this global::Grpc.Core.ChannelBase client,
             global::ProtoBuf.Grpc.Configuration.ClientFactory? clientFactory = null)

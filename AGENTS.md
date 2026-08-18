@@ -323,9 +323,17 @@ keeping the last three digits, so `PBN2001`→`PBN3001` and the mapping needs no
 the owners reads exactly like a list of all of them, which is why the table above is exhaustive and
 names the assembly rather than the feature.
 
-New IDs should be added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not
-actually *enforced* here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so
-the table is documentation rather than a build gate, and it *had* drifted: it listed only the AOT
+New IDs **must** be added to `AnalyzerReleases.Unshipped.md`: release tracking is enforced as of
+2026-08-18 — `Microsoft.CodeAnalysis.Analyzers` is referenced and `RS2000`/`RS2001`/`RS2002` are
+escalated to errors, so an unlisted id fails the build. Proven by deleting an entry and watching
+`error RS2000` appear, rather than by observing a green build.
+
+That kills the *register* half of this problem but not the *ownership* half, which is why the table
+above stays: the release file maps id → category/severity/title and never says which type declares
+one. The RS10xx analyzer-authoring rules that arrive with the same package are `NoWarn`ed with a
+reason in the csproj — declined rather than unexamined.
+
+Historically the table was documentation rather than a build gate, and it *had* drifted: it listed only the AOT
 half, while `ServiceContractAnalyzer`'s ten shipped ids were recorded nowhere at all — which is the
 other half of how this happened.
 

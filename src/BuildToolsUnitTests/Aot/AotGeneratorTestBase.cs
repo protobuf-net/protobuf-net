@@ -140,8 +140,16 @@ namespace BuildToolsUnitTests.Aot
             {
                 // what <InterceptorsNamespaces> becomes by the time a generator sees it: the Csc task
                 // passes it as a compiler feature, so the fixture route is the same one real builds take
-                parseOptions = parseOptions.WithFeatures(
-                    new[] { new KeyValuePair<string, string>("InterceptorsNamespaces", interceptorNamespaces) });
+                // BOTH spellings, and that is not belt-and-braces: at Roslyn 4.11 - which this test project
+                // pins - interceptors are still the *experimental* feature, gated on
+                // InterceptorsPreviewNamespaces; the non-preview name is what newer compilers use. Supplying
+                // only the latter left the emitted interceptor failing to compile with CS9137, which the
+                // "expected errors" escape hatch then recorded as if it were intended.
+                parseOptions = parseOptions.WithFeatures(new[]
+                {
+                    new KeyValuePair<string, string>("InterceptorsNamespaces", interceptorNamespaces),
+                    new KeyValuePair<string, string>("InterceptorsPreviewNamespaces", interceptorNamespaces),
+                });
             }
             var references = MetadataReferenceHelpers.WellKnownReferences
                 .Concat(MetadataReferenceHelpers.ProtoBufReferences)

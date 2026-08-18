@@ -1,5 +1,0 @@
-Output code has 2 diagnostics from 'protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Intercept.InterceptServices.grpc.interceptors.g.cs':
-Error CS9137 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Intercept.InterceptServices.grpc.interceptors.g.cs L22 C10
-The 'interceptors' experimental feature is not enabled in this namespace. Add '<InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);ProtoBuf.AOT</InterceptorsPreviewNamespaces>' to your project.
-Error CS9137 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Intercept.InterceptServices.grpc.interceptors.g.cs L33 C10
-The 'interceptors' experimental feature is not enabled in this namespace. Add '<InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);ProtoBuf.AOT</InterceptorsPreviewNamespaces>' to your project.
