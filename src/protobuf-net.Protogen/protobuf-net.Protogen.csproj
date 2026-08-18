@@ -8,7 +8,8 @@
     <AssemblyName>protogen</AssemblyName>
     <ToolCommandName>protogen</ToolCommandName>
     <PackageId>protobuf-net.Protogen</PackageId>
-    <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
+    <Title>protobuf-net.Protogen</Title>
+    <Description>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Description>
     <GrpcTools>true</GrpcTools>
     <ApplicationIcon>protobuf-net.ico</ApplicationIcon>
     <RollForward>LatestMajor</RollForward>

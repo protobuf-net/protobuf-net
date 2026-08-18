@@ -7,7 +7,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AssemblyName>protobuf-net.Core</AssemblyName>
     <Title>protobuf-net.Core</Title>
-    <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
+    <Description>The protobuf-net serialization engine and build-time tooling; most projects should reference protobuf-net, which adds the runtime type model</Description>
     <!--<DefineConstants>$(DefineConstants);TRACK_USAGE</DefineConstants>-->
   </PropertyGroup>
 
