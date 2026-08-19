@@ -723,6 +723,12 @@ namespace ProtoBuf.BuildTools.Internal
         private static bool IsTypeDefaultValue(SpecialType? specialType, object value) => specialType switch
         {
             SpecialType.System_Boolean => value.Equals(false),
+
+            // "" counts as the default for a string even though the CLR default is null, so
+            // [DefaultValue("")] never reports. Strictly it can lose data - a sender holding ""
+            // writes nothing and the receiver is left at null - but null and "" are treated as
+            // interchangeable often enough that a diagnostic here would confuse more than it
+            // helps. Deliberate; do not tighten this without a reason to.
             SpecialType.System_String => value is string text && text.Length == 0,
             _ => IsNumericZero(value),
         };
