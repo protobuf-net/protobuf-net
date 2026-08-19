@@ -1719,6 +1719,23 @@ code and editions-driven users get to write what the spec says; nobody's build s
 XML doc alone may be enough — it costs nothing and fixes the discoverability problem, which is the
 actual complaint.
 
+### B37. Incoming from `main`: new analyzers will fire on existing fixtures
+
+Marc, 2026-08-19, as a heads-up rather than a defect: new analyzers on `main` (the
+`[DefaultValue]`/implicit-default family — see the open `marc/analyzer-*` PRs) will trigger against
+**pre-existing tests whose default-value setups conflict**. Expect noise on the next `main` → `v4`
+merge that is nothing to do with whatever change is being merged.
+
+**Suppression in the affected fixtures is fine** (Marc), because those fixtures exist to pin a
+*known state* — several deliberately encode contradictory or degenerate declarations precisely so
+the behaviour is nailed down. `Partial.input.cs` already sets this precedent, suppressing `PBN0008`
+and `PBN0010` with `#pragma` rather than the analyzer being changed: pinning a precedence rule
+requires a contradiction to resolve, so there is no version of that test the analyzer would allow.
+
+The thing to avoid is the reflex of "a warning appeared, soften the analyzer". Where a fixture is
+deliberately contradictory, suppress at the fixture and say why in a comment; where it is *not*, the
+analyzer has found something and the fixture is wrong.
+
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
