@@ -32,6 +32,8 @@ PBN0020  | Usage    | Warning  | Member should declare `[DefaultValue]`
 PBN0021  | Usage    | Warning  | Member should update its `[DefaultValue]`
 PBN0022  | Usage    | Warning  | Member should declare `IsRequired`
 PBN0023  | Usage    | Warning  | `[ProtoContract]` on an interface is not recommended
+PBN0024  | Usage    | Warning  | Member declares `[DefaultValue]` but nothing initializes it to that value
+PBN0025  | Usage    | Warning  | Member declares a `[DefaultValue]` that protobuf-net will not apply
 PBN2001  | Usage    | Error    | gRPC: invalid member kind on a service contract
 PBN2002  | Usage    | Error    | gRPC: invalid payload type
 PBN2003  | Usage    | Error    | gRPC: invalid return type

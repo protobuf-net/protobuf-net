@@ -125,6 +125,200 @@ namespace BuildToolsUnitTests
                 || x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired));
         }
 
+        // A member equal to its declared default is not written, and deserialization only assigns
+        // fields that are present - so with nothing to restore the value, the two ends disagree
+        // about what "absent" means and the sender's value is lost
+        [Theory]
+        [InlineData("string", "\"abc\"")]
+        [InlineData("int", "5")]
+        [InlineData("bool", "true")]
+        [InlineData("double", "2.5")]
+        [InlineData("DayOfWeek", "DayOfWeek.Monday")]
+        public async Task ReportsDeclaredDefaultCannotRoundTrip(string type, string attributeValue)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{
+                    [ProtoMember(1), DefaultValue({attributeValue})] public {type} FieldBar;
+                    [ProtoMember(2), DefaultValue({attributeValue})] public {type} PropertyBar {{ get; set; }}
+                }}
+            ");
+
+            var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultCannotRoundTrip).ToList();
+            Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
+            Assert.Equal(2, diags.Count);
+        }
+
+        // the shapes where something *does* restore the value, or where the declared default is not
+        // load-bearing in the first place; every one of these is a pattern protogen emits or a
+        // deliberate opt-out, and reporting on any of them would be noise
+        [Theory]
+        // the correct pairing: an initializer restores it
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";")]
+        // ...and protogen writes that assignment into a constructor instead
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                      public Foo() { Bar = ""abc""; }")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                      public Foo() { this.Bar = ""abc""; }")]
+        // explicit presence: this is protogen's proto2-optional shape, [DefaultValue("")] and all
+        [InlineData(@"[ProtoMember(1), DefaultValue("""")] public string Bar { get; set; }
+                      public bool ShouldSerializeBar() => Bar != null;")]
+        [InlineData(@"[ProtoMember(1), DefaultValue("""")] public string Bar { get; set; }
+                      public bool BarSpecified { get; set; }")]
+        // a null declared default means "no declared default" at all
+        [InlineData(@"[ProtoMember(1), DefaultValue(null)] public string Bar { get; set; }")]
+        // not a kind whose declared default we can reason about
+        [InlineData(@"[ProtoMember(1), DefaultValue(5)] public int? Bar { get; set; }")]
+        // a declared default equal to the type's own default needs nothing to restore it - the CLR
+        // already hands it over. This is the shape protogen emits for a proto2 enum field whose
+        // default is the zero member, and CustomOptions.cs in this repo is full of it
+        [InlineData(@"public enum Kind { None = 0, Other = 1 }
+                      [ProtoMember(1), DefaultValue(Kind.None)] public Kind Bar { get; set; }")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(0)] public int Bar { get; set; }")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(false)] public bool Bar { get; set; }")]
+        [InlineData(@"[ProtoMember(1), DefaultValue("""")] public string Bar { get; set; }")]
+        public async Task DoesNotReportDeclaredDefaultCannotRoundTrip(string body)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{
+                    {body}
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultCannotRoundTrip));
+        }
+
+        // under SkipConstructor neither a constructor nor a field initializer runs, so the fix this
+        // diagnostic implies would not fix anything - it stays quiet rather than give bad advice
+        [Fact]
+        public async Task DoesNotReportDeclaredDefaultCannotRoundTripUnderSkipConstructor()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract(SkipConstructor = true)]
+                public class Foo {
+                    [ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                }
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultCannotRoundTrip));
+        }
+
+        // ValueMember.BuildSerializer only reaches the DefaultValueDecorator for a non-repeated,
+        // non-required member, so in these two shapes the declared default is simply inert
+        [Theory]
+        [InlineData(@"[ProtoMember(1, IsRequired = true), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(5)] public System.Collections.Generic.List<int> Bar { get; set; } = new();")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(5)] public int[] Bar { get; set; }")]
+        public async Task ReportsDeclaredDefaultIgnored(string body)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{
+                    {body}
+                }}
+            ");
+
+            var diag = Assert.Single(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultIgnored));
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+        }
+
+        [Theory]
+        // bytes are a scalar to protobuf-net, not a repeated member, so the default is applied
+        [InlineData(@"[ProtoMember(1), DefaultValue(5)] public byte[] Bar { get; set; }")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(5)] public System.ReadOnlyMemory<byte> Bar { get; set; }")]
+        // a string is IEnumerable but is a scalar
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";")]
+        // ShouldSerialize overriding the declared default is protogen's intended composition
+        [InlineData(@"[ProtoMember(1), DefaultValue("""")] public string Bar { get; set; }
+                      public bool ShouldSerializeBar() => Bar != null;")]
+        // a null declared default is not a declared default
+        [InlineData(@"[ProtoMember(1, IsRequired = true), DefaultValue(null)] public string Bar { get; set; }")]
+        public async Task DoesNotReportDeclaredDefaultIgnored(string body)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{
+                    {body}
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultIgnored));
+        }
+
+        // the whole shape protogen emits for a proto2 optional field with a default, which must be
+        // clean: it is the single largest body of code these two diagnostics could have shouted at
+        [Fact]
+        public async Task ProtogenPresenceTrackingShapeIsClean()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {
+                    [ProtoMember(1)]
+                    [DefaultValue("""")]
+                    public string Name
+                    {
+                        get => __pbn__Name ?? """";
+                        set => __pbn__Name = value;
+                    }
+                    public bool ShouldSerializeName() => __pbn__Name != null;
+                    public void ResetName() => __pbn__Name = null;
+                    private string __pbn__Name;
+                }
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultCannotRoundTrip
+                || x.Descriptor == DataContractAnalyzer.DeclaredDefaultIgnored));
+        }
+
+        // lifted verbatim from CustomOptions.cs, which protogen generated: a proto2 enum field whose
+        // declared default is the zero member, carrying no initializer because it does not need one
+        [Fact]
+        public async Task ProtogenZeroEnumDefaultShapeIsClean()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                public enum MessageKind { None = 0, Service = 1 }
+
+                [ProtoContract]
+                public partial class ProtogenMessageOptions {
+                    [ProtoMember(5, Name = @""messageKind"")]
+                    [DefaultValue(MessageKind.None)]
+                    public MessageKind MessageKind { get; set; }
+                }
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultCannotRoundTrip
+                || x.Descriptor == DataContractAnalyzer.DeclaredDefaultIgnored));
+        }
+
         // a collection member has no wire presence to force - an empty collection writes nothing,
         // and IsRequired is only observable for value-type scalars - so initializing one (the
         // standard pattern, including getter-only) must not trigger the IsRequired nag
