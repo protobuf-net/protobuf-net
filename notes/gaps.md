@@ -1324,14 +1324,17 @@ go-slow as the control and the fallback. It matters for consumers who have not a
 `[ProtoModel]` — and `docs/aot.md` shows that population got nothing from v4 on serialize
 (20.59 → 20.39 µs) while deserialize improved 23%.
 
-### B29. `ProtoReader.cs` cites a `PORTING.md` that does not exist
+### B29. ~~`ProtoReader.cs` cites a `PORTING.md` that does not exist~~ — **FIXED 2026-08-19**
 
 The "museum bridge" comment — the one that explains liquify/resolidify and is the best short
 statement of how the legacy reader relates to `State` — ends *"Museum API, museum prices - see
 PORTING.md"*. There is no such file anywhere in the repo (`git ls-files` finds nothing).
 
-Either write it or drop the reference. It is the pointer someone follows when they wonder why the
-instance API is slow, so a dangling one costs more than no pointer at all.
+**Repointed rather than deleted**, since the pointer earns its place — it is what someone follows
+when they wonder why the instance API is slow. It now names `notes/nano-core.md`, which actually
+holds the arc and its cuts, and says outright that there is no `PORTING.md` so nobody goes looking
+again. Writing a real porting guide is still worth doing if the museum API ever needs a migration
+story for consumers; that is a documentation decision, not a dangling-link bug.
 
 ### B31. An EXTERNAL serializer takes its member off measure-first — widened by `[ProtoSerializer]`
 
