@@ -1449,6 +1449,20 @@ regenerations and one golden. The gate battery dominates the wall-clock, not the
 Marc, 2026-08-19, from `marc/bench-delimited-v4` (branched off `schema-breadth`). **Captured, not
 started.**
 
+**Provenance, and why it raises the stakes:** this came out of a write-up of the **editions**
+feature — hence "delimited" rather than `Group`. That is not a naming footnote. **C14** records that
+editions' `features.message_encoding = DELIMITED` *resurrects group encoding as a first-class
+choice*, and that protobuf-net is "unusually well placed" because the wire form is already
+implemented on both paths. B35 puts that premise in question: the framing editions promotes is the
+one that got **none** of the v4 write optimisation, and is now 5.7× slower than the alternative it
+used to beat.
+
+The ordering consequence is the useful part. C14 is deferred to 4.1; B35 is a 4.0 write-path defect.
+Shipping editions on top of an unoptimised delimited write would land the headline feature on the
+slow framing and make protobuf-net's long-standing advantage here — an encoding it has supported for
+15+ years, which the spec has now caught up with — read as a liability. **B35 wants fixing before
+editions ships, not after**, which is a stronger reason to schedule it than the benchmark alone.
+
 **The finding.** Length-prefixed framing got the optimized write emit; delimited did not. On
 `schema-breadth`, delimited is now the slower framing in *every* serialize cell, by up to **5.7×**.
 Serialize to `Stream`, deep chain of 512, ns, via the compile-time model, same source file on both
@@ -2035,6 +2049,12 @@ that matters here is **`features.message_encoding = DELIMITED`** — which *resu
 encoding*, deprecated in proto3 and now back as a first-class choice. Marc's note: this is
 substantially what he recommended to the protobuf team 15+ years ago, and it is what protobuf-net
 has implemented throughout as `DataFormat.Group`.
+
+**Caveat added 2026-08-19 — see B35.** "Unusually well placed" is true of the wire form and is
+currently *false* of the write performance: delimited writes did not get v4's optimized emit and
+measure 5.7× slower than length-prefixed, having been the faster framing on 3.3. That finding came
+out of the editions write-up itself. Fix it before editions ships, or the feature arrives on the
+slow path.
 
 So we are unusually well placed: the wire form is already implemented on both paths, and the
 `DataFormat.Group` plumbing is the same plumbing editions needs. What is missing is the *schema*
