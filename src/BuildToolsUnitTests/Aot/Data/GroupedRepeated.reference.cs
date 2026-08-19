@@ -1,0 +1,126 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.GroupedRepeated;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___GroupedRepeatedModel : ISerializer<Node>
+{
+	Node ISerializer<Node>.Read(ref ProtoReader.State state, Node value)
+	{
+		if (value == null)
+		{
+			Node node = new Node();
+			value = node;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int value2 = state.ReadInt32();
+				value.Value = value2;
+				break;
+			}
+			case 2:
+			{
+				Node node = value.Child;
+				node = state.ReadMessage(SerializerFeatures.CategoryRepeated, node, this);
+				if (node != null)
+				{
+					value.Child = node;
+				}
+				break;
+			}
+			case 3:
+			{
+				List<Node> prefixed = value.Children;
+				prefixed = RepeatedSerializer.CreateList<Node>().ReadRepeated(ref state, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, prefixed, this);
+				if (prefixed != null)
+				{
+					value.Children = prefixed;
+				}
+				break;
+			}
+			case 4:
+			{
+				Node[] more = value.More;
+				more = RepeatedSerializer.CreateVector<Node>().ReadRepeated(ref state, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, more, this);
+				if (more != null)
+				{
+					value.More = more;
+				}
+				break;
+			}
+			case 5:
+			{
+				List<Node> prefixed = value.Prefixed;
+				prefixed = RepeatedSerializer.CreateList<Node>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, prefixed, this);
+				if (prefixed != null)
+				{
+					value.Prefixed = prefixed;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Node>.Write(ref ProtoWriter.State state, Node value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int value2 = value.Value;
+		if (value2 != 0)
+		{
+			state.WriteInt32Varint(1, value2);
+		}
+		Node child = value.Child;
+		state.WriteGroup(2, SerializerFeatures.CategoryRepeated, child, this);
+		List<Node> children = value.Children;
+		if (children != null)
+		{
+			List<Node> values = children;
+			RepeatedSerializer.CreateList<Node>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+		Node[] more = value.More;
+		if (more != null)
+		{
+			Node[] values2 = more;
+			RepeatedSerializer.CreateVector<Node>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeStartGroup | SerializerFeatures.OptionPackedDisabled, values2, this);
+		}
+		List<Node> prefixed = value.Prefixed;
+		if (prefixed != null)
+		{
+			List<Node> values = prefixed;
+			RepeatedSerializer.CreateList<Node>().WriteRepeated(ref state, 5, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, this);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Node>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class GroupedRepeatedModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___GroupedRepeatedModel, T>();
+	}
+}
