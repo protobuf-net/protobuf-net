@@ -1,4 +1,4 @@
-[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
+﻿[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
 [PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.set -> void
 [PBN9001]ProtoBuf.ProtoSchemaAttribute
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.Path.get -> string
@@ -79,3 +79,4 @@
 [PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, long> lengths) -> bool
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool
+ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat

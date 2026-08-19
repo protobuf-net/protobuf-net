@@ -1638,11 +1638,27 @@ separate:
   everywhere and a cold reader will be searching for the wrong token. Worth stating the synonym once,
   and it will matter more as C14 (editions) lands.
 
-### B36. `DataFormat.Group` vs editions' `DELIMITED`: the spec renamed our encoding
+### B36. ~~`DataFormat.Group` vs editions' `DELIMITED`~~ — **DONE 2026-08-19: `Delimited` added as a synonym, `Group` untouched**
 
 Marc, 2026-08-19, agreeing the terminology gap is real: **at a minimum change the IntelliSense** on
 the enum member so the link is explicit, and **consider** an alias `DataFormat.Delimited` with
 `[Obsolete]` on `Group`.
+
+**Landed as the suggested shape**, per Marc ("synonym sounds good… we'll call it a v4 addition"):
+`DataFormat.Delimited = Group`, both members documented in terms of the other, and **`Group` is not
+obsoleted**. Two risks were checked rather than assumed before doing it:
+
+- **protogen's output cannot change.** The `{dataFormat}` interpolations in both code generators
+  interpolate a **string** (`out string dataFormat`, assigned from `nameof(DataFormat.Group)`), not
+  the enum — so the duplicate value can never make `ToString()` pick the other name in generated
+  code. That was the one way a synonym could have done harm silently.
+- **the public-API analyzers do track enum members** (`ProtoBuf.DataFormat.Group = 4 -> …` is in
+  `PublicAPI.Shipped.txt`), so `Delimited` is declared in `Unshipped.txt` for Core *and* for
+  protobuf-net's forwarded surface. RS0016/RS0017 are live here — see B32 — so omitting it would
+  have added to that noise rather than being silently fine.
+
+Still true, and the reason `Group` stays: obsoleting it would raise warnings in `protogen`-generated
+files consumers cannot edit.
 
 The problem is now permanent rather than cosmetic: editions is **GA** (3.3.21) and the spec's word
 for this encoding is `DELIMITED`, while the codebase says `Group` everywhere. Anyone arriving from
