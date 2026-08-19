@@ -428,7 +428,7 @@ produced a confident wrong answer twice running on this one question.
 covers depth incidentally, at ~600 nested messages).
 
 
-### B14. ~~Groups defeat measure-first~~ — **done 2026-08-14; write-side depth guard added with it**
+### B14. ~~Groups defeat measure-first~~ — **done 2026-08-14; write-side depth guard added with it. BUT SEE B35** (2026-08-19): a benchmark says delimited writes are 5.7× slower than prefixed, which this entry says should be impossible**
 
 Marc, 2026-08-14: *"group basically avoids the whole 'measure before you write' — it boosts write
 perf hugely at the cost of reads needing to watch for a sentinel."* Exactly so, and that is what
@@ -1443,6 +1443,86 @@ regenerations and one golden. The gate battery dominates the wall-clock, not the
   conflict surfaces on the **v4** hop rather than ours;
 - `CustomProtogenSerializer.cs` is committed generator output, so it churns on *every* hop; regenerate
   at each, and expect the final shape to be ours.
+
+### B35. **Delimited (`DataFormat.Group`) writes did NOT get the optimized emit** — filed as #1293, not yet diagnosed
+
+Marc, 2026-08-19, from `marc/bench-delimited-v4` (branched off `schema-breadth`). **Captured, not
+started.**
+
+**The finding.** Length-prefixed framing got the optimized write emit; delimited did not. On
+`schema-breadth`, delimited is now the slower framing in *every* serialize cell, by up to **5.7×**.
+Serialize to `Stream`, deep chain of 512, ns, via the compile-time model, same source file on both
+branches:
+
+| framing | 3.3 | `schema-breadth` | |
+| --- | ---: | ---: | --- |
+| prefixed | 90,798 | 14,258 | **6.4× better** |
+| delimited | 77,941 | 81,270 | **4% worse** |
+
+Every other cell carries the same signature — prefixed improved 1.2–1.7×, delimited did not move.
+**The two framings swapped places**: on 3.3 delimited was 14% faster at depth 512 and 27% faster at
+depth 64; here it is 5.7× and 1.6× slower.
+
+**The read path is fine** and is not implicated: deserialize improved on both framings (deep-512
+prefixed 14,842 → 5,930, delimited 14,968 → 6,336) and now beats Google.Protobuf in all six cells.
+Write emit only.
+
+**Ruled out before filing** (Marc): not a runtime-model fallback — a generated model is closed over
+compile-time types and would throw rather than reflect; not a payload difference — `Setup` asserts
+byte-equality against Google.Protobuf for all four payloads, passing on both branches; not noise —
+5.7× at StdDev under 1%.
+
+**Repro**: `--filter *DelimitedEncoding*` on that branch. `SerializeDeep_ProtobufNet_Delimited` at
+`Size=512` against its prefixed sibling is the single cell to watch.
+
+#### The stated hypothesis is contradicted by the code, which makes it MORE interesting
+
+Marc's hypothesis, explicitly flagged unconfirmed: *the optimized emit declines group-encoded members
+and leaves them on the classic bodies*. It fits the numbers exactly — v4-delimited ≈ 3.3-delimited
+while v4-prefixed pulled 6.4× ahead.
+
+But the emitter as written says the opposite, in two places, and **B14 is recorded as done**:
+
+- `ProtoModelGenerator.Emit.cs` has a dedicated raw grouped-write arm whose own comment is *"THE
+  point of a group, and the whole of gap B14: framed by a start/end tag pair rather than a length
+  prefix, so there is no length to compute and the measure call is not merely cheap — it is ABSENT.
+  A fully-grouped tree therefore writes without a single measure pass."*;
+- `RawMemberMeasureBlocked` carves `Group` out of the blanket non-default-format block, for exactly
+  this shape: `DataFormat == Group && Kind == Message && Repeated.Factory is null && Map.Factory is
+  null`.
+
+So a deep chain of grouped message members *should* be fully raw **and** measure-free — i.e. strictly
+less work than the prefixed path, which pays Measure_ plus write. That is the reverse of what the
+benchmark reports. Three ways that can be true at once, and they are what the diagnosis has to
+separate:
+
+1. the contracts are being dropped from the measurable/raw set **upstream**, for a reason unrelated
+   to `Group` — the cascade runs to a fixed point, so one unrelated member would do it;
+2. the carve-out is **not being reached** — e.g. the benchmark's chain member is not
+   `ProtoMemberKind.Message` as the predicate requires;
+3. **B14 regressed** since 2026-08-14 and nothing caught it, which would make this the first evidence.
+
+#### Two cheap confirmations, neither needing a benchmark
+
+- **Count the methods.** `-p:EmitCompilerGeneratedFiles=true` on the bench project, then count
+  `Measure_`/`RawWrite_` for the delimited contract. This is the diagnostic `AGENTS.md` already
+  prescribes — *"a model with zero of them is not exercising the raw writer at all, whatever its name
+  says"* — and it distinguishes all three cases above in seconds. Note the trap recorded with it: an
+  absent or empty `generated/` folder is indistinguishable from a generator that emitted nothing.
+- **A `ClassicEmit` control on the same branch.** `[ProtoModel(ClassicEmit = true)]` for the
+  delimited fixture: if v4-delimited ≈ v4-classic-delimited, that confirms it is on the classic
+  bodies. This is a *better* control than the 3.3 comparison because it isolates emit mode without
+  crossing branches or packages — and B18 exists precisely so that comparison is available.
+
+#### Two things the report does not pin down
+
+- **What the six cells are.** The read-path claim is "all six cells" and the write signature is
+  "every other cell", but the matrix is never stated — a reader cannot reconstruct which
+  depths/shapes/framings were run. Worth one line in the PR body.
+- **Terminology.** The report says *delimited* throughout and the cause is `DataFormat.Group`; these
+  are the same thing (proto2 groups, renamed "delimited" by editions), but the codebase says `Group`
+  everywhere and a cold reader will be searching for the wrong token. Worth stating the synonym once,
+  and it will matter more as C14 (editions) lands.
 
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
