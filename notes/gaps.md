@@ -1774,7 +1774,14 @@ Its measure-first cost is recorded in **B26**, which is where the work is. The r
 4. **No `GetSchema` test.** The attribute rewrites the emitted `.proto` (`fixed64` vs `int64`,
    `bytes` vs `string` for a `Guid`), which is arguably its most user-visible consequence and is
    covered nowhere.
-5. **`decimal` + `ZigZag` is a live JIT/AOT divergence, and PRE-DATES this feature.** The generator
+5. ~~**`decimal` + `ZigZag` is a live JIT/AOT divergence**~~ — **FIXED 2026-08-19.** `decimal` is now
+   exempt from the ZigZag refusal, and the fixture proves the premise rather than asserting it:
+   `DecimalZigZag.reference.cs` shows ref-emit emitting `WriteFieldHeader(1, WireType.String)` +
+   `WriteDecimal` for the ZigZag member — **byte-identical to the plain one at field 2** — and
+   `AotConformanceTests` compares our bytes against exactly that, so the comparison could not pass if
+   the runtime refused the shape. Original note, retained because the reasoning is the reusable part:
+
+   **PRE-DATES this feature.** The generator
    drops any BCL-kind member with `ZigZag`; the runtime *ignores* the format for `decimal` entirely
    (`ValueMember.cs`'s `ProtoTypeCode.Decimal` arm sets `WireType.String` unconditionally and calls
    `DecimalSerializer.Create(compatibilityLevel)` with no `dataFormat` argument). So the runtime
