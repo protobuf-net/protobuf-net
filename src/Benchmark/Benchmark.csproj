@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net472;net8.0</TargetFrameworks>
-    <NoWarn>$(NoWarn);CS1591;CA1822</NoWarn>
+    <NoWarn>$(NoWarn);CS1591;CA1822;PBN9001</NoWarn>
     <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
     <DefineConstants Condition="'$(TargetFramework)'!='net472'">$(DefineConstants);INTRINSICS</DefineConstants>
@@ -21,6 +21,9 @@
     <PackageReference Include="BenchmarkDotNet" />
     <PackageReference Include="Google.Protobuf" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <!-- the compile-time model generator, for DelimitedEncodingBenchmarks -->
+    <ProjectReference Include="..\protobuf-net.BuildTools\protobuf-net.BuildTools.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <PackageReference Include="Pipelines.Sockets.Unofficial" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
     <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
