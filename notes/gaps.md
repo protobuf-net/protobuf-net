@@ -428,7 +428,7 @@ produced a confident wrong answer twice running on this one question.
 covers depth incidentally, at ~600 nested messages).
 
 
-### B14. ~~Groups defeat measure-first~~ — **done 2026-08-14; write-side depth guard added with it**
+### B14. ~~Groups defeat measure-first~~ — **done 2026-08-14; write-side depth guard added with it. BUT SEE B35** (2026-08-19): a benchmark says delimited writes are 5.7× slower than prefixed, which this entry says should be impossible**
 
 Marc, 2026-08-14: *"group basically avoids the whole 'measure before you write' — it boosts write
 perf hugely at the cost of reads needing to watch for a sentinel."* Exactly so, and that is what
@@ -1444,6 +1444,255 @@ regenerations and one golden. The gate battery dominates the wall-clock, not the
 - `CustomProtogenSerializer.cs` is committed generator output, so it churns on *every* hop; regenerate
   at each, and expect the final shape to be ours.
 
+### B35. ~~Delimited (`DataFormat.Group`) writes did NOT get the optimized emit~~ — **DIAGNOSED AND FIXED 2026-08-19; delimited is now 4.5× FASTER than length-prefixed**
+
+Marc, 2026-08-19, from `marc/bench-delimited-v4` (branched off `schema-breadth`). **Captured, not
+started.**
+
+**Provenance, and why it raises the stakes:** this came out of a write-up of the **editions**
+feature — hence "delimited" rather than `Group`. That is not a naming footnote. **C14** records that
+editions' `features.message_encoding = DELIMITED` *resurrects group encoding as a first-class
+choice*, and that protobuf-net is "unusually well placed" because the wire form is already
+implemented on both paths. B35 puts that premise in question: the framing editions promotes is the
+one that got **none** of the v4 write optimisation, and is now 5.7× slower than the alternative it
+used to beat.
+
+**Corrected 2026-08-19, having first written the opposite:** editions is not pending. It **shipped**
+— #1287, GA in **3.3.21** on 2026-08-17 — so "fix this before editions ships" was already too late
+when it was written. The real shape is worse and more specific:
+
+- **today, on 3.3.21**, a consumer who sets `features.message_encoding = DELIMITED` gets the
+  *faster* framing — 14% at depth 512, 27% at depth 64;
+- **on v4** the same consumer gets 81,270 ns against length-prefixed's 14,258. Choosing the
+  spec-blessed option would cost them **5.7×**, and leave them 4% slower than the release they
+  upgraded from.
+
+So this is a **regression for users of a GA feature, arriving at the v4 upgrade** — not a scheduling
+preference. It is worth weighing as a v4 release-blocker candidate on that basis: v4's whole pitch is
+that everything gets faster, and this is a now-standard encoding choice, on the one wire form
+protobuf-net backed 15+ years before the spec caught up, where it would not.
+
+**C14 predicted it five days early** and the prediction is why the diagnosis has a favourite: that
+entry warned on 2026-08-14 that groups defeating measure-first "would make an editions-delimited
+payload slower rather than faster until it is fixed". B14 was marked done the same day. B35 measures
+the predicted slowness anyway — so **"B14 regressed, or its fix never covered this shape"** outranks
+the other two candidates below.
+
+**The finding.** Length-prefixed framing got the optimized write emit; delimited did not. On
+`schema-breadth`, delimited is now the slower framing in *every* serialize cell, by up to **5.7×**.
+Serialize to `Stream`, deep chain of 512, ns, via the compile-time model, same source file on both
+branches:
+
+| framing | 3.3 | `schema-breadth` | |
+| --- | ---: | ---: | --- |
+| prefixed | 90,798 | 14,258 | **6.4× better** |
+| delimited | 77,941 | 81,270 | **4% worse** |
+
+Every other cell carries the same signature — prefixed improved 1.2–1.7×, delimited did not move.
+**The two framings swapped places**: on 3.3 delimited was 14% faster at depth 512 and 27% faster at
+depth 64; here it is 5.7× and 1.6× slower.
+
+**The read path is fine** and is not implicated: deserialize improved on both framings (deep-512
+prefixed 14,842 → 5,930, delimited 14,968 → 6,336) and now beats Google.Protobuf in all six cells.
+Write emit only.
+
+**Ruled out before filing** (Marc): not a runtime-model fallback — a generated model is closed over
+compile-time types and would throw rather than reflect; not a payload difference — `Setup` asserts
+byte-equality against Google.Protobuf for all four payloads, passing on both branches; not noise —
+5.7× at StdDev under 1%.
+
+**Repro**: `--filter *DelimitedEncoding*` on that branch. `SerializeDeep_ProtobufNet_Delimited` at
+`Size=512` against its prefixed sibling is the single cell to watch.
+
+#### DIAGNOSED 2026-08-19: a **repeated** grouped member disqualifies its whole contract
+
+Not the stated hypothesis, and not a B14 regression. Established by emitting the benchmark's own
+generated code (`-p:EmitCompilerGeneratedFiles=true` on `src/Benchmark`) and counting:
+
+| contract | `Measure_` | `RawWrite_` |
+| --- | ---: | ---: |
+| `LengthPrefixedNode` | 6 | 4 |
+| `DelimitedNode` | **0** | **0** |
+
+Then the counterfactual, which is what makes it proof rather than correlation: **delete the one
+repeated grouped member** and rebuild — `DelimitedNode` immediately emits **3 `Measure_` + 3
+`RawWrite_`**. (The build then fails because the wide benchmarks reference `Children`; the generator
+runs first, so the evidence is complete regardless.)
+
+The benchmark's contract is:
+
+```csharp
+[ProtoMember(2, DataFormat = DataFormat.Group)] public DelimitedNode Child { get; set; }
+[ProtoMember(3, DataFormat = DataFormat.Group)] public List<DelimitedNode> Children { get; set; }
+```
+
+`RawMemberMeasureBlocked`'s carve-out is `DataFormat == Group && Kind == Message &&
+Repeated.Factory is null && Map.Factory is null` — so `Child` passes and **`Children` fails on
+`Repeated.Factory is null`**. `RawRepeatedMessageTarget` independently requires `DataFormat ==
+Default`, so a grouped repeated message is excluded from the raw repeated path in both directions.
+
+**Two things make the effect much larger than the cause looks.** Measurability is a *static*
+property of the contract, so the deep benchmark pays in full even though it never populates
+`Children`; and the exclusion cascades to a fixed point, so a self-referential contract like this one
+is removed entirely. That is the whole 5.7×: `Child` — the member the benchmark actually uses — would
+have been emitted perfectly, and never gets the chance.
+
+**B14 did not regress; its carve-out never covered the repeated case**, and says so: *"Restricted to
+a unary message member: a grouped COLLECTION or MAP frames each element, which is a different sum and
+is not attempted here."* What nobody drew out is that declining the *sum* costs the *contract*.
+That is the general lesson worth keeping — in a fixed-point exclusion, "we do not attempt X" is never
+local.
+
+#### FIXED, and measured: 81,270 ns → 3,047 ns
+
+All four sites landed together. Re-measured on the reporting branch, deep chain, `Size=512`,
+`SerializeDeep_ProtobufNet_*`:
+
+| | 3.3 | `schema-breadth` before | after the fix |
+| --- | ---: | ---: | ---: |
+| length-prefixed | 90,798 | 14,258 | 13,769 |
+| **delimited** | 77,941 | 81,270 | **3,047** |
+
+So delimited is **~27× faster than it was an hour ago**, and now runs at **ratio 0.22 against
+length-prefixed — 4.5× faster**, having been 5.7× slower. The same shape holds at the other sizes:
+0.22 at 64, 0.49 at 8. It also allocates nothing.
+
+**That is the outcome B14 and C14 both predicted and neither had ever been able to show**: a
+fully-grouped tree writes with **no measure pass at all**, so once it is admitted to the raw path it
+must beat length-prefixed, which pays a measure plus a write. C14's claim that protobuf-net is
+"unusually well placed" for editions is now true of the write performance as well as the wire form —
+`features.message_encoding = DELIMITED` is, on v4, the fast choice.
+
+The generated-code check that started this now reads: `DelimitedNode` **0 → 4 `Measure_` + 4
+`RawWrite_`**, matching its length-prefixed twin.
+
+#### The fix, scoped: four sites, and it must be done in one go
+
+The arithmetic is easy — a grouped element is `start-tag + body + end-tag`, and both tags fold to the
+same constant because the field number is shared and only the wire type differs (3 vs 4). It is the
+same shape as `MeasureAddGroup`'s `len += 2 * tagLen + payload`, applied per element.
+
+1. `RawRepeatedMessageTarget` — admit `Group` as well as `Default`;
+2. `RawMemberMeasureBlocked` — drop `Repeated.Factory is null` from the carve-out, letting the
+   repeated branch decide;
+3. `EmitRawRepeatedWrite` — emit start/end tags per element instead of the `| 2` tag plus length
+   prefix (it currently hard-codes wire type 2 for message elements);
+4. the repeated measure arm — `len += 2 * tagLen + sub` per element instead of
+   `tagLen + MeasureRawVarint64(sub) + sub`.
+
+**All four together or none**: AGENTS.md's standing warning is that widening one of these predicates
+without a matching measure arm makes the generator *throw*, surfacing as every model in the
+compilation losing its `Instance` accessor with the real message buried in a `CS8785`. That trap has
+bitten three times.
+
+Worth a decision before starting, because it is a **widening** rather than a repair: the alternative
+is to leave the sum unattempted and instead stop it costing the whole contract — but there is no
+obvious way to do that, since a member either measures or it does not.
+
+#### The stated hypothesis is contradicted by the code, which makes it MORE interesting
+
+Marc's hypothesis, explicitly flagged unconfirmed: *the optimized emit declines group-encoded members
+and leaves them on the classic bodies*. It fits the numbers exactly — v4-delimited ≈ 3.3-delimited
+while v4-prefixed pulled 6.4× ahead.
+
+But the emitter as written says the opposite, in two places, and **B14 is recorded as done**:
+
+- `ProtoModelGenerator.Emit.cs` has a dedicated raw grouped-write arm whose own comment is *"THE
+  point of a group, and the whole of gap B14: framed by a start/end tag pair rather than a length
+  prefix, so there is no length to compute and the measure call is not merely cheap — it is ABSENT.
+  A fully-grouped tree therefore writes without a single measure pass."*;
+- `RawMemberMeasureBlocked` carves `Group` out of the blanket non-default-format block, for exactly
+  this shape: `DataFormat == Group && Kind == Message && Repeated.Factory is null && Map.Factory is
+  null`.
+
+So a deep chain of grouped message members *should* be fully raw **and** measure-free — i.e. strictly
+less work than the prefixed path, which pays Measure_ plus write. That is the reverse of what the
+benchmark reports. Three ways that can be true at once, and they are what the diagnosis has to
+separate:
+
+1. the contracts are being dropped from the measurable/raw set **upstream**, for a reason unrelated
+   to `Group` — the cascade runs to a fixed point, so one unrelated member would do it;
+2. the carve-out is **not being reached** — e.g. the benchmark's chain member is not
+   `ProtoMemberKind.Message` as the predicate requires;
+3. **B14 regressed** since 2026-08-14 and nothing caught it, which would make this the first evidence.
+
+#### Two cheap confirmations, neither needing a benchmark
+
+- **Count the methods.** `-p:EmitCompilerGeneratedFiles=true` on the bench project, then count
+  `Measure_`/`RawWrite_` for the delimited contract. This is the diagnostic `AGENTS.md` already
+  prescribes — *"a model with zero of them is not exercising the raw writer at all, whatever its name
+  says"* — and it distinguishes all three cases above in seconds. Note the trap recorded with it: an
+  absent or empty `generated/` folder is indistinguishable from a generator that emitted nothing.
+- **A `ClassicEmit` control on the same branch.** `[ProtoModel(ClassicEmit = true)]` for the
+  delimited fixture: if v4-delimited ≈ v4-classic-delimited, that confirms it is on the classic
+  bodies. This is a *better* control than the 3.3 comparison because it isolates emit mode without
+  crossing branches or packages — and B18 exists precisely so that comparison is available.
+
+#### Two things the report does not pin down
+
+- **What the six cells are.** The read-path claim is "all six cells" and the write signature is
+  "every other cell", but the matrix is never stated — a reader cannot reconstruct which
+  depths/shapes/framings were run. Worth one line in the PR body.
+- **Terminology.** The report says *delimited* throughout and the cause is `DataFormat.Group`; these
+  are the same thing (proto2 groups, renamed "delimited" by editions), but the codebase says `Group`
+  everywhere and a cold reader will be searching for the wrong token. Worth stating the synonym once,
+  and it will matter more as C14 (editions) lands.
+
+### B36. ~~`DataFormat.Group` vs editions' `DELIMITED`~~ — **DONE 2026-08-19: `Delimited` added as a synonym, `Group` untouched**
+
+Marc, 2026-08-19, agreeing the terminology gap is real: **at a minimum change the IntelliSense** on
+the enum member so the link is explicit, and **consider** an alias `DataFormat.Delimited` with
+`[Obsolete]` on `Group`.
+
+**Landed as the suggested shape**, per Marc ("synonym sounds good… we'll call it a v4 addition"):
+`DataFormat.Delimited = Group`, both members documented in terms of the other, and **`Group` is not
+obsoleted**. Two risks were checked rather than assumed before doing it:
+
+- **protogen's output cannot change.** The `{dataFormat}` interpolations in both code generators
+  interpolate a **string** (`out string dataFormat`, assigned from `nameof(DataFormat.Group)`), not
+  the enum — so the duplicate value can never make `ToString()` pick the other name in generated
+  code. That was the one way a synonym could have done harm silently.
+- **the public-API analyzers do track enum members** (`ProtoBuf.DataFormat.Group = 4 -> …` is in
+  `PublicAPI.Shipped.txt`), so `Delimited` is declared in `Unshipped.txt` for Core *and* for
+  protobuf-net's forwarded surface. RS0016/RS0017 are live here — see B32 — so omitting it would
+  have added to that noise rather than being silently fine.
+
+Still true, and the reason `Group` stays: obsoleting it would raise warnings in `protogen`-generated
+files consumers cannot edit.
+
+The problem is now permanent rather than cosmetic: editions is **GA** (3.3.21) and the spec's word
+for this encoding is `DELIMITED`, while the codebase says `Group` everywhere. Anyone arriving from
+the editions documentation — including whoever writes the next bug report, as B35 shows — greps for
+the wrong token and finds nothing.
+
+**The doc change is unambiguous and free.** `DataFormat.Group`'s XML summary should name
+`features.message_encoding = DELIMITED` outright, so IntelliSense closes the gap at the point of use.
+Same for `[ProtoMember(DataFormat = …)]` and the `[ProtoInclude]`/`[ProtoMap]` overloads that take
+one.
+
+**The alias is a compatibility question, not a naming one**, and that is the part worth knowing
+before deciding:
+
+- `nameof` saves us from the obvious trap. Duplicate-valued enum members make `ToString()` pick
+  unpredictably between the two names, but the codegen path uses `nameof(DataFormat.Group)`
+  (`CSharpCodeGenerator.cs:979`, and the VB twin), which is compile-time and unambiguous. So an alias
+  would *not* silently flip generated output.
+- **`[Obsolete]` on `Group` is the disproportionate part.** protogen writes that token into consumer
+  source — `tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}")` — so obsoleting it
+  makes every contract-first consumer's **generated** DTOs raise warnings in code they did not write
+  and cannot edit. Fixing that means flipping protogen to emit `Delimited` in the same release, which
+  then makes newly-generated DTOs require the newer protobuf-net. A rename would be paying a
+  compatibility cost for a vocabulary problem.
+- a `case DataFormat.Group: case DataFormat.Delimited:` pair is **CS0152** (duplicate label), so any
+  consumer switching on the enum has to pick one. Minor, but it is the kind of thing that surfaces
+  after the fact.
+
+**Suggested shape, if it is wanted at all**: add `Delimited` as a documented synonym, do **not**
+obsolete `Group`, and leave protogen emitting `Group` until there is a reason to break that. New
+code and editions-driven users get to write what the spec says; nobody's build starts warning. The
+XML doc alone may be enough — it costs nothing and fixes the discoverability problem, which is the
+actual complaint.
+
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
@@ -1948,13 +2197,35 @@ existing `(LanguageVersion)1200` constant and the real numbering. `LanguageVersi
 therefore **derives** its expectations from the enum rather than restating them, so the same
 mistake cannot pass twice.
 
-### C14. protobuf **editions**, and refreshing `descriptor.proto` — **DEFERRED to 4.1 (Marc, 2026-08-14)**
+### C14. ~~protobuf **editions**, and refreshing `descriptor.proto`~~ — **LANDED (#1287) and GA in 3.3.21, 2026-08-17.** The deferral below is stale; read it as background
 
 Marc, 2026-08-14. Editions replace the proto2/proto3 split with per-feature settings, and the one
 that matters here is **`features.message_encoding = DELIMITED`** — which *resurrects group
 encoding*, deprecated in proto3 and now back as a first-class choice. Marc's note: this is
 substantially what he recommended to the protobuf team 15+ years ago, and it is what protobuf-net
 has implemented throughout as `DataFormat.Group`.
+
+**Status, 2026-08-19.** Editions **shipped**: `ff6a6cf4 Implement "editions" (#1287)` is on `main`
+and released **GA as 3.3.21** on 2026-08-17. `DELIMITED` is handled through the schema front-end
+(`Parsers`, both code generators, and a refreshed `descriptor.proto`), so the "what is missing is the
+schema half" paragraph below and the `descriptor.proto` prerequisite are both **done**. Everything
+after this block is background, kept because the mapping table and the packed-by-default polarity
+warning are still the reference for anyone touching it.
+
+**Caveat RESOLVED 2026-08-19 — see B35.** "Unusually well placed" was, for a few days, true of the
+wire form and false of the write performance: a repeated grouped member disqualified its whole
+contract from measure-first, so delimited measured 5.7× slower than length-prefixed. Fixed; delimited
+now runs **4.5× faster** than length-prefixed, because a fully-grouped tree needs no measure pass at
+all. The claim below is now true in both senses. The paragraph that follows is kept as the record of
+what was wrong, since the shape of the mistake is the reusable part.
+
+**The caveat as it stood.** "Unusually well placed" is true of the wire form and
+currently *false* of the write performance. This is no longer a "fix it before editions ships"
+question, because editions has shipped: a consumer can opt into `message_encoding = DELIMITED`
+**today, on 3.3.21**, where it is the *faster* framing (14% at depth 512). On v4 the same consumer
+gets 81,270 ns against length-prefixed's 14,258 — so choosing the spec-blessed option would cost them
+**5.7×**, and leave them 4% slower than the release they upgraded from. That is a regression for
+users of a **GA feature**, materialising at the v4 upgrade rather than at some future release.
 
 So we are unusually well placed: the wire form is already implemented on both paths, and the
 `DataFormat.Group` plumbing is the same plumbing editions needs. What is missing is the *schema*
@@ -1981,8 +2252,11 @@ a good deal more (`Edition`, `FeatureSet`, `FeatureSetDefaults`, and the `featur
 options message). That refresh is worth doing on its own, ahead of and independent of editions
 support, since a stale descriptor mis-parses schemas rather than merely lacking features.
 
-See also **B14**: groups currently *defeat* measure-first rather than benefiting from it, which
-would make an editions-delimited payload slower rather than faster until it is fixed. That is the
+See also **B14** — and note this paragraph **predicted B35 five days early**: groups currently
+*defeat* measure-first rather than benefiting from it, which would make an editions-delimited payload
+slower rather than faster until it is fixed. B14 was marked done the same day this was written; B35
+now measures exactly the slowness predicted here. That corroboration is why "B14 regressed, or its
+fix never covered this shape" is the leading hypothesis rather than one of three equals. That is the
 ordering constraint between these two items.
 
 ### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**

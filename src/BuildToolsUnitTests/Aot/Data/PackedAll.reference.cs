@@ -1,0 +1,305 @@
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Reflection;
+using AotFixtures.PackedAll;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___PackedAllModel : ISerializer<EveryPackedShape>
+{
+	EveryPackedShape ISerializer<EveryPackedShape>.Read(ref ProtoReader.State state, EveryPackedShape value)
+	{
+		if (value == null)
+		{
+			EveryPackedShape everyPackedShape = new EveryPackedShape();
+			value = everyPackedShape;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				uint[] u32Array = value.U32Array;
+				u32Array = RepeatedSerializer.CreateVector<uint>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, u32Array);
+				if (u32Array != null)
+				{
+					value.U32Array = u32Array;
+				}
+				break;
+			}
+			case 2:
+			{
+				List<uint> u32List = value.U32List;
+				u32List = RepeatedSerializer.CreateList<uint>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, u32List);
+				if (u32List != null)
+				{
+					value.U32List = u32List;
+				}
+				break;
+			}
+			case 3:
+			{
+				ImmutableArray<uint> u32Immutable = value.U32Immutable;
+				u32Immutable = RepeatedSerializer.CreateImmutableArray<uint>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, u32Immutable);
+				value.U32Immutable = u32Immutable;
+				break;
+			}
+			case 4:
+			{
+				int[] i32Array = value.I32Array;
+				i32Array = RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, i32Array);
+				if (i32Array != null)
+				{
+					value.I32Array = i32Array;
+				}
+				break;
+			}
+			case 5:
+			{
+				ulong[] u64Array = value.U64Array;
+				u64Array = RepeatedSerializer.CreateVector<ulong>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, u64Array);
+				if (u64Array != null)
+				{
+					value.U64Array = u64Array;
+				}
+				break;
+			}
+			case 6:
+			{
+				long[] s64Array = value.I64Array;
+				s64Array = RepeatedSerializer.CreateVector<long>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, s64Array);
+				if (s64Array != null)
+				{
+					value.I64Array = s64Array;
+				}
+				break;
+			}
+			case 7:
+			{
+				int[] i32Array = value.S32Array;
+				i32Array = RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeSignedVarint, i32Array);
+				if (i32Array != null)
+				{
+					value.S32Array = i32Array;
+				}
+				break;
+			}
+			case 8:
+			{
+				long[] s64Array = value.S64Array;
+				s64Array = RepeatedSerializer.CreateVector<long>().ReadRepeated(ref state, SerializerFeatures.WireTypeSignedVarint, s64Array);
+				if (s64Array != null)
+				{
+					value.S64Array = s64Array;
+				}
+				break;
+			}
+			case 9:
+			{
+				int[] i32Array = value.F32Array;
+				i32Array = RepeatedSerializer.CreateVector<int>().ReadRepeated(ref state, SerializerFeatures.WireTypeFixed32, i32Array);
+				if (i32Array != null)
+				{
+					value.F32Array = i32Array;
+				}
+				break;
+			}
+			case 10:
+			{
+				long[] s64Array = value.F64Array;
+				s64Array = RepeatedSerializer.CreateVector<long>().ReadRepeated(ref state, SerializerFeatures.WireTypeFixed64, s64Array);
+				if (s64Array != null)
+				{
+					value.F64Array = s64Array;
+				}
+				break;
+			}
+			case 11:
+			{
+				float[] singles = value.Singles;
+				singles = RepeatedSerializer.CreateVector<float>().ReadRepeated(ref state, SerializerFeatures.WireTypeFixed32, singles);
+				if (singles != null)
+				{
+					value.Singles = singles;
+				}
+				break;
+			}
+			case 12:
+			{
+				double[] doubles = value.Doubles;
+				doubles = RepeatedSerializer.CreateVector<double>().ReadRepeated(ref state, SerializerFeatures.WireTypeFixed64, doubles);
+				if (doubles != null)
+				{
+					value.Doubles = doubles;
+				}
+				break;
+			}
+			case 13:
+			{
+				bool[] flags = value.Flags;
+				flags = RepeatedSerializer.CreateVector<bool>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, flags);
+				if (flags != null)
+				{
+					value.Flags = flags;
+				}
+				break;
+			}
+			case 14:
+			{
+				List<bool> flagList = value.FlagList;
+				flagList = RepeatedSerializer.CreateList<bool>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, flagList);
+				if (flagList != null)
+				{
+					value.FlagList = flagList;
+				}
+				break;
+			}
+			case 15:
+			{
+				Level[] levels = value.Levels;
+				levels = RepeatedSerializer.CreateVector<Level>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, levels, this as ISerializer<Level>);
+				if (levels != null)
+				{
+					value.Levels = levels;
+				}
+				break;
+			}
+			case 16:
+			{
+				List<Level> levelList = value.LevelList;
+				levelList = RepeatedSerializer.CreateList<Level>().ReadRepeated(ref state, SerializerFeatures.WireTypeVarint, levelList, this as ISerializer<Level>);
+				if (levelList != null)
+				{
+					value.LevelList = levelList;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<EveryPackedShape>.Write(ref ProtoWriter.State state, EveryPackedShape value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		uint[] u32Array = value.U32Array;
+		if (u32Array != null)
+		{
+			uint[] values = u32Array;
+			RepeatedSerializer.CreateVector<uint>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeVarint, values);
+		}
+		List<uint> u32List = value.U32List;
+		if (u32List != null)
+		{
+			List<uint> values2 = u32List;
+			RepeatedSerializer.CreateList<uint>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeVarint, values2);
+		}
+		ImmutableArray<uint> u32Immutable = value.U32Immutable;
+		RepeatedSerializer.CreateImmutableArray<uint>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeVarint, u32Immutable);
+		int[] i32Array = value.I32Array;
+		if (i32Array != null)
+		{
+			int[] values3 = i32Array;
+			RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeVarint, values3);
+		}
+		ulong[] u64Array = value.U64Array;
+		if (u64Array != null)
+		{
+			ulong[] values4 = u64Array;
+			RepeatedSerializer.CreateVector<ulong>().WriteRepeated(ref state, 5, SerializerFeatures.WireTypeVarint, values4);
+		}
+		long[] i64Array = value.I64Array;
+		if (i64Array != null)
+		{
+			long[] values5 = i64Array;
+			RepeatedSerializer.CreateVector<long>().WriteRepeated(ref state, 6, SerializerFeatures.WireTypeVarint, values5);
+		}
+		int[] s32Array = value.S32Array;
+		if (s32Array != null)
+		{
+			int[] values3 = s32Array;
+			RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 7, SerializerFeatures.WireTypeSignedVarint, values3);
+		}
+		long[] s64Array = value.S64Array;
+		if (s64Array != null)
+		{
+			long[] values5 = s64Array;
+			RepeatedSerializer.CreateVector<long>().WriteRepeated(ref state, 8, SerializerFeatures.WireTypeSignedVarint, values5);
+		}
+		int[] f32Array = value.F32Array;
+		if (f32Array != null)
+		{
+			int[] values3 = f32Array;
+			RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 9, SerializerFeatures.WireTypeFixed32, values3);
+		}
+		long[] f64Array = value.F64Array;
+		if (f64Array != null)
+		{
+			long[] values5 = f64Array;
+			RepeatedSerializer.CreateVector<long>().WriteRepeated(ref state, 10, SerializerFeatures.WireTypeFixed64, values5);
+		}
+		float[] singles = value.Singles;
+		if (singles != null)
+		{
+			float[] values6 = singles;
+			RepeatedSerializer.CreateVector<float>().WriteRepeated(ref state, 11, SerializerFeatures.WireTypeFixed32, values6);
+		}
+		double[] doubles = value.Doubles;
+		if (doubles != null)
+		{
+			double[] values7 = doubles;
+			RepeatedSerializer.CreateVector<double>().WriteRepeated(ref state, 12, SerializerFeatures.WireTypeFixed64, values7);
+		}
+		bool[] flags = value.Flags;
+		if (flags != null)
+		{
+			bool[] values8 = flags;
+			RepeatedSerializer.CreateVector<bool>().WriteRepeated(ref state, 13, SerializerFeatures.WireTypeVarint, values8);
+		}
+		List<bool> flagList = value.FlagList;
+		if (flagList != null)
+		{
+			List<bool> values9 = flagList;
+			RepeatedSerializer.CreateList<bool>().WriteRepeated(ref state, 14, SerializerFeatures.WireTypeVarint, values9);
+		}
+		Level[] levels = value.Levels;
+		if (levels != null)
+		{
+			Level[] values10 = levels;
+			RepeatedSerializer.CreateVector<Level>().WriteRepeated(ref state, 15, SerializerFeatures.WireTypeVarint, values10, this as ISerializer<Level>);
+		}
+		List<Level> levelList = value.LevelList;
+		if (levelList != null)
+		{
+			List<Level> values11 = levelList;
+			RepeatedSerializer.CreateList<Level>().WriteRepeated(ref state, 16, SerializerFeatures.WireTypeVarint, values11, this as ISerializer<Level>);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<EveryPackedShape>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class PackedAllModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___PackedAllModel, T>();
+	}
+}

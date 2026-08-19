@@ -1294,7 +1294,15 @@ produces a build break rather than a wire bug, which is why it sat undiscovered.
 `grpc-aot-generator` → `main`, +11,500/−85 over 105 files) **lands first**, so #1277 absorbs it —
 measured as a small overlap, and the detail is **B34**: zero library changes, one shared file that
 auto-merges, one `Emit.cs` conflict that is the same fix twice with ours a superset, and golden churn
-of exactly one fixture. Second, **the manual golden review** (`notes/gaps.md` section D). 63 changed vs `v4` plus 3 new fixtures — and the bodies moved twice more *after* that
+of exactly one fixture. Second, **the manual golden review** (`notes/gaps.md` section D).
+
+**And one open finding that may bear on the arc itself: B35.** Delimited (`DataFormat.Group`) writes
+appear not to have got the optimized emit — 5.7× slower than prefixed on `schema-breadth`, where on
+3.3 delimited was the *faster* framing. Filed as #1293, captured but not diagnosed. It matters here
+because the stated hypothesis contradicts **B14**, which this file records as done: the emitter has a
+dedicated raw grouped-write arm and a measure carve-out for exactly that shape, so a grouped tree
+should be doing *less* work, not more. Either something drops those contracts upstream, or B14 has
+regressed and nothing caught it. 63 changed vs `v4` plus 3 new fixtures — and the bodies moved twice more *after* that
 review began (B16's local folding, B16a's drift calls), so anything read before those commits is
 stale; both diffs are uniform and skim quickly.
 

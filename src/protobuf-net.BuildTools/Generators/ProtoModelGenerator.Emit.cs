@@ -3149,7 +3149,14 @@ namespace ProtoBuf.BuildTools.Generators
             bool listAsSpan, bool immutableAsSpan, ProtoContractPlan? messageTarget = null,
             string depth = "state.RawDepthBudget")
         {
-            var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
+            // a GROUPED message element is framed by a start/end tag pair rather than a length
+            // prefix (gap B35): wire type 3 opens it, 4 closes it, and the field number is the same
+            // in both - so the two tags fold to the same constant length and there is no length to
+            // compute at all. Same reasoning as the unary grouped member; what was missing is that
+            // declining it here cost the whole CONTRACT its measure-first eligibility.
+            var grouped = messageTarget is not null && member.DataFormat == ProtoDataFormat.Group;
+            var wire = grouped ? 3
+                : member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
                 or ProtoMemberKind.Bytes ? 2 : RawScalarWireBits(member.Kind);
             var source = RepeatedSpan(member, number, listAsSpan, immutableAsSpan) ?? $"tmp{number}";
             var item = $"item{number}";
@@ -3165,7 +3172,14 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
             }
             Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | {wire});  // {member.Name}");
-            if (messageTarget is not null)
+            if (grouped)
+            {
+                // no length prefix, so nothing to measure and nothing for the drift check to prove
+                var targetName = Sanitise(member.TypeName!);
+                Line(sb, indent + 1, $"RawWrite_{targetName}(ref state, {item}, {depth});");
+                Line(sb, indent + 1, $"state.WriteRawTag(({member.FieldNumber} << 3) | 4);  // {member.Name} (end group)");
+            }
+            else if (messageTarget is not null)
             {
                 var targetName = Sanitise(member.TypeName!);
                 if (messageTarget.IsValueType)
@@ -3252,10 +3266,14 @@ namespace ProtoBuf.BuildTools.Generators
             // i.e. reaching for groups because they are faster produced the opposite.
             // Restricted to a unary message member: a grouped COLLECTION or MAP frames each
             // element, which is a different sum and is not attempted here.
+            // Group is admitted for a message member whether it is unary or REPEATED (gap B35);
+            // the repeated branch below then decides via RawRepeatedMessageTarget. Requiring
+            // `Repeated.Factory is null` here is what cost the benchmark 5.7x: one repeated grouped
+            // member disqualified its whole contract, and the exclusion cascades to a fixed point,
+            // so a member that was never even populated took the contract off measure-first.
             if (member.DataFormat != ProtoDataFormat.Default
                 && !(member.DataFormat == ProtoDataFormat.Group
                     && member.Kind == ProtoMemberKind.Message
-                    && member.Repeated.Factory is null
                     && member.Map.Factory is null)) return true;
             if (member.Repeated.Factory is not null)
             {
@@ -3317,7 +3335,9 @@ namespace ProtoBuf.BuildTools.Generators
                 && member.Repeated.Factory is "CreateList" or "CreateVector"
                 && !member.Repeated.TakesCollectionType
                 && !member.IsPacked && !member.WrappedValue && !member.WrappedCollection
-                && member.DataFormat == ProtoDataFormat.Default
+                // Group joins Default here (gap B35): a grouped element is start-tag + body +
+                // end-tag, which both the write and the measure now emit
+                && member.DataFormat is ProtoDataFormat.Default or ProtoDataFormat.Group
                 && member.SubSerializer is null or "this"
                 && member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) != true
                 && member.TypeName is not null
@@ -3680,7 +3700,12 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, $"lengths[{item}] = sub;");
                     Line(sb, indent + 1, "}");
                 }
-                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
+                // a grouped element carries no length prefix: start tag + body + end tag, and both
+                // tags encode to the same width (same field number, wire type differs only in the
+                // low three bits), so they fold to one constant - MeasureAddGroup's shape, per item
+                Line(sb, indent + 1, member.DataFormat == ProtoDataFormat.Group
+                    ? $"len += {tagLen * 2} + sub;"
+                    : $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
             }
             else if (member.Kind == ProtoMemberKind.String)
             {

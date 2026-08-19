@@ -1,0 +1,168 @@
+using System;
+using System.Reflection;
+using AotFixtures.BclMeasure;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___BclMeasureModel : ISerializer<Timings>
+{
+	Timings ISerializer<Timings>.Read(ref ProtoReader.State state, Timings value)
+	{
+		if (value == null)
+		{
+			Timings timings = new Timings();
+			value = timings;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime when = BclHelpers.ReadDateTime(ref state);
+				value.When = when;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan elapsed = BclHelpers.ReadTimeSpan(ref state);
+				value.Elapsed = elapsed;
+				break;
+			}
+			case 3:
+			{
+				DateTime? maybeWhen = BclHelpers.ReadDateTime(ref state);
+				value.MaybeWhen = maybeWhen;
+				break;
+			}
+			case 4:
+			{
+				TimeSpan? maybeElapsed = BclHelpers.ReadTimeSpan(ref state);
+				value.MaybeElapsed = maybeElapsed;
+				break;
+			}
+			case 6:
+			{
+				Guid id = BclHelpers.ReadGuid(ref state);
+				value.Id = id;
+				break;
+			}
+			case 7:
+			{
+				decimal amount = BclHelpers.ReadDecimal(ref state);
+				value.Amount = amount;
+				break;
+			}
+			case 8:
+			{
+				Guid? maybeId = BclHelpers.ReadGuid(ref state);
+				value.MaybeId = maybeId;
+				break;
+			}
+			case 9:
+			{
+				decimal? maybeAmount = BclHelpers.ReadDecimal(ref state);
+				value.MaybeAmount = maybeAmount;
+				break;
+			}
+			case 10:
+			{
+				int sequence = state.ReadInt32();
+				value.Sequence = sequence;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Timings>.Write(ref ProtoWriter.State state, Timings value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = when;
+		BclHelpers.WriteDateTime(ref state, value2);
+		TimeSpan elapsed = value.Elapsed;
+		if (!(elapsed == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteTimeSpan(ref state, elapsed);
+		}
+		DateTime? maybeWhen = value.MaybeWhen;
+		if (maybeWhen.HasValue)
+		{
+			DateTime valueOrDefault = maybeWhen.GetValueOrDefault();
+			state.WriteFieldHeader(3, WireType.String);
+			value2 = valueOrDefault;
+			BclHelpers.WriteDateTime(ref state, value2);
+		}
+		TimeSpan? maybeElapsed = value.MaybeElapsed;
+		if (maybeElapsed.HasValue)
+		{
+			TimeSpan valueOrDefault2 = maybeElapsed.GetValueOrDefault();
+			state.WriteFieldHeader(4, WireType.String);
+			elapsed = valueOrDefault2;
+			BclHelpers.WriteTimeSpan(ref state, elapsed);
+		}
+		Guid id = value.Id;
+		if (!(id == Guid.Empty))
+		{
+			state.WriteFieldHeader(6, WireType.String);
+			BclHelpers.WriteGuid(ref state, id);
+		}
+		decimal amount = value.Amount;
+		if (!(amount == 0m))
+		{
+			state.WriteFieldHeader(7, WireType.String);
+			BclHelpers.WriteDecimal(ref state, amount);
+		}
+		Guid? maybeId = value.MaybeId;
+		if (maybeId.HasValue)
+		{
+			Guid valueOrDefault3 = maybeId.GetValueOrDefault();
+			state.WriteFieldHeader(8, WireType.String);
+			id = valueOrDefault3;
+			BclHelpers.WriteGuid(ref state, id);
+		}
+		decimal? maybeAmount = value.MaybeAmount;
+		if (maybeAmount.HasValue)
+		{
+			decimal valueOrDefault4 = maybeAmount.GetValueOrDefault();
+			state.WriteFieldHeader(9, WireType.String);
+			amount = valueOrDefault4;
+			BclHelpers.WriteDecimal(ref state, amount);
+		}
+		int sequence = value.Sequence;
+		if (sequence != 0)
+		{
+			state.WriteInt32Varint(10, sequence);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Timings>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class BclMeasureModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___BclMeasureModel, T>();
+	}
+}

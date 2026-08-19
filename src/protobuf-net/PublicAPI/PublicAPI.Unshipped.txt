@@ -1,4 +1,4 @@
-[PBN9002]ProtoBuf.ProtoReader.ReadScope (forwarded, contained in protobuf-net.Core)
+﻿[PBN9002]ProtoBuf.ProtoReader.ReadScope (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoReader.ReadScope.ReadScope() -> void (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.IExtensible instance) -> void (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.ITypedExtensible instance, System.Type type) -> void (forwarded, contained in protobuf-net.Core)
@@ -67,3 +67,4 @@
 [PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, long> lengths) -> bool (forwarded, contained in protobuf-net.Core)
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool (forwarded, contained in protobuf-net.Core)
+ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat (forwarded, contained in protobuf-net.Core)
