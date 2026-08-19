@@ -42,6 +42,33 @@ namespace BuildToolsUnitTests
             );
         }
 
+        // an initializer that only restates the type's own default - `= default`, `= null`, and the
+        // `= default!` / `= null!` forms that nullable-reference-types makes routine - changes nothing
+        // about what goes on the wire, so it must not trigger the IsRequired nag
+        [Theory]
+        [InlineData("string", "default")]
+        [InlineData("string", "default!")]
+        [InlineData("string", "null")]
+        [InlineData("string", "null!")]
+        [InlineData("string", "(string)null")]
+        [InlineData("object", "default")]
+        [InlineData("object", "null")]
+        public async Task DoesNotReportShouldDeclareIsRequiredForImplicitDefaults(string type, string value)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+
+                [ProtoContract]
+                public class Foo {{
+                    [ProtoMember(1)] public {type} FieldBar = {value};
+                    [ProtoMember(2)] public {type} PropertyBar {{ get; set; }} = {value};
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired));
+        }
+
         // a collection member has no wire presence to force - an empty collection writes nothing,
         // and IsRequired is only observable for value-type scalars - so initializing one (the
         // standard pattern, including getter-only) must not trigger the IsRequired nag

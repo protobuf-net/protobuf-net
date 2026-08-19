@@ -435,10 +435,29 @@ namespace ProtoBuf.BuildTools.Internal
                 return MemberInitValueKind.NotSet;
             }
             
+            // `x!` is just x for our purposes; nullable-reference-types makes `= default!` and
+            // `= null!` the routine way of writing "I know, and I don't care" on a non-nullable
+            // member, and the suppression must not hide the initializer from us
+            while (initialValueSyntaxNode is PostfixUnaryExpressionSyntax postfix
+                && postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
+            {
+                initialValueSyntaxNode = postfix.Operand;
+            }
+
             // calculating the member initial value using semantic model 
             var semanticModel = context.Compilation.GetSemanticModel(memberNode.SyntaxTree);
             var constantValue = semanticModel.GetConstantValue(initialValueSyntaxNode!);
-            if (!constantValue.HasValue || constantValue.Value is null)
+            if (constantValue.HasValue && constantValue.Value is null)
+            {
+                // an initializer that only restates the type's own default - `= null`, `= default`,
+                // `= (string)null` - is a no-op: there is no [DefaultValue] worth declaring and no
+                // value that could be lost on the wire, so it is treated as no initializer at all
+                initialValueSyntaxNode = null;
+                memberInitialValue = null;
+                return MemberInitValueKind.NotSet;
+            }
+
+            if (!constantValue.HasValue)
             {
                 // static fields are not considered as `constantValue`,
                 // so we can manually go over some known assignments (i.e. `string.Empty`)
