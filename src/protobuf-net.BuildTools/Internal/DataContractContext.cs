@@ -317,6 +317,9 @@ namespace ProtoBuf.BuildTools.Internal
                                     break;
 
                                 case MemberInitValueKind.ConstantExpression:
+                                    // `null` is one of the constants we can land on, and it is the one
+                                    // value that has no ToString() to offer the code fix
+                                    var memberInitValueText = memberInitValue?.ToString() ?? "null";
                                     if (ShouldDeclareDefault(member, memberInitValue))
                                     {
                                         context.ReportDiagnostic(Diagnostic.Create(
@@ -326,7 +329,7 @@ namespace ProtoBuf.BuildTools.Internal
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
                                                             .Add(DefaultValueCodeFixProviderBase.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
-                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
+                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueCalculatedArgKey, memberInitValueText)
                                                             .Add(DefaultValueCodeFixProviderBase.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
@@ -340,7 +343,7 @@ namespace ProtoBuf.BuildTools.Internal
                                             additionalLocations: null,
                                             properties: DiagnosticPropertiesBuilder.Create()
                                                             .Add(DefaultValueCodeFixProviderBase.DefaultValueStringRepresentationArgKey, memberValueStringRepresentation)
-                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueCalculatedArgKey, memberInitValue!.ToString())
+                                                            .Add(DefaultValueCodeFixProviderBase.DefaultValueCalculatedArgKey, memberInitValueText)
                                                             .Add(DefaultValueCodeFixProviderBase.MemberSpecialTypeArgKey, member.SymbolSpecialType.ToString())
                                                             .Build()
                                         ));
@@ -435,10 +438,29 @@ namespace ProtoBuf.BuildTools.Internal
                 return MemberInitValueKind.NotSet;
             }
             
+            // `x!` is just x for our purposes; nullable-reference-types makes `= default!` and
+            // `= null!` the routine way of writing "I know, and I don't care" on a non-nullable
+            // member, and the suppression must not hide the initializer from us
+            while (initialValueSyntaxNode is PostfixUnaryExpressionSyntax postfix
+                && postfix.IsKind(SyntaxKind.SuppressNullableWarningExpression))
+            {
+                initialValueSyntaxNode = postfix.Operand;
+            }
+
             // calculating the member initial value using semantic model 
             var semanticModel = context.Compilation.GetSemanticModel(memberNode.SyntaxTree);
             var constantValue = semanticModel.GetConstantValue(initialValueSyntaxNode!);
-            if (!constantValue.HasValue || constantValue.Value is null)
+            if (constantValue.HasValue && constantValue.Value is null)
+            {
+                // an initializer that only restates the type's own default - `= null`, `= default`,
+                // `= (string)null` - is a constant like any other, and specifically the one that
+                // makes IsRequired pointless: there is no value here that could be lost on the wire.
+                // It still gets compared against [DefaultValue], which may claim otherwise.
+                memberInitialValue = null;
+                return MemberInitValueKind.ConstantExpression;
+            }
+
+            if (!constantValue.HasValue)
             {
                 // static fields are not considered as `constantValue`,
                 // so we can manually go over some known assignments (i.e. `string.Empty`)
@@ -513,6 +535,10 @@ namespace ProtoBuf.BuildTools.Internal
                 if (constructorArg.IsNull && memberInitValue is not null) return true;
                 if (constructorArg.Value is null && memberInitValue is not null) return true;
                 if (constructorArg.Value is not null && memberInitValue is null) return true;
+
+                // both sides are the type's own default, so they agree; the comparisons below
+                // dereference the attribute value and must not be reached when it is null
+                if (constructorArg.Value is null && memberInitValue is null) return false;
                 
                 var memberSpecialType = member.SymbolSpecialType!.Value;
                 if (memberSpecialType.IsPrimitiveValueType())
