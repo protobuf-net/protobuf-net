@@ -1444,7 +1444,7 @@ regenerations and one golden. The gate battery dominates the wall-clock, not the
 - `CustomProtogenSerializer.cs` is committed generator output, so it churns on *every* hop; regenerate
   at each, and expect the final shape to be ours.
 
-### B35. **Delimited (`DataFormat.Group`) writes did NOT get the optimized emit** — filed as #1293, not yet diagnosed
+### B35. ~~Delimited (`DataFormat.Group`) writes did NOT get the optimized emit~~ — **DIAGNOSED AND FIXED 2026-08-19; delimited is now 4.5× FASTER than length-prefixed**
 
 Marc, 2026-08-19, from `marc/bench-delimited-v4` (branched off `schema-breadth`). **Captured, not
 started.**
@@ -1542,6 +1542,29 @@ a unary message member: a grouped COLLECTION or MAP frames each element, which i
 is not attempted here."* What nobody drew out is that declining the *sum* costs the *contract*.
 That is the general lesson worth keeping — in a fixed-point exclusion, "we do not attempt X" is never
 local.
+
+#### FIXED, and measured: 81,270 ns → 3,047 ns
+
+All four sites landed together. Re-measured on the reporting branch, deep chain, `Size=512`,
+`SerializeDeep_ProtobufNet_*`:
+
+| | 3.3 | `schema-breadth` before | after the fix |
+| --- | ---: | ---: | ---: |
+| length-prefixed | 90,798 | 14,258 | 13,769 |
+| **delimited** | 77,941 | 81,270 | **3,047** |
+
+So delimited is **~27× faster than it was an hour ago**, and now runs at **ratio 0.22 against
+length-prefixed — 4.5× faster**, having been 5.7× slower. The same shape holds at the other sizes:
+0.22 at 64, 0.49 at 8. It also allocates nothing.
+
+**That is the outcome B14 and C14 both predicted and neither had ever been able to show**: a
+fully-grouped tree writes with **no measure pass at all**, so once it is admitted to the raw path it
+must beat length-prefixed, which pays a measure plus a write. C14's claim that protobuf-net is
+"unusually well placed" for editions is now true of the write performance as well as the wire form —
+`features.message_encoding = DELIMITED` is, on v4, the fast choice.
+
+The generated-code check that started this now reads: `DelimitedNode` **0 → 4 `Measure_` + 4
+`RawWrite_`**, matching its length-prefixed twin.
 
 #### The fix, scoped: four sites, and it must be done in one go
 
@@ -2173,7 +2196,14 @@ schema half" paragraph below and the `descriptor.proto` prerequisite are both **
 after this block is background, kept because the mapping table and the packed-by-default polarity
 warning are still the reference for anyone touching it.
 
-**And the caveat that matters — see B35.** "Unusually well placed" is true of the wire form and
+**Caveat RESOLVED 2026-08-19 — see B35.** "Unusually well placed" was, for a few days, true of the
+wire form and false of the write performance: a repeated grouped member disqualified its whole
+contract from measure-first, so delimited measured 5.7× slower than length-prefixed. Fixed; delimited
+now runs **4.5× faster** than length-prefixed, because a fully-grouped tree needs no measure pass at
+all. The claim below is now true in both senses. The paragraph that follows is kept as the record of
+what was wrong, since the shape of the mistake is the reusable part.
+
+**The caveat as it stood.** "Unusually well placed" is true of the wire form and
 currently *false* of the write performance. This is no longer a "fix it before editions ships"
 question, because editions has shipped: a consumer can opt into `message_encoding = DELIMITED`
 **today, on 3.3.21**, where it is the *faster* framing (14% at depth 512). On v4 the same consumer
