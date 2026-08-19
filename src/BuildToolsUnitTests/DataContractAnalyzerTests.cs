@@ -88,7 +88,12 @@ public partial class Foo
     }
     public Foo (){}
 } "});
-            Assert.Empty(diagnostics);
+            // this fixture pairs SkipConstructor with [DefaultValue(3)], which PBN0026 reports and
+            // is right to: the instance is built without running a constructor, so Bar arrives as 0
+            // while a sender holding 3 writes nothing. Asserted as the *only* diagnostic, so the
+            // test still fails if a partial declaration provokes anything else - which is its point
+            var diag = Assert.Single(diagnostics);
+            Assert.Equal(DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor, diag.Descriptor);
         }
 
 
