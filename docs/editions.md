@@ -267,8 +267,14 @@ in a deep graph is true of every outer level:
 - **Skipping is cheaper with a length prefix.** A reader that wants to ignore a field can jump over a
   length-prefixed one; a delimited one has to be walked to find its matching end tag. If your readers skip a
   lot of what they receive, the prefix earns its keep.
-- **Changing the framing changes the bytes.** It is a wire-breaking change, like changing a field number:
-  both ends have to agree.
+- **Changing the framing changes the bytes** - though what that costs you depends entirely on who reads
+  them. protobuf-net itself is relaxed: its reader dispatches on the wire type actually present, not on how
+  the member is declared, so a protobuf-net consumer deserializes either framing either way round. Other
+  implementations are generally not - `protoc`-generated parsers match on the whole tag, field number *and*
+  wire type together, so a field that arrives in the framing they were not generated for falls through to
+  their unknown-field set: it reads back as unset rather than as an error. Treat the switch as a wire break
+  as soon as anything other than protobuf-net is reading, and as a rolling upgrade you can take at leisure
+  when it is protobuf-net at both ends.
 - **Not every consumer is willing.** The wire types are core protobuf and every complete implementation reads
   them, but a consumer generating from a proto3 schema has no way to *declare* the field, so they would be
   stuck hand-writing it. Editions is what fixes that - which is rather the point of this page.
