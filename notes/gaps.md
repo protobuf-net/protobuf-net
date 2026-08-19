@@ -1227,7 +1227,7 @@ narrow-and-store over a span needs no serializer at all, exactly as `PackedSizeB
 none. Worth doing *because* it is cheap to answer, but note it ranks below B19 on reach: cross-width
 columns are rarer than same-width ones, and the same-width case is already optimal.
 
-### B27. `AotDifferential` loads the generator from **Debug first**, whatever it was built as
+### B27. ~~`AotDifferential` loads the generator from **Debug first**, whatever it was built as~~ — **FIXED 2026-08-19**
 
 Found 2026-08-16 while merging main into v4: a `-c Release` run reported *"the generated model does
 not compile"* against `WriteRawPackedVarint`, an API that exists on `schema-breadth` and nowhere
@@ -1249,7 +1249,19 @@ the same class of mistake ("a control that shares the code under test is not a c
 cost this project weeks once, in the packed arc. The fix is to load the configuration the harness
 itself was built in, and to say so when the dll it picks is older than the library it is testing.
 
-**Open.** Not touched in the merge that found it, since a merge commit is the wrong place for it.
+**Fixed 2026-08-19.** `LoadGenerator` now tries the `Configuration` const first — the same one
+#1264 gave the corpus scan — and only then the other, announcing it when it falls back. Verified
+three ways rather than assumed: with a stale `bin/Debug` planted, a Release run now picks Release
+and matches 3058 at 100% (it previously failed with *"the generated model does not compile"*); with
+only Release present, no note fires; and with only Debug present, the note **does** fire, so it is
+not dead code.
+
+**A staleness check was written and then removed**, which is worth recording because it looked
+obviously right: "warn if the generator is older than the library it will be compared against". It
+fires on a **three-second build-ordering gap** — i.e. on every ordinary build — and a warning that
+cries wolf is worse than none, as B32's sixteen standing warnings demonstrate. Any threshold that
+silenced it would have been invented, which is the objection that removed an earlier probe test in
+B16. The configuration fix alone addresses the recorded failure.
 
 ### B28. Is `Impl*` dispatch a bottleneck on the CLASSIC write path? — **no on the real write; DEFINITIONALLY yes on the measuring pass**
 

@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
@@ -279,16 +279,42 @@ internal sealed class Corpus
         return Type.GetType(full, throwOnError: false);
     }
 
+    /// <summary>
+    /// Load the generator reflectively — see the class remarks for why it is not referenced.
+    /// </summary>
+    /// <remarks>
+    /// <b>The configuration this harness was built as comes first</b> (gap B27). This used to walk
+    /// <c>{ "Debug", "Release" }</c> unconditionally, so a stale <c>bin/Debug</c> left behind by
+    /// another branch beat the Release build the run was actually asked for — which compares one
+    /// branch's generator against another branch's library and then reports the disagreement as a
+    /// corpus failure, i.e. pointing at exactly the wrong place. That cost two debugging sessions.
+    /// <para>
+    /// The other configuration is still tried, because building only one is a perfectly normal
+    /// thing to have done — but taking it is announced, since the run may then not be testing what
+    /// it looks like it is testing.
+    /// <para>
+    /// A timestamp check ("is the generator older than the library?") was written and then removed:
+    /// it fires on a three-second build-ordering gap, i.e. on every ordinary build, and a warning
+    /// that cries wolf is worse than none. Any threshold that silenced it would have been invented.
+    /// </para>
+    /// </para>
+    /// </remarks>
     private static ISourceGenerator LoadGenerator()
     {
         var dir = RepoRoot() ?? throw new InvalidOperationException("could not locate the repo root");
-        foreach (var configuration in new[] { "Debug", "Release" })
+        var other = Configuration == "Debug" ? "Release" : "Debug";
+        foreach (var configuration in new[] { Configuration, other })
         {
             var path = Path.Combine(dir, "src", "protobuf-net.BuildTools", "bin", configuration,
                 "netstandard2.0", "protobuf-net.BuildTools.dll");
             if (!File.Exists(path)) continue;
             var type = Assembly.LoadFrom(path).GetType(GeneratorTypeName);
             if (type is null) continue;
+            if (configuration != Configuration)
+            {
+                Console.Error.WriteLine($"note: this harness was built as {Configuration}, but only a "
+                    + $"{configuration} build of protobuf-net.BuildTools exists; using it.");
+            }
             return ((IIncrementalGenerator)Activator.CreateInstance(type)).AsSourceGenerator();
         }
         throw new InvalidOperationException("build protobuf-net.BuildTools first");
