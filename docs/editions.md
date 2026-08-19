@@ -51,7 +51,7 @@ wire maps onto something protobuf-net has had for years:
 | feature | protobuf-net |
 | --- | --- |
 | `field_presence` (`EXPLICIT`, `IMPLICIT`, `LEGACY_REQUIRED`) | presence tracking; `LEGACY_REQUIRED` is `IsRequired` |
-| `message_encoding` (`LENGTH_PREFIXED`, `DELIMITED`) | `DataFormat.Group` |
+| `message_encoding` (`LENGTH_PREFIXED`, `DELIMITED`) | `DataFormat.Group` (v4: also spelled `DataFormat.Delimited`) |
 | `repeated_field_encoding` (`PACKED`, `EXPANDED`) | `IsPacked` |
 | `enum_type` (`OPEN`, `CLOSED`) | parsed and round-tripped; **not enforced at runtime** - protobuf-net enums are open, as they are in Google's own C# runtime |
 | `utf8_validation`, `json_format` | parsed; no runtime behaviour (protobuf-net does not offer a UTF-8 verify mode, and does not implement canonical JSON) |
@@ -96,7 +96,8 @@ understood -
 public Address Home { get; set; }
 ```
 
-**Code first**: a contract that uses `DataFormat.Group` -
+**Code first**: a contract that uses `DataFormat.Group` (v4 adds `DataFormat.Delimited` as a synonym for the
+same value, matching the editions vocabulary; `Group` is not deprecated, and remains what `protogen` emits) -
 
 ``` c#
 [ProtoContract]
@@ -169,8 +170,9 @@ with `DataFormat.Group`, and asserts that the writer buffered nothing at all alo
 `src/Benchmark/DelimitedEncodingBenchmarks.cs` in this repo measures both framings, in protobuf-net and in
 Google.Protobuf, over two shapes - **deep** (a chain of `Size` nested messages) and **wide** (one message
 with `Size` children) - serializing to both write targets, and deserializing. Both libraries write the same
-bytes for a given framing (the benchmark asserts it before measuring), so the four columns really are the
-same work done four ways. Run it with:
+bytes for a given framing (the benchmark asserts it before measuring), so every column below is the same
+work done a different way. The same file runs on the 3.3 line and on v4, which is what makes those columns
+comparable. Run it with:
 
 ``` txt
 dotnet run -c Release -f net8.0 --project src/Benchmark -- --filter *DelimitedEncoding*
@@ -178,64 +180,67 @@ dotnet run -c Release -f net8.0 --project src/Benchmark -- --filter *DelimitedEn
 
 Numbers below are from an AMD Ryzen 9 7900X on .NET 8, BenchmarkDotNet 0.15.8, in nanoseconds; they are
 here to show the *shape* of the effect, and are worth re-measuring on your own data rather than trusting to
-three significant figures.
+three significant figures. The v4 columns are from a development branch and will move; Google.Protobuf is
+3.34.1 and is unaffected by which protobuf-net branch it is measured beside.
 
 **Serialize to a `Stream`** - the back-fill route
 
-| shape, size | protobuf-net, prefixed | protobuf-net, delimited | Google, prefixed | Google, delimited |
-| --- | ---: | ---: | ---: | ---: |
-| deep, 8 | 284 | 264 | 170 | 130 |
-| deep, 64 | 3,168 | 2,325 | 6,621 | 595 |
-| deep, 512 | 90,798 | **77,941** | 800,197 | **4,705** |
-| wide, 8 | 353 | 356 | 155 | 157 |
-| wide, 64 | 2,177 | 2,111 | 743 | 661 |
-| wide, 512 | 16,848 | 16,430 | 5,572 | 4,981 |
+| shape, size | 3.3 prefixed | 3.3 delimited | v4 prefixed | v4 delimited | Google prefixed | Google delimited |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| deep, 8 | 284 | 264 | 246 | **123** | 172 | 128 |
+| deep, 64 | 3,168 | 2,325 | 1,653 | **363** | 6,453 | 613 |
+| deep, 512 | 90,798 | 77,941 | 13,877 | **2,967** | 765,402 | 4,710 |
+| wide, 8 | 353 | 356 | 240 | **139** | 159 | 151 |
+| wide, 64 | 2,177 | 2,111 | 1,219 | **367** | 730 | 655 |
+| wide, 512 | 16,848 | 16,430 | 9,131 | **2,522** | 5,424 | 4,863 |
 
 **Serialize to an `IBufferWriter<byte>`** - the measure-first route
 
-| shape, size | protobuf-net, prefixed | protobuf-net, delimited | Google, prefixed | Google, delimited |
-| --- | ---: | ---: | ---: | ---: |
-| deep, 8 | 638 | **277** | 107 | 65 |
-| deep, 64 | 6,897 | **2,740** | 6,583 | 476 |
-| deep, 512 | 120,501 | **81,601** | 768,913 | 4,481 |
-| wide, 8 | 648 | **337** | 96 | 80 |
-| wide, 64 | 4,308 | **2,182** | 631 | 562 |
-| wide, 512 | 33,130 | **16,925** | 5,189 | 4,558 |
+| shape, size | 3.3 prefixed | 3.3 delimited | v4 prefixed | v4 delimited | Google prefixed | Google delimited |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| deep, 8 | 638 | 277 | 226 | **107** | 108 | 64 |
+| deep, 64 | 6,897 | 2,740 | 1,636 | **330** | 6,776 | 466 |
+| deep, 512 | 120,501 | 81,601 | 14,044 | **2,340** | 787,929 | 4,424 |
+| wide, 8 | 648 | 337 | 213 | **107** | 93 | 81 |
+| wide, 64 | 4,308 | 2,182 | 1,172 | **345** | 636 | 554 |
+| wide, 512 | 33,130 | 16,925 | 9,050 | **2,611** | 5,153 | 4,581 |
 
 **Deserialize**
 
-| shape, size | protobuf-net, prefixed | protobuf-net, delimited | Google, prefixed | Google, delimited |
-| --- | ---: | ---: | ---: | ---: |
-| deep, 8 | 283 | 268 | 283 | 221 |
-| deep, 64 | 1,784 | 1,754 | 1,633 | 1,156 |
-| deep, 512 | 14,842 | 14,968 | 12,872 | 9,166 |
-| wide, 8 | 439 | 408 | 309 | 269 |
-| wide, 64 | 2,016 | 1,921 | 1,651 | 1,254 |
-| wide, 512 | 14,635 | 13,557 | 12,162 | 8,932 |
+| shape, size | 3.3 prefixed | 3.3 delimited | v4 prefixed | v4 delimited | Google prefixed | Google delimited |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| deep, 8 | 283 | 268 | 97 | 83 | 279 | 223 |
+| deep, 64 | 1,784 | 1,754 | 727 | 597 | 1,615 | 1,137 |
+| deep, 512 | 14,842 | 14,968 | 5,901 | 6,594 | 13,120 | 9,189 |
+| wide, 8 | 439 | 408 | 134 | 119 | 310 | 263 |
+| wide, 64 | 2,016 | 1,921 | 689 | 601 | 1,652 | 1,241 |
+| wide, 512 | 14,635 | 13,557 | 5,142 | 4,517 | 12,459 | 8,829 |
 
 Reading those honestly:
 
-- **Which target you write to matters more than anything else here.** On an `IBufferWriter<byte>`, where a
-  prefix costs a whole measuring pass over each sub-message, delimited wins **every** cell by 1.5-2.5×. On a
-  `Stream`, where the prefix is back-filled instead, the win narrows to depth: 14% at depth 512, 27% at
-  depth 64, and a wash when the graph is shallow or merely wide. Lots of *small* sub-messages cost little to
-  length-prefix on a stream, because their lengths fit the byte reserved and nothing has to move - but they
-  still cost a measuring pass on a buffer writer.
+- **On v4, delimited is the faster way to write, everywhere.** Every serialize cell, on both targets, by
+  2-6×: at depth 512 that is 13,877 ns against 2,967 ns to a stream, and 14,044 against 2,340 to a buffer
+  writer. There is no shape in this benchmark where length-prefixing wins on the write side.
+- **On 3.3 the answer depends on the target.** Writing to an `IBufferWriter<byte>`, where a prefix costs a
+  measuring pass over each sub-message, delimited wins every cell by 1.5-2.5×. Writing to a `Stream`, where
+  the prefix is back-filled instead, the win narrows to depth - 14% at depth 512, 27% at depth 64, and a wash
+  when the graph is shallow or merely wide, because a small sub-message's length fits the byte reserved and
+  nothing has to move.
 - **Google.Protobuf's length-prefixed writer goes quadratic in depth.** Its generated `WriteTo` calls
   `CalculateSize()` on each sub-message before writing it, and that call walks the whole subtree, so writing
-  a chain of *n* nested messages does *O(n²)* measuring work. At depth 512 that is 800 µs length-prefixed
-  against 4.7 µs delimited: the same data, the same library, **170× apart**, purely because the delimited
-  path never needs to know a length.
-- **Google.Protobuf is faster than protobuf-net in most of the other cells**, and that is worth saying
-  plainly: this page is about a framing choice, not a scoreboard. protobuf-net leads decisively on exactly
-  one axis - deep length-prefixed writes, where the length cache keeps it out of that quadratic - and
-  trails on the wide cases.
-- Deserialization barely cares. Delimited is a few percent ahead at most, and at depth 512 it is marginally
-  behind: the reader has to walk to the end tag where it could have skipped a known length.
+  a chain of *n* nested messages does *O(n²)* measuring work. At depth 512 that is 765 µs length-prefixed
+  against 4.7 µs delimited: the same data, the same library, **160× apart**, purely because the delimited
+  path never needs to know a length. protobuf-net keeps a length cache and stays out of that.
+- **Deserialization barely cares**, and is the one place delimited can lose: the reader has to walk to the
+  end tag where a length would have let it skip. Mostly it is a few percent ahead; at depth 512 on v4 it is
+  12% behind.
+- This is a framing comparison rather than a scoreboard, but for reference: v4 is ahead of Google.Protobuf
+  in every deserialize cell and every delimited-write cell, while Google still leads the *length-prefixed*
+  writes of wide graphs.
 
-The numbers come from the compile-time model (`[ProtoModel]`), which is what the benchmark uses so that one
-file runs on every branch. The reflection-based `RuntimeTypeModel` path is 10-35% slower on serialize and
-about 1.8× slower on deserialize, with the same shape to the framing comparison.
+The numbers are from the compile-time model (`[ProtoModel]`); on 3.3 the reflection-based `RuntimeTypeModel`
+path is 10-35% slower on serialize and about 1.8× slower on deserialize, with the same shape to the framing
+comparison.
 
 Allocations are in the benchmark output rather than the tables above, because the two libraries are not
 directly comparable there: protobuf-net's serialize path allocates nothing at all, while Google's API builds
