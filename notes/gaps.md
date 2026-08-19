@@ -1457,11 +1457,26 @@ implemented on both paths. B35 puts that premise in question: the framing editio
 one that got **none** of the v4 write optimisation, and is now 5.7× slower than the alternative it
 used to beat.
 
-The ordering consequence is the useful part. C14 is deferred to 4.1; B35 is a 4.0 write-path defect.
-Shipping editions on top of an unoptimised delimited write would land the headline feature on the
-slow framing and make protobuf-net's long-standing advantage here — an encoding it has supported for
-15+ years, which the spec has now caught up with — read as a liability. **B35 wants fixing before
-editions ships, not after**, which is a stronger reason to schedule it than the benchmark alone.
+**Corrected 2026-08-19, having first written the opposite:** editions is not pending. It **shipped**
+— #1287, GA in **3.3.21** on 2026-08-17 — so "fix this before editions ships" was already too late
+when it was written. The real shape is worse and more specific:
+
+- **today, on 3.3.21**, a consumer who sets `features.message_encoding = DELIMITED` gets the
+  *faster* framing — 14% at depth 512, 27% at depth 64;
+- **on v4** the same consumer gets 81,270 ns against length-prefixed's 14,258. Choosing the
+  spec-blessed option would cost them **5.7×**, and leave them 4% slower than the release they
+  upgraded from.
+
+So this is a **regression for users of a GA feature, arriving at the v4 upgrade** — not a scheduling
+preference. It is worth weighing as a v4 release-blocker candidate on that basis: v4's whole pitch is
+that everything gets faster, and this is a now-standard encoding choice, on the one wire form
+protobuf-net backed 15+ years before the spec caught up, where it would not.
+
+**C14 predicted it five days early** and the prediction is why the diagnosis has a favourite: that
+entry warned on 2026-08-14 that groups defeating measure-first "would make an editions-delimited
+payload slower rather than faster until it is fixed". B14 was marked done the same day. B35 measures
+the predicted slowness anyway — so **"B14 regressed, or its fix never covered this shape"** outranks
+the other two candidates below.
 
 **The finding.** Length-prefixed framing got the optimized write emit; delimited did not. On
 `schema-breadth`, delimited is now the slower framing in *every* serialize cell, by up to **5.7×**.
@@ -1537,6 +1552,45 @@ separate:
   are the same thing (proto2 groups, renamed "delimited" by editions), but the codebase says `Group`
   everywhere and a cold reader will be searching for the wrong token. Worth stating the synonym once,
   and it will matter more as C14 (editions) lands.
+
+### B36. `DataFormat.Group` vs editions' `DELIMITED`: the spec renamed our encoding
+
+Marc, 2026-08-19, agreeing the terminology gap is real: **at a minimum change the IntelliSense** on
+the enum member so the link is explicit, and **consider** an alias `DataFormat.Delimited` with
+`[Obsolete]` on `Group`.
+
+The problem is now permanent rather than cosmetic: editions is **GA** (3.3.21) and the spec's word
+for this encoding is `DELIMITED`, while the codebase says `Group` everywhere. Anyone arriving from
+the editions documentation — including whoever writes the next bug report, as B35 shows — greps for
+the wrong token and finds nothing.
+
+**The doc change is unambiguous and free.** `DataFormat.Group`'s XML summary should name
+`features.message_encoding = DELIMITED` outright, so IntelliSense closes the gap at the point of use.
+Same for `[ProtoMember(DataFormat = …)]` and the `[ProtoInclude]`/`[ProtoMap]` overloads that take
+one.
+
+**The alias is a compatibility question, not a naming one**, and that is the part worth knowing
+before deciding:
+
+- `nameof` saves us from the obvious trap. Duplicate-valued enum members make `ToString()` pick
+  unpredictably between the two names, but the codegen path uses `nameof(DataFormat.Group)`
+  (`CSharpCodeGenerator.cs:979`, and the VB twin), which is compile-time and unambiguous. So an alias
+  would *not* silently flip generated output.
+- **`[Obsolete]` on `Group` is the disproportionate part.** protogen writes that token into consumer
+  source — `tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}")` — so obsoleting it
+  makes every contract-first consumer's **generated** DTOs raise warnings in code they did not write
+  and cannot edit. Fixing that means flipping protogen to emit `Delimited` in the same release, which
+  then makes newly-generated DTOs require the newer protobuf-net. A rename would be paying a
+  compatibility cost for a vocabulary problem.
+- a `case DataFormat.Group: case DataFormat.Delimited:` pair is **CS0152** (duplicate label), so any
+  consumer switching on the enum has to pick one. Minor, but it is the kind of thing that surfaces
+  after the fact.
+
+**Suggested shape, if it is wanted at all**: add `Delimited` as a documented synonym, do **not**
+obsolete `Group`, and leave protogen emitting `Group` until there is a reason to break that. New
+code and editions-driven users get to write what the spec says; nobody's build starts warning. The
+XML doc alone may be enough — it costs nothing and fixes the discoverability problem, which is the
+actual complaint.
 
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
@@ -2042,7 +2096,7 @@ existing `(LanguageVersion)1200` constant and the real numbering. `LanguageVersi
 therefore **derives** its expectations from the enum rather than restating them, so the same
 mistake cannot pass twice.
 
-### C14. protobuf **editions**, and refreshing `descriptor.proto` — **DEFERRED to 4.1 (Marc, 2026-08-14)**
+### C14. ~~protobuf **editions**, and refreshing `descriptor.proto`~~ — **LANDED (#1287) and GA in 3.3.21, 2026-08-17.** The deferral below is stale; read it as background
 
 Marc, 2026-08-14. Editions replace the proto2/proto3 split with per-feature settings, and the one
 that matters here is **`features.message_encoding = DELIMITED`** — which *resurrects group
@@ -2050,11 +2104,20 @@ encoding*, deprecated in proto3 and now back as a first-class choice. Marc's not
 substantially what he recommended to the protobuf team 15+ years ago, and it is what protobuf-net
 has implemented throughout as `DataFormat.Group`.
 
-**Caveat added 2026-08-19 — see B35.** "Unusually well placed" is true of the wire form and is
-currently *false* of the write performance: delimited writes did not get v4's optimized emit and
-measure 5.7× slower than length-prefixed, having been the faster framing on 3.3. That finding came
-out of the editions write-up itself. Fix it before editions ships, or the feature arrives on the
-slow path.
+**Status, 2026-08-19.** Editions **shipped**: `ff6a6cf4 Implement "editions" (#1287)` is on `main`
+and released **GA as 3.3.21** on 2026-08-17. `DELIMITED` is handled through the schema front-end
+(`Parsers`, both code generators, and a refreshed `descriptor.proto`), so the "what is missing is the
+schema half" paragraph below and the `descriptor.proto` prerequisite are both **done**. Everything
+after this block is background, kept because the mapping table and the packed-by-default polarity
+warning are still the reference for anyone touching it.
+
+**And the caveat that matters — see B35.** "Unusually well placed" is true of the wire form and
+currently *false* of the write performance. This is no longer a "fix it before editions ships"
+question, because editions has shipped: a consumer can opt into `message_encoding = DELIMITED`
+**today, on 3.3.21**, where it is the *faster* framing (14% at depth 512). On v4 the same consumer
+gets 81,270 ns against length-prefixed's 14,258 — so choosing the spec-blessed option would cost them
+**5.7×**, and leave them 4% slower than the release they upgraded from. That is a regression for
+users of a **GA feature**, materialising at the v4 upgrade rather than at some future release.
 
 So we are unusually well placed: the wire form is already implemented on both paths, and the
 `DataFormat.Group` plumbing is the same plumbing editions needs. What is missing is the *schema*
@@ -2081,8 +2144,11 @@ a good deal more (`Edition`, `FeatureSet`, `FeatureSetDefaults`, and the `featur
 options message). That refresh is worth doing on its own, ahead of and independent of editions
 support, since a stale descriptor mis-parses schemas rather than merely lacking features.
 
-See also **B14**: groups currently *defeat* measure-first rather than benefiting from it, which
-would make an editions-delimited payload slower rather than faster until it is fixed. That is the
+See also **B14** — and note this paragraph **predicted B35 five days early**: groups currently
+*defeat* measure-first rather than benefiting from it, which would make an editions-delimited payload
+slower rather than faster until it is fixed. B14 was marked done the same day this was written; B35
+now measures exactly the slowness predicted here. That corroboration is why "B14 regressed, or its
+fix never covered this shape" is the leading hypothesis rather than one of three equals. That is the
 ordering constraint between these two items.
 
 ### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**
