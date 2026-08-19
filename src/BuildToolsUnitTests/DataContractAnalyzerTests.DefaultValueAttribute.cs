@@ -69,6 +69,62 @@ namespace BuildToolsUnitTests
             Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired));
         }
 
+        // [DefaultValue("abc")] on a member left at null is a contract that loses data: protobuf-net
+        // omits a member equal to its declared default, so a sender holding "abc" writes nothing and
+        // the receiver - which has no initializer to fall back on - ends up with null. The two sides
+        // disagree, which is exactly what PBN0021 is for; it must not be mistaken for the IsRequired nag
+        [Theory]
+        [InlineData("string", "\"abc\"", "null")]
+        [InlineData("string", "\"abc\"", "null!")]
+        [InlineData("string", "\"abc\"", "default")]
+        [InlineData("string", "\"abc\"", "default!")]
+        [InlineData("string", "\"abc\"", "(string)null")]
+        public async Task ReportsShouldUpdateDefaultForNullInitializer(string type, string attributeValue, string propertyValue)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{
+                    [ProtoMember(1), DefaultValue({attributeValue})] public {type} FieldBar = {propertyValue};
+                    [ProtoMember(2), DefaultValue({attributeValue})] public {type} PropertyBar {{ get; set; }} = {propertyValue};
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired));
+
+            var diags = diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldUpdateDefault).ToList();
+            Assert.All(diags, diag => Assert.Equal(DiagnosticSeverity.Warning, diag.Severity));
+            Assert.Equal(2, diags.Count);
+        }
+
+        // ...but when both sides say "default", they agree, and there is nothing to report
+        [Theory]
+        [InlineData("string", "null", "null")]
+        [InlineData("string", "null", "default!")]
+        [InlineData("string", "(string)null", "default")]
+        [InlineData("object", "null", "null")]
+        public async Task DoesNotReportWhenAttributeAndInitializerAreBothNull(string type, string attributeValue, string propertyValue)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract]
+                public class Foo {{
+                    [ProtoMember(1), DefaultValue({attributeValue})] public {type} FieldBar = {propertyValue};
+                    [ProtoMember(2), DefaultValue({attributeValue})] public {type} PropertyBar {{ get; set; }} = {propertyValue};
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.ShouldUpdateDefault
+                || x.Descriptor == DataContractAnalyzer.ShouldDeclareDefault
+                || x.Descriptor == DataContractAnalyzer.ShouldDeclareIsRequired));
+        }
+
         // a collection member has no wire presence to force - an empty collection writes nothing,
         // and IsRequired is only observable for value-type scalars - so initializing one (the
         // standard pattern, including getter-only) must not trigger the IsRequired nag
