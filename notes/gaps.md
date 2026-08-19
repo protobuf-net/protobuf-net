@@ -1638,7 +1638,7 @@ separate:
   everywhere and a cold reader will be searching for the wrong token. Worth stating the synonym once,
   and it will matter more as C14 (editions) lands.
 
-### B36. ~~`DataFormat.Group` vs editions' `DELIMITED`~~ — **DONE 2026-08-19: `Delimited` added as a synonym, `Group` untouched**
+### B36. ~~`DataFormat.Group` vs editions' `DELIMITED`~~ — **DONE 2026-08-19: `Delimited` is the preferred spelling; `Group` kept, but hidden from IntelliSense**
 
 Marc, 2026-08-19, agreeing the terminology gap is real: **at a minimum change the IntelliSense** on
 the enum member so the link is explicit, and **consider** an alias `DataFormat.Delimited` with
@@ -1656,6 +1656,32 @@ obsoleted**. Two risks were checked rather than assumed before doing it:
   `PublicAPI.Shipped.txt`), so `Delimited` is declared in `Unshipped.txt` for Core *and* for
   protobuf-net's forwarded surface. RS0016/RS0017 are live here — see B32 — so omitting it would
   have added to that noise rather than being silently fine.
+
+**`Group` is additionally hidden** — `[Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]`
+(Marc's call; I had argued against it, and he is the one who has to answer the support questions).
+It matches the house pattern, though note every *existing* use of that pair here also carries
+`[Obsolete]` — `RepeatedSerializer.CreateReadOnySet`, and three members of `TypeModel`. Hiding
+without deprecating is new to this codebase.
+
+Facts established by probe before doing it, since two of the three were guesses otherwise:
+
+- **it compiles cleanly on an enum member** — no warning, and `EditorBrowsable` produces no build
+  diagnostic of any kind, so nothing in our own tree or a consumer's starts complaining;
+- **`ToString()` still returns `"Group"`.** For duplicate-valued members the *first declared* name
+  wins, so the hidden name is the one the runtime reports. Harmless here — nothing stringifies a
+  `DataFormat` (both code generators interpolate a `string` obtained from `nameof`) — but worth
+  knowing before anyone reads a log and cannot find the member;
+- **`[Browsable(false)]` alone would do nothing for this**: it targets the designer property grid.
+  `EditorBrowsable` is the one that reaches IntelliSense, and only for *referenced* assemblies, which
+  a consumer of protobuf-net satisfies.
+
+**Unverified, and worth checking in a real IDE**: whether VS honours `EditorBrowsable` on enum
+members specifically. It is honoured for referenced assemblies generally; enum-member support has
+historically been patchy across versions, and nothing here can test IDE completion.
+
+**protogen still emits `Group`** — deliberately, per Marc, for compatibility: emitting `Delimited`
+would make newly-generated DTOs require a protobuf-net new enough to have it. So generated code
+references a member that IntelliSense will not offer, which is the accepted cost.
 
 Still true, and the reason `Group` stays: obsoleting it would raise warnings in `protogen`-generated
 files consumers cannot edit.

@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.ComponentModel;
 
 namespace ProtoBuf
 {
@@ -36,17 +37,25 @@ namespace ProtoBuf
         FixedSize,
 
         /// <summary>
-        /// When applied to a sub-message, indicates that the value should be treated
-        /// as group-delimited: framed by a start/end tag pair rather than carrying a
-        /// length prefix.
+        /// A synonym for <see cref="Delimited"/>, which is the preferred spelling: when applied to
+        /// a sub-message, the value is framed by a start/end tag pair rather than carrying a length
+        /// prefix.
         /// </summary>
         /// <remarks>
-        /// This is the encoding that protobuf <b>editions</b> calls
-        /// <c>features.message_encoding = DELIMITED</c>; <see cref="Delimited"/> is the
-        /// same value under that name. Deprecated in proto3 and reinstated by editions as
-        /// a first-class choice, it is often the <i>faster</i> option to write, since a
-        /// message with no length prefix needs no size computed before it is emitted.
+        /// <para>
+        /// This is protobuf-net's original name for the encoding, and it is <b>not</b> deprecated —
+        /// it remains valid, is what <c>protogen</c> emits into generated code, and is the name
+        /// <see cref="object.ToString"/> reports for the value. It is hidden from IntelliSense only
+        /// so that new code reaches for <see cref="Delimited"/>, the name the protobuf
+        /// <b>editions</b> specification uses (<c>features.message_encoding = DELIMITED</c>).
+        /// </para>
+        /// <para>
+        /// Deprecated in proto3 and reinstated by editions as a first-class choice, this framing is
+        /// often the <i>faster</i> option to write: a message carrying no length prefix needs no
+        /// size computed before it is emitted.
+        /// </para>
         /// </remarks>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         Group,
 
         /// <summary>
@@ -58,16 +67,23 @@ namespace ProtoBuf
         WellKnown,
 
         /// <summary>
-        /// A synonym for <see cref="Group"/>, matching the name protobuf <b>editions</b> uses for
-        /// this encoding: <c>features.message_encoding = DELIMITED</c>. The two are the same value
-        /// and behave identically; prefer whichever matches the vocabulary you are working in.
+        /// When applied to a sub-message, indicates that the value is framed by a start/end tag
+        /// pair rather than carrying a length prefix — the encoding protobuf <b>editions</b> calls
+        /// <c>features.message_encoding = DELIMITED</c>. A synonym for <see cref="Group"/>, which
+        /// is the same value under protobuf-net's original name.
         /// </summary>
         /// <remarks>
-        /// <see cref="Group"/> is <b>not</b> deprecated and is not going anywhere: it is what
-        /// protobuf-net has always called this, it is what <c>protogen</c> emits into generated
-        /// code, and obsoleting it would raise warnings in generated files consumers cannot edit.
-        /// This member exists so that code written against the editions specification can say what
-        /// the specification says.
+        /// <para>
+        /// Prefer this spelling in new code: it matches the specification, and
+        /// <see cref="Group"/> is hidden from IntelliSense for that reason. The two are
+        /// interchangeable — <see cref="Group"/> is not deprecated, remains what <c>protogen</c>
+        /// emits, and is the name <see cref="object.ToString"/> reports for the value.
+        /// </para>
+        /// <para>
+        /// Reinstated by editions as a first-class choice after being deprecated in proto3, and
+        /// often the <i>faster</i> option to write: a message carrying no length prefix needs no
+        /// size computed before it is emitted.
+        /// </para>
         /// </remarks>
         Delimited = Group,
     }
