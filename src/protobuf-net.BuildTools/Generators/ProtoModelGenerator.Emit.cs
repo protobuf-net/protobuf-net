@@ -2943,6 +2943,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static bool BclMeasurable(ProtoMemberPlan member)
         {
+            // FixedSize on the date/time pair is measurable and CONSTANT - see BclFixedWidth
+            if (BclFixedWidth(member) is not null) return true;
             if (member.DataFormat != ProtoDataFormat.Default) return false;
             return member.Kind switch
             {
@@ -2953,6 +2955,26 @@ namespace ProtoBuf.BuildTools.Generators
                 _ => false,
             };
         }
+
+        /// <summary>
+        /// The flat payload width of a BCL member whose framing carries no length prefix, or
+        /// <c>null</c> where the member is length-prefixed and must be measured for real.
+        /// </summary>
+        /// <remarks>
+        /// <c>DataFormat.FixedSize</c> on <c>DateTime</c>/<c>TimeSpan</c> selects a <c>Fixed64</c>
+        /// header (see <see cref="BclWireType"/>), and under that header <c>BclHelpers.WriteDateTime</c>
+        /// emits the flat eight-byte form rather than a message — so the whole member is tag plus
+        /// exactly eight bytes, with nothing to compute. It is genuine protobuf, not a message body
+        /// mislabelled: <c>09-80-80-85-75-3A-0F-38-00</c> is a tag and eight bytes.
+        /// <para>
+        /// The compatibility level does not reach it: the flat form is what the <c>Fixed64</c> header
+        /// selects at every level, which is why there is no level test here unlike the arms below.
+        /// </para>
+        /// </remarks>
+        private static int? BclFixedWidth(ProtoMemberPlan member)
+            => member.DataFormat == ProtoDataFormat.FixedSize
+                && member.Kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                ? 8 : null;
 
         /// <summary>The body length for such a member — the payload, not the framing.</summary>
         private static string BclMeasureBody(ProtoMemberPlan member, string expression)
@@ -3272,6 +3294,7 @@ namespace ProtoBuf.BuildTools.Generators
             // member disqualified its whole contract, and the exclusion cascades to a fixed point,
             // so a member that was never even populated took the contract off measure-first.
             if (member.DataFormat != ProtoDataFormat.Default
+                && BclFixedWidth(member) is null
                 && !(member.DataFormat == ProtoDataFormat.Group
                     && member.Kind == ProtoMemberKind.Message
                     && member.Map.Factory is null)) return true;
@@ -3462,6 +3485,13 @@ namespace ProtoBuf.BuildTools.Generators
                         // than a single expression - and RawScalarMeasure has nothing for these,
                         // which previously emitted `len += 1 + ;` and failed to compile. Presence
                         // has already decided, so there is no inner value test either way.
+                        if (BclFixedWidth(member) is { } nullableFixed)
+                        {
+                            // no length prefix: tag + a flat payload, folded to one literal
+                            Line(sb, indent + 1, MeasureAdd(member, 1, nullableFixed.ToString()));
+                            Line(sb, indent, "}");
+                            goto measured;
+                        }
                         var nullableBody = $"bcl{number}";
                         Line(sb, indent + 1, $"var {nullableBody} = {BclMeasureBody(member, $"val{number}")};");
                         Line(sb, indent + 1, MeasureAdd(member, 2,
@@ -3495,6 +3525,11 @@ namespace ProtoBuf.BuildTools.Generators
                         // the nullable one and the switch below. RawScalarMeasure has nothing for
                         // these kinds, and the `!` turns that into `len += 1 + ;` - which compiles
                         // nowhere and is caught by the goldens rather than by review.
+                        if (BclFixedWidth(member) is { } tupleFixed)
+                        {
+                            Line(sb, indent, MeasureAdd(member, 1, tupleFixed.ToString()));
+                            goto measured;
+                        }
                         var tupleBody = $"bcl{number}";
                         Line(sb, indent, $"var {tupleBody} = {BclMeasureBody(member, $"tmp{number}")};");
                         Line(sb, indent, MeasureAdd(member, 2,
@@ -3516,20 +3551,31 @@ namespace ProtoBuf.BuildTools.Generators
                         or ProtoMemberKind.Guid or ProtoMemberKind.Decimal when BclMeasurable(member):
                     {
                         var body = $"bcl{number}";
-                        var contribution = MeasureAdd(member, 2,
-                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){body}) + {body}");
+                        // a fixed-width member has no length prefix and needs no body local: the
+                        // whole contribution folds to one literal (BclFixedWidth)
+                        var fixedWidth = BclFixedWidth(member);
+                        var contribution = fixedWidth is { } width
+                            ? MeasureAdd(member, 1, width.ToString())
+                            : MeasureAdd(member, 2,
+                                $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){body}) + {body}");
+                        void EmitBody(int at)
+                        {
+                            if (fixedWidth is null)
+                            {
+                                Line(sb, at, $"var {body} = {BclMeasureBody(member, $"tmp{number}")};");
+                            }
+                            Line(sb, at, contribution);
+                        }
                         if (member.Kind == ProtoMemberKind.DateTime
                             || member.IsRequired || member.WriteCondition is not null)
                         {
-                            Line(sb, indent, $"var {body} = {BclMeasureBody(member, $"tmp{number}")};");
-                            Line(sb, indent, contribution);
+                            EmitBody(indent);
                         }
                         else
                         {
                             Line(sb, indent, $"if ({ScalarGuard(member, $"tmp{number}")})");
                             Line(sb, indent, "{");
-                            Line(sb, indent + 1, $"var {body} = {BclMeasureBody(member, $"tmp{number}")};");
-                            Line(sb, indent + 1, contribution);
+                            EmitBody(indent + 1);
                             Line(sb, indent, "}");
                         }
                         break;

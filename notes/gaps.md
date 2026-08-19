@@ -1944,10 +1944,18 @@ arithmetic, which would agree with itself. Verified able to fail.
 
 **Still open**, in the order worth doing them:
 
-1. **`DataFormat.FixedSize` on `DateTime`/`TimeSpan`** — the flat eight-byte form under a `Fixed64`
-   header, so the measure is the constant `8` and there is no length prefix at all. Cheap, but it
-   needs the blanket `DataFormat != Default` refusal in `RawMemberMeasureBlocked` relaxing for
-   these kinds — the same shared gate that already carries carve-outs for `Group` and for packed.
+1. ~~**`DataFormat.FixedSize` on `DateTime`/`TimeSpan`**~~ — **DONE 2026-08-19.** The flat eight-byte
+   form under a `Fixed64` header, so the whole member folds to `len += tagLen + 8` — one literal, no
+   length prefix, no body local. `BclFixedWidth` is the single decision point; `BclMeasurable` and the
+   blanket `DataFormat != Default` gate in `RawMemberMeasureBlocked` both consult it, so the carve-out
+   sits beside the ones for `Group` and packed rather than duplicating their shape. Ref-emit's own
+   output (`BclFixedSize.reference.cs`) independently shows the `WireType.Fixed64` header the constant
+   assumes, which is the check worth having — the arithmetic is otherwise self-confirming.
+
+   **The tuple arm of this is defensive and unreachable**, and that is worth stating so nobody
+   "tests" it: the third measure site fires on `contract.IsTuple`, for a tuple's own synthesised
+   members, which carry no attributes and therefore no `DataFormat`. The arm is written anyway,
+   because the failure mode when a path is missed is `len += 1 + ;` rather than a wrong number.
 2. **level 240+ `Timestamp`/`Duration`** — a seconds+nanos message, genuinely different arithmetic
    from `ScaledTicks`; needs its own measure and its own fixture.
 3. **level 300 `GuidString`/`GuidBytes`/`DecimalString`** — string and byte forms; `GuidBytes` is a
