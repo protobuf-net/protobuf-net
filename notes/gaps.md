@@ -1504,6 +1504,68 @@ byte-equality against Google.Protobuf for all four payloads, passing on both bra
 **Repro**: `--filter *DelimitedEncoding*` on that branch. `SerializeDeep_ProtobufNet_Delimited` at
 `Size=512` against its prefixed sibling is the single cell to watch.
 
+#### DIAGNOSED 2026-08-19: a **repeated** grouped member disqualifies its whole contract
+
+Not the stated hypothesis, and not a B14 regression. Established by emitting the benchmark's own
+generated code (`-p:EmitCompilerGeneratedFiles=true` on `src/Benchmark`) and counting:
+
+| contract | `Measure_` | `RawWrite_` |
+| --- | ---: | ---: |
+| `LengthPrefixedNode` | 6 | 4 |
+| `DelimitedNode` | **0** | **0** |
+
+Then the counterfactual, which is what makes it proof rather than correlation: **delete the one
+repeated grouped member** and rebuild — `DelimitedNode` immediately emits **3 `Measure_` + 3
+`RawWrite_`**. (The build then fails because the wide benchmarks reference `Children`; the generator
+runs first, so the evidence is complete regardless.)
+
+The benchmark's contract is:
+
+```csharp
+[ProtoMember(2, DataFormat = DataFormat.Group)] public DelimitedNode Child { get; set; }
+[ProtoMember(3, DataFormat = DataFormat.Group)] public List<DelimitedNode> Children { get; set; }
+```
+
+`RawMemberMeasureBlocked`'s carve-out is `DataFormat == Group && Kind == Message &&
+Repeated.Factory is null && Map.Factory is null` — so `Child` passes and **`Children` fails on
+`Repeated.Factory is null`**. `RawRepeatedMessageTarget` independently requires `DataFormat ==
+Default`, so a grouped repeated message is excluded from the raw repeated path in both directions.
+
+**Two things make the effect much larger than the cause looks.** Measurability is a *static*
+property of the contract, so the deep benchmark pays in full even though it never populates
+`Children`; and the exclusion cascades to a fixed point, so a self-referential contract like this one
+is removed entirely. That is the whole 5.7×: `Child` — the member the benchmark actually uses — would
+have been emitted perfectly, and never gets the chance.
+
+**B14 did not regress; its carve-out never covered the repeated case**, and says so: *"Restricted to
+a unary message member: a grouped COLLECTION or MAP frames each element, which is a different sum and
+is not attempted here."* What nobody drew out is that declining the *sum* costs the *contract*.
+That is the general lesson worth keeping — in a fixed-point exclusion, "we do not attempt X" is never
+local.
+
+#### The fix, scoped: four sites, and it must be done in one go
+
+The arithmetic is easy — a grouped element is `start-tag + body + end-tag`, and both tags fold to the
+same constant because the field number is shared and only the wire type differs (3 vs 4). It is the
+same shape as `MeasureAddGroup`'s `len += 2 * tagLen + payload`, applied per element.
+
+1. `RawRepeatedMessageTarget` — admit `Group` as well as `Default`;
+2. `RawMemberMeasureBlocked` — drop `Repeated.Factory is null` from the carve-out, letting the
+   repeated branch decide;
+3. `EmitRawRepeatedWrite` — emit start/end tags per element instead of the `| 2` tag plus length
+   prefix (it currently hard-codes wire type 2 for message elements);
+4. the repeated measure arm — `len += 2 * tagLen + sub` per element instead of
+   `tagLen + MeasureRawVarint64(sub) + sub`.
+
+**All four together or none**: AGENTS.md's standing warning is that widening one of these predicates
+without a matching measure arm makes the generator *throw*, surfacing as every model in the
+compilation losing its `Instance` accessor with the real message buried in a `CS8785`. That trap has
+bitten three times.
+
+Worth a decision before starting, because it is a **widening** rather than a repair: the alternative
+is to leave the sum unattempted and instead stop it costing the whole contract — but there is no
+obvious way to do that, since a member either measures or it does not.
+
 #### The stated hypothesis is contradicted by the code, which makes it MORE interesting
 
 Marc's hypothesis, explicitly flagged unconfirmed: *the optimized emit declines group-encoded members
