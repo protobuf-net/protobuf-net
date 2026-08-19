@@ -1,0 +1,104 @@
+using System.Collections.Generic;
+using System.Reflection;
+using AotFixtures.RepeatedBytes;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___RepeatedBytesModel : ISerializer<BytesHolder>
+{
+	BytesHolder ISerializer<BytesHolder>.Read(ref ProtoReader.State state, BytesHolder value)
+	{
+		if (value == null)
+		{
+			BytesHolder bytesHolder = new BytesHolder();
+			value = bytesHolder;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				List<byte[]> chunks = value.Chunks;
+				chunks = RepeatedSerializer.CreateList<byte[]>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, chunks);
+				if (chunks != null)
+				{
+					value.Chunks = chunks;
+				}
+				break;
+			}
+			case 2:
+			{
+				byte[][] blocks = value.Blocks;
+				blocks = RepeatedSerializer.CreateVector<byte[]>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, blocks);
+				if (blocks != null)
+				{
+					value.Blocks = blocks;
+				}
+				break;
+			}
+			case 3:
+			{
+				byte[] single = value.Single;
+				single = state.AppendBytes(single);
+				if (single != null)
+				{
+					value.Single = single;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<BytesHolder>.Write(ref ProtoWriter.State state, BytesHolder value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		List<byte[]> chunks = value.Chunks;
+		if (chunks != null)
+		{
+			List<byte[]> values = chunks;
+			RepeatedSerializer.CreateList<byte[]>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values);
+		}
+		byte[][] blocks = value.Blocks;
+		if (blocks != null)
+		{
+			byte[][] values2 = blocks;
+			RepeatedSerializer.CreateVector<byte[]>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2);
+		}
+		byte[] single = value.Single;
+		if (single != null)
+		{
+			state.WriteFieldHeader(3, WireType.String);
+			byte[] data = single;
+			state.WriteBytes(data);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<BytesHolder>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class RepeatedBytesModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___RepeatedBytesModel, T>();
+	}
+}
