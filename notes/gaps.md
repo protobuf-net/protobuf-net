@@ -1876,7 +1876,7 @@ because one is a design decision and the other is unfinished work:
 Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
 span at all and is correctly out.
 
-### B26. Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain — **and a SHIPPED FEATURE now leans on the remainder**
+### B26. ~~Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain~~ — **CLOSED 2026-08-19: all four items done**
 
 **Priority note, 2026-08-17.** `[ProtoDataFormat]` merged into `v4` (#1276), and its headline use —
 `[assembly: ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at level 300 — lands squarely on
@@ -1984,9 +1984,26 @@ arithmetic, which would agree with itself. Verified able to fail.
    `RawMemberMeasureBlocked`'s blanket format gate now asks `BclMeasurable` rather than carrying a
    second special case, so `FixedSize`-on-`Guid`-at-300 (the only format that reaches these) is
    admitted in one place.
-4. **repeated BCL elements** — `List<DateTime>` and friends. Note the ordering trap found while
-   fixturing this: a repeated member is tested for eligibility **before** the BCL arm, so a single
-   `List<DateTime>` drops its whole contract back to write-to-count.
+4. ~~**repeated BCL elements**~~ — **DONE 2026-08-19.** The ordering trap was real and is exactly
+   why nothing admitted them: the repeated branch of `RawMemberMeasureBlocked` runs **before** the
+   BCL arm, so a single `List<DateTime>` dropped its whole contract back to write-to-count.
+
+   **The key realisation is that measure and write eligibility are INDEPENDENT**, and already were:
+   a *unary* BCL member is measurable while being written statefully (`WriteFieldHeader` +
+   `BclHelpers.WriteX`). So there is no need for a raw repeated BCL *write* — the member keeps the
+   stateful `RepeatedSerializer` path, and only the measure has to predict its bytes:
+   `tag + varint(body) + body` per element, the unary shape in a loop.
+
+   `RawRepeatedBclMeasurable` is the predicate. Two details: `RawScalarWireBits` does not know these
+   kinds are length-prefixed (it answers for the raw *scalar* kinds), so the tag is forced to wire
+   type 2; and the per-element body takes its own `bcl{n}` local rather than the shared `sub`, which
+   is reserved for sub-message lengths and is declared by matching on `sub = Measure_`.
+
+   Nullable elements are excluded — protobuf-net rejects null elements outright, so there is no wire
+   form to agree with.
+
+**B26 is closed**: every collection shape and every element kind now measures, at every compatibility
+level and for the formats that reach them.
 
 **The trap to expect, because it has now happened three times:** the measure emitter reaches BCL
 kinds from **three** places — the nullable path, the tuple path, and the main switch — and each

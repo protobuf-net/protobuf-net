@@ -3313,6 +3313,8 @@ namespace ProtoBuf.BuildTools.Generators
             if (member.Repeated.Factory is not null)
             {
                 if (RawRepeatedWritable(member, immutableAsSpan) || RawPackedWritable(member, listAsSpan, immutableAsSpan)) return false;
+                // measurable even though the WRITE stays stateful - see RawRepeatedBclMeasurable
+                if (RawRepeatedBclMeasurable(member)) return false;
                 return RawRepeatedMessageTarget(member, measurable) is null;
             }
             // a nullable STRUCT message would measure one GetValueOrDefault copy and write
@@ -3378,6 +3380,26 @@ namespace ProtoBuf.BuildTools.Generators
                 && member.TypeName is not null
                 && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
                 ? target : null;
+
+        /// <summary>
+        /// A repeated member whose ELEMENT is a measurable compatibility-level BCL type. Such a
+        /// member is still written by the stateful <c>RepeatedSerializer</c> — there is no raw
+        /// repeated BCL write — but it can be measured, and that is the whole point: measure and
+        /// write eligibility are independent, exactly as they already are for a UNARY BCL member,
+        /// which is measurable while being written with <c>WriteFieldHeader</c> + <c>BclHelpers</c>.
+        /// </summary>
+        /// <remarks>
+        /// Before this, a single <c>List&lt;DateTime&gt;</c> dropped its whole contract back to
+        /// write-to-count, because the repeated branch is tested BEFORE the BCL arm and nothing in it
+        /// admitted these kinds (gap B26 item 4). A nullable element is excluded: protobuf-net rejects
+        /// null elements outright, so the shape has no wire form to agree with.
+        /// </remarks>
+        private static bool RawRepeatedBclMeasurable(ProtoMemberPlan member)
+            => member.Repeated.Factory is not null
+                && member.Kind is ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                    or ProtoMemberKind.Guid or ProtoMemberKind.Decimal
+                && member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) != true
+                && BclMeasurable(member);
 
         /// <summary>The generator-side varint size, for folding constant tag lengths.</summary>
         private static int VarintLen(uint value)
@@ -3715,8 +3737,11 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitRawRepeatedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
             bool listAsSpan, bool immutableAsSpan, ProtoContractPlan? messageTarget)
         {
+            // the compatibility-level BCL kinds are length-prefixed too, which RawScalarWireBits
+            // does not know - it answers for the raw SCALAR kinds only
             var wire = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Message
-                or ProtoMemberKind.Bytes ? 2 : RawScalarWireBits(member.Kind);
+                or ProtoMemberKind.Bytes || RawRepeatedBclMeasurable(member)
+                ? 2 : RawScalarWireBits(member.Kind);
             var tagLen = VarintLen((uint)((member.FieldNumber << 3) | wire));
             var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
             var count = member.Repeated.Factory is "CreateVector" or "CreateImmutableArray"
@@ -3743,7 +3768,16 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
             }
-            if (messageTarget is not null)
+            if (RawRepeatedBclMeasurable(member))
+            {
+                // the unary BCL shape, per element: tag + varint(body) + body. Its own local rather
+                // than the shared `sub`, which is reserved for sub-message lengths and is declared
+                // by matching on `sub = Measure_`
+                var elementBody = $"bcl{number}";
+                Line(sb, indent + 1, $"var {elementBody} = {BclMeasureBody(member, item)};");
+                Line(sb, indent + 1, $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){elementBody}) + {elementBody};");
+            }
+            else if (messageTarget is not null)
             {
                 var targetName = Sanitise(member.TypeName!);
                 if (messageTarget.IsValueType)
