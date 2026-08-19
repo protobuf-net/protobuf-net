@@ -136,6 +136,28 @@ namespace ProtoBuf.Internal
                 }
             }
         }
+        /// <summary>
+        /// The number of bytes <see cref="WriteSecondsNanos"/> emits as the message BODY, excluding
+        /// the field header and length prefix. Beside the writer deliberately: the two must agree
+        /// field-for-field, and adjacency is the cheapest way to keep that true.
+        /// </summary>
+        /// <remarks>
+        /// Value-dependent in both fields, because each is omitted when zero — so a <c>default</c>
+        /// <c>Duration</c>/<c>Timestamp</c> has an empty body. The normalisation has to run first
+        /// and with the same <paramref name="isTimestamp"/> flag, since it is what decides the
+        /// final pair; measuring the un-normalised values would disagree at every boundary.
+        /// </remarks>
+        internal static int MeasureSecondsNanos(long seconds, int nanos, bool isTimestamp)
+        {
+            NormalizeSecondsNanoseconds(ref seconds, ref nanos, isTimestamp);
+            int len = 0;
+            // one-byte tags: fields 1 and 2, both varint. A negative value sign-extends to the
+            // ten-byte form, which MeasureInt64/MeasureInt32 already account for
+            if (seconds != 0) len += 1 + ProtoWriter.MeasureInt64(seconds);
+            if (nanos != 0) len += 1 + ProtoWriter.MeasureInt32(nanos);
+            return len;
+        }
+
         private static void WriteSecondsNanos(ref ProtoWriter.State state, long seconds, int nanos, bool isTimestamp)
         {
             NormalizeSecondsNanoseconds(ref seconds, ref nanos, isTimestamp);

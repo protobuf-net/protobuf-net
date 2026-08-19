@@ -83,3 +83,5 @@ ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat
 static ProtoBuf.BclHelpers.MeasureDecimalString(decimal value) -> int
 static ProtoBuf.BclHelpers.MeasureGuidBytes(System.Guid value) -> int
 static ProtoBuf.BclHelpers.MeasureGuidString(System.Guid value) -> int
+static ProtoBuf.BclHelpers.MeasureDuration(System.TimeSpan value) -> int
+static ProtoBuf.BclHelpers.MeasureTimestamp(System.DateTime value) -> int

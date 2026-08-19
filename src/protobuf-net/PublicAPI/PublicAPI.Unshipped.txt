@@ -71,3 +71,5 @@ ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat (forwarded, contained i
 static ProtoBuf.BclHelpers.MeasureDecimalString(decimal value) -> int (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.BclHelpers.MeasureGuidBytes(System.Guid value) -> int (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.BclHelpers.MeasureGuidString(System.Guid value) -> int (forwarded, contained in protobuf-net.Core)
+static ProtoBuf.BclHelpers.MeasureDuration(System.TimeSpan value) -> int (forwarded, contained in protobuf-net.Core)
+static ProtoBuf.BclHelpers.MeasureTimestamp(System.DateTime value) -> int (forwarded, contained in protobuf-net.Core)

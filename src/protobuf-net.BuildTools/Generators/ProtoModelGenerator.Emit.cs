@@ -2953,10 +2953,11 @@ namespace ProtoBuf.BuildTools.Generators
                     && member.CompatibilityLevel >= 300)) return false;
             return member.Kind switch
             {
-                // 240+ swaps these for Timestamp/Duration, which is different arithmetic - B26 item 2
-                ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan => member.CompatibilityLevel < 240,
-                // every level: 300's GuidString/GuidBytes/DecimalString now measure too
-                ProtoMemberKind.Guid or ProtoMemberKind.Decimal => true,
+                // every level, for all four: 240+ swaps the date/time pair for Timestamp/Duration and
+                // 300 swaps Guid/decimal for their string forms, and BclSuffix picks the method for
+                // each - so the measure follows the writer without this needing to know the levels
+                ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan
+                    or ProtoMemberKind.Guid or ProtoMemberKind.Decimal => true,
                 _ => false,
             };
         }

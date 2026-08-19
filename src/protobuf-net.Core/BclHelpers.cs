@@ -191,6 +191,28 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// The number of bytes <see cref="WriteDuration(ref ProtoWriter.State, TimeSpan)"/> writes
+        /// as the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>Level 240+ only; below that, <c>TimeSpan</c> uses protobuf-net's own form.</remarks>
+        public static int MeasureDuration(TimeSpan value)
+        {
+            WellKnownTypes.Duration duration = value;
+            return PrimaryTypeProvider.MeasureSecondsNanos(duration.Seconds, duration.Nanoseconds, false);
+        }
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteTimestamp(ref ProtoWriter.State, DateTime)"/> writes
+        /// as the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>Level 240+ only; below that, <c>DateTime</c> uses protobuf-net's own form.</remarks>
+        public static int MeasureTimestamp(DateTime value)
+        {
+            WellKnownTypes.Timestamp timestamp = value;
+            return PrimaryTypeProvider.MeasureSecondsNanos(timestamp.Seconds, timestamp.Nanoseconds, true);
+        }
+
+        /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]

@@ -1956,8 +1956,19 @@ arithmetic, which would agree with itself. Verified able to fail.
    "tests" it: the third measure site fires on `contract.IsTuple`, for a tuple's own synthesised
    members, which carry no attributes and therefore no `DataFormat`. The arm is written anyway,
    because the failure mode when a path is missed is `len += 1 + ;` rather than a wrong number.
-2. **level 240+ `Timestamp`/`Duration`** — a seconds+nanos message, genuinely different arithmetic
-   from `ScaledTicks`; needs its own measure and its own fixture.
+2. ~~**level 240+ `Timestamp`/`Duration`**~~ — **DONE 2026-08-19.** `MeasureSecondsNanos` sits beside
+   `WriteSecondsNanos` on `PrimaryTypeProvider` and mirrors it exactly: both fields are omitted when
+   zero, so a default `Timestamp`/`Duration` has an **empty body**, and negatives sign-extend to the
+   ten-byte varint form (which `ProtoWriter.MeasureInt64`/`MeasureInt32` already account for).
+
+   **`NormalizeSecondsNanoseconds` has to run first, with the same `isTimestamp` flag** — it is what
+   decides the final pair, so measuring the un-normalised values would agree on ordinary inputs and
+   disagree at every boundary. That is why `BclLevel240.input.cs` carries sub-second, exact-second and
+   negative samples rather than a couple of ordinary dates.
+
+   As predicted by item 3's restructuring, this needed **no generator change** beyond letting
+   `BclMeasurable` through: `BclSuffix` already picked `Timestamp`/`Duration` for the writer, and
+   `BclMeasureBody` follows it. `BclMeasurable` is now level-agnostic for all four kinds.
 3. ~~**level 300 `GuidString`/`GuidBytes`/`DecimalString`**~~ — **DONE 2026-08-19.** All three stay
    length-prefixed, so the emitted shape is the usual `tag + varint(len) + len` and only the body
    measure differs: `GuidHelper.Measure` is a constant 16 or 36 (and **0** for `Guid.Empty`, which
