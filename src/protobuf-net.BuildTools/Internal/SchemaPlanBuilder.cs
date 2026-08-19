@@ -93,7 +93,7 @@ namespace ProtoBuf.BuildTools.Internal
 
                 foreach (var message in file.MessageTypes)
                 {
-                    if (!AddMessage(message, ns, null, names, types, mapEntries, contracts, ref unsupported, subTypes)) return null;
+                    if (!AddMessage(message, ns, null, names, types, mapEntries, contracts, ref unsupported, subTypes, IsProto2(file))) return null;
                 }
 
                 // an enum reached as a MEMBER is an inline scalar and needs no plan of its own; it
@@ -128,7 +128,7 @@ namespace ProtoBuf.BuildTools.Internal
         private static bool AddMessage(DescriptorProto message, string? ns, string? outer,
             NameNormalizer names, Dictionary<string, string> types,
             Dictionary<string, DescriptorProto> mapEntries,
-            List<ProtoContractPlan> contracts, ref string? unsupported, SchemaSubTypes subTypes)
+            List<ProtoContractPlan> contracts, ref string? unsupported, SchemaSubTypes subTypes, bool proto2)
         {
             // the synthetic map-entry type: real to the descriptor, absent from the C#
             if (message.Options?.MapEntry == true) return true;
@@ -136,13 +136,13 @@ namespace ProtoBuf.BuildTools.Internal
             var localName = names.GetName(message);
             var qualified = outer is null ? localName : outer + "." + localName;
 
-            var contract = TryBuildMessage(message, ns, qualified, names, types, mapEntries, ref unsupported, subTypes);
+            var contract = TryBuildMessage(message, ns, qualified, names, types, mapEntries, ref unsupported, subTypes, proto2);
             if (contract is null) return false;
             contracts.Add(contract);
 
             foreach (var nested in message.NestedTypes)
             {
-                if (!AddMessage(nested, ns, qualified, names, types, mapEntries, contracts, ref unsupported, subTypes)) return false;
+                if (!AddMessage(nested, ns, qualified, names, types, mapEntries, contracts, ref unsupported, subTypes, proto2)) return false;
             }
             return true;
         }
@@ -197,7 +197,7 @@ namespace ProtoBuf.BuildTools.Internal
 
         private static ProtoContractPlan? TryBuildMessage(DescriptorProto message, string? ns,
             string qualifiedName, NameNormalizer names, Dictionary<string, string> types,
-            Dictionary<string, DescriptorProto> mapEntries, ref string? unsupported, SchemaSubTypes subTypes)
+            Dictionary<string, DescriptorProto> mapEntries, ref string? unsupported, SchemaSubTypes subTypes, bool proto2)
         {
             var typeName = Qualify(ns, qualifiedName);
             var members = new List<ProtoMemberPlan>();
@@ -252,7 +252,11 @@ namespace ProtoBuf.BuildTools.Internal
                     enumTypeName: enumTypeName,
                     defaultLiteral: defaultLiteral,
                     dataFormat: dataFormat,
-                    writeCondition: WriteCondition(field, name)));
+                    writeCondition: WriteCondition(field, name, proto2),
+                    // proto2 `required` becomes [ProtoMember(..., IsRequired = true)], which DROPS
+                    // the write guard - so a required zero reaches the wire where an optional one
+                    // does not. Without this an all-zero required message serialized to NOTHING
+                    isRequired: field.label == FieldDescriptorProto.Label.LabelRequired));
             }
 
             // ORDER BY FIELD NUMBER, not by declaration. protobuf-net writes members in field-number
@@ -302,20 +306,23 @@ namespace ProtoBuf.BuildTools.Internal
             Dictionary<string, DescriptorProto> mapEntries, NameNormalizer names,
             ref string? unsupported)
         {
-            if (field.type == FieldDescriptorProto.Type.TypeEnum)
-            {
-                // PARKED, and not for the reason first assumed. The proxy itself is free - naming
-                // the enum on the plan is all EmitEnumProxies needs - but turning it on exposed a
-                // byte disagreement that is NOT enum-specific: an EMPTY packed collection emits a
-                // zero-length field (`DA-01-00`) where ref-emit writes nothing. protogen marks a
-                // repeated enum `IsPacked = true`, and per AGENTS.md the symbol path has never
-                // supported that argument - so the packed raw-write arm is largely unexercised and
-                // this is the first thing to drive it. Worth its own investigation rather than a
-                // guess; see notes/aot-schema-model.md
-                unsupported = $"{message.Name}.{field.Name}: a repeated enum is packed, and the "
-                    + "packed write arm disagrees with ref-emit on an empty collection";
-                return null;
-            }
+            // A repeated enum was PARKED here on the grounds that "the packed write arm disagrees
+            // with ref-emit on an empty collection", emitting a zero-length field where ref-emit
+            // wrote nothing. Re-checked 2026-08-14 and every clause of that reasoning failed:
+            //
+            //  * `IsPacked` IS honoured by the symbol path (ListOptions pins five such members
+            //    against ref-emit), so it is not an unexercised argument;
+            //  * there is no separate "packed raw-write arm" to be unexercised: RawRepeatedWritable
+            //    declines `IsPacked` outright, so a packed member falls back to
+            //    RepeatedSerializer.WriteRepeated - the SAME runtime call ref-emit makes;
+            //  * and protobuf-net never actually packs an enum on either path anyway, because
+            //    RepeatedSerializer.Write takes the packed branch only when the element serializer
+            //    is IMeasuringSerializer<T>, and EnumSerializer<TEnum> is not one.
+            //
+            // Packing is also the WRITER'S choice - a reader must accept both forms - so declining
+            // to pack could not be a wire bug even if the paths did differ. The byte gate below
+            // (Schemas/conformance.proto's repeated enum, empty and populated) is what now holds
+            // this honest, rather than a refusal.
 
             var elementKind = MapKind(field, out var typeRef, out var format);
             if (elementKind is null)
@@ -437,14 +444,11 @@ namespace ProtoBuf.BuildTools.Internal
             // underlying scalar; naming it is all ISerializerProxy<TEnum> needs
             var keyIsEnum = keyField.type == FieldDescriptorProto.Type.TypeEnum;
             var valueIsEnum = valueField.type == FieldDescriptorProto.Type.TypeEnum;
-            if (valueIsEnum)
-            {
-                // parked alongside the repeated enum above, to keep the two moving together -
-                // the proxy plumbing is shared and so is the test that would cover it
-                unsupported = $"{message.Name}.{field.Name}: an enum map value is parked with the "
-                    + "repeated-enum case";
-                return null;
-            }
+            // an enum VALUE was parked here purely "alongside the repeated enum above, to keep the
+            // two moving together". That case turned out to rest on a disproven premise and is now
+            // lifted, so this follows it - the parking had no reason of its own, and the enum map
+            // KEY was already supported directly below. Covered by the byte gate rather than by a
+            // refusal: Schemas/conformance.proto's map<string, Grade>.
 
             var keyTypeName = keyIsEnum ? types[keyRef!] : ScalarTypeName(keyKind.Value);
             var valueTypeName = valueIsMessage || valueIsEnum
@@ -488,8 +492,49 @@ namespace ProtoBuf.BuildTools.Internal
         /// needs distinguishing. That is why one line covers two features.
         /// </para>
         /// </remarks>
-        private static string? WriteCondition(FieldDescriptorProto field, string name)
-            => field.ShouldSerializeOneofIndex() ? "ShouldSerialize" + name + "()" : null;
+        /// <remarks>
+        /// PROTO2 arrives by a different route to the same place. Every proto2 <c>optional</c> is
+        /// presence-tracked whether or not it declares a default — protogen backs each one with a
+        /// nullable field and emits <c>ShouldSerialize{Name}()</c> — so the condition applies to
+        /// all of them, and <c>[default = x]</c> then needs no handling of its own: the condition
+        /// REPLACES the value guard, so the declared default never reaches a comparison.
+        /// <para>
+        /// This was not a missing feature but a WIRE BUG, and it went both ways: an all-default
+        /// <c>Defaulted</c> serialized to a full payload where ref-emit writes nothing (we
+        /// compared each member against its type's zero, and the getters return the declared
+        /// defaults), while an all-zero <c>Required</c> serialized to nothing where ref-emit
+        /// writes every member. Caught by adding proto2 to the byte gate, which was proto3-only —
+        /// the corpus probe could not see it, since it only asks whether a plan BUILDS.
+        /// </para>
+        /// </remarks>
+        private static string? WriteCondition(FieldDescriptorProto field, string name, bool proto2)
+        {
+            // a oneof member, or a proto3 `optional` (a synthetic one-field oneof)
+            if (field.ShouldSerializeOneofIndex()) return "ShouldSerialize" + name + "()";
+
+            // ...or any proto2 optional. `required` is unconditional and `repeated` is a
+            // collection, so neither gets one
+            if (proto2 && field.label == FieldDescriptorProto.Label.LabelOptional)
+                return "ShouldSerialize" + name + "()";
+
+            return null;
+        }
+
+        /// <summary>
+        /// Whether a file is proto2 — which is the case when `syntax` is ABSENT as well as when
+        /// it is stated, since proto2 is the default and most proto2 files never say so.
+        /// </summary>
+        /// <remarks>
+        /// It has to come from the FILE: a proto3 singular field is also <c>LabelOptional</c> in
+        /// the descriptor, so the label alone cannot tell the two apart, and getting that wrong
+        /// would put a <c>ShouldSerialize</c> guard on every proto3 field in the corpus.
+        /// </remarks>
+        private static bool IsProto2(FileDescriptorProto file)
+        {
+            var syntax = file?.Syntax;
+            return string.IsNullOrEmpty(syntax)
+                || string.Equals(syntax, "proto2", StringComparison.Ordinal);
+        }
 
         /// <summary>The C# spelling of a scalar kind, as the element of a collection.</summary>
         private static string ScalarTypeName(ProtoMemberKind kind) => kind switch

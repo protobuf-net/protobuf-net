@@ -153,20 +153,29 @@ message Thing {
         /// wrongly, since a plan that silently omits a member is a wire bug.
         /// </summary>
         [Theory]
-        // an enum in a collection is refused - but NOT for the reason first assumed. The proxy is
-        // free: naming the enum on the plan is all EmitEnumProxies needs, and that worked. What
-        // turning it on exposed is that an EMPTY PACKED collection emits a zero-length field where
-        // ref-emit writes nothing, and protogen marks a repeated enum IsPacked - an arm the symbol
-        // path has never driven. So the refusal is parked on the PACKED disagreement, not on the
-        // proxy, and the message says which: the two would be fixed in different places
-        [InlineData("enum E { A = 0; }\nmessage M { repeated E xs = 1; }", "packed")]
-        [InlineData("enum E { A = 0; }\nmessage M { map<string, E> m = 1; }", "parked")]
+        // The repeated-enum and enum-map-value cases USED to be pinned here as refusals, on the
+        // grounds that "an EMPTY packed collection emits a zero-length field where ref-emit writes
+        // nothing". Every clause of that reasoning failed on re-checking (2026-08-14): IsPacked is
+        // honoured by the symbol path, there is no separate packed raw-write arm - RawRepeatedWritable
+        // declines IsPacked so it falls back to the same RepeatedSerializer call ref-emit makes -
+        // and protobuf-net never packs an enum anyway, because EnumSerializer is not an
+        // IMeasuringSerializer. Both now emit, and are held by the BYTE gate
+        // (AotConformanceTests/Schemas/conformance.proto) rather than by a refusal, which is the
+        // stronger check: it compares the actual payload including the empty case that was
+        // originally reported.
+        //
         // NOTE there is no map-of-map case here, and that is a finding rather than an omission:
         // proto forbids a map as a map VALUE, so the shape cannot be written. A map whose value is
-        // a MESSAGE that happens to contain a map is ordinary, and is supported
+        // a MESSAGE that happens to contain a map is ordinary, and is supported.
+        // `group` is proto2-only, so this one carries its own syntax line rather than taking the
+        // harness's proto3 default - the only remaining refusal, and the only genuinely missing
+        // schema feature across the 268-schema corpus
+        [InlineData("syntax = \"proto2\";\nmessage M { optional group Detail = 1 { optional int32 depth = 1; } }",
+            "outside the spike")]
         public void OutOfScopeShapesAreRefused(string body, string because)
         {
-            var set = ParseSchema("scope.proto", "syntax = \"proto3\";\npackage scope;\n" + body);
+            var prefix = body.StartsWith("syntax") ? "" : "syntax = \"proto3\";\n";
+            var set = ParseSchema("scope.proto", prefix + "package scope;\n" + body);
             var plan = SchemaPlanBuilder.TryBuild(set, NameNormalizer.Default,
                 "SpikeModels", "ScopeModel", out var unsupported);
             Assert.Null(plan);

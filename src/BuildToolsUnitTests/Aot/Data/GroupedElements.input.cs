@@ -1,4 +1,4 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
 
@@ -34,6 +34,39 @@ public class Grouped
     [ProtoMember(5, DataFormat = DataFormat.Group)] public Item Single { get; set; }
 }
 
+// The shape gap B14 is about, and the reason it needs its own contract: `Grouped` above is
+// blocked from measure-first by its grouped COLLECTION members whatever we do about the unary
+// case, so it cannot show whether a unary grouped sub-message is measurable. This one's only
+// non-default member is a unary group, so it must come out MEASURABLE - a grouped sub-message
+// carries no length prefix, so its size is the body plus two folded tags, with no varint measure
+// at all. Before B14 the contract lost its Measure_ entirely, which meant reaching for groups
+// *because* they are cheap to write put the whole tree on the write-to-count path instead.
+[ProtoContract]
+public class GroupedOnly
+{
+    [ProtoMember(1)] public int Id { get; set; }
+    [ProtoMember(2, DataFormat = DataFormat.Group)] public Item Body { get; set; }
+    [ProtoMember(3)] public string Trailer { get; set; }
+}
+
+// Marc's nightmare fuel, and the reason B14 needed a depth guard rather than just a faster
+// measure:
+//
+//     Node a = new(), b = new() { GroupTail = a };
+//     a.GroupTail = b;
+//     Serialize(a);
+//
+// A length-prefixed cycle is caught by the MEASURE, which is depth-budgeted. A grouped cycle is
+// not measured at all - that is the whole point of a group - so before the guard this recursed
+// until the process died. It must now throw. NOT in Values: it cannot be serialized, so the
+// differential suite must never see it; GroupCycleTests drives it directly.
+[ProtoContract]
+public class Node
+{
+    [ProtoMember(1)] public int Id { get; set; }
+    [ProtoMember(2, DataFormat = DataFormat.Group)] public Node GroupTail { get; set; }
+}
+
 [ProtoContract]
 public class GroupedMaps
 {
@@ -58,6 +91,12 @@ public static class GroupedElementsSamples
         new Grouped(),
         new Grouped { Items = [One, Two], Array = [One], Plain = [Two], Single = One },
         new Grouped { Items = [] },
+        // the unary-group contract: empty, populated, and with the group absent but the
+        // surrounding scalars present - the last one is what proves the guard, since a null
+        // group must contribute nothing at all to the measure
+        new GroupedOnly(),
+        new GroupedOnly { Id = 7, Body = One, Trailer = "tail" },
+        new GroupedOnly { Id = 8, Trailer = "no group here" },
         new GroupedMaps(),
         new GroupedMaps
         {
@@ -72,6 +111,8 @@ public static class GroupedElementsSamples
 [ProtoModel]
 [ProtoSerializable(typeof(Grouped))]
 [ProtoSerializable(typeof(GroupedMaps))]
+[ProtoSerializable(typeof(GroupedOnly))]
+[ProtoSerializable(typeof(Node))]
 public partial class GroupedElementsModel : TypeModel
 {
 }

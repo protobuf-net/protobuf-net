@@ -23,6 +23,29 @@ partial class DerivedModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -30,10 +53,11 @@ partial class DerivedModel
             => RawRead_AotFixtures_Derived_Ambiguous(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Ambiguous>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
-            => RawWrite_AotFixtures_Derived_Ambiguous(ref state, value);
+            => RawWrite_AotFixtures_Derived_Ambiguous(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value)
+        public static void RawWrite_AotFixtures_Derived_Ambiguous(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Ambiguous value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
             if (tmp1 != null)
@@ -96,6 +120,7 @@ partial class DerivedModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Derived.Derives value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.List;
             if (tmp1 != null)
             {
@@ -115,14 +140,15 @@ partial class DerivedModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Ambiguous
-                var lengths4 = state.RawLengths;
-                if (!lengths4.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out var len))
                 {
-                    len4 = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, lengths4);
-                    lengths4[tmp4] = len4;
+                    len = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len;
                 }
-                state.WriteRawVarint64((ulong)len4);
-                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Derived_Ambiguous(ref state, tmp4, state.RawDepthBudget);
+                DebugAssertPosition(ref state, before + len, "Ambiguous");
             }
         }
 

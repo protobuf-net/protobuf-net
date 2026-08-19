@@ -25,6 +25,29 @@ partial class NonPublicCtorModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -32,23 +55,26 @@ partial class NonPublicCtorModel
             => RawRead_AotFixtures_NonPublicCtor_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.Holder value)
-            => RawWrite_AotFixtures_NonPublicCtor_Holder(ref state, value);
+            => RawWrite_AotFixtures_NonPublicCtor_Holder(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.Holder value)
+        public static void RawWrite_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.Child;
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Child
-                var lengths1 = state.RawLengths;
-                if (!lengths1.TryGetValue(tmp1, out var len1))
+                if (!state.RawLengths.TryGetValue(tmp1, out var len))
                 {
-                    len1 = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp1, state.RawDepthBudget, lengths1);
-                    lengths1[tmp1] = len1;
+                    len = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp1, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp1] = len;
                 }
-                state.WriteRawVarint64((ulong)len1);
-                RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, tmp1);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Child");
             }
         }
 
@@ -59,12 +85,12 @@ partial class NonPublicCtorModel
             var tmp1 = value.Child;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out var len1))
+                if (!lengths.TryGetValue(tmp1, out var sub))
                 {
-                    len1 = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp1, depth, lengths);
-                    lengths[tmp1] = len1;
+                    sub = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp1, depth, lengths);
+                    lengths[tmp1] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len1) + len1;  // Child
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
             return len;
         }
@@ -133,10 +159,11 @@ partial class NonPublicCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.InternalCtor value)
-            => RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref state, value);
+            => RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.InternalCtor value)
+        public static void RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.InternalCtor value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -193,10 +220,11 @@ partial class NonPublicCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.PrivateCtor value)
-            => RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, value);
+            => RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.PrivateCtor value)
+        public static void RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.PrivateCtor value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -258,10 +286,11 @@ partial class NonPublicCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.ProtectedCtor value)
-            => RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref state, value);
+            => RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.ProtectedCtor value)
+        public static void RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.ProtectedCtor value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

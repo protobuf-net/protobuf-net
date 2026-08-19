@@ -103,10 +103,11 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_ByHand(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value)
-            => RawWrite_AotFixtures_Extensible_ByHand(ref state, value);
+            => RawWrite_AotFixtures_Extensible_ByHand(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value)
+        public static void RawWrite_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -222,10 +223,11 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_FromBase(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value)
-            => RawWrite_AotFixtures_Extensible_FromBase(ref state, value);
+            => RawWrite_AotFixtures_Extensible_FromBase(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value)
+        public static void RawWrite_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -288,10 +290,11 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_TypedOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value)
-            => RawWrite_AotFixtures_Extensible_TypedOnly(ref state, value);
+            => RawWrite_AotFixtures_Extensible_TypedOnly(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value)
+        public static void RawWrite_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

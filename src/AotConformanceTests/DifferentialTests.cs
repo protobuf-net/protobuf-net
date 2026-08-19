@@ -357,11 +357,25 @@ namespace ProtoBuf.AotConformance
         /// Sample values for a model: whatever the fixture declares in its <c>*Samples.Values</c>,
         /// plus a default instance of every seed type.
         /// </summary>
+        /// <summary>
+        /// The same sample resolution, for a sibling fixture — <c>ClassicVsRawTests</c> drives the
+        /// identical corpus and must not re-implement the conventions to do it.
+        /// </summary>
+        internal static object[] SamplesFor(Type modelType) => GetSamples(modelType);
+
         private static object[] GetSamples(Type modelType)
         {
             var stem = modelType.Name.EndsWith("Model", StringComparison.Ordinal)
                 ? modelType.Name.Substring(0, modelType.Name.Length - "Model".Length)
                 : modelType.Name;
+
+            // a ClassicEmit twin drives the SAME samples as the model it shadows: <Stem>ClassicModel
+            // resolves to <Stem>Samples. Without this the twin would fall back to default instances
+            // only, which is the weakest possible version of the comparison it exists to make.
+            if (stem.EndsWith("Classic", StringComparison.Ordinal))
+            {
+                stem = stem.Substring(0, stem.Length - "Classic".Length);
+            }
 
             var declared = Fixtures
                 .GetType($"{modelType.Namespace}.{stem}Samples")

@@ -327,10 +327,11 @@ partial class InheritModel
             => RawRead_AotFixtures_Inherit_Standalone(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Standalone>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value)
-            => RawWrite_AotFixtures_Inherit_Standalone(ref state, value);
+            => RawWrite_AotFixtures_Inherit_Standalone(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value)
+        public static void RawWrite_AotFixtures_Inherit_Standalone(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Standalone value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Value;
             if (tmp1 != 0)
             {

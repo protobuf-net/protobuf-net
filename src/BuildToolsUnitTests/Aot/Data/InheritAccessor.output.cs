@@ -231,10 +231,11 @@ partial class InheritAccessorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
-            => RawWrite_AotFixtures_InheritAccessor_Holder(ref state, value);
+            => RawWrite_AotFixtures_InheritAccessor_Holder(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_InheritAccessor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value)
+        public static void RawWrite_AotFixtures_InheritAccessor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritAccessor.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = Field_AotFixtures_InheritAccessor_Holder__n(ref value);
             if (tmp1 != 0)
             {

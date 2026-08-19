@@ -36,10 +36,11 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Derived(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value)
-            => RawWrite_AotFixtures_Unlinked_Derived(ref state, value);
+            => RawWrite_AotFixtures_Unlinked_Derived(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value)
+        public static void RawWrite_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.FromDerived;
             if (tmp2 != 0)
@@ -167,10 +168,11 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_FromPlain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value)
-            => RawWrite_AotFixtures_Unlinked_FromPlain(ref state, value);
+            => RawWrite_AotFixtures_Unlinked_FromPlain(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value)
+        public static void RawWrite_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Name;
             if (tmp1 != null)
@@ -231,10 +233,11 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Reuses(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value)
-            => RawWrite_AotFixtures_Unlinked_Reuses(ref state, value);
+            => RawWrite_AotFixtures_Unlinked_Reuses(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value)
+        public static void RawWrite_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Mine;
             if (tmp1 != 0)
@@ -347,10 +350,11 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value)
-            => RawWrite_AotFixtures_Unlinked_Unlinked(ref state, value);
+            => RawWrite_AotFixtures_Unlinked_Unlinked(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value)
+        public static void RawWrite_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.NotLinked;
             if (tmp3 != 0)

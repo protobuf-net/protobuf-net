@@ -89,6 +89,18 @@ message Sample {
     Node node = 21;
     Flavour flavour = 22;
     repeated Node nodes = 23;
+
+    // A REPEATED ENUM, which was refused by the front-end until 2026-08-14 on the grounds that
+    // "the packed write arm disagrees with ref-emit on an empty collection". Every clause of that
+    // turned out to be wrong (see SchemaPlanBuilder), so the refusal is gone and THIS is what
+    // keeps it honest instead. protogen marks it IsPacked, and the samples cover the empty case
+    // specifically, since that was the shape the disagreement was reported against.
+    repeated Grade grades = 40;
+
+    // an enum as a map VALUE, parked alongside the repeated enum for no reason of its own. The
+    // enum map KEY was already supported; both need the same ISerializerProxy<TEnum>, which is
+    // free once the enum is named on the plan.
+    map<string, Grade> ranks = 41;
 }
 
 // Fields declared OUT of numeric order. protobuf-net writes members in FIELD-NUMBER order

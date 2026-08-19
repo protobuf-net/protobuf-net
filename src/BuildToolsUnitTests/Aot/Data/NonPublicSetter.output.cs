@@ -29,10 +29,11 @@ partial class NonPublicSetterModel
             => RawRead_AotFixtures_NonPublicSetter_Guarded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicSetter.Guarded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicSetter.Guarded value)
-            => RawWrite_AotFixtures_NonPublicSetter_Guarded(ref state, value);
+            => RawWrite_AotFixtures_NonPublicSetter_Guarded(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicSetter.Guarded value)
+        public static void RawWrite_AotFixtures_NonPublicSetter_Guarded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicSetter.Guarded value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

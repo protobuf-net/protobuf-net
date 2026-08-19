@@ -6,7 +6,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 
 [assembly: AssemblyVersion("0.0.0.0")]
-internal sealed class ___PBN_Services___GroupedElementsModel : ISerializer<Grouped>, ISerializer<GroupedMaps>, ISerializer<Item>
+internal sealed class ___PBN_Services___GroupedElementsModel : ISerializer<Grouped>, ISerializer<GroupedMaps>, ISerializer<GroupedOnly>, ISerializer<Node>, ISerializer<Item>
 {
 	Grouped ISerializer<Grouped>.Read(ref ProtoReader.State state, Grouped value)
 	{
@@ -111,6 +111,18 @@ internal sealed class ___PBN_Services___GroupedElementsModel : ISerializer<Group
 		return this.Features_82();
 	}
 
+	SerializerFeatures ISerializer<GroupedOnly>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<Node>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
 	SerializerFeatures ISerializer<Item>.get_Features()
 	{
 		//ILSpy generated this explicit interface implementation from .override directive in Features_82
@@ -204,6 +216,113 @@ internal sealed class ___PBN_Services___GroupedElementsModel : ISerializer<Group
 			Dictionary<int, Item> values = plain;
 			MapSerializer.CreateDictionary<int, Item>().WriteMap(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, this);
 		}
+	}
+
+	GroupedOnly ISerializer<GroupedOnly>.Read(ref ProtoReader.State state, GroupedOnly value)
+	{
+		if (value == null)
+		{
+			GroupedOnly groupedOnly = new GroupedOnly();
+			value = groupedOnly;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int id = state.ReadInt32();
+				value.Id = id;
+				break;
+			}
+			case 2:
+			{
+				Item body = value.Body;
+				body = state.ReadMessage(SerializerFeatures.CategoryRepeated, body, this);
+				if (body != null)
+				{
+					value.Body = body;
+				}
+				break;
+			}
+			case 3:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Trailer = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<GroupedOnly>.Write(ref ProtoWriter.State state, GroupedOnly value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int id = value.Id;
+		if (id != 0)
+		{
+			state.WriteInt32Varint(1, id);
+		}
+		Item body = value.Body;
+		state.WriteGroup(2, SerializerFeatures.CategoryRepeated, body, this);
+		string trailer = value.Trailer;
+		state.WriteString(3, trailer);
+	}
+
+	Node ISerializer<Node>.Read(ref ProtoReader.State state, Node value)
+	{
+		if (value == null)
+		{
+			Node node = new Node();
+			value = node;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				int id = state.ReadInt32();
+				value.Id = id;
+				break;
+			}
+			case 2:
+			{
+				Node node = value.GroupTail;
+				node = state.ReadMessage(SerializerFeatures.CategoryRepeated, node, this);
+				if (node != null)
+				{
+					value.GroupTail = node;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Node>.Write(ref ProtoWriter.State state, Node value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		int id = value.Id;
+		if (id != 0)
+		{
+			state.WriteInt32Varint(1, id);
+		}
+		Node groupTail = value.GroupTail;
+		state.WriteGroup(2, SerializerFeatures.CategoryRepeated, groupTail, this);
 	}
 
 	Item ISerializer<Item>.Read(ref ProtoReader.State state, Item value)

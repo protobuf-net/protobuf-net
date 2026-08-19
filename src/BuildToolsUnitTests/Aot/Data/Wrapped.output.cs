@@ -32,10 +32,11 @@ partial class WrappedModel
             => RawRead_AotFixtures_Wrapped_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Wrapped.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Nested value)
-            => RawWrite_AotFixtures_Wrapped_Nested(ref state, value);
+            => RawWrite_AotFixtures_Wrapped_Nested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Nested value)
+        public static void RawWrite_AotFixtures_Wrapped_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Wrapped.Nested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)

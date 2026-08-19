@@ -12,13 +12,14 @@ Detail lives in the linked documents; this file is the index and the verdict. St
 | **open** | needs a human decision, and is blocking nothing until it gets one |
 | **next** | agreed, unstarted |
 
-This file lives on **`aot-schema-model`**, and reaches `writer-buffer-core` and below when that
-branch merges.
+This file lives on **`v4`** — the writer/schema stack collapsed onto it on 2026-08-14 — and on
+whatever sub-branch is currently in flight off it.
 
-*(It originally asserted it lived on `writer-buffer-core`, and did not — every commit landed on
-whichever branch happened to be checked out. Recorded rather than quietly corrected: a document
-stating where it lives, wrongly, is precisely the staleness this file exists to prevent, and it
-took someone looking at GitHub to catch it.)*
+*(It has now asserted the wrong branch **twice** — first `writer-buffer-core`, then
+`aot-schema-model` after the stack collapsed — and `AGENTS.md`'s index repeated the error
+independently. Recorded rather than quietly corrected, because a document stating where it lives,
+wrongly, is precisely the staleness this file exists to prevent. **If you move this file or cut a
+branch, this paragraph is the one to re-read.**)*
 
 ---
 
@@ -42,15 +43,109 @@ emitted" while *raising* correctness.
 The reasoning is here rather than in `notes/nano-writer.md`, which keeps the *findings* (what was
 tried, measured and reverted) but no longer carries a to-do list.
 
-### B1. Packed writes, and the empty-collection disagreement — **next**
+### B1. Packed writes — **LANDED on the raw path (3.4×–32×); two DataFormat arms remain**
 
-The sharpest item, because it is the only one suspected of being a **live bug** rather than
-absent work. An empty packed collection appears to emit a zero-length field where ref-emit writes
-nothing. Found while adding enum support to the schema front-end, but it is **not enum-specific**:
-protogen marks a repeated enum `IsPacked = true`, and per `AGENTS.md` the symbol path has never
-supported that argument — *"that named argument is not supported yet, so we always emit the
-disabled form"* — so the packed raw-write arm is largely undriven and the schema path is simply
-the first thing to reach it.
+**2026-08-15, second update.** The work moved to where it belongs and the numbers changed
+completely. `RepeatedSerializer`'s fast paths were **backed out** (classic is the control - see
+AGENTS.md, "Don't improve the legacy library or ref-emit"), and the packed primitives are now a raw
+`ProtoWriter.State` surface the generator calls directly. Against a pristine classic baseline:
+bool **32×**, floating point **13.6×**, enum **7.8×**, unsigned varint **4.0×**, signed **3.4×**.
+
+The larger prize was never the throughput, though: `IsPacked` used to make a member
+**measure-blocked**, which by the fixed-point rule removed its whole contract - and every contract
+referencing it - from measure-first. That cascade is closed for these shapes.
+
+**Both `DataFormat` arms have since landed too**, so all seven categories are on the raw path -
+`FixedSize` at **13.0x** and `ZigZag` at **1.5x**. (The earlier note here recorded those two as
+~6-10% *slower* under the raw model; that was an artefact of their being the only non-raw contracts
+inside a raw model, and it disappeared when they joined. Nothing was ever wrong with the raw
+writer.)
+
+**What is left**, in order: a zigzag write blit (its measure is already vectorised, but the write is
+still per element, which is the whole of the gap between 1.5x and the others); B21 tier 2, writing
+without per-element room checks now that the length is known exactly; and the **narrow kinds**
+(`sbyte`/`byte`/`short`/`ushort`/`char`) - which this previously called "the narrow *varint* kinds",
+implying the non-varint ones were done. They are not, and the two cases differ:
+
+| | wire form | why it is out | tractable? |
+| --- | --- | --- | --- |
+| narrow, default/zigzag | varint | a span pun reinterprets bytes, so a 1-2 byte element cannot become a 4-byte one; and a varint needs per-element encoding regardless, so there is no blit to reach for | least |
+| narrow, `FixedSize` | **`Fixed32`** | this is a **widen**, not a pun: 2 CLR bytes become 4 wire bytes | **most** - `Vector.Widen` is the exact inverse of the `Vector.Narrow` the blit already uses, and is in the same portable `Vector<T>` family |
+
+`FixedSize` on these is legal and not obscure: `byte`, `sbyte`, `short` and `ushort` all pass
+**width 32** to `ValueMember.GetIntWireType`, so they land on `Fixed32`. **`char` is the exception** -
+it hard-codes `WireType.Varint` and ignores `DataFormat` altogether, so there is no non-varint
+`char` to support.
+
+So the narrow `FixedSize` column is a widen-then-blit, which is a smaller piece of work than the
+narrow varint column and worth doing first if either is done. Sign matters and `Vector.Widen`
+handles it by overload: `short` sign-extends to `int`, `ushort` zero-extends to `uint`.
+
+
+**Status, 2026-08-15.** Tier 1 of B21 has landed for all four varint element types (see B21), and
+the two remaining premises recorded here were both checked rather than carried forward:
+
+- **"enums are never packed, because `EnumSerializer` is not an `IMeasuringSerializer`" — FALSE.**
+  They are packed, and always were; `PackedBlockCopyTests.PackedEnumsAreActuallyPacked` pins the
+  bytes. `TypeHelper.CanBePacked` returns true for `IsEnum` outright, and the *concrete*
+  `EnumSerializer<TEnum, TRaw>` implements `IMeasuringSerializer<TEnum>` — only the public abstract
+  base does not, and the gate tests the instance. The real gap is smaller: a packed enum does not
+  reach the fast varint arms (they match `typeof(T) == typeof(uint)` and an enum is none of them),
+  so it pays an enumerator step and a virtual write per element — 2.54 ns/element against 1.74 for
+  `uint32`. Routing it through the underlying-type pun is the fix, and it is worth doing.
+- **"~1 µs per member blocks further packed work" — RETRACTED.** It is ~10 ns; the figure was a
+  total divided by a member count. See `notes/packed-writes.md`, which carries the measurement and
+  the methodology lesson.
+
+
+This was "the sharpest item, the only one suspected of being a live bug". Three checks say the
+premise does not hold up, and none of them needed new code:
+
+**1. `IsPacked` IS supported, contrary to `AGENTS.md`.** `ListOptions.input.cs` carries five
+`IsPacked = true` members, and we emit `WireTypeVarint` **without** `OptionPackedDisabled` for
+them — byte-identical to `ListOptions.reference.cs`, and the differential has been comparing them
+all along. The claim that "we always emit the disabled form" was simply out of date.
+
+**2. Packing is the WRITER'S FREE CHOICE** (Marc), and the spec says so in as many words —
+[the encoding guide](https://protobuf.dev/programming-guides/encoding/#packed), read 2026-08-14:
+*"Protocol buffer parsers must be able to parse repeated fields that were compiled as `packed` as
+if they were not packed, and vice versa."* **Declining to pack is therefore never a wire bug** —
+which removes the whole category this item was filed under.
+
+Three further points from that page, all load-bearing somewhere:
+
+- **only repeated primitive numeric types may be packed** — those using `VARINT`, `I32` or `I64`,
+  which includes enums and excludes `string`/`bytes`;
+- **parsers must accept *multiple* packed records for one field and concatenate the payloads** —
+  which is what `RepeatedFieldOccurrencesMergeIdentically` already exercises by concatenating
+  sample payloads;
+- **the page is silent on empty/zero-length packed fields.** So `WriteZeroLengthPackedHeader` is a
+  permitted choice rather than a requirement, and either form is readable — meaning the original
+  "disagreement" would be a byte difference from ref-emit, not an interop problem. That is a much
+  weaker thing than the item claimed.
+
+**3. protobuf-net packs only when it can cheaply size the elements.**
+`RepeatedSerializer.Write` takes the packed branch only when
+`serializer is IMeasuringSerializer<TItem>`. `EnumSerializer<TEnum>` implements
+`ISerializer<TEnum>` and `ISerializer<TEnum?>` but **not** the measuring interface — so a repeated
+enum is *never* packed by protobuf-net, on either path, even though `TypeHelper.CanBePacked`
+returns true for enums. Both paths fall through to the unpacked loop identically, so there is
+nothing to disagree about.
+
+So the original observation — "an empty packed collection emits a zero-length field where ref-emit
+writes nothing" — needs reproducing before it is believed. It may have come from one specific
+configuration rather than being general, and the attribution to `IsPacked` being unsupported is
+definitely wrong.
+
+**What genuinely remains** is the *opportunity*, not a bug: making enums (and other kinds) packable
+by giving them measuring serializers, which is a size win on the wire and the thing B19's
+vectorised sizing would serve. That is worth doing on its own merits — but it is optional
+behaviour, not a correctness fix, and it should be measured rather than assumed.
+
+Note also that `descriptor.proto` **does** use `[packed = true]` — on `SourceCodeInfo.Location`'s
+`path` and `span` — but source info is normally stripped, so the benchmark payload carries none.
+Any packed work needs a **bespoke payload** for both correctness and performance (Marc); the
+census already predicts the descriptor set would show nothing.
 
 Packed repeated writes generally belong with it: the write needs the zero-length-header model
 option and a per-element measure, the `MemoryMarshal` block trick for fixed widths is recorded in
@@ -333,6 +428,805 @@ produced a confident wrong answer twice running on this one question.
 covers depth incidentally, at ~600 nested messages).
 
 
+### B14. ~~Groups defeat measure-first~~ — **done 2026-08-14; write-side depth guard added with it. BUT SEE B35** (2026-08-19): a benchmark says delimited writes are 5.7× slower than prefixed, which this entry says should be impossible**
+
+Marc, 2026-08-14: *"group basically avoids the whole 'measure before you write' — it boosts write
+perf hugely at the cost of reads needing to watch for a sentinel."* Exactly so, and that is what
+makes the current behaviour backwards.
+
+A grouped sub-message is framed by a start-group tag and an end-group tag, with **no length
+prefix** — so its size is never needed. It is the one shape that should cost *nothing* to write.
+
+Instead: `RawMemberMeasureBlocked` blanket-blocks on `member.DataFormat != ProtoDataFormat.Default`,
+and a blocked member **removes its whole contract from the `measurable` set** — computed to a
+fixed point, so the exclusion cascades to every referrer. A single grouped member therefore drops
+its containing tree onto the classic write-to-count path, which is the slow one measure-first
+exists to replace.
+
+So a consumer who reaches for groups *because* they are faster gets the opposite. Two things to
+do, and the first is much smaller than the second:
+
+- **Stop blocking on it.** `Group` on a message member is perfectly measurable when its target is:
+  the size is `startTag + Measure_(body) + endTag`, all known. The blanket `DataFormat != Default`
+  test is right for the formats that genuinely need the engine (`FixedSize`, BCL kinds, wrapping)
+  and wrong for this one.
+  The tag lengths fold, since the field number is a compile-time constant — so a grouped member's
+  measure is literally `Measure_(body) + <two constants>`.
+
+- **Then skip the measure entirely**, which is the actual prize and is bigger than making the
+  measure cheap. A length is only ever needed by a *length-prefixed* parent, so a grouped tree can
+  be written without a measure pass. That is not a faster measure, it is no measure: the measure
+  leg is 3.76 µs of the gRPC shape's 15.45 µs (`docs/aot.md`), and a grouped tree deletes it
+  rather than shrinking it.
+
+  **With one condition I first stated too strongly** (Marc): it holds only while **nothing above it
+  needs a length**. A grouped subtree hanging under an ordinary length-prefixed parent is still
+  walked, because the parent's own length includes it. So the property belongs to the **path from
+  the root**, not to the member — "a grouped tree needs no measure" is true of a tree grouped *all
+  the way up*, and false of a grouped subtree. `CallbackPassesFollowTheNearestLengthPrefixedAncestor`
+  pins the distinction:
+
+  ```
+  group at root,        stream / buffer-writer : [false]  / [false]
+  group under a length, stream / buffer-writer : [false]  / [true, false]
+  ```
+
+  The trade is on the read side, and it is real: a length prefix lets a reader skip a sub-message
+  without parsing it, while a sentinel has to be scanned for. That is the choice protobuf made in
+  the other direction for proto3, and the reason this is a *format* decision rather than a
+  free win.
+
+Worth measuring rather than assuming, as ever — but unlike the seven flat micro-experiments this
+one is a *structural* removal of work, not a cheaper way of doing it.
+
+### B15. Depth is not synced on the raw → stateful transition — **open, narrow**
+
+`RawWrite_` now carries a **remaining depth budget**, seeded from `state.RawDepthBudget` where the
+stateful world hands off to the raw one, and never touches `writer.Depth` — the "raw API does not
+maintain all the members" convention, and Marc's read of how the two worlds should meet.
+
+The gap is the **reverse** transition. Where a raw body falls back to the stateful engine mid-way
+(`state.WriteMessage(...)` for a member the raw path does not handle), the engine measures depth
+from `writer.Depth`, which was last set at the *outer* boundary — so a deep raw chain that then
+goes stateful under-counts, and the effective cap is larger than `MaxDepth`.
+
+Narrow, and not a correctness hole in the sense B14 was: the cap still exists at both ends, it is
+just not additive across a boundary. The fix is to push `writer.Depth` at the point of transition
+rather than to thread anything further. Recorded rather than done because it wants a fixture that
+actually crosses the boundary deeply, and no existing one does.
+
+### B16. Locals in the emitted bodies — **`lengths` and `len` done (2026-08-14, corrected 2026-08-16); `tmpN` folding still open**
+
+Marc, 2026-08-14, on two shapes in the generated code:
+
+```csharp
+var lengths2 = state.RawLengths;   // repeated per message member
+var tmp7 = value.Something;        // one per member, whatever the type
+```
+
+**Scale first, because it changed the answer.** Sampling the test fixtures gave 8–11 locals per
+body and the conclusion "the JIT already handles this". Marc pointed at a real model, and the
+fixtures are not representative:
+
+| body | locals | source |
+| --- | ---: | --- |
+| `RawWrite_TestEnormousDescriptor` | **1000** | corpus |
+| `RawWrite_FileOptions` | 21 | an ordinary protogen DTO |
+
+`state.RawLengths` appears 1613 times in the differential model, 33 in protogen's own serializer.
+
+**Why the scale matters rather than just being a bigger number.** RyuJIT tracks a bounded number
+of locals for liveness; beyond that limit locals become *untracked*, and untracked locals are
+neither enregistered nor lifetime-merged. So "the register allocator already reuses slots by
+liveness, which beats folding by type" is true for a ten-local body and stops being true long
+before a thousand. Marc's suggestion — fold the temporaries **by type**, via a map in the emitter
+— would cut a 1000-local body to roughly one local per distinct type, back inside the tracked set.
+
+**A second cost, not previously connected.** `[module: SkipLocalsInit]` is applied to
+protobuf-net's own assemblies, but **the generated model lands in the consumer's assembly**, which
+has no such attribute — so every one of those locals is zero-initialised on each call, in their
+build rather than ours. Per-method `[SkipLocalsInit]` is the targeted fix and is **not usable**:
+it requires `AllowUnsafeBlocks` in the consumer's project, which a serializer has no business
+demanding.
+
+**The `lengths` half is separate and simpler.** `state.RawLengths` is three dependent field loads
+(`state._writer` → `writer.netCache` → `netCache._rawLengths`); Roslyn does not CSE across
+statements, and the JIT cannot hoist the two heap loads across the intervening `TryGetValue` /
+`Measure_` / `RawWrite_` calls. One method-level local removes N−1 of them.
+
+That hoist is **safe today but needs a comment saying why**: `_rawLengths` is genuinely reassigned
+— `NetObjectCache.InitializeFrom` swaps it for the measure→write hand-off, and `ClearAndMaybeTrim`
+may replace it — but both happen at the boundaries, never mid-body. If the hand-off ever moved,
+a hoisted local would go stale silently.
+
+#### Measured: three arms, and the per-site local is the worst of them
+
+`src/NanoBench/LengthCacheAccessBenchmarks.cs`, 8 sites, mirroring the real three-load chain with
+real `TryGetValue` calls between the sites — without those the JIT hoists everything and all three
+arms measure identically, which would have been a meaningless pass.
+
+| arm | mean | ratio |
+| --- | ---: | ---: |
+| per-site local (as it was) | 43.14 ns | 1.00 |
+| one hoisted local | 38.21 ns | **0.89** |
+| no local, read inline | 38.53 ns | **0.89** |
+
+Hoisting and reading inline are a **dead heat**, so the JIT inlines the property chain perfectly
+well: what costs is materialising a distinct local per site. **Applied: no local at all** — same
+speed as hoisting, simpler to emit, and it removes the staleness hazard a hoisted local would have
+carried across an `InitializeFrom` swap.
+
+**The `tmpN` locals are a different case and must stay** (Marc): `value.Something` is *consumer*
+code, so reading it twice is a **correctness** risk, not merely a cost. `state.RawLengths` is ours
+and known to be a field chain, which is exactly why it needs no local. The distinction is "do we
+know this is cheap and stable", not "is it a property".
+
+#### Correction, 2026-08-16: "no local at all" was applied to ONE of the two sites
+
+The sentence above said *Applied: no local at all*, flatly, and that was **not true of the whole
+emitter** — it described the straight-line unary-message site only. A second site survived in
+`EmitRawRepeatedWrite`, hoisting `var lengths{number} = state.RawLengths;` once per repeated
+*message* member, and it was **missed rather than reasoned**: `83b9886f` talks exclusively about
+"per-site" locals and never mentions the loop case, though both sites arrived together in the
+writer arc (`89b535f7`). Marc found it by reading the emitted protogen serializer, where it
+accounted for **26** locals.
+
+It is gone now, per Marc: *"we don't even need to declare `lengths`; literally use
+`state.RawLengths` at every site."* One rule, no exceptions, nothing to go stale — the argument
+that decided the first site decides this one too, and fewer locals is the actual objective.
+
+**The `lenN` family went with it**, which is the part that needed thought rather than deletion: a
+sub-message length is an `out` target, so unlike the cache reference it cannot be eliminated — but
+it need not be *duplicated*. All such temporaries are `long`, and each is assigned then consumed
+immediately, so they fold onto one local with no type map and no lifetime overlap.
+
+**Hoist only what is used more than once** (Marc): a body with a single length site keeps its
+declaration **at** the site (`out var len`), because hoisting one use to the top widens its scope
+and buys nothing. Two or more get `long len;` once. `AppendFoldingLengthTemp` decides this by
+inspecting what was actually emitted rather than by restating the eligibility predicate — a second
+copy of that predicate would be free to drift from the first — which also keeps an unused local out
+of the consumer's build, where it would be CS0168.
+
+In `Measure_` bodies the shared temp is `sub`, since `len` is already the accumulator there.
+
+**Three emit paths needed it, not one**, and the two extra ones are why the first attempt emitted
+`CS0103` across nine fixtures: besides `RawWrite_`, both the classic `ISerializer.Write` body and
+the sub-type write body call `EmitWriteMembers` with `raw:` possibly true. The golden tests caught
+it because they *compile* their output (`Assert.Equal(0, result.ErrorCount)`) rather than only
+diffing it.
+
+Measured on the committed protogen serializer:
+
+| | before | after |
+| --- | ---: | ---: |
+| `lengths{n}` locals | 26 | **0** |
+| `len{n}` locals | 72 | **0** (4 folded declarations, the rest scoped single-site) |
+| worst `RawWrite_` body | 25 locals | **13** |
+
+#### B16a. DEBUG-only length-drift detection (Marc, 2026-08-16)
+
+Emitted alongside the folding, because the two touch the same statements. A measured length that
+disagrees with the bytes actually written is a **corrupt stream**, and it is the one failure this
+arc can produce that nothing else catches: the classic buffer-writer path already validates
+(*"Length mismatch; calculated 'x', actual 'y'"*) and the raw path validated nothing.
+
+```csharp
+state.WriteRawVarint64((ulong)len);
+DebugCapturePosition(ref state, ref before);
+RawWrite_Foo(ref state, item2, depth);
+DebugAssertPosition(ref state, before + len, "Fields");
+```
+
+**`Position64` is safe to lean on, and it is the exception rather than the rule.** The raw path
+deliberately does not maintain most writer state - `RawWrite_` threads its own depth budget and
+never touches `writer.Depth`. Position needs no maintaining because it is **derived**:
+`_position64 + GetUncommitted(in state)`, and both real backends override `GetUncommitted` with the
+live buffer offset (`state.OffsetInCurrent`, `Pending(in state)`) that a raw write is already
+advancing. A stream flush mid-body is fine too - `_position64` gains exactly what `Pending` loses.
+
+**`ref` rather than `out` is forced, not preferred:** `out` on a conditional member is **CS0685**,
+precisely because the call may vanish and leave the target unassigned.
+
+**It costs a Release consumer nothing at all**, measured rather than assumed - the concern being
+that a capture local per site would re-add what the folding above just removed:
+
+| build | IL locals | IL bytes | warnings |
+| --- | ---: | ---: | --- |
+| Release | **0** | 2 | 0 |
+| Debug | 2 | 27 | 0 |
+
+Roslyn elides the local entirely once both conditional calls are gone, and emits no CS0219 for the
+assigned-never-read `long before = 0;`. The bodies are `#if DEBUG`'d as well (Marc), so even an
+explicit call costs nothing there.
+
+**`Debug.Fail` TERMINATES THE PROCESS on .NET Core** - it is not a logged warning; it is an
+uncatchable `FailFast` printing *"Process terminated. Assertion failed."* That makes it a real gate
+and also means a **false positive would kill every consumer's Debug build**, so the no-false-alarm
+side needed proving broadly rather than spot-checking: `AotConformanceTests` in Debug (1592, with
+**44 live call sites across 19 models** - verified by `-p:EmitCompilerGeneratedFiles=true`, since a
+plain build writes nothing to disk and an empty `generated` folder looks identical to a generator
+that emitted nothing) and `AotSmoke -c Debug`, whose `.proto` descriptor tree is the deepest nesting
+available.
+
+**Proven to fire**, per the precedent set by the services-constructor `IsScalar` assert - by
+perturbing `Measure_` to `return len + 1`, i.e. the real bug class rather than a tautology, then
+reverting:
+
+```
+Process terminated. Assertion failed.
+Length drift writing 'Customer': measured length and bytes written differ by -1.
+```
+
+Note what it does **not** cover: the root length, which is checked by the classic engine's own
+validation via `TryMeasureRaw`. Between the two, every length-prefixed node is covered. Grouped
+members carry no length and so get no check.
+
+`tmpN` folding remains open and is now the whole of the remaining work here — it is much the
+largest family (337 in that same file, 21 in one body) and the only one needing a type-keyed map.
+
+#### `tmpN` folding by type — agreed, and the reason is the STACK, not throughput
+
+Marc: *"I am still inclined to do the reuse-thing, if only for the stack problem."* Agreed, and the
+arithmetic supports it over any throughput argument:
+
+- `TypeModel.DefaultMaxDepth` is **512**;
+- a 1000-local body is roughly an **8 KB frame**;
+- 512 × 8 KB ≈ **4 MB**, against a 1 MB default thread stack.
+
+So for large contracts the depth guard **does not bound anything** — the stack dies around 128
+frames, long before 512. `MaxDepth` silently assumes small frames, and the generated bodies for
+big contracts break that assumption. That makes this correctness-adjacent rather than a
+micro-optimisation, and it is the argument for doing it.
+
+Folding by type also brings a 1000-local body back inside RyuJIT's tracked-local limit, past which
+locals are neither enregistered nor lifetime-merged — so the throughput effect, whatever its size,
+points the same way.
+
+**Not a union, though.** Marc floated overlapping the non-reference temporaries (refs cannot be
+unioned — the GC must track them). Legal, but likely counterproductive: a union member is
+address-taken and therefore memory-resident, which **defeats enregistration entirely**, making
+every small body worse to fix the large ones. Folding by type gets most of the reduction while
+leaving ordinary locals the JIT can still keep in registers.
+
+#### Attempted and REVERTED: scoping is not folding
+
+I substituted a cheaper mechanism for Marc's idea — wrap each member's temporaries in a `{ }`
+block and let Roslyn's slot allocator reuse the slot, on the reasoning that the compiler knows the
+exact types and cannot mis-key them. Measured before/after on IL local counts
+(`MethodBody.LocalVariables`), Release:
+
+| body | before | after |
+| --- | ---: | ---: |
+| `RawWrite_Lists_Repeated` | 50 | **50** |
+| `Measure_Lists_Repeated` | 40 | **40** |
+| `RawWrite_Generic_Holder` | 18 | **18** |
+
+**Byte-identical. Reverted**, rather than keeping churn in every generated body for a hypothesis
+that did not show.
+
+**But the null result does not test Marc's idea — it tests my substitute for it.** Scoping asks
+the compiler to fold; *folding* means emitting genuinely fewer distinct locals, from a
+generator-side name map. Those are different changes and only the first has been measured. The
+original idea remains open and untested, and the same applies to the `lenN` temporaries Marc
+raised alongside — same family, same mechanism, same open question.
+
+Two methodological notes worth keeping, both mine to own:
+- **Roslyn reuses slots in Release only** — Debug keeps locals alive for the debugger. A first
+  measurement taken under `dotnet test` (Debug by default) reported 70 and meant nothing.
+- The probe test that produced these numbers was **deleted**: its threshold was invented, it
+  failed in the default Debug configuration for an implementation-detail reason, and the
+  hypothesis it was written to defend turned out false.
+
+#### The case for folding stands anyway, and does not rest on a benchmark
+
+Marc: *"if nothing else, it'll make the compiler's job easier."* Right, and that argument is
+untouched by the null result above, because neither thing I measured tests it — I measured
+**scoping** (not folding) on a **~50-local** body (not the 1000-local one that motivated this).
+
+Emitting genuinely fewer distinct locals reduces, by arithmetic rather than by hypothesis:
+
+- **IL size** and Roslyn's own analysis work on very large bodies;
+- **RyuJIT tracked-local pressure** — past its limit locals are neither enregistered nor
+  lifetime-merged, and 1000 is comfortably past it;
+- **`.locals init` zeroing**, which the *consumer's* assembly pays because
+  `[module: SkipLocalsInit]` is on protobuf-net's assemblies and not on theirs, and the per-method
+  form is unusable (it requires `AllowUnsafeBlocks` in their project);
+- **frame size**, which is the one that matters: `MaxDepth` of 512 only bounds recursion if frames
+  are small.
+
+So the right instrument is **the local count on a large contract**, not a nanosecond benchmark —
+and the honest status is that the idea is agreed and unimplemented, not that it was tried and
+failed. The same applies to the `lenN` temporaries.
+
+### B17. Callbacks and measure-first — **answered; a `BeforeSerialize` contract silently loses measure-first**
+
+Marc asked how we stand. Checked rather than assumed, and the answer is a real limitation that was
+not written down anywhere:
+
+- **`RawMeasurableShape` requires `!HasCallback(contract, BeforeSerialize)`.** So a contract with a
+  before-serialize callback is **excluded from measure-first entirely** and drops to the classic
+  write-to-count path — the very path measure-first exists to replace. That is correctness-driven
+  rather than an oversight: a before-serialize callback may *mutate the object*, so anything
+  measured before it ran would be measuring the wrong state, and `Measure_` has nowhere to run it.
+- **`AfterSerialize` is fine** and is emitted at the end of `RawWrite_`.
+- **The measure pass invokes no callbacks at all**, and cannot: `Measure_(value, depth, lengths)`
+  holds no `ISerializationContext`.
+- `ProtoWriter.IsMeasuring(context)` exists, but it serves the **classic** path, where measuring
+  *is* writing to a null writer and callbacks therefore fire on the counting pass as well as the
+  real one. On the measure-first route there is nothing to disambiguate, because nothing fires.
+
+**So the cost of a callback today is not "the callback runs" — it is that the whole contract, and
+by cascade everything referencing it, falls off the fast path.** That is worth knowing before
+recommending callbacks to anyone.
+
+#### What `ref state` would buy, and what it would cost
+
+Marc's proposal: give `Measure_` `ref state` instead of `(depth, lengths)`. His own observation
+settles the cost side — **`ref state` is one pointer, exactly what the `lengths` reference already
+costs** — and `depth`/`lengths` would then come *off* the state, so the signature gets **shorter**,
+not longer. There is no performance argument against it.
+
+It would let callback-bearing contracts join measure-first, which is the actual prize. Two things
+to settle first, and only the second is hard:
+
+1. **Double-fire is REQUIRED, not merely acceptable** — settled by prior art, not open. Marc
+   recalled it; `CallbackMeasurePassTests` now pins it against the runtime model:
+
+   | route | `BeforeSerialization` fires | `IsMeasuring` |
+   | --- | ---: | --- |
+   | plain `Serialize` | **once** | `false` |
+   | `Measure` + `Serialize` | **twice** | `true`, then `false` |
+
+   The reasoning is in `df529277`: *"the measure pass is a real write to a counting writer, so a
+   serialization callback runs once per pass — correct for the common shape (populate a member
+   that is then serialized: both passes MUST see the same object). Suppressing wholesale is worse
+   than the doubling, because the two passes would then see different objects and the length check
+   would throw."*
+
+   So "fire once before the measure, not in the write" — which I first called the cleaner
+   alternative — is the **broken** one. If `Measure_` ever fires callbacks it must fire them per
+   pass, exactly as the classic path does, with `IsMeasuring` distinguishing them.
+
+   This also makes the current refusal **load-bearing rather than conservative**: firing
+   `BeforeSerialize` only in `RawWrite_` would let the object change between measuring and writing
+   and commit a wrong length. `RawMeasurableShape`'s exclusion is the only thing keeping that
+   correct today — so relaxing it is not "let callbacks through", it is "fire them per pass in
+   `Measure_` too", which is now a settled design rather than an open question.
+
+   **And the doubling is not confined to the explicit `Measure` API — it is already per-backend**,
+   which Marc identified and `CallbackMeasurePassTests` now pins. For a *nested* contract, with
+   nobody asking to measure:
+
+   | route | fires | `IsMeasuring` |
+   | --- | ---: | --- |
+   | `Serialize` to a **stream** | **once** | `false` |
+   | `Serialize` to an **`IBufferWriter`** | **twice** | `true`, then `false` |
+
+   The stream writer reserves, writes and back-fills the length (shuffling bytes when the varint
+   width changes), so it crawls once; the buffer-writer computes the length, writes the prefix,
+   writes for real and then **validates** (`Length mismatch; calculated 'x', actual 'y'`), so it
+   crawls twice. A consumer's callback side-effect therefore already depends on which output they
+   chose — undocumented until now.
+
+   **Decision (Marc, 2026-08-14): make twice the consistent normal for both**, rather than leaving
+   the stream as the exception. It is also where measure-first leads anyway, since that *is*
+   measure-then-write.
+
+   **But "always twice for nested" is not the rule, and cannot be** (Marc). The count is set by the
+   nearest **length-prefixed ancestor**, not by the member's own framing: a *grouped* member needs
+   no length, so it is visited once — **unless** something above it does need one, at which point
+   the parent's measure walks straight through it. Pinned:
+
+   | shape | stream | buffer-writer |
+   | --- | --- | --- |
+   | group at the root | `[false]` | `[false]` |
+   | same group under a length-prefixed parent | `[false]` | `[true, false]` |
+
+   So the target is "**once per pass over this node**", where the number of passes is a property of
+   the path from the root — not "twice, always". This is also why B14 and B17 cannot be settled
+   independently: making grouped trees measure-free changes how often callbacks inside them fire.
+
+   **The fair demand is "at most twice"** (Marc), for a node not duplicated in the tree — and
+   **the length cache already buys it**. Every length-prefixed ancestor needs a length for
+   everything beneath it, so a naive measure-by-writing would re-walk the innermost node once per
+   ancestor, i.e. exponentially in depth. Memoising a sub-message's measured length by reference
+   collapses that to one measure pass plus one write pass. **Verified at depth 3: two calls, not
+   eight** — `AtMostTwiceHoweverDeepTheNesting`.
+
+   That is the invariant worth defending, and it is now guarded: if that test ever reports more
+   than two, the cache has stopped working and the cost has gone exponential in depth rather than
+   linear — which would be a far bigger problem than the callback count that exposed it.
+
+   The cost to weigh when doing it: on the **classic** stream path, replacing one back-fill shuffle
+   (a memmove only when the varint width changes) with a full second crawl is a real slowdown. On
+   the **measure-first** path it is not, because the measure is arithmetic rather than a write —
+   which is an argument for converging the two as measure-first widens (see B1, B5) rather than
+   changing the classic stream writer on its own.
+2. **Coupling.** `Measure_` is today a pure arithmetic walk with no writer in sight, which is what
+   makes it trivially testable and independently callable. Taking `ref state` ties it to a live
+   writer. That is the real trade, and it is a design call rather than a measurement.
+
+Note this also interacts with **B1** (packed writes) and **B5** (counting mode for mixed
+contracts), both of which want the measure path to reach further into shapes it currently declines.
+
+### B18. ~~`ClassicEmit` is never exercised by any gate~~ — **closed 2026-08-14**
+
+Marc, 2026-08-14: *"remember to cross-check classic-emit in all cases... classic-emit should be
+functionally equivalent, if slower."* Checked, and **no test project sets
+`[ProtoModel(ClassicEmit = true)]`** — not one fixture, not the conformance model, nothing. So the
+generator's classic path is emitted by nobody and compared against nothing.
+
+That matters more than a normal coverage gap, because `ClassicEmit` is the **escape hatch** we
+point people at (it is named in `ProtoWriter.State.Raw.cs`'s own error text for the
+non-seekable-stream case). It is the fallback that is least tested.
+
+Everything on this branch — proto2 `required`/defaults, groups taking the raw path, the write-side
+depth guard, dropping the per-site length local — was verified **only on the raw path**. The
+differential proves generated-vs-`RuntimeTypeModel`; it does not prove
+generated-classic-vs-generated-raw.
+
+**Closing it is nearly free, with one obstacle.** `DifferentialTests.DiscoverModels()` enumerates
+every `[ProtoModel]` type in the assembly, so a twin model declaring `ClassicEmit = true` over the
+same seeds is picked up and compared automatically — no new harness. The obstacle is that
+`GetSamples` resolves samples **by name convention**: `<Stem>Model` → `<Stem>Samples.Values`. A
+twin therefore needs either a name that still resolves, or a small change to that resolver (strip a
+known prefix/suffix before looking up the samples class). That is the whole job.
+
+**Closed.** Five `ClassicEmit` twins now live in `src/AotConformanceTests/ClassicEmitTwins.cs`,
+chosen for where the paths could plausibly diverge rather than for breadth: groups (raw path, no
+measure), callbacks (which disqualify a contract from measure-first), repeated members (where B1
+lands), nesting (length prefixes and the cache), and scalars as the control. They are declared in
+the test project rather than beside the fixtures, which are shared with the golden tests and
+`AotRefGen`.
+
+`DifferentialTests` picks them up automatically and compares each against `RuntimeTypeModel`:
+**1445 → 1544 cases**. And per Marc — *nothing precludes two type models over the same domain, one
+classic and one not* — `ClassicVsRawTests` compares the twins against their raw siblings
+**directly**, in one build. That is sharper than two separate comparisons against ref-emit, which
+two models diverging the same way would both pass.
+
+**Verified to be a real second path, not a silently-ignored flag**: `GroupedElementsModel` emits 3
+`RawWrite_` and 3 `Measure_` bodies; its classic twin emits none of either.
+
+### B1 addendum: what the packed code actually says (2026-08-14)
+
+Gathered while starting B1, and it may **invert** what B1 states above — flagged rather than
+corrected, because it has not been verified end to end yet.
+
+`RepeatedSerializer.WritePacked` accepts `Fixed32` (count×4), `Fixed64` (count×8) and
+`Varint`/`SignedVarint` (measured per element), and throws for anything else. So the packable set
+is the protobuf one — **enums pack**, being varint, which is why protogen marks a repeated enum
+`IsPacked = true` (Marc asked; the answer is yes).
+
+The decision site reads:
+
+```csharp
+if (TypeHelper<TItem>.CanBePacked && !features.IsPackedDisabled()
+    && (count == 0 || count > 1) && serializer is IMeasuringSerializer<TItem> measurer)
+{
+    if (count == 0) WriteZeroLengthPackedHeader(ref state, fieldNumber);
+    else WritePacked(...);
+}
+```
+
+So the runtime **does** write a zero-length header for an empty *packed* collection. B1 above says
+we emit a zero-length field "where ref-emit writes nothing" — that looks backwards: the difference
+is more likely that **we never enable packing at all** (`AGENTS.md`: the `IsPacked` argument "is not
+supported yet, so we always emit the disabled form"), so our empty collection writes nothing while a
+genuinely packed one writes the header. Same disagreement, opposite attribution — and the fix is
+"support `IsPacked`", not "stop writing a header".
+
+**Verify before building.** Both directions are cheap to test and the wrong attribution would send
+the work the wrong way.
+
+### B18b. Packed writes are per-element even where a block copy would do — **the biggest packed win, and it needs no SIMD**
+
+`RepeatedSerializer.WritePacked` writes **every** packed element through an enumerator and a
+virtual serializer call, whatever the type — there is no `MemoryMarshal`, no `AsBytes`, no bulk
+path anywhere in the file. So a packed `float[]` → `repeated float`, which on a little-endian
+machine is a **pure `memcpy`**, is emitted one float at a time through an interface dispatch.
+
+Sizing is already O(1) for those types (`count * 4` / `count * 8`); it is only the write.
+
+This outranks every vectorised idea below it: block copy is portable, needs no intrinsics, is
+trivially correct behind the `IsLittleEndian` guard the codebase already uses, and covers the whole
+matching-fixed-width family. **`notes/packed-writes.md` has the full scenario matrix** and the
+ranking; B19–B21 are all downstream of this one.
+
+### B19. Vectorised sizing for a packed varint span — **measured: 1.8×-6.6×, the first non-flat result in this arc**
+
+Marc, 2026-08-14: for a large span of integers — `CollectionsMarshal.AsSpan` on a `List<T>`, or an
+array directly — is there anything SIMD can do to *size* them, given more than a vector's width?
+
+**First, the scoping, which cuts most of it away.** `RepeatedSerializer.WritePacked` already handles
+the fixed widths in O(1): `Fixed32` is `count * 4`, `Fixed64` is `count * 8`. So floats, doubles
+and the fixed integer forms need **no sizing at all** — the opportunity is exactly the
+`Varint`/`SignedVarint` arm, which is the one that measures per element.
+
+**Second, it needs no leading-zero intrinsic**, which is what makes it plausible. A varint length is
+a threshold ladder, and thresholds vectorise trivially:
+
+```
+len(v) = 1 + (v >= 2^7) + (v >= 2^14) + (v >= 2^21) + (v >= 2^28)      // uint32
+```
+
+A vector comparison yields all-ones (`-1`) per lane, so the total for a block is
+`count - Σ(mask₇ + mask₁₄ + mask₂₁ + mask₂₈)` — four compares and four adds per vector, no
+horizontal work until the very end. At `Vector<uint>`'s 8 lanes that is roughly **one instruction
+per element**, against a branchy scalar loop today. `uint64` is the same shape with nine thresholds.
+
+The wrinkles, none fatal:
+
+- **`int32`/`int64` sign-extend**: a negative value is always the 10-byte form, so compute the
+  unsigned ladder and blend `10` in where the lane is negative;
+- **`sint32`/`sint64`** zigzag first — `(v << 1) ^ (v >> 31)` is itself vectorisable — then take the
+  unsigned ladder;
+- **the span has to exist.** Arrays and `List<T>` via `CollectionsMarshal` are fine; anything only
+  enumerable is not, so this is a fast path beside the loop rather than a replacement for it.
+
+**And there is a free correctness net**: `WritePacked` already validates the measure against what
+was actually written (*"packed encoding length miscalculation for … expected X, got Y"*), so a
+vectorised sizer that disagreed with the scalar writer would be caught immediately rather than
+producing a corrupt payload.
+
+#### Measured (`src/NanoBench/PackedSizeBenchmarks.cs`) — and it is the first non-flat result in this arc
+
+| count | distribution | scalar | vectorised | ratio |
+| ---: | --- | ---: | ---: | ---: |
+| 4096 | mixed | 3,481 ns | **530 ns** | **0.15×** |
+| 4096 | small | 948 ns | **534 ns** | 0.56× |
+| 256 | mixed | 144 ns | **32.7 ns** | 0.23× |
+| 256 | small | 63.4 ns | **32.7 ns** | 0.52× |
+| 16 | mixed | 8.39 ns | **3.19 ns** | 0.38× |
+| 16 | small | 3.73 ns | **3.18 ns** | 0.85× |
+
+**It wins at every size and distribution, including 16 elements.** Seven consecutive
+micro-optimisations in this arc measured flat; this one does not, and the reason is structural
+rather than clever — the work per element genuinely drops.
+
+**The branch-free scalar `Ladder` arm LOSES everywhere** (1.13× to 4.27× *worse* than scalar), and
+that is why it was included: it isolates the cause. The win is SIMD, not branch-avoidance —
+removing the branches without vectorising is a **pessimisation**, because the early-exit ladder is
+already cheap on the small values that dominate real data, and the branch-free form always pays
+all four comparisons.
+
+**Vectorised is nearly flat across distributions** (530–534 ns at 4096) because it does the same
+work regardless of the values, while scalar swings 948 → 3,481 ns on the same count. So the edge is
+*smallest* on the small-value data most columns actually contain (1.8×) and largest on mixed or
+wide data (6.6×). Quote the 1.8× when deciding, not the 6.6×.
+
+#### The API shape: three methods, and the rest puns (Marc)
+
+Marc's read, and it holds: the surface is
+`MeasureVarint(ReadOnlySpan<uint>)`, `MeasureVarint(ReadOnlySpan<ulong>)` and
+`MeasureVarint(ReadOnlySpan<int>)`. Everything else reaches one of those by `MemoryMarshal.Cast`,
+which is free — same element width, no copy.
+
+| CLR type | puns to | why |
+| --- | --- | --- |
+| `uint` | *itself* | 1–5 bytes |
+| `ulong` | *itself* | 1–10 bytes |
+| `int` | **needs its own** | **negatives sign-extend to 10 bytes**, so it is emphatically not `uint` |
+| `long` | **`ulong`** | a negative `long` reinterprets as a large `ulong`, and both encode as the same 64-bit two's-complement varint — identical length, so this one is free |
+| enum | `int`/`uint`/`long`/`ulong` | by underlying type; same width, same sign rule |
+| `bool` | — | always one byte: the answer is `count` |
+| `sint32`/`sint64` | **two more methods**, not three - see below | there is no unsigned zigzag, and the transform needs no shift instructions |
+| `float`/`double` | — | fixed width; `WritePacked` is already O(1) for these |
+| `short`/`sbyte` | **cannot pun** | narrower elements, so a `short[]` is not castable to `int[]`. Code-first only — no `.proto` produces them |
+
+**The int/uint asymmetry is the load-bearing part**, and it is confirmed in our own emitted code
+rather than assumed: an `int32`-family member measures as
+`MeasureRawVarint64(unchecked((ulong)(long)value))` — sign-extended to 64 bits — while `uint32`
+uses the 32-bit form. This is protobuf's long-standing quirk (*"if you use int32 or int64 as the
+type for a negative number, the resulting varint is always ten bytes long"*), and it is exactly why
+`int` cannot share the `uint` ladder: the branchless form has to **blend 10 in where the lane is
+negative** rather than running four thresholds.
+
+#### Zigzag: two more methods, no shifts, and a BIGGER relative win (Marc asked)
+
+Marc asked whether zigzag needs a separate SIMD implementation for the extra shifts. Two answers,
+both measured rather than reasoned:
+
+**It needs no shift instructions at all.** `zigzag(v) = (v << 1) ^ (v >> 31)`, and neither shift is
+required: `v << 1` is `v + v`, while the arithmetic `v >> 31` is *exactly* what
+`Vector.LessThan(v, Zero)` produces — all-ones for a negative lane, zero otherwise. So the
+transform is **add, compare, xor**, using only the down-level-safe `Vector<T>` surface. That
+matters: `Vector.ShiftLeft` is .NET 7+, so a shift-based version would have no vector path on
+netstandard2.0 or net4x. The identity is cross-checked in the benchmark's setup, which throws if
+the two forms disagree.
+
+**And it is two methods, not three** — `sint32` and `sint64`; there is no unsigned zigzag. Zigzag
+also *simplifies* the ladder rather than complicating it: the result is unsigned, so there is no
+10-byte blend, and `sint32` is always 1–5 bytes where `int32` can be 10.
+
+**Measured, and the shape is the interesting part:**
+
+| | plain | zigzag | overhead |
+| --- | ---: | ---: | ---: |
+| vectorised, 256 mixed | 32.65 ns | 34.36 ns | **+5%** |
+| vectorised, 256 small | 32.40 ns | 34.36 ns | **+6%** |
+| scalar, 256 mixed | 129.7 ns | 175.7 ns | +35% |
+| scalar, 256 small | 63.2 ns | 112.8 ns | **+78%** |
+
+The transform amortises across lanes, so **zigzag is a bigger relative win for SIMD than plain
+varint is** — the scalar path pays the shifts per element, the vector path pays them per block.
+`sint32` columns are therefore the best case for this work, not the awkward one.
+
+**Where it plugs in, and it is better placed than expected**: protogen emits `T[]` for every
+packable scalar (`string`/`bytes`/message become getter-only `List<T>` and are not packed at all),
+so the array-backed `RepeatedSerializer` override *is* the packed sizing path for schema-first
+consumers — and an array yields a span natively on every TFM, with no `CollectionsMarshal` and no
+new API. `List<T>` would need `CollectionsMarshal.AsSpan` (net5+) and keeps the scalar loop
+down-level, which costs little given the shape protogen actually emits.
+
+**What this does NOT say.** It measures *sizing in isolation*. Sizing is one part of packed writing
+— the encode still has to happen — and packed columns are in turn a fraction of most payloads;
+`DescriptorPayloadCensus.md` has this repo's reference payload at 71.5% string/bytes, which is why
+the descriptor set would show none of this. An in-situ number needs a packed-numeric payload that
+does not exist yet, and that payload is the real prerequisite, not the algorithm.
+
+### B21. SIMD for the packed varint WRITE — **tiers 1 and 2 LANDED; tier 3 still open**
+
+Marc, 2026-08-14: can SIMD do something clever for the write — measure a block at once, then
+"scatter/gather, switch, something"? Yes, but it separates into tiers that differ enormously in
+cost and reach, and the honest answer is that the cheapest one carries the most traffic.
+
+**Tier 1 — the homogeneous-block fast path. Portable, and the dominant case.**
+If every value in a block is `< 128`, every varint is exactly one byte and there are no
+continuation bits to interleave — so the encode collapses to **narrow-and-store**. Detect with
+`Vector.GreaterThanAny(v, 127)`, then `Vector.Narrow` twice (`uint`→`ushort`→`byte`) and blit.
+`DescriptorPayloadCensus.md` puts 99.7% of tags and most field values in the single-byte class, so
+this arm would carry most real traffic — and it needs only `Narrow`, the same portable primitive
+B20 wants. **This is the one to try first.**
+
+**Tier 1 is now LANDED**, 2026-08-15, for all four varint element types — `uint32`, `int32`,
+`uint64`, `int64` — on both the array path (every TFM) and the `CollectionsMarshal` span path
+(net5+). `PackedVarintMeasure.WritePackedUInt32` / `WritePackedInt32` / `WritePackedUInt64`.
+Measured in isolation by `PackedWriteBenchmarks`, 999 elements:
+
+| element | scalar | tier 1 | where it fires | where it cannot |
+| --- | --- | --- | --- | --- |
+| `uint32` | 1449 ns | **169 ns** | **8.6×** | +3% |
+| `int32` | 1448 ns | **170 ns** | **8.5×** | +6% |
+| `uint64` | 1445 ns | **217 ns** | **6.6×** | +5% |
+
+64-bit is behind 32-bit because it takes **three** narrowing steps rather than two, so a block is
+eight vectors rather than four; the element count per block is 32 either way.
+
+Two puns make four element types into three methods, and both were verified rather than assumed:
+`long` rides on `WritePackedUInt64` (a negative `long` reinterprets as a large `ulong`, so it fails
+the `< 128` test and is never blitted, and both encode as the same 64-bit two's-complement varint),
+while `int32` needs its **own** method — the block test can be the unsigned one, but the scalar
+*fallback* must write the 64-bit sign-extended form, so it cannot simply call the `uint32` version.
+
+**The cost side is the number that mattered for the decision**, since the check runs on every block
+whether it succeeds or not: +3% to +6% on a distribution where a block is essentially never
+uniform. Against 6.6×–8.7× where it does fire, and a census that puts 99.7% of values in the
+single-byte class, that trade is not close.
+
+**A mixed block hands the REST to the scalar loop rather than falling back per-block.** That is
+deliberate: resuming the vector loop after a wide value would need the tail written first to keep
+byte order, and the pathological case (`oneWide`) measures at full speed anyway because a single
+wide value in the ragged tail never breaks the block loop at all.
+
+**Two methodology findings came out of this, and both generalise:**
+
+- **The end-to-end harness could not resolve it.** `PackedMatrixBenchmarks` serializes a four-member
+  contract, and the run-to-run spread on a single arm (7.26–7.84 µs for identical code) was
+  *larger than the effect being claimed*; two successive runs put the same arm on opposite sides of
+  its baseline, which would have supported either conclusion. The dilution has two named causes —
+  the ~1 µs/member fixed overhead (item 3 in `notes/packed-writes.md`) and, before the 64-bit arm
+  landed, half the members having no fast path. An end-to-end number is the right *final* check and
+  the wrong instrument for attributing a delta to one loop; `PackedWriteBenchmarks` exists for that,
+  at ±0.5% noise.
+- **Watch what the control arm does.** Classic-emit tracked raw within 1% throughout, which looks
+  like "the optimisation did nothing" and actually means "both models go through the same library
+  `RepeatedSerializer`, so both got it". A control that shares the code under test is not a control.
+
+**The test had a hole that only sabotage found.** `PackedBlockCopyTests.PackedVarintBlockMatchesTheEncodingRules`
+sweeps 31/32/33/47/64/999 elements against a hand-written LEB128 oracle — but widening the
+uniformity threshold from `0x80` to `0x100` left every case passing, because no fixture value lay
+in **128–255**, the band the cutoff actually discriminates. With a `justOver` pattern added it
+fails as it should. The differential suite is structurally blind here for the usual reason: both
+sides go through `RepeatedSerializer`, so a wrong blit is wrong identically on both.
+
+**Tier 2 LANDED 2026-08-15**, for zigzag and for the varint blits' scalar tails. It is worth +25%
+on the `spread` distribution and ~nothing on `small` (where tier 1 already took the work), and it is
+zigzag's *only* lever since that has no blit — 1.5× → 2.4×. Two things it taught:
+
+- **"nearly free" was wrong about the shape.** The obvious form — measure the payload, check the
+  room once, write the whole column unchecked — measured at **exactly zero**, because the writer's
+  buffer is `BufferPool.BUFFER_LENGTH` = 1024 and a packed column worth optimising is precisely one
+  that exceeds it. The guard could essentially never be true. The working form is **chunked**: stay
+  unchecked while the current chunk provably holds one more worst-case element, and hand only the
+  boundary element to the checked path.
+- **it is bounded by what tier 1 leaves.** A bracket in `PackedWriteBenchmarks` (scalar loop vs a
+  no-checks ceiling) put the available win at 2.7× for zigzag and 3.8× for a plain varint column;
+  realised is well under that, because the ceiling also drops the writer entirely.
+
+The original sketch follows, for the record:
+
+**Tier 2 — measure, then write without per-element room checks. Nearly free, falls out of B19.**
+SIMD-measure the block for its total length, reserve exactly that, then run the scalar encoder with
+**no `RemainingInCurrent` test per element**, because the room is already guaranteed. That deletes
+a compare-and-branch per element from the current raw path. Unglamorous, portable, and essentially
+free once B19 exists.
+
+**Tier 3 — full vectorised LEB128. Real, published, and a big lift.**
+The shape is: encode each element into a fixed-width lane, derive a per-block length pattern, then
+**compact via a shuffle table** indexed by that pattern (`pshufb`). It is what streamvbyte and
+group-varint do. Two things bite:
+
+- **LEB128 is deliberately SIMD-hostile.** Group-varint exists *because* interleaved continuation
+  bits resist vectorisation — Google designed a different format rather than vectorising this one,
+  and we cannot change the format;
+- **the shuffle is not portable.** `Vector128.Shuffle`/`Ssse3.Shuffle` is .NET Core 3.0+/.NET 7+,
+  not in the `Vector<T>` API and absent on net472. So tier 3 is a modern-TFM-only path with tiers
+  1–2 as the fallback.
+
+**There is no scatter/gather shortcut past this**: variable-width output needs a compaction step,
+and compaction needs a shuffle. That is the whole difficulty, and it is why the format-level answer
+(group-varint) exists at all.
+
+Ordering: tier 1 is cheap, portable and hits the common case; tier 2 comes free with B19; tier 3 is
+a research-shaped piece that should only start once tiers 1–2 have shown what is left to win.
+
+### B20. Cross-width packed columns — **DOWNGRADED: not reachable from `[ProtoMember]`**
+
+Marc, 2026-08-14: protobuf-net supports cross-targeting widths — a C# `double`/`double[]` member
+can target a `float`/`repeated float` field. Confirmed rather than assumed:
+`ProtoWriter.State.WriteMethods.cs` documents `WriteDouble` as *"supported wire-types: **Fixed32**,
+Fixed64"* and narrows with `float f = (float)value;`. That is the schema-first shape — the `.proto`
+says `float`, the C# member is `double`.
+
+**First, the thing that decides its priority** (Marc asked whether the floating-point parity
+result covered widen/narrow — it did not, and checking why was instructive): **a C# `double` member
+cannot be narrowed onto a `float` field by any `[ProtoMember]` option.** `ValueMember` consults
+`DataFormat` for a width only through `GetIntWireType`, which is called from the **integer** cases
+alone; `Single` and `Double` assign `Fixed32`/`Fixed64` unconditionally. Pinned by
+`ADoubleMemberIsAlwaysFixed64_EvenWithFixedSize`.
+
+So `WriteDouble`'s documented `Fixed32` support exists for **reading** a payload whose schema says
+`float` into a `double` member, and for models configured by other means — not for anything a
+consumer can express with an attribute. That makes this an interop affordance rather than a shape
+real code produces, and it drops below everything else on the list.
+
+**It is a WRITE-side opportunity, not a sizing one**, which distinguishes it from B19: a packed
+*fixed-width* column needs no measuring at all (`WritePacked` is `count * 4` / `count * 8`). So the
+only work is conversion plus store, which is pure throughput.
+
+**And it splits in two, with only half of it interesting:**
+
+- **matching width** (`float[]` → `repeated float`) is already a straight block copy —
+  `MemoryMarshal.AsBytes` over the span, which `notes/nano-writer.md` records as the fixed-width
+  trick. Nothing to gain;
+- **cross width** (`double[]` → `repeated float`, `long[]` → `repeated sfixed32`) converts per
+  element today. That is where `Vector.Narrow` fits: it takes **two** source vectors and yields one
+  narrowed vector, which is precisely the shape needed. `Vector.Widen` is the read-side mirror.
+
+`Vector.Narrow`/`Widen` live in `System.Numerics.Vector`, so they should be available on every TFM
+via `System.Numerics.Vectors` — **worth confirming on net4x before relying on it**, as that is the
+same class of assumption that made `Vector.ShiftLeft` unusable in B19.
+
+**Endianness: do NOT assume little-endian, because this codebase does not and it is free not to.**
+`fixed32`/`fixed64` are little-endian *on the wire*, so a block or vector store of native memory is
+only correct where the CPU agrees. The established pattern here is a `BitConverter.IsLittleEndian`
+guard with a `BinaryPrimitives` fallback — `LocalWriteFixed32` already writes through
+`BinaryPrimitives.WriteUInt32LittleEndian`, and the raw reader states the reasoning outright: *"…
+every little-endian platform (**IsLittleEndian is a JIT constant**), so correctness on BE costs
+nothing — and legacy is BE-correct via BinaryPrimitives, so anything less would be"* a regression.
+
+So the vector arm takes the same shape: guard on `IsLittleEndian`, fall back to the existing scalar
+path on big-endian. The JIT eliminates the dead arm on LE, so the guard is genuinely free — which
+means "assume LE" would buy nothing and lose a correctness property the library currently has.
+
+Note this is **specific to B20**: B19 sizes rather than stores, and a *length* is endian-independent.
+
+**Isolatable, and easily**: a benchmark of scalar convert-and-store versus vectorised
+narrow-and-store over a span needs no serializer at all, exactly as `PackedSizeBenchmarks` needed
+none. Worth doing *because* it is cheap to answer, but note it ranks below B19 on reach: cross-width
+columns are rarer than same-width ones, and the same-width case is already optimal.
+
 ### B27. `AotDifferential` loads the generator from **Debug first**, whatever it was built as
 
 Found 2026-08-16 while merging main into v4: a `-c Release` run reported *"the generated model does
@@ -357,6 +1251,509 @@ itself was built in, and to say so when the dll it picks is older than the libra
 
 **Open.** Not touched in the merge that found it, since a merge commit is the wrong place for it.
 
+### B28. Is `Impl*` dispatch a bottleneck on the CLASSIC write path? — **no on the real write; DEFINITIONALLY yes on the measuring pass**
+
+Marc, 2026-08-16, having read how the two halves differ: the reader's `Impl*` family is **gone**
+(zero occurrences in `ProtoReader*.cs`) — it went with the backend classes, replaced by one
+`_source switch` in `GetNextBuffer`, i.e. a type test per *refill* instead of a virtual call per
+*primitive*. The writer still has all 11, abstract on `ProtoWriter` and overridden three times
+(`BufferWriter`, `Stream`, `Null`). Reasonable to suspect that of being a write-path bottleneck.
+
+**The closest available measurement says no.** The `int32`-bypass fix (`notes/nano-writer.md`,
+"Two findings from reading a golden") removed exactly that cost — runtime tag encode, `WireType`
+set and reset, **and the `ImplWriteVarint32` virtual hop** — for the commonest member shape in
+protobuf, and measured **10.192 → 10.207 µs (+0.15%)**, with the Google.Protobuf gauge drifting
+2.5% between the same two legs. That was the fifth consecutive write-path micro-optimisation to
+measure flat, and the payload census explains it: the descriptor set is **71.5% UTF-8 string
+payload**, so per-field overhead is diluted.
+
+**What IS costing the classic writer** is length discovery, not dispatch: `docs/aot.md`'s gRPC
+table has the runtime model at **+85%** for measure+serialize over plain serialize (write-to-count
+against the null writer, plus buffer-and-patch back-fill), against +51% for the generated model.
+That is what measure-first replaces, and it is why B5's counting mode and the writer swap are one
+piece of work — `ProtoWriter.Null` exists precisely to implement `Impl*` as "count, don't store".
+
+**Still genuinely untested**: an *unpacked numeric-dense* payload, where there are no strings to
+hide behind. The census note is explicit that the descriptor payload cannot speak for one. The
+packed results (3.4×–32×) do not answer it either, since packing replaces the loop with a block
+write. `PackedMatrix` already builds the columns, so running them unpacked through classic vs raw
+would isolate per-field write overhead the way `PackedSizeBenchmarks` isolated sizing.
+
+**But there IS one path where it is a bottleneck by construction: the NULL writer** (Marc, asked
+after the above). `NullProtoWriter` never acquires a buffer — `CreateNullProtoWriter` returns
+`new State(obj)`, whose constructor is `this = default; _writer = writer;`, and the file contains
+**no** `state.Init`, `GetMemory`, `GetSpan` or lease anywhere. So `RemainingInCurrent` is
+permanently 0, **every** raw op fails its room check and takes the `[NoInlining]` slow arm, and the
+override counts instead of storing (`ImplWriteVarint32` → `Advance(MeasureUInt32(value))`,
+`ImplWriteString` → `Advance(expectedBytes)`).
+
+That is elegant — the polymorphism *is* the measuring switch, and no branch anywhere asks "am I
+counting?" — and it means the answer to this whole entry sharpens to: **`Impl*` dispatch is not a
+bottleneck on the real write, and is definitionally a per-primitive cost on the MEASURING pass**,
+where the fast arm is unreachable. That is the `+85%` in the gRPC table, and it is exactly the pass
+measure-first deletes. So the dispatch question and B5 are the same question asked twice.
+
+Two details that follow, both checked rather than assumed:
+
+- **the drift check (B16a) stays valid under the null writer**: `GetUncommitted` is overridden only
+  by the buffer-writer and stream backends, so the null writer inherits `=> 0` and `Position64` is
+  just `_position64`, which `Advance` maintains. A counted length is proven exactly as a written one
+  is;
+- **generated measurable contracts do not normally reach it**: `ProtoWriter.cs`'s
+  `IMeasuringSerializer<T>` + `OptionTrySkipWritingWhenMeasuring` interception calls `Measure(...)`
+  and caches the length instead of traversing. The null traversal is the fallback — a
+  non-measurable contract, or `TryMeasureRaw` answering -1 for a non-writer context.
+
+**Ranked low deliberately** (Marc): the raw path already demotes `Impl*` from the hot arm to the
+overflow arm — every raw primitive is a `RemainingInCurrent` room check with a `[NoInlining]`
+`Impl*` fallback, so the virtual call fires per *buffer boundary*, exactly as the reader's type
+test does. So the question only characterises the **classic** writer, which is on a deliberate
+go-slow as the control and the fallback. It matters for consumers who have not adopted
+`[ProtoModel]` — and `docs/aot.md` shows that population got nothing from v4 on serialize
+(20.59 → 20.39 µs) while deserialize improved 23%.
+
+### B29. `ProtoReader.cs` cites a `PORTING.md` that does not exist
+
+The "museum bridge" comment — the one that explains liquify/resolidify and is the best short
+statement of how the legacy reader relates to `State` — ends *"Museum API, museum prices - see
+PORTING.md"*. There is no such file anywhere in the repo (`git ls-files` finds nothing).
+
+Either write it or drop the reference. It is the pointer someone follows when they wonder why the
+instance API is slow, so a dangling one costs more than no pointer at all.
+
+### B31. An EXTERNAL serializer takes its member off measure-first — widened by `[ProtoSerializer]`
+
+`RawMemberMeasureBlocked` excludes any member whose sub-serializer is external:
+
+```csharp
+if (member.SubSerializer is not null || member.SubSerializerIsScalar
+    || member.SubSerializerDynamic) return false;   // ...i.e. not raw-writable
+```
+
+and the exclusion runs to a fixed point, so the *containing* contract and everything referencing
+it fall onto the classic write-to-count path with it. The comment at the site states the reason
+and it is a good one: **a hand-written or deferred-category serializer frames itself and cannot be
+second-guessed**, so there is nothing for `Measure_` to do arithmetically.
+
+That has always been true of `[ProtoContract(Serializer = …)]`. What `[ProtoSerializer]` (#1275)
+changes is the *reach*: a serializer can now be bound to a type **you do not own** — a BCL type, or
+anything whose assembly cannot reference protobuf-net — so a single declaration can attach to a
+widely-used value type and demote every contract that contains one. Narrower than B26's blast
+radius (only explicitly-bound types, not every member of a scalar kind across an assembly), but the
+same shape, and equally **silent**: no diagnostic says a contract left the fast path.
+
+**Not a defect in the feature, and probably not fixable in general** — the whole point of a
+hand-written serializer is that we do not know what it emits. Two things could narrow it, neither
+attempted:
+
+- an **`IMeasuringSerializer<T>` external serializer could be asked**, exactly as the classic engine
+  already asks one (`ProtoWriter.cs`'s `OptionTrySkipWritingWhenMeasuring` interception). A
+  hand-written serializer that implements the measuring interface is telling us it can size itself
+  arithmetically; the raw path currently ignores that and blocks anyway;
+- the **info diagnostic** proposed in B26 would cover this case too, since it is the same question
+  from the consumer's side: *why did my model leave the optimised path?*
+
+### B32. `PublicAPI.Shipped.txt` has drifted from the real signature — 16 warnings on every build
+
+Noticed 2026-08-17 while running `AotRefGen`; **pre-dates both external PRs** and is nobody's recent
+doing. `TypeModel.GetInbuiltSerializer<T>` produces `RS0016` (symbol not part of the declared API)
+and `RS0017` (declared API symbol not found) simultaneously, in `protobuf-net.Core` and again in
+`protobuf-net` via the type-forward — 16 warnings on a plain `v4` build. The declared entry has no
+default values; the real one does.
+
+Note this **contradicts a claim in `AGENTS.md`**, which says release tracking "is not actually
+*enforced* here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so the table is
+documentation rather than a build gate". That is true of the **RS2000** release-tracking rules and
+false of the **RS0016/RS0017** PublicApiAnalyzers rules, which are plainly live and shouting. The
+sentence should be narrowed when this is fixed.
+
+Cheap to clear (update the two `.Shipped.txt` entries to the current signature), and worth clearing
+precisely because 16 standing warnings are how a *new* one goes unnoticed.
+
+### B33. Move the working notes into per-arc sub-folders (Marc, 2026-08-17)
+
+`notes/` is flat and about to gain a second arc — Marc has parallel work on **protobuf editions**
+(C14 here, deferred to 4.1). Proposal: `notes/aot/…` for this arc, `notes/editions/…` for that one.
+Agreed in principle; **unblocked as of #1275 merging**, which was the reason to wait (it edited
+`notes/aot-findings.md`, and a rename against a concurrent edit is the one conflict class worth not
+inviting).
+
+Three decisions taken when it happens, recorded so they are not re-litigated:
+
+- **`gaps.md` moves too**, to `notes/aot/gaps.md`. Its content is entirely this arc, and a *global*
+  gaps file that mixes arcs gets worse as arcs multiply. `AGENTS.md`'s document table is already the
+  real index, so the model becomes per-arc gaps indexed from there. The cost is that AGENTS.md calls
+  `notes/gaps.md` "the entry point for what is missing" in more than one place, and those pointers
+  must move in the *same commit* — a stale pointer to the file that tells you what is missing is
+  exactly the failure this project keeps recording.
+- **Drop the redundant prefix while moving** — `notes/aot/findings.md`, not
+  `notes/aot/aot-findings.md` — but leave the other names alone (`nano-writer.md`,
+  `packed-writes.md`). Renaming path *and* filename for everything doubles the churn for no gain.
+- **It is a sweep, not a `git mv`.** There are ~148 references across ~25 files, and not only in
+  markdown: `.cs` and `.proto` comments cite these paths (`AotDifferential/Program.cs`, several
+  `Aot/Data/*.input.cs`, `SchemaSourcedModelEndToEndTests.cs`, `Schemas/*.proto`).
+
+Best done on a quiet tree, i.e. after #1277 squashes into `v4`.
+
+### B34. **BLOCKER: PR #1282 (build-time gRPC proxies) lands before #1277** — measured, and the overlap is small
+
+Marc, 2026-08-17. `grpc-aot-generator` → **`main`**, **+11,500 / −85 across 105 files**, and it will
+land first. So #1277 absorbs it, not the other way round. Trial-merged against `schema-breadth` on
+2026-08-17 rather than guessed at; the estimate below is from that merge, not from the diff size.
+
+**The headline is that it does not go where we go.** Zero changes to `protobuf-net.Core` or
+`protobuf-net` — no library changes at all, as intended. Its own weight is a new gRPC generator
+(19 files under `protobuf-net.BuildTools`), its own test corpus (`Grpc/Data`, ~57 goldens) and a new
+`AotGrpcSmoke` project.
+
+**Nine conflicted files, of which one is interesting:**
+
+| file | shape |
+| --- | --- |
+| `ProtoModelGenerator.Emit.cs` | **the same fix, twice** — see below |
+| `docs/aot.md`, `AnalyzerReleases.Unshipped.md`, `PublicAPI.Unshipped.txt` ×3 | list appends |
+| `Reflection/Descriptor.cs`, `Reflection/Internal/CustomProtogenSerializer.cs` | **generated output**; regenerate, never hand-merge — the latter is CI's "Generated model drift" gate |
+| `src/version.json` | trivial |
+
+**The `Emit.cs` conflict is not divergent work.** Both branches carry the *same* fix — a
+`WriteCondition` (`Specified`/`ShouldSerialize`) must replace the `[DefaultValue]` guard rather than
+compose with it — because it was made on `v4` and independently on `main`. **Ours is a superset**: we
+also gate on `!member.IsRequired`. Resolution is take-ours, then check `#1282`'s new
+`ConditionalDefault` fixture still says what it means to.
+
+**The one shared file that matters auto-merges**: `ProtoModelGenerator.Parse.cs` gains **+17/−0**, a
+call to `GrpcProxyGenerator.CollectPayloadsForModel` that seeds the model from `[ProtoGrpc]`
+declarations. That is the entire functional coupling between the two arcs.
+
+**Golden churn is 1 file, not 57.** Only `ConditionalDefault.{input,output,reference}.cs` touch
+`Aot/Data`, and its `.output.cs` was generated on `main`'s emitter, so it will be stale against ours
+(depth guard, folded length temps, drift asserts). Its ~57 `Grpc/Data` goldens contain no
+`RawWrite_`/`RawRead_`/`Measure_` at all — checked — so our emitter changes cannot touch them.
+
+**No diagnostic-id collision, and this is worth noting as evidence rather than luck**: #1282 takes a
+fresh `PBN4000`–`PBN4018` block and *references* `PBN3000`–`PBN3013`, i.e. it was written against a
+`main` that already had #1283's renumber. The owner table in `AGENTS.md` did its job first time out.
+
+**Estimate**: well under an agent-session — five list-append resolutions, one take-ours, two
+regenerations and one golden. The gate battery dominates the wall-clock, not the merging.
+
+**Two things to watch, neither large:**
+
+- the path is `#1282 → main → v4 → schema-breadth`, two hops, and the `Emit.cs` duplicate-fix
+  conflict surfaces on the **v4** hop rather than ours;
+- `CustomProtogenSerializer.cs` is committed generator output, so it churns on *every* hop; regenerate
+  at each, and expect the final shape to be ours.
+
+### B35. ~~Delimited (`DataFormat.Group`) writes did NOT get the optimized emit~~ — **DIAGNOSED AND FIXED 2026-08-19; delimited is now 4.5× FASTER than length-prefixed**
+
+Marc, 2026-08-19, from `marc/bench-delimited-v4` (branched off `schema-breadth`). **Captured, not
+started.**
+
+**Provenance, and why it raises the stakes:** this came out of a write-up of the **editions**
+feature — hence "delimited" rather than `Group`. That is not a naming footnote. **C14** records that
+editions' `features.message_encoding = DELIMITED` *resurrects group encoding as a first-class
+choice*, and that protobuf-net is "unusually well placed" because the wire form is already
+implemented on both paths. B35 puts that premise in question: the framing editions promotes is the
+one that got **none** of the v4 write optimisation, and is now 5.7× slower than the alternative it
+used to beat.
+
+**Corrected 2026-08-19, having first written the opposite:** editions is not pending. It **shipped**
+— #1287, GA in **3.3.21** on 2026-08-17 — so "fix this before editions ships" was already too late
+when it was written. The real shape is worse and more specific:
+
+- **today, on 3.3.21**, a consumer who sets `features.message_encoding = DELIMITED` gets the
+  *faster* framing — 14% at depth 512, 27% at depth 64;
+- **on v4** the same consumer gets 81,270 ns against length-prefixed's 14,258. Choosing the
+  spec-blessed option would cost them **5.7×**, and leave them 4% slower than the release they
+  upgraded from.
+
+So this is a **regression for users of a GA feature, arriving at the v4 upgrade** — not a scheduling
+preference. It is worth weighing as a v4 release-blocker candidate on that basis: v4's whole pitch is
+that everything gets faster, and this is a now-standard encoding choice, on the one wire form
+protobuf-net backed 15+ years before the spec caught up, where it would not.
+
+**C14 predicted it five days early** and the prediction is why the diagnosis has a favourite: that
+entry warned on 2026-08-14 that groups defeating measure-first "would make an editions-delimited
+payload slower rather than faster until it is fixed". B14 was marked done the same day. B35 measures
+the predicted slowness anyway — so **"B14 regressed, or its fix never covered this shape"** outranks
+the other two candidates below.
+
+**The finding.** Length-prefixed framing got the optimized write emit; delimited did not. On
+`schema-breadth`, delimited is now the slower framing in *every* serialize cell, by up to **5.7×**.
+Serialize to `Stream`, deep chain of 512, ns, via the compile-time model, same source file on both
+branches:
+
+| framing | 3.3 | `schema-breadth` | |
+| --- | ---: | ---: | --- |
+| prefixed | 90,798 | 14,258 | **6.4× better** |
+| delimited | 77,941 | 81,270 | **4% worse** |
+
+Every other cell carries the same signature — prefixed improved 1.2–1.7×, delimited did not move.
+**The two framings swapped places**: on 3.3 delimited was 14% faster at depth 512 and 27% faster at
+depth 64; here it is 5.7× and 1.6× slower.
+
+**The read path is fine** and is not implicated: deserialize improved on both framings (deep-512
+prefixed 14,842 → 5,930, delimited 14,968 → 6,336) and now beats Google.Protobuf in all six cells.
+Write emit only.
+
+**Ruled out before filing** (Marc): not a runtime-model fallback — a generated model is closed over
+compile-time types and would throw rather than reflect; not a payload difference — `Setup` asserts
+byte-equality against Google.Protobuf for all four payloads, passing on both branches; not noise —
+5.7× at StdDev under 1%.
+
+**Repro**: `--filter *DelimitedEncoding*` on that branch. `SerializeDeep_ProtobufNet_Delimited` at
+`Size=512` against its prefixed sibling is the single cell to watch.
+
+#### DIAGNOSED 2026-08-19: a **repeated** grouped member disqualifies its whole contract
+
+Not the stated hypothesis, and not a B14 regression. Established by emitting the benchmark's own
+generated code (`-p:EmitCompilerGeneratedFiles=true` on `src/Benchmark`) and counting:
+
+| contract | `Measure_` | `RawWrite_` |
+| --- | ---: | ---: |
+| `LengthPrefixedNode` | 6 | 4 |
+| `DelimitedNode` | **0** | **0** |
+
+Then the counterfactual, which is what makes it proof rather than correlation: **delete the one
+repeated grouped member** and rebuild — `DelimitedNode` immediately emits **3 `Measure_` + 3
+`RawWrite_`**. (The build then fails because the wide benchmarks reference `Children`; the generator
+runs first, so the evidence is complete regardless.)
+
+The benchmark's contract is:
+
+```csharp
+[ProtoMember(2, DataFormat = DataFormat.Group)] public DelimitedNode Child { get; set; }
+[ProtoMember(3, DataFormat = DataFormat.Group)] public List<DelimitedNode> Children { get; set; }
+```
+
+`RawMemberMeasureBlocked`'s carve-out is `DataFormat == Group && Kind == Message &&
+Repeated.Factory is null && Map.Factory is null` — so `Child` passes and **`Children` fails on
+`Repeated.Factory is null`**. `RawRepeatedMessageTarget` independently requires `DataFormat ==
+Default`, so a grouped repeated message is excluded from the raw repeated path in both directions.
+
+**Two things make the effect much larger than the cause looks.** Measurability is a *static*
+property of the contract, so the deep benchmark pays in full even though it never populates
+`Children`; and the exclusion cascades to a fixed point, so a self-referential contract like this one
+is removed entirely. That is the whole 5.7×: `Child` — the member the benchmark actually uses — would
+have been emitted perfectly, and never gets the chance.
+
+**B14 did not regress; its carve-out never covered the repeated case**, and says so: *"Restricted to
+a unary message member: a grouped COLLECTION or MAP frames each element, which is a different sum and
+is not attempted here."* What nobody drew out is that declining the *sum* costs the *contract*.
+That is the general lesson worth keeping — in a fixed-point exclusion, "we do not attempt X" is never
+local.
+
+#### FIXED, and measured: 81,270 ns → 3,047 ns
+
+All four sites landed together. Re-measured on the reporting branch, deep chain, `Size=512`,
+`SerializeDeep_ProtobufNet_*`:
+
+| | 3.3 | `schema-breadth` before | after the fix |
+| --- | ---: | ---: | ---: |
+| length-prefixed | 90,798 | 14,258 | 13,769 |
+| **delimited** | 77,941 | 81,270 | **3,047** |
+
+So delimited is **~27× faster than it was an hour ago**, and now runs at **ratio 0.22 against
+length-prefixed — 4.5× faster**, having been 5.7× slower. The same shape holds at the other sizes:
+0.22 at 64, 0.49 at 8. It also allocates nothing.
+
+**That is the outcome B14 and C14 both predicted and neither had ever been able to show**: a
+fully-grouped tree writes with **no measure pass at all**, so once it is admitted to the raw path it
+must beat length-prefixed, which pays a measure plus a write. C14's claim that protobuf-net is
+"unusually well placed" for editions is now true of the write performance as well as the wire form —
+`features.message_encoding = DELIMITED` is, on v4, the fast choice.
+
+The generated-code check that started this now reads: `DelimitedNode` **0 → 4 `Measure_` + 4
+`RawWrite_`**, matching its length-prefixed twin.
+
+#### The fix, scoped: four sites, and it must be done in one go
+
+The arithmetic is easy — a grouped element is `start-tag + body + end-tag`, and both tags fold to the
+same constant because the field number is shared and only the wire type differs (3 vs 4). It is the
+same shape as `MeasureAddGroup`'s `len += 2 * tagLen + payload`, applied per element.
+
+1. `RawRepeatedMessageTarget` — admit `Group` as well as `Default`;
+2. `RawMemberMeasureBlocked` — drop `Repeated.Factory is null` from the carve-out, letting the
+   repeated branch decide;
+3. `EmitRawRepeatedWrite` — emit start/end tags per element instead of the `| 2` tag plus length
+   prefix (it currently hard-codes wire type 2 for message elements);
+4. the repeated measure arm — `len += 2 * tagLen + sub` per element instead of
+   `tagLen + MeasureRawVarint64(sub) + sub`.
+
+**All four together or none**: AGENTS.md's standing warning is that widening one of these predicates
+without a matching measure arm makes the generator *throw*, surfacing as every model in the
+compilation losing its `Instance` accessor with the real message buried in a `CS8785`. That trap has
+bitten three times.
+
+Worth a decision before starting, because it is a **widening** rather than a repair: the alternative
+is to leave the sum unattempted and instead stop it costing the whole contract — but there is no
+obvious way to do that, since a member either measures or it does not.
+
+#### The stated hypothesis is contradicted by the code, which makes it MORE interesting
+
+Marc's hypothesis, explicitly flagged unconfirmed: *the optimized emit declines group-encoded members
+and leaves them on the classic bodies*. It fits the numbers exactly — v4-delimited ≈ 3.3-delimited
+while v4-prefixed pulled 6.4× ahead.
+
+But the emitter as written says the opposite, in two places, and **B14 is recorded as done**:
+
+- `ProtoModelGenerator.Emit.cs` has a dedicated raw grouped-write arm whose own comment is *"THE
+  point of a group, and the whole of gap B14: framed by a start/end tag pair rather than a length
+  prefix, so there is no length to compute and the measure call is not merely cheap — it is ABSENT.
+  A fully-grouped tree therefore writes without a single measure pass."*;
+- `RawMemberMeasureBlocked` carves `Group` out of the blanket non-default-format block, for exactly
+  this shape: `DataFormat == Group && Kind == Message && Repeated.Factory is null && Map.Factory is
+  null`.
+
+So a deep chain of grouped message members *should* be fully raw **and** measure-free — i.e. strictly
+less work than the prefixed path, which pays Measure_ plus write. That is the reverse of what the
+benchmark reports. Three ways that can be true at once, and they are what the diagnosis has to
+separate:
+
+1. the contracts are being dropped from the measurable/raw set **upstream**, for a reason unrelated
+   to `Group` — the cascade runs to a fixed point, so one unrelated member would do it;
+2. the carve-out is **not being reached** — e.g. the benchmark's chain member is not
+   `ProtoMemberKind.Message` as the predicate requires;
+3. **B14 regressed** since 2026-08-14 and nothing caught it, which would make this the first evidence.
+
+#### Two cheap confirmations, neither needing a benchmark
+
+- **Count the methods.** `-p:EmitCompilerGeneratedFiles=true` on the bench project, then count
+  `Measure_`/`RawWrite_` for the delimited contract. This is the diagnostic `AGENTS.md` already
+  prescribes — *"a model with zero of them is not exercising the raw writer at all, whatever its name
+  says"* — and it distinguishes all three cases above in seconds. Note the trap recorded with it: an
+  absent or empty `generated/` folder is indistinguishable from a generator that emitted nothing.
+- **A `ClassicEmit` control on the same branch.** `[ProtoModel(ClassicEmit = true)]` for the
+  delimited fixture: if v4-delimited ≈ v4-classic-delimited, that confirms it is on the classic
+  bodies. This is a *better* control than the 3.3 comparison because it isolates emit mode without
+  crossing branches or packages — and B18 exists precisely so that comparison is available.
+
+#### Two things the report does not pin down
+
+- **What the six cells are.** The read-path claim is "all six cells" and the write signature is
+  "every other cell", but the matrix is never stated — a reader cannot reconstruct which
+  depths/shapes/framings were run. Worth one line in the PR body.
+- **Terminology.** The report says *delimited* throughout and the cause is `DataFormat.Group`; these
+  are the same thing (proto2 groups, renamed "delimited" by editions), but the codebase says `Group`
+  everywhere and a cold reader will be searching for the wrong token. Worth stating the synonym once,
+  and it will matter more as C14 (editions) lands.
+
+### B36. ~~`DataFormat.Group` vs editions' `DELIMITED`~~ — **DONE 2026-08-19: `Delimited` is the preferred spelling; `Group` kept, but hidden from IntelliSense**
+
+Marc, 2026-08-19, agreeing the terminology gap is real: **at a minimum change the IntelliSense** on
+the enum member so the link is explicit, and **consider** an alias `DataFormat.Delimited` with
+`[Obsolete]` on `Group`.
+
+**Landed as the suggested shape**, per Marc ("synonym sounds good… we'll call it a v4 addition"):
+`DataFormat.Delimited = Group`, both members documented in terms of the other, and **`Group` is not
+obsoleted**. Two risks were checked rather than assumed before doing it:
+
+- **protogen's output cannot change.** The `{dataFormat}` interpolations in both code generators
+  interpolate a **string** (`out string dataFormat`, assigned from `nameof(DataFormat.Group)`), not
+  the enum — so the duplicate value can never make `ToString()` pick the other name in generated
+  code. That was the one way a synonym could have done harm silently.
+- **the public-API analyzers do track enum members** (`ProtoBuf.DataFormat.Group = 4 -> …` is in
+  `PublicAPI.Shipped.txt`), so `Delimited` is declared in `Unshipped.txt` for Core *and* for
+  protobuf-net's forwarded surface. RS0016/RS0017 are live here — see B32 — so omitting it would
+  have added to that noise rather than being silently fine.
+
+**`Group` is additionally hidden** — `[Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]`
+(Marc's call; I had argued against it, and he is the one who has to answer the support questions).
+It matches the house pattern, though note every *existing* use of that pair here also carries
+`[Obsolete]` — `RepeatedSerializer.CreateReadOnySet`, and three members of `TypeModel`. Hiding
+without deprecating is new to this codebase.
+
+Facts established by probe before doing it, since two of the three were guesses otherwise:
+
+- **it compiles cleanly on an enum member** — no warning, and `EditorBrowsable` produces no build
+  diagnostic of any kind, so nothing in our own tree or a consumer's starts complaining;
+- **`ToString()` still returns `"Group"`.** For duplicate-valued members the *first declared* name
+  wins, so the hidden name is the one the runtime reports. Harmless here — nothing stringifies a
+  `DataFormat` (both code generators interpolate a `string` obtained from `nameof`) — but worth
+  knowing before anyone reads a log and cannot find the member;
+- **`[Browsable(false)]` alone would do nothing for this**: it targets the designer property grid.
+  `EditorBrowsable` is the one that reaches IntelliSense, and only for *referenced* assemblies, which
+  a consumer of protobuf-net satisfies.
+
+**Unverified, and worth checking in a real IDE**: whether VS honours `EditorBrowsable` on enum
+members specifically. It is honoured for referenced assemblies generally; enum-member support has
+historically been patchy across versions, and nothing here can test IDE completion.
+
+**protogen still emits `Group`** — deliberately, per Marc, for compatibility: emitting `Delimited`
+would make newly-generated DTOs require a protobuf-net new enough to have it. So generated code
+references a member that IntelliSense will not offer, which is the accepted cost.
+
+Still true, and the reason `Group` stays: obsoleting it would raise warnings in `protogen`-generated
+files consumers cannot edit.
+
+The problem is now permanent rather than cosmetic: editions is **GA** (3.3.21) and the spec's word
+for this encoding is `DELIMITED`, while the codebase says `Group` everywhere. Anyone arriving from
+the editions documentation — including whoever writes the next bug report, as B35 shows — greps for
+the wrong token and finds nothing.
+
+**The doc change is unambiguous and free.** `DataFormat.Group`'s XML summary should name
+`features.message_encoding = DELIMITED` outright, so IntelliSense closes the gap at the point of use.
+Same for `[ProtoMember(DataFormat = …)]` and the `[ProtoInclude]`/`[ProtoMap]` overloads that take
+one.
+
+**The alias is a compatibility question, not a naming one**, and that is the part worth knowing
+before deciding:
+
+- `nameof` saves us from the obvious trap. Duplicate-valued enum members make `ToString()` pick
+  unpredictably between the two names, but the codegen path uses `nameof(DataFormat.Group)`
+  (`CSharpCodeGenerator.cs:979`, and the VB twin), which is compile-time and unambiguous. So an alias
+  would *not* silently flip generated output.
+- **`[Obsolete]` on `Group` is the disproportionate part.** protogen writes that token into consumer
+  source — `tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}")` — so obsoleting it
+  makes every contract-first consumer's **generated** DTOs raise warnings in code they did not write
+  and cannot edit. Fixing that means flipping protogen to emit `Delimited` in the same release, which
+  then makes newly-generated DTOs require the newer protobuf-net. A rename would be paying a
+  compatibility cost for a vocabulary problem.
+- a `case DataFormat.Group: case DataFormat.Delimited:` pair is **CS0152** (duplicate label), so any
+  consumer switching on the enum has to pick one. Minor, but it is the kind of thing that surfaces
+  after the fact.
+
+**Suggested shape, if it is wanted at all**: add `Delimited` as a documented synonym, do **not**
+obsolete `Group`, and leave protogen emitting `Group` until there is a reason to break that. New
+code and editions-driven users get to write what the spec says; nobody's build starts warning. The
+XML doc alone may be enough — it costs nothing and fixes the discoverability problem, which is the
+actual complaint.
+
+### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
+
+Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
+anywhere the resolver returns `Default` and the emitted bytes are identical, so the blast radius for
+existing consumers is zero rather than small), wire-correct where used (AotDifferential 100%, its
+fixture covering nullable / repeated-nullable / map exemption / explicit-member-wins / `WellKnown`
+promoting 200→240), and in the right layer — `Parse.cs`, the plan rather than the emit, so
+`ClassicEmit` and raw both inherit it and neither engine diverges from the other.
+
+Its measure-first cost is recorded in **B26**, which is where the work is. The rest:
+
+1. **Generator-side caching and an early-out.** The runtime helper gained a cache after the
+   contributor's own final review; `GetDataFormatDefault` did not. It walks the contract's base
+   chain plus module plus assembly attributes **per member**, and builds a `Qualified` key before
+   checking whether any declaration exists at all. This is the only cost that falls on compilations
+   that never use the feature, which is what makes it grate against the `ProtoBufDisableBuildTools`
+   promise that unwanted tooling costs one dictionary lookup. **Unmeasured** — the magnitude is not
+   asserted here, only the shape.
+2. **A refusal should name the ambient source.** `PBN3001: "DataFormat.ZigZag on a BCL type"`
+   reported against a member carrying no format attribute is baffling, and it costs the whole
+   contract plus its referrers.
+3. **A declaration that can never match is a silent no-op** — `typeof(Guid?)`, `typeof(List<Guid>)`
+   — because both sides unwrap the *member* but never the declared type. Analyzer-shaped.
+4. **No `GetSchema` test.** The attribute rewrites the emitted `.proto` (`fixed64` vs `int64`,
+   `bytes` vs `string` for a `Guid`), which is arguably its most user-visible consequence and is
+   covered nowhere.
+5. **`decimal` + `ZigZag` is a live JIT/AOT divergence, and PRE-DATES this feature.** The generator
+   drops any BCL-kind member with `ZigZag`; the runtime *ignores* the format for `decimal` entirely
+   (`ValueMember.cs`'s `ProtoTypeCode.Decimal` arm sets `WireType.String` unconditionally and calls
+   `DecimalSerializer.Create(compatibilityLevel)` with no `dataFormat` argument). So the runtime
+   model serializes and the generated model drops the contract and cascades. Reachable today with a
+   plain `[ProtoMember(1, DataFormat = ZigZag)]`; `[ProtoDataFormat]` only widens the aperture.
+   AGENTS.md already calls the refusal "a small deliberate over-reach" — the one-line fix is to
+   exempt `decimal` from it.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The feature lands on the **`aot-schema-model`** branch; the design and the findings are in
@@ -367,6 +1764,303 @@ including the `sint`/`fixed` spellings, `string` with protogen's proto3 `[Defaul
 guard, `bytes`/`bool`/`float`/`double`, enums as members, nested messages and enums, `repeated` in
 both protogen shapes, maps including the `bool`-key case, `import`, and the naming rules
 (pluralisation, collision avoidance, package → namespace).
+
+### B22. ~~The raw PACKED path is natively UNMEASURED~~ — **CLOSED 2026-08-15, and it cost zero warnings**
+
+**Found by audit, 2026-08-15, and it is a hole by this repo's own standard** ("whatever `AotSmoke`
+does not cover is not fine, it is unmeasured" — AGENTS.md). `grep IsPacked src/AotSmoke/*.cs`
+returns nothing, so the entire raw packed surface — six write methods, six measures, the SIMD blit,
+the `MemoryMarshal.Cast` puns — has never run under ILC.
+
+The risk is low rather than nil: it is all managed span work with no reflection, so the failure
+modes that bit before (`MissingMethodException` from a trimmed constructor, "missing native code or
+metadata") do not obviously apply. But `Vector<T>` under ILC and a `MemoryMarshal.Cast` over an enum
+span are both unexercised there, and low-risk-but-unmeasured is exactly what the map members were
+before adding three of them moved the warning count 20 → 29.
+
+**Fix is cheap**: add packed members to `AotSmoke` covering a varint column, a fixed-width column, a
+bool column and an **enum** column (the enum one being the sharp case, since it is the pun). Re-measure
+the warning baseline on both sides when doing it, since the count tracks fixtures.
+
+**Done.** Four columns on `Order`, 40 elements each — deliberately over the 32-element block so the
+vector path engages *and* leaves a ragged tail; a shorter column would have exercised only the
+scalar fallback and proved nothing about the blit:
+
+| member | reaches |
+| --- | --- |
+| `Readings` (`int[]`) | varint over a span, values straddling 128 so the uniform-block blit **and** the scalar fallback both run |
+| `Offsets` (`int[]`, `FixedSize`) | the flat block copy under a `Fixed32` header |
+| `Flags` (`bool[]`) | the payload-IS-the-span blit, behind its vectorised canonical scan |
+| `Levels` (`Status[]`) | the **enum pun** — `MemoryMarshal.Cast<Status, int>` at the call site, the sharp case, since nothing else here would show it wrong |
+
+`win-x64` native publish **passes**, and the framing is verifiable by eye in the emitted payload:
+field 59 is `DA-03-A0-01` — tag, then a length of 160, i.e. exactly 40 x 4 bytes.
+
+**The warning count did not move: 19 before, 19 after**, with the composition unchanged (6 `IL2067`,
+5 `IL3050`, 3 `IL2091`, 3 `IL2070`, 1 `IL2057`, 1 `IL2055`). Binary 3.44 MB.
+
+That zero is worth recording rather than shrugging at, because the comparable case went the other
+way: adding three *map* members moved the baseline 20 -> 29 on the spot. The difference is that the
+raw packed surface is pure span work — no `Activator`, no `MakeGenericType`, no serializer resolved
+from the model — so it demands no metadata at all. `Vector<T>` under ILC and a `MemoryMarshal.Cast`
+over an enum span were the two genuinely unknown pieces, and both are free.
+
+### B23. ~~Packed columns are limited to `T[]` and `List<T>`~~ — **`ImmutableArray<T>` DONE 2026-08-15; derived lists still a hold**
+
+**`ImmutableArray<T>` now takes the span path**, for packed *and* unpacked, write *and* measure —
+so it also stopped blocking measure-first for its contract. Three findings, in the order they
+turned up:
+
+1. **`AsSpan()` fails safe on a default instance, on both targeted runtimes.**
+   `default(ImmutableArray<T>)` throws on `Length`, the indexer and `GetEnumerator`, but `AsSpan()`
+   returns an **empty span** — checked on net472 *and* net8.0 rather than assumed from one, since
+   the type comes from a package down-level and the shared framework on modern .NET.
+2. **A default serializes exactly as empty**, not as absent: the packed member still writes its
+   zero-length header (`12-00`). That follows from `ImmutableArraySerializer.Initialize` mapping
+   `IsDefault` onto `Empty`. Together with (1) this means the emit needs **no guard at all** — an
+   empty span produces precisely the bytes a default is defined to produce.
+3. **...and the guard that was already there was actively WRONG.** `ImmutableArray<T>` declares
+   lifted equality over `ImmutableArray<T>?`, so the generated `if (tmp != null)` *compiles* for it
+   and evaluates to **false** for a default instance. So a default immutable array was skipped
+   entirely. Invisible for an unpacked member (empty writes nothing anyway); for a **packed** one it
+   dropped the zero-length header — a real wire divergence, and **pre-existing**, not introduced by
+   this work.
+
+That third one is the interesting one, because of how it was found: the corpus differential caught
+it (`99% match`, one contract) on a contract that only existed because the *test* for (1) declared
+one. Nothing in the fixtures had a packed `ImmutableArray`, so the bug had no way to show. The fix
+is `NeedsNullGuard`, keyed on `Repeated.IsValueType`.
+
+**`AsSpan` availability is probed** (`ProtoModelPlan.ImmutableArrayAsSpan`) separately from
+`ListAsSpan`, because it is a different capability with a different origin — `CollectionsMarshal` is
+a net5+ *framework* type, while this rides on the `System.Collections.Immutable` *package*, so a
+net472 consumer can perfectly well have it. Absent it, the member keeps the stateful path.
+
+**Derived lists remain the deliberate hold** described below — still no fixture, still not widened.
+
+### B23 (original entry). Packed columns are limited to `T[]` and `List<T>`
+
+`RawPackedWritable` admits `Factory is "CreateList" or "CreateVector"` only, so of the 28 repeated
+factories the generator knows, **two** reach the raw packed path. Two exclusions are worth separating,
+because one is a design decision and the other is unfinished work:
+
+- **`ImmutableArray<T>` — unfinished.** The design note in `notes/packed-writes.md` explicitly lists
+  it as one of the three shapes that yield a span (`.AsSpan()`), and it never got implemented. It is
+  a struct, so it also needs the hazard settled that the design note flags and nobody has checked:
+  **`default(ImmutableArray<T>)` is not null and throws on most access**, so whether `AsSpan()`
+  survives a default instance decides whether the emit needs an `IsDefaultOrEmpty` guard the array
+  case does not.
+- **derived lists (`TakesCollectionType`) — a deliberate hold, with the reasoning already done.** The
+  unpacked path excludes them because `foreach` binds to the DECLARED type's `GetEnumerator`, which
+  could be a hiding redeclaration. `CollectionsMarshal.AsSpan` has no such hazard, so the packed path
+  **could** be wider than the unpacked one. It is not, only because no fixture covers a derived
+  packed list — and a widening nobody has a test for is not a widening.
+
+Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
+span at all and is correctly out.
+
+### B26. Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain — **and a SHIPPED FEATURE now leans on the remainder**
+
+**Priority note, 2026-08-17.** `[ProtoDataFormat]` merged into `v4` (#1276), and its headline use —
+`[assembly: ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at level 300 — lands squarely on
+the tier this entry still owes. `RawMemberMeasureBlocked` blocks a member on *any* non-default
+`DataFormat` (bar a packed column and `Group` on a unary message) and `BclMeasurable` gates on the
+default format outright, so an ambient declaration takes members off measure-first and **one blocked
+member removes its whole contract, to a fixed point through every referrer**. The feature's own
+fixture demonstrates it: `FormatDefault.output.cs` emits `RawRead_` and **zero**
+`Measure_`/`RawWrite_`.
+
+That is a gap here, not a defect there — but it changes the ranking twice over. The consequence is
+**silent**: a consumer who turns the attribute on loses write throughput with no diagnostic and no
+way to discover why, and the symptom is "it got slower". And the arms it needs are the *cheapest*
+ones outstanding, because the formats this attribute makes common are constant-width — a level-300
+`FixedSize` `Guid` is 16 bytes, `FixedSize` `DateTime`/`TimeSpan` is 8. Doing the constant-width
+cases alone would cover the motivating use.
+
+Worth considering alongside them: an **info-level diagnostic** when an ambient format demotes
+contracts off measure-first. Nothing else tells the consumer, and "your model got slower for a
+reason you cannot see" is precisely the failure this codebase keeps writing notes about.
+
+
+
+Marc, 2026-08-15: *"ensure we use span based unrolls when possible for lists/arrays/immutable arrays
+for regular non-packed writes and measures of all types."* Half done, and the halves are worth
+separating because only one of them is a whitelist.
+
+**Collection shape — done.** `RepeatedSpan` is the single decision point and covers all three:
+`T[]` directly, `List<T>` via `CollectionsMarshal.AsSpan` (net5+, probed), `ImmutableArray<T>` via
+`AsSpan()` (probed). Both `EmitRawRepeatedWrite` and `EmitRawRepeatedMeasure` go through it, so
+wherever the raw path is taken there is no enumerator, packed or unpacked.
+
+**Element kind — still a whitelist.** `RawRepeatedWritable` admits `Bool`, the integer kinds,
+`Char`, `Single`, `Double`, `String`, plus `Message` through `RawRepeatedMessageTarget`. Absent, and
+therefore still on the stateful path *and* still measure-blocking their contract:
+
+| kind | state |
+| --- | --- |
+| `Bytes` (`List<byte[]>`) | **DONE 2026-08-16.** Length-prefixed and shaped exactly like `String`; `WriteRawBytes` emits its own length and the measure is `tag + varint(len) + len`. Admitted for the `byte[]` element spelling only. |
+| `IntPtr`/`UIntPtr`, `DateOnly`/`TimeOnly` | **DONE 2026-08-16**, scalar *and* repeated. All four are plain varints — `WriteDateOnly` is `WriteInt32(DayNumber)`, `WriteTimeOnly` is `WriteInt64(Ticks)` — so no library surface was needed after all. |
+| `DateTime`, `TimeSpan`, `Guid`, `Decimal` | **still open**, and the only ones that genuinely need library work. |
+
+Every kind added stops blocking measure-first for the contract that holds it, and that exclusion
+runs to a fixed point — so the reach is wider than the member count suggests.
+
+#### The last four: level 200/240 DONE, the level variants remain
+
+**Landed 2026-08-16** — all four compatibility-level BCL types now measure arithmetically at the
+**default format**, which is the common case since level 200 is the default:
+
+| type | measure | shape |
+| --- | --- | --- |
+| `DateTime`, `TimeSpan` | `BclHelpers.MeasureDateTime` / `MeasureTimeSpan` | one `MeasureScaledTicks`, since both serialize as that message |
+| `Guid` | `BclHelpers.MeasureGuid` | constant: empty, or two `Fixed64` fields at one-byte tags = **18** |
+| `decimal` | `BclHelpers.MeasureDecimal` | value-dependent: three fields, each omitted when zero, so `0m` has an empty body |
+
+Each measure sits **beside its writer** rather than in `BclHelpers` with the public entry points —
+the two must agree field-for-field and adjacency is the cheapest way to keep that true.
+`BclHelpers` just forwards. They take no `ISerializationContext`, because a generated `Measure_`
+has none.
+
+Proven against **bytes protobuf-net actually wrote** (`BclMeasureTests`, 29 cases): serialize a
+one-member contract, read the length prefix back out, compare. Not against a second copy of the
+arithmetic, which would agree with itself. Verified able to fail.
+
+**Still open**, in the order worth doing them:
+
+1. **`DataFormat.FixedSize` on `DateTime`/`TimeSpan`** — the flat eight-byte form under a `Fixed64`
+   header, so the measure is the constant `8` and there is no length prefix at all. Cheap, but it
+   needs the blanket `DataFormat != Default` refusal in `RawMemberMeasureBlocked` relaxing for
+   these kinds — the same shared gate that already carries carve-outs for `Group` and for packed.
+2. **level 240+ `Timestamp`/`Duration`** — a seconds+nanos message, genuinely different arithmetic
+   from `ScaledTicks`; needs its own measure and its own fixture.
+3. **level 300 `GuidString`/`GuidBytes`/`DecimalString`** — string and byte forms; `GuidBytes` is a
+   flat 16 and `GuidString` a flat 36, so only `DecimalString` is value-dependent.
+4. **repeated BCL elements** — `List<DateTime>` and friends. Note the ordering trap found while
+   fixturing this: a repeated member is tested for eligibility **before** the BCL arm, so a single
+   `List<DateTime>` drops its whole contract back to write-to-count.
+
+**The trap to expect, because it has now happened three times:** the measure emitter reaches BCL
+kinds from **three** places — the nullable path, the tuple path, and the main switch — and each
+asks `RawScalarMeasure`, which returns null for these and is dereferenced with `!`, emitting
+`len += 1 + ;`. Landing `DateTime`/`TimeSpan` exposed the nullable one; widening to `Guid`/`decimal`
+exposed the tuple one, via an *unrelated* fixture (`Diagnostics/TupleLevels`). Anyone adding the
+level variants should expect a fourth. The goldens catch it; review did not.
+
+### B24. ~~`Serialize<object>` on a `RuntimeTypeModel` costs 41×~~ — **FIXED on main (#1280); the general half remains**
+
+Found while disproving the "~1 µs per member" claim, and it is a real user-facing cliff rather than a
+harness artefact — but note it is the **pair**, and neither half alone is slow:
+
+| model | dispatch | per call | allocated |
+| --- | --- | ---: | ---: |
+| generated | generic | 58 ns | 0 |
+| generated | `object` | 76 ns | 0 |
+| `RuntimeTypeModel` | generic | 72 ns | 0 |
+| `RuntimeTypeModel` | **`object`** | **2951 ns** | **2272 B** |
+
+This is the call shape `PBN2011` already warns about for AOT reasons; it turns out to carry a large
+throughput and allocation cost as well, on a shape plenty of pre-generic protobuf-net code still
+uses.
+
+**DIAGNOSED 2026-08-15, and it is a `main` bug, not a v4 one** — `RuntimeTypeModel.cs` is
+byte-identical between this branch and `origin/main`, so it ships in 3.x today.
+
+**Cause: negative serializer lookups are never memoised.** `RuntimeTypeModel.GetServices<T>` is
+
+```csharp
+=> (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T), ambient));
+```
+
+and `GetServicesSlow` ends with `if (service is not null) { … _serviceCache[type] = service; }`. A
+`Hashtable` miss and a cached null are indistinguishable, so a type with **no** service re-runs the
+whole slow path on **every call**: a `lock (_serviceCache)`, `TryGetRepeatedProvider`, and
+`FindOrAddAuto`. `typeof(object)` is exactly that type, and the object API asks for it every time.
+
+Attributed exactly rather than guessed — `src/NanoBench/ObjectDispatchProbe.cs`, run with
+`dotnet run --project src/NanoBench -c Release -- --probe`, using
+`GC.GetAllocatedBytesForCurrentThread()` so it needs no profiler:
+
+| | B/call |
+| --- | ---: |
+| `TryGetSerializer<object>` (never cached) | **2272.0** |
+| `TryGetSerializer<Payload>` (cached) | 0.0 |
+
+i.e. **100% of the cliff is that one lookup**. It is perfectly linear from 1 call to 1000, so it is
+a fixed per-call cost and not a warm-up, and it is identical to a `Stream` and to an
+`IBufferWriter`, so the destination is irrelevant.
+
+**Scale**: 2.2 KB/call is ~22 MB/s of pure GC pressure for a service doing 10k messages/sec through
+the non-generic API, for no work.
+
+**Two candidate fixes**, and they are not the same size:
+
+- **A, minimal.** Short-circuit `typeof(T) == typeof(object)` in `TypeModel.TryGetSerializer<T>`;
+  `object` can never have a serializer, so nothing is lost.
+
+  **This was first written up as "a JIT-time constant, so it folds away and costs every other `T`
+  nothing". That is wrong, and Marc caught it: all reference-type instantiations share a single
+  canonical JIT body (`__Canon`).** So for a reference-type `T` — which is every contract that
+  matters here — the test does *not* fold; it becomes a runtime type-handle load and compare inside
+  the shared code, paid by every caller. It folds only for value-type `T`, which get their own
+  instantiation, and those are not the case in question.
+
+  It is probably still fine, because `TryGetSerializer<T>` is called **per root serialize**, not per
+  member, and one type-handle compare against ~72 ns of existing work is noise. But "probably fine"
+  is a measurement, not an assertion, and the first version of this entry asserted it.
+- **B, general and needs care.** Memoise negatives with a sentinel. Wider (it helps *any* repeated
+  failed lookup, including the auxiliary-type paths) but it changes behaviour: a type that becomes
+  serializable later would stay negative unless invalidated, and `ResetServiceCache` is called from
+  only two `MetaType` sites — nothing obviously invalidates when a *new* type is added. The cache is
+  also keyed on type alone while `GetServicesSlow` takes an ambient `CompatibilityLevel`; that is
+  already true of positives, but caching negatives widens the exposure.
+
+**The `__Canon` correction shifts the balance toward B**, which is worth saying plainly since A was
+recommended on a false premise. B adds **nothing at all** to the generic path — the fast path stays
+a single `Hashtable` hit — whereas A adds a comparison to every reference-type caller to fix a case
+only the object API reaches. B's cost is entirely in invalidation semantics, which is a design
+question with a testable answer, rather than a tax on the hot path.
+
+A third option worth weighing with them: cache the negative **only for `typeof(object)`**, inside
+`GetServices`/`GetServicesSlow` rather than at the generic call site. That has B's zero-overhead
+property and A's zero-risk property — `object` cannot become serializable, so the invalidation
+question does not arise — at the cost of being a special case rather than a general fix.
+
+**Fix on a main-facing branch either way** (Marc, 2026-08-15: "we might break tradition and fix it on
+a main-facing branch") so 3.x gets it, and let it flow into v4 by merge. Whichever is chosen, the
+`--probe` numbers above are the before/after gate.
+
+**FIXED on main — [PR #1280](https://github.com/protobuf-net/protobuf-net/pull/1280)**, 2026-08-15,
+by the third option: an early return for `typeof(object)` in `GetServicesSlow`, plus
+`ObjectSerializerLookupTests`. **2272 → 0 B/call.**
+
+**Merged to `main` as `afb97b2d` and merged back here**, 2026-08-15, so `--probe` now reports
+**0 B/call** on this branch too. The route was: cherry-pick onto a branch off `main`, drop the local
+copy so exactly one version existed, then take it back by merge. That avoided reconciling a
+duplicate — and, the real reason for the care, avoided any review change to #1280 turning that
+duplicate into a conflict. In the event #1280 merged unchanged, so the caution cost nothing and
+proved nothing; it was still the right shape for a fix whose review outcome was unknown.
+
+**Still open, and the larger half**: general negative-caching, for the auxiliary-type paths. #1280
+fixes only `typeof(object)`, which is the one type where "never has a service" is guaranteed
+(`Add(typeof(object))` is refused), so it needs no invalidation. Doing it generally does.
+
+### B25. ~~Doc links in SOURCE still point at `protobuf-net.github.io`~~ — **CLOSED, main #1279**
+
+Main's move to `docs.protobuf-net.dev` swept `docs/` only; roughly ten links remain in source —
+`ThrowHelper`, `DataContractAnalyzer`, `AotMigrationAnalyzer`, `AddProtoModelCodeFixProvider` and its
+tests, `Issue722`, `NullWrappedValueAttribute`. Two of those are **analyzer `helpLinkUri`s and
+exception messages**, i.e. consumer-visible.
+
+Deliberately not fixed on this branch: every one is present in main with the same URL, so it is
+main's sweep to finish, and doing it here would put unrelated churn in a merge. Marc is handling it
+(2026-08-15). Recorded so it is not lost if that lands after this branch merges — note
+`AotMigrationAnalyzer.cs` is the one file both sides touch, so expect a small conflict there.
+
+**Done by main #1279** (`d5324e64`), merged here 2026-08-15. A grep for `protobuf-net.github.io`
+across `*.md`/`*.cs`/`*.csproj` now returns only this heading. The predicted conflict in
+`AotMigrationAnalyzer.cs` did **not** materialise — both sides touched the file but not the same
+lines, so it auto-merged. Leaving it to main was the right call: no unrelated churn in a merge
+commit, and the sweep landed as one coherent change rather than a scattered follow-up.
 
 ### C1. ~~Point the existing schema corpus at this path~~ — **done, 2026-08-14**
 
@@ -411,12 +2105,20 @@ as `WriteCondition`, which emits `if (value.ShouldSerializeA())`. A couple of li
 The same shape: a `ShouldSerialize{Name}()` over a private nullable backing field. Also just a
 `WriteCondition`.
 
-### C4. Enum in a `repeated`, or as a map value — blocked on B1
+### C4. ~~Enum in a `repeated`, or as a map value~~ — **done 2026-08-14**
 
-The proxy is **free**: naming the enum on the plan is all `EmitEnumProxies` needs, and that was
-built and working. What blocks it is the packed-empty disagreement in B1. Note an enum map **key**
-cannot occur at all — proto forbids it (*"invalid map key type (only integral and string types are
-allowed)"*).
+Both were refused, and neither refusal survived checking. The repeated-enum one claimed *"the
+packed write arm disagrees with ref-emit on an empty collection"*; every clause of that failed (see
+B1). The enum-map-value one was parked *"alongside the repeated enum, to keep the two moving
+together"* — it had no reason of its own, and the enum map **key** was already supported.
+
+Lifted, and held by the **byte gate** instead of by a refusal — `conformance.proto` gains
+`repeated Grade grades` and `map<string, Grade> ranks`, with samples covering the **empty** case
+specifically, since that was the shape the original disagreement was reported against. 1559
+conformance cases pass, byte-identical to `RuntimeTypeModel`.
+
+**Corpus: 241 → 261 of 268 schemas, 1369 → 1597 contracts, refusals 27 → 7.** The remaining 7 are
+all `group` (C6), which is now the only genuinely missing schema feature.
 
 ### C5. ~~A map value that is itself a map~~ — **not a gap**
 
@@ -429,15 +2131,221 @@ Found by a scope test asserting the refusal and getting a plan instead — the t
 list to evaporate on contact (with the enum map key, and the enum-proxy plumbing). Worth the
 pattern: **a refusal nobody has tried to trigger may be describing an impossibility.**
 
-### C6. proto2 — deferred
+### C6. proto2 — **`required` and defaults fixed 2026-08-14; `group` still deferred**
 
-`required`, `[default = x]` (→ `[DefaultValue]`), and `group` encoding.
+Not a deferral on inspection: `required` and `[default = x]` were **silently wrong on the wire**,
+and the fix was two lines. `group` remains refused, which is safe.
 
-### C7. `extend` / extensions, well-known types, schema options — deferred
+The bug went both ways, which is why neither showed up as a missing feature:
 
-protogen emits extension *accessor methods* rather than members; the well-known types
-(`Timestamp`, `Duration`, `Any`) are where the compatibility level starts to matter; and
-schema-level options can change the contract.
+| sample | ref-emit | us, before |
+| --- | --- | --- |
+| `new Required()` (all zero) | `08-00 12-00 18-00` | **`(empty)`** — every required member dropped |
+| `new Defaulted()` (nothing set) | **`(empty)`** | a full payload — every declared default written |
+| `Defaulted` with values equal to the declared defaults | writes them | omits the enum one |
+
+The cause is that protogen presence-tracks proto2 differently from how the plan assumed:
+`required` becomes `[ProtoMember(..., IsRequired = true)]`, which **drops** the write guard; and
+**every** proto2 `optional` — with or without a declared default — is backed by a nullable field
+and a `ShouldSerialize{Name}()`, so presence rather than value decides. We were comparing each
+member against its type's zero, and the generated getters return the declared defaults.
+
+So `[default = x]` needs **no handling of its own**: the condition REPLACES the value guard, so
+the declared default never reaches a comparison. Two lines: set `IsRequired` from the label, and
+extend `WriteCondition` to proto2 optionals.
+
+`proto2`-ness has to come from the **file**, not the field: a proto3 singular field is also
+`LabelOptional` in the descriptor, so the label alone cannot tell them apart and getting it wrong
+would put a `ShouldSerialize` guard on every proto3 field in the corpus. Note `syntax` is *absent*
+in most proto2 files, since it is the default.
+
+**Why this was invisible:** the byte gate was proto3-only, and the corpus probe only asks whether
+a plan BUILDS. `SchemaProto2ProbeTests` now reports the plan's view of each proto2 shape, and
+`Schemas/legacy.proto` puts them on the byte gate — with samples chosen so the guard can fail: an
+all-zero `required`, and values explicitly set EQUAL to their declared defaults.
+
+Still deferred: **`group`** — 6 of the corpus's 268 schemas, and the only genuinely missing
+schema feature. It is refused rather than mis-emitted.
+
+### C7. ~~`extend` / extensions~~ — **already works, 2026-08-14**; well-known types and schema options deferred
+
+Probed rather than assumed, and the extension half needed nothing: protogen emits extension
+accessors as **static extension methods** (`Extensible.GetValue<T>(obj, 100)` /
+`AppendValue<T>(obj, 100, value)`) rather than as members, so they are consumer API and never
+reach the plan. The message carrying `extensions 100 to 199` is just an extensible contract, which
+the AOT generator has supported throughout — `SchemaPlanBuilder` already marks every
+schema-sourced contract `ProtoExtensibleKind.Untyped`, matching protogen's `: IExtensible` on
+every message. An `extend` block adds no members and needs no plan.
+
+Worth knowing: those accessors DO work under native AOT, but only for the generic overloads at
+the default `DataFormat` — which is exactly what protogen emits. See `docs/aot.md`'s known issues.
+
+Still deferred here: the **well-known types** (`Timestamp`, `Duration`, `Any`), where the
+compatibility level starts to matter, and **schema-level options** that can change the contract.
+
+### C13. ~~`ProtoFileGenerator`'s language-version detection stops at C# 9~~ — **fixed 2026-08-14**
+
+`ProtoFileGenerator` maps `context.ParseOptions.LanguageVersion` onto the string protogen's
+`GeneratorContext` parses, and the switch ends at `LanguageVersion.CSharp9 => "9"`, with
+`_ => null` for everything above. `CommonCodeGenerator.GeneratorContext.Supports(Version)` then
+reads null as **"default is highest"** and returns true.
+
+So today **every C# 10+ project reports no language version to the code generator**, and every
+`Supports(...)` test passes unconditionally.
+
+**Harmless right now, and not harmless in general.** Nothing protogen emits is newer than C# 9, so
+no consumer can currently hit it — but the failure mode is emitting syntax a consumer's compiler
+does not accept, i.e. a build break in a project they did not change. Any feature gated on
+language version (C12 is the first) is inert until this is fixed, which makes it a prerequisite
+rather than a tidy-up.
+
+Found by Marc questioning a claim in C12 that the Roslyn path was version-blind. It is not blind —
+it reads the real value — but it discarded everything above C# 9, which has the same effect and is
+harder to see.
+
+**Fixed by decoding arithmetically rather than by naming constants.** From C# 8 the enum is
+`major*100 + minor` (`CSharp8 = 800`, `CSharp10 = 1000`, `CSharp12 = 1200`), so the mapping names
+nothing — which it must not, since this assembly compiles against the Roslyn 4.3.1 baseline where
+`LanguageVersion.CSharp12` does not exist. That is the same reason `ProtoModelGenerator` already
+spells its AOT floor `(LanguageVersion)1200`, and following that precedent means **C# 15 needs no
+change here either**.
+
+Safe to switch on, checked rather than assumed: every existing `Supports(...)` gate in
+`CSharpCodeGenerator` is C# 3, 6 or 7.1, so reporting 10+ where nothing was reported before
+satisfies all of them and changes no output — 403 BuildTools, 556 Reflection (both TFMs) and 1431
+conformance tests pass with no golden drift.
+
+**A correction worth keeping**, since it is the exact failure this file exists to prevent: the
+first cut assumed the values were 10, 11, 12 and range-checked `>= 10 and < 100`. They are 1000,
+1100, 1200 — so it matched *nothing*, and was a silent no-op that a hand-written test expectation
+would have confirmed happily. Marc's aside that "for AOT *we* demand C# 12" is what led to the
+existing `(LanguageVersion)1200` constant and the real numbering. `LanguageVersionMappingTests`
+therefore **derives** its expectations from the enum rather than restating them, so the same
+mistake cannot pass twice.
+
+### C14. ~~protobuf **editions**, and refreshing `descriptor.proto`~~ — **LANDED (#1287) and GA in 3.3.21, 2026-08-17.** The deferral below is stale; read it as background
+
+Marc, 2026-08-14. Editions replace the proto2/proto3 split with per-feature settings, and the one
+that matters here is **`features.message_encoding = DELIMITED`** — which *resurrects group
+encoding*, deprecated in proto3 and now back as a first-class choice. Marc's note: this is
+substantially what he recommended to the protobuf team 15+ years ago, and it is what protobuf-net
+has implemented throughout as `DataFormat.Group`.
+
+**Status, 2026-08-19.** Editions **shipped**: `ff6a6cf4 Implement "editions" (#1287)` is on `main`
+and released **GA as 3.3.21** on 2026-08-17. `DELIMITED` is handled through the schema front-end
+(`Parsers`, both code generators, and a refreshed `descriptor.proto`), so the "what is missing is the
+schema half" paragraph below and the `descriptor.proto` prerequisite are both **done**. Everything
+after this block is background, kept because the mapping table and the packed-by-default polarity
+warning are still the reference for anyone touching it.
+
+**Caveat RESOLVED 2026-08-19 — see B35.** "Unusually well placed" was, for a few days, true of the
+wire form and false of the write performance: a repeated grouped member disqualified its whole
+contract from measure-first, so delimited measured 5.7× slower than length-prefixed. Fixed; delimited
+now runs **4.5× faster** than length-prefixed, because a fully-grouped tree needs no measure pass at
+all. The claim below is now true in both senses. The paragraph that follows is kept as the record of
+what was wrong, since the shape of the mistake is the reusable part.
+
+**The caveat as it stood.** "Unusually well placed" is true of the wire form and
+currently *false* of the write performance. This is no longer a "fix it before editions ships"
+question, because editions has shipped: a consumer can opt into `message_encoding = DELIMITED`
+**today, on 3.3.21**, where it is the *faster* framing (14% at depth 512). On v4 the same consumer
+gets 81,270 ns against length-prefixed's 14,258 — so choosing the spec-blessed option would cost them
+**5.7×**, and leave them 4% slower than the release they upgraded from. That is a regression for
+users of a **GA feature**, materialising at the v4 upgrade rather than at some future release.
+
+So we are unusually well placed: the wire form is already implemented on both paths, and the
+`DataFormat.Group` plumbing is the same plumbing editions needs. What is missing is the *schema*
+half — recognising an `edition = "2023"` file and mapping its feature set onto the options
+protobuf-net already has.
+
+**Two features map onto options we already have**, per
+[the encoding guide](https://protobuf.dev/programming-guides/encoding/#packed) (read 2026-08-14,
+because "things keep changing"):
+
+| edition feature | protobuf-net equivalent |
+| --- | --- |
+| `message_encoding = DELIMITED` | `DataFormat.Group` |
+| `repeated_field_encoding = PACKED` / `EXPANDED` | `IsPacked = true` / default |
+
+Note **Edition 2023+ packs by default**, which inverts the proto2 posture — so an editions
+front-end has to treat "packed" as the default and `EXPANDED` as the opt-out, rather than the
+reverse. Worth knowing before the mapping is written, since getting the polarity wrong is silent.
+
+**A prerequisite, and one we have already stubbed a toe on:** our `descriptor.proto` needs
+refreshing. It is behind upstream — regenerating it during the sub-type work turned up a missing
+`FieldOptions.unverified_lazy` that had been silently landing in extension data — and editions add
+a good deal more (`Edition`, `FeatureSet`, `FeatureSetDefaults`, and the `features` fields on every
+options message). That refresh is worth doing on its own, ahead of and independent of editions
+support, since a stale descriptor mis-parses schemas rather than merely lacking features.
+
+See also **B14** — and note this paragraph **predicted B35 five days early**: groups currently
+*defeat* measure-first rather than benefiting from it, which would make an editions-delimited payload
+slower rather than faster until it is fixed. B14 was marked done the same day this was written; B35
+now measures exactly the slowness predicted here. That corroboration is why "B14 regressed, or its
+fix never covered this shape" is the leading hypothesis rather than one of three equals. That is the
+ordering constraint between these two items.
+
+### C12. Extension *properties* for `extend`, via C# 14 extension blocks — **tracked, opt-in when built**
+
+Marc, 2026-08-14. protogen emits extension accessors as static methods (see C7):
+
+``` c#
+public static string GetNote(this Base obj) => Extensible.GetValue<string>(obj, 100);
+public static void SetNote(this Base obj, string value) => Extensible.AppendValue<string>(obj, 100, value);
+```
+
+C# 14 **extension blocks** allow extension *properties*, so the same thing could read as an
+ordinary member — `thing.Note = "x"` rather than `thing.SetNote("x")`:
+
+``` c#
+public static partial class Extensions
+{
+    extension(Base obj)
+    {
+        public string Note
+        {
+            get => Extensible.GetValue<string>(obj, 100);
+            set => Extensible.AppendValue<string>(obj, 100, value);
+        }
+    }
+}
+```
+
+Four things to settle before building it, in the order they bite:
+
+- **TWO gates, and they are AND — not either** (Marc). It is API-breaking, so the primary gate is
+  an explicit opt-in: another protogen option in the shape of `SubTypes`, honoured on all three
+  routes, **off by default**. The language version is a *second* guard on top, never the enabling
+  condition.
+
+  **This distinction is the whole point**: nobody should get an API break as a side effect of a
+  machine acquiring a newer SDK.
+
+  **PREREQUISITE, found by Marc questioning the claim above.** The build-tools path *does* read
+  the language version from the project — `context.ParseOptions.LanguageVersion` in
+  `ProtoFileGenerator` — so it is not blind, as this note first said. But **the mapping stops at
+  `CSharp9`**: everything newer falls to `_ => null`, and `ctx.Supports(null)` returns *true*
+  ("default is highest"). So every modern project currently reports **no** language version, and a
+  langver gate would be **inert** — the mechanism would emit C# 14 syntax into a C# 10 project.
+  That switch has to be extended before the second gate means anything, and it is a live
+  latent bug rather than a new requirement: it is simply unexercised because nothing yet emits
+  syntax newer than C# 9.
+
+  The **CLI** is genuinely ignorant unless `+langver=` is passed, so the opt-in has to carry the
+  weight there regardless — which is a second reason it, not the version, is the primary gate.
+
+  So: opt-in off → nothing ever changes. Opt-in on, language version too low → a **diagnostic and
+  fall back to methods**, not a build break; that is the failure mode the `PBN2000` floor exists
+  to avoid elsewhere, and the reason it is a fallback here rather than a hard floor is that the
+  consumer asked for a nicety, not for a wall.
+- **`repeated` extensions do not fit the shape.** Today they are `GetTags` (returning
+  `IEnumerable<T>`) plus `AddTags` — and a property cannot express "append". So this is not a
+  blanket swap: either repeated extensions keep their methods (a mixed API, which is ugly but
+  honest) or the property returns something with an `Add`, which changes the semantics. **This is
+  the part that needs a decision, not just work.**
+- **No AOT implication whatsoever.** These are consumer API and never reach the plan — see C7 —
+  so nothing in the AOT generator or the byte gate changes. It is purely a protogen codegen
+  nicety, which is also why it is safe to defer indefinitely.
 
 ### C8. ~~Cross-schema type references~~ — **covered, 2026-08-14**
 
@@ -476,6 +2384,7 @@ silent pick.
 
 | question | detail |
 | --- | --- |
-| **manual review of the write-emitted goldens** | 55 changed shape when `int32` moved onto the raw path. **The one item still open** |
+| **manual review of the write-emitted goldens** | **65 changed vs `v4`**, plus **4 new fixtures** (`PackedAll`, `BclMeasure`, `RepeatedBytes`, `GroupedRepeated`) — all four now carry a `.reference.cs`, so ref-emit's own output is available beside every one. Start with `PackedAll.output.cs`: it is the only file showing all six `WriteRawPacked*` variants, three of which appeared in no golden before it existed. **The bodies moved four times since this review began** — B16's local folding, B16a's drift calls, B35's grouped-repeated arm, and the `GroupedElements` contract moving onto measure-first — so anything read before `f69d4baf` is stale. Each diff is uniform and skims quickly. **The one item still open, and the only thing owed by a human in this branch** |
+| ~~do the two external PRs land before or after #1277?~~ | **Answered by events, 2026-08-17: both landed first.** #1276 and #1275 are merged into `v4` and forward-merged here. What remains is **#1282** (build-time gRPC proxies), which lands before #1277 — see **B34** for the measured overlap: small, and nothing this branch has to do in advance |
 | ~~the tag ladder: keep or revert?~~ | **Settled 2026-08-14: narrowed, not reverted.** Split by *dynamic population* rather than kept or dropped wholesale — the one- and two-byte arms and the bool fold stay, the folded 3/4/5-byte arms go back to the shipped encoder. Two follow-on micro-ideas (`&` for `&&`, hoisting `RemainingInCurrent`) were answered by inspection and need no measurement; the reasoning is in the comment block |
 | ~~when to rewrite `docs/aot.md`'s "needs its own project" advice~~ | **Done**, pre-emptively on `aot-schema-model`, so it arrives with the merge |

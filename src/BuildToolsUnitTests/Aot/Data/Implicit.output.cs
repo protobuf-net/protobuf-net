@@ -33,10 +33,11 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_AllFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllFields value)
-            => RawWrite_AotFixtures_Implicit_AllFields(ref state, value);
+            => RawWrite_AotFixtures_Implicit_AllFields(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllFields value)
+        public static void RawWrite_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllFields value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = Field_AotFixtures_Implicit_AllFields__Ignored_k__BackingField(value);
             if (tmp1 != 0)
@@ -133,10 +134,11 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_AllPublic(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllPublic>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllPublic value)
-            => RawWrite_AotFixtures_Implicit_AllPublic(ref state, value);
+            => RawWrite_AotFixtures_Implicit_AllPublic(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllPublic value)
+        public static void RawWrite_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllPublic value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Apple;
             if (tmp1 != null)
@@ -231,10 +233,11 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_FirstTag(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.FirstTag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.FirstTag value)
-            => RawWrite_AotFixtures_Implicit_FirstTag(ref state, value);
+            => RawWrite_AotFixtures_Implicit_FirstTag(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.FirstTag value)
+        public static void RawWrite_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.FirstTag value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp10 = value.Alpha;
             if (tmp10 != 0)
@@ -312,10 +315,11 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Ignoring value)
-            => RawWrite_AotFixtures_Implicit_Ignoring(ref state, value);
+            => RawWrite_AotFixtures_Implicit_Ignoring(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Ignoring value)
+        public static void RawWrite_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Ignoring value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Kept;
             if (tmp1 != 0)
@@ -376,10 +380,11 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Mixed value)
-            => RawWrite_AotFixtures_Implicit_Mixed(ref state, value);
+            => RawWrite_AotFixtures_Implicit_Mixed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Mixed value)
+        public static void RawWrite_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Mixed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Alpha;
             if (tmp1 != 0)

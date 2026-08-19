@@ -31,6 +31,20 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static readonly string[] Bools = ["1", "0", "yes", "no", "true", "false", "on", "off"];
 
+        /// <summary>
+        /// Renders a <c>major*100 + minor</c> language version as protogen spells it — "12" for
+        /// 1200, "7.3" for 703 — dropping a zero minor, since protogen's own parse accepts both
+        /// but every existing spelling here omits it.
+        /// </summary>
+        internal static string Describe(int encoded)
+        {
+            int major = encoded / 100, minor = encoded % 100;
+            return minor == 0
+                ? major.ToString(CultureInfo.InvariantCulture)
+                : major.ToString(CultureInfo.InvariantCulture) + "."
+                    + minor.ToString(CultureInfo.InvariantCulture);
+        }
+
         private event Action<string>? Log;
         event Action<string>? ILoggingAnalyzer.Log
         {
@@ -100,6 +114,26 @@ namespace ProtoBuf.BuildTools.Generators
                                 LanguageVersion.CSharp7_3 => "7.3",
                                 LanguageVersion.CSharp8 => "8",
                                 LanguageVersion.CSharp9 => "9",
+                                // C# 8 and up are encoded as major*100 + minor (CSharp8 = 800,
+                                // CSharp10 = 1000, CSharp12 = 1200), so they can be decoded
+                                // arithmetically and need NO named constant. That matters: this
+                                // assembly compiles against the Roslyn 4.3.1 baseline, where
+                                // LanguageVersion.CSharp12 does not exist - which is the same
+                                // reason ProtoModelGenerator spells its floor `(LanguageVersion)1200`.
+                                // It also means C# 15 needs no change here.
+                                //
+                                // The bounds exclude the pseudo-values: Default is 0, and
+                                // Latest/LatestMajor/Preview sit at int.MaxValue and just below.
+                                // Those map to null - "assume highest" - which is what EVERY
+                                // version above 9 used to get, and the only safe answer for a
+                                // version we cannot name.
+                                //
+                                // LanguageVersionMappingTests derives the expectations from the
+                                // enum itself rather than restating them, because the first cut
+                                // of this assumed the values were 10, 11, 12 and silently matched
+                                // nothing at all.
+                                _ when (int)cs.LanguageVersion is >= 1000 and < 10000
+                                    => Describe((int)cs.LanguageVersion),
                                 _ => null
                             };
                         }

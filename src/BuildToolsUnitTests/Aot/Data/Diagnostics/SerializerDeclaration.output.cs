@@ -27,10 +27,11 @@ partial class SerializerDeclarationModel
             => RawRead_AotFixtures_SerializerDeclaration_Untouched(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SerializerDeclaration.Untouched>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SerializerDeclaration.Untouched value)
-            => RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref state, value);
+            => RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SerializerDeclaration.Untouched value)
+        public static void RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SerializerDeclaration.Untouched value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

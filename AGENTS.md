@@ -9,7 +9,7 @@ code-quality rests with the human submitter/reviewer; "slop" will be culled with
 
 ## Where the notes live — and which branch they are on
 
-**`docs/` is the published site** (<https://protobuf-net.github.io/protobuf-net/>), so it holds
+**`docs/` is the published site** (<https://docs.protobuf-net.dev/>, via `docs/CNAME`), so it holds
 consumer documentation only. Working notes — design, findings, corpus snapshots — live in
 **`notes/`**, which is not published. The test for which is which is `docs/index.md`: everything in
 `docs/` is linked from it. If you add a working note to `docs/`, you have published it.
@@ -19,24 +19,29 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-The stack **collapsed onto `v4` on 2026-08-14**: the reader arc, the writer arc, the buffer core,
-`[ProtoSchema]` and the protogen sub-type option are one branch again. So there is currently no
-"which branch is this note current on?" question to answer — everything below is current on `v4`.
-This section stays because that question returns the moment a branch is cut.
+The stack collapsed onto `v4` on 2026-08-14, and **a branch was cut again on 2026-08-15**:
+`schema-breadth` (PR #1277, *"Additional write-path extensions"*) carries the packed write arc and
+the raw repeated/BCL measure work. So the "which branch is this note current on?" question is live
+again, and the column below is restored — its absence is a statement that the stack is flat, and
+two wrong-branch claims were shipped last time it was left off.
 
 ```
-main → v4   (raw-writer, writer-buffer-core and aot-schema-model are folded into it)
+main → v4 → schema-breadth   (PR #1277)
 ```
 
-| document | covers |
-| --- | --- |
-| `AGENTS.md` (this file) | conventions, traps, gate battery |
-| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
-| `notes/nano-core.md` | the reader arc: design and the cuts |
-| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
-| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
-| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
-| `notes/aot-findings.md` | numbered findings from the AOT generator work |
+**Every note listed below is current on `schema-breadth`**, not on `v4`: all twelve tracked
+documents were touched there. Read them from that branch, and treat `v4`'s copies as one arc behind.
+
+| document | covers | current on |
+| --- | --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery | `schema-breadth` |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `schema-breadth` |
+| `notes/nano-core.md` | the reader arc: design and the cuts | `schema-breadth` |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `schema-breadth` |
+| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** | `schema-breadth` |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items | `schema-breadth` |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `schema-breadth` |
+| `notes/aot-findings.md` | numbered findings from the AOT generator work | `schema-breadth` |
 | `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots |
 
 **When a branch is next cut, restore the "where it is current" column.** Its absence is a statement
@@ -89,6 +94,183 @@ path. So `src/Examples` calls `model.Compile("X", "X.dll")` and compiles cleanly
 writing no dll at all. Don't infer from that code that persistence works on modern .NET.
 
 If a new TFM is ever needed, prefer **net10.0** (LTS) over net9.0.
+
+## Don't improve the legacy library or ref-emit "while you're in there"
+
+`RepeatedSerializer`, the other `protobuf-net.Core` serializers, and the ref-emit path are
+**deliberately left alone**, and a change there needs a reason beyond "it was easy from here".
+This is not conservatism about old code; the legacy path has three jobs that a well-meaning
+optimisation quietly destroys:
+
+- **it is the CONTROL.** `[ProtoModel(ClassicEmit = true)]` exists so a generated model can be
+  compared against the old engine. If the old engine absorbs the new work, that comparison stops
+  measuring anything;
+- **it is the FALLBACK.** Every shape the generator refuses lands here, so it needs to stay boring
+  and trustworthy rather than clever and new;
+- **it is the BASELINE for perf claims.** A speedup measured against a baseline that already
+  contains the speedup is not a speedup.
+
+**This has already happened once, at full scale.** The packed work put ~130 lines of fast paths
+into `RepeatedSerializer` — block copies, a bool blit, direct varint arms, a vectorised measure —
+and because both models route through that one method, **every "classic vs raw" number in
+`notes/packed-writes.md` was comparing classic against classic**. It looked for weeks like the raw
+writer simply had no advantage on packed data. It was reverted on 2026-08-15 (`a73d6fc0`) and the
+work rebuilt where it belongs, as raw writer state APIs the generator calls directly.
+
+**The diagnostic worth memorising: if a benchmark shows classic tracking raw within ~1%, suspect
+they are the same code before you conclude the optimisation did nothing.** A control that shares
+the code under test is not a control. Confirm it the cheap way — emit the generator output
+(`-p:EmitCompilerGeneratedFiles=true`) and count `Measure_`/`RawWrite_` methods; a model with zero
+of them is not exercising the raw writer at all, whatever its name says. Note this also means
+`ClassicVsRawTests` can pass while comparing a thing to itself.
+
+**When a revert IS the answer, revert to the right point, not to `main`.** That same file had also
+been touched by the writer arc for unrelated reasons (a typo fix with an `[Obsolete]` forwarder,
+and an `AdvanceAndReset` → `ResetWireType` change), so `git checkout main -- <file>` would have
+silently taken those too. Find the last commit before the work being backed out and restore to
+that.
+
+**None of this is "never touch it".** Revisiting the library and ref-emit with what the raw arc
+learned is a genuine future item — but as its own piece of work, measured on its own terms, and
+deliberately *after* the new path is established enough to be the reference. Doing it
+opportunistically, one fast path at a time, is what removes the ability to tell whether any of it
+helped.
+
+## The writer's measure-first path: three invariants that are easy to break
+
+The generated writer measures a contract arithmetically (`Measure_`) and then writes it
+(`RawWrite_`) with an exact length prefix, instead of writing it twice. Design and history are in
+`notes/nano-writer.md`; these three are the ones that bite silently.
+
+**1. Not every contract is measurable, and losing it cascades.** `RawMeasurableShape` plus
+`RawMemberMeasureBlocked` decide, and an ineligible member removes its *whole contract* from the
+measurable set — computed **to a fixed point**, so the exclusion spreads to everything that
+references it. One awkward member can therefore drop a large subtree onto the classic
+write-to-count path. When something is unexpectedly slow, check whether it is still measurable
+before looking anywhere else.
+
+**2. A `[ProtoBeforeSerialization]` callback disqualifies a contract, and that is load-bearing.**
+`Measure_` has no `ISerializationContext` and so cannot fire callbacks at all; refusing such
+contracts is the only thing keeping the length honest, since firing only in `RawWrite_` would let
+the object change between measuring and writing.
+
+**How often a callback fires is per-BACKEND today**, which is easy to miss and is pinned by
+`CallbackMeasurePassTests`:
+
+| route | `BeforeSerialization` fires | `IsMeasuring` |
+| --- | ---: | --- |
+| plain `Serialize` to a **stream**, nested contract | **once** | `false` |
+| to an **`IBufferWriter`**, nested contract | **twice** | `true`, then `false` |
+| explicit `Measure` + `Serialize` | **twice** | `true`, then `false` |
+
+The stream writer *reserves, writes and back-fills* the length — shuffling bytes when the varint
+width changes — so it crawls once. The buffer-writer path computes the length first, writes the
+prefix, writes for real, and then **validates** (`Length mismatch; calculated 'x', actual 'y'`), so
+it crawls twice. So a consumer's callback side-effect already behaves differently depending on
+which output they serialize to, with nobody having asked to measure.
+
+Where doubling happens it is *required*, not incidental: both passes must observe the same object,
+or the measured length will not match the bytes written — which is exactly what that validation
+catches. `ProtoWriter.IsMeasuring(context)` is how a callback tells the passes apart.
+
+**It is not as simple as "twice for anything nested", though**, because a **group** carries no
+length prefix — so nothing measures it and its callback fires once, *unless something above it
+needs a length*, at which point the parent's measure walks through it anyway. The count follows the
+nearest **length-prefixed ancestor**, i.e. the path from the root, not the member's own framing:
+
+| shape | stream | buffer-writer |
+| --- | --- | --- |
+| group at the root | `[false]` | `[false]` |
+| same group under a length-prefixed parent | `[false]` | `[true, false]` |
+
+**The invariant to hold is "AT MOST TWICE"** (Marc), for a node not duplicated in the tree — and
+that is what the length cache buys. Every length-prefixed ancestor needs a length for everything
+beneath it, so a naive measure-by-writing would re-walk the innermost node once per ancestor;
+memoising a sub-message's measured length by reference collapses that to one measure pass plus one
+write pass, whatever the depth. **Verified at depth 3: two calls, not eight**
+(`AtMostTwiceHoweverDeepTheNesting`). If that test ever reports more, the cache has stopped working
+and the cost is exponential in depth, not linear.
+
+**Decided (Marc, 2026-08-14): twice becomes the consistent normal for both backends**, rather than
+the stream being the odd one out — stated as "**once per pass over this node, at most twice**",
+since the number of passes is a property of the path. That is also where measure-first leads
+anyway, since it *is* measure-then-write. See `notes/gaps.md` B17 for what it costs the classic
+stream path, and B14 for why the two cannot be settled independently.
+
+**3. The write recursion is depth-guarded on its own, and used not to be.** It was once safe *by
+construction* — every write was preceded by a measure, and the measure carried the budget. A
+**grouped** sub-message has no length prefix, so nothing measures it; making groups write raw
+removed that guard, and a cycle through grouped members recursed until the process died. `RawWrite_`
+now threads a remaining depth budget, seeded at the boundary from `state.RawDepthBudget` and never
+touching `writer.Depth` — the "raw API does not maintain all the members" convention. Every
+`RawWrite_` checks it, deliberately: the alternative is a predicate over which contracts are
+reachable through a group, and that predicate's failure mode is an uncatchable stack overflow.
+`GroupCycleTests` drives exactly that graph.
+
+Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract emits a local
+per member — 1000 in the corpus's worst case — and at roughly 8 KB a frame the stack is exhausted
+around 128 levels, long before the depth guard fires. See `notes/gaps.md` B16, where the
+length-temporary families have since been folded and `tmpN` remains.
+
+**4. A measured length that disagrees with the body is caught in DEBUG, and only in DEBUG.** Every
+length-prefixed raw write is followed by `DebugAssertPosition`, comparing `state.Position64` against
+the prefix that was written; the pair of `[Conditional("DEBUG")]` helpers is emitted onto the
+services type. This is the raw path's answer to the classic buffer-writer's *"Length mismatch;
+calculated 'x', actual 'y'"* validation, and it reaches the consumer's own contracts, which the
+differential corpus never can.
+
+Three things about it are load-bearing:
+
+- **`Debug.Fail` terminates the process on .NET Core.** It is an uncatchable `FailFast`, not a
+  logged warning — so drift cannot be ignored, and equally a **false positive would kill every
+  consumer's Debug build**. Widening what the assert covers demands the same breadth of proof the
+  original did (the whole fixture set under `-c Debug`, plus `AotSmoke -c Debug`).
+- **`Position64` is safe to lean on here despite the raw path not maintaining most writer state**,
+  because it is *derived* — committed bytes plus the backend's uncommitted buffer offset, which is
+  exactly what a raw write advances. Contrast `writer.Depth`, which the raw path genuinely does not
+  maintain.
+- **`ref`, not `out`**: `out` on a conditional member is **CS0685**, precisely because the call may
+  vanish and leave the target unassigned. The capture local costs a Release consumer nothing —
+  measured at 0 IL locals and 2 bytes of IL once both calls are removed.
+
+### Repeated members on the raw path: four predicates, and one trap that has bitten three times
+
+The generator decides per member whether a repeated or BCL member takes the raw path. The decision
+is spread over four small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy to widen
+one at a time without noticing the others:
+
+| predicate | decides |
+| --- | --- |
+| `RawRepeatedWritable` | an **unpacked** repeated member: collection shape and element kind |
+| `RawPackedWritable` | a **packed** one — a different engine, not a variation, since packing needs the payload measured before the prefix goes down |
+| `RepeatedSpan` | how the collection becomes a span: `T[]` directly, `List<T>` via `CollectionsMarshal` (probed), `ImmutableArray<T>` via `AsSpan()` (probed separately — it rides on a *package*, not the framework) |
+| `BclMeasurable` | whether a compatibility-level BCL member has arithmetic sizing (currently: default format, `DateTime`/`TimeSpan` below level 240, `Guid`/`decimal` below 300) |
+
+**Widening any of them without a matching measure arm makes the generator THROW**, and the symptom
+does not name the cause: every model in the compilation loses its generated `Instance`, producing a
+pile of unrelated-looking `CS0117`s (and, in `AotDifferential`, a segfault). The real message is in
+a `CS8785` generator warning — *"unmeasurable member slipped eligibility: …"*. That self-check is
+load-bearing; without it the first symptom would be wrong bytes.
+
+**The measure emitter reaches scalar kinds from THREE branches** — the nullable path, the tuple
+path, and the main switch — and each calls `RawScalarMeasure(...)!`. For a kind that helper has
+nothing for, the `!` turns null into an empty string and emits `len += 1 + ;`, which compiles
+nowhere. Adding a kind means visiting all three. This has bitten **three times**: `DateOnly`
+(main switch), the level-200 BCL pair (nullable), and `Guid`/`decimal` (tuple — surfaced by an
+*unrelated* fixture, `Diagnostics/TupleLevels`). The goldens caught every one; review caught none.
+
+**`NeedsNullGuard` exists because a value-type collection must NOT get one.** `ImmutableArray<T>`
+declares lifted equality over `ImmutableArray<T>?`, so `tmp != null` compiles for it and evaluates
+to **false** for a `default` instance — silently skipping the member. Harmless unpacked (empty
+writes nothing) and a wire divergence packed (it drops the zero-length header). `AsSpan()` on a
+default yields an empty span on every targeted runtime, and protobuf-net treats default as empty,
+so the guard is not merely unnecessary there but wrong.
+
+`BclHelpers.Measure*` is the sizing surface these rely on. Each measure lives **beside its writer**
+(in `PrimaryTypeProvider.*.cs`), not next to the public entry point, because the two must agree
+field-for-field and adjacency is the only cheap way to keep that true; `BclHelpers` forwards. They
+take no `ISerializationContext` — a generated `Measure_` has none. `BclMeasureTests` proves them
+against **bytes protobuf-net actually wrote**, never against restated arithmetic.
 
 ## AOT source generator (work in progress)
 
@@ -421,9 +603,19 @@ member's declared type, while `Create{X}<TElement>()` has it fixed by the factor
 it. Read uses the same merge shape as sub-messages (existing collection passed in, result assigned
 back only when non-null). Facts confirmed against ref-emit rather than assumed:
 
-- **Packing is a compile-time decision.** The features constant carries `OptionPackedDisabled`, and
-  ref-emit simply *omits* it for `[ProtoMember(IsPacked = true)]`. Unpacked is the default; that
-  named argument is not supported yet, so we always emit the disabled form.
+- **Packing is a compile-time decision, and `IsPacked` IS honoured** — this previously said the
+  argument "is not supported yet, so we always emit the disabled form", which was **stale**. The
+  features constant carries `OptionPackedDisabled` by default and both ref-emit and the generator
+  *omit* it for `[ProtoMember(IsPacked = true)]`; `ListOptions.input.cs` pins five such members
+  against `ListOptions.reference.cs`.
+
+  Two things worth knowing before treating packing as a correctness matter. **Whether to pack is
+  the writer's free choice** — protobuf requires a *reader* to accept both forms, so declining to
+  pack is never a wire bug. And **protobuf-net packs only when it can cheaply size the elements**:
+  `RepeatedSerializer.Write` takes the packed branch only when the element serializer is an
+  `IMeasuringSerializer<T>`. `EnumSerializer<TEnum>` is not one, so **a repeated enum is never
+  actually packed**, on either path, even though `TypeHelper.CanBePacked` returns true for enums.
+  See `notes/gaps.md` B1.
 - The features wire type is the **element's**, not the member's.
 - A message element passes `this` as the sub-serializer; a scalar element passes nothing.
 - **A repeated enum needs a serializer proxy.** Unlike an inline scalar, `RepeatedSerializer`
@@ -1014,8 +1206,32 @@ a refusal, not about what is outstanding.
 - a behaviour change shows up as a diff to read, not an assertion to appease;
 - don't hand-edit a golden to make a test pass — fix the generator and re-run.
 
+**They only write back in DEBUG.** `WriteBack` locates the source tree from `[CallerFilePath]`, and
+a Release build stamps deterministic paths (`/_1/...`) that do not exist on disk, so it silently
+returns. Run the golden tests in **Debug** to regenerate; a Release run just fails twice and writes
+nothing, which looks exactly like a generator producing unstable output.
+
+**The goldens COMPILE their output** (`Assert.Equal(0, result.ErrorCount)`), not merely diff it —
+which is the only reason a change that emits a local in one code path but declares it in another is
+caught at all. Worth remembering before "simplifying" that assertion away.
+
+**A `.txt` golden pins diagnostic LINE NUMBERS**, so editing a fixture's header comment moves them
+and fails the test for a reason that has nothing to do with the generator.
+
 `Data/*.cs` files are excluded from compilation via `<Compile Remove="Aot/Data/**/*.*.cs" />` and
 copied to the output directory instead.
+
+### Reading what the generator actually emitted
+
+`-p:EmitCompilerGeneratedFiles=true`, and then look under
+`obj/<config>/<tfm>/generated/protobuf-net.BuildTools/...`. Two traps, both hit on 2026-08-16:
+
+- **without that flag the generated files are never written to disk at all**, so an empty (or
+  absent) `generated` folder is indistinguishable from a generator that emitted nothing. A grep
+  returning zero is not evidence until you have checked the files exist;
+- **the folder survives a branch switch**, so a stale file from another branch reads as current.
+  It is also incremental: if nothing recompiled, nothing is rewritten. `--no-incremental` and a
+  timestamp check are the cheap guards.
 
 Fixture conventions:
 
@@ -1107,6 +1323,13 @@ Two members earn their place for reasons that are not obvious from reading them:
   other's output, so a `[ProtoModel]` in the same project as the `.proto` gets an *error symbol* for
   the seed — one with a name but no attributes, which used to be reported as "not marked
   `[ProtoContract]`". `PBN3002` now recognises `TypeKind.Error` and names the fix.
+
+**Packed columns** were added 2026-08-15 (`Readings`/`Offsets`/`Flags`/`Levels`) and are the only
+members reaching the raw packed surface — the SIMD blit, `Vector<T>` under ILC, and the
+`MemoryMarshal.Cast` enum pun, none of which any other member touches. 40 elements each so the
+vector path engages with a ragged tail; a short column would exercise only the scalar fallback.
+Adding them moved the warning count by **zero** (19 → 19), which is the opposite of what the map
+members did (20 → 29) and is explained by the surface being pure span work with no metadata demand.
 
 The feature sweep is **complete** as of this branch: every generator feature that was listed as
 natively unexercised now has a member here — the immutable *reference* families, both callback
@@ -1406,6 +1629,21 @@ differential, and `AotConformanceTests`) replay a declaration the same way — t
 `MetaType.SerializerType` — rather than teaching each harness a second mechanism, and the category
 assert's message now names both routes (the contract's own `Serializer =` and a `[ProtoSerializer]`
 declaration) so a mismatch says which one supplied the serializer.
+
+**A `Nullable<TStruct>` member whose serializer is scalar- or undetermined-category used not to
+compile at all**, and now works. The two switches disagreed about precedence: the *write* tested
+`IsNullable && Kind == Message` **before** the scalar arm and routed to `WriteMessage` — a length
+prefix over a bare scalar — while the *read* tested the scalar arm **first** and emitted
+`ISerializer<T>.Read(ref state, T?)`. Probed rather than reasoned: the generated code failed with
+`CS1503: cannot convert from 'Gauge?' to 'Gauge'`, so the wrong bytes were unreachable — the
+consumer's build broke first. Both sides now unwrap with `GetValueOrDefault()` and the write uses
+`WriteAny`, which takes the framing off the serializer. `AotSmoke`'s `Tally<string>? Bonus` covers
+it under ILC.
+
+Worth keeping as a shape, not just a fix: **presence and framing are decided by different switches
+in the two directions**, so a member kind that is both nullable *and* specially framed has to be
+handled in both, and getting only one produces a build break rather than a wire bug — which is the
+good failure, and the reason this sat undiscovered.
 
 #### `[ProtoSurrogate]` on the model
 

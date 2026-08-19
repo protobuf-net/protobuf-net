@@ -62,6 +62,44 @@ namespace ProtoBuf.Internal
             return new decimal(lo, mid, hi, isNeg, scale);
         }
 
+        /// <summary>
+        /// The body length the <c>Write</c> below produces — the same three conditional fields,
+        /// sized rather than written. Kept adjacent to the writer for the usual reason.
+        /// </summary>
+        /// <remarks>
+        /// Value-dependent, because each field is omitted when zero: a <c>0m</c> has an entirely
+        /// empty body. The bit-twiddling is duplicated from the writer rather than factored out,
+        /// which is the one wart here — the alternative was reshaping a hot write path to hand back
+        /// its intermediate values.
+        /// </remarks>
+        internal static int MeasureDecimalBody(decimal value)
+        {
+            ulong low;
+            uint high, signScale;
+            if (s_decimalOptimized)
+            {
+                var dec = new DecimalAccessor(value);
+                ulong a = ((ulong)dec.Mid) << 32, b = ((ulong)dec.Lo) & 0xFFFFFFFFL;
+                low = a | b;
+                high = (uint)dec.Hi;
+                signScale = (uint)(((dec.Flags >> 15) & 0x01FE) | ((dec.Flags >> 31) & 0x0001));
+            }
+            else
+            {
+                int[] bits = decimal.GetBits(value);
+                ulong a = ((ulong)bits[1]) << 32, b = ((ulong)bits[0]) & 0xFFFFFFFFL;
+                low = a | b;
+                high = (uint)bits[2];
+                signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
+            }
+
+            int len = 0;
+            if (low != 0) len += 1 + ProtoWriter.MeasureUInt64(low);
+            if (high != 0) len += 1 + ProtoWriter.MeasureUInt32(high);
+            if (signScale != 0) len += 1 + ProtoWriter.MeasureUInt32(signScale);
+            return len;
+        }
+
         void ISerializer<decimal>.Write(ref ProtoWriter.State state, decimal value)
         {
             ulong low;

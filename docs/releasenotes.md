@@ -76,6 +76,12 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 - **fix**: `PBN0022` ("should declare `IsRequired`") no longer fires for collection members —
   `List<T> Lines { get; } = [];` is the standard pattern, an empty collection has no wire presence
   to force, and `IsRequired` is only observable for value-type scalars anyway
+- **fix**: the **non-generic (`object`-typed) API re-resolved the serializer for `object` on every
+  call**, because the model's lookup cache stores positive results only — so each call re-ran a
+  lock, the repeated-provider probe and `FindOrAddAuto` for a type that can never have a serializer.
+  That cost **~2.3 KB allocated and ~40× the time** of the same serialization reached generically
+  (#1280); it is now zero-allocation. Affects anyone calling `Serialize`/`Deserialize` with a
+  statically-`object` value — common in pre-generic and reflection-driven code
 
 ## 3.3.0
 

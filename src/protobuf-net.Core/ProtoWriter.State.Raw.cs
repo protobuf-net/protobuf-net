@@ -305,6 +305,25 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Appends bytes with <b>no length prefix</b> — the body half of a write whose header
+            /// the caller has already emitted.
+            /// </summary>
+            /// <remarks>
+            /// Exists for the packed fixed-width fast path: a packed <c>float[]</c> is, on a
+            /// little-endian machine, exactly the payload bytes, so the whole body is one copy
+            /// rather than one virtual serializer call per element. <c>ImplWriteBytes</c> is
+            /// <c>private protected</c> on the writer and so unreachable from
+            /// <c>RepeatedSerializer</c>; this is the seam.
+            /// </remarks>
+            [MethodImpl(ProtoReader.HotPath)]
+            internal void WriteRawBytesBody(ReadOnlySpan<byte> value)
+            {
+                if (value.IsEmpty) return;
+                if (RemainingInCurrent >= value.Length) LocalWriteBytes(value);
+                else _writer.ImplWriteBytes(ref this, value);
+            }
+
+            /// <summary>
             /// Throws for a null element inside a collection, matching the stateful repeated
             /// write; generated raw loops call this so the failure is the same exception with
             /// the same message, rather than a bare NullReferenceException from the write.

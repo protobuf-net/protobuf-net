@@ -24,6 +24,29 @@ partial class InitModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.InitStruct>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -48,10 +71,11 @@ partial class InitModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.InitStruct>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.InitStruct value)
-            => RawWrite_AotFixtures_Init_InitStruct(ref state, value);
+            => RawWrite_AotFixtures_Init_InitStruct(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Init_InitStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.InitStruct value)
+        public static void RawWrite_AotFixtures_Init_InitStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.InitStruct value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -83,11 +107,13 @@ partial class InitModel
             => RawRead_AotFixtures_Init_Inits(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Inits>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Inits value)
-            => RawWrite_AotFixtures_Init_Inits(ref state, value);
+            => RawWrite_AotFixtures_Init_Inits(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Inits value)
+        public static void RawWrite_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Inits value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -104,14 +130,15 @@ partial class InitModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len))
                 {
-                    len3 = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len = Measure_AotFixtures_Init_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len;
                 }
-                state.WriteRawVarint64((ulong)len3);
-                RawWrite_AotFixtures_Init_Nested(ref state, tmp3);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Init_Nested(ref state, tmp3, depth);
+                DebugAssertPosition(ref state, before + len, "Message");
             }
             var tmp4 = value.Mutable;
             if (tmp4 != 0)
@@ -135,12 +162,12 @@ partial class InitModel
             var tmp3 = value.Message;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out var len3))
+                if (!lengths.TryGetValue(tmp3, out var sub))
                 {
-                    len3 = Measure_AotFixtures_Init_Nested(tmp3, depth, lengths);
-                    lengths[tmp3] = len3;
+                    sub = Measure_AotFixtures_Init_Nested(tmp3, depth, lengths);
+                    lengths[tmp3] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len3) + len3;  // Message
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Message
             }
             var tmp4 = value.Mutable;
             if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Mutable
@@ -225,10 +252,11 @@ partial class InitModel
             => RawRead_AotFixtures_Init_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Init.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Nested value)
-            => RawWrite_AotFixtures_Init_Nested(ref state, value);
+            => RawWrite_AotFixtures_Init_Nested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Init_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Nested value)
+        public static void RawWrite_AotFixtures_Init_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Nested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)

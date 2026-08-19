@@ -35,10 +35,11 @@ partial class ModelSurrogateModel
             => RawRead_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
-            => RawWrite_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value);
+            => RawWrite_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value)
+        public static void RawWrite_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Ticks;
             if (tmp1 != 0)
@@ -233,10 +234,11 @@ partial class ModelSurrogateModel
             => RawRead_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
-            => RawWrite_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value);
+            => RawWrite_AotFixtures_ModelSurrogate_TicksSurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value)
+        public static void RawWrite_AotFixtures_ModelSurrogate_TicksSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -297,10 +299,11 @@ partial class ModelSurrogateModel
             => RawRead_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
-            => RawWrite_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value);
+            => RawWrite_AotFixtures_ModelSurrogate_VersionSurrogate(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value)
+        public static void RawWrite_AotFixtures_ModelSurrogate_VersionSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)

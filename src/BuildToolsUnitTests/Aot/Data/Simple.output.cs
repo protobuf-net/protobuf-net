@@ -27,10 +27,11 @@ partial class SimpleModel
             => RawRead_AotFixtures_Simple_Order(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Simple.Order>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value)
-            => RawWrite_AotFixtures_Simple_Order(ref state, value);
+            => RawWrite_AotFixtures_Simple_Order(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value)
+        public static void RawWrite_AotFixtures_Simple_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Simple.Order value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)

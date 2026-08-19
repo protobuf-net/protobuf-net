@@ -1,0 +1,41 @@
+// The proto2 half of the byte gate (notes/gaps.md C6).
+//
+// A separate file because `syntax` is per-file, and the proto3 gate must stay proto3. The model
+// picks this up because [ProtoSchema] is declared for it explicitly.
+//
+// Everything here exists because a PROBE said the plan disagreed with what protogen emits, and
+// the disagreements are guard-shaped rather than name-shaped - so only a byte comparison can see
+// them. Specifically:
+//
+//   * `required` becomes [ProtoMember(..., IsRequired = true)], which DROPS the write guard, so
+//     a required zero must reach the wire where an optional zero must not;
+//   * `[default = x]` becomes [DefaultValue(x)] AND a ShouldSerialize{Name}() backed by a
+//     nullable field, so presence - not value - decides. An explicitly-set value EQUAL to the
+//     default must still be written, and that is the case a plain `!= default` guard gets wrong.
+
+syntax = "proto2";
+
+package Legacy;
+
+message Required {
+    required int32 id = 1;
+    required string name = 2;
+    required bool flag = 3;
+    optional int32 spare = 4;
+}
+
+enum Shade {
+    SHADE_NONE = 0;
+    SHADE_RED = 1;
+    SHADE_GREEN = 2;
+}
+
+message Defaulted {
+    optional int32 count = 1 [default = 7];
+    optional string label = 2 [default = "unnamed"];
+    optional bool enabled = 3 [default = true];
+    optional double ratio = 4 [default = 1.5];
+    optional Shade shade = 5 [default = SHADE_GREEN];
+    // no default: the ordinary proto2 optional, which still gets ShouldSerialize
+    optional int32 plain = 6;
+}

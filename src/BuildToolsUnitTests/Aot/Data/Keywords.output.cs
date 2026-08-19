@@ -24,6 +24,29 @@ partial class KeywordsModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -31,10 +54,11 @@ partial class KeywordsModel
             => RawRead_AotFixtures_Keywords_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Inner value)
-            => RawWrite_AotFixtures_Keywords_Inner(ref state, value);
+            => RawWrite_AotFixtures_Keywords_Inner(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Inner value)
+        public static void RawWrite_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Inner value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.@int;
             if (tmp1 != 0)
@@ -95,11 +119,14 @@ partial class KeywordsModel
             => RawRead_AotFixtures_Keywords_Keywords(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Keywords value)
-            => RawWrite_AotFixtures_Keywords_Keywords(ref state, value);
+            => RawWrite_AotFixtures_Keywords_Keywords(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Keywords value)
+        public static void RawWrite_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Keywords value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
+            long before = 0;
             var tmp1 = value.@case;
             if (tmp1 != 0)
             {
@@ -125,27 +152,29 @@ partial class KeywordsModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // class
-                var lengths4 = state.RawLengths;
-                if (!lengths4.TryGetValue(tmp4, out var len4))
+                if (!state.RawLengths.TryGetValue(tmp4, out len))
                 {
-                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, lengths4);
-                    lengths4[tmp4] = len4;
+                    len = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp4] = len;
                 }
-                state.WriteRawVarint64((ulong)len4);
-                RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4, depth);
+                DebugAssertPosition(ref state, before + len, "class");
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // lock
-                var lengths5 = state.RawLengths;
-                if (!lengths5.TryGetValue(tmp5, out var len5))
+                if (!state.RawLengths.TryGetValue(tmp5, out len))
                 {
-                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, lengths5);
-                    lengths5[tmp5] = len5;
+                    len = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp5] = len;
                 }
-                state.WriteRawVarint64((ulong)len5);
-                RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5, depth);
+                DebugAssertPosition(ref state, before + len, "lock");
             }
             var tmp6 = value.value;
             if (tmp6 != 0)
@@ -159,6 +188,7 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.@case;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // case
             var tmp2 = value.@event;
@@ -177,22 +207,22 @@ partial class KeywordsModel
             var tmp4 = value.@class;
             if (tmp4 != null)
             {
-                if (!lengths.TryGetValue(tmp4, out var len4))
+                if (!lengths.TryGetValue(tmp4, out sub))
                 {
-                    len4 = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
-                    lengths[tmp4] = len4;
+                    sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
+                    lengths[tmp4] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len4) + len4;  // class
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // class
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
             {
-                if (!lengths.TryGetValue(tmp5, out var len5))
+                if (!lengths.TryGetValue(tmp5, out sub))
                 {
-                    len5 = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
-                    lengths[tmp5] = len5;
+                    sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
+                    lengths[tmp5] = sub;
                 }
-                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len5) + len5;  // lock
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // lock
             }
             var tmp6 = value.value;
             if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // value
@@ -325,10 +355,11 @@ partial class KeywordsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value)
-            => RawWrite_AotFixtures_Keywords_Pair(ref state, value);
+            => RawWrite_AotFixtures_Keywords_Pair(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Keywords_Pair(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value)
+        public static void RawWrite_AotFixtures_Keywords_Pair(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.@if;
             state.WriteRawTag((1 << 3) | 0);  // if
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));

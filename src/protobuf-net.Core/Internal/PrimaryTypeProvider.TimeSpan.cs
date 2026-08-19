@@ -60,6 +60,35 @@ namespace ProtoBuf.Internal
             }
         }
 
+        /// <summary>
+        /// The body length the <c>Write</c> immediately above would produce — the arithmetic half
+        /// of the same three decisions, so a generated <c>Measure_</c> can size a level-200
+        /// <c>DateTime</c> or <c>TimeSpan</c> member without writing it.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Deliberately adjacent to the writer rather than in <c>BclHelpers</c> with the public
+        /// entry points: the two must agree field-for-field, and the only cheap way to keep that
+        /// true is for an edit to one to be visibly next to the other.
+        /// </para>
+        /// <para>
+        /// The sizes mirror the writer's wire types exactly — field 1 is <c>SignedVarint</c>, so it
+        /// is zigzag, while 2 and 3 are plain varints written through <c>WriteInt32</c>, which
+        /// sign-extends a negative to ten bytes. All three tags are one byte, the field numbers
+        /// being 1–3.
+        /// </para>
+        /// </remarks>
+        internal static int MeasureScaledTicks(in ScaledTicks value)
+        {
+            int len = 0;
+            if (value.Value != 0) len += 1 + ProtoWriter.MeasureUInt64(ProtoWriter.Zig(value.Value));
+            if (value.Scale != TimeSpanScale.Days)
+                len += 1 + ProtoWriter.MeasureUInt64(unchecked((ulong)(long)(int)value.Scale));
+            if (value.Kind != DateTimeKind.Unspecified)
+                len += 1 + ProtoWriter.MeasureUInt64(unchecked((ulong)(long)(int)value.Kind));
+            return len;
+        }
+
         SerializerFeatures ISerializer<ScaledTicks>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         ScaledTicks ISerializer<ScaledTicks>.Read(ref ProtoReader.State state, ScaledTicks _)
             => ReadRawScaledTicksBody(ref state);

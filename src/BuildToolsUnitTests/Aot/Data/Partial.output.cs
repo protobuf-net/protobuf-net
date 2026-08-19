@@ -50,10 +50,11 @@ partial class PartialModel
             => RawRead_AotFixtures_Partial_Contested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value)
-            => RawWrite_AotFixtures_Partial_Contested(ref state, value);
+            => RawWrite_AotFixtures_Partial_Contested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value)
+        public static void RawWrite_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Pinned;
             if (tmp1 != 0)
@@ -157,7 +158,7 @@ partial class PartialModel
             var tmp5 = value.Values;
             if (tmp5 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<int>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, tmp5);
+                state.WriteRawPackedVarint(5, tmp5);  // Values
             }
             var tmp6 = value.Replaced;
             if (tmp6 != null)
@@ -267,10 +268,11 @@ partial class PartialModel
             => RawRead_AotFixtures_Partial_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value)
-            => RawWrite_AotFixtures_Partial_Excluded(ref state, value);
+            => RawWrite_AotFixtures_Partial_Excluded(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value)
+        public static void RawWrite_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Kept;
             if (tmp1 != 0)
@@ -331,10 +333,11 @@ partial class PartialModel
             => RawRead_AotFixtures_Partial_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value)
-            => RawWrite_AotFixtures_Partial_Mixed(ref state, value);
+            => RawWrite_AotFixtures_Partial_Mixed(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value)
+        public static void RawWrite_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.OrderOnly;
             if (tmp2 != 0)

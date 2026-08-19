@@ -29,10 +29,11 @@ partial class EnumsModel
             => RawRead_AotFixtures_Enums_WithEnums(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Enums.WithEnums value)
-            => RawWrite_AotFixtures_Enums_WithEnums(ref state, value);
+            => RawWrite_AotFixtures_Enums_WithEnums(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Enums.WithEnums value)
+        public static void RawWrite_AotFixtures_Enums_WithEnums(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Enums.WithEnums value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.SByteEnum;
             if (tmp1 != default(global::AotFixtures.Enums.AsSByte))

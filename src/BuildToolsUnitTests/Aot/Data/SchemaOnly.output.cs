@@ -31,10 +31,11 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Empty(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Empty>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value)
-            => RawWrite_AotFixtures_SchemaOnly_Empty(ref state, value);
+            => RawWrite_AotFixtures_SchemaOnly_Empty(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value)
+        public static void RawWrite_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
         }
 
@@ -75,10 +76,11 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
-            => RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value);
+            => RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
+        public static void RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             state.AppendExtensionData(value);
         }
@@ -121,10 +123,11 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value)
-            => RawWrite_AotFixtures_SchemaOnly_Ignoring(ref state, value);
+            => RawWrite_AotFixtures_SchemaOnly_Ignoring(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value)
+        public static void RawWrite_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -202,10 +205,11 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Plain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Plain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value)
-            => RawWrite_AotFixtures_SchemaOnly_Plain(ref state, value);
+            => RawWrite_AotFixtures_SchemaOnly_Plain(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value)
+        public static void RawWrite_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -283,10 +287,11 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.SchemaOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
-            => RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref state, value);
+            => RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
+        public static void RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

@@ -23,6 +23,29 @@ partial class FieldModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.Nested>
     {
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -30,10 +53,11 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_DataFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
-            => RawWrite_AotFixtures_Field_DataFields(ref state, value);
+            => RawWrite_AotFixtures_Field_DataFields(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
+        public static void RawWrite_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.First;
             if (tmp1 != 0)
@@ -128,10 +152,11 @@ partial class FieldModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
-            => RawWrite_AotFixtures_Field_FieldStruct(ref state, value);
+            => RawWrite_AotFixtures_Field_FieldStruct(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
+        public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -165,6 +190,7 @@ partial class FieldModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Fields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Fields value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.Number;
             if (tmp1 != 0)
             {
@@ -181,14 +207,15 @@ partial class FieldModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                var lengths3 = state.RawLengths;
-                if (!lengths3.TryGetValue(tmp3, out var len3))
+                if (!state.RawLengths.TryGetValue(tmp3, out var len))
                 {
-                    len3 = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, lengths3);
-                    lengths3[tmp3] = len3;
+                    len = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp3] = len;
                 }
-                state.WriteRawVarint64((ulong)len3);
-                RawWrite_AotFixtures_Field_Nested(ref state, tmp3);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Field_Nested(ref state, tmp3, state.RawDepthBudget);
+                DebugAssertPosition(ref state, before + len, "Message");
             }
             var tmp4 = value.Zig;
             if (tmp4 != 0)
@@ -304,10 +331,11 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
-            => RawWrite_AotFixtures_Field_Nested(ref state, value);
+            => RawWrite_AotFixtures_Field_Nested(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
+        public static void RawWrite_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != 0)

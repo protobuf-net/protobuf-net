@@ -1201,6 +1201,126 @@ again, exactly as AGENTS.md describes: the link step fails naming link.exe.)
 **Handover note: this section plus "The presized buffer core: the plan" above is the
 entry point for a fresh session.**
 
+### State as of 2026-08-16 (end of day) — branch `schema-breadth` (PR #1277 → `v4`)
+
+**Read this block first; the 2026-08-13 one below is two branches behind.** Everything is pushed
+and green at `43030db6`: traversal clean (incl. net472), protobuf-net.Test 1543/1542 x2 TFMs,
+Examples 676/702, Reflection 556 x2, BuildToolsUnitTests **405**, AotConformanceTests **1592**,
+**AotDifferential 3051 at 100%** (exit 0), AotSmoke native win-x64 at **19 warnings** with the
+smoke run passing, and `AotSmoke -c Debug` passing too — which now matters, see the drift check
+below.
+
+**The stack is flat again**: `main` → `v4` → `schema-breadth`, all three carrying `PBN3000+`.
+`v4` was 7 commits behind main this morning and is current.
+
+**The packed write arc is complete**, and it moved home mid-arc. The fast paths were first built
+inside `RepeatedSerializer` and then **backed out of it** (`a73d6fc0`) — classic emit is the
+control, the fallback and the perf baseline, and it had quietly absorbed the work, making every
+"classic vs raw" number in `notes/packed-writes.md` a comparison of classic against itself. The
+rule that came out of that is now a standing section in `AGENTS.md`. The work was rebuilt as a raw
+`ProtoWriter.State` surface (`ProtoWriter.State.RawPacked.cs`) that the generator calls directly.
+
+Against a pristine classic baseline, all seven categories now on the raw path:
+bool **32×**, fixed integer **11.9×**, floating point **11.9×**, enum **7.6×**, unsigned varint
+**4.6×**, signed varint **3.4×**, zigzag **2.4×**. Tier 1 (uniform-block blit) carries `small`
+data, tier 2 (chunked, no per-element room check) carries `spread`; they help *opposite*
+distributions, which a single before/after number hides.
+
+**Also landed this session**, each its own commit with gates:
+
+- `ImmutableArray<T>` on the span path (packed and unpacked, write and measure) — and a
+  **pre-existing wire bug** it exposed, where the generated `if (tmp != null)` guard is *false* for
+  a default immutable array and silently skipped the member;
+- repeated `bytes`, and `nint`/`nuint`/`DateOnly`/`TimeOnly` — the latter four were blocked as
+  *unary* members too, so each stopped blocking measure-first for its whole contract;
+- `BclHelpers.Measure*` for `DateTime`/`TimeSpan`/`Guid`/`decimal` at the default format, so the
+  level-200/240 tier now measures arithmetically instead of writing to count;
+- native AOT coverage for the packed surface (gaps.md B22) at **zero** warning cost;
+- `Serialize<object>` on a `RuntimeTypeModel` was 41× slower and allocated 2.2 KB per call —
+  diagnosed here, fixed on `main` as **PR #1280**, merged back.
+
+**Retracted this session, so do not act on it:** the "~1 µs per member" overhead this file's
+sibling once ranked as the largest remaining number. It is ~10 ns; the figure was a total divided
+by a member count. `notes/packed-writes.md` carries the measurement and the methodology lesson.
+
+**Landed LATER on 2026-08-16, after the block above was first written:**
+
+- **B16 finished.** `lengths{n}` is gone entirely — `state.RawLengths` is read inline at every site,
+  including inside the repeated loop, where a hoist had survived the 2026-08-14 decision by being
+  *missed rather than reasoned*. `len{n}` folds onto one local per body, and a body with a single
+  site keeps its declaration AT the site (hoisting one use widens scope for nothing). Committed
+  protogen serializer: `lengths{n}` 26 → 0, `len{n}` 72 → 0, worst `RawWrite_` body 25 locals → 13.
+  **`tmpN` folding is now the whole of the remaining work in B16**, and is the only family needing
+  a type-keyed map.
+- **B16a: DEBUG-only length-drift detection.** Every measured length is proven against the bytes
+  actually written, through two `[Conditional("DEBUG")]` helpers on the services type. `Debug.Fail`
+  **terminates the process** on .NET Core, so it is a real gate — and a false positive would kill
+  every consumer's Debug build, which is why the no-false-alarm side was proven across the whole
+  fixture set rather than spot-checked, and the firing side by perturbing `Measure_`.
+- **The AOT diagnostic ids moved to `PBN3000+`** (#1283 on main, then forward to `v4` and here).
+  They had collided with `ServiceContractAnalyzer`'s `PBN2001`–`PBN2010`, in the same assembly,
+  since 3.3 shipped. `AGENTS.md` now carries an exhaustive owner table; the paragraph that used to
+  license the collision was the cause.
+- **A CI hole**: the `branches:` filter on `pull_request` matches the PR's *base*, so a PR into any
+  unlisted branch got **zero checks** — which reads as clean rather than broken. Fixed on `main`;
+  the filter is gone from `pull_request` and kept on `push`.
+
+**#1276 `[ProtoDataFormat]` MERGED into `v4` on 2026-08-17** and forward into this branch. **The
+thing to know**: an ambient non-default format takes members off measure-first, via
+`RawMemberMeasureBlocked`/`BclMeasurable`, and one blocked member removes its whole contract to a
+fixed point. Its own fixture demonstrates it — the golden emits `RawRead_` and **zero**
+`Measure_`/`RawWrite_`. That is a gap in our measure arms, not in the feature; **B26 is re-ranked
+for it** and the remaining follow-ups are **B30**.
+
+Merging it forward produced the one failure a textual merge cannot catch: both branches had added
+an `AotSmoke` member at **field 58** (their `Vault`, our packed columns), which git merged cleanly
+into a duplicate tag. `PBN0003` caught it at build; `Vault` moved to 62. Worth knowing that the
+analyzer, not a test, is what stands between a clean auto-merge and a corrupt fixture.
+
+**#1275 `[ProtoSerializer]` MERGED into `v4` on 2026-08-17** and forward into this branch, so both
+external PRs are in. It is *not* `[ProtoSurrogate]`: a surrogate always yields a sub-message, while
+a hand-written serializer may be `CategoryScalar`, framed by its own wire type. Its parity note for
+us is **B31** — an external serializer takes its member off measure-first, and `[ProtoSerializer]`
+widens that to types you do not own.
+
+It also carried a fix worth knowing as a *shape*: a `Nullable<TStruct>` member with a scalar- or
+undetermined-category serializer **used not to compile** (`CS1503`, probed rather than reasoned),
+because the write switch tests nullability before framing and the read switch tests framing first.
+Presence and framing are decided by different switches in the two directions; getting only one
+produces a build break rather than a wire bug, which is why it sat undiscovered. Recorded in
+`AGENTS.md` beside the hand-written-serializer section.
+
+**Two things gate the merge back to `v4`.** First, **PR #1282** (build-time gRPC proxies,
+`grpc-aot-generator` → `main`, +11,500/−85 over 105 files) **lands first**, so #1277 absorbs it —
+measured as a small overlap, and the detail is **B34**: zero library changes, one shared file that
+auto-merges, one `Emit.cs` conflict that is the same fix twice with ours a superset, and golden churn
+of exactly one fixture. Second, **the manual golden review** (`notes/gaps.md` section D).
+
+**And one open finding that may bear on the arc itself: B35.** Delimited (`DataFormat.Group`) writes
+appear not to have got the optimized emit — 5.7× slower than prefixed on `schema-breadth`, where on
+3.3 delimited was the *faster* framing. Filed as #1293, captured but not diagnosed. It matters here
+because the stated hypothesis contradicts **B14**, which this file records as done: the emitter has a
+dedicated raw grouped-write arm and a measure carve-out for exactly that shape, so a grouped tree
+should be doing *less* work, not more. Either something drops those contracts upstream, or B14 has
+regressed and nothing caught it. 63 changed vs `v4` plus 3 new fixtures — and the bodies moved twice more *after* that
+review began (B16's local folding, B16a's drift calls), so anything read before those commits is
+stale; both diffs are uniform and skim quickly.
+
+**Everything else is post-merge backlog**, in `notes/gaps.md`:
+
+- *arc work with a live consumer* — **B26** (BCL level variants; re-ranked because #1276 shipped and
+  leans on it), **B16** (`tmpN` folding, the last of that entry), **B1** (two `DataFormat` arms),
+  **B23** (derived lists), **B21 tier 3**;
+- *correctness-adjacent, narrow* — **B15** (depth not synced on the raw → stateful transition),
+  **B24** (the general negative-caching half);
+- *housekeeping, each small* — **B27** (the differential's Debug-first generator load, which has
+  bitten twice), **B29** (`ProtoReader.cs` cites a non-existent `PORTING.md`), **B30** (five
+  `[ProtoDataFormat]` follow-ups, none blocking), **B32** (`PublicAPI.Shipped.txt` drift, 16
+  warnings on every build), **B33** (move the notes into per-arc sub-folders — agreed, and best done
+  on a quiet tree after #1277 squashes);
+- *answered, no action* — **B28** (dispatch), **B31** (external serializers), plus the long
+  deferred/parked set (B2–B11, C9–C12, and C14 editions → 4.1).
+
 **State as of 2026-08-13, end of session.** Everything is pushed to `raw-writer` and green on
 every gate (protobuf-net.Test 1110 x2 TFMs, Examples 679/705, Reflection 556 x2, conformance
 1364, AotDifferential 3028/3028 exit 0, AotSmoke + DownLevelSmoke, native 19 warnings). What

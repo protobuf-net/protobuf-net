@@ -39,6 +39,29 @@ partial class FormatsModel
             return result;
         }
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -48,6 +71,7 @@ partial class FormatsModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Formatted value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.ZigZagInt;
             if (tmp1 != 0)
             {
@@ -88,19 +112,25 @@ partial class FormatsModel
                 state.WriteRawString(tmp7);
             }
             var tmp8 = value.Grouped;
-            state.WriteGroup<global::AotFixtures.Formats.Inner>(8, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp8, this);
+            if (tmp8 != null)
+            {
+                state.WriteRawTag((8 << 3) | 3);  // Grouped (start group)
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp8, state.RawDepthBudget);
+                state.WriteRawTag((8 << 3) | 4);  // Grouped (end group)
+            }
             var tmp9 = value.Plain;
             if (tmp9 != null)
             {
                 state.WriteRawTag((9 << 3) | 2);  // Plain
-                var lengths9 = state.RawLengths;
-                if (!lengths9.TryGetValue(tmp9, out var len9))
+                if (!state.RawLengths.TryGetValue(tmp9, out var len))
                 {
-                    len9 = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, lengths9);
-                    lengths9[tmp9] = len9;
+                    len = Measure_AotFixtures_Formats_Inner(tmp9, state.RawDepthBudget, state.RawLengths);
+                    state.RawLengths[tmp9] = len;
                 }
-                state.WriteRawVarint64((ulong)len9);
-                RawWrite_AotFixtures_Formats_Inner(ref state, tmp9);
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Formats_Inner(ref state, tmp9, state.RawDepthBudget);
+                DebugAssertPosition(ref state, before + len, "Plain");
             }
             var tmp10 = value.ZigZagArray;
             if (tmp10 != null)
@@ -110,7 +140,7 @@ partial class FormatsModel
             var tmp11 = value.PackedFixed;
             if (tmp11 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateVector<long>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeFixed64, tmp11);
+                state.WriteRawPackedFixed64(11, global::System.Runtime.InteropServices.MemoryMarshal.Cast<long, ulong>(tmp11));  // PackedFixed
             }
         }
 
@@ -264,10 +294,11 @@ partial class FormatsModel
             => RawRead_AotFixtures_Formats_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
-            => RawWrite_AotFixtures_Formats_Inner(ref state, value);
+            => RawWrite_AotFixtures_Formats_Inner(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value)
+        public static void RawWrite_AotFixtures_Formats_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Inner value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

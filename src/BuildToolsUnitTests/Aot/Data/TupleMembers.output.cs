@@ -25,6 +25,29 @@ partial class TupleMembersModel
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -60,18 +83,22 @@ partial class TupleMembersModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value)
-            => RawWrite__int___int__string__(ref state, value);
+            => RawWrite__int___int__string__(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite__int___int__string__(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value)
+        public static void RawWrite__int___int__string__(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
             var tmp1 = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Item2;
             state.WriteRawTag((2 << 3) | 2);  // Item2
-            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len2);
-            RawWrite__int__string_(ref state, tmp2);
+            var len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite__int__string_(ref state, tmp2, depth);
+            DebugAssertPosition(ref state, before + len, "Item2");
         }
 
         private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
@@ -81,8 +108,8 @@ partial class TupleMembersModel
             var tmp1 = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
-            var len2 = Measure__int__string_(tmp2, depth, lengths);
-            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)len2) + len2;  // Item2
+            var sub = Measure__int__string_(tmp2, depth, lengths);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Item2
             return len;
         }
 
@@ -128,10 +155,11 @@ partial class TupleMembersModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
-            => RawWrite__int__string_(ref state, value);
+            => RawWrite__int__string_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
+        public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Item1;
             state.WriteRawTag((1 << 3) | 0);  // Item1
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
@@ -173,26 +201,36 @@ partial class TupleMembersModel
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleMembers.HasTuples value)
         {
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
+            long before = 0;
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
-            var len1 = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len1);
-            RawWrite__int__string_(ref state, tmp1);
+            len = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite__int__string_(ref state, tmp1, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Named");
             var tmp2 = value.Anonymous;
             state.WriteRawTag((2 << 3) | 2);  // Anonymous
-            var len2 = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len2);
-            RawWrite__int__string_(ref state, tmp2);
+            len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite__int__string_(ref state, tmp2, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Anonymous");
             var tmp3 = value.Deep;
             state.WriteRawTag((3 << 3) | 2);  // Deep
-            var len3 = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len3);
-            RawWrite__int___int__string__(ref state, tmp3);
+            len = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite__int___int__string__(ref state, tmp3, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Deep");
             var tmp4 = value.Pair;
             state.WriteRawTag((4 << 3) | 2);  // Pair
-            var len4 = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
-            state.WriteRawVarint64((ulong)len4);
-            RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4);
+            len = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4, state.RawDepthBudget);
+            DebugAssertPosition(ref state, before + len, "Pair");
             var tmp5 = value.MaybePair;
             if (tmp5.HasValue)
             {
@@ -331,10 +369,11 @@ partial class TupleMembersModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
-            => RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value);
+            => RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
+        public static void RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Key;
             state.WriteRawTag((1 << 3) | 0);  // Key
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));

@@ -27,10 +27,11 @@ partial class BadLevelModel
             => RawRead_AotFixtures_BadLevel_GoodLevel(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BadLevel.GoodLevel>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value)
-            => RawWrite_AotFixtures_BadLevel_GoodLevel(ref state, value);
+            => RawWrite_AotFixtures_BadLevel_GoodLevel(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value)
+        public static void RawWrite_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)

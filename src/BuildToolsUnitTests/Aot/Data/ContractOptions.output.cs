@@ -36,10 +36,11 @@ partial class ContractOptionsModel
             => RawRead_AotFixtures_ContractOptions_BothFamilies(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.BothFamilies>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.BothFamilies value)
-            => RawWrite_AotFixtures_ContractOptions_BothFamilies(ref state, value);
+            => RawWrite_AotFixtures_ContractOptions_BothFamilies(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.BothFamilies value)
+        public static void RawWrite_AotFixtures_ContractOptions_BothFamilies(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.BothFamilies value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Ordered;
             if (tmp1 != 0)
@@ -166,10 +167,11 @@ partial class ContractOptionsModel
             => RawRead_AotFixtures_ContractOptions_Lenient(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.Lenient>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value)
-            => RawWrite_AotFixtures_ContractOptions_Lenient(ref state, value);
+            => RawWrite_AotFixtures_ContractOptions_Lenient(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value)
+        public static void RawWrite_AotFixtures_ContractOptions_Lenient(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.Lenient value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Id;
             if (tmp1 != 0)
             {
@@ -341,10 +343,11 @@ partial class ContractOptionsModel
             => RawRead_AotFixtures_ContractOptions_ProtoOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ContractOptions.ProtoOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
-            => RawWrite_AotFixtures_ContractOptions_ProtoOnly(ref state, value);
+            => RawWrite_AotFixtures_ContractOptions_ProtoOnly(ref state, value, state.RawDepthBudget);
 
-        public static void RawWrite_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.ProtoOnly value)
+        public static void RawWrite_AotFixtures_ContractOptions_ProtoOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ContractOptions.ProtoOnly value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp3 = value.Tagged;
             if (tmp3 != 0)

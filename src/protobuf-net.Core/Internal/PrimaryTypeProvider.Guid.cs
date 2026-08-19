@@ -79,6 +79,17 @@ namespace ProtoBuf.Internal
             }
         }
 
+        /// <summary>
+        /// The body length the <c>Write</c> below produces. Beside it deliberately: the two must
+        /// agree, and adjacency is the cheapest way to keep that true.
+        /// </summary>
+        /// <remarks>
+        /// Constant, unlike the <c>ScaledTicks</c> body: both branches of the writer emit the same
+        /// two <c>Fixed64</c> fields at numbers 1 and 2, so it is two one-byte tags plus sixteen
+        /// bytes. <c>Guid.Empty</c> writes nothing at all.
+        /// </remarks>
+        internal static int MeasureGuidBody(Guid value) => value == Guid.Empty ? 0 : (1 + 8) * 2;
+
         void ISerializer<Guid>.Write(ref ProtoWriter.State state, Guid value)
         {
             if (value == Guid.Empty) { }
