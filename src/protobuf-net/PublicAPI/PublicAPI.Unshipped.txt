@@ -68,3 +68,6 @@
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool (forwarded, contained in protobuf-net.Core)
 ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat (forwarded, contained in protobuf-net.Core)
+static ProtoBuf.BclHelpers.MeasureDecimalString(decimal value) -> int (forwarded, contained in protobuf-net.Core)
+static ProtoBuf.BclHelpers.MeasureGuidBytes(System.Guid value) -> int (forwarded, contained in protobuf-net.Core)
+static ProtoBuf.BclHelpers.MeasureGuidString(System.Guid value) -> int (forwarded, contained in protobuf-net.Core)

@@ -80,3 +80,6 @@
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool
 ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat
+static ProtoBuf.BclHelpers.MeasureDecimalString(decimal value) -> int
+static ProtoBuf.BclHelpers.MeasureGuidBytes(System.Guid value) -> int
+static ProtoBuf.BclHelpers.MeasureGuidString(System.Guid value) -> int

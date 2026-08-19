@@ -81,6 +81,22 @@ namespace ProtoBuf.Internal
             static byte ToHex(int value) => (byte)"0123456789abcdef"[value];
         }
 
+        /// <summary>
+        /// The number of bytes <see cref="Write"/> emits as the payload, excluding the field header
+        /// and length prefix. Beside the writer deliberately: the two must agree exactly, and
+        /// adjacency is the cheapest way to keep that true.
+        /// </summary>
+        /// <remarks>
+        /// Constant in both forms, because the formatter's output length is fixed: <c>'N'</c> packs
+        /// to <see cref="WRITE_BYTES_LENGTH"/> bytes and <c>'D'</c> renders
+        /// <see cref="WRITE_STRING_LENGTH"/> characters. <c>Guid.Empty</c> short-circuits to an
+        /// empty payload in the writer, so it measures zero — which matters only where the write
+        /// guard has been removed (<c>IsRequired</c>, or a <c>Specified</c>/<c>ShouldSerialize</c>
+        /// condition), since otherwise an empty Guid is never written at all.
+        /// </remarks>
+        internal static int Measure(in Guid value, bool asBytes)
+            => value.Equals(Guid.Empty) ? 0 : (asBytes ? WRITE_BYTES_LENGTH : WRITE_STRING_LENGTH);
+
         internal static void Write(ref ProtoWriter.State state, in Guid value, bool asBytes)
         {
             if (value.Equals(Guid.Empty))

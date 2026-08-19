@@ -1958,8 +1958,21 @@ arithmetic, which would agree with itself. Verified able to fail.
    because the failure mode when a path is missed is `len += 1 + ;` rather than a wrong number.
 2. **level 240+ `Timestamp`/`Duration`** — a seconds+nanos message, genuinely different arithmetic
    from `ScaledTicks`; needs its own measure and its own fixture.
-3. **level 300 `GuidString`/`GuidBytes`/`DecimalString`** — string and byte forms; `GuidBytes` is a
-   flat 16 and `GuidString` a flat 36, so only `DecimalString` is value-dependent.
+3. ~~**level 300 `GuidString`/`GuidBytes`/`DecimalString`**~~ — **DONE 2026-08-19.** All three stay
+   length-prefixed, so the emitted shape is the usual `tag + varint(len) + len` and only the body
+   measure differs: `GuidHelper.Measure` is a constant 16 or 36 (and **0** for `Guid.Empty`, which
+   the writer short-circuits to an empty payload), while `MeasureDecimalString` formats for real with
+   the same `Utf8Formatter` call as the writer — the only honest way to agree with it.
+
+   **The structural change is the one worth keeping**: `BclMeasureBody` is now keyed on
+   `BclSuffix`, *the same selector the writer uses*, instead of on the member kind. The level and
+   format pick `Guid`/`GuidString`/`GuidBytes` and `Decimal`/`DecimalString`, and deriving measure and
+   write from one function is what makes them unable to drift. It also means item 2 below needs no
+   generator change at all beyond `BclMeasurable` — just the two new measures.
+
+   `RawMemberMeasureBlocked`'s blanket format gate now asks `BclMeasurable` rather than carrying a
+   second special case, so `FixedSize`-on-`Guid`-at-300 (the only format that reaches these) is
+   admitted in one place.
 4. **repeated BCL elements** — `List<DateTime>` and friends. Note the ordering trap found while
    fixturing this: a repeated member is tested for eligibility **before** the BCL arm, so a single
    `List<DateTime>` drops its whole contract back to write-to-count.

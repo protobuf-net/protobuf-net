@@ -2945,13 +2945,18 @@ namespace ProtoBuf.BuildTools.Generators
         {
             // FixedSize on the date/time pair is measurable and CONSTANT - see BclFixedWidth
             if (BclFixedWidth(member) is not null) return true;
-            if (member.DataFormat != ProtoDataFormat.Default) return false;
+            // the ONE format that reaches these otherwise: FixedSize selects GuidBytes at level 300
+            // (below it, the format is simply ignored - see BclWireType)
+            if (member.DataFormat != ProtoDataFormat.Default
+                && !(member.DataFormat == ProtoDataFormat.FixedSize
+                    && member.Kind == ProtoMemberKind.Guid
+                    && member.CompatibilityLevel >= 300)) return false;
             return member.Kind switch
             {
-                // 240+ swaps these for Timestamp/Duration, which is different arithmetic
+                // 240+ swaps these for Timestamp/Duration, which is different arithmetic - B26 item 2
                 ProtoMemberKind.DateTime or ProtoMemberKind.TimeSpan => member.CompatibilityLevel < 240,
-                // 300 swaps these for their string forms
-                ProtoMemberKind.Guid or ProtoMemberKind.Decimal => member.CompatibilityLevel < 300,
+                // every level: 300's GuidString/GuidBytes/DecimalString now measure too
+                ProtoMemberKind.Guid or ProtoMemberKind.Decimal => true,
                 _ => false,
             };
         }
@@ -2977,8 +2982,14 @@ namespace ProtoBuf.BuildTools.Generators
                 ? 8 : null;
 
         /// <summary>The body length for such a member — the payload, not the framing.</summary>
+        /// <remarks>
+        /// Keyed on <see cref="BclSuffix"/>, the same selector the <b>writer</b> uses, rather than on
+        /// the kind: the level and format pick `Guid`/`GuidString`/`GuidBytes` (and
+        /// `Decimal`/`DecimalString`, and `DateTime`/`Timestamp`), and measure must follow write
+        /// exactly. Deriving both from one function is what makes them unable to drift apart.
+        /// </remarks>
         private static string BclMeasureBody(ProtoMemberPlan member, string expression)
-            => $"global::ProtoBuf.BclHelpers.Measure{member.Kind}({expression})";
+            => $"global::ProtoBuf.BclHelpers.Measure{BclSuffix(member)}({expression})";
 
         /// <summary>
         /// The span expression for a repeated member, or <c>null</c> if this member cannot be
@@ -3294,7 +3305,7 @@ namespace ProtoBuf.BuildTools.Generators
             // member disqualified its whole contract, and the exclusion cascades to a fixed point,
             // so a member that was never even populated took the contract off measure-first.
             if (member.DataFormat != ProtoDataFormat.Default
-                && BclFixedWidth(member) is null
+                && !BclMeasurable(member)
                 && !(member.DataFormat == ProtoDataFormat.Group
                     && member.Kind == ProtoMemberKind.Message
                     && member.Map.Factory is null)) return true;
