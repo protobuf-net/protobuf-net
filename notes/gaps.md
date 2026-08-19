@@ -1365,7 +1365,7 @@ attempted:
 - the **info diagnostic** proposed in B26 would cover this case too, since it is the same question
   from the consumer's side: *why did my model leave the optimised path?*
 
-### B32. `PublicAPI.Shipped.txt` has drifted from the real signature — 16 warnings on every build
+### B32. ~~`PublicAPI.Shipped.txt` has drifted~~ — **24 of 28 symbols fixed 2026-08-19; the residue is `#if DEBUG` API, which no tracking file can satisfy**
 
 Noticed 2026-08-17 while running `AotRefGen`; **pre-dates both external PRs** and is nobody's recent
 doing. `TypeModel.GetInbuiltSerializer<T>` produces `RS0016` (symbol not part of the declared API)
@@ -1379,8 +1379,30 @@ documentation rather than a build gate". That is true of the **RS2000** release-
 false of the **RS0016/RS0017** PublicApiAnalyzers rules, which are plainly live and shouting. The
 sentence should be narrowed when this is fixed.
 
-Cheap to clear (update the two `.Shipped.txt` entries to the current signature), and worth clearing
-precisely because 16 standing warnings are how a *new* one goes unnoticed.
+**Investigated properly on 2026-08-19, and the first diagnosis above was too narrow.** A clean
+per-configuration build shows **28 untracked public symbols**, and only four of them are the
+signature problem described above:
+
+- **24 were simply never declared**, and 20 of those are **our own**: the eight `WriteRawPacked*`
+  and eight `MeasureRawPacked*` members from the packed arc, and the four `BclHelpers.Measure*`
+  from B26's level-200 tier. The other four are `ProtoDataFormatAttribute` from #1276. All added
+  public API and none added a tracking entry. **Fixed**: Debug now reports **zero**.
+- **4 are `#if DEBUG`-conditional public API**, which is the real B32 and cannot be fixed by editing
+  a file: `TypeModel.ForwardsOnly` exists only in DEBUG (a test hook), and
+  `TypeModel.GetInbuiltSerializer<T>` has **two different signatures** — without default arguments in
+  DEBUG (*"I always want these explicitly specified in the library code; so: enforce that"*) and with
+  them in Release. One tracked signature cannot match both configurations: declaring the Debug form
+  makes Release report `RS0016` + `RS0017`, and declaring both makes each configuration complain
+  about the other.
+
+  So the options are all design changes, not bookkeeping: drop the `#if DEBUG` split and enforce
+  explicit arguments another way; suppress `RS0016`/`RS0017` project-wide (which loses the coverage
+  that just found 24 real omissions); or accept the noise. **Left for Marc** — it is his deliberate
+  mechanism, and the third option is what has been happening.
+
+The lesson that generalises: those 24 omissions hid *inside* the 192-warning noise, which is exactly
+the failure this entry predicted — "16 standing warnings are how a new one goes unnoticed" — except
+the number was larger and the new ones were ours.
 
 ### B33. Move the working notes into per-arc sub-folders (Marc, 2026-08-17)
 

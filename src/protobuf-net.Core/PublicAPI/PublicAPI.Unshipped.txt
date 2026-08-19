@@ -85,3 +85,27 @@ static ProtoBuf.BclHelpers.MeasureGuidBytes(System.Guid value) -> int
 static ProtoBuf.BclHelpers.MeasureGuidString(System.Guid value) -> int
 static ProtoBuf.BclHelpers.MeasureDuration(System.TimeSpan value) -> int
 static ProtoBuf.BclHelpers.MeasureTimestamp(System.DateTime value) -> int
+ProtoBuf.ProtoDataFormatAttribute
+ProtoBuf.ProtoDataFormatAttribute.DataFormat.get -> ProtoBuf.DataFormat
+ProtoBuf.ProtoDataFormatAttribute.ProtoDataFormatAttribute(System.Type type, ProtoBuf.DataFormat dataFormat) -> void
+ProtoBuf.ProtoDataFormatAttribute.Type.get -> System.Type
+ProtoBuf.ProtoWriter.State.WriteRawPackedBool(int fieldNumber, System.ReadOnlySpan<bool> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedFixed32(int fieldNumber, System.ReadOnlySpan<uint> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedFixed64(int fieldNumber, System.ReadOnlySpan<ulong> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedVarint(int fieldNumber, System.ReadOnlySpan<int> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedVarint(int fieldNumber, System.ReadOnlySpan<uint> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedVarint(int fieldNumber, System.ReadOnlySpan<ulong> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<int> values) -> void
+ProtoBuf.ProtoWriter.State.WriteRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<long> values) -> void
+static ProtoBuf.BclHelpers.MeasureDateTime(System.DateTime value) -> int
+static ProtoBuf.BclHelpers.MeasureDecimal(decimal value) -> int
+static ProtoBuf.BclHelpers.MeasureGuid(System.Guid value) -> int
+static ProtoBuf.BclHelpers.MeasureTimeSpan(System.TimeSpan value) -> int
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedBool(int fieldNumber, int count) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed32(int fieldNumber, int count) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(int fieldNumber, int count) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<int> values) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<uint> values) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<ulong> values) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<int> values) -> long
+static ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<long> values) -> long
