@@ -410,7 +410,8 @@ namespace ProtoBuf.BuildTools.Generators
             // seeding parses contracts purely to collect payload symbols and discards the model
             if (compilation is null) return default;
 
-            var gathered = MetadataGather.Gather(contractType, method, implementation);
+            var gathered = MetadataGather.Gather(contractType, method, implementation,
+                MetadataGather.ResolvesInheritedImplementation(compilation));
             var expressions = ImmutableArray.CreateBuilder<string>(gathered.Count);
             foreach (var attribute in gathered)
             {

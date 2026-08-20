@@ -576,9 +576,9 @@ justification should know it was retired by measurement rather than by opinion.
   the reason. Emitting a *partial* list would be the dangerous option — a short metadata list is a more
   permissive endpoint, and nothing would notice;
 - an operation with no metadata emits `System.Array.Empty<object>()`;
-- the list follows **`main`'s** semantics, so a consumer on 1.3.6 gets #369's behaviour early for a
-  `[SubService]` operation. That is the divergence the oracle reports, now visible in generated output
-  rather than only in the harness.
+- the shape is **chosen from the referenced package's version**, so a consumer on 1.3.6 gets 1.3.6's
+  behaviour and anyone past it gets #369's. See below — this started out as an accepted delta and is
+  now resolved, so there is no divergence to accept.
 
 **The oracle earned its keep immediately, on the worst class of bug.** `[Service]` renders as
 `new ServiceAttribute(null)`, and a bare `null` does not bind when an attribute has *overloaded*
@@ -586,6 +586,28 @@ constructors — so the generated file would have been **`CS0121` in the consume
 two-constructor attribute to the fixture reproduced it at once, because the oracle **compiles what it
 renders**; a string-comparison harness would have sailed straight past it. Null constructor arguments
 are now written as `default(T)`, which also covers a `Nullable<T>` parameter, where `(T)null` would not.
+
+**The #369 delta is resolved by version, not accepted.** `MetadataGather.ResolvesInheritedImplementation`
+reads the referenced protobuf-net.Grpc's version and emits the matching shape: at or below **1.3.6**, an
+operation inherited from a `[SubService]` base contributes no implementation-method attributes, exactly
+as that runtime behaves; past it, #369's shape. Two things about reading that version are load-bearing,
+and the first is why the obvious approach fails:
+
+- **it comes from `AssemblyFileVersionAttribute`, not the assembly identity.** Nerdbank.GitVersioning
+  pins `AssemblyVersion` to `1.0.0.0` so references keep binding across releases — measured, not assumed
+  — so identity reports `1.0.0.0` for every release ever shipped. `AssemblyVersionAttribute` is the
+  *special* one, written into the Assembly table rather than kept as a custom attribute; the file version
+  is an ordinary attribute, and Roslyn surfaces it from a referenced assembly's metadata;
+- **only the first three components are the version.** NBGV puts the git height in the fourth, so 1.3.6
+  arrives as `1.3.6.5978`, and a plain `Version` comparison against `1.3.6` calls it newer than itself.
+
+Where no version can be read — an assembly built without NBGV, or the stubs the unit-test harnesses
+declare — it answers "current", rather than assuming a release that is already behind. The goldens take
+that path, which is why the version gate does not change them.
+
+The oracle tests the gate as much as the gather: it asks for exactly what the generator would emit,
+version gate included, so a wrong threshold is a mismatch rather than an explained difference. Proven by
+moving the threshold to 1.3.5 and watching the sub-service operation fail 10 against 9.
 
 **The custom-binder delta is an accepted limitation, not an oversight.** `ServiceBinder`'s virtuals are
 otherwise all about *discovery and naming* - `GetDefaultName`, `GetDataContractName`,
@@ -697,8 +719,9 @@ Three things it established that were not obvious, each recorded where it applie
   old behaviour is asked of the gather itself (`resolveInheritedImplementation: false`) rather than
   filtered out of its output, so a wrong model of it fails rather than quietly agreeing with itself.
 
-Run it with `dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj`. Last known-good:
-**2 operations compared, 0 failing, 1 explained divergence.**
+Run it with `dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj`; it prints the
+protobuf-net.Grpc version it compared against and which #369 shape that selected. Last known-good:
+**2 operations compared, 0 failing**, against 1.3.6.5978.
 
 ### Metadata parity, and protobuf-net.Grpc#369 — landed, and we needed nothing
 

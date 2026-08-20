@@ -1,5 +1,6 @@
 #nullable enable
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -25,6 +26,58 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
     /// </remarks>
     internal static class MetadataGather
     {
+        /// <summary>
+        /// Whether the referenced protobuf-net.Grpc resolves an inherited operation's implementation
+        /// method - i.e. whether it carries
+        /// <see href="https://github.com/protobuf-net/protobuf-net.Grpc/pull/369">#369</see>, which is
+        /// everything after 1.3.6.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Read off <c>AssemblyFileVersionAttribute</c> rather than the assembly identity, and that is
+        /// not a preference: Nerdbank.GitVersioning pins <c>AssemblyVersion</c> to <c>1.0.0.0</c> so
+        /// references keep binding across releases, and puts the real number on the file and
+        /// informational versions. Identity reports <c>1.0.0.0</c> for every release ever shipped.
+        /// </para>
+        /// <para>
+        /// Only the first three components are the version: NBGV puts the git height in the fourth, so
+        /// 1.3.6 arrives as <c>1.3.6.5978</c> and a plain <see cref="Version"/> comparison against
+        /// <c>1.3.6</c> would call it newer than itself.
+        /// </para>
+        /// <para>
+        /// Where no version can be read - an assembly built without NBGV, or the stubs the unit-test
+        /// harnesses declare - this answers <c>true</c>, matching current protobuf-net.Grpc rather than
+        /// a release that is already behind.
+        /// </para>
+        /// </remarks>
+        public static bool ResolvesInheritedImplementation(Compilation compilation)
+        {
+            foreach (var reference in compilation.References)
+            {
+                if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assembly) continue;
+                if (assembly.Name != "protobuf-net.Grpc") continue;
+
+                foreach (var attribute in assembly.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString()
+                        != "System.Reflection.AssemblyFileVersionAttribute")
+                    {
+                        continue;
+                    }
+                    if (attribute.ConstructorArguments.Length == 1
+                        && attribute.ConstructorArguments[0].Value is string text
+                        && Version.TryParse(text, out var version))
+                    {
+                        var release = new Version(version.Major, version.Minor,
+                            version.Build < 0 ? 0 : version.Build);
+                        return release > new Version(1, 3, 6);
+                    }
+                }
+                return true;
+            }
+            return true;
+        }
+
         /// <summary>
         /// Gathers endpoint metadata for one operation.
         /// </summary>

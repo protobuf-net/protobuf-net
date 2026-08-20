@@ -51,25 +51,27 @@ internal static class Program
             return 2;
         }
 
+        // the gate is the thing under test as much as the gather is: #369 changed what GetMetadata
+        // returns for an operation inherited from a [SubService] base, it is in no release yet, and the
+        // generator picks its shape from the referenced package's file version. Get that wrong and the
+        // emitted metadata disagrees with the runtime the consumer actually has.
+        var resolvesInherited = MetadataGather.ResolvesInheritedImplementation(symbols!);
+        Console.WriteLine($"comparing against protobuf-net.Grpc {GrpcVersion(symbols!) ?? "(unknown)"}"
+            + $"; inherited implementation attributes {(resolvesInherited ? "resolved (#369)" : "not resolved (pre-#369)")}");
+
         var failures = 0;
-        var divergences = 0;
         var compared = 0;
 
         foreach (var (contract, method, service) in Operations(symbols!))
         {
             var label = $"{contract.Name}.{method.Name} / {service?.Name ?? "(no implementation)"}";
 
-            // what we would emit: main's behaviour, i.e. including #369
-            var gathered = MetadataGather.Gather(contract, method, service);
+            // exactly what the generator would emit, version gate and all - so this compares our
+            // reconstruction against the behaviour of the package actually referenced, and a wrong gate
+            // shows up as a mismatch rather than as an explained difference
+            var gathered = MetadataGather.Gather(contract, method, service, resolvesInherited);
 
-            // ...and what the *pinned* package produces, which predates it. Asking the gather for the
-            // old behaviour rather than filtering its output here means a wrong model of that behaviour
-            // fails the comparison instead of quietly agreeing with itself.
-            var expected = MetadataGather.Gather(contract, method, service,
-                resolveInheritedImplementation: false);
-            var delta = gathered.Count - expected.Count;
-
-            if (!TryMaterialise(symbols!, expected, out var reconstructed, out var why))
+            if (!TryMaterialise(symbols!, gathered, out var reconstructed, out var why))
             {
                 Console.Error.WriteLine($"FAIL {label}: {why}");
                 failures++;
@@ -90,25 +92,10 @@ internal static class Program
             }
 
             Console.WriteLine($"ok   {label} ({actual.Count} item(s))");
-            if (delta > 0)
-            {
-                divergences++;
-                Console.WriteLine($"     ~ diverges from the pinned package by {delta} item(s): "
-                    + "implementation-method attributes for an operation declared on a [SubService] "
-                    + "base. protobuf-net.Grpc#369 adds these; it is in no released package, and we "
-                    + "target main deliberately.");
-                // implementation-method attributes sort last, so the old list is a strict prefix of
-                // the new one and the difference is simply what follows it
-                foreach (var item in gathered.Skip(expected.Count))
-                {
-                    Console.WriteLine($"       + {item.AttributeClass?.ToDisplayString()}");
-                }
-            }
         }
 
         Console.WriteLine();
-        Console.WriteLine($"{compared} operation(s) compared, {failures} failing, "
-            + $"{divergences} with an explained divergence from the pinned package.");
+        Console.WriteLine($"{compared} operation(s) compared, {failures} failing.");
         return failures == 0 ? 0 : 1;
     }
 
@@ -143,6 +130,36 @@ internal static class Program
             return null;
         }
         return compilation;
+    }
+
+    /// <summary>
+    /// The version of protobuf-net.Grpc being compared against.
+    /// </summary>
+    /// <remarks>
+    /// Read off <c>AssemblyFileVersionAttribute</c>, not the assembly identity: Nerdbank.GitVersioning
+    /// pins <c>AssemblyVersion</c> to <c>1.0.0.0</c> so that references keep binding across releases,
+    /// and puts the real number on the file and informational versions. Identity would say <c>1.0.0.0</c>
+    /// for every release ever shipped, which is exactly no information.
+    /// </remarks>
+    private static string? GrpcVersion(Compilation compilation)
+    {
+        foreach (var reference in compilation.References)
+        {
+            if (compilation.GetAssemblyOrModuleSymbol(reference) is not IAssemblySymbol assembly) continue;
+            if (assembly.Name != "protobuf-net.Grpc") continue;
+
+            foreach (var attribute in assembly.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString() != "System.Reflection.AssemblyFileVersionAttribute") continue;
+                if (attribute.ConstructorArguments.Length == 1
+                    && attribute.ConstructorArguments[0].Value is string version)
+                {
+                    return version;
+                }
+            }
+            return "identity " + assembly.Identity.Version + " (no file version attribute)";
+        }
+        return null;
     }
 
     /// <summary>
