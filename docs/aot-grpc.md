@@ -70,13 +70,37 @@ reflective metadata survives AOT perfectly well, and it was then built for a dif
 reason — the attributes as declared are the authoritative source, and this removes the last reflective
 call on the server binding path.
 
-### 1. `Stream` payloads — the widest capability gap
+### 1. `Stream` payloads — done
 
-The largest difference between "works on JIT" and "works published". protobuf-net.Grpc has a documented
-streams feature; we refuse those contracts (`PBN4002`), and under AOT a refused contract does not
-degrade, it throws. `IObservable<T>` and `Grpc.Core`'s own call types are the same shape of gap but far
-rarer. Start from `IsRuntimeOnlyPayload` in `GrpcProxyGenerator.ParseContract.cs`, and from
-`docs/streams.md` in the protobuf-net.Grpc repo for what the runtime actually does.
+Built. The shape is far narrower than the name suggests, which is what made it tractable: only
+`Task<Stream>` / `ValueTask<Stream>` as the **return**, with an optional single request and optional
+context — twelve rows in `ContractOperation`. There is no `Stream` request and no `Stream` element.
+
+It is carried as a **server-streaming call of `BytesValue`**, whose bespoke marshaller `MarshallerCache`
+pre-seeds, so the contract's own payload type never appears on the response side. Facts taken from the
+runtime rather than guessed:
+
+- the match is on **exactly `System.IO.Stream`**, mirroring `type == typeof(Task<Stream>)`. A
+  `Task<FileStream>` is *not* this shape and stays refused — worth knowing, because it looks like it
+  ought to work;
+- the client calls `Reshape.ServerByteStreaming{Task,ValueTask}Async`, not `ServerStreamingAsync`;
+- the server calls `Reshape.WriteStream`, which is **not generic** and takes `Task<Stream>`, so a
+  `ValueTask<Stream>` is converted — exactly what `ServerInvokerLookup` does through `ToTaskT`.
+  `writeTrailer` is `true`, matching the runtime, which always sends the total-length trailer even
+  though the client does not demand it.
+
+**`BytesValue` is excluded from marshaller pre-registration alongside `Empty`**, and that one is worth
+remembering: both are pre-seeded with hand-written marshallers and neither is a contract in anyone's
+model, but overriding `BytesValue`'s is the worse of the two — it is the wire type of *every* byte
+stream, so a model-derived marshaller would change what all of them put on the wire. Caught by reading
+the golden, not by a test.
+
+`AotGrpcSmoke` round-trips one natively, so this is measured rather than merely compiled: 4 IL warnings,
+14,610,432 bytes.
+
+What remains genuinely unsupported is `IObservable<T>` and `Grpc.Core`'s own call types — both reshaped
+at run time, both far rarer, and neither on the roadmap. `GrpcDroppedUnderAotTests` uses `IObservable<T>`
+as its dropped-contract example for that reason; it used to use `Task<Stream>`, which stopped being one.
 
 ### 2. Verify on `linux-x64`
 

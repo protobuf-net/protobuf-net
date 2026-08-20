@@ -6,6 +6,7 @@
 // where ref-emit still exists and can quietly paper over a reflective step.
 using AotGrpcSmoke;
 using Grpc.Net.Client;
+using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -106,6 +107,17 @@ try
     ProtoBuf.Grpc.Configuration.BinderConfiguration config = SmokeServices.Instance;
     Check("binder configuration is not the reflective default",
         !ReferenceEquals(config, ProtoBuf.Grpc.Configuration.BinderConfiguration.Default));
+
+    // A byte stream: Task<Stream>, carried as a server-stream of BytesValue with a marshaller that
+    // does NOT come from the model. Worth running natively rather than trusting the golden - the
+    // golden proves the emitted code compiles, and says nothing about whether the framing works.
+    using (var download = await greeter.DownloadAsync(new HelloRequest { Name = "world" }))
+    using (var buffer = new MemoryStream())
+    {
+        await download.CopyToAsync(buffer);
+        var text = System.Text.Encoding.UTF8.GetString(buffer.ToArray());
+        Check("byte-stream round-trip", text == "stream:world", text);
+    }
 
     // ---- endpoint metadata: does it reach the endpoint once ILC has been through? ----
     //

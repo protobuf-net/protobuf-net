@@ -52,6 +52,12 @@ public interface IGreeter
     /// invoking it would need an auth stack that has nothing to do with what is being measured. Binding
     /// is enough, because binding is when metadata is collected.
     /// </summary>
+    /// <summary>
+    /// The byte-stream shape: a server-stream of <c>BytesValue</c> under the covers, with a bespoke
+    /// marshaller that <c>MarshallerCache</c> pre-seeds rather than one the model supplies.
+    /// </summary>
+    Task<System.IO.Stream> DownloadAsync(HelloRequest request, CallContext context = default);
+
     [SmokeTag("contract-method")]
     [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
     Task<HelloReply> SecureAsync(HelloRequest request, CallContext context = default);
@@ -95,6 +101,10 @@ public class GreeterService : IGreeter
 {
     public Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default)
         => Task.FromResult(new HelloReply { Message = "hello, " + request.Name, Count = request.Count });
+
+    public Task<System.IO.Stream> DownloadAsync(HelloRequest request, CallContext context = default)
+        => Task.FromResult<System.IO.Stream>(new System.IO.MemoryStream(
+            System.Text.Encoding.UTF8.GetBytes("stream:" + request.Name)));
 
     [SmokeTag("service-method")]
     public Task<HelloReply> SecureAsync(HelloRequest request, CallContext context = default)
