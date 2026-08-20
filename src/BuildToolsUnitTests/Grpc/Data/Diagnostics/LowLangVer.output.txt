@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4000 Grpc/Data/Diagnostics/LowLangVer.input.cs L55 C33
+'LowLangVerServices' was not given build-time gRPC proxies because the language version is below C# 9.0; the runtime proxy will be used, which is not trim/AOT-friendly

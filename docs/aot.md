@@ -39,6 +39,9 @@ The AOT generator builds those serializers at **compile time** instead. Your mod
 C# in your own project — code you can read, step through, and that ILC can compile like anything
 else.
 
+If you use **protobuf-net.Grpc**, the same applies to your gRPC clients and services — see
+[gRPC](#grpc) below.
+
 ## Opting in
 
 Declare a partial class deriving from `TypeModel`, and tell it what to serialize:
@@ -72,12 +75,50 @@ The trigger attributes are `[Experimental]` with the id `PBN9001`, so you must s
 </PropertyGroup>
 ```
 
-If you want none of this — no analyzers, no generators — one property turns off everything
-`protobuf-net.BuildTools` does, and is checked before any work happens:
+If you want none of this — no analyzers, no generators — one property turns off all of protobuf-net's
+build-time tooling, and is checked before any work happens:
 
 ``` xml
 <ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>
 ```
+
+## gRPC
+
+protobuf-net.Grpc has the same problem twice over: it builds its client proxies with ref-emit, and their
+payloads through the runtime model. Both halves are generated at compile time too, and the shape mirrors
+the one above — you declare a partial, and the generator fills it in:
+
+``` c#
+using ProtoBuf.Grpc.Configuration;
+
+[ProtoGrpc(Model = typeof(MyModel))]
+[ProtoService(typeof(IGreeter), typeof(GreeterService))]
+public sealed partial class MyServices : ClientFactory { }
+```
+
+``` c#
+var greeter = channel.CreateGrpcService<IGreeter>(MyServices.Instance);   // client
+builder.Services.AddMyServices();                                        // server (generated)
+app.MapGrpcService<GreeterService>();
+```
+
+Two things worth knowing here, because they are easy to miss:
+
+- **the `Model` link is the point.** Generated proxies with reflected payloads is the failure that looks
+  fine until you publish: the proxies are AOT-safe, the bytes they carry are not, and the build succeeds
+  either way. Naming a `[ProtoModel]` is what closes that;
+- **you do not list the payload types.** `[ProtoService]` already names the contracts, so the model picks
+  up their request and response types automatically — a `[ProtoModel]` used only for gRPC needs no
+  `[ProtoSerializable]` at all.
+
+There is more: interceptors that let existing `CreateGrpcService` calls stay as they are, DI-registered
+clients, and diagnostics for each way a contract can fall short. That belongs with protobuf-net.Grpc's own
+documentation:
+
+> **[grpc.protobuf-net.dev/aot](https://grpc.protobuf-net.dev/aot)**
+
+It needs protobuf-net.Grpc **1.3.6 or later**; earlier versions statically root the runtime model, which
+keeps the reflection paths alive however static your own code is.
 
 ## Requirements
 
@@ -197,8 +238,8 @@ move it to a generic overload.
 
 ### `.proto`-generated DTOs need their own project
 
-If you generate DTOs from a `.proto` using
-[protobuf-net.BuildTools](https://docs.protobuf-net.dev/contract_first), you **cannot**
+If you generate DTOs from a `.proto`
+[at build time](https://docs.protobuf-net.dev/contract_first), you **cannot**
 put `[ProtoModel]` in the same project. Source generators all run against the same input compilation
 and never see each other's output, so the model finds nothing to serialize.
 
@@ -301,6 +342,13 @@ auto-tuples, and closed generic contracts.
 An **open** generic contract cannot be supported: the generated services type is a single non-generic
 class, so there is nowhere to put the type parameter.
 
+For gRPC, the supported surface is the code-first one protobuf-net.Grpc itself binds: unary,
+client-streaming, server-streaming and duplex operations, `CallContext` or `CancellationToken`, void
+requests and responses, `[SubService]` bases, `IDisposable`/`IAsyncDisposable`, `[Operation]` and
+`[ServiceContract]`/`[OperationContract]` naming, and closed generic contracts. Anything else is refused
+with a warning rather than half-generated — see [grpc.protobuf-net.dev/aot](https://grpc.protobuf-net.dev/aot).
+
 The best current statement of what works is the test corpus: every `[ProtoContract]` in protobuf-net's
 own test projects, plus DTOs generated from a large `.proto` corpus, is serialized by both models and
-compared byte-for-byte on every CI run.
+compared byte-for-byte on every CI run. For the gRPC half it is a native-AOT smoke test with a real
+client and a real server over a real socket, in one natively-compiled binary.

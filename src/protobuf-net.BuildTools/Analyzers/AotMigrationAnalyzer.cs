@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -69,7 +69,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             id: "PBN3013",
             title: "Compile-time serializers are available",
             // qualitative deliberately: the measured figure is ~3x on an ordinary build (see
-            // docs/aot-findings.md), but a hard number in a diagnostic ages badly and varies by
+            // notes/aot/findings.md), but a hard number in a diagnostic ages badly and varies by
             // workload, so the message says "several times" and the docs carry the table
             messageFormat: "This project has protobuf-net contracts and no [ProtoModel]. Compile-time "
                 + "serializers are not only for AOT: they skip the metadata inspection and IL emission "
@@ -170,17 +170,7 @@ namespace ProtoBuf.BuildTools.Analyzers
         /// </remarks>
         private static void Announce(SymbolAnalysisContext context, INamedTypeSymbol anchor)
         {
-            var options = context.Options.AnalyzerConfigOptionsProvider.GlobalOptions;
-            string? asked = null;
-            foreach (var property in new[] { "PublishAot", "PublishTrimmed", "IsAotCompatible", "IsTrimmable" })
-            {
-                if (options.TryGetValue("build_property." + property, out var value)
-                    && string.Equals(value, "true", System.StringComparison.OrdinalIgnoreCase))
-                {
-                    asked = property;
-                    break;
-                }
-            }
+            var asked = context.Options.AnalyzerConfigOptionsProvider.AsksForAot();
 
             // Anchored on a contract rather than at Location.None, which is where this started: a
             // code fix has to attach to a document, and an actionable lightbulb offering to write the

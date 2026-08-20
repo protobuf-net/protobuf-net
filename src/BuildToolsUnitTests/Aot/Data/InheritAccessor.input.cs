@@ -15,7 +15,7 @@ namespace AotFixtures.InheritAccessor;
 // SubTypeState<T> wrapper, not the contract.
 //
 // Only reachable from the corpus once the harness stopped filtering non-public members out of
-// metadata; see docs/aot-findings.md item 8.
+// metadata; see notes/aot/findings.md item 8.
 
 [ProtoContract]
 [ProtoInclude(10, typeof(Derived))]

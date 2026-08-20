@@ -1,9 +1,12 @@
-﻿; ServiceContractAnalyzer's PBN2001-PBN2010 (the gRPC analyzers) shipped in #735 and were
+; ServiceContractAnalyzer's PBN2001-PBN2010 (the gRPC analyzers) shipped in #735 and were
 ; recorded here by NOBODY until 2026-08-16 - which is half of why the AOT generator was later
 ; given a "PBN2000+ block of its own" that was nothing of the kind. They are listed below as
 ; new rules because that is where a reader will look; they are not new, they are newly tracked.
-; Release tracking is not enforced in this repo (the RS2000 rules are inactive), so this table
-; is documentation - and the ONLY register of which ids are taken. Check it before adding one.
+; Release tracking IS now enforced: Microsoft.CodeAnalysis.Analyzers is referenced and RS2000/RS2001/
+; RS2002 are escalated to errors, so an id that is not listed here is a build break rather than a
+; convention someone has to remember. Verified by deleting an entry and watching the build fail.
+; AGENTS.md still carries the *ownership* table, which this file structurally cannot express: it maps
+; id -> category/severity/title, never which type declares it - and the PBN40xx block has two owners.
 
 ### New Rules
 
@@ -54,4 +57,23 @@ PBN3010  | ProtoBuf | Warning  | Call uses the runtime model, not the AOT model
 PBN3011  | ProtoBuf | Warning  | Call resolves its contract type at run time
 PBN3012  | ProtoBuf | Warning  | Project publishes AOT or trimmed, but has no AOT model
 PBN3013  | ProtoBuf | Info     | Compile-time serializers are available
-
+PBN4000  | ProtoBuf.Grpc | Warning | Language version too low for build-time gRPC proxies
+PBN4001  | ProtoBuf.Grpc | Warning | Service interface cannot be nested
+PBN4002  | ProtoBuf.Grpc | Warning | Service method shape is not supported by the generator
+PBN4003  | ProtoBuf.Grpc | Warning | Open generic service interfaces are not supported
+PBN4004  | ProtoBuf.Grpc | Warning | Service interface inherits an interface that is not a sub-service
+PBN4005  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be partial
+PBN4006  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must derive from ClientFactory
+PBN4007  | ProtoBuf.Grpc | Warning | Named type is not a service contract
+PBN4008  | ProtoBuf.Grpc | Warning | Named implementation does not implement the contract
+PBN4009  | ProtoBuf.Grpc | Warning | Service contract declares no recognised operations
+PBN4010  | ProtoBuf.Grpc | Warning | No AOT serializer model named for these proxies
+PBN4011  | ProtoBuf.Grpc | Warning | Service contract could not be resolved
+PBN4012  | ProtoBuf.Grpc | Warning | The named serializer model is not marked [ProtoModel]
+PBN4013  | ProtoBuf.Grpc | Warning | The named serializer model has no serializer for a payload type
+PBN4014  | ProtoBuf.Grpc | Warning | A [ProtoGrpc] type must be top-level and non-generic
+PBN4015  | ProtoBuf.Grpc | Warning | Project publishes AOT or trimmed, but has no build-time gRPC proxies
+PBN4016  | ProtoBuf.Grpc | Warning | Call does not use the build-time gRPC proxies
+PBN4017  | ProtoBuf.Grpc | Warning | DI-registered gRPC clients are not using the build-time proxies
+PBN4018  | ProtoBuf.Grpc | Warning | A contract has no build-time proxy, and this project publishes AOT or trimmed
+PBN4019  | ProtoBuf.Grpc | Warning | Endpoint metadata could not be reconstructed at compile time

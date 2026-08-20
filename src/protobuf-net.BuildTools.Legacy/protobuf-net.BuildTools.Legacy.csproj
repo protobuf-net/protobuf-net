@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf.BuildTools</RootNamespace>
@@ -38,6 +38,13 @@
          on its own unless it is removed. -->
     <Compile Remove="../protobuf-net.BuildTools/CodeFixes/UseAotModelCodeFixProvider.cs" />
     <Compile Remove="../protobuf-net.BuildTools/CodeFixes/AddProtoModelCodeFixProvider.cs" />
+    <!-- same for the gRPC one: it fixes PBN4016, which GrpcMigrationAnalyzer reports, and that analyzer
+         is not listed above either -->
+    <Compile Remove="../protobuf-net.BuildTools/CodeFixes/UseGeneratedClientFactoryCodeFixProvider.cs" />
+    <!-- Internal/** is a glob too, so the gRPC generator's plan types arrive here on their own.
+         Legacy serves very old SDKs, which never get GrpcProxyGenerator (generators are listed by
+         name, above), so these would be dead weight. Same reasoning as the AOT fixers. -->
+    <Compile Remove="../protobuf-net.BuildTools/Internal/Grpc/**/*.cs" />
     <Compile Include="../protobuf-net.BuildTools/Generators/ProtoFileGenerator.cs" Link="ProtoFileGenerator.cs" />
   </ItemGroup>
 

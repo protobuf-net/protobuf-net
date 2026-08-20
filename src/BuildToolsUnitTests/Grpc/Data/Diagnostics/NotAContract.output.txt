@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN4007 Grpc/Data/Diagnostics/NotAContract.input.cs L32 C14
+'GrpcFixtures.NotAContract.NotAnInterface' was named by [ProtoService] but is not an interface marked [Service] or [ServiceContract], so protobuf-net.Grpc would not bind it either
+Warning PBN4007 Grpc/Data/Diagnostics/NotAContract.input.cs L38 C18
+'GrpcFixtures.NotAContract.IUnmarked' was named by [ProtoService] but is not an interface marked [Service] or [ServiceContract], so protobuf-net.Grpc would not bind it either

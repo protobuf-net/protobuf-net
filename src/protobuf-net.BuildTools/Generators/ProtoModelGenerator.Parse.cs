@@ -99,6 +99,23 @@ namespace ProtoBuf.BuildTools.Generators
                 if (attribute.ConstructorArguments[0].Value is INamedTypeSymbol seed) pending.Enqueue(seed);
             }
 
+            // Implicit seeds from the gRPC side: a [ProtoGrpc] declaration naming this model needs a
+            // marshaller for every payload of every contract it binds, and having written those types out
+            // once in [ProtoService] there is no reason to write them again here. Nothing is inferred
+            // about the *linkage* - both halves of it are still consumer-written - only the repetition is
+            // removed.
+            //
+            // Note this cannot read the gRPC generator's output (no generator sees another's), and does
+            // not need to: [ProtoGrpc] and [ProtoService] are ordinary symbols. It shares that
+            // generator's contract parse rather than its results, so the two cannot disagree about what a
+            // contract needs.
+            var grpcPayloads = new List<ITypeSymbol>();
+            GrpcProxyGenerator.CollectPayloadsForModel(compilation, model, grpcPayloads, cancellationToken);
+            foreach (var payload in grpcPayloads)
+            {
+                if (payload is INamedTypeSymbol named) pending.Enqueue(named);
+            }
+
             // walk the transitive closure: a seed's members can reach further contracts, and the same
             // contract is commonly reachable by several paths (or seeded *and* reachable)
             while (pending.Count != 0)

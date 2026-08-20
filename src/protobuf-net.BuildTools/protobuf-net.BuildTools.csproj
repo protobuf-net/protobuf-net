@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -10,6 +10,15 @@
     <IsPackable>false</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);RS2007;NU5128</NoWarn>
+    <!-- The point of referencing Microsoft.CodeAnalysis.Analyzers is the RS2000-family release-tracking
+         rules, which are escalated to errors below so an unrecorded diagnostic id cannot ship. The RS10xx
+         rules arrive with it and are a different thing - analyzer-authoring style advice: RS1032 wants
+         terser message wording (106 of ours are deliberately conversational), RS1036/RS1038 concern banned
+         APIs and compiler-provided references, RS1037 a CompilationEnd tag. Declined rather than
+         unexamined. -->
+    <NoWarn>$(NoWarn);RS1032;RS1036;RS1037;RS1038</NoWarn>
+    <!-- an id missing from AnalyzerReleases.*.md is a build break, which is the whole reason this is on -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS2000;RS2001;RS2002</WarningsAsErrors>
     <Description>Analyzer and Generator support for protobuf-net</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoPackageAnalysis>true</NoPackageAnalysis>
@@ -19,6 +28,9 @@
 
   <ItemGroup>
     <!-- build time deps -->
+    <!-- turns on the RS2000-family release-tracking rules, so an unrecorded diagnostic id is a
+         build failure rather than a convention nobody enforces -->
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Pack="false" PrivateAssets="all" />
 
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />

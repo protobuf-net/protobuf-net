@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4009 Grpc/Data/Diagnostics/MarkerInterface.input.cs L30 C18
+'GrpcFixtures.MarkerInterface.IThing' was named by [ProtoService] but declares no methods recognised as gRPC operations, so no proxy was generated for it and 'CreateClient<IThing>' will throw. Properties, events and static members are not operations

@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN4002 Grpc/Data/Diagnostics/MethodShape.input.cs L42 C13
+Method 'GrpcFixtures.MethodShape.IThing.EchoAsync' is not emitted at build time because it is generic, so there is no one request or response type to build a Method<,> from; the whole contract is left to the runtime proxy, which is not trim/AOT-friendly
