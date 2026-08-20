@@ -1407,32 +1407,47 @@ The lesson that generalises: those 24 omissions hid *inside* the 192-warning noi
 the failure this entry predicted — "16 standing warnings are how a new one goes unnoticed" — except
 the number was larger and the new ones were ours.
 
-### B33. Move the working notes into per-arc sub-folders (Marc, 2026-08-17)
+### B33. ~~Move the working notes into per-arc sub-folders~~ — **`main` DID IT, 2026-08-20; one open question left**
 
-`notes/` is flat and about to gain a second arc — Marc has parallel work on **protobuf editions**
-(C14 here, deferred to 4.1). Proposal: `notes/aot/…` for this arc, `notes/editions/…` for that one.
-Agreed in principle; **unblocked as of #1275 merging**, which was the reason to wait (it edited
-`notes/aot/findings.md`, and a rename against a concurrent edit is the one conflict class worth not
-inviting).
+Marc, 2026-08-17; closed on the `main` merge of 2026-08-20.
 
-Three decisions taken when it happens, recorded so they are not re-litigated:
+**`main` performed this independently, and in the shape proposed here**: `notes/aot/coverage.md`,
+`notes/aot/differential.md`, `notes/aot/findings.md` — sub-folder per arc, redundant prefix dropped,
+alongside the `notes/editions/` that already existed. It also added `notes/readme.md` stating the
+`docs/` vs `notes/` split, which is now the reference for it; `AGENTS.md` points at that rather than
+restating it.
 
-- **`gaps.md` moves too**, to `notes/aot/gaps.md`. Its content is entirely this arc, and a *global*
-  gaps file that mixes arcs gets worse as arcs multiply. `AGENTS.md`'s document table is already the
-  real index, so the model becomes per-arc gaps indexed from there. The cost is that AGENTS.md calls
-  `notes/gaps.md` "the entry point for what is missing" in more than one place, and those pointers
-  must move in the *same commit* — a stale pointer to the file that tells you what is missing is
-  exactly the failure this project keeps recording.
-- **Drop the redundant prefix while moving** — `notes/aot/findings.md`, not
-  `notes/aot/aot-findings.md` — but leave the other names alone (`nano-writer.md`,
-  `packed-writes.md`). Renaming path *and* filename for everything doubles the churn for no gain.
-- **It is a sweep, not a `git mv`.** There are ~148 references across ~25 files, and not only in
-  markdown: `.cs` and `.proto` comments cite these paths (`AotDifferential/Program.cs`, several
-  `Aot/Data/*.input.cs`, `SchemaSourcedModelEndToEndTests.cs`, `Schemas/*.proto`).
+**The predicted conflict is exactly what happened.** This entry called a rename against a concurrent
+edit "the one conflict class worth not inviting", and the merge produced three `rename/rename`
+conflicts — the same file renamed two ways from the same base. Resolved to `main`'s layout
+throughout. Git carried the content merge to *both* paths, so resolution was: keep `main`'s path,
+delete ours, strip the markers. Cheap because both sides were only ever a self-referencing path
+inside the file.
 
-Best done on a quiet tree, i.e. after #1277 squashes into `v4`.
+**What is still flat, and the one decision that needs re-taking:** `gaps.md`, `nano-core.md`,
+`nano-writer.md`, `packed-writes.md` and `aot-schema-model.md` are untouched, since `main` never had
+them.
 
-### B34. **BLOCKER: PR #1282 (build-time gRPC proxies) lands before #1277** — measured, and the overlap is small
+- `aot-schema-model.md` → `notes/aot/schema-model.md` is uncontroversial and follows the convention
+  exactly;
+- `nano-*.md` / `packed-writes.md` want a folder of their own (`notes/nano/`?) — they are the
+  reader/writer engine, not the AOT generator;
+- **`gaps.md` is the one to re-decide, because its premise moved.** This entry said "its content is
+  entirely this arc" and sent it to `notes/aot/gaps.md`. That was true when written and is not now:
+  it carries the **C** series (schema front-end and *editions*, C14), and `main` has a
+  `notes/editions/` folder those belong beside. So the choice is a global `notes/gaps.md` that
+  indexes per-arc, or a split — and a split has a real cost, since B35 already reasons across the
+  boundary (a writer-arc finding whose stakes come from an editions-arc premise). **Left for Marc**:
+  the mechanical part is easy, the filing question is not, and executing the recorded decision
+  unchanged would file the editions items in the AOT folder.
+
+The sweep cost stands at ~148 references across ~25 files, in `.cs` and `.proto` comments as well as
+markdown, so whichever way it goes it is a sweep and not a `git mv`.
+
+### B34. ~~**BLOCKER: PR #1282 (build-time gRPC proxies) lands before #1277**~~ — **MERGED 2026-08-20; the measurement held**
+
+**Closed.** #1282 merged to `main` as `427e3e80` and was merged into `v4` on 2026-08-20. Every prediction below was made from a trial merge on 2026-08-17 and is recorded as written; what actually happened is at the end of this entry.
+
 
 Marc, 2026-08-17. `grpc-aot-generator` → **`main`**, **+11,500 / −85 across 105 files**, and it will
 land first. So #1277 absorbs it, not the other way round. Trial-merged against `schema-breadth` on
@@ -1480,6 +1495,33 @@ regenerations and one golden. The gate battery dominates the wall-clock, not the
   conflict surfaces on the **v4** hop rather than ours;
 - `CustomProtogenSerializer.cs` is committed generator output, so it churns on *every* hop; regenerate
   at each, and expect the final shape to be ours.
+
+
+**What actually happened, 2026-08-20.** The shape was right and the estimate was right; two things
+were missed, both additions from `main` rather than errors in the measurement:
+
+- **the conflicts were nine, but not the nine listed** — the two hops predicted here collapsed into
+  one, because #1277 had already squashed into `v4`. `Emit.cs` did not conflict at all (the
+  duplicate `WriteCondition` fix resolved on the earlier hop, exactly as predicted), and neither did
+  `PublicAPI.Unshipped.txt`. What conflicted instead was `AGENTS.md` (13 hunks, 12 of them the
+  `notes/` rename from B33) and `docs/aot.md` (3, all additive — both sides added sections in the
+  same places and both are kept).
+- **`main` brought two new gates with it**, neither of which this entry anticipated, and both bit:
+  - **release tracking is now enforced** (`RS2000`/`RS2001`/`RS2002` as errors). It failed the build
+    on `PBN1900`. Not a collision — this entry was right that the id blocks do not collide — but a
+    rule change about how ids must be *declared*. See the commit and the `AGENTS.md` note: the
+    tracker discovers ids from `DiagnosticDescriptor` declarations, not from `SupportedDiagnostics`;
+  - **`ReferenceProvenanceTests`** stamps every `*.reference.cs` with its input's sha256 and failed
+    13 of our fixtures. Twelve were merely unstamped; one, `DynamicCategory`, was **genuinely stale
+    and short a member**. A gate arriving and immediately finding a real defect is the argument for
+    it.
+
+**The gate battery after the merge, all green:** traversal build 0 errors; `BuildToolsUnitTests`
+624/624 (Debug *and* Release); `AotConformanceTests` 1709/1709; `protobuf-net.Test`, `Examples` and
+`protobuf-net.Reflection.Test` on net8.0 *and* net472; the corpus differential **3123 compared, 0
+differ** (up from 2988 — the merge widened the corpus, 1392 → 1448 seedable, 93% emitted);
+`AotSmoke` native win-x64 **19 IL warnings, matching the recorded baseline**, passing in both Release
+and Debug; and `main`'s two new legs, `AotGrpcSmoke` (native) and `AotGrpcMetadataDiff`, both passing.
 
 ### B35. ~~Delimited (`DataFormat.Group`) writes did NOT get the optimized emit~~ — **DIAGNOSED AND FIXED 2026-08-19; delimited is now 4.5× FASTER than length-prefixed**
 
@@ -2495,6 +2537,6 @@ silent pick.
 | question | detail |
 | --- | --- |
 | **manual review of the write-emitted goldens** | **65 changed vs `v4`**, plus **4 new fixtures** (`PackedAll`, `BclMeasure`, `RepeatedBytes`, `GroupedRepeated`) — all four now carry a `.reference.cs`, so ref-emit's own output is available beside every one. Start with `PackedAll.output.cs`: it is the only file showing all six `WriteRawPacked*` variants, three of which appeared in no golden before it existed. **The bodies moved four times since this review began** — B16's local folding, B16a's drift calls, B35's grouped-repeated arm, and the `GroupedElements` contract moving onto measure-first — so anything read before `f69d4baf` is stale. Each diff is uniform and skims quickly. **The one item still open, and the only thing owed by a human in this branch** |
-| ~~do the two external PRs land before or after #1277?~~ | **Answered by events, 2026-08-17: both landed first.** #1276 and #1275 are merged into `v4` and forward-merged here. What remains is **#1282** (build-time gRPC proxies), which lands before #1277 — see **B34** for the measured overlap: small, and nothing this branch has to do in advance |
+| ~~do the two external PRs land before or after #1277?~~ | **Answered by events, 2026-08-17: both landed first.** #1276 and #1275 are merged into `v4` and forward-merged here. #1282 (build-time gRPC proxies) then landed too, and merged into `v4` on 2026-08-20 — see **B34**, where the measured overlap held. Nothing is now waiting on an external PR |
 | ~~the tag ladder: keep or revert?~~ | **Settled 2026-08-14: narrowed, not reverted.** Split by *dynamic population* rather than kept or dropped wholesale — the one- and two-byte arms and the bool fold stay, the folded 3/4/5-byte arms go back to the shipped encoder. Two follow-on micro-ideas (`&` for `&&`, hoisting `RemainingInCurrent`) were answered by inspection and need no measurement; the reasoning is in the comment block |
 | ~~when to rewrite `docs/aot.md`'s "needs its own project" advice~~ | **Done**, pre-emptively on `aot-schema-model`, so it arrives with the merge |

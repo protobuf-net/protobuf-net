@@ -559,6 +559,15 @@ New IDs **must** be added to `AnalyzerReleases.Unshipped.md`: release tracking i
 escalated to errors, so an unlisted id fails the build. Proven by deleting an entry and watching
 `error RS2000` appear, rather than by observing a green build.
 
+**...but "listed" is only half of it: release tracking discovers ids from `DiagnosticDescriptor`
+DECLARATIONS**, not from any analyzer's `SupportedDiagnostics`. That is why the *generator*
+diagnostics pass despite having no analyzer behind them — `PBN3020`–`PBN3023` and `PBN4000+` are
+declared as descriptor fields. An id reported through the id-and-strings
+`Diagnostic.Create(string id, string category, ...)` overload is invisible to it, and the symptom is
+`RS2002` saying the id "is not a supported diagnostic for any analyzer" — which points at analyzers
+and is therefore misleading, since the fix is to declare a descriptor. `PBN1900` was the last one
+reported that way and was converted on the `main` merge; declare a descriptor for anything new.
+
 That kills the *register* half of this problem but not the *ownership* half, which is why the table
 above stays: the release file maps id → category/severity/title and never says which type declares
 one. The RS10xx analyzer-authoring rules that arrive with the same package are `NoWarn`ed with a
@@ -2222,6 +2231,26 @@ silently drops a map-of-map member" bug that turned out to be a fixture edited w
 `AotRefGen`; see the "Retracted" section of `notes/aot/findings.md`. Regenerate before concluding
 anything from a member that is missing, and commit the regenerated file in the same commit as the
 fixture change so the two cannot drift.
+
+**That is a gate now, not merely advice** — `ReferenceProvenanceTests`, which arrived from `main`.
+`AotRefGen` stamps each `*.reference.cs` with the fixture it came from and that fixture's sha256
+(`src/AotRefGen/ReferenceProvenance.cs`), and the test fails on a missing or stale stamp. It earned
+itself on the `main` merge by catching `DynamicCategory.reference.cs` describing five members where
+its input declares six — #1275 had added one and the reference was never re-run. Nothing else could
+have found it: the goldens compare us against *ourselves*, and no test consumes `.reference.cs`.
+
+Note **the failure is normal for a contributor and is not carelessness** — `AotRefGen` is net472 and
+Windows-only, so anyone else literally cannot regenerate. Expect to run it yourself when merging
+fixture changes from elsewhere.
+
+Two operational traps, both hit while clearing exactly that:
+
+- **it takes no arguments**, so `dotnet run --project src/AotRefGen --nologo` passes `--nologo`
+  through and it fails with `fixture directory not found: ...\--nologo`;
+- **the test reads the reference from the test project's OUTPUT directory**, since `Data/**` is
+  copied rather than compiled. So regenerating and then running with `--no-build` re-checks the
+  *stale* copy and fails; rebuild first. Same shape as the stale-generator trap in `notes/gaps.md`
+  B27.
 
 - Fixture convention: `<Name>.input.cs` declares model type `<Name>Model`, giving `<Name>.reference.cs`.
 - Contract types in fixtures must be `public` — full ref-emit compilation only reaches public members.
