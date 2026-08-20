@@ -3,12 +3,12 @@
 # AOT generator coverage
 
 scanned: protobuf-net.Test, Examples, protobuf-net.Reflection.Test
-seedable `[ProtoContract]` types: **1392**
+seedable `[ProtoContract]` types: **1448**
 - not seedable, not public: 157
 - not seedable, generic: 19
 
-contracts dropped: **107** of 1392 (93% emitted)
-of which dropped only by cascade: 28
+contracts dropped: **115** of 1448 (93% emitted)
+of which dropped only by cascade: 34
 
 | count | reason |
 | ---: | --- |
@@ -18,6 +18,7 @@ of which dropped only by cascade: 28
 | 7 | PBN3001 member '…' is not public |
 | 6 | PBN3002 member '…' has [NullWrappedValue] on a non-scalar, which protobuf-net refuses: "NullWrappedValue can only be used with scalar types, or in a collection" |
 | 4 | PBN3001 member '…' has unsupported type '…'; it has a ToString() and a static Parse(string), so [ProtoModel(AllowParseableTypes = true)] would include it - off by default, matching RuntimeTypeModel |
+| 3 | PBN3003 this form of [ProtoBeforeSerialization] is not supported yet |
 | 3 | PBN3002 it is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" |
 | 3 | PBN3002 it is reached at more than one compatibility level, and protobuf-net refuses that too: "must use a single compatibility level ... this usually means it is being used in different contexts in the same model" |
 | 2 | PBN3002 the type could not be resolved. If it is produced by another source generator in this same project - a .proto compiled by protobuf-net.BuildTools, say - then it is not visible here: generators do not see each other's output. Move the generated types to a referenced project |
@@ -38,7 +39,6 @@ of which dropped only by cascade: 28
 | 1 | PBN3002 Field 32 is reserved and cannot be used for sub-type '…' (iz 32), which protobuf-net refuses too |
 | 1 | PBN3002 Field '…' is reserved and cannot be used for sub-type 33 (iz B), which protobuf-net refuses too |
 | 1 | PBN3003 this form of [ProtoAfterDeserialization] is not supported yet |
-| 1 | PBN3003 this form of [ProtoBeforeSerialization] is not supported yet |
 | 1 | PBN3001 member '…' has no public getter |
 | 1 | PBN3003 this form of [DefaultValue] is not supported yet |
 | 1 | PBN3001 member '…' has unsupported type '…'; its element '…' is not marked [ProtoContract], [DataContract] or [XmlType] and is not a tuple, so protobuf-net has no serializer for it either: "No serializer defined for type" - [ProtoSurrogate] on the model is the way to serialize a type you do not own |
@@ -68,6 +68,81 @@ Member types we could not handle:
 | 1 | `FloatData` |
 | 1 | `Item` |
 
+## raw read pass (the optimized emit): who falls back, and why
+
+| optimized read emitted | 1332 |
+| classic fallback (whole contract) | 36 |
+| legacy-mode members inside raw contracts | 212 |
+
+| contract fallback category | contracts |
+| --- | ---: |
+| contract shape (value type, tuple, surrogate or external serializer) | 31 |
+| hierarchy with serialization callbacks | 3 |
+| hierarchy with non-default construction | 2 |
+
+| legacy-mode member category | members |
+| --- | ---: |
+| null-wrapped | 28 |
+| element type not raw-eligible | 12 |
+| target type not raw-eligible | 10 |
+| collection shape CreateEnumerable | 9 |
+| accessor-reached setter | 8 |
+| map with non-default DataFormat | 8 |
+| null-wrapped map | 8 |
+| message shape (nullable or struct) | 7 |
+| map without a plain setter | 7 |
+| kind Guid | 6 |
+| kind Single | 5 |
+| map with per-side format | 5 |
+| element kind Single | 5 |
+| accessor-reached member | 4 |
+| hand-written serializer | 4 |
+| element kind Guid | 4 |
+| repeated Double | 4 |
+| kind Int16 | 3 |
+| collection shape CreateImmutableIList | 3 |
+| map shape CreateIImmutableDictionary | 3 |
+| collection shape CreateImmutableISet | 3 |
+| map with repeated value | 3 |
+| map shape CreateDictionary | 3 |
+| collection shape CreateImmutableArray | 3 |
+| map value kind Decimal | 3 |
+| element kind Decimal | 3 |
+| kind Decimal | 3 |
+| kind IntPtr | 3 |
+| map value type not raw-eligible | 3 |
+| collection shape CreateImmutableList | 2 |
+| map shape CreateImmutableDictionary | 2 |
+| collection shape CreateImmutableHashSet | 2 |
+| collection shape CreateImmutableSortedSet | 2 |
+| map shape CreateImmutableSortedDictionary | 2 |
+| kind UInt16 | 2 |
+| kind Byte | 2 |
+| non-default DataFormat (FixedSize on Double) | 2 |
+| kind Uri | 2 |
+| OverwriteList collection | 2 |
+| kind UIntPtr | 2 |
+| collection shape CreateConcurrentQueue | 1 |
+| collection shape CreateConcurrentBag | 1 |
+| map shape CreateConcurrentDictionary | 1 |
+| collection shape CreateConcurrentStack | 1 |
+| collection shape CreateImmutableIQueue | 1 |
+| collection shape CreateImmutableIStack | 1 |
+| collection shape CreateQueue | 1 |
+| collection shape CreateStack | 1 |
+| non-default DataFormat (FixedSize on Single) | 1 |
+| getter-only scalar | 1 |
+| getter-only message | 1 |
+| OverwriteList map | 1 |
+| element kind DateTime | 1 |
+| element kind TimeSpan | 1 |
+| non-default DataFormat (WellKnown on Int32) | 1 |
+| kind DateOnly | 1 |
+| kind TimeOnly | 1 |
+| element kind DateOnly | 1 |
+| element kind TimeOnly | 1 |
+| kind SByte | 1 |
+
 the generated code compiles cleanly.
 
-harness artefact, CS0433: 3 — two scanned assemblies declare the same type name, e.g. The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
+harness artefact, CS0433: 5 — two scanned assemblies declare the same type name, e.g. The type 'Timestamp' exists in both 'Google.Protobuf, Version=3.34.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604' and 'protobuf-net.Test, Version=4.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67'
