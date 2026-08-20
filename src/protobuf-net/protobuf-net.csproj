@@ -7,6 +7,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Configurations>Debug;Release</Configurations>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <!-- define configuration per-platform -->
@@ -27,9 +28,13 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <None Include="Meta\MetaType.Nullability.cs">
-		  <DependentUpon>Meta\MetaType.cs</DependentUpon>
-	  </None>
+      <None Include="Meta\MetaType.Nullability.cs">
+          <DependentUpon>Meta\MetaType.cs</DependentUpon>
+      </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup Label="public API tracking">
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
