@@ -557,6 +557,22 @@ Separately, `PBN9001` is not an analyzer diagnostic at all: it is the `[Experime
 opting into the generator must suppress it. Anything that compiles a model programmatically has to
 suppress it too — see `src/AotCoverage`.
 
+**`PBN9002` is the same thing for the raw reader/writer surface, and carrying it is POLICY**
+(Marc, 2026-08-19): *every new Raw API gets `[System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]`*,
+without exception, for as long as that surface may still reshape. It is not decoration — it is the
+one thing standing between "we may still change this" and a consumer depending on it.
+
+This is easy to forget because **it costs nothing internally and so nothing fails when you omit it**:
+`src/Directory.Build.props` carries a repo-wide `NoWarn` including `PBN9002`, deliberately, since the
+repo consumes its own raw surface throughout. So an unmarked raw member builds, tests, and ships
+looking exactly like a marked one — the only difference appears in a *consumer's* build, which no
+gate here exercises. The packed write surface (sixteen `WriteRawPacked*`/`MeasureRawPacked*` members)
+shipped unmarked for precisely that reason and was corrected on 2026-08-19.
+
+The tracking file records it as a prefix — `[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawVarint32(uint
+value) -> void` — so a missing attribute is *visible* there if anyone reads it, which is the cheapest
+place to notice.
+
 Note the shipped analyzer still compiles against the low Roslyn baseline (4.3.1), which predates
 `LanguageVersion.CSharp12` — hence the numeric constant in `ProtoModelGenerator`. `BuildToolsUnitTests`
 carries a `VersionOverride` to 4.8.0 purely so its in-memory compilations can parse C# 12.

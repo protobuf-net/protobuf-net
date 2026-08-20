@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -68,12 +68,14 @@ namespace ProtoBuf
             // ---- varint ----
 
             /// <summary>Total bytes for a packed <c>uint32</c> column, framing included.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedVarint(int fieldNumber, ReadOnlySpan<uint> values)
                 => PackedTotal(fieldNumber, values.Length,
                     values.Length > 1 ? PackedVarintMeasure.Measure(values) : 0,
                     values.Length == 1 ? MeasureUInt32(values[0]) : 0);
 
             /// <summary>Writes a packed <c>uint32</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedVarint(int fieldNumber, ReadOnlySpan<uint> values)
             {
                 if (values.Length == 1)
@@ -91,12 +93,14 @@ namespace ProtoBuf
             /// Total bytes for a packed <c>int32</c> column. Not the unsigned overload with a
             /// cast: a negative <c>int32</c> sign-extends to the ten-byte form.
             /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedVarint(int fieldNumber, ReadOnlySpan<int> values)
                 => PackedTotal(fieldNumber, values.Length,
                     values.Length > 1 ? PackedVarintMeasure.Measure(values) : 0,
                     values.Length == 1 ? MeasureUInt64(unchecked((ulong)(long)values[0])) : 0);
 
             /// <summary>Writes a packed <c>int32</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedVarint(int fieldNumber, ReadOnlySpan<int> values)
             {
                 if (values.Length == 1)
@@ -115,12 +119,14 @@ namespace ProtoBuf
             /// site: a negative <c>long</c> is a large <c>ulong</c>, and both encode as the same
             /// 64-bit two's-complement varint.
             /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedVarint(int fieldNumber, ReadOnlySpan<ulong> values)
                 => PackedTotal(fieldNumber, values.Length,
                     values.Length > 1 ? PackedVarintMeasure.Measure(values) : 0,
                     values.Length == 1 ? MeasureUInt64(values[0]) : 0);
 
             /// <summary>Writes a packed 64-bit varint column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedVarint(int fieldNumber, ReadOnlySpan<ulong> values)
             {
                 if (values.Length == 1)
@@ -145,12 +151,14 @@ namespace ProtoBuf
             // is a different shape from the plain varint one rather than a parameter of it.
 
             /// <summary>Total bytes for a packed <c>sint32</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedZigZag(int fieldNumber, ReadOnlySpan<int> values)
                 => PackedTotal(fieldNumber, values.Length,
                     values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0,
                     values.Length == 1 ? MeasureUInt32(Zig(values[0])) : 0);
 
             /// <summary>Writes a packed <c>sint32</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedZigZag(int fieldNumber, ReadOnlySpan<int> values)
             {
                 if (values.Length == 1)
@@ -165,12 +173,14 @@ namespace ProtoBuf
             }
 
             /// <summary>Total bytes for a packed <c>sint64</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedZigZag(int fieldNumber, ReadOnlySpan<long> values)
                 => PackedTotal(fieldNumber, values.Length,
                     values.Length > 1 ? PackedVarintMeasure.MeasureZigZag(values) : 0,
                     values.Length == 1 ? MeasureUInt64(Zig(values[0])) : 0);
 
             /// <summary>Writes a packed <c>sint64</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedZigZag(int fieldNumber, ReadOnlySpan<long> values)
             {
                 if (values.Length == 1)
@@ -356,10 +366,12 @@ namespace ProtoBuf
             // whose byte is neither 0 nor 1, and a blit would put it on the wire verbatim.
 
             /// <summary>Total bytes for a packed <c>bool</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedBool(int fieldNumber, int count)
                 => PackedTotal(fieldNumber, count, count, 1);
 
             /// <summary>Writes a packed <c>bool</c> column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedBool(int fieldNumber, ReadOnlySpan<bool> values)
             {
                 if (values.Length == 1)
@@ -384,14 +396,17 @@ namespace ProtoBuf
             // punned onto these two at the call site, where the generator knows the type.
 
             /// <summary>Total bytes for a packed 4-byte fixed-width column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedFixed32(int fieldNumber, int count)
                 => PackedTotal(fieldNumber, count, count * 4L, 4);
 
             /// <summary>Total bytes for a packed 8-byte fixed-width column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public static long MeasureRawPackedFixed64(int fieldNumber, int count)
                 => PackedTotal(fieldNumber, count, count * 8L, 8);
 
             /// <summary>Writes a packed 4-byte fixed-width column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedFixed32(int fieldNumber, ReadOnlySpan<uint> values)
             {
                 if (values.Length == 1)
@@ -410,6 +425,7 @@ namespace ProtoBuf
             }
 
             /// <summary>Writes a packed 8-byte fixed-width column.</summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
             public void WriteRawPackedFixed64(int fieldNumber, ReadOnlySpan<ulong> values)
             {
                 if (values.Length == 1)
