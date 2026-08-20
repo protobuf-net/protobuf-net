@@ -24,8 +24,8 @@ Contract-first works too: generate C#/VB from a `.proto` schema at build time, f
 [protobuf-net.dev](https://protobuf-net.dev/).
 
 Build tools — analyzers that check your contracts, and the generator that emits serializers at compile time
-so native AOT and trimming work — ship with this package by default; opt out with
-`<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
+so [native AOT and trimming](https://docs.protobuf-net.dev/aot) work — ship with this package by default;
+opt out with `<ProtoBufDisableBuildTools>true</ProtoBufDisableBuildTools>`.
 
 ## More
 

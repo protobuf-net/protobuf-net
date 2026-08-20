@@ -4,9 +4,10 @@
 `Instant` and `Duration` serialize as the protobuf well-known types (`google.protobuf.Timestamp` and
 `google.protobuf.Duration`), so the payloads interoperate with other protobuf implementations.
 
-With a compile-time model (`[ProtoModel]`, as used for native AOT), those two need **no registration at
-all**: the pairings are declared at assembly level in this package, so any generated model in a project that
-references it picks them up.
+With a compile-time model (`[ProtoModel]`, as used for
+[native AOT](https://docs.protobuf-net.dev/aot)), those two need **no registration at all**: the pairings are
+declared at assembly level in this package, so any generated model in a project that references it picks
+them up.
 
 For the runtime model, register them:
 

@@ -6,8 +6,8 @@ current analyzers.
 
 **If your build is current, you do not need this package**: the same tooling ships inside
 [protobuf-net](https://www.nuget.org/packages/protobuf-net) and reaches every consumer by default. This one
-exists only for the older SDKs, and does not include the compile-time serializer generator (native AOT and
-trimming support), which requires a newer toolchain.
+exists only for the older SDKs, and does not include the compile-time serializer generator
+([native AOT and trimming](https://docs.protobuf-net.dev/aot) support), which requires a newer toolchain.
 
 ## More
 
