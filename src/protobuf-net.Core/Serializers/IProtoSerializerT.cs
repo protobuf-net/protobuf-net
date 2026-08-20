@@ -130,6 +130,16 @@ namespace ProtoBuf.Serializers
         /// </summary>
         OptionTrySkipWritingWhenMeasuring = 1 << 16,
 
+        /// <summary>
+        /// For map value/key serializers: when the element is a reference type and the wire
+        /// carries no payload for it, preserve <c>null</c> instead of materialising the proto
+        /// default (e.g. <c>""</c> for <see cref="string"/>). Used for back-compat with v2
+        /// semantics at <see cref="CompatibilityLevel.Level200"/> / <see cref="CompatibilityLevel.Level240"/>,
+        /// where the writer already distinguishes null (value tag omitted) from empty
+        /// (value tag length 0) on the wire. No effect for value types.
+        /// </summary>
+        OptionMapValuePreservesNull = 1 << 17,
+
         // this isn't quite ready; the problem is that the property assignment / null-check logic
         // gets hella messy
         ///// <summary>
@@ -204,8 +214,8 @@ namespace ProtoBuf.Serializers
 
         [MethodImpl(ProtoReader.HotPath)]
         public static T DefaultFor<T>(this SerializerFeatures features)
-            // prefer true nunll when wrapped
-            => features.HasAny(SerializerFeatures.OptionWrappedValue) ? default(T) : TypeHelper<T>.Default;
+            // prefer true null when wrapped, or when the caller asked for null-preservation (v2-compat map values)
+            => features.HasAny(SerializerFeatures.OptionWrappedValue | SerializerFeatures.OptionMapValuePreservesNull) ? default(T) : TypeHelper<T>.Default;
 
         // core wire-type bits plus the zig-zag marker; first 4 bits
         private const SerializerFeatures WireTypeMask = (SerializerFeatures)15;
