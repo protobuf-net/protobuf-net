@@ -229,6 +229,8 @@ ProtoBuf.Meta.MetaType.UseConstructor.get -> bool
 ProtoBuf.Meta.MetaType.UseConstructor.set -> void
 ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.ProtoSyntax.Default = -1 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
+ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
+ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.ProtoSyntax.Proto2 = 0 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.ProtoSyntax.Proto3 = 1 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.RuntimeTypeModel

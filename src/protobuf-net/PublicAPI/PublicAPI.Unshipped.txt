@@ -1,2 +1,0 @@
-ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
-ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)

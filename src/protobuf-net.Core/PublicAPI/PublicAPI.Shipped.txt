@@ -169,6 +169,8 @@ ProtoBuf.MemberSerializationOptions.Packed = 1 -> ProtoBuf.MemberSerializationOp
 ProtoBuf.MemberSerializationOptions.Required = 2 -> ProtoBuf.MemberSerializationOptions
 ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.ProtoSyntax.Default = -1 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.ProtoSyntax.Proto2 = 0 -> ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.ProtoSyntax.Proto3 = 1 -> ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.SchemaGenerationFlags
