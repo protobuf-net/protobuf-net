@@ -7,8 +7,8 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
 > `dotnet test src/BuildToolsUnitTests` (**400** pass), the full traversal build, `AotConformanceTests`
 > (667), `AotDifferential` (**3080 contracts compared, 0 differing**), a JIT run of `src/AotGrpcSmoke`,
-> and a `win-x64` native publish of the same — **twelve checks, 4 IL warnings, 14,585,856 bytes**.
-> `protobuf-net.BuildTools.Legacy` builds green. **`linux-x64` has not been measured on this branch.**
+> and a `win-x64` native publish of the same. `protobuf-net.BuildTools.Legacy` builds green.
+> **`linux-x64` is now measured too** — see "Verify on `linux-x64`" below — and CI runs it.
 >
 > **This is feature-complete for the routes people actually use.** Every consumer entry point is covered
 > — a direct `CreateGrpcService`, an intercepted one, a DI-registered client, and the server — and
@@ -102,11 +102,30 @@ What remains genuinely unsupported is `IObservable<T>` and `Grpc.Core`'s own cal
 at run time, both far rarer, and neither on the roadmap. `GrpcDroppedUnderAotTests` uses `IObservable<T>`
 as its dropped-contract example for that reason; it used to use `Task<Stream>`, which stopped being one.
 
-### 2. Verify on `linux-x64`
+### 2. Verify on `linux-x64` — done, and in CI
 
-Never published there on this branch. The serializer side historically matched win-x64
-warning-for-warning, so this is confirmation rather than discovery. Byte sizes are **not** comparable
-across RIDs; warning counts are.
+Measured, both halves, and the counts match `win-x64` exactly:
+
+| | `linux-x64` | `win-x64` |
+| --- | --- | --- |
+| `AotGrpcSmoke` | all checks pass, **4 IL warnings** | 4 |
+| `AotSmoke` | passes, **19 IL warnings** | 19 |
+
+So the long-standing claim that the two RIDs match warning-for-warning holds for the gRPC half as well
+as the serializer half, and is now evidence rather than inheritance. Byte sizes are still **not**
+comparable across RIDs; warning counts are.
+
+CI now runs it, as a separate `ubuntu-latest` job (`native-aot-linux`) that publishes *and runs* both
+smoke tests. The Windows-only constraint on the main job does not apply here: that is about the
+traversal globbing net4x-only projects, and these two are modern-TFM apps whose references resolve to
+modern TFMs only.
+
+Two notes for anyone re-running it by hand. There is no Linux in the usual dev environment, so the way
+this was trialled before trusting CI was a container — `mcr.microsoft.com/dotnet/sdk:10.0`, the same
+`apt-get install clang zlib1g-dev`, against a `git archive HEAD` export rather than a mount, so a Linux
+`obj/` cannot collide with the Windows one and break later builds. And the job publishes with `-o`
+rather than the default path, because the two apps are on **different TFMs** (net10.0 and net8.0) and
+naming `bin/Release/<tfm>/…` is a break waiting to happen.
 
 ### 3. Release 3.4.0
 
