@@ -14,7 +14,7 @@ namespace BuildToolsUnitTests.Aot
     /// <para>
     /// This is the automated half of a hazard that had to be found the hard way: a reference that was
     /// never re-run and a ref-emit that genuinely emitted nothing look identical, and reasoning from
-    /// the first produced a wrong finding, since retracted (<c>notes/aot-findings.md</c>).
+    /// the first produced a wrong finding, since retracted (<c>notes/aot/findings.md</c>).
     /// </para>
     /// <para>
     /// Note what it does and does not claim. It pins <em>provenance</em> - this reference came from

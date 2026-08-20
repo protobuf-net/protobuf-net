@@ -26,7 +26,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
     /// here is build-time only and carries none of AOT's constraints.
     /// </para>
     /// <para>
-    /// The encoding is fully specified and was reproduced by hand (see <c>notes/aot-grpc.md</c>), so
+    /// The encoding is fully specified and was reproduced by hand (see <c>notes/aot/grpc.md</c>), so
     /// synthesising it ourselves is a proven fallback if this route ever fails - it needs an
     /// <c>xxHash128</c>, which Roslyn itself vendors. Calling the API is preferred because it tracks
     /// whatever encoding the compiler currently prefers, where synthesis pins us to version 1.

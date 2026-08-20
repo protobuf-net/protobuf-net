@@ -69,7 +69,7 @@ namespace ProtoBuf.BuildTools.Analyzers
             id: "PBN3013",
             title: "Compile-time serializers are available",
             // qualitative deliberately: the measured figure is ~3x on an ordinary build (see
-            // notes/aot-findings.md), but a hard number in a diagnostic ages badly and varies by
+            // notes/aot/findings.md), but a hard number in a diagnostic ages badly and varies by
             // workload, so the message says "several times" and the docs carry the table
             messageFormat: "This project has protobuf-net contracts and no [ProtoModel]. Compile-time "
                 + "serializers are not only for AOT: they skip the metadata inspection and IL emission "

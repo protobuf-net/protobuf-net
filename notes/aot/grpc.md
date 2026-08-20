@@ -1,7 +1,7 @@
 # Build-time gRPC proxies: findings and handover
 
-Working notes for the gRPC half of the AOT story, in the same spirit as `aot-findings.md`. The
-serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
+Working notes for the gRPC half of the AOT story, in the same spirit as `findings.md`. The
+serializer half is `aot.md` (user-facing) and `findings.md` (working notes).
 
 > **Handover** (2026-08-17). Branch `grpc-aot-generator`, draft PR
 > [#1282](https://github.com/protobuf-net/protobuf-net/pull/1282). Validated on Windows:
@@ -512,7 +512,7 @@ since the whole question is what can be discovered about a model through metadat
   two `RuntimeTypeModel` roots" below for why it was all-or-nothing. All four are per-assembly
   rollups; nothing is attributed to generated code. If more ever appear, use
   `/p:IlcGenerateDgmlFile=true` and walk *incoming* edges rather than guessing, per
-  `aot-findings.md`.
+  `findings.md`.
 - **No interceptors yet.** See below.
 
 ### The marshaller's two arms, and the SerializationContext state machine
@@ -862,7 +862,7 @@ pass its goldens.
 The goldens *compile* unary, server-streaming, client-streaming, duplex and void; for a while
 `AotGrpcSmoke` only *ran* three of them. Client-streaming and duplex each reach their own `Reshape`
 helper on the client and their own `AddXxxMethod` on the server, so neither was known-good under ILC -
-merely unmeasured, which is the distinction `aot-findings.md` insists on for `AotSmoke` and which applies
+merely unmeasured, which is the distinction `findings.md` insists on for `AotSmoke` and which applies
 just as much here.
 
 Both are now exercised, with three distinct values in the request stream so that a shape which dropped or
