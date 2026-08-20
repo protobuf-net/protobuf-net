@@ -7,8 +7,9 @@ using System.IO;
 namespace ProtoBuf.AotNodaTimeSmoke;
 
 /// <summary>
-/// A consumer that only knows it is using NodaTime. It declares no surrogates: the pairings come
-/// from protobuf-net.NodaTime's assembly-level [ProtoSurrogate] declarations.
+/// A consumer that only knows it is using NodaTime. It declares no surrogates and calls no
+/// AddNodaTime: the pairings come from protobuf-net.NodaTime's assembly-level [ProtoSurrogate]
+/// declarations. IsoDayOfWeek needs no pairing at all - it is an enum.
 /// </summary>
 [ProtoContract]
 public class Appointment
@@ -16,6 +17,9 @@ public class Appointment
     [ProtoMember(1)] public string Title { get; set; }
     [ProtoMember(2)] public Instant Starts { get; set; }
     [ProtoMember(3)] public Duration Runs { get; set; }
+    [ProtoMember(4)] public LocalDate Day { get; set; }
+    [ProtoMember(5)] public LocalTime Time { get; set; }
+    [ProtoMember(6)] public IsoDayOfWeek Dow { get; set; }
 }
 
 [ProtoModel]
@@ -35,22 +39,13 @@ internal static class Program
             Title = "standup",
             Starts = Instant.FromUtc(2020, 1, 2, 3, 4),
             Runs = Duration.FromMinutes(15),
+            Day = new LocalDate(2020, 1, 2),
+            Time = new LocalTime(3, 4, 5).PlusNanoseconds(123456789),
+            Dow = IsoDayOfWeek.Thursday,
         };
 
         using var ms = new MemoryStream();
-        try
-        {
-            model.Serialize(ms, original);
-        }
-        catch (InvalidOperationException ex)
-        {
-            // the pairings *are* found - see the PBN3003/PBN3004 chain at build time - but the
-            // well-known types they point at declare [ProtoContract(Serializer = ...)] naming the
-            // internal PrimaryTypeProvider, which a consumer's generated code cannot name. Exposing
-            // a public serializer for those types is what would finish this off.
-            Console.WriteLine($"NodaTime surrogate smoke test BLOCKED: {ex.Message}");
-            return 0;
-        }
+        model.Serialize(ms, original);
         var bytes = ms.ToArray();
         Console.WriteLine($"serialized {bytes.Length} bytes: {BitConverter.ToString(bytes)}");
 
@@ -60,6 +55,9 @@ internal static class Program
         Check(ref failures, "Title", original.Title, clone.Title);
         Check(ref failures, "Starts", original.Starts, clone.Starts);
         Check(ref failures, "Runs", original.Runs, clone.Runs);
+        Check(ref failures, "Day", original.Day, clone.Day);
+        Check(ref failures, "Time", original.Time, clone.Time);
+        Check(ref failures, "Dow", original.Dow, clone.Dow);
 
         Console.WriteLine(failures == 0
             ? "NodaTime surrogate smoke test PASSED"

@@ -1,0 +1,23 @@
+ProtoBuf.Meta.NodaTimeSurrogates
+ProtoBuf.Meta.NodaTimeSurrogates.Date
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Date() -> void
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Day.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Day.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Month.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Month.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Year.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.Date.Year.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Hours.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Hours.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Minutes.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Minutes.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Nanos.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Nanos.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Seconds.get -> int
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.Seconds.set -> void
+ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.TimeOfDay() -> void
+static ProtoBuf.Meta.NodaTimeSurrogates.Date.implicit operator NodaTime.LocalDate(ProtoBuf.Meta.NodaTimeSurrogates.Date value) -> NodaTime.LocalDate
+static ProtoBuf.Meta.NodaTimeSurrogates.Date.implicit operator ProtoBuf.Meta.NodaTimeSurrogates.Date(NodaTime.LocalDate value) -> ProtoBuf.Meta.NodaTimeSurrogates.Date
+static ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.implicit operator NodaTime.LocalTime(ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay value) -> NodaTime.LocalTime
+static ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay.implicit operator ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay(NodaTime.LocalTime value) -> ProtoBuf.Meta.NodaTimeSurrogates.TimeOfDay
