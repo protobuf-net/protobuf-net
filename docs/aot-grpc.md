@@ -52,6 +52,85 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > - **vendoring `xxHash128`** to synthesise interceptor locations. ~2,000 lines from Roslyn's own copy;
 >   reflection into the host is 80. The synthesis route is proven and recorded as the fallback.
 
+## Plan forward
+
+Written for a cold start: this section plus the Handover above should be enough to act without
+re-deriving anything. `AGENTS.md` has the rules of the road; this is the queue.
+
+### 0. Compile-time endpoint metadata — MVP-blocking
+
+**Why it is not optional:** endpoint metadata is how authorization is enforced in gRPC for .NET, so
+`[Authorize]` must arrive as a real instance. Detailed steps are in "Compile-time metadata: REOPENED"
+below. In short, and in this order, because each step is what makes the next checkable:
+
+1. **differential harness first** — reconstructed list vs `binder.GetMetadata(...)`, item by item, on a
+   contract with attributes at all three levels (`SubService.input.cs` is the shape). Build this before
+   any emit: both remaining traps produce plausible-but-wrong lists, and a wrong list means a more
+   permissive endpoint with no error anywhere.
+2. **the gather**, in `GetMetadata`'s four-source order (contract type, contract method, service type,
+   service method) — order is semantic, later wins.
+3. **`PBN4019`** for anything `AttributeRenderer` cannot render, naming the attribute and the operation.
+4. **the emit**, replacing `__cfg.Binder.GetMetadata(...)`.
+
+`Internal/Grpc/AttributeRenderer.cs` is written and has no caller, so nothing is half-replaced today.
+
+### 1. `Stream` payloads — the widest capability gap
+
+The largest difference between "works on JIT" and "works published". protobuf-net.Grpc has a documented
+streams feature; we refuse those contracts (`PBN4002`), and under AOT a refused contract does not
+degrade, it throws. `IObservable<T>` and `Grpc.Core`'s own call types are the same shape of gap but far
+rarer. Start from `IsRuntimeOnlyPayload` in `GrpcProxyGenerator.ParseContract.cs`, and from
+`docs/streams.md` in the protobuf-net.Grpc repo for what the runtime actually does.
+
+### 2. Verify on `linux-x64`
+
+Never published there on this branch. The serializer side historically matched win-x64
+warning-for-warning, so this is confirmation rather than discovery. Byte sizes are **not** comparable
+across RIDs; warning counts are.
+
+### 3. Release 3.4.0
+
+`version.json` is revved and `get-version` computes `3.4.0` — verified by squash-probing onto
+`origin/main`, not by arithmetic. The gRPC docs already claim that floor, so the two are consistent.
+
+### 4. Server reflection
+
+`protobuf-net.Grpc.AspNetCore.Reflection` builds schemas at run time and is untouched. It resolves a
+**`BinderConfiguration`** from DI — the second and last DI seam — and a `[ProtoGrpc]` type converts to
+one implicitly, so the fix that covered `AddCodeFirstGrpcClient` should apply.
+
+### Declined, with reasons — do not reopen without new information
+
+- **nested/generic `[ProtoGrpc]` declarations** (`PBN4014`): refused cleanly; "does not work today,
+  continues not to work". `ProtoModelGenerator` has the same case open as a TODO with a quieter failure,
+  so if it is ever built, build both.
+- **open generic contracts**: impossible, not declined — the emitted proxy is a non-generic type.
+- **vendoring `xxHash128`**: ~2,000 lines against 80 for reflecting into the host. Synthesis is proven
+  and recorded as the fallback if that reflection ever stops working.
+
+### Where to be suspicious
+
+**The interceptor goldens.** That area has produced two false-confidence bugs in one session: the
+"expected errors" escape hatch silently recorded a `CS9137` failure as intended output, and a golden
+embedded a machine-specific checksum that passed locally and failed CI. Both are fixed, but treat green
+there as weaker evidence than elsewhere — `src/AotGrpcSmoke` is what actually proves that path, because
+it runs.
+
+### Standing verification recipe
+
+Anything touching the generators should clear all of these before being called done:
+
+``` sh
+dotnet test src/BuildToolsUnitTests/BuildToolsUnitTests.csproj      # goldens rewrite then assert: run twice on new fixtures
+dotnet build src/protobuf-net.BuildTools.Legacy/protobuf-net.BuildTools.Legacy.csproj
+dotnet build Build.csproj -c Debug                                  # the traversal
+dotnet test src/AotConformanceTests/AotConformanceTests.csproj
+dotnet run --project src/AotDifferential/AotDifferential.csproj     # gates CI; must read 0 differing
+dotnet publish src/AotGrpcSmoke/AotGrpcSmoke.csproj -c Release -r win-x64   # then RUN the exe
+```
+
+Last known-good: 400 tests, 3080 contracts compared / 0 differing, twelve native checks, 4 IL warnings.
+
 ## What this is
 
 An alternative to [#1255](https://github.com/protobuf-net/protobuf-net/pull/1255) and

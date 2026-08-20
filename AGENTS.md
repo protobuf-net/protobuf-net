@@ -1761,7 +1761,9 @@ orders never having been read in the first place.
 
 ### Build-time gRPC proxies (`GrpcProxyGenerator`)
 
-**`docs/aot-grpc.md` is the reference, and opens with a Handover section.** Read it before touching
+**`docs/aot-grpc.md` is the reference. It opens with a Handover section, followed by a "Plan forward"
+that is written for a cold start** - the ordered queue, what is declined and why, where to be
+suspicious, and the standing verification recipe. Read both before touching
 `Generators/GrpcProxyGenerator.*` or `Internal/Grpc/`. The short version:
 
 - it is a *second* generator in BuildTools, triggered by `[ProtoGrpc]` on a consumer-declared
