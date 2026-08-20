@@ -21,7 +21,9 @@ namespace ProtoBuf.Meta
     /// The field numbers and the omit-when-zero behaviour match <see cref="NodaTimeSerializers"/>
     /// exactly - the two must produce identical bytes, and <c>NodaTimeSurrogateTests</c> asserts it.
     /// They are deliberately not named as <c>.google.type.*</c>: schema generation from a
-    /// compile-time model is not implemented, so a name here would describe nothing.
+    /// compile-time model is not implemented, so a name here would describe nothing. They are
+    /// structs for the same reason <see cref="WellKnownTypes.Timestamp"/> is - a surrogate is
+    /// created for every value converted, and the types being surrogated are themselves structs.
     /// </para>
     /// </remarks>
     public static class NodaTimeSurrogates
@@ -30,7 +32,7 @@ namespace ProtoBuf.Meta
         /// The wire shape of <see cref="LocalDate"/>, matching <c>google.type.Date</c>.
         /// </summary>
         [ProtoContract]
-        public sealed class Date
+        public struct Date
         {
             /// <summary>The year.</summary>
             [ProtoMember(1)] public int Year { get; set; }
@@ -62,7 +64,6 @@ namespace ProtoBuf.Meta
             {
                 // an absent field is a zero here, where the reader in NodaTimeSerializers starts
                 // from the components of a default LocalDate - which are 1, 1, 1
-                if (value is null) return default;
                 return new LocalDate( // ISO calendar is implicit
                     value.Year == 0 ? 1 : value.Year,
                     value.Month == 0 ? 1 : value.Month,
@@ -74,7 +75,7 @@ namespace ProtoBuf.Meta
         /// The wire shape of <see cref="LocalTime"/>, matching <c>google.type.TimeOfDay</c>.
         /// </summary>
         [ProtoContract]
-        public sealed class TimeOfDay
+        public struct TimeOfDay
         {
             /// <summary>The hour, 0-23.</summary>
             [ProtoMember(1)] public int Hours { get; set; }
@@ -99,7 +100,7 @@ namespace ProtoBuf.Meta
 
             /// <summary>Convert to <see cref="LocalTime"/>.</summary>
             public static implicit operator LocalTime(TimeOfDay value)
-                => value is null ? default : new LocalTime(value.Hours, value.Minutes, value.Seconds).PlusNanoseconds(value.Nanos);
+                => new LocalTime(value.Hours, value.Minutes, value.Seconds).PlusNanoseconds(value.Nanos);
         }
     }
 }
