@@ -25,7 +25,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
     /// </remarks>
     internal static class InterceptorSupport
     {
-        /// <summary>The namespace the generated interceptors live in; see <c>docs/aot-grpc.md</c>.</summary>
+        /// <summary>The namespace the generated interceptors live in; see <c>notes/aot-grpc.md</c>.</summary>
         public const string Namespace = "ProtoBuf.AOT";
 
         private const string FeatureKey = "InterceptorsNamespaces";

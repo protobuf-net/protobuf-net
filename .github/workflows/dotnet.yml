@@ -70,7 +70,7 @@ jobs:
   #
   # Gated on exit code only, never on the IL warning count: that count tracks the fixtures, so pinning it
   # would turn every legitimate fixture change into a CI failure. It is a measurement to re-take, not a
-  # threshold - see docs/aot-findings.md.
+  # threshold - see notes/aot-findings.md.
   native-aot-linux:
 
     runs-on: ubuntu-latest

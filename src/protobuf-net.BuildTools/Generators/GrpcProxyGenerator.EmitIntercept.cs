@@ -14,7 +14,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// <remarks>
         /// <para>
         /// One method per <em>receiver overload</em>, not per contract - the interceptor may be generic,
-        /// which was checked rather than assumed (see <c>docs/aot-grpc.md</c>). That is why nothing here
+        /// which was checked rather than assumed (see <c>notes/aot-grpc.md</c>). That is why nothing here
         /// needs a per-contract name, and why the body is the same text for every consumer.
         /// </para>
         /// <para>

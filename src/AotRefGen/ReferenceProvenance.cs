@@ -12,7 +12,7 @@ namespace ProtoBuf.AotRefGen
     /// A reference is only evidence if it was generated from the input beside it, and the dangerous
     /// direction is an <em>absence</em>: a file that was never re-run and a ref-emit that genuinely
     /// emitted nothing look exactly alike. That has already produced one wrong conclusion, recorded
-    /// under "Retracted" in <c>docs/aot-findings.md</c>.
+    /// under "Retracted" in <c>notes/aot-findings.md</c>.
     /// </para>
     /// <para>
     /// Generating a reference needs .NET Framework (persist-to-dll) and so cannot run on Linux, but

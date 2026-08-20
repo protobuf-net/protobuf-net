@@ -533,7 +533,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // custom ServiceBinder, so building the list here silently ignores it - the very bug the
                 // paragraph above is about. The machinery to do it exists and is proven correct
                 // (MetadataGather, AttributeRenderer, and the src/AotGrpcMetadataDiff oracle); it is the
-                // trade that does not pay. See docs/aot-grpc.md.
+                // trade that does not pay. See notes/aot-grpc.md.
                 if (operation.MetadataExpressions.IsDefault)
                 {
                     // something on this operation could not be reconstructed, so it keeps the reflective
