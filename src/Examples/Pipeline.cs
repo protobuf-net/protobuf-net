@@ -105,6 +105,7 @@ message EnumWrapper {
 package Examples;
 
 message EnumParentWrapper {
+   // warning: 'group' here is shorthand; strict proto2 requires the group body inline, with the field named after it; edition 2023 or later expresses this exactly (features.message_encoding = DELIMITED)
    optional group EnumWrapper Wrapper = 1;
 }
 message EnumWrapper {

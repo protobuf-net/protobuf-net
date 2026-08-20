@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net462;netstandard2.0;net8.0</TargetFrameworks>
     <RootNamespace>ProtoBuf.FSharp</RootNamespace>
+    <Title>protobuf-net.FSharp</Title>
+    <Description>F# collection support for protobuf-net: serializes list, Map and Set</Description>
   </PropertyGroup>
 
   <ItemGroup>

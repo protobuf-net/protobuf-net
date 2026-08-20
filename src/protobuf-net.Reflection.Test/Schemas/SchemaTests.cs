@@ -521,20 +521,11 @@ namespace ProtoBuf.Schemas
                 switch(path)
                 {
                     case "google/protobuf/unittest_custom_options.proto":
-                    case "advancedOptions.proto":
-                        // these are special cases; the two encoders choose slightly different
-                        // layouts for the same data; both are valid; I'm happy that this is OK
-                        // - this was why the "decode" tool (on the website) was written!
-                        break;
-                    case "google/protobuf/unittest.proto":
-                        // ^^^ different layout of an integer; "2e+8" vs "200000000" - I'm fine with it
-                        //
-                        // the following end up importing unittest.proto, so have the same symptom
-                    case "google/protobuf/map_unittest.proto" when (includeImports):
-                    case "google/protobuf/unittest_optimize_for.proto" when (includeImports):
-                    case "google/protobuf/unittest_embed_optimize_for.proto" when (includeImports):
-                    case "google/protobuf/unittest_lite_imports_nonlite.proto" when (includeImports):
-                    case "google/protobuf/unittest_no_field_presence.proto" when (includeImports):
+                        // special case: the two encoders choose slightly different layouts for
+                        // the same data; both are valid; I'm happy that this is OK - this was
+                        // why the "decode" tool (on the website) was written! (the rest of the
+                        // historical skip list - advancedOptions, and the unittest.proto float
+                        // cluster - was retired by the protoc-35.1 compat fixes)
                         break;
                     default:
                         // compare results

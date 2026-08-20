@@ -1,0 +1,2 @@
+edition = "2024";
+message bad_name { int32 BadField = 1; }

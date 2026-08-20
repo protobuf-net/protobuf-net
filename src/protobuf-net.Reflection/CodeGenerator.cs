@@ -182,6 +182,12 @@ namespace ProtoBuf.Reflection
         {
             foreach (var file in set.Files)
             {
+                // a set loaded from a compiled descriptor never went through Process(), so the
+                // editions feature resolution may not have run; it is cheap and idempotent
+                file.ResolveFeatures();
+            }
+            foreach (var file in set.Files)
+            {
                 if (!file.IncludeInOutput) continue;
 
                 var fileName = Path.ChangeExtension(file.Name, DefaultFileExtension);
@@ -426,7 +432,9 @@ namespace ProtoBuf.Reflection
                 && oneOf is null // exclude "oneof" - tracked via the discriminator
                 && field.type != FieldDescriptorProto.Type.TypeMessage // handled via obj-ref
                 && field.type != FieldDescriptorProto.Type.TypeGroup // handled via obj-ref
-                && (ctx.Syntax == FileDescriptorProto.SyntaxProto2 || field.Proto3Optional);
+                // explicit presence, from the resolved features; proto2, proto3-optional and
+                // editions-default all land here, proto3-implicit and legacy-required do not
+                && field.ResolvedFeatures.FieldPresence == FeatureSet.FieldPresence.Explicit;
         }
 
         /// <summary>

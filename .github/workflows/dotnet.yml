@@ -28,6 +28,14 @@ jobs:
         dotnet-version: |
           8.0.x
           10.0.x
+    # Restore dominates the cold-runner build time, and the package set changes rarely; the
+    # same treatment measurably helped SE.Redis (StackExchange/StackExchange.Redis@74bfe78).
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Packages.props', 'global.json', '**/*.csproj') }}
+        restore-keys: ${{ runner.os }}-nuget-
     - name: Restore dependencies
       run: dotnet restore Build.csproj
     - name: Build

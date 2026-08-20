@@ -1,4 +1,5 @@
 using System;
+using ProtoBuf.Internal;
 using System.Diagnostics.CodeAnalysis;
 
 namespace ProtoBuf
@@ -13,13 +14,13 @@ namespace ProtoBuf
     /// a diagnostic rather than being guessed at.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    [Experimental(ProtoModelAttribute.DiagnosticId)]
+    [Experimental(Experiments.CompileTimeModel, UrlFormat = Experiments.UrlFormat)]
     public sealed class ProtoModelAttribute : Attribute
     {
         /// <summary>
         /// The diagnostic reported for use of the compile-time model APIs while they are experimental.
         /// </summary>
-        public const string DiagnosticId = "PBN9001";
+        public const string DiagnosticId = Experiments.CompileTimeModel;
 
         /// <summary>
         /// Whether types with a <c>ToString()</c> and a <c>Parse(string)</c> should be serialized as
@@ -52,7 +53,7 @@ namespace ProtoBuf
     /// root is included in the model automatically.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-    [Experimental(ProtoModelAttribute.DiagnosticId)]
+    [Experimental(Experiments.CompileTimeModel, UrlFormat = Experiments.UrlFormat)]
     public sealed class ProtoSerializableAttribute : Attribute
     {
         /// <summary>

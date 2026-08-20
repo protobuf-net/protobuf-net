@@ -61,6 +61,14 @@ A value that isn't recognised is **ignored** rather than failing the build - but
 quietly do nothing. The free-form options (`LangVersion`, `Package`, `ImportPaths`, `Services`) are not
 checked.
 
+## Editions
+
+`.proto` files can also use [editions](https://docs.protobuf-net.dev/editions) - `edition = "2023";` in place
+of `syntax = "proto2";` / `"proto3"` - which protobuf-net parses, resolves and generates from in exactly the
+same way. One editions feature is worth knowing about specifically:
+[`features.message_encoding = DELIMITED`](https://docs.protobuf-net.dev/delimited), which generates
+`DataFormat.Group` and is usually the faster framing to write.
+
 ## That doesn't work for you?
 
 protobuf-net also provides:

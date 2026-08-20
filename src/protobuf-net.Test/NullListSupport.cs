@@ -262,6 +262,7 @@ message BasicGroupedLists {
     repeated int32 Int32List = 1 [packed = false];
     repeated int32 NullableInt32List = 2;
     repeated string StringList = 3;
+    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
     repeated group SomePoco PocoList = 4;
 }
 message SomePoco {
@@ -338,6 +339,7 @@ message BasicPackedGroupedLists {
     repeated int32 Int32List = 1;
     repeated int32 NullableInt32List = 2;
     repeated string StringList = 3;
+    // warning: 'group' is not valid in proto3; DELIMITED encoding requires edition 2023 or later (features.message_encoding = DELIMITED)
     repeated group SomePoco PocoList = 4;
 }
 message SomePoco {

@@ -1703,7 +1703,9 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, $"if (tmp{number}.HasValue)");
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, $"var val{number} = tmp{number}.GetValueOrDefault();");
-                    if (member.DefaultLiteral is { } nullableDefault)
+                    // a write condition replaces the declared-default test (the HasValue unwrap
+                    // above is not a guard, and stays)
+                    if (member.WriteCondition is null && member.DefaultLiteral is { } nullableDefault)
                     {
                         Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
                         Line(sb, indent + 1, "{");

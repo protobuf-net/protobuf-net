@@ -1,0 +1,55 @@
+edition = "2023";
+
+package editions.basic;
+
+message Scalars {
+  int32 plain = 1;                       // explicit presence (the editions default)
+  int32 implied = 2 [features.field_presence = IMPLICIT];
+  int32 must = 3 [features.field_presence = LEGACY_REQUIRED];
+  string name = 4 [default = "abc"];
+  repeated int32 packed_default = 5;
+  repeated int32 expanded = 6 [features.repeated_field_encoding = EXPANDED];
+  Child child = 7;
+  Child grouped = 8 [features.message_encoding = DELIMITED];
+  reserved 100 to 200;
+  reserved old_name, other_name;
+}
+
+message Child {
+  int32 value = 1;
+}
+
+enum OpenEnum {
+  OPEN_ENUM_UNKNOWN = 0;
+  OPEN_ENUM_A = 1;
+}
+
+enum ClosedEnum {
+  option features.enum_type = CLOSED;
+  CLOSED_ENUM_A = 1;
+}
+
+enum WithReserved {
+  reserved 5, 10 to 20;
+  reserved WR_GONE, WR_ALSO_GONE;
+  WR_ZERO = 0;
+}
+
+message HasOneof {
+  oneof kind {
+    int32 a = 1;
+    string b = 2;
+  }
+}
+
+message HasMap {
+  map<string, Child> items = 1;
+}
+
+message Extended {
+  extensions 100 to 200;
+}
+
+extend Extended {
+  int32 extra = 100;
+}

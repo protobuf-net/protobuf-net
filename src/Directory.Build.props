@@ -17,7 +17,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageIcon>protobuf-net.png</PackageIcon>
         <Product>protobuf-net ($(TargetFramework))</Product>
-        <PackageReleaseNotes>https://docs.protobuf-net.dev/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
+        <PackageReleaseNotes>https://github.com/protobuf-net/protobuf-net/releases</PackageReleaseNotes>
 
         <PackageTags>binary;serialization;protobuf</PackageTags>
 
@@ -33,6 +33,10 @@
 
         <LibSysValueTuple>4.5.0</LibSysValueTuple>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <!-- the readme is included explicitly below; pack reads its items from the OUTER build of a
+             multi-targeting project, where the SDK's default item globs do not run, so the glob must
+             not be the only thing that finds it - and must not claim it twice -->
+        <DefaultItemExcludes>$(DefaultItemExcludes);readme.md</DefaultItemExcludes>
         <CheckEolTargetFramework>False</CheckEolTargetFramework>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release' or '$(Configuration)'=='VS'">
@@ -62,6 +66,10 @@
 
     <ItemGroup>
         <None Include="../../protobuf-net.png" Pack="true" PackagePath="/" Visible="false" />
-        <None Include="../../readme.md" Link="readme.md" Pack="true" PackagePath="/" Visible="false" />
+        <!-- each shipping package carries its own readme.md - it is what nuget.org shows on the
+             package page, so it should describe THAT package; anything without one falls back to
+             the repo readme -->
+        <None Include="readme.md" Pack="true" PackagePath="/" Condition="Exists('$(MSBuildProjectDirectory)/readme.md')" />
+        <None Include="../../readme.md" Link="readme.md" Pack="true" PackagePath="/" Visible="false" Condition="!Exists('$(MSBuildProjectDirectory)/readme.md')" />
     </ItemGroup>
 </Project>
