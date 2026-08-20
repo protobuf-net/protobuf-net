@@ -1,0 +1,187 @@
+using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using AotFixtures.BclFixedSize;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: InternalsVisibleTo("System, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Core, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Numerics, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Reflection.Context, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Runtime.WindowsRuntime, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("System.Runtime.WindowsRuntime.UI.Xaml, PublicKey=00000000000000000400000000000000")]
+[assembly: InternalsVisibleTo("WindowsBase, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: InternalsVisibleTo("PresentationCore, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: InternalsVisibleTo("PresentationFramework, PublicKey=0024000004800000940000000602000000240000525341310004000001000100B5FC90E7027F67871E773A8FDE8938C81DD402BA65B9201D60593E96C492651E889CC13F1415EBB53FAC1131AE0BD333C5EE6021672D9718EA31A8AEBD0DA0072F25D87DBA6FC90FFD598ED4DA35E44C398C454307E8E33B8426143DAEC9F596836F97C8F74750E5975C64E2189F45DEF46B2A2B1247ADC3652BF5C308055DA9")]
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___BclFixedSizeModel : ISerializer<Fixed>, ISerializer<(DateTime, TimeSpan)>
+{
+	Fixed ISerializer<Fixed>.Read(ref ProtoReader.State state, Fixed value)
+	{
+		if (value == null)
+		{
+			Fixed obj = new Fixed();
+			value = obj;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime plainWhen = BclHelpers.ReadDateTime(ref state);
+				value.When = plainWhen;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan plainTook = BclHelpers.ReadTimeSpan(ref state);
+				value.Took = plainTook;
+				break;
+			}
+			case 3:
+			{
+				DateTime? maybeWhen = BclHelpers.ReadDateTime(ref state);
+				value.MaybeWhen = maybeWhen;
+				break;
+			}
+			case 4:
+			{
+				TimeSpan? maybeTook = BclHelpers.ReadTimeSpan(ref state);
+				value.MaybeTook = maybeTook;
+				break;
+			}
+			case 5:
+			{
+				(DateTime, TimeSpan) pair = value.Pair;
+				pair = state.ReadMessage(SerializerFeatures.CategoryRepeated, pair, this);
+				value.Pair = pair;
+				break;
+			}
+			case 6:
+			{
+				DateTime plainWhen = BclHelpers.ReadDateTime(ref state);
+				value.PlainWhen = plainWhen;
+				break;
+			}
+			case 7:
+			{
+				TimeSpan plainTook = BclHelpers.ReadTimeSpan(ref state);
+				value.PlainTook = plainTook;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Fixed>.Write(ref ProtoWriter.State state, Fixed value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.Fixed64);
+		DateTime value2 = when;
+		BclHelpers.WriteDateTime(ref state, value2);
+		TimeSpan took = value.Took;
+		if (!(took == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.Fixed64);
+			BclHelpers.WriteTimeSpan(ref state, took);
+		}
+		DateTime? maybeWhen = value.MaybeWhen;
+		if (maybeWhen.HasValue)
+		{
+			DateTime valueOrDefault = maybeWhen.GetValueOrDefault();
+			state.WriteFieldHeader(3, WireType.Fixed64);
+			value2 = valueOrDefault;
+			BclHelpers.WriteDateTime(ref state, value2);
+		}
+		TimeSpan? maybeTook = value.MaybeTook;
+		if (maybeTook.HasValue)
+		{
+			TimeSpan valueOrDefault2 = maybeTook.GetValueOrDefault();
+			state.WriteFieldHeader(4, WireType.Fixed64);
+			took = valueOrDefault2;
+			BclHelpers.WriteTimeSpan(ref state, took);
+		}
+		(DateTime, TimeSpan) pair = value.Pair;
+		state.WriteMessage(5, SerializerFeatures.CategoryRepeated, pair, this);
+		DateTime plainWhen = value.PlainWhen;
+		state.WriteFieldHeader(6, WireType.String);
+		value2 = plainWhen;
+		BclHelpers.WriteDateTime(ref state, value2);
+		took = value.PlainTook;
+		if (!(took == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(7, WireType.String);
+			BclHelpers.WriteTimeSpan(ref state, took);
+		}
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Fixed>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	SerializerFeatures ISerializer<(DateTime, TimeSpan)>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+
+	(DateTime, TimeSpan) ISerializer<(DateTime, TimeSpan)>.Read(ref ProtoReader.State state, (DateTime, TimeSpan) value)
+	{
+		var (item, item2) = value;
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+				item = BclHelpers.ReadDateTime(ref state);
+				break;
+			case 2:
+				item2 = BclHelpers.ReadTimeSpan(ref state);
+				break;
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		value = (item, item2);
+		return value;
+	}
+
+	void ISerializer<(DateTime, TimeSpan)>.Write(ref ProtoWriter.State state, (DateTime, TimeSpan) value)
+	{
+		var (dateTime, _) = value;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = dateTime;
+		BclHelpers.WriteDateTime(ref state, value2);
+		TimeSpan item = value.Item2;
+		state.WriteFieldHeader(2, WireType.String);
+		TimeSpan value3 = item;
+		BclHelpers.WriteTimeSpan(ref state, value3);
+	}
+}
+public sealed class BclFixedSizeModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___BclFixedSizeModel, T>();
+	}
+}

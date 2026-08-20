@@ -19,7 +19,7 @@ partial class CompatElementsModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.CompatMaps>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.CompatElements.Level300Lists>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Map>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.WellKnownLists>
     {
@@ -184,13 +184,17 @@ partial class CompatElementsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.CompatElements.Level300Lists global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.Level300Lists value)
             => RawRead_AotFixtures_CompatElements_Level300Lists(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Lists>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.CompatElements.Level300Lists value)
+            => RawWrite_AotFixtures_CompatElements_Level300Lists(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_CompatElements_Level300Lists(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.CompatElements.Level300Lists value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Guids;
             if (tmp1 != null)
@@ -218,6 +222,63 @@ partial class CompatElementsModel
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
             }
         }
+
+        private static long Measure_AotFixtures_CompatElements_Level300Lists(global::AotFixtures.CompatElements.Level300Lists value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Guids;
+            if (tmp1 != null)
+            {
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                {
+                    var bcl1 = global::ProtoBuf.BclHelpers.MeasureGuidString(item1);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;
+                }
+            }
+            var tmp2 = value.Decimals;
+            if (tmp2 != null)
+            {
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    var bcl2 = global::ProtoBuf.BclHelpers.MeasureDecimalString(item2);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;
+                }
+            }
+            var tmp3 = value.Dates;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    var bcl3 = global::ProtoBuf.BclHelpers.MeasureTimestamp(item3);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;
+                }
+            }
+            var tmp4 = value.Spans;
+            if (tmp4 != null)
+            {
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                {
+                    var bcl4 = global::ProtoBuf.BclHelpers.MeasureDuration(item4);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl4) + bcl4;
+                }
+            }
+            var tmp5 = value.Fixed;
+            if (tmp5 != null)
+            {
+                foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp5))
+                {
+                    var bcl5 = global::ProtoBuf.BclHelpers.MeasureGuidBytes(item5);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl5) + bcl5;
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.CompatElements.Level300Lists>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.CompatElements.Level300Lists value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_CompatElements_Level300Lists(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.CompatElements.Level300Lists RawRead_AotFixtures_CompatElements_Level300Lists(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.CompatElements.Level300Lists value)
         {

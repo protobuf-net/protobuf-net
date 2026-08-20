@@ -1277,9 +1277,13 @@ namespace ProtoBuf.BuildTools.Generators
                 if (IsBclKind(kind))
                 {
 
-                    // ZigZag throws while building the model; everything else selects a field-header
-                    // wire type (see BclWireType), which for several combinations means "no change"
-                    if (dataFormat == ProtoDataFormat.ZigZag)
+                    // ZigZag throws while building the model for three of the four - but NOT for
+                    // decimal, which ignores DataFormat entirely (ValueMember's Decimal arm sets
+                    // WireType.String unconditionally and calls DecimalSerializer.Create with no
+                    // format argument). Refusing it there was a deliberate over-reach that became a
+                    // real JIT/AOT divergence: the runtime model serializes, the generated model
+                    // dropped the contract and cascaded. gap B30 item 5.
+                    if (dataFormat == ProtoDataFormat.ZigZag && kind != ProtoMemberKind.Decimal)
                     {
                         return Option(diagnostics, atMember, name, "DataFormat.ZigZag on a BCL type");
                     }

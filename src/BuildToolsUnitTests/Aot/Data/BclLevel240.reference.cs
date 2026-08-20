@@ -1,0 +1,115 @@
+using System;
+using System.Reflection;
+using AotFixtures.BclLevel240;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___BclLevel240Model : ISerializer<Level240>
+{
+	Level240 ISerializer<Level240>.Read(ref ProtoReader.State state, Level240 value)
+	{
+		if (value == null)
+		{
+			Level240 level = new Level240();
+			value = level;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				DateTime when = BclHelpers.ReadTimestamp(ref state);
+				value.When = when;
+				break;
+			}
+			case 2:
+			{
+				TimeSpan alwaysTook = BclHelpers.ReadDuration(ref state);
+				value.Took = alwaysTook;
+				break;
+			}
+			case 3:
+			{
+				DateTime? maybeWhen = BclHelpers.ReadTimestamp(ref state);
+				value.MaybeWhen = maybeWhen;
+				break;
+			}
+			case 4:
+			{
+				TimeSpan? maybeTook = BclHelpers.ReadDuration(ref state);
+				value.MaybeTook = maybeTook;
+				break;
+			}
+			case 5:
+			{
+				TimeSpan alwaysTook = BclHelpers.ReadDuration(ref state);
+				value.AlwaysTook = alwaysTook;
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Level240>.Write(ref ProtoWriter.State state, Level240 value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		DateTime when = value.When;
+		state.WriteFieldHeader(1, WireType.String);
+		DateTime value2 = when;
+		BclHelpers.WriteTimestamp(ref state, value2);
+		TimeSpan took = value.Took;
+		if (!(took == TimeSpan.Zero))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteDuration(ref state, took);
+		}
+		DateTime? maybeWhen = value.MaybeWhen;
+		if (maybeWhen.HasValue)
+		{
+			DateTime valueOrDefault = maybeWhen.GetValueOrDefault();
+			state.WriteFieldHeader(3, WireType.String);
+			value2 = valueOrDefault;
+			BclHelpers.WriteTimestamp(ref state, value2);
+		}
+		TimeSpan? maybeTook = value.MaybeTook;
+		if (maybeTook.HasValue)
+		{
+			TimeSpan valueOrDefault2 = maybeTook.GetValueOrDefault();
+			state.WriteFieldHeader(4, WireType.String);
+			took = valueOrDefault2;
+			BclHelpers.WriteDuration(ref state, took);
+		}
+		TimeSpan alwaysTook = value.AlwaysTook;
+		state.WriteFieldHeader(5, WireType.String);
+		took = alwaysTook;
+		BclHelpers.WriteDuration(ref state, took);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Level240>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class BclLevel240Model : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___BclLevel240Model, T>();
+	}
+}

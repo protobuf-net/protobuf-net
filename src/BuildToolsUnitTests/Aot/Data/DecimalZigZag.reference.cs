@@ -1,0 +1,89 @@
+using System.Reflection;
+using AotFixtures.DecimalZigZag;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using ProtoBuf.Serializers;
+
+[assembly: AssemblyVersion("0.0.0.0")]
+internal sealed class ___PBN_Services___DecimalZigZagModel : ISerializer<Prices>
+{
+	Prices ISerializer<Prices>.Read(ref ProtoReader.State state, Prices value)
+	{
+		if (value == null)
+		{
+			Prices prices = new Prices();
+			value = prices;
+		}
+		int num;
+		while ((num = state.ReadFieldHeader()) > 0)
+		{
+			switch (num)
+			{
+			case 1:
+			{
+				decimal ignored = BclHelpers.ReadDecimal(ref state);
+				value.Ignored = ignored;
+				break;
+			}
+			case 2:
+			{
+				decimal ignored = BclHelpers.ReadDecimal(ref state);
+				value.Plain = ignored;
+				break;
+			}
+			case 3:
+			{
+				string text = state.ReadString();
+				if (text != null)
+				{
+					value.Label = text;
+				}
+				break;
+			}
+			default:
+				state.SkipField();
+				break;
+			}
+		}
+		return value;
+	}
+
+	void ISerializer<Prices>.Write(ref ProtoWriter.State state, Prices value)
+	{
+		TypeModel.ThrowUnexpectedSubtype(value);
+		decimal ignored = value.Ignored;
+		if (!(ignored == 0m))
+		{
+			state.WriteFieldHeader(1, WireType.String);
+			BclHelpers.WriteDecimal(ref state, ignored);
+		}
+		ignored = value.Plain;
+		if (!(ignored == 0m))
+		{
+			state.WriteFieldHeader(2, WireType.String);
+			BclHelpers.WriteDecimal(ref state, ignored);
+		}
+		string label = value.Label;
+		state.WriteString(3, label);
+	}
+
+	private SerializerFeatures Features_82()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
+	}
+
+	SerializerFeatures ISerializer<Prices>.get_Features()
+	{
+		//ILSpy generated this explicit interface implementation from .override directive in Features_82
+		return this.Features_82();
+	}
+}
+public sealed class DecimalZigZagModel : TypeModel
+{
+	protected sealed override ISerializer<T> GetSerializer<T>()
+	{
+		//Error decoding local variables: Signature type sequence must have at least one element.
+		return SerializerCache.Get<___PBN_Services___DecimalZigZagModel, T>();
+	}
+}

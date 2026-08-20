@@ -23,11 +23,11 @@ partial class CompatModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.InheritsLevel>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Legacy>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LegacyFixed>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Level240>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Level300>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.LevelledBase>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.LevelledBase>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Mixed>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
@@ -459,13 +459,17 @@ partial class CompatModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Compat.Level240 global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
             => RawRead_AotFixtures_Compat_Level240(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level240>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Level240 value)
+            => RawWrite_AotFixtures_Compat_Level240(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Compat_Level240(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Level240 value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
@@ -489,6 +493,39 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp4);
             }
         }
+
+        private static long Measure_AotFixtures_Compat_Level240(global::AotFixtures.Compat.Level240 value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.When;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp1);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // When
+            var tmp2 = value.How;
+            if (tmp2 != global::System.TimeSpan.Zero)
+            {
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureDuration(tmp2);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // How
+            }
+            var tmp3 = value.Id;
+            if (tmp3 != global::System.Guid.Empty)
+            {
+                var bcl3 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp3);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;  // Id
+            }
+            var tmp4 = value.Amount;
+            if (tmp4 != 0m)
+            {
+                var bcl4 = global::ProtoBuf.BclHelpers.MeasureDecimal(tmp4);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl4) + bcl4;  // Amount
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Level240>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Compat.Level240 value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Compat_Level240(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Compat.Level240 RawRead_AotFixtures_Compat_Level240(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level240 value)
         {
@@ -550,13 +587,17 @@ partial class CompatModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Compat.Level300 global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level300 value)
             => RawRead_AotFixtures_Compat_Level300(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Level300>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Level300 value)
+            => RawWrite_AotFixtures_Compat_Level300(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Compat_Level300(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Level300 value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.When;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
@@ -586,6 +627,45 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteGuidBytes(ref state, tmp5);
             }
         }
+
+        private static long Measure_AotFixtures_Compat_Level300(global::AotFixtures.Compat.Level300 value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.When;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp1);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // When
+            var tmp2 = value.How;
+            if (tmp2 != global::System.TimeSpan.Zero)
+            {
+                var bcl2 = global::ProtoBuf.BclHelpers.MeasureDuration(tmp2);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // How
+            }
+            var tmp3 = value.Id;
+            if (tmp3 != global::System.Guid.Empty)
+            {
+                var bcl3 = global::ProtoBuf.BclHelpers.MeasureGuidString(tmp3);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;  // Id
+            }
+            var tmp4 = value.Amount;
+            if (tmp4 != 0m)
+            {
+                var bcl4 = global::ProtoBuf.BclHelpers.MeasureDecimalString(tmp4);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl4) + bcl4;  // Amount
+            }
+            var tmp5 = value.Fixed;
+            if (tmp5 != global::System.Guid.Empty)
+            {
+                var bcl5 = global::ProtoBuf.BclHelpers.MeasureGuidBytes(tmp5);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl5) + bcl5;  // Fixed
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Level300>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Compat.Level300 value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Compat_Level300(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Compat.Level300 RawRead_AotFixtures_Compat_Level300(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Level300 value)
         {
@@ -727,13 +807,17 @@ partial class CompatModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Compat.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
             => RawRead_AotFixtures_Compat_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Mixed value)
+            => RawWrite_AotFixtures_Compat_Mixed(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Compat_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.Mixed value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Inherited;
             state.WriteFieldHeader(1, global::ProtoBuf.WireType.String);
@@ -748,6 +832,30 @@ partial class CompatModel
                 global::ProtoBuf.BclHelpers.WriteGuid(ref state, tmp3);
             }
         }
+
+        private static long Measure_AotFixtures_Compat_Mixed(global::AotFixtures.Compat.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Inherited;
+            var bcl1 = global::ProtoBuf.BclHelpers.MeasureTimestamp(tmp1);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl1) + bcl1;  // Inherited
+            var tmp2 = value.Downgraded;
+            var bcl2 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp2);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl2) + bcl2;  // Downgraded
+            var tmp3 = value.DowngradedGuid;
+            if (tmp3 != global::System.Guid.Empty)
+            {
+                var bcl3 = global::ProtoBuf.BclHelpers.MeasureGuid(tmp3);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl3) + bcl3;  // DowngradedGuid
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Compat.Mixed value)
+            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
+                && Measure_AotFixtures_Compat_Mixed(value, depth, lengths) is var len && len <= int.MaxValue
+                ? (int)len : -1;
 
         private static global::AotFixtures.Compat.Mixed RawRead_AotFixtures_Compat_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Compat.Mixed value)
         {

@@ -80,3 +80,32 @@
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool
 ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat
+static ProtoBuf.BclHelpers.MeasureDecimalString(decimal value) -> int
+static ProtoBuf.BclHelpers.MeasureGuidBytes(System.Guid value) -> int
+static ProtoBuf.BclHelpers.MeasureGuidString(System.Guid value) -> int
+static ProtoBuf.BclHelpers.MeasureDuration(System.TimeSpan value) -> int
+static ProtoBuf.BclHelpers.MeasureTimestamp(System.DateTime value) -> int
+ProtoBuf.ProtoDataFormatAttribute
+ProtoBuf.ProtoDataFormatAttribute.DataFormat.get -> ProtoBuf.DataFormat
+ProtoBuf.ProtoDataFormatAttribute.ProtoDataFormatAttribute(System.Type type, ProtoBuf.DataFormat dataFormat) -> void
+ProtoBuf.ProtoDataFormatAttribute.Type.get -> System.Type
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedBool(int fieldNumber, System.ReadOnlySpan<bool> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedFixed32(int fieldNumber, System.ReadOnlySpan<uint> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedFixed64(int fieldNumber, System.ReadOnlySpan<ulong> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedVarint(int fieldNumber, System.ReadOnlySpan<int> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedVarint(int fieldNumber, System.ReadOnlySpan<uint> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedVarint(int fieldNumber, System.ReadOnlySpan<ulong> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<int> values) -> void
+[PBN9002]ProtoBuf.ProtoWriter.State.WriteRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<long> values) -> void
+static ProtoBuf.BclHelpers.MeasureDateTime(System.DateTime value) -> int
+static ProtoBuf.BclHelpers.MeasureDecimal(decimal value) -> int
+static ProtoBuf.BclHelpers.MeasureGuid(System.Guid value) -> int
+static ProtoBuf.BclHelpers.MeasureTimeSpan(System.TimeSpan value) -> int
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedBool(int fieldNumber, int count) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed32(int fieldNumber, int count) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedFixed64(int fieldNumber, int count) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<int> values) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<uint> values) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<ulong> values) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<int> values) -> long
+[PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<long> values) -> long

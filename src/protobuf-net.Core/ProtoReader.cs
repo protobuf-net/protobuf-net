@@ -22,8 +22,8 @@ namespace ProtoBuf
             PreferReadMessage = "If possible, please use the ReadMessage API; this API may not work correctly with all readers";
 
         // ---- the museum bridge: the class holds the SOLID form; every instance-API
-        // call liquifies, operates, and re-solidifies. Museum API, museum prices - see
-        // PORTING.md. State no longer references the class at all, and the old backends
+        // call liquifies, operates, and re-solidifies. Museum API, museum prices - the arc
+        // and its cuts are in notes/nano-core.md (there is no PORTING.md; there never was). State no longer references the class at all, and the old backends
         // (StreamProtoReader / ReadOnlySequenceProtoReader) are gone.
         private protected ReaderSnapshot _snapshot;
 

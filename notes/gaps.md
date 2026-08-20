@@ -1227,7 +1227,7 @@ narrow-and-store over a span needs no serializer at all, exactly as `PackedSizeB
 none. Worth doing *because* it is cheap to answer, but note it ranks below B19 on reach: cross-width
 columns are rarer than same-width ones, and the same-width case is already optimal.
 
-### B27. `AotDifferential` loads the generator from **Debug first**, whatever it was built as
+### B27. ~~`AotDifferential` loads the generator from **Debug first**, whatever it was built as~~ — **FIXED 2026-08-19**
 
 Found 2026-08-16 while merging main into v4: a `-c Release` run reported *"the generated model does
 not compile"* against `WriteRawPackedVarint`, an API that exists on `schema-breadth` and nowhere
@@ -1249,7 +1249,19 @@ the same class of mistake ("a control that shares the code under test is not a c
 cost this project weeks once, in the packed arc. The fix is to load the configuration the harness
 itself was built in, and to say so when the dll it picks is older than the library it is testing.
 
-**Open.** Not touched in the merge that found it, since a merge commit is the wrong place for it.
+**Fixed 2026-08-19.** `LoadGenerator` now tries the `Configuration` const first — the same one
+#1264 gave the corpus scan — and only then the other, announcing it when it falls back. Verified
+three ways rather than assumed: with a stale `bin/Debug` planted, a Release run now picks Release
+and matches 3058 at 100% (it previously failed with *"the generated model does not compile"*); with
+only Release present, no note fires; and with only Debug present, the note **does** fire, so it is
+not dead code.
+
+**A staleness check was written and then removed**, which is worth recording because it looked
+obviously right: "warn if the generator is older than the library it will be compared against". It
+fires on a **three-second build-ordering gap** — i.e. on every ordinary build — and a warning that
+cries wolf is worse than none, as B32's sixteen standing warnings demonstrate. Any threshold that
+silenced it would have been invented, which is the objection that removed an earlier probe test in
+B16. The configuration fix alone addresses the recorded failure.
 
 ### B28. Is `Impl*` dispatch a bottleneck on the CLASSIC write path? — **no on the real write; DEFINITIONALLY yes on the measuring pass**
 
@@ -1312,14 +1324,17 @@ go-slow as the control and the fallback. It matters for consumers who have not a
 `[ProtoModel]` — and `docs/aot.md` shows that population got nothing from v4 on serialize
 (20.59 → 20.39 µs) while deserialize improved 23%.
 
-### B29. `ProtoReader.cs` cites a `PORTING.md` that does not exist
+### B29. ~~`ProtoReader.cs` cites a `PORTING.md` that does not exist~~ — **FIXED 2026-08-19**
 
 The "museum bridge" comment — the one that explains liquify/resolidify and is the best short
 statement of how the legacy reader relates to `State` — ends *"Museum API, museum prices - see
 PORTING.md"*. There is no such file anywhere in the repo (`git ls-files` finds nothing).
 
-Either write it or drop the reference. It is the pointer someone follows when they wonder why the
-instance API is slow, so a dangling one costs more than no pointer at all.
+**Repointed rather than deleted**, since the pointer earns its place — it is what someone follows
+when they wonder why the instance API is slow. It now names `notes/nano-core.md`, which actually
+holds the arc and its cuts, and says outright that there is no `PORTING.md` so nobody goes looking
+again. Writing a real porting guide is still worth doing if the museum API ever needs a migration
+story for consumers; that is a documentation decision, not a dangling-link bug.
 
 ### B31. An EXTERNAL serializer takes its member off measure-first — widened by `[ProtoSerializer]`
 
@@ -1353,7 +1368,7 @@ attempted:
 - the **info diagnostic** proposed in B26 would cover this case too, since it is the same question
   from the consumer's side: *why did my model leave the optimised path?*
 
-### B32. `PublicAPI.Shipped.txt` has drifted from the real signature — 16 warnings on every build
+### B32. ~~`PublicAPI.Shipped.txt` has drifted~~ — **24 of 28 symbols fixed 2026-08-19; the residue is `#if DEBUG` API, which no tracking file can satisfy**
 
 Noticed 2026-08-17 while running `AotRefGen`; **pre-dates both external PRs** and is nobody's recent
 doing. `TypeModel.GetInbuiltSerializer<T>` produces `RS0016` (symbol not part of the declared API)
@@ -1367,8 +1382,30 @@ documentation rather than a build gate". That is true of the **RS2000** release-
 false of the **RS0016/RS0017** PublicApiAnalyzers rules, which are plainly live and shouting. The
 sentence should be narrowed when this is fixed.
 
-Cheap to clear (update the two `.Shipped.txt` entries to the current signature), and worth clearing
-precisely because 16 standing warnings are how a *new* one goes unnoticed.
+**Investigated properly on 2026-08-19, and the first diagnosis above was too narrow.** A clean
+per-configuration build shows **28 untracked public symbols**, and only four of them are the
+signature problem described above:
+
+- **24 were simply never declared**, and 20 of those are **our own**: the eight `WriteRawPacked*`
+  and eight `MeasureRawPacked*` members from the packed arc, and the four `BclHelpers.Measure*`
+  from B26's level-200 tier. The other four are `ProtoDataFormatAttribute` from #1276. All added
+  public API and none added a tracking entry. **Fixed**: Debug now reports **zero**.
+- **4 are `#if DEBUG`-conditional public API**, which is the real B32 and cannot be fixed by editing
+  a file: `TypeModel.ForwardsOnly` exists only in DEBUG (a test hook), and
+  `TypeModel.GetInbuiltSerializer<T>` has **two different signatures** — without default arguments in
+  DEBUG (*"I always want these explicitly specified in the library code; so: enforce that"*) and with
+  them in Release. One tracked signature cannot match both configurations: declaring the Debug form
+  makes Release report `RS0016` + `RS0017`, and declaring both makes each configuration complain
+  about the other.
+
+  So the options are all design changes, not bookkeeping: drop the `#if DEBUG` split and enforce
+  explicit arguments another way; suppress `RS0016`/`RS0017` project-wide (which loses the coverage
+  that just found 24 real omissions); or accept the noise. **Left for Marc** — it is his deliberate
+  mechanism, and the third option is what has been happening.
+
+The lesson that generalises: those 24 omissions hid *inside* the 192-warning noise, which is exactly
+the failure this entry predicted — "16 standing warnings are how a new one goes unnoticed" — except
+the number was larger and the new ones were ours.
 
 ### B33. Move the working notes into per-arc sub-folders (Marc, 2026-08-17)
 
@@ -1719,6 +1756,23 @@ code and editions-driven users get to write what the spec says; nobody's build s
 XML doc alone may be enough — it costs nothing and fixes the discoverability problem, which is the
 actual complaint.
 
+### B37. Incoming from `main`: new analyzers will fire on existing fixtures
+
+Marc, 2026-08-19, as a heads-up rather than a defect: new analyzers on `main` (the
+`[DefaultValue]`/implicit-default family — see the open `marc/analyzer-*` PRs) will trigger against
+**pre-existing tests whose default-value setups conflict**. Expect noise on the next `main` → `v4`
+merge that is nothing to do with whatever change is being merged.
+
+**Suppression in the affected fixtures is fine** (Marc), because those fixtures exist to pin a
+*known state* — several deliberately encode contradictory or degenerate declarations precisely so
+the behaviour is nailed down. `Partial.input.cs` already sets this precedent, suppressing `PBN0008`
+and `PBN0010` with `#pragma` rather than the analyzer being changed: pinning a precedence rule
+requires a contradiction to resolve, so there is no version of that test the analyzer would allow.
+
+The thing to avoid is the reflex of "a warning appeared, soften the analyzer". Where a fixture is
+deliberately contradictory, suppress at the fixture and say why in a comment; where it is *not*, the
+analyzer has found something and the fixture is wrong.
+
 ### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
@@ -1745,7 +1799,14 @@ Its measure-first cost is recorded in **B26**, which is where the work is. The r
 4. **No `GetSchema` test.** The attribute rewrites the emitted `.proto` (`fixed64` vs `int64`,
    `bytes` vs `string` for a `Guid`), which is arguably its most user-visible consequence and is
    covered nowhere.
-5. **`decimal` + `ZigZag` is a live JIT/AOT divergence, and PRE-DATES this feature.** The generator
+5. ~~**`decimal` + `ZigZag` is a live JIT/AOT divergence**~~ — **FIXED 2026-08-19.** `decimal` is now
+   exempt from the ZigZag refusal, and the fixture proves the premise rather than asserting it:
+   `DecimalZigZag.reference.cs` shows ref-emit emitting `WriteFieldHeader(1, WireType.String)` +
+   `WriteDecimal` for the ZigZag member — **byte-identical to the plain one at field 2** — and
+   `AotConformanceTests` compares our bytes against exactly that, so the comparison could not pass if
+   the runtime refused the shape. Original note, retained because the reasoning is the reusable part:
+
+   **PRE-DATES this feature.** The generator
    drops any BCL-kind member with `ZigZag`; the runtime *ignores* the format for `decimal` entirely
    (`ValueMember.cs`'s `ProtoTypeCode.Decimal` arm sets `WireType.String` unconditionally and calls
    `DecimalSerializer.Create(compatibilityLevel)` with no `dataFormat` argument). So the runtime
@@ -1859,7 +1920,7 @@ because one is a design decision and the other is unfinished work:
 Everything else in that table (sets, queues, stacks, the concurrent and immutable families) has no
 span at all and is correctly out.
 
-### B26. Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain — **and a SHIPPED FEATURE now leans on the remainder**
+### B26. ~~Span unrolls: every collection SHAPE done; element KINDs mostly done, BCL level variants remain~~ — **CLOSED 2026-08-19: all four items done**
 
 **Priority note, 2026-08-17.** `[ProtoDataFormat]` merged into `v4` (#1276), and its headline use —
 `[assembly: ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]` at level 300 — lands squarely on
@@ -1927,17 +1988,66 @@ arithmetic, which would agree with itself. Verified able to fail.
 
 **Still open**, in the order worth doing them:
 
-1. **`DataFormat.FixedSize` on `DateTime`/`TimeSpan`** — the flat eight-byte form under a `Fixed64`
-   header, so the measure is the constant `8` and there is no length prefix at all. Cheap, but it
-   needs the blanket `DataFormat != Default` refusal in `RawMemberMeasureBlocked` relaxing for
-   these kinds — the same shared gate that already carries carve-outs for `Group` and for packed.
-2. **level 240+ `Timestamp`/`Duration`** — a seconds+nanos message, genuinely different arithmetic
-   from `ScaledTicks`; needs its own measure and its own fixture.
-3. **level 300 `GuidString`/`GuidBytes`/`DecimalString`** — string and byte forms; `GuidBytes` is a
-   flat 16 and `GuidString` a flat 36, so only `DecimalString` is value-dependent.
-4. **repeated BCL elements** — `List<DateTime>` and friends. Note the ordering trap found while
-   fixturing this: a repeated member is tested for eligibility **before** the BCL arm, so a single
-   `List<DateTime>` drops its whole contract back to write-to-count.
+1. ~~**`DataFormat.FixedSize` on `DateTime`/`TimeSpan`**~~ — **DONE 2026-08-19.** The flat eight-byte
+   form under a `Fixed64` header, so the whole member folds to `len += tagLen + 8` — one literal, no
+   length prefix, no body local. `BclFixedWidth` is the single decision point; `BclMeasurable` and the
+   blanket `DataFormat != Default` gate in `RawMemberMeasureBlocked` both consult it, so the carve-out
+   sits beside the ones for `Group` and packed rather than duplicating their shape. Ref-emit's own
+   output (`BclFixedSize.reference.cs`) independently shows the `WireType.Fixed64` header the constant
+   assumes, which is the check worth having — the arithmetic is otherwise self-confirming.
+
+   **The tuple arm of this is defensive and unreachable**, and that is worth stating so nobody
+   "tests" it: the third measure site fires on `contract.IsTuple`, for a tuple's own synthesised
+   members, which carry no attributes and therefore no `DataFormat`. The arm is written anyway,
+   because the failure mode when a path is missed is `len += 1 + ;` rather than a wrong number.
+2. ~~**level 240+ `Timestamp`/`Duration`**~~ — **DONE 2026-08-19.** `MeasureSecondsNanos` sits beside
+   `WriteSecondsNanos` on `PrimaryTypeProvider` and mirrors it exactly: both fields are omitted when
+   zero, so a default `Timestamp`/`Duration` has an **empty body**, and negatives sign-extend to the
+   ten-byte varint form (which `ProtoWriter.MeasureInt64`/`MeasureInt32` already account for).
+
+   **`NormalizeSecondsNanoseconds` has to run first, with the same `isTimestamp` flag** — it is what
+   decides the final pair, so measuring the un-normalised values would agree on ordinary inputs and
+   disagree at every boundary. That is why `BclLevel240.input.cs` carries sub-second, exact-second and
+   negative samples rather than a couple of ordinary dates.
+
+   As predicted by item 3's restructuring, this needed **no generator change** beyond letting
+   `BclMeasurable` through: `BclSuffix` already picked `Timestamp`/`Duration` for the writer, and
+   `BclMeasureBody` follows it. `BclMeasurable` is now level-agnostic for all four kinds.
+3. ~~**level 300 `GuidString`/`GuidBytes`/`DecimalString`**~~ — **DONE 2026-08-19.** All three stay
+   length-prefixed, so the emitted shape is the usual `tag + varint(len) + len` and only the body
+   measure differs: `GuidHelper.Measure` is a constant 16 or 36 (and **0** for `Guid.Empty`, which
+   the writer short-circuits to an empty payload), while `MeasureDecimalString` formats for real with
+   the same `Utf8Formatter` call as the writer — the only honest way to agree with it.
+
+   **The structural change is the one worth keeping**: `BclMeasureBody` is now keyed on
+   `BclSuffix`, *the same selector the writer uses*, instead of on the member kind. The level and
+   format pick `Guid`/`GuidString`/`GuidBytes` and `Decimal`/`DecimalString`, and deriving measure and
+   write from one function is what makes them unable to drift. It also means item 2 below needs no
+   generator change at all beyond `BclMeasurable` — just the two new measures.
+
+   `RawMemberMeasureBlocked`'s blanket format gate now asks `BclMeasurable` rather than carrying a
+   second special case, so `FixedSize`-on-`Guid`-at-300 (the only format that reaches these) is
+   admitted in one place.
+4. ~~**repeated BCL elements**~~ — **DONE 2026-08-19.** The ordering trap was real and is exactly
+   why nothing admitted them: the repeated branch of `RawMemberMeasureBlocked` runs **before** the
+   BCL arm, so a single `List<DateTime>` dropped its whole contract back to write-to-count.
+
+   **The key realisation is that measure and write eligibility are INDEPENDENT**, and already were:
+   a *unary* BCL member is measurable while being written statefully (`WriteFieldHeader` +
+   `BclHelpers.WriteX`). So there is no need for a raw repeated BCL *write* — the member keeps the
+   stateful `RepeatedSerializer` path, and only the measure has to predict its bytes:
+   `tag + varint(body) + body` per element, the unary shape in a loop.
+
+   `RawRepeatedBclMeasurable` is the predicate. Two details: `RawScalarWireBits` does not know these
+   kinds are length-prefixed (it answers for the raw *scalar* kinds), so the tag is forced to wire
+   type 2; and the per-element body takes its own `bcl{n}` local rather than the shared `sub`, which
+   is reserved for sub-message lengths and is declared by matching on `sub = Measure_`.
+
+   Nullable elements are excluded — protobuf-net rejects null elements outright, so there is no wire
+   form to agree with.
+
+**B26 is closed**: every collection shape and every element kind now measures, at every compatibility
+level and for the formats that reach them.
 
 **The trap to expect, because it has now happened three times:** the measure emitter reaches BCL
 kinds from **three** places — the nullable path, the tuple path, and the main switch — and each

@@ -191,6 +191,28 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// The number of bytes <see cref="WriteDuration(ref ProtoWriter.State, TimeSpan)"/> writes
+        /// as the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>Level 240+ only; below that, <c>TimeSpan</c> uses protobuf-net's own form.</remarks>
+        public static int MeasureDuration(TimeSpan value)
+        {
+            WellKnownTypes.Duration duration = value;
+            return PrimaryTypeProvider.MeasureSecondsNanos(duration.Seconds, duration.Nanoseconds, false);
+        }
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteTimestamp(ref ProtoWriter.State, DateTime)"/> writes
+        /// as the message BODY, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>Level 240+ only; below that, <c>DateTime</c> uses protobuf-net's own form.</remarks>
+        public static int MeasureTimestamp(DateTime value)
+        {
+            WellKnownTypes.Timestamp timestamp = value;
+            return PrimaryTypeProvider.MeasureSecondsNanos(timestamp.Seconds, timestamp.Nanoseconds, true);
+        }
+
+        /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         [MethodImpl(ProtoReader.HotPath)]
@@ -442,6 +464,35 @@ namespace ProtoBuf
                 ArrayPool<byte>.Shared.Return(arr);
             }
         }
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteDecimalString(ref ProtoWriter.State, decimal)"/>
+        /// writes as the payload, excluding the field header and length prefix.
+        /// </summary>
+        /// <remarks>
+        /// Value-dependent, unlike the Guid string forms, so it formats for real — with the same
+        /// <c>Utf8Formatter</c> call and the same implicit <c>'G'</c> format as the writer, which is
+        /// the only way to be sure the two agree. A stack buffer, since nothing escapes.
+        /// </remarks>
+        public static int MeasureDecimalString(decimal value)
+        {
+            Span<byte> scratch = stackalloc byte[MAX_DECIMAL_BYTES];
+            if (!Utf8Formatter.TryFormat(value, scratch, out int bytesWritten)) // 'G' is implicit, as above
+                ThrowHelper.ThrowInvalidOperationException($"Unable to format decimal: '{value}'");
+            return bytesWritten;
+        }
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteGuidBytes(ref ProtoWriter.State, Guid)"/> writes as
+        /// the payload, excluding the field header and length prefix.
+        /// </summary>
+        public static int MeasureGuidBytes(Guid value) => GuidHelper.Measure(in value, asBytes: true);
+
+        /// <summary>
+        /// The number of bytes <see cref="WriteGuidString(ref ProtoWriter.State, Guid)"/> writes as
+        /// the payload, excluding the field header and length prefix.
+        /// </summary>
+        public static int MeasureGuidString(Guid value) => GuidHelper.Measure(in value, asBytes: false);
 
         private const int MAX_DECIMAL_BYTES = 32; // CoreLib uses 31; we'll round up (cheaper to wipe)
 
