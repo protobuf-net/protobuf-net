@@ -31,7 +31,7 @@ namespace ProtoBuf.MessagePipeTests
             }
         }
 
-        [Fact(Skip = "unreliable; do not ship")]
+        [Fact]
         public async Task SimpleMessagePipe()
         {
             var name = Guid.NewGuid().ToString();
@@ -112,7 +112,7 @@ namespace ProtoBuf.MessagePipeTests
         }
 
 // this works on netcoreapp3.0; I haven't had time to figure out what is wrong on net462, but: client doesn't get the pong
-        [Fact(Skip = "unreliable; do not ship")]
+        [Fact]
         public async Task DuplexPipe()
         {
             var name = Guid.NewGuid().ToString();
@@ -128,11 +128,12 @@ namespace ProtoBuf.MessagePipeTests
             using (var server = new NamedPipeServerStream(name, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
                 PipeOptions.Asynchronous | PipeOptions.WriteThrough))
             {
-                var duplex = MessagePipe.DuplexAsync<Pong, Ping>(server, options);
                 var receive = Task.Run(async () =>
                 {
                     Log("[Server] waiting for connection...");
                     await server.WaitForConnectionAsync();
+
+                    var duplex = MessagePipe.DuplexAsync<Pong, Ping>(server, options);
 
                     Log($"[Server] connected; receiving...");
                     await duplex.AsServer(ping => new Pong { Token = ping.Token });
