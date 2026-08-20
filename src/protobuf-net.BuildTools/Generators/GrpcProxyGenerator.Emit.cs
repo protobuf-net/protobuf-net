@@ -513,10 +513,18 @@ namespace ProtoBuf.BuildTools.Generators
                 // That is a legal contract - [Operation] gives them distinct names on the wire - and it
                 // used to compile perfectly and then fail at server startup.
                 //
-                // Reconstructing the attributes at compile time and dropping the call entirely is NOT
-                // simply pending: the list GetMetadata returns contains compiler-synthesized attributes
-                // (NullableContextAttribute) whose types are internal to the declaring assembly, so it
-                // cannot be reproduced exactly from generated code. See docs/aot-grpc.md.
+                // Reconstructing the attributes at compile time and dropping this call is deliberately
+                // NOT done, and the reason is a measurement rather than a limitation: the reflective
+                // route survives a native publish intact - AotGrpcSmoke carries attributes at all three
+                // levels plus a real [Authorize], and every one arrives after ILC, since the typeof()s
+                // just above root the metadata that keeps them.
+                //
+                // So a constructed list would buy one less startup-time reflective call, and cost the
+                // consumer's override: GetMetadata is virtual and BinderConfiguration.Create takes a
+                // custom ServiceBinder, so building the list here silently ignores it - the very bug the
+                // paragraph above is about. The machinery to do it exists and is proven correct
+                // (MetadataGather, AttributeRenderer, and the src/AotGrpcMetadataDiff oracle); it is the
+                // trade that does not pay. See docs/aot-grpc.md.
                 Line(sb, indent + 3, "var __meta = __cfg.Binder.GetMetadata(");
                 Line(sb, indent + 4, $"typeof({operation.DeclaringInterfaceFullName}).GetMethod({operationLiteral},");
                 Line(sb, indent + 5, $"new global::System.Type[] {{ {ParameterTypeOfs(operation)} }})!,");

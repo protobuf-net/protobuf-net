@@ -25,10 +25,36 @@ public class HelloReply
     public int Count { get; set; }
 }
 
+/// <summary>
+/// Endpoint metadata, at each of the three levels the runtime collects from.
+/// </summary>
+/// <remarks>
+/// These exist to <em>measure</em> something that was previously unmeasured: the generated server
+/// binding reaches metadata through <c>__cfg.Binder.GetMetadata</c>, which is reflective, and until
+/// now nothing here carried an attribute - so it returned an empty list twelve times and proved
+/// nothing about whether ILC keeps attribute metadata alive. A missing <c>[Authorize]</c> is a more
+/// permissive endpoint with no error anywhere, so "probably fine" is not good enough.
+/// </remarks>
+[AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
+public sealed class SmokeTagAttribute(string name) : Attribute
+{
+    public string Name { get; } = name;
+}
+
 [Service]
 public interface IGreeter
 {
     Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default);
+
+    /// <summary>
+    /// Bound, and deliberately never called: its <c>[Authorize]</c> is real, and ASP.NET Core enforces
+    /// it on any request that arrives (the endpoint middleware demands <c>UseAuthorization()</c>) - so
+    /// invoking it would need an auth stack that has nothing to do with what is being measured. Binding
+    /// is enough, because binding is when metadata is collected.
+    /// </summary>
+    [SmokeTag("contract-method")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "admin")]
+    Task<HelloReply> SecureAsync(HelloRequest request, CallContext context = default);
 
     IAsyncEnumerable<HelloReply> CountAsync(HelloRequest request, CallContext context = default);
 
@@ -64,10 +90,15 @@ public interface IGreeter
     IAsyncEnumerable<HelloReply> EchoAsync(IAsyncEnumerable<HelloRequest> requests, CallContext context = default);
 }
 
+[SmokeTag("service-type")]
 public class GreeterService : IGreeter
 {
     public Task<HelloReply> SayHelloAsync(HelloRequest request, CallContext context = default)
         => Task.FromResult(new HelloReply { Message = "hello, " + request.Name, Count = request.Count });
+
+    [SmokeTag("service-method")]
+    public Task<HelloReply> SecureAsync(HelloRequest request, CallContext context = default)
+        => Task.FromResult(new HelloReply { Message = "secret", Count = 0 });
 
     public async Task<HelloReply> SumAsync(IAsyncEnumerable<HelloRequest> requests,
         CallContext context = default)

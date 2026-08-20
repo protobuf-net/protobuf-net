@@ -107,6 +107,27 @@ try
     Check("binder configuration is not the reflective default",
         !ReferenceEquals(config, ProtoBuf.Grpc.Configuration.BinderConfiguration.Default));
 
+    // ---- endpoint metadata: does reflection still deliver it once ILC has been through? ----
+    //
+    // This is the exact call the generated server binding makes, on the exact contract it binds, so a
+    // pass here says the reflective route survives a native publish and a fail says it does not. Until
+    // this existed nothing in the fixture carried an attribute, so GetMetadata returned an empty list
+    // and the whole path was unmeasured - which is not the same as fine. The stake is real: metadata is
+    // how [Authorize] reaches ASP.NET Core, and losing it is a more permissive endpoint, silently.
+    var __metaMethod = typeof(IGreeter).GetMethod(nameof(IGreeter.SecureAsync),
+        new[] { typeof(HelloRequest), typeof(ProtoBuf.Grpc.CallContext) })!;
+    var __meta = config.Binder.GetMetadata(__metaMethod, typeof(IGreeter), typeof(GreeterService));
+    var __tags = __meta.OfType<SmokeTagAttribute>().Select(static x => x.Name).ToArray();
+    Check("endpoint metadata survives: contract method attribute",
+        __tags.Contains("contract-method"), string.Join(",", __tags));
+    Check("endpoint metadata survives: service type attribute",
+        __tags.Contains("service-type"), string.Join(",", __tags));
+    Check("endpoint metadata survives: service method attribute",
+        __tags.Contains("service-method"), string.Join(",", __tags));
+    var __authorize = __meta.OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().FirstOrDefault();
+    Check("endpoint metadata survives: [Authorize] arrives as an instance, with its arguments",
+        __authorize?.Roles == "admin", __authorize is null ? "absent" : ("Roles=" + __authorize.Roles));
+
     var bytes = Measure(SmokeModel.Instance, new HelloRequest { Name = "world", Count = 42 });
     Check("generated model serializes the payload",
         Convert.ToHexString(bytes) == "0A05776F726C64102A", Convert.ToHexString(bytes));

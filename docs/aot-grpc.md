@@ -33,10 +33,13 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > **What is left, in the order I would take it:**
 >
-> 0. **Compile-time endpoint metadata — MVP-blocking, and previously mis-recorded as closed.** It is how
->    authorization is enforced, so it is not optional. `AttributeRenderer` and `MetadataGather` are
->    written and **`src/AotGrpcMetadataDiff` proves the gather against the real binder**; what is left is
->    `PBN4019` and the emit. See the section below.
+> 0. **Compile-time endpoint metadata — measured, and *not* blocking.** The premise was that reflective
+>    metadata would not survive AOT. It does: `AotGrpcSmoke` now carries attributes at all three levels
+>    plus a real `[Authorize]`, and a `win-x64` native publish delivers every one of them. So this is an
+>    optimisation, not a correctness fix — and one with a cost, since a constructed list silently ignores
+>    a consumer's overridden `GetMetadata`. `AttributeRenderer`, `MetadataGather` and the
+>    `src/AotGrpcMetadataDiff` oracle are all built and green; the emit is **deliberately not done**. See
+>    the section below.
 > 1. **`linux-x64` native publish.** Unmeasured here; the serializer side historically matched win-x64
 >    warning-for-warning, so this is confirmation rather than discovery. Byte sizes are not comparable
 >    across RIDs.
@@ -58,22 +61,18 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 Written for a cold start: this section plus the Handover above should be enough to act without
 re-deriving anything. `AGENTS.md` has the rules of the road; this is the queue.
 
-### 0. Compile-time endpoint metadata — MVP-blocking
+### 0. Compile-time endpoint metadata — measured, and parked
 
-**Why it is not optional:** endpoint metadata is how authorization is enforced in gRPC for .NET, so
-`[Authorize]` must arrive as a real instance. Detailed steps are in "Compile-time metadata: REOPENED"
-below. In short, and in this order, because each step is what makes the next checkable:
+**The premise was wrong, and measuring it is what settled it.** The claim was that `[Authorize]` had to
+be constructed at compile time because the reflective route would not survive AOT. It survives: see
+"Compile-time metadata: measured" below. The gather, the renderer and the oracle are built and green;
+the emit is not done, and should not be done without a reason better than tidiness — replacing
+`__cfg.Binder.GetMetadata(...)` with a constructed list silently ignores a consumer's overridden
+`GetMetadata`, which is the exact bug the comment at that emit site exists to prevent.
 
-1. **differential harness first** — reconstructed list vs `binder.GetMetadata(...)`, item by item, on a
-   contract with attributes at all three levels (`SubService.input.cs` is the shape). Build this before
-   any emit: both remaining traps produce plausible-but-wrong lists, and a wrong list means a more
-   permissive endpoint with no error anywhere.
-2. **the gather**, in `GetMetadata`'s four-source order (contract type, contract method, service type,
-   service method) — order is semantic, later wins.
-3. **`PBN4019`** for anything `AttributeRenderer` cannot render, naming the attribute and the operation.
-4. **the emit**, replacing `__cfg.Binder.GetMetadata(...)`.
-
-`Internal/Grpc/AttributeRenderer.cs` is written and has no caller, so nothing is half-replaced today.
+If it is ever picked up, what remains is `PBN4019` (for anything `AttributeRenderer` refuses, naming the
+attribute and the operation) and the emit itself — and the emit should keep the reflective call for a
+non-default binder rather than replacing it outright.
 
 ### 1. `Stream` payloads — the widest capability gap
 
@@ -550,7 +549,7 @@ parameter types, which `GrpcOperationModel` already carried. `Overloads.input.cs
 the reason the typeof list cannot reuse the signature rendering: `typeof(Foo?)` is CS8639 for a
 reference type, while the annotation is part of the type for `Nullable<T>`.
 
-### Compile-time metadata: REOPENED, and it is MVP-blocking
+### Compile-time metadata: measured, and parked
 
 Previously recorded here as closed-because-impossible. That was wrong, and the correction matters:
 endpoint metadata is **how authorization is enforced** in gRPC for .NET, so `[Authorize]` arriving as a
@@ -559,6 +558,37 @@ place to stop; the bar is **reproduce what carries meaning, and be loud about th
 
 `Internal/Grpc/AttributeRenderer.cs` is step 0 and is **done** - it renders an `AttributeData` to
 constructing source, or returns a reason.
+
+**Then it was measured, and the reason for building it went away.** `AotGrpcSmoke` carries attributes at
+all three levels — contract method, implementation class, implementation method — plus a real
+`[Authorize(Roles = "admin")]`, and a `win-x64` native publish delivers **every one of them**, with
+`[Authorize]` arriving as a constructed instance carrying its arguments. 4 IL warnings, unchanged. ILC
+keeps them because the generated binding already roots the declaring interface and the implementation
+with `typeof(...)`, and attribute metadata on a rooted type is preserved.
+
+So this entry has now been wrong in both directions: first closed as impossible, then reopened as
+required. What it actually is: an **optimisation** that removes one startup-time reflective call. And it
+has a real cost, which is why it is parked rather than merely deprioritised — `ServiceBinder.GetMetadata`
+is `virtual` and `BinderConfiguration.Create` accepts a custom binder, so emitting a constructed list
+silently ignores a consumer's override. That is precisely the bug the comment at the emit site was
+written to prevent, and reintroducing it to avoid a reflective call that demonstrably works is a bad
+trade.
+
+Two smaller things the measurement settled, both worth keeping:
+
+- **The metadata genuinely reaches ASP.NET Core.** The first JIT run failed with *"Endpoint gRPC -
+  /AotGrpcSmoke.Greeter/SayHello contains authorization metadata, but a middleware was not found that
+  supports authorization"* — i.e. the framework saw and enforced the `[Authorize]` that arrived through
+  the generated binding. The fixture now puts it on a **bound but never invoked** operation, since
+  binding is when metadata is collected and invoking it would need an auth stack irrelevant to the test.
+- **`NullableContextAttribute` really is in the list** (the oracle reports two, and now says so rather
+  than filtering silently) — so the old *fact* was right even though the conclusion drawn from it was
+  not. They are unconstructable from another assembly and ASP.NET Core does not consume them, so
+  dropping them loses nothing; that was already the renderer's deliberate position.
+
+**What was built before the measurement is kept**, and is not wasted: the oracle is the only precise,
+executable record of what the runtime's metadata semantics actually are, it gates CI, and it found three
+things nobody would have derived by reading (below). If the emit is ever wanted, it is now checkable.
 
 **Steps 1 and 2 are now done**, and the gather still has no caller in the generator - so the branch
 emits the reflective call and behaviour is unchanged. What exists:

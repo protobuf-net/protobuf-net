@@ -285,9 +285,22 @@ internal static class Program
         var liveMethod = liveDeclaring.GetMethods().Single(m => m.Name == method.Name
             && m.GetParameters().Select(p => Normalise(p.ParameterType)).SequenceEqual(parameters));
 
-        return ServiceBinder.Default.GetMetadata(liveMethod, liveContract, liveService)
-            .Where(item => !AttributeRenderer.IsSynthesised(item.GetType().FullName ?? ""))
+        var all = ServiceBinder.Default.GetMetadata(liveMethod, liveContract, liveService);
+        var kept = all.Where(item => !AttributeRenderer.IsSynthesised(item.GetType().FullName ?? ""))
             .ToList();
+
+        // Reported rather than merely filtered. The emit site long carried the claim that this list
+        // "contains compiler-synthesized attributes (NullableContextAttribute) whose types are internal
+        // to the declaring assembly, so it cannot be reproduced exactly" - which was the reason
+        // compile-time metadata was once closed as impossible. If this count is zero, that premise was
+        // wrong on its own terms, and saying so out loud is cheaper than re-deriving it later.
+        if (all.Count != kept.Count)
+        {
+            Console.WriteLine($"     ~ filtered {all.Count - kept.Count} compiler-synthesised item(s): "
+                + string.Join(", ", all.Where(x => AttributeRenderer.IsSynthesised(x.GetType().FullName ?? ""))
+                    .Select(x => x.GetType().Name).Distinct()));
+        }
+        return kept;
     }
 
     private static Type Live(INamedTypeSymbol symbol)
