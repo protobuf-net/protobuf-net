@@ -205,6 +205,24 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor DeclaredDefaultCannotRoundTrip = new(
+            id: "PBN0024",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredDefaultCannotRoundTrip),
+            messageFormat: "Field '{0}' declares [DefaultValue] but nothing initializes it to that value; a member equal to its declared default is not written, so the value is lost on the receiving end.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
+        internal static readonly DiagnosticDescriptor DeclaredDefaultIgnored = new(
+            id: "PBN0025",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredDefaultIgnored),
+            messageFormat: "Field '{0}' declares [DefaultValue], but protobuf-net will not apply it: {1}.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
         internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
             id: "PBN0023",
             title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
