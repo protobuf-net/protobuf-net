@@ -5,7 +5,8 @@
     <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <AssemblyName>protogen</AssemblyName>
-    <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
+    <Title>protogen</Title>
+    <Description>The protogen command-line generator (C#/VB from .proto schemas), as a plain package; for command-line use, prefer the protobuf-net.Protogen global tool</Description>
     <GrpcTools>false</GrpcTools>
     <ApplicationIcon>protobuf-net.ico</ApplicationIcon>
     <RollForward>LatestMajor</RollForward>
