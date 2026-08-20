@@ -40,6 +40,11 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
         Task,        // Task or Task<T>
         ValueTask,   // ValueTask or ValueTask<T>
         AsyncEnumerable,
+
+        // protobuf-net.Grpc's byte-stream shape: Task<Stream>/ValueTask<Stream>, which is a
+        // server-streaming call of BytesValue with bespoke marshalling, not a data payload
+        TaskStream,
+        ValueTaskStream,
     }
 
     /// <summary>

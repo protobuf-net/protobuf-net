@@ -20,6 +20,12 @@ namespace ProtoBuf.BuildTools.Generators
         // every name below is public API on protobuf-net.Grpc / Grpc.Core / Grpc.AspNetCore.Server,
         // so generated code never needs InternalsVisibleTo and this generator needs no runtime changes
         private const string EmptyTypeName = "global::ProtoBuf.Grpc.Internal.Empty";
+
+        /// <summary>
+        /// The wire type of a byte stream. Like <c>Empty</c>, <c>MarshallerCache</c> pre-seeds its
+        /// bespoke marshaller, so it resolves without a <c>TypeModel</c> and without reflection.
+        /// </summary>
+        private const string BytesValueTypeName = "global::ProtoBuf.Grpc.Internal.BytesValue";
         private const string ReshapeTypeName = "global::ProtoBuf.Grpc.Internal.Reshape";
         private const string BinderConfigurationTypeName = "global::ProtoBuf.Grpc.Configuration.BinderConfiguration";
         private const string MarshallerFactoryTypeName = "global::ProtoBuf.Grpc.Configuration.MarshallerFactory";
@@ -303,9 +309,12 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 foreach (var payload in PayloadTypes(contract)) payloads.Add(payload);
             }
-            // Empty is pre-registered by MarshallerCache itself, and is not a contract in anyone's
-            // model, so it must not be handed to the generated model's serializer
+            // Empty and BytesValue are pre-registered by MarshallerCache itself, with hand-written
+            // marshallers, and neither is a contract in anyone's model - so they must not be handed to
+            // the generated model's serializer. Overriding BytesValue's would be the worse of the two:
+            // it is the wire type of every byte stream, so it would change what those put on the wire.
             payloads.Remove(EmptyTypeName);
+            payloads.Remove(BytesValueTypeName);
             return payloads;
         }
 
@@ -609,8 +618,21 @@ namespace ProtoBuf.BuildTools.Generators
                         + $"global::Grpc.Core.IServerStreamWriter<{operation.ResponseTypeFullName}> writer, {ServerCallContextTypeName} ctx)");
                     Line(sb, indent, "{");
                     EmitServerContextLocal(sb, indent + 1, operation);
-                    Line(sb, indent + 1, $"return {ReshapeTypeName}.WriteTo<{operation.ResponseTypeFullName}>("
-                        + $"{ServiceCall(operation, "request")}, writer, ctx.CancellationToken);");
+                    if (operation.ResponseShape is GrpcResultShape.TaskStream or GrpcResultShape.ValueTaskStream)
+                    {
+                        // a byte stream is written by Reshape.WriteStream, which is not generic and takes
+                        // Task<Stream> - so a ValueTask<Stream> is converted, exactly as ServerInvokerLookup
+                        // does with ToTaskT. writeTrailer: true matches the runtime, which always sends the
+                        // total-length trailer even though the client does not demand it.
+                        var source = ServiceCall(operation, "request")
+                            + (operation.ResponseShape == GrpcResultShape.ValueTaskStream ? ".AsTask()" : "");
+                        Line(sb, indent + 1, $"return {ReshapeTypeName}.WriteStream({source}, writer, ctx, true);");
+                    }
+                    else
+                    {
+                        Line(sb, indent + 1, $"return {ReshapeTypeName}.WriteTo<{operation.ResponseTypeFullName}>("
+                            + $"{ServiceCall(operation, "request")}, writer, ctx.CancellationToken);");
+                    }
                     Line(sb, indent, "}");
                     break;
 
@@ -803,6 +825,10 @@ namespace ProtoBuf.BuildTools.Generators
                 (GrpcMethodKind.Unary, GrpcResultShape.ValueTask, true) => "UnaryValueTaskAsyncVoid",
                 (GrpcMethodKind.Unary, GrpcResultShape.Sync, false) => "UnarySync",
                 (GrpcMethodKind.Unary, GrpcResultShape.Sync, true) => "UnarySyncVoid",
+                // the byte-stream shapes take their own Reshape helpers; both are server-streaming
+                // calls of BytesValue, so they must be matched before the general server-streaming arm
+                (GrpcMethodKind.ServerStreaming, GrpcResultShape.TaskStream, _) => "ServerByteStreamingTaskAsync",
+                (GrpcMethodKind.ServerStreaming, GrpcResultShape.ValueTaskStream, _) => "ServerByteStreamingValueTaskAsync",
                 (GrpcMethodKind.ServerStreaming, _, _) => "ServerStreamingAsync",
                 (GrpcMethodKind.ClientStreaming, GrpcResultShape.Task, _) => "ClientStreamingTaskAsync",
                 (GrpcMethodKind.ClientStreaming, GrpcResultShape.ValueTask, false) => "ClientStreamingValueTaskAsync",

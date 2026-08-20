@@ -1,5 +1,6 @@
 using ProtoBuf.BuildTools.Generators;
 using System.Collections.Immutable;
+using System;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,7 +31,7 @@ namespace BuildToolsUnitTests.Grpc
             using ProtoBuf.Grpc;
             using ProtoBuf.Grpc.Configuration;
             using ProtoBuf.Meta;
-            using System.IO;
+            using System;
             using System.Threading.Tasks;
 
             namespace Dropped;
@@ -44,8 +45,12 @@ namespace BuildToolsUnitTests.Grpc
             [Service]
             public interface IThing
             {
-                // a Stream payload is a runtime-path shape, so the whole contract is dropped
-                Task<Stream> DownloadAsync(Request request, CallContext context = default);
+                // IObservable<T> is a runtime-path shape, so the whole contract is dropped.
+                //
+                // This used to be Task<Stream>, which stopped working as a *dropped* example the moment
+                // the byte-stream shapes were implemented - Task<Stream> is now emitted. IObservable is
+                // the durable choice here: it is reshaped at run time and is not on the roadmap.
+                IObservable<Request> DownloadAsync(Request request, CallContext context = default);
             }
 
             [ProtoModel]

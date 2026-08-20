@@ -71,7 +71,8 @@ namespace Grpc.Core
 
     public interface IAsyncStreamReader<T> { }
 
-    public interface IServerStreamWriter<T> { }
+    public interface IAsyncStreamWriter<T> { }
+    public interface IServerStreamWriter<T> : IAsyncStreamWriter<T> { }
 }
 
 namespace Grpc.AspNetCore.Server
@@ -313,6 +314,14 @@ namespace ProtoBuf.Grpc.Internal
         public static readonly Task<Empty> InstanceTask = Task.FromResult(Instance);
     }
 
+    /// <summary>
+    /// The wire type of a byte stream. Real protobuf-net.Grpc gives this a bespoke marshaller, which
+    /// MarshallerCache pre-seeds; here it only has to exist so the emitted code binds.
+    /// </summary>
+    public sealed class BytesValue
+    {
+    }
+
     [Obsolete("Not intended for direct consumption", false)]
     public static class Reshape
     {
@@ -341,6 +350,19 @@ namespace ProtoBuf.Grpc.Internal
         public static void UnarySyncVoid<TRequest, TResponse>(
             in CallContext context, CallInvoker invoker, Method<TRequest, TResponse> method, TRequest request, string? host)
             where TRequest : class where TResponse : class { }
+
+        // the byte-stream shapes: Task<Stream>/ValueTask<Stream>, carried as a server-stream of BytesValue
+        public static Task<System.IO.Stream> ServerByteStreamingTaskAsync<TRequest, TResponse>(
+            in CallContext context, CallInvoker invoker, Method<TRequest, TResponse> method,
+            TRequest request, string? host = null) where TRequest : class => null!;
+
+        public static ValueTask<System.IO.Stream> ServerByteStreamingValueTaskAsync<TRequest, TResponse>(
+            in CallContext context, CallInvoker invoker, Method<TRequest, TResponse> method,
+            TRequest request, string? host = null) where TRequest : class => default;
+
+        // note: not generic, and takes Task<Stream> - which is why a ValueTask<Stream> is converted
+        public static Task WriteStream(Task<System.IO.Stream> source, IAsyncStreamWriter<BytesValue> writer,
+            ServerCallContext context, bool writeTrailer) => null!;
 
         public static IAsyncEnumerable<TResponse> ServerStreamingAsync<TRequest, TResponse>(
             in CallContext context, CallInvoker invoker, Method<TRequest, TResponse> method, TRequest request, string? host)

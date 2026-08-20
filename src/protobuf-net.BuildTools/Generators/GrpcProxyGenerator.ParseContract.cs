@@ -253,7 +253,12 @@ namespace ProtoBuf.BuildTools.Generators
                 return false;
             }
             var (responseShape, impliedKind, responseSymbol, voidResponse) = returnInfo.Value;
-            var responseType = responseSymbol is null ? EmptyTypeName : Display(responseSymbol);
+
+            // a byte stream is carried as BytesValue, whose marshaller MarshallerCache pre-seeds - so it
+            // resolves through __cfg.GetMarshaller<T>() like Empty, and never reaches the TypeModel
+            var responseType = responseShape is GrpcResultShape.TaskStream or GrpcResultShape.ValueTaskStream
+                ? BytesValueTypeName
+                : responseSymbol is null ? EmptyTypeName : Display(responseSymbol);
 
             GrpcArgShape requestShape;
             string requestType;
@@ -697,7 +702,25 @@ namespace ProtoBuf.BuildTools.Generators
                     var definition = named.ConstructedFrom;
                     var payload = named.TypeArguments[0];
 
-                    // Task<Stream>, IAsyncEnumerable<IObservable<T>>, ... are all runtime-path shapes
+                    // Task<Stream>/ValueTask<Stream> is protobuf-net.Grpc's byte-stream shape - a
+                    // server-streaming call of BytesValue - so it has to be recognised BEFORE the
+                    // runtime-only test, which would otherwise refuse it for mentioning a Stream.
+                    //
+                    // Exactly System.IO.Stream, matching ContractOperation's `type == typeof(Task<Stream>)`:
+                    // Task<FileStream> is not this shape, and stays refused.
+                    if (payload.Name == "Stream" && payload.ContainingNamespace?.ToDisplayString() == "System.IO")
+                    {
+                        if (IsType(definition, "System.Threading.Tasks", "Task"))
+                        {
+                            return (GrpcResultShape.TaskStream, GrpcMethodKind.ServerStreaming, null, false);
+                        }
+                        if (IsType(definition, "System.Threading.Tasks", "ValueTask"))
+                        {
+                            return (GrpcResultShape.ValueTaskStream, GrpcMethodKind.ServerStreaming, null, false);
+                        }
+                    }
+
+                    // IAsyncEnumerable<IObservable<T>>, Task<FileStream>, ... are all runtime-path shapes
                     if (IsRuntimeOnlyPayload(payload)) return null;
 
                     if (IsType(definition, "System.Threading.Tasks", "Task")) return (GrpcResultShape.Task, GrpcMethodKind.Unary, payload, false);

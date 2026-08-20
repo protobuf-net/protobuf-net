@@ -1,5 +1,3 @@
-Generator produced 2 diagnostics:
-Warning PBN4002 Grpc/Data/Diagnostics/MethodShape.input.cs L40 C18
-Method 'GrpcFixtures.MethodShape.IThing.DownloadAsync' is not emitted at build time because its return type 'global::System.Threading.Tasks.Task<global::System.IO.Stream>' is a shape only the runtime proxy handles - Stream, IObservable<T> and Grpc.Core's own call types are reshaped at run time; the whole contract is left to the runtime proxy, which is not trim/AOT-friendly
+Generator produced 1 diagnostics:
 Warning PBN4002 Grpc/Data/Diagnostics/MethodShape.input.cs L42 C13
 Method 'GrpcFixtures.MethodShape.IThing.EchoAsync' is not emitted at build time because it is generic, so there is no one request or response type to build a Method<,> from; the whole contract is left to the runtime proxy, which is not trim/AOT-friendly
