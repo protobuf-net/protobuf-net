@@ -178,8 +178,9 @@ Still deferred (deliberately): edition 2026 is parse-tolerated only, per scope.
 
 ## Shipping checklist
 
-- **Done**: consumer documentation is `docs/editions.md` (linked from `docs/index.md`), which leads on
-  delimited encoding - the one editions feature that maps exactly onto something protobuf-net already had.
+- **Done**: consumer documentation is `docs/editions.md` plus `docs/delimited.md` (both linked from
+  `docs/index.md`); the delimited encoding got its own page, since it is the one editions feature that maps
+  exactly onto something protobuf-net already had, and it was crowding out the rest.
   The numbers it quotes come from `src/Benchmark/DelimitedEncodingBenchmarks.cs`, which measures both
   framings in protobuf-net *and* Google.Protobuf, over serialize and deserialize; re-run it when the
   writer/reader change and update the table.
