@@ -400,6 +400,27 @@ namespace ProtoBuf.BuildTools.Internal
                         ));
                     }
                 }
+
+                if (HasFlag(DataContractContextFlags.SkipConstructor) && OwnsSkipConstructorBlame(ref context))
+                {
+                    // no arrangement of the member makes this correct - the initializer PBN0024
+                    // would ask for is exactly what SkipConstructor skips - so it is the pairing
+                    // itself that gets reported, once, at the option responsible
+                    var lost = _members
+                        .Where(DeclaredDefaultLostToSkipConstructor)
+                        .Select(candidate => "'" + candidate.MemberName + "'")
+                        .ToList();
+                    if (lost.Count != 0)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            descriptor: DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor,
+                            location: Utils.PickLocation(ref context, _skipConstructorBlame),
+                            messageArgs: new object[] { string.Join(", ", lost) },
+                            additionalLocations: null,
+                            properties: null
+                        ));
+                    }
+                }
             }
             static bool PropertyOrFieldExists(ITypeSymbol type, string name)
             {
@@ -675,12 +696,27 @@ namespace ProtoBuf.BuildTools.Internal
             if (HasShouldSerializeMethod(member) || HasSpecifiedProperty(member)) return false;
 
             // under SkipConstructor the instance is never constructed, so a field initializer would
-            // not run either; the fix this diagnostic implies would not actually fix anything
+            // not run either; the fix this diagnostic implies would not actually fix anything, and
+            // the pairing is reported once per contract as PBN0026 instead
             if (HasFlag(DataContractContextFlags.SkipConstructor)) return false;
 
             // protogen assigns the default in a constructor rather than in an initializer
             if (IsAssignedInInstanceConstructor(member)) return false;
 
+            return true;
+        }
+
+        // A declared default that SkipConstructor makes unreachable. Unlike PBN0024 this does not
+        // care whether an initializer is present: the initializer does not run either, so there is
+        // no way to write the member that restores the value. Explicit presence is the exception -
+        // it replaces the declared-default guard, so the value still goes to the wire - and a
+        // default that is never applied at all cannot be lost, which is PBN0025's territory.
+        private bool DeclaredDefaultLostToSkipConstructor(Member member)
+        {
+            if (!HasEffectiveDeclaredDefault(member)) return false;
+            if (member.SymbolSpecialType is not { } specialType || !HonoursDeclaredDefault(specialType)) return false;
+            if (HasShouldSerializeMethod(member) || HasSpecifiedProperty(member)) return false;
+            if (DeclaredDefaultIsIgnored(member, out _)) return false;
             return true;
         }
 
@@ -878,7 +914,13 @@ namespace ProtoBuf.BuildTools.Internal
             _ = blame;
             _flags |= DataContractContextFlags.IsProtoContract;
             if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.SkipConstructor), out var val) && val)
+            {
                 _flags |= DataContractContextFlags.SkipConstructor;
+                // PBN0026 is a fact about the contract rather than about any one member, so it is
+                // reported once, against the option that causes it
+                _skipConstructorBlame = NamedArgumentLocation(attrib, nameof(ProtoContractAttribute.SkipConstructor))
+                    ?? attrib.GetLocation(blame);
+            }
             if (attrib.TryGetBooleanByName(nameof(ProtoContractAttribute.IgnoreUnknownSubTypes), out val) && val)
                 _flags |= DataContractContextFlags.IgnoreUnknownSubTypes;
             foreach (var named in attrib.NamedArguments)
@@ -888,6 +930,33 @@ namespace ProtoBuf.BuildTools.Internal
                     _flags |= DataContractContextFlags.HasSurrogate;
                 }
             }
+        }
+
+        private Location? _skipConstructorBlame;
+
+        // A partial type is visited once per declaration, and this is a fact about the type rather
+        // than about any one part, so it must not be reported once per file. The part that actually
+        // writes `SkipConstructor` is the one that owns it; if there is no syntax to go on, report
+        // rather than stay silent, since a duplicate is a smaller failure than a miss.
+        private bool OwnsSkipConstructorBlame(ref SyntaxNodeAnalysisContext context)
+        {
+            if (_skipConstructorBlame is not { } blame || blame.SourceTree is null) return true;
+            return blame.SourceTree == context.Node.SyntaxTree
+                && context.Node.FullSpan.Contains(blame.SourceSpan);
+        }
+
+        // the whole attribute is a serviceable fallback, but `SkipConstructor = true` is the thing
+        // the reader has to decide about, so point at that argument where the syntax is available
+        private static Location? NamedArgumentLocation(AttributeData attrib, string name)
+        {
+            if (attrib.ApplicationSyntaxReference?.GetSyntax() is not AttributeSyntax syntax) return null;
+            var arguments = syntax.ArgumentList?.Arguments;
+            if (arguments is null) return null;
+            foreach (var argument in arguments)
+            {
+                if (argument.NameEquals?.Name.Identifier.ValueText == name) return argument.GetLocation();
+            }
+            return null;
         }
 
         public bool HasFlag(DataContractContextFlags flag)

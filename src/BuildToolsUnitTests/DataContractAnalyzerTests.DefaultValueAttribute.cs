@@ -319,6 +319,131 @@ namespace BuildToolsUnitTests
                 || x.Descriptor == DataContractAnalyzer.DeclaredDefaultIgnored));
         }
 
+        // SkipConstructor deserializes via GetUninitializedObject, so neither the constructor nor a
+        // field initializer runs - and a declared default is only restored by one of those. There
+        // is no way to write the member that makes it round-trip, so the pairing itself is reported
+        [Theory]
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(5)] public int Bar { get; set; } = 5;")]
+        [InlineData(@"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                      public Foo() { Bar = ""abc""; }")]
+        public async Task ReportsDeclaredDefaultUnderSkipConstructor(string body)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract(SkipConstructor = true)]
+                public class Foo {{
+                    {body}
+                }}
+            ");
+
+            var diag = Assert.Single(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor));
+            Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
+            Assert.Contains("'Bar'", diag.GetMessage(CultureInfo.InvariantCulture));
+        }
+
+        // one report per contract, not per member, and it names every member it covers
+        [Fact]
+        public async Task ReportsDeclaredDefaultUnderSkipConstructorOncePerType()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract(SkipConstructor = true)]
+                public class Foo {
+                    [ProtoMember(1), DefaultValue(""abc"")] public string First { get; set; } = ""abc"";
+                    [ProtoMember(2), DefaultValue(5)] public int Second { get; set; } = 5;
+                    [ProtoMember(3)] public string Untouched { get; set; }
+                }
+            ");
+
+            var diag = Assert.Single(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor));
+            var message = diag.GetMessage(CultureInfo.InvariantCulture);
+            Assert.Contains("'First'", message);
+            Assert.Contains("'Second'", message);
+            Assert.DoesNotContain("Untouched", message);
+        }
+
+        // the report points at `SkipConstructor = true`, which is the thing to decide about
+        [Fact]
+        public async Task ReportsDeclaredDefaultUnderSkipConstructorAtTheOption()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract(SkipConstructor = true)]
+                public class Foo {
+                    [ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";
+                }
+            ");
+
+            var diag = Assert.Single(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor));
+            var span = diag.Location.SourceSpan;
+            var text = (await diag.Location.SourceTree!.GetTextAsync()).ToString().Substring(span.Start, span.Length);
+            Assert.Equal("SkipConstructor = true", text);
+        }
+
+        [Theory]
+        // no SkipConstructor, no problem
+        [InlineData(@"[ProtoContract]", @"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";")]
+        [InlineData(@"[ProtoContract(SkipConstructor = false)]", @"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; } = ""abc"";")]
+        // nothing declares a default
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1)] public string Bar { get; set; }")]
+        // explicit presence replaces the declared-default guard, so the value still reaches the wire
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                      public bool ShouldSerializeBar() => Bar != null;")]
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                      public bool BarSpecified { get; set; }")]
+        // a default equal to the type's own default is supplied by the CLR, constructor or not
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1), DefaultValue(0)] public int Bar { get; set; }")]
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1), DefaultValue(null)] public string Bar { get; set; }")]
+        // a default that is never applied cannot be lost - that is PBN0025's business
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1, IsRequired = true), DefaultValue(""abc"")] public string Bar { get; set; }")]
+        [InlineData(@"[ProtoContract(SkipConstructor = true)]", @"[ProtoMember(1), DefaultValue(5)] public System.Collections.Generic.List<int> Bar { get; set; } = new();")]
+        public async Task DoesNotReportDeclaredDefaultUnderSkipConstructor(string contract, string body)
+        {
+            var diagnostics = await AnalyzeAsync($@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                {contract}
+                public class Foo {{
+                    {body}
+                }}
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor));
+        }
+
+        // PBN0024 stands down under SkipConstructor - its advice would not work there - so the two
+        // never both fire on the same member
+        [Fact]
+        public async Task SkipConstructorReportSupersedesTheRoundTripNag()
+        {
+            var diagnostics = await AnalyzeAsync(@"
+                using ProtoBuf;
+                using System;
+                using System.ComponentModel;
+
+                [ProtoContract(SkipConstructor = true)]
+                public class Foo {
+                    [ProtoMember(1), DefaultValue(""abc"")] public string Bar { get; set; }
+                }
+            ");
+
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultCannotRoundTrip));
+            Assert.Single(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.DeclaredDefaultUnderSkipConstructor));
+        }
+
         // a collection member has no wire presence to force - an empty collection writes nothing,
         // and IsRequired is only observable for value-type scalars - so initializing one (the
         // standard pattern, including getter-only) must not trigger the IsRequired nag

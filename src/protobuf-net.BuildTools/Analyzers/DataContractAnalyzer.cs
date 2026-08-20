@@ -223,6 +223,15 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             isEnabledByDefault: true,
             helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
 
+        internal static readonly DiagnosticDescriptor DeclaredDefaultUnderSkipConstructor = new(
+            id: "PBN0026",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DeclaredDefaultUnderSkipConstructor),
+            messageFormat: "SkipConstructor means no constructor or field initializer runs on deserialize, so nothing can restore a declared default; {0} will not round-trip.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            helpLinkUri: "https://stackoverflow.com/a/3162253/1882616");
+
         internal static readonly DiagnosticDescriptor ProtoContractOnInterface = new(
             id: "PBN0023",
             title: nameof(DataContractAnalyzer) + "." + nameof(ProtoContractOnInterface),
