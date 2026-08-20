@@ -231,22 +231,27 @@ in a deep graph is true of every outer level:
 
 ## When not to use it
 
-- **Skipping is much cheaper with a length prefix**, and this is the real cost of delimited framing rather
-  than a theoretical one. A reader that does not want a field reads the length and jumps the whole thing -
-  *O(1)*, however big it is. A delimited body has to be walked to its matching end tag, which is *O(size)*.
-  Reading the same payloads into a contract that declares only field 1, so the sub-message must be skipped:
+- **Skipping is much cheaper with a length prefix** - though most reads skip nothing. Deserializing into a
+  contract that declares the fields being sent, which is the ordinary case, consumes every byte: the whole
+  payload is the payload you wanted. Skipping only arises for data the reader has no member for - a peer
+  running a newer contract than yours, or a type that deliberately declares just the parts it cares about -
+  and that is usually a thin tail rather than the body of the message.
 
-  ![Skipping a field: constant time when length-prefixed, proportional to size when delimited](assets/delimited-skip.svg)
+  Where it *does* happen, the asymmetry is stark, because a length lets the reader jump the field entirely
+  while a delimited body has to be walked to its end tag. Reading the payloads above into a contract
+  declaring only field 1:
 
   | deep chain | length-prefixed | delimited |
   | --- | ---: | ---: |
   | depth 8 | 132 ns | 198 ns |
-  | depth 64 | **107 ns** | 871 ns |
-  | depth 512 | **96 ns** | 6,377 ns |
+  | depth 64 | 107 ns | 871 ns |
+  | depth 512 | 96 ns | 6,377 ns |
 
-  The length-prefixed column *falls* as the payload grows - 512 levels are skipped more cheaply than 8,
-  because the bytes are never touched at all. The delimited column is 66× worse at depth 512. If your
-  readers routinely ignore large parts of what they receive, the prefix earns its keep.
+  The length-prefixed column *falls* as the payload grows - 512 levels skip more cheaply than 8, since the
+  bytes are never touched - while the delimited column grows with the data. So: if you are routinely handed
+  large messages and read only a corner of them, keep the prefix. If you read what you are sent, this line
+  costs you nothing.
+
 - **Changing the framing changes the bytes** - though what that costs you depends entirely on who reads
   them. protobuf-net itself is relaxed: its reader dispatches on the wire type actually present, not on how
   the member is declared, so a protobuf-net consumer deserializes either framing either way round. Other
