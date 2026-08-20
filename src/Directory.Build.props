@@ -16,6 +16,15 @@
         <PackageIcon>protobuf-net.png</PackageIcon>
         <Product>protobuf-net ($(TargetFramework))</Product>
         <PackageReleaseNotes>https://github.com/protobuf-net/protobuf-net/releases</PackageReleaseNotes>
+        <!-- ApiCompat, as built into the SDK: at pack time it downloads this version of the package
+             from nuget.org and diffs the surface, so a removed member or a narrowed signature fails
+             the build (CP0001/CP0002/CP0003) instead of shipping. Opted into per project rather than
+             set here, because the set that ships is the Packing=true list in Build.csproj and is not
+             derivable from anything a project declares - protobuf-net.MessagePipes builds and packs
+             locally but has never been published, so it has no baseline to diff against, and
+             protobuf-net.BuildTools is IsPackable=false. Per-project also leaves room for a package
+             whose version has drifted from the rest. -->
+        <ProtoBufPackageBaseline>3.4.0</ProtoBufPackageBaseline>
 
         <PackageTags>binary;serialization;protobuf</PackageTags>
 

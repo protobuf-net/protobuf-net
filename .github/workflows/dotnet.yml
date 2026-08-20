@@ -58,6 +58,15 @@ jobs:
     # protobuf-net.Grpc is known to differ; anything else exits non-zero.
     - name: gRPC endpoint-metadata differential
       run: dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj --no-build
+    # Package validation (ApiCompat) runs at pack time, so without a pack here it would run only in
+    # release.yml - after the change had been merged and tagged, which is far too late to stop
+    # anything. Packing=true restricts the traversal to the shipping projects, so this is a much
+    # smaller build than the one above rather than a second full one; it is Release because that is
+    # what ships, and a Debug surface can differ.
+    - name: Pack (runs package validation)
+      run: |
+        dotnet build Build.csproj -c Release -p:Packing=true -p:GeneratePackageOnBuild=false
+        dotnet pack Build.csproj --no-build -c Release -p:Packing=true -p:PackageOutputPath=${{ github.workspace }}/.nupkgs
 
   # The only leg that proves the AOT story on a second platform. Deliberately NOT the traversal:
   # Build.csproj globs src\*\*.csproj, which includes net4x-only projects, and that is exactly why the
