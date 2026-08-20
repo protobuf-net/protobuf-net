@@ -254,7 +254,15 @@ namespace ProtoBuf.AotRefGen
                 : modelType.Name;
 
             var target = Path.Combine(fixtureDir, stem + ".reference.cs");
-            File.WriteAllText(target, code);
+
+            // stamp which fixture this came from, so a reference that was never re-run can be told from
+            // one where ref-emit genuinely produced nothing - see ReferenceProvenance
+            var inputName = stem + ".input.cs";
+            var inputPath = Path.Combine(fixtureDir, inputName);
+            var header = File.Exists(inputPath)
+                ? ReferenceProvenance.Header(inputName, ReferenceProvenance.Hash(File.ReadAllText(inputPath)))
+                : "";
+            File.WriteAllText(target, header + code);
             Console.WriteLine($"{modelType.Name}: {seeds.Count} seed(s) -> {target}");
         }
     }

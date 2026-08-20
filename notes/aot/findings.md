@@ -590,7 +590,7 @@ option that should not survive.
 
 ### 13. The corpus differential's remaining disagreements
 
-**This entry exists because `notes/aot-differential.md` is generated and overwritten on every run.**
+**This entry exists because `notes/aot/differential.md` is generated and overwritten on every run.**
 It is a snapshot, not a backlog. Read the snapshot for current numbers.
 
 **There are none.** Every bucket is either zero or a category where comparison is impossible by

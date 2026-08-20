@@ -26,6 +26,18 @@ namespace ProtoBuf.Test
         }
 
         [ProtoContract]
+        public class HazNullableLocalDate
+        {
+            [ProtoMember(1)] public LocalDate? Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazNullableLocalTime
+        {
+            [ProtoMember(1)] public LocalTime? Value { get; set; }
+        }
+
+        [ProtoContract]
         public class HazDateSurrogate
         {
             [ProtoMember(1)] public NodaTimeSurrogates.Date Value { get; set; }
@@ -115,6 +127,32 @@ namespace ProtoBuf.Test
             using var ms = new MemoryStream();
             var clone = NodaModel().Deserialize<HazLocalDate>(ms);
             Assert.Equal(default(LocalDate), clone.Value);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void NullableDateRoundTrips(bool hasValue)
+        {
+            LocalDate? value = hasValue ? new LocalDate(2020, 1, 2) : null;
+            var model = NodaModel();
+            using var ms = new MemoryStream();
+            model.Serialize(ms, new HazNullableLocalDate { Value = value });
+            ms.Position = 0;
+            Assert.Equal(value, model.Deserialize<HazNullableLocalDate>(ms).Value);
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void NullableTimeRoundTrips(bool hasValue)
+        {
+            LocalTime? value = hasValue ? new LocalTime(3, 4, 5) : null;
+            var model = NodaModel();
+            using var ms = new MemoryStream();
+            model.Serialize(ms, new HazNullableLocalTime { Value = value });
+            ms.Position = 0;
+            Assert.Equal(value, model.Deserialize<HazNullableLocalTime>(ms).Value);
         }
 
         [Fact]

@@ -56,3 +56,57 @@ jobs:
     # committed copy has drifted from what the generator now produces - commit the regeneration.
     - name: Generated model drift
       run: git diff --exit-code -- src/protobuf-net.Reflection/Generated
+    # The same idea applied to gRPC endpoint metadata: reconstructs each endpoint's metadata from
+    # symbols, compiles and *runs* it, and compares the resulting objects against what
+    # ServiceBinder.GetMetadata produces reflectively. Gated because the failure mode is silent and
+    # security-relevant - a dropped [Authorize] is a more permissive endpoint, with no error anywhere.
+    # A difference against the pinned package is reported rather than failed where a released
+    # protobuf-net.Grpc is known to differ; anything else exits non-zero.
+    - name: gRPC endpoint-metadata differential
+      run: dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj --no-build
+
+  # The only leg that proves the AOT story on a second platform. Deliberately NOT the traversal:
+  # Build.csproj globs src\*\*.csproj, which includes net4x-only projects, and that is exactly why the
+  # job above is windows-latest. These two are net8.0 apps, and although protobuf-net multi-targets down
+  # to net462, a net8.0 consumer resolves only the net8.0 TFM - so net4x is never built here.
+  #
+  # It *runs* the published binaries rather than only publishing them: both exit non-zero on mismatch,
+  # and under a native publish the reflective fallbacks are simply absent, so a pass here means the
+  # generated path carried the whole thing. Publishing alone would prove it links, which is not the claim.
+  #
+  # Gated on exit code only, never on the IL warning count: that count tracks the fixtures, so pinning it
+  # would turn every legitimate fixture change into a CI failure. It is a measurement to re-take, not a
+  # threshold - see notes/aot/findings.md.
+  native-aot-linux:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # versioning
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          8.0.x
+          10.0.x
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('src/Directory.Packages.props', 'global.json', '**/*.csproj') }}
+        restore-keys: ${{ runner.os }}-nuget-
+    # ILC shells out to the platform toolchain to link; clang is on the image, zlib is not always
+    - name: Install the native toolchain
+      run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+    # -o rather than the default path: these two are on different TFMs (net10.0 and net8.0) and would
+    # move again, so naming bin/Release/<tfm>/... here is a break waiting to happen
+    - name: Publish and run the serializer smoke test
+      run: |
+        dotnet publish src/AotSmoke/AotSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-smoke
+        ./artifacts/aot-smoke/AotSmoke
+    - name: Publish and run the gRPC smoke test
+      run: |
+        dotnet publish src/AotGrpcSmoke/AotGrpcSmoke.csproj -c Release -r linux-x64 -o artifacts/aot-grpc-smoke
+        ./artifacts/aot-grpc-smoke/AotGrpcSmoke

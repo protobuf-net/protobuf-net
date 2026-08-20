@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using System;
@@ -102,6 +102,28 @@ namespace ProtoBuf.BuildTools.Internal
         internal static bool BuildToolsDisabled(this AnalyzerConfigOptionsProvider options)
             => options.GlobalOptions.TryGetValue(Literals.DisableProperty, out var value)
                 && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Which AOT-or-trimming property the project asked for, or null if it asked for none.
+        /// </summary>
+        /// <remarks>
+        /// Shared between the serializer and gRPC migration analyzers deliberately: they make the same
+        /// argument about the same projects, and two copies of this list would drift the moment the SDK
+        /// grew a fifth property. The name is returned rather than a bool so the diagnostic can quote
+        /// what the consumer actually set.
+        /// </remarks>
+        internal static string? AsksForAot(this AnalyzerConfigOptionsProvider options)
+        {
+            foreach (var property in new[] { "PublishAot", "PublishTrimmed", "IsAotCompatible", "IsTrimmable" })
+            {
+                if (options.GlobalOptions.TryGetValue("build_property." + property, out var value)
+                    && string.Equals(value, "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    return property;
+                }
+            }
+            return null;
+        }
 
         internal static bool InNamespace(this INamedTypeSymbol symbol, string ns0)
         {

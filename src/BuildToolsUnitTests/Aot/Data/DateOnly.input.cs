@@ -1,3 +1,11 @@
+// DateOnly/TimeOnly, whose BclHelpers methods live inside #if NET6_0_OR_GREATER - so the generator
+// probes for the *method*, not the language type.
+//
+// This fixture is <Compile Remove>d from AotRefGen, which is net472 and has no DateOnly at all, so it
+// has no .reference.cs - deliberate, not neglect. The golden here is a drop (the golden tests compile
+// against the netstandard2.0 BuildTools assembly); the differential suite on net8.0 is where it is
+// really exercised.
+
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;

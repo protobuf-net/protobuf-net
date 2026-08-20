@@ -19,34 +19,28 @@ The notes are deliberately versioned **with the code**, not in one central place
 and a note on a branch correctly describes *that branch*. The cost is that you have to know where
 to look while a stack is in flight, which is what this section is for.
 
-The stack collapsed onto `v4` on 2026-08-14, and **a branch was cut again on 2026-08-15**:
-`schema-breadth` (PR #1277, *"Additional write-path extensions"*) carries the packed write arc and
-the raw repeated/BCL measure work. So the "which branch is this note current on?" question is live
-again, and the column below is restored — its absence is a statement that the stack is flat, and
-two wrong-branch claims were shipped last time it was left off.
+The stack collapsed onto `v4` again on 2026-08-20, when `schema-breadth` (PR #1277) merged and
+was pruned. **There is no "current on" column below, and that absence is a statement**: every note
+is current on `v4`. Restore the column the moment a branch is cut — two wrong-branch claims were
+shipped last time it was left off while a stack was in flight, one of them in this very table.
 
-```
-main → v4 → schema-breadth   (PR #1277)
-```
+`notes/readme.md` states the `docs/` vs `notes/` split and why it matters; read it before adding a
+file to either. The short form is that `docs/` is the published site, so "it is obviously internal"
+buys nothing — the test is which directory it is in.
 
-**Every note listed below is current on `schema-breadth`**, not on `v4`: all twelve tracked
-documents were touched there. Read them from that branch, and treat `v4`'s copies as one arc behind.
-
-| document | covers | current on |
-| --- | --- | --- |
-| `AGENTS.md` (this file) | conventions, traps, gate battery | `schema-breadth` |
-| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** | `schema-breadth` |
-| `notes/nano-core.md` | the reader arc: design and the cuts | `schema-breadth` |
-| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** | `schema-breadth` |
-| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** | `schema-breadth` |
-| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items | `schema-breadth` |
-| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table | `schema-breadth` |
-| `notes/aot-findings.md` | numbered findings from the AOT generator work | `schema-breadth` |
-| `notes/aot-coverage.md`, `notes/aot-differential.md` | the two corpus sweeps' last snapshots |
-
-**When a branch is next cut, restore the "where it is current" column.** Its absence is a statement
-that the stack is flat, not that the column was unnecessary: two separate wrong-branch claims were
-shipped while the stack was in flight, one of them in this very table.
+| document | covers |
+| --- | --- |
+| `AGENTS.md` (this file) | conventions, traps, gate battery |
+| **`notes/gaps.md`** | **every known gap with its DECISION — start here for "what is missing?"** |
+| `notes/nano-core.md` | the reader arc: design and the cuts |
+| `notes/nano-writer.md` | the writer arc, **plus an index of everything parked or owed** |
+| `notes/packed-writes.md` | the packed matrix, **and the raw packed surface that came out of it** |
+| `notes/aot-schema-model.md` | `[ProtoSchema]`: design and open items |
+| `notes/aot/findings.md` | numbered findings from the AOT generator work, and the ranked next-steps list |
+| `notes/aot/coverage.md`, `notes/aot/differential.md` | the two corpus sweeps' last snapshots (tool output — regenerated, not maintained) |
+| `notes/aot/grpc.md` | the gRPC proxy generator (from `main`) |
+| `notes/editions/feature-analysis.md` | the editions arc (from `main`) |
+| `docs/aot.md` | the consumer-facing AOT guide, incl. the throughput table |
 
 Two rules that keep this honest, both learned the hard way here:
 
@@ -67,6 +61,12 @@ Refresh the table above when a branch is cut or merged.
 - CI (`.github/workflows/dotnet.yml`) runs on **windows-latest** and builds/tests **`Build.csproj`**,
   a `Microsoft.Build.Traversal` project. It globs `src\*\*.csproj`, so a new project under `src/`
   is picked up by CI automatically — including `net4x`-only ones, which are fine because CI is Windows.
+- **`docs/` is published; `notes/` is not.** `docs/` is the Jekyll source for
+  <https://docs.protobuf-net.dev>, with `jekyll-sitemap` on and no `exclude:` in `_config.yml` — so a
+  file put there is built into the site and handed to search engines, however internal it reads.
+  Working notes, handovers and generated snapshots go in **`notes/`**, grouped per topic —
+  `notes/aot/` and `notes/editions/`. The four AOT files were published for a while before anyone
+  noticed.
 - **Central package management is on.** Add versions to `src/Directory.Packages.props`; leave
   `Version=` off the `PackageReference` in the csproj.
 
@@ -274,7 +274,7 @@ against **bytes protobuf-net actually wrote**, never against restated arithmetic
 
 ## AOT source generator (work in progress)
 
-> **Picking this up on a new machine?** `notes/aot-findings.md` opens with a **Handover** section
+> **Picking this up on a new machine?** `notes/aot/findings.md` opens with a **Handover** section
 > recording the Windows-only validations and their results — all run and green as of 2026-08-11,
 > including the full-TFM `pack` (note the `dotnet pack`/NU5026 wrinkle recorded there), the win-x64
 > native publish (19 warnings, matching linux-x64), and the net472 test legs.
@@ -527,11 +527,19 @@ it.
 
 | block | owner |
 | --- | --- |
-| `PBN0001`–`PBN0023` | `DataContractAnalyzer` |
+| `PBN0001`–`PBN0026` | `DataContractAnalyzer` |
 | `PBN1000+` | `ProtoFileGenerator`'s schema errors |
 | **`PBN2001`–`PBN2010`** | **`ServiceContractAnalyzer`** (the gRPC analyzers, since #735) |
 | `PBN3000`–`PBN3004` | `ProtoModelGenerator` — the language floor and the four drop reasons |
 | `PBN3010`–`PBN3013` | `AotMigrationAnalyzer` |
+| `PBN4000`–`PBN4014`, `PBN4018` | `GrpcProxyGenerator` — the language floor, the drop reasons, and the AOT escalation |
+| **`PBN4015`–`PBN4017`** | **`GrpcMigrationAnalyzer`** — a *different owner inside the same block* |
+
+**Note the `PBN40xx` block has two owners**, and the numbering is interleaved rather than split at a
+boundary: `PBN4018` belongs to the generator even though `PBN4015`–`PBN4017` sit below it on the
+analyzer. That is not an accident to tidy — the ids were assigned in the order the features landed, and
+renumbering a shipped id is worse than an untidy table. It does mean "the 4000 block is the generator's"
+is *false*, which is the assumption the story below is about.
 
 **The AOT block was `PBN2000+` until 2026-08-16 and collided with the gRPC analyzers on five ids**
 (`PBN2001`–`PBN2004`, `PBN2010`), which shipped that way in 3.3. They are one assembly, so a
@@ -546,9 +554,17 @@ keeping the last three digits, so `PBN2001`→`PBN3001` and the mapping needs no
 the owners reads exactly like a list of all of them, which is why the table above is exhaustive and
 names the assembly rather than the feature.
 
-New IDs should be added to `AnalyzerReleases.Unshipped.md` — note that release tracking is not
-actually *enforced* here (the `Microsoft.CodeAnalysis.Analyzers` RS2000 rules are not active), so
-the table is documentation rather than a build gate, and it *had* drifted: it listed only the AOT
+New IDs **must** be added to `AnalyzerReleases.Unshipped.md`: release tracking is enforced as of
+2026-08-18 — `Microsoft.CodeAnalysis.Analyzers` is referenced and `RS2000`/`RS2001`/`RS2002` are
+escalated to errors, so an unlisted id fails the build. Proven by deleting an entry and watching
+`error RS2000` appear, rather than by observing a green build.
+
+That kills the *register* half of this problem but not the *ownership* half, which is why the table
+above stays: the release file maps id → category/severity/title and never says which type declares
+one. The RS10xx analyzer-authoring rules that arrive with the same package are `NoWarn`ed with a
+reason in the csproj — declined rather than unexamined.
+
+Historically the table was documentation rather than a build gate, and it *had* drifted: it listed only the AOT
 half, while `ServiceContractAnalyzer`'s ten shipped ids were recorded nowhere at all — which is the
 other half of how this happened.
 
@@ -733,7 +749,7 @@ succeeds and emits the member, then the first use throws *"No serializer for typ
 `ISerializer<KeyValuePair<string,string>>`, so the cast is null and resolution falls back to a model
 with no entry. The reflection path handles all three shapes. So our repeated and nested map **values**
 match reflection and *exceed* the compiled path, and our refused nested **key** matches the compiled
-path and falls short of reflection. Item 9 in `notes/aot-findings.md`.
+path and falls short of reflection. Item 9 in `notes/aot/findings.md`.
 
 That distinction is only visible if you **run** the compiled model. `AotRefGen` compiles and
 decompiles but never executes, so `*.reference.cs` shows the member emitted and says nothing about
@@ -922,7 +938,7 @@ Two of those refusals are newer and worth the detail:
 in addition to the implementation's, so a property declared on both goes on the wire **twice**. That
 is consistent — the interface property and the implementing property genuinely are different members
 — but it is not what anyone writing that contract intends, and it is why the analyzer says
-"supported but not recommended". `notes/aot-findings.md` has the decoded bytes.
+"supported but not recommended". `notes/aot/findings.md` has the decoded bytes.
 
 This also turned up a bug in the *shipped* analyzer: `PBN0012` ("declared as an include, but is not
 a direct sub-type") compared `BaseType` only, so it reported a build **error** for every interface
@@ -982,7 +998,7 @@ each input in isolation, which is exactly what is needed.
 The level-200 `Guid` path used to be recorded here as costing four AOT warnings the other forms did
 not. It never did: those warnings were kept-reflectable members of `System.Enum`, and ILC merely
 attributed them to `WriteGuid`/`ReadGuid` as one of several retained paths. They are gone, along
-with the rest of that group — see item 4 of `notes/aot-findings.md`, and treat per-feature warning
+with the rest of that group — see item 4 of `notes/aot/findings.md`, and treat per-feature warning
 attributions with suspicion generally.
 
 `[ProtoDataFormat(type, format)]` rides the same machinery as the level: it resolves **type → module
@@ -1211,6 +1227,10 @@ Everything else it refuses is a **match** with protobuf-net rather than a shortf
 "Telling our gaps from protobuf-net's" above, which stays here because it is about how to READ
 a refusal, not about what is outstanding.
 
+**The ranked candidate list lives in the "Next steps" section of `notes/aot/findings.md`**, with the
+reasoning for the ordering. Keep it there rather than scattering next-step opinions through this
+file, as had started to happen.
+
 ### Golden-file tests
 
 `src/BuildToolsUnitTests/Aot/` pairs each `Data/*.input.cs` with the exact code it generates
@@ -1415,7 +1435,7 @@ which `TypeModel` implements nine instantiations. Nothing reflects over a stream
 `T` on `Deserialize<T>`, and that one was never annotated. Because the mask includes nested types,
 ILC kept **1738 framework members** reflectable (`Task` 520, `Array` 160, `Enum` 99, `Stream` 72, …)
 and *no* protobuf-net members. Removing the three annotations: **34 → 20** warnings and
-**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `notes/aot-findings.md` has the
+**3.52 MB → 2.73 MB**, i.e. **22.4%** of the native binary. Item 4 of `notes/aot/findings.md` has the
 measurement and the tracing recipe.
 
 So the standing rule is: **before annotating a type parameter, ask what would reflect over it.** A
@@ -1542,7 +1562,7 @@ warning's clothes, and is where the 808 KB above was found. There are currently 
 publish is incremental and a second run reports nothing at all, and re-measure the *baseline*
 whenever a fixture changes, since the count tracks fixtures. **Watch the binary size too**, not just
 the count: the two do not move together, and the largest win so far was invisible in the count.
-`notes/aot-findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
+`notes/aot/findings.md` A2 no longer quotes a floor — every estimate so far was beaten by the next
 measurement.
 
 When a warning needs attributing, get the graph rather than guessing —
@@ -1964,7 +1984,7 @@ parseable fixture looks like a generator bug.
 Note the coverage sweep does **not** enable this, deliberately — a real consumer has to opt in, so
 counting these as emittable would overstate what works out of the box.
 
-A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `notes/aot-findings.md` under
+A UTF-8 fast path for these (`IUtf8SpanFormattable`) is parked in `notes/aot/findings.md` under
 "Future ideas" — it is blocked on protobuf-net having no UTF-8 `WriteString` equivalent, and the
 read half of the interface pair is implemented by far fewer types than the write half.
 
@@ -2041,12 +2061,70 @@ Each turned out to reuse machinery that was already here, which is why they went
 as the contrast — otherwise "only field 3 survives" is indistinguishable from the `[DataMember]`
 orders never having been read in the first place.
 
+### Build-time gRPC proxies (`GrpcProxyGenerator`)
+
+**`notes/aot/grpc.md` is the reference. It opens with a Handover section, followed by a "Plan forward"
+that is written for a cold start** - the ordered queue, what is declined and why, where to be
+suspicious, and the standing verification recipe. Read both before touching
+`Generators/GrpcProxyGenerator.*` or `Internal/Grpc/`. The short version:
+
+- it is a *second* generator in BuildTools, triggered by `[ProtoGrpc]` on a consumer-declared
+  `partial class X : ClientFactory`, seeded by `[ProtoService(typeof(IContract), typeof(Impl))]`, and
+  linked to a `[ProtoModel]` by `Model = typeof(...)`;
+- **the link to the serializer model is the whole point.** Generated proxies with marshallers left on
+  `BinderConfiguration.Default` are AOT-safe code carrying reflectively-built bytes — the build
+  succeeds and ILC is where it fails. `MarshallerCache.CreateMarshaller<T>` gates on
+  `CanSerialize(typeof(T))`, which reaches `DynamicStub` → `MakeGenericType` and returns **false**
+  under AOT. The generator pre-registers marshallers via the public
+  `BinderConfiguration.SetMarshaller<T>` to sidestep it; that is load-bearing, not an optimisation;
+- the *generated code* needs no protobuf-net.Grpc changes — `ClientFactory`'s two members are already
+  abstract, and `IServiceMethodProvider<T>` is registered via `TryAddEnumerable` so a generated
+  provider is added alongside. `[ProtoGrpc]`/`[ProtoService]` are real API in **protobuf-net.Grpc
+  1.3.0+** (they were generator-owned post-init while the shape moved, as `[ProtoModel]` was), and are
+  matched by **full name** — keep it that way, the tests stub them;
+- `Internal/Grpc/` is subject to the same no-Roslyn-references rule as `Internal/Aot/`, and is
+  explicitly `Compile Remove`d from `protobuf-net.BuildTools.Legacy` because `Internal/**` is a glob
+  there — the same trap `UseAotModelCodeFixProvider` hit;
+- `src/AotGrpcSmoke` is the only thing that proves the goal (real client, real server, real socket,
+  real packages, native publish). `Grpc/Data/_ContractSurface.cs` is a *snapshot* for the goldens and
+  can drift — the smoke project is what catches it, and already has once;
+- `src/AotGrpcMetadataDiff` is the endpoint-metadata oracle: it reconstructs each endpoint's metadata
+  from symbols, **compiles and runs** it, and compares the objects against the real
+  `ServiceBinder.GetMetadata`. It gates CI, and it exists because a dropped `[Authorize]` is a more
+  permissive endpoint with no error anywhere. Note it reaches BuildTools through an **`extern alias`**
+  — it references the real protobuf-net.Grpc, so the usual Core-ambiguity applies.
+
+Diagnostics are `PBN40xx` — `PBN3xxx` is the AOT serializer generator's since #1283, and `PBN2xxx` is
+`ServiceContractAnalyzer`'s. **The block has two owners**: `PBN4000`–`PBN4014` and `PBN4018` are the
+generator's, `PBN4015`–`PBN4017` are `GrpcMigrationAnalyzer`'s. See the id table earlier in this file,
+which is the only exhaustive one. `AnalyzerReleases.Unshipped.md` is the register of what is taken;
+check it before adding an id, and add the id to it.
+
+Beyond the generator, three pieces are worth knowing about before touching this area:
+
+- **`GrpcMigrationAnalyzer`** is the gRPC counterpart of `AotMigrationAnalyzer`, and its trigger is
+  *consumer-side usage* rather than the presence of service contracts — shipping `[Service]` interfaces
+  in a shared package is the recommended layout and needs no `[ProtoGrpc]`, so triggering on
+  declarations would nag hardest at the project laid out correctly. `Utils.AsksForAot` is shared with
+  the serializer analyzer rather than re-listing the four MSBuild properties.
+- **`UseGeneratedClientFactoryCodeFixProvider`** fixes `PBN4016` by inserting the factory argument, and
+  is `Compile Remove`d from Legacy — `CodeFixes/**` is a glob there while analyzers are listed by name,
+  the same asymmetry that made `UseAotModelCodeFixProvider` a build break.
+- **the interceptor half** (`GrpcProxyGenerator.ParseIntercept.cs` / `.EmitIntercept.cs`,
+  `Internal/Grpc/InterceptorSupport.cs`, `InterceptableLocations.cs`) rewrites plain
+  `CreateGrpcService<T>` calls. Two constraints there are easy to break: the location payload is
+  obtained by **reflecting** into the host's `GetInterceptableLocation` (Roslyn 4.11+) so the shipped
+  baseline can stay at 4.3.1 — `BuildToolsUnitTests` overrides Roslyn to 4.11 *only* so this is
+  testable in-process; and nothing may be emitted unless the consumer enabled the namespace, because
+  `CS9137` is an **error**. `notes/aot/grpc.md` records the encoding, which was reverse-engineered and
+  proven by hand, as the fallback if that reflection ever stops working.
+
 ### Coverage sweep
 
 `src/AotCoverage` runs the generator over every `[ProtoContract]` in the already-built
 `protobuf-net.Test`, `Examples` and `protobuf-net.Reflection.Test` assemblies and tallies what it
 could and could not handle, grouped by reason. It exists so that "what should the generator support
-next" is answered by counting real contracts rather than by guessing; `notes/aot-coverage.md` is the
+next" is answered by counting real contracts rather than by guessing; `notes/aot/coverage.md` is the
 last snapshot. Build those three projects first — it seeds from **metadata**, not source.
 
 Two artefacts to know about: it can only seed types a `typeof(...)` in another assembly can name, so
@@ -2057,7 +2135,7 @@ under its own "harness artefact" heading rather than counted as a generator bug,
 emitted code compile" line means what it says.
 
 It writes to stdout and the snapshot carries a hand-added header line, so regenerating it is
-`{ header; dotnet run --project src/AotCoverage; } > notes/aot-coverage.md`, not a plain redirect.
+`{ header; dotnet run --project src/AotCoverage; } > notes/aot/coverage.md`, not a plain redirect.
 
 ### Differential sweep (the corpus, on bytes)
 
@@ -2065,7 +2143,7 @@ It writes to stdout and the snapshot carries a hand-added header line, so regene
 **compiles**; this one *runs* it, comparing bytes against `RuntimeTypeModel` for a populated instance
 of every contract. That is the property that actually matters — every serious bug this generator has
 had (the `DataFormat` cast that mis-mapped, the BCL element wire types, `OverwriteList` on a bytes
-member) compiled perfectly and wrote the wrong bytes. `notes/aot-differential.md` is the last snapshot.
+member) compiled perfectly and wrote the wrong bytes. `notes/aot/differential.md` is the last snapshot.
 
 Three things about it are load-bearing:
 
@@ -2098,7 +2176,7 @@ Three things about it are load-bearing:
 
   This is not "more corpus", it is a **different distribution**, and that is the point: people do not
   write `public int @case`, and machine-generated contracts do. It found a bug that broke the
-  consumer's *build* on its first run — item 14 of `notes/aot-findings.md`.
+  consumer's *build* on its first run — item 14 of `notes/aot/findings.md`.
 
   Two things about it are load-bearing. The DTO assembly must be compiled against **the same
   reference set the corpus loads**, or every contract gets a second, incompatible
@@ -2141,7 +2219,7 @@ ref-emit behaviour show up in review.
 direction is an *absence*: a file that was never re-run and a ref-emit that genuinely emitted nothing
 look exactly alike. That has already produced one wrong conclusion — a recorded "the persisted path
 silently drops a map-of-map member" bug that turned out to be a fixture edited without re-running
-`AotRefGen`; see the "Retracted" section of `notes/aot-findings.md`. Regenerate before concluding
+`AotRefGen`; see the "Retracted" section of `notes/aot/findings.md`. Regenerate before concluding
 anything from a member that is missing, and commit the regenerated file in the same commit as the
 fixture change so the two cannot drift.
 

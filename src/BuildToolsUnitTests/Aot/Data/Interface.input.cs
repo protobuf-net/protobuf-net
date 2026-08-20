@@ -57,7 +57,7 @@ public class Zoo
 
     // Cat gets its own field rather than sharing Star: the differential suite manufactures repeated
     // fields by concatenating every sample, and merging two *different* sub-types into one field
-    // overflows the stack - see notes/aot-findings.md, and Inherit.input.cs for the same workaround
+    // overflows the stack - see notes/aot/findings.md, and Inherit.input.cs for the same workaround
     [ProtoMember(4)] public IAnimal Backup { get; set; }
 }
 
