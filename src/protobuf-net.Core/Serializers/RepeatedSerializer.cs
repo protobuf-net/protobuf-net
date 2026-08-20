@@ -83,6 +83,8 @@ namespace ProtoBuf.Serializers
             => SerializerCache<SetSerializer<TCollection, T>>.InstanceField;
 
 #if NET6_0_OR_GREATER
+        [MethodImpl(ProtoReader.HotPath)]
+        public static RepeatedSerializer<Memory<T>, T> CreateMemory<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>() => SerializerCache<MemorySerializer<T>>.InstanceField;
         /// <summary>Create a serializer that operates on sets</summary>
         [MethodImpl(ProtoReader.HotPath)]
         public static RepeatedSerializer<IReadOnlySet<T>, T> CreateReadOnySet<T>()
@@ -727,6 +729,84 @@ namespace ProtoBuf.Serializers
         {
             var iter = values.GetEnumerator();
             Write(ref state, fieldNumber, category, wireType, ref iter, serializer, features);
+        }
+    }
+
+    class MemorySerializer<T> : RepeatedSerializer<Memory<T>, T>
+    {
+        protected override Memory<T> Initialize(Memory<T> values, ISerializationContext context) => values;
+
+        protected override int TryGetCount(Memory<T> values) => values.Length;
+
+        internal override long Measure(Memory<T> values, IMeasuringSerializer<T> serializer, ISerializationContext context, WireType wireType)
+        {
+            long length = 0;
+            for (int i = 0; i < values.Length; i++)
+            {
+                length += serializer.Measure(context, wireType, values.Span[i]);
+            }
+            return length;
+        }
+
+        internal override void WritePacked(ref ProtoWriter.State state, Memory<T> values, IMeasuringSerializer<T> serializer, WireType wireType)
+        {
+            for (int i = 0; i < values.Length; i++)
+            {
+                state.WireType = wireType; // tell the serializer what we want to do
+                serializer.Write(ref state, values.Span[i]);
+            }
+        }
+
+        internal override void Write(ref ProtoWriter.State state, int fieldNumber, SerializerFeatures category, WireType wireType, Memory<T> values, ISerializer<T> serializer, SerializerFeatures features)
+        {
+            var writer = state.GetWriter();
+            bool wrapped = features.HasAny(SerializerFeatures.OptionWrappedValue);
+            // when wrapping inside a collection, we always need to write the message header, so:
+            // we must use field-presence rules
+            if (wrapped) features |= SerializerFeatures.OptionWrappedValueFieldPresence;
+            for (int i = 0; i < values.Length; i++)
+            {
+                T value = values.Span[i];
+
+                if (wrapped)
+                {
+                    state.WriteWrapped(fieldNumber, features, value, serializer);
+                }
+                else
+                {
+                    if (TypeHelper<T>.CanBeNull && TypeHelper<T>.ValueChecker.IsNull(value))
+                        ThrowHelper.ThrowNullRepeatedContents<T>();
+
+                    state.WriteFieldHeader(fieldNumber, wireType);
+                    switch (category)
+                    {
+                        case SerializerFeatures.CategoryMessageWrappedAtRoot:
+                        case SerializerFeatures.CategoryMessage:
+                            writer.WriteMessage(ref state, value, serializer, PrefixStyle.Base128, true);
+                            break;
+                        case SerializerFeatures.CategoryScalar:
+                            serializer.Write(ref state, value);
+                            break;
+                        default:
+                            category.ThrowInvalidCategory();
+                            break;
+                    }
+                }
+            }
+        }
+
+        protected override Memory<T> Clear(Memory<T> values, ISerializationContext context)
+        {
+            values.Span.Clear();
+            return values;
+        }
+
+        protected override Memory<T> AddRange(Memory<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
+        {
+            T[] result = new T[values.Length + newValues.Count];
+            values.CopyTo(result);
+            newValues.CopyTo(result, values.Length);
+            return result;
         }
     }
 #endif
