@@ -32,6 +32,27 @@ namespace ProtoBuf.BuildTools.Generators
         private static readonly string[] Bools = ["1", "0", "yes", "no", "true", "false", "on", "off"];
 
         /// <summary>
+        /// An <c>&lt;AdditionalFiles&gt;</c> item-metadata option whose value is not one of the
+        /// accepted spellings.
+        /// </summary>
+        /// <remarks>
+        /// Declared as a descriptor rather than reported through the id-and-strings
+        /// <c>Diagnostic.Create(string, string, ...)</c> overload, because the RS2000-family
+        /// release-tracking rules discover ids from <see cref="DiagnosticDescriptor"/>
+        /// declarations. Reported the other way, this id was invisible to them, and
+        /// <c>RS2002</c> - a build error here - said it was recorded in
+        /// <c>AnalyzerReleases.Unshipped.md</c> without belonging to anything. Every other id in
+        /// this assembly already had a descriptor, so this was the only one affected.
+        /// </remarks>
+        private static readonly DiagnosticDescriptor UnrecognisedOptionValue = new(
+            id: "PBN1900",
+            title: "Unrecognised option value",
+            messageFormat: "'{0}' is not a recognised value for '{1}'; it will be ignored. Expected one of: {2}.",
+            category: "Protobuf",
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
         /// Renders a <c>major*100 + minor</c> language version as protogen spells it — "12" for
         /// 1200, "7.3" for 703 — dropping a zero minor, since protogen's own parse accepts both
         /// but every existing spelling here omits it.
@@ -290,10 +311,9 @@ namespace ProtoBuf.BuildTools.Generators
                                         StringComparison.OrdinalIgnoreCase)) return;
                                 }
                                 var name = readKey.Substring(Literals.AdditionalFileMetadataPrefix.Length);
-                                context.ReportDiagnostic(Diagnostic.Create("PBN1900", "Protobuf",
-                                    $"'{optionValue}' is not a recognised value for '{name}'; it will be ignored. Expected one of: {string.Join(", ", valid)}.",
-                                    DiagnosticSeverity.Warning, DiagnosticSeverity.Warning, true, 2,
-                                    location: Location.Create(schema.Value.Path, default, default)));
+                                context.ReportDiagnostic(Diagnostic.Create(UnrecognisedOptionValue,
+                                    Location.Create(schema.Value.Path, default, default),
+                                    optionValue, name, string.Join(", ", valid)));
                             }
                         }
 
