@@ -34,8 +34,9 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 > **What is left, in the order I would take it:**
 >
 > 0. **Compile-time endpoint metadata — MVP-blocking, and previously mis-recorded as closed.** It is how
->    authorization is enforced, so it is not optional. `AttributeRenderer` is written; steps 1-4 are in
->    the section below, and the differential harness comes first.
+>    authorization is enforced, so it is not optional. `AttributeRenderer` and `MetadataGather` are
+>    written and **`src/AotGrpcMetadataDiff` proves the gather against the real binder**; what is left is
+>    `PBN4019` and the emit. See the section below.
 > 1. **`linux-x64` native publish.** Unmeasured here; the serializer side historically matched win-x64
 >    warning-for-warning, so this is confirmation rather than discovery. Byte sizes are not comparable
 >    across RIDs.
@@ -126,6 +127,7 @@ dotnet build src/protobuf-net.BuildTools.Legacy/protobuf-net.BuildTools.Legacy.c
 dotnet build Build.csproj -c Debug                                  # the traversal
 dotnet test src/AotConformanceTests/AotConformanceTests.csproj
 dotnet run --project src/AotDifferential/AotDifferential.csproj     # gates CI; must read 0 differing
+dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj    # gates CI; must read 0 failing
 dotnet publish src/AotGrpcSmoke/AotGrpcSmoke.csproj -c Release -r win-x64   # then RUN the exe
 ```
 
@@ -556,32 +558,89 @@ real instance is a security property, not a fidelity nicety. "Cannot be reproduc
 place to stop; the bar is **reproduce what carries meaning, and be loud about the rest**.
 
 `Internal/Grpc/AttributeRenderer.cs` is step 0 and is **done** - it renders an `AttributeData` to
-constructing source, or returns a reason. It has **no caller yet**, so the branch still emits the
-reflective call and behaviour is unchanged.
+constructing source, or returns a reason.
 
-The remaining work, in the order to do it:
+**Steps 1 and 2 are now done**, and the gather still has no caller in the generator - so the branch
+emits the reflective call and behaviour is unchanged. What exists:
 
-1. **The differential harness, before any emit.** For a contract with attributes at all three levels,
-   compare a reconstructed list against `binder.GetMetadata(...)` item by item. Build this *first*: it is
-   the only thing that can prove the two hard parts below are right, and both are easy to get subtly
-   wrong. `SubService.input.cs` is the contract shape to use.
-2. **The gather**, reproducing `GetMetadata`'s four sources **in order** - contract type, contract
-   method, service type, service method - because the consumer treats *later as higher priority*, so the
-   order is semantic and not just the set. Two traps, both established by probe rather than by reading:
+1. **The differential harness** - `src/AotGrpcMetadataDiff`, described in its own section below. It
+   reconstructs each endpoint's metadata from symbols, **compiles and runs it**, and compares the
+   resulting objects against `ServiceBinder.GetMetadata` property by property. It gates CI.
+2. **The gather** - `Internal/Grpc/MetadataGather.cs`, reproducing `GetMetadata`'s four sources **in
+   order** (contract type, contract method, service type, service method), because the consumer treats
+   *later as higher priority*, so the order is semantic and not just the set. Both traps are handled and
+   both are now pinned by the harness rather than by reading:
    - `GetCustomAttributes(inherit: true)` **does not walk base interfaces**, but does walk base classes
      and overridden methods; `[AttributeUsage(Inherited = false)]` opts out; non-`AllowMultiple`
      attributes dedup most-derived-wins.
    - the implementation side resolves through `FindImplementationForInterfaceMember`, keyed on the
-     **declaring** interface - which is exactly what protobuf-net.Grpc#369 just taught the runtime, so
-     the two now agree.
+     **declaring** interface - which is what protobuf-net.Grpc#369 taught the runtime, so the two agree.
 3. **`PBN4019`** for anything `AttributeRenderer` reports as unsupported, naming the attribute *and* the
    operation. This is what converts today's silent risk into a build warning.
-4. **Emit**, replacing `__cfg.Binder.GetMetadata(...)` with the constructed list - and only then, since
-   until step 1 exists there is no way to know the replacement is faithful.
+4. **Emit**, replacing `__cfg.Binder.GetMetadata(...)` with the constructed list. The harness is what
+   makes this checkable, and it is in place, so this is now unblocked.
 
 Skipped silently, deliberately: the compiler-synthesised `NullableContext` family. Unconstructable from
 another assembly by construction, not consumed by ASP.NET Core, and present on nearly every annotated
 member - so warning about them would train a reader to ignore `PBN4019`.
+
+### The endpoint-metadata oracle (`src/AotGrpcMetadataDiff`)
+
+The differential for metadata, and the counterpart of `AotDifferential`: that one proves the generated
+serializer agrees with ref-emit **on bytes**, this one proves the reconstructed endpoint metadata agrees
+with the runtime binder **on objects**.
+
+It compares live instances, not rendered strings. The compile-time side is gathered from symbols,
+rendered by `AttributeRenderer`, **compiled and executed**, and the resulting objects compared to
+`ServiceBinder.GetMetadata`'s property by property. Nothing weaker tests the gather and the renderer
+together; a string comparison would pass on an expression that does not compile, and a set comparison
+would pass on a list in the wrong order — which is the case that matters, since the consumer treats
+later as higher priority.
+
+The fixture is compiled **twice, deliberately**: once by the SDK, giving the live types the reflective
+side needs, and once by Roslyn in-process, giving the symbols the compile-time side needs. That is why
+`Fixtures/*.cs` is both `<Compile>` and `<Content>`.
+
+Three things about the plumbing are load-bearing, and all three are the same trap wearing different
+clothes — BuildTools compiles protobuf-net.Core's sources in, so it collides with the real Core that
+protobuf-net.Grpc brings:
+
+- the project reference to BuildTools carries **`Aliases="buildtools"`**. `AotDifferential` avoids the
+  collision by loading BuildTools reflectively and talking to it only through Roslyn's interfaces; we
+  cannot, because we call `MetadataGather` and `AttributeRenderer` directly. An `extern alias` is the
+  other answer, and this repo already knows the machinery (see "Identifiers" in `AGENTS.md`);
+- the **run-time** reference set drops `protobuf-net.BuildTools.dll` for the same reason. An alias is
+  not available there, since those references are assembled from `TRUSTED_PLATFORM_ASSEMBLIES`;
+- the harness's **own** assembly is excluded when compiling the fixtures for symbols (it already
+  contains those types, so every one would be ambiguous with the copy being compiled) and included when
+  compiling the rendered metadata, which has to name them.
+
+**It is proven able to fail**, by mutation rather than by observing green:
+
+| mutation | caught as |
+| --- | --- |
+| drop the per-group reversal | `item 0 is ServiceAttribute, expected SingletonAttribute` — note the *multiset is identical*, so only an ordered comparison catches it |
+| ignore `[AttributeUsage(Inherited = false)]` | `expected 12 item(s), reconstructed 16` |
+
+Three things it established that were not obvious, each recorded where it applies:
+
+- **`[Authorize]` cannot go on a contract interface at all.** Its `AttributeUsage` is `Class | Method`,
+  so `[Authorize]` on a `[Service]` interface is CS0592. The routes that exist are the contract
+  *method*, the implementation *class* and the implementation *method* — worth knowing, since the
+  obvious mental model of "annotate the service contract" does not compile.
+- **The `Inherited = false` rule is load-bearing for every class-implemented endpoint**, not merely for
+  types that use it: the class walk ends at `System.Object`, which carries `[TypeForwardedFrom]`,
+  `[ComVisible]` and `[ClassInterface]`, and only their `Inherited = false` keeps all three out of the
+  metadata. Found by disabling that test and reading what appeared, which is also the +4 above.
+- **#369 is in no released package.** 1.3.6 predates it, so the pinned package still misses
+  implementation-method attributes for an operation declared on a `[SubService]` base. We target
+  `main`'s behaviour deliberately — it is about to be released — so the harness reports that difference
+  as an *explained divergence* rather than failing it, while anything unexplained exits non-zero. The
+  old behaviour is asked of the gather itself (`resolveInheritedImplementation: false`) rather than
+  filtered out of its output, so a wrong model of it fails rather than quietly agreeing with itself.
+
+Run it with `dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj`. Last known-good:
+**2 operations compared, 0 failing, 1 explained divergence.**
 
 ### Metadata parity, and protobuf-net.Grpc#369 — landed, and we needed nothing
 
@@ -623,12 +682,11 @@ One deliberate limit, recorded so it is not mistaken for a bug: the sub-service 
 `GetCustomAttributes(inherit: true)` not walking base interfaces — probed rather than assumed — so it is
 existing semantics rather than something #369 introduced.
 
-**If compile-time metadata is ever revisited** (it is closed as impossible-as-specified, above), this is
-the union that has to be reproduced exactly, and the differential to run is: for a contract with a
-`[SubService]` base carrying an attribute at each of the three levels — top-level interface, sub-service
-interface, implementation method — compare the reconstructed list against `binder.GetMetadata(...)` item
-by item. The failure mode is worth the care: `[Authorize]` going missing produces no error, just a more
-permissive endpoint.
+**This union is what compile-time metadata has to reproduce exactly**, and the differential described
+above now runs precisely that comparison: a contract with a `[SubService]` base carrying an attribute at
+each level, reconstructed and compared against `binder.GetMetadata(...)` item by item. The failure mode
+is why it was built before the emit rather than after: `[Authorize]` going missing produces no error,
+just a more permissive endpoint.
 
 ### Built, and where it can be tested
 

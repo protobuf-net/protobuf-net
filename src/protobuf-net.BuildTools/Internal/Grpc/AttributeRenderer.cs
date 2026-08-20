@@ -58,6 +58,16 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
         };
 
+        /// <summary>
+        /// Whether a name is one of the compiler-synthesised attributes dropped silently.
+        /// </summary>
+        /// <remarks>
+        /// Exposed so the metadata oracle can filter the <em>reflective</em> list by the same rule: at
+        /// run time these are present, while Roslyn does not surface them at all (they are added at
+        /// emit), so without this the two sides differ by construction. One list, two callers.
+        /// </remarks>
+        public static bool IsSynthesised(string fullName) => s_synthesised.Contains(fullName);
+
         public static AttributeRenderKind TryRender(Compilation compilation, AttributeData attribute,
             out string? expression, out string? reason)
         {

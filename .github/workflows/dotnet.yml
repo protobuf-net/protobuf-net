@@ -50,3 +50,11 @@ jobs:
     # project above already produces the assemblies it scans.
     - name: AOT differential
       run: dotnet run --project src/AotDifferential/AotDifferential.csproj --no-build
+    # The same idea applied to gRPC endpoint metadata: reconstructs each endpoint's metadata from
+    # symbols, compiles and *runs* it, and compares the resulting objects against what
+    # ServiceBinder.GetMetadata produces reflectively. Gated because the failure mode is silent and
+    # security-relevant - a dropped [Authorize] is a more permissive endpoint, with no error anywhere.
+    # A difference against the pinned package is reported rather than failed where a released
+    # protobuf-net.Grpc is known to differ; anything else exits non-zero.
+    - name: gRPC endpoint-metadata differential
+      run: dotnet run --project src/AotGrpcMetadataDiff/AotGrpcMetadataDiff.csproj --no-build

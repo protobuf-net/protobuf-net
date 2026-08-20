@@ -1785,7 +1785,12 @@ suspicious, and the standing verification recipe. Read both before touching
   there — the same trap `UseAotModelCodeFixProvider` hit;
 - `src/AotGrpcSmoke` is the only thing that proves the goal (real client, real server, real socket,
   real packages, native publish). `Grpc/Data/_ContractSurface.cs` is a *snapshot* for the goldens and
-  can drift — the smoke project is what catches it, and already has once.
+  can drift — the smoke project is what catches it, and already has once;
+- `src/AotGrpcMetadataDiff` is the endpoint-metadata oracle: it reconstructs each endpoint's metadata
+  from symbols, **compiles and runs** it, and compares the objects against the real
+  `ServiceBinder.GetMetadata`. It gates CI, and it exists because a dropped `[Authorize]` is a more
+  permissive endpoint with no error anywhere. Note it reaches BuildTools through an **`extern alias`**
+  — it references the real protobuf-net.Grpc, so the usual Core-ambiguity applies.
 
 Diagnostics are `PBN40xx` — `PBN3xxx` is the AOT serializer generator's since #1283, and `PBN2xxx` is
 `ServiceContractAnalyzer`'s. **The block has two owners**: `PBN4000`–`PBN4014` and `PBN4018` are the
