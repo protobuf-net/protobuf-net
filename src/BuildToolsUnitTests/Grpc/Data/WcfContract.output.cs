@@ -142,10 +142,11 @@ namespace GrpcFixtures.WcfContract
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.WcfContract.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.WcfContract.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(global::Grpc.Core.MethodType.Unary, "wcf.Calculator", "Sum", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.WcfContract.ICalculator).GetMethod("AddAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.WcfContract.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.WcfContract.ICalculator), typeof(global::GrpcFixtures.WcfContract.CalculatorService));
+                    var __meta = new object[]
+                    {
+                        new global::System.ServiceModel.ServiceContractAttribute() { Name = "wcf.Calculator", Namespace = "http://example.com/ignored" },
+                        new global::System.ServiceModel.OperationContractAttribute() { Name = "Sum" },
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.WcfContract.CalculatorService, global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(AddAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -157,10 +158,11 @@ namespace GrpcFixtures.WcfContract
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.WcfContract.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.WcfContract.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(global::Grpc.Core.MethodType.Unary, "wcf.Calculator", "Multiply", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.WcfContract.ICalculator).GetMethod("MultiplyAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.WcfContract.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.WcfContract.ICalculator), typeof(global::GrpcFixtures.WcfContract.CalculatorService));
+                    var __meta = new object[]
+                    {
+                        new global::System.ServiceModel.ServiceContractAttribute() { Name = "wcf.Calculator", Namespace = "http://example.com/ignored" },
+                        new global::System.ServiceModel.OperationContractAttribute(),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.WcfContract.CalculatorService, global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(MultiplyAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -197,10 +199,11 @@ namespace GrpcFixtures.WcfContract
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.WcfContract.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.WcfContract.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.WcfContract.Plain", "Go", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.WcfContract.IPlain).GetMethod("GoAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.WcfContract.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.WcfContract.IPlain), typeof(global::GrpcFixtures.WcfContract.PlainService));
+                    var __meta = new object[]
+                    {
+                        new global::System.ServiceModel.ServiceContractAttribute(),
+                        new global::System.ServiceModel.OperationContractAttribute(),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.WcfContract.PlainService, global::GrpcFixtures.WcfContract.Request, global::GrpcFixtures.WcfContract.Reply>(GoAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)

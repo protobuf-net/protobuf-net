@@ -127,7 +127,8 @@ namespace ProtoBuf.BuildTools.Generators
                     continue;
                 }
 
-                var candidate = ParseContract(contract, implementation, cancellationToken, payloads);
+                var candidate = ParseContract(contract, implementation, cancellationToken, payloads,
+                    ctx.SemanticModel.Compilation);
                 diagnostics.AddRange(candidate.Diagnostics);
                 if (candidate.Model is { } model && seen.Add(model.InterfaceFullName))
                 {

@@ -115,7 +115,8 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             bool voidRequest,
             bool voidResponse,
             string returnTypeDisplay,
-            ImmutableArray<GrpcParameterModel> parameters)
+            ImmutableArray<GrpcParameterModel> parameters,
+            ImmutableArray<string> metadataExpressions)
         {
             OperationName = operationName;
             MethodName = methodName;
@@ -130,6 +131,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             VoidResponse = voidResponse;
             ReturnTypeDisplay = returnTypeDisplay;
             Parameters = parameters;
+            MetadataExpressions = metadataExpressions;
         }
 
         /// <summary>The logical gRPC operation name (after <c>[Operation]</c> / trailing-Async handling).</summary>
@@ -172,6 +174,17 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
 
         public ImmutableArray<GrpcParameterModel> Parameters { get; }
 
+        /// <summary>
+        /// The endpoint metadata, as C# expressions constructing each attribute - or
+        /// <see cref="ImmutableArray{T}.IsDefault"/> when it could not be reconstructed and the emitted
+        /// binding must fall back to the reflective <c>GetMetadata</c> call.
+        /// </summary>
+        /// <remarks>
+        /// Strings rather than <c>AttributeData</c>, so this stays a value that caches - the gather runs
+        /// during parse and only its rendering survives into the model.
+        /// </remarks>
+        public ImmutableArray<string> MetadataExpressions { get; }
+
         public bool Equals(GrpcOperationModel? other)
         {
             if (other is null) return false;
@@ -187,13 +200,28 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
                 || VoidRequest != other.VoidRequest
                 || VoidResponse != other.VoidResponse
                 || !string.Equals(ReturnTypeDisplay, other.ReturnTypeDisplay, StringComparison.Ordinal)
-                || Parameters.Length != other.Parameters.Length)
+                || Parameters.Length != other.Parameters.Length
+                || MetadataExpressions.IsDefault != other.MetadataExpressions.IsDefault)
             {
                 return false;
             }
             for (int i = 0; i < Parameters.Length; i++)
             {
                 if (!Parameters[i].Equals(other.Parameters[i])) return false;
+            }
+            // element-wise, since ImmutableArray's own equality is by reference and would defeat the
+            // driver's cache silently - the same rule the serializer generator's plan types follow
+            if (!MetadataExpressions.IsDefault)
+            {
+                if (MetadataExpressions.Length != other.MetadataExpressions.Length) return false;
+                for (int i = 0; i < MetadataExpressions.Length; i++)
+                {
+                    if (!string.Equals(MetadataExpressions[i], other.MetadataExpressions[i],
+                        StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+                }
             }
             return true;
         }
@@ -212,6 +240,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             hash = (hash * -1521134295) + StringComparer.Ordinal.GetHashCode(RequestTypeFullName);
             hash = (hash * -1521134295) + StringComparer.Ordinal.GetHashCode(ResponseTypeFullName);
             hash = (hash * -1521134295) + Parameters.Length;
+            hash = (hash * -1521134295) + (MetadataExpressions.IsDefault ? -1 : MetadataExpressions.Length);
             return hash;
         }
     }
@@ -375,6 +404,7 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
         ModelIsNotAProtoModel,
         ModelCannotSerializePayload,
         UnresolvedContract,
+        MetadataNotConstructible,
     }
 
     /// <summary>

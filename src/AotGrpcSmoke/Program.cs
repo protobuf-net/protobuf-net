@@ -107,24 +107,36 @@ try
     Check("binder configuration is not the reflective default",
         !ReferenceEquals(config, ProtoBuf.Grpc.Configuration.BinderConfiguration.Default));
 
-    // ---- endpoint metadata: does reflection still deliver it once ILC has been through? ----
+    // ---- endpoint metadata: does it reach the endpoint once ILC has been through? ----
     //
-    // This is the exact call the generated server binding makes, on the exact contract it binds, so a
-    // pass here says the reflective route survives a native publish and a fail says it does not. Until
-    // this existed nothing in the fixture carried an attribute, so GetMetadata returned an empty list
-    // and the whole path was unmeasured - which is not the same as fine. The stake is real: metadata is
-    // how [Authorize] reaches ASP.NET Core, and losing it is a more permissive endpoint, silently.
-    var __metaMethod = typeof(IGreeter).GetMethod(nameof(IGreeter.SecureAsync),
-        new[] { typeof(HelloRequest), typeof(ProtoBuf.Grpc.CallContext) })!;
-    var __meta = config.Binder.GetMetadata(__metaMethod, typeof(IGreeter), typeof(GreeterService));
-    var __tags = __meta.OfType<SmokeTagAttribute>().Select(static x => x.Name).ToArray();
+    // Read off the *routing table*, not by calling GetMetadata: the generated binding now constructs
+    // this list at compile time, so asking the binder would test a path the server no longer uses. What
+    // the endpoint carries is what ASP.NET Core will enforce, which is the only thing that matters.
+    //
+    // Until this existed nothing in the fixture carried an attribute, so the metadata path returned an
+    // empty list twelve times and was unmeasured rather than fine - and the stake is real, because a
+    // dropped [Authorize] is a more permissive endpoint with nothing to notice it.
+    var __endpoints = app.Services.GetRequiredService<Microsoft.AspNetCore.Routing.EndpointDataSource>()
+        .Endpoints;
+    var __secure = __endpoints.FirstOrDefault(static e
+        => (e as Microsoft.AspNetCore.Routing.RouteEndpoint)?.RoutePattern.RawText
+            == "/AotGrpcSmoke.Greeter/Secure");
+    Check("the Secure endpoint was bound", __secure is not null,
+        string.Join(", ", __endpoints.OfType<Microsoft.AspNetCore.Routing.RouteEndpoint>()
+            .Select(static e => e.RoutePattern.RawText)));
+
+    var __tags = __secure?.Metadata.OfType<SmokeTagAttribute>().Select(static x => x.Name).ToArray() ?? [];
     Check("endpoint metadata survives: contract method attribute",
         __tags.Contains("contract-method"), string.Join(",", __tags));
     Check("endpoint metadata survives: service type attribute",
         __tags.Contains("service-type"), string.Join(",", __tags));
     Check("endpoint metadata survives: service method attribute",
         __tags.Contains("service-method"), string.Join(",", __tags));
-    var __authorize = __meta.OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>().FirstOrDefault();
+
+    // the one that is not a fidelity nicety: ASP.NET Core reads this to enforce authorization, so it
+    // has to arrive as a constructed instance carrying its arguments, not merely as a type that is named
+    var __authorize = __secure?.Metadata.OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>()
+        .FirstOrDefault();
     Check("endpoint metadata survives: [Authorize] arrives as an instance, with its arguments",
         __authorize?.Roles == "admin", __authorize is null ? "absent" : ("Roles=" + __authorize.Roles));
 

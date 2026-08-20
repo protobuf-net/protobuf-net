@@ -78,6 +78,23 @@ public sealed class ShapesAttribute : Attribute
     public double Ratio { get; set; }
 }
 
+/// <summary>
+/// Overloaded constructors, so a bare <c>null</c> argument does not bind: the renderer has to say which
+/// overload it meant, or the emitted source is CS0121. Nothing exotic - <c>[Service]</c> itself renders
+/// as <c>new ServiceAttribute(null)</c>, and only its single constructor saves it.
+/// </summary>
+[AttributeUsage(AttributeTargets.All)]
+public sealed class EitherAttribute : Attribute
+{
+    public EitherAttribute(string? name) => Name = name;
+
+    public EitherAttribute(Type? target) => Target = target;
+
+    public string? Name { get; }
+
+    public Type? Target { get; }
+}
+
 [ProtoContract]
 public class Request
 {
@@ -102,6 +119,7 @@ public interface IAudited
 }
 
 [Service]
+[Either((string?)null)]
 [Tag("contract-type")]
 [Singleton("contract")]
 public interface IThing : IAudited

@@ -73,4 +73,4 @@ PBN4015  | ProtoBuf.Grpc | Warning | Project publishes AOT or trimmed, but has n
 PBN4016  | ProtoBuf.Grpc | Warning | Call does not use the build-time gRPC proxies
 PBN4017  | ProtoBuf.Grpc | Warning | DI-registered gRPC clients are not using the build-time proxies
 PBN4018  | ProtoBuf.Grpc | Warning | A contract has no build-time proxy, and this project publishes AOT or trimmed
-
+PBN4019  | ProtoBuf.Grpc | Warning | Endpoint metadata could not be reconstructed at compile time

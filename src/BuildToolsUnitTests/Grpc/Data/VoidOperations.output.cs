@@ -139,10 +139,10 @@ namespace GrpcFixtures.VoidOperations
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.VoidOperations.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::ProtoBuf.Grpc.Internal.Empty>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.VoidOperations.Thing", "Ping", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.VoidOperations.IThing).GetMethod("PingAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.VoidOperations.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.VoidOperations.IThing), typeof(global::GrpcFixtures.VoidOperations.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.VoidOperations.ThingService, global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(PingAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -154,10 +154,10 @@ namespace GrpcFixtures.VoidOperations
                     var __m_req = __cfg.GetMarshaller<global::ProtoBuf.Grpc.Internal.Empty>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.VoidOperations.Reply>();
                     var __op = new global::Grpc.Core.Method<global::ProtoBuf.Grpc.Internal.Empty, global::GrpcFixtures.VoidOperations.Reply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.VoidOperations.Thing", "Status", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.VoidOperations.IThing).GetMethod("StatusAsync",
-                            new global::System.Type[] { typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.VoidOperations.IThing), typeof(global::GrpcFixtures.VoidOperations.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::ProtoBuf.Grpc.Internal.Empty, global::GrpcFixtures.VoidOperations.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.VoidOperations.ThingService, global::ProtoBuf.Grpc.Internal.Empty, global::GrpcFixtures.VoidOperations.Reply>(StatusAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -168,10 +168,10 @@ namespace GrpcFixtures.VoidOperations
                 {
                     var __m_req = __cfg.GetMarshaller<global::ProtoBuf.Grpc.Internal.Empty>();
                     var __op = new global::Grpc.Core.Method<global::ProtoBuf.Grpc.Internal.Empty, global::ProtoBuf.Grpc.Internal.Empty>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.VoidOperations.Thing", "Nudge", __m_req, __m_req);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.VoidOperations.IThing).GetMethod("NudgeAsync",
-                            new global::System.Type[] { typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.VoidOperations.IThing), typeof(global::GrpcFixtures.VoidOperations.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::ProtoBuf.Grpc.Internal.Empty, global::ProtoBuf.Grpc.Internal.Empty>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.VoidOperations.ThingService, global::ProtoBuf.Grpc.Internal.Empty, global::ProtoBuf.Grpc.Internal.Empty>(NudgeAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -183,10 +183,10 @@ namespace GrpcFixtures.VoidOperations
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.VoidOperations.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::ProtoBuf.Grpc.Internal.Empty>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.VoidOperations.Thing", "Reset", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.VoidOperations.IThing).GetMethod("ResetAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.VoidOperations.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.VoidOperations.IThing), typeof(global::GrpcFixtures.VoidOperations.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.VoidOperations.ThingService, global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(ResetAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -198,10 +198,10 @@ namespace GrpcFixtures.VoidOperations
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.VoidOperations.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::ProtoBuf.Grpc.Internal.Empty>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.VoidOperations.Thing", "Fire", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.VoidOperations.IThing).GetMethod("Fire",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.VoidOperations.Request) })!,
-                        typeof(global::GrpcFixtures.VoidOperations.IThing), typeof(global::GrpcFixtures.VoidOperations.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.VoidOperations.ThingService, global::GrpcFixtures.VoidOperations.Request, global::ProtoBuf.Grpc.Internal.Empty>(Fire_Server_Unary));
                 }
                 catch (global::System.Exception __ex)

@@ -109,10 +109,10 @@ namespace GrpcFixtures.CustomRegistration
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.CustomRegistration.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.CustomRegistration.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.CustomRegistration.Request, global::GrpcFixtures.CustomRegistration.Reply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.CustomRegistration.Calculator", "Add", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.CustomRegistration.ICalculator).GetMethod("AddAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.CustomRegistration.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.CustomRegistration.ICalculator), typeof(global::GrpcFixtures.CustomRegistration.CalculatorService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.CustomRegistration.Request, global::GrpcFixtures.CustomRegistration.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.CustomRegistration.CalculatorService, global::GrpcFixtures.CustomRegistration.Request, global::GrpcFixtures.CustomRegistration.Reply>(AddAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)

@@ -136,10 +136,10 @@ namespace GrpcFixtures.ClosedGeneric
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.ClosedGeneric.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.ClosedGeneric.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.ClosedGeneric.Request, global::GrpcFixtures.ClosedGeneric.Reply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.ClosedGeneric.Box_Request", "Get", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.ClosedGeneric.IBox<global::GrpcFixtures.ClosedGeneric.Request>).GetMethod("GetAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.ClosedGeneric.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.ClosedGeneric.IBox<global::GrpcFixtures.ClosedGeneric.Request>), typeof(global::GrpcFixtures.ClosedGeneric.RequestBox));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.ClosedGeneric.Request, global::GrpcFixtures.ClosedGeneric.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.ClosedGeneric.RequestBox, global::GrpcFixtures.ClosedGeneric.Request, global::GrpcFixtures.ClosedGeneric.Reply>(GetAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)

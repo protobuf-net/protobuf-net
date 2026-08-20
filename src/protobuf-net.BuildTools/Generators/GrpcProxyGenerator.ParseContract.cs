@@ -54,7 +54,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static GrpcContractCandidate ParseContract(INamedTypeSymbol iface,
             INamedTypeSymbol? implementation, CancellationToken cancellationToken,
-            List<ITypeSymbol>? payloadSink = null)
+            List<ITypeSymbol>? payloadSink = null, Compilation? compilation = null)
         {
             if (iface.TypeKind != TypeKind.Interface)
             {
@@ -134,7 +134,8 @@ namespace ProtoBuf.BuildTools.Generators
                     if (method.MethodKind != Microsoft.CodeAnalysis.MethodKind.Ordinary) continue;
                     if (method.IsStatic) continue;
 
-                    if (TryParseOperation(method, contract, out var operation, out var reason, payloadSink)
+                    if (TryParseOperation(method, contract, iface, implementation, compilation,
+                            diagnostics, out var operation, out var reason, payloadSink)
                         && operation is not null)
                     {
                         operations.Add(operation);
@@ -225,6 +226,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// and there are six quite different ways to reach it.
         /// </param>
         private static bool TryParseOperation(IMethodSymbol method, INamedTypeSymbol declaringInterface,
+            INamedTypeSymbol contractType, INamedTypeSymbol? implementation, Compilation? compilation,
+            ImmutableArray<DiagnosticInfo>.Builder diagnostics,
             out GrpcOperationModel? model, out string reason, List<ITypeSymbol>? payloadSink = null)
         {
             model = null;
@@ -376,8 +379,56 @@ namespace ProtoBuf.BuildTools.Generators
                 voidRequest: voidRequest,
                 voidResponse: voidResponse,
                 returnTypeDisplay: Display(method.ReturnType),
-                parameters: parameters.MoveToImmutable());
+                parameters: parameters.MoveToImmutable(),
+                metadataExpressions: BuildMetadata(compilation, contractType, method, implementation,
+                    diagnostics));
             return true;
+        }
+
+        /// <summary>
+        /// Reconstructs this operation's endpoint metadata as constructing expressions, or gives up for
+        /// this one operation and leaves it on the reflective lookup.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Giving up is per-operation and deliberate. Emitting a <em>partial</em> list would be the
+        /// dangerous option: metadata is how authorization is enforced, so a short list is a more
+        /// permissive endpoint and nothing would notice. Falling back keeps behaviour exactly as it was,
+        /// and <c>PBN4019</c> says which operation still reflects and why.
+        /// </para>
+        /// <para>
+        /// The <em>top-level</em> contract is passed as <paramref name="contractType"/> while the method
+        /// is taken from its declaring interface, matching what the emitted binding passes to
+        /// <c>GetMetadata</c> - the two are different for an operation inherited from a
+        /// <c>[SubService]</c> base, and both are load-bearing.
+        /// </para>
+        /// </remarks>
+        private static ImmutableArray<string> BuildMetadata(Compilation? compilation,
+            INamedTypeSymbol contractType, IMethodSymbol method, INamedTypeSymbol? implementation,
+            ImmutableArray<DiagnosticInfo>.Builder diagnostics)
+        {
+            // seeding parses contracts purely to collect payload symbols and discards the model
+            if (compilation is null) return default;
+
+            var gathered = MetadataGather.Gather(contractType, method, implementation);
+            var expressions = ImmutableArray.CreateBuilder<string>(gathered.Count);
+            foreach (var attribute in gathered)
+            {
+                switch (AttributeRenderer.TryRender(compilation, attribute, out var expression, out var reason))
+                {
+                    case AttributeRenderKind.Rendered:
+                        expressions.Add(expression!);
+                        break;
+                    case AttributeRenderKind.Skipped:
+                        break;
+                    default:
+                        diagnostics.Add(new DiagnosticInfo(GrpcDiagnosticKind.MetadataNotConstructible,
+                            Where(method), contractType.ToDisplayString(), method.Name,
+                            reason ?? "it could not be constructed from this assembly"));
+                        return default;
+                }
+            }
+            return expressions.ToImmutable();
         }
 
         /// <summary>

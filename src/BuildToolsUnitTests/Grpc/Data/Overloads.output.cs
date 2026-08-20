@@ -136,10 +136,11 @@ namespace GrpcFixtures.Overloads
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Overloads.HelloRequest>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Overloads.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Overloads.HelloRequest, global::GrpcFixtures.Overloads.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Overloads.Thing", "SendOne", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Overloads.IThing).GetMethod("SendAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.Overloads.HelloRequest), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.Overloads.IThing), typeof(global::GrpcFixtures.Overloads.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                        new global::ProtoBuf.Grpc.Configuration.OperationAttribute("SendOne"),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.Overloads.HelloRequest, global::GrpcFixtures.Overloads.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Overloads.ThingService, global::GrpcFixtures.Overloads.HelloRequest, global::GrpcFixtures.Overloads.HelloReply>(SendAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -150,10 +151,11 @@ namespace GrpcFixtures.Overloads
                 {
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Overloads.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Overloads.HelloReply, global::GrpcFixtures.Overloads.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Overloads.Thing", "SendMany", __m_req, __m_req);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Overloads.IThing).GetMethod("SendAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.Overloads.HelloReply), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.Overloads.IThing), typeof(global::GrpcFixtures.Overloads.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                        new global::ProtoBuf.Grpc.Configuration.OperationAttribute("SendMany"),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.Overloads.HelloReply, global::GrpcFixtures.Overloads.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Overloads.ThingService, global::GrpcFixtures.Overloads.HelloReply, global::GrpcFixtures.Overloads.HelloReply>(SendAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -165,10 +167,10 @@ namespace GrpcFixtures.Overloads
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.Overloads.HelloRequest?>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Overloads.HelloReply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.Overloads.HelloRequest?, global::GrpcFixtures.Overloads.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Overloads.Thing", "Maybe", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Overloads.IThing).GetMethod("MaybeAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.Overloads.HelloRequest), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.Overloads.IThing), typeof(global::GrpcFixtures.Overloads.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.Overloads.HelloRequest?, global::GrpcFixtures.Overloads.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Overloads.ThingService, global::GrpcFixtures.Overloads.HelloRequest?, global::GrpcFixtures.Overloads.HelloReply>(MaybeAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -180,10 +182,10 @@ namespace GrpcFixtures.Overloads
                     var __m_req = __cfg.GetMarshaller<int?>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.Overloads.HelloReply>();
                     var __op = new global::Grpc.Core.Method<int?, global::GrpcFixtures.Overloads.HelloReply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.Overloads.Thing", "Count", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.Overloads.IThing).GetMethod("CountAsync",
-                            new global::System.Type[] { typeof(int?), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.Overloads.IThing), typeof(global::GrpcFixtures.Overloads.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<int?, global::GrpcFixtures.Overloads.HelloReply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.Overloads.ThingService, int?, global::GrpcFixtures.Overloads.HelloReply>(CountAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)

@@ -120,10 +120,10 @@ namespace GrpcFixtures.SubService
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.SubService.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.SubService.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.SubService.Request, global::GrpcFixtures.SubService.Reply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.SubService.Thing", "Get", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.SubService.IThing).GetMethod("GetAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.SubService.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.SubService.IThing), typeof(global::GrpcFixtures.SubService.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.SubService.Request, global::GrpcFixtures.SubService.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.SubService.ThingService, global::GrpcFixtures.SubService.Request, global::GrpcFixtures.SubService.Reply>(GetAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)
@@ -135,10 +135,10 @@ namespace GrpcFixtures.SubService
                     var __m_req = __cfg.GetMarshaller<global::GrpcFixtures.SubService.Request>();
                     var __m_resp = __cfg.GetMarshaller<global::GrpcFixtures.SubService.Reply>();
                     var __op = new global::Grpc.Core.Method<global::GrpcFixtures.SubService.Request, global::GrpcFixtures.SubService.Reply>(global::Grpc.Core.MethodType.Unary, "GrpcFixtures.SubService.Thing", "WhoAmI", __m_req, __m_resp);
-                    var __meta = __cfg.Binder.GetMetadata(
-                        typeof(global::GrpcFixtures.SubService.IAudited).GetMethod("WhoAmIAsync",
-                            new global::System.Type[] { typeof(global::GrpcFixtures.SubService.Request), typeof(global::ProtoBuf.Grpc.CallContext) })!,
-                        typeof(global::GrpcFixtures.SubService.IThing), typeof(global::GrpcFixtures.SubService.ThingService));
+                    var __meta = new object[]
+                    {
+                        new global::ProtoBuf.Grpc.Configuration.ServiceAttribute(default(string)),
+                    };
                     context.AddUnaryMethod<global::GrpcFixtures.SubService.Request, global::GrpcFixtures.SubService.Reply>(__op, __meta, new global::Grpc.AspNetCore.Server.Model.UnaryServerMethod<global::GrpcFixtures.SubService.ThingService, global::GrpcFixtures.SubService.Request, global::GrpcFixtures.SubService.Reply>(WhoAmIAsync_Server_Unary));
                 }
                 catch (global::System.Exception __ex)

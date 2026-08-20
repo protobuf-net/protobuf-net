@@ -37,6 +37,7 @@ namespace ProtoBuf.BuildTools.Generators
             GrpcDiagnosticKind.ModelIsNotAProtoModel => ModelIsNotAProtoModel,
             GrpcDiagnosticKind.ModelCannotSerializePayload => ModelCannotSerializePayload,
             GrpcDiagnosticKind.UnresolvedContract => UnresolvedContract,
+            GrpcDiagnosticKind.MetadataNotConstructible => MetadataNotConstructible,
             _ => throw new System.ArgumentOutOfRangeException(nameof(kind)),
         };
 
@@ -277,6 +278,33 @@ namespace ProtoBuf.BuildTools.Generators
         /// contract saying why.
         /// </para>
         /// </remarks>
+        /// <summary>
+        /// An attribute on an operation could not be reconstructed at compile time, so that one
+        /// operation keeps the reflective metadata lookup.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Reported rather than passed over because endpoint metadata is how authorization is enforced:
+        /// silently emitting a <em>shorter</em> list than the runtime would have built is a more
+        /// permissive endpoint with nothing to notice it. The emitted binding therefore falls back to
+        /// <c>GetMetadata</c> for this operation, so behaviour is unchanged - this says why one call
+        /// site still reflects, and what to change if that matters.
+        /// </para>
+        /// <para>
+        /// The usual cause is an attribute, its constructor, or a <c>typeof()</c> argument that the
+        /// consuming assembly cannot name. Compiler-synthesised attributes are excluded before this
+        /// point: they are unconstructable by construction and ASP.NET Core does not consume them, so
+        /// reporting them would train a reader to ignore this.
+        /// </para>
+        /// </remarks>
+        internal static readonly DiagnosticDescriptor MetadataNotConstructible = new(
+            id: "PBN4019",
+            title: "Endpoint metadata could not be reconstructed at compile time",
+            messageFormat: "'{0}.{1}' keeps the reflective metadata lookup because {2}",
+            category: Category,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         internal static readonly DiagnosticDescriptor DroppedContractUnderAot = new(
             id: "PBN4018",
             title: "A contract has no build-time proxy, and this project publishes AOT or trimmed",

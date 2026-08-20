@@ -3,11 +3,11 @@ Warning CS8634 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyG
 The type 'GrpcFixtures.Overloads.HelloRequest?' cannot be used as type parameter 'TRequest' in the generic type or method 'Reshape.UnaryTaskAsync<TRequest, TResponse>(in CallContext, CallInvoker, Method<TRequest, TResponse>, TRequest, string?)'. Nullability of type argument 'GrpcFixtures.Overloads.HelloRequest?' doesn't match 'class' constraint.
 Error CS0452 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L118 C63
 The type 'int?' must be a reference type in order to use it as parameter 'TRequest' in the generic type or method 'Reshape.UnaryTaskAsync<TRequest, TResponse>(in CallContext, CallInvoker, Method<TRequest, TResponse>, TRequest, string?)'
-Warning CS8634 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L171 C21
+Warning CS8634 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L173 C21
 The type 'GrpcFixtures.Overloads.HelloRequest?' cannot be used as type parameter 'TRequest' in the generic type or method 'ServiceMethodProviderContext<ThingService>.AddUnaryMethod<TRequest, TResponse>(Method<TRequest, TResponse>, IList<object>, UnaryServerMethod<ThingService, TRequest, TResponse>)'. Nullability of type argument 'GrpcFixtures.Overloads.HelloRequest?' doesn't match 'class' constraint.
-Warning CS8634 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L171 C251
+Warning CS8634 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L173 C251
 The type 'GrpcFixtures.Overloads.HelloRequest?' cannot be used as type parameter 'TRequest' in the generic type or method 'UnaryServerMethod<TService, TRequest, TResponse>'. Nullability of type argument 'GrpcFixtures.Overloads.HelloRequest?' doesn't match 'class' constraint.
-Error CS0452 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L186 C29
+Error CS0452 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L188 C29
 The type 'int?' must be a reference type in order to use it as parameter 'TRequest' in the generic type or method 'ServiceMethodProviderContext<ThingService>.AddUnaryMethod<TRequest, TResponse>(Method<TRequest, TResponse>, IList<object>, UnaryServerMethod<ThingService, TRequest, TResponse>)'
-Error CS0452 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L186 C211
+Error CS0452 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.GrpcProxyGenerator/GrpcFixtures.Overloads.OverloadsServices.grpc.g.cs L188 C211
 The type 'int?' must be a reference type in order to use it as parameter 'TRequest' in the generic type or method 'UnaryServerMethod<TService, TRequest, TResponse>'

@@ -101,7 +101,12 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
             for (int i = 0; i < attribute.ConstructorArguments.Length; i++)
             {
                 if (i != 0) sb.Append(", ");
-                if (!TryValue(compilation, attribute.ConstructorArguments[i], sb, out reason))
+
+                // the declared parameter type is passed so a null can be *typed*: a bare `null` does not
+                // bind when the attribute has overloaded constructors, and the result is CS0121 in the
+                // consumer's build - found by the metadata oracle, which compiles what it renders
+                var parameterType = i < ctor.Parameters.Length ? ctor.Parameters[i].Type : null;
+                if (!TryValue(compilation, attribute.ConstructorArguments[i], sb, out reason, parameterType))
                 {
                     return AttributeRenderKind.Unsupported;
                 }
@@ -129,9 +134,21 @@ namespace ProtoBuf.BuildTools.Internal.Grpc
 
         /// <summary>Renders one argument, or explains why it cannot be.</summary>
         private static bool TryValue(Compilation compilation, TypedConstant value, StringBuilder sb,
-            out string? reason)
+            out string? reason, ITypeSymbol? parameterType = null)
         {
             reason = null;
+
+            // a null in *constructor* position is written as default(T), which both binds an overload and
+            // works for a Nullable<T> parameter, where (T)null would not. A null named argument needs no
+            // such help: assigning to a property involves no overload resolution.
+            if (value.IsNull && parameterType is not null)
+            {
+                sb.Append("default(")
+                  .Append(parameterType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+                  .Append(')');
+                return true;
+            }
+
             switch (value.Kind)
             {
                 case TypedConstantKind.Error:

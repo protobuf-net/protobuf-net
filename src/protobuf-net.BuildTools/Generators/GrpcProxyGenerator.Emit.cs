@@ -525,10 +525,29 @@ namespace ProtoBuf.BuildTools.Generators
                 // paragraph above is about. The machinery to do it exists and is proven correct
                 // (MetadataGather, AttributeRenderer, and the src/AotGrpcMetadataDiff oracle); it is the
                 // trade that does not pay. See docs/aot-grpc.md.
-                Line(sb, indent + 3, "var __meta = __cfg.Binder.GetMetadata(");
-                Line(sb, indent + 4, $"typeof({operation.DeclaringInterfaceFullName}).GetMethod({operationLiteral},");
-                Line(sb, indent + 5, $"new global::System.Type[] {{ {ParameterTypeOfs(operation)} }})!,");
-                Line(sb, indent + 4, $"typeof({contract.InterfaceFullName}), typeof({impl}));");
+                if (operation.MetadataExpressions.IsDefault)
+                {
+                    // something on this operation could not be reconstructed, so it keeps the reflective
+                    // lookup and PBN4019 says why - see BuildMetadata
+                    Line(sb, indent + 3, "var __meta = __cfg.Binder.GetMetadata(");
+                    Line(sb, indent + 4, $"typeof({operation.DeclaringInterfaceFullName}).GetMethod({operationLiteral},");
+                    Line(sb, indent + 5, $"new global::System.Type[] {{ {ParameterTypeOfs(operation)} }})!,");
+                    Line(sb, indent + 4, $"typeof({contract.InterfaceFullName}), typeof({impl}));");
+                }
+                else if (operation.MetadataExpressions.Length == 0)
+                {
+                    Line(sb, indent + 3, "var __meta = global::System.Array.Empty<object>();");
+                }
+                else
+                {
+                    Line(sb, indent + 3, "var __meta = new object[]");
+                    Line(sb, indent + 3, "{");
+                    foreach (var expression in operation.MetadataExpressions)
+                    {
+                        Line(sb, indent + 4, expression + ",");
+                    }
+                    Line(sb, indent + 3, "};");
+                }
 
                 var addMethod = operation.Kind switch
                 {
