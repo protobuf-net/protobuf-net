@@ -19,7 +19,7 @@ namespace Benchmark
     /// The protobuf-net side goes through the compile-time model (<see cref="DelimitedModel"/>),
     /// which is what v4 wires at build rather than at runtime.
     /// </para>
-    /// <para>See docs/editions.md.</para>
+    /// <para>See docs/delimited.md, which quotes these numbers.</para>
     /// </summary>
     [SimpleJob(RuntimeMoniker.Net80), MemoryDiagnoser]
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
@@ -40,6 +40,18 @@ namespace Benchmark
             [ProtoMember(1)] public int Value { get; set; }
             [ProtoMember(2, DataFormat = DataFormat.Group)] public DelimitedNode Child { get; set; }
             [ProtoMember(3, DataFormat = DataFormat.Group)] public List<DelimitedNode> Children { get; set; }
+        }
+
+        /// <summary>
+        /// Declares only field 1, so the sub-message fields in the payload are unknown to it and
+        /// must be skipped - which a length prefix lets the reader jump, and a delimited body does
+        /// not: it has to be walked to its end tag. Reading the same payloads into this is what
+        /// measures that difference.
+        /// </summary>
+        [ProtoContract]
+        public class SkippingNode
+        {
+            [ProtoMember(1)] public int Value { get; set; }
         }
 
         /// <summary>Nesting depth for the deep tests, and child count for the wide tests.</summary>
@@ -257,6 +269,22 @@ namespace Benchmark
         [Benchmark, BenchmarkCategory("BufferWide")]
         public long BufferWide_Google_Delimited() => SerializeGoogleBuffer(_googleWideDelimited);
 
+        [Benchmark(Baseline = true), BenchmarkCategory("SkipDeep")]
+        public SkippingNode SkipDeep_ProtobufNet_LengthPrefixed()
+            => _pbn.Deserialize<SkippingNode>(_deepLengthPrefixedBytes.AsMemory());
+
+        [Benchmark, BenchmarkCategory("SkipDeep")]
+        public SkippingNode SkipDeep_ProtobufNet_Delimited()
+            => _pbn.Deserialize<SkippingNode>(_deepDelimitedBytes.AsMemory());
+
+        [Benchmark(Baseline = true), BenchmarkCategory("SkipWide")]
+        public SkippingNode SkipWide_ProtobufNet_LengthPrefixed()
+            => _pbn.Deserialize<SkippingNode>(_wideLengthPrefixedBytes.AsMemory());
+
+        [Benchmark, BenchmarkCategory("SkipWide")]
+        public SkippingNode SkipWide_ProtobufNet_Delimited()
+            => _pbn.Deserialize<SkippingNode>(_wideDelimitedBytes.AsMemory());
+
         /// <summary>
         /// A minimal reusable <see cref="IBufferWriter{T}"/> over a single array, so the buffer
         /// target costs nothing per operation and the measurement is of the writers, not of us.
@@ -299,6 +327,7 @@ namespace Benchmark
     [ProtoModel]
     [ProtoSerializable(typeof(DelimitedEncodingBenchmarks.LengthPrefixedNode))]
     [ProtoSerializable(typeof(DelimitedEncodingBenchmarks.DelimitedNode))]
+    [ProtoSerializable(typeof(DelimitedEncodingBenchmarks.SkippingNode))]
     public partial class DelimitedModel : TypeModel
     {
     }
