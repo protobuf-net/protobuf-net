@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>protobuf-net.ServiceModel</AssemblyName>
     <RootNamespace>ProtoBuf</RootNamespace>
-    <Title>protobuf-net</Title>
+    <Title>protobuf-net.ServiceModel</Title>
     <Description>ServiceModel (WCF) extensions for protobuf-net</Description>
     <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
