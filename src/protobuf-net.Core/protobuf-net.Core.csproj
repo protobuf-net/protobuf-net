@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net462;netstandard2.0;netstandard2.1;net8.0</TargetFrameworks>
@@ -72,6 +72,15 @@ TRACK_USAGE               : count writer activity to check disposal/re-use is co
     <!-- the one non-additive split: ReadIntPtr/WriteIntPtr spell as System.IntPtr down-level but nint on net8.0+ -->
     <AdditionalFiles Include="PublicAPI/pre-net8.0/PublicAPI.*.txt" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
     <AdditionalFiles Include="PublicAPI/net8.0/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+    <!-- three members are declared differently under #if DEBUG - TypeModel.ForwardsOnly and
+         RuntimeTypeModel.LockCount exist only there, and GetInbuiltSerializer<T> is declared twice,
+         without default arguments in DEBUG so that library code has to state them. The shipped
+         surface is the non-DEBUG one; the Debug surface is tracked too so that a Debug build is
+         equally clean. Keyed on the configuration rather than on DEBUG being defined, because the
+         DefineConstants are not settled where this is evaluated - and note the VS configuration
+         takes the release files, which is correct: the SDK defines DEBUG for Debug alone. -->
+    <AdditionalFiles Include="PublicAPI/debug/PublicAPI.*.txt" Condition="'$(Configuration)' == 'Debug'" />
+    <AdditionalFiles Include="PublicAPI/release/PublicAPI.*.txt" Condition="'$(Configuration)' != 'Debug'" />
     <!-- net4x-only surface (e.g. persist-to-dll) -->
     <AdditionalFiles Include="PublicAPI/net462/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net462'))" />
   </ItemGroup>

@@ -1,0 +1,4 @@
+ProtoBuf.Meta.RuntimeTypeModel.LockCount.get -> int
+ProtoBuf.Meta.TypeModel.ForwardsOnly.get -> bool (forwarded, contained in protobuf-net.Core)
+ProtoBuf.Meta.TypeModel.ForwardsOnly.set -> void (forwarded, contained in protobuf-net.Core)
+static ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<T>(ProtoBuf.CompatibilityLevel compatibilityLevel, ProtoBuf.DataFormat dataFormat) -> ProtoBuf.Serializers.ISerializer<T> (forwarded, contained in protobuf-net.Core)
