@@ -53,5 +53,9 @@
 
   <ItemGroup>
     <ProjectReference Include="../protobuf-net.BuildTools/protobuf-net.BuildTools.csproj" ReferenceOutputAssembly="true" />
+    <!-- compiled in rather than referenced: AotRefGen is a net472 exe. One copy of the normalisation
+         rule, because two that drifted would fail every fixture at once for a reason that looks like a
+         generator bug and is not. -->
+    <Compile Include="../AotRefGen/ReferenceProvenance.cs" Link="Aot/ReferenceProvenance.cs" />
   </ItemGroup>
 </Project>
