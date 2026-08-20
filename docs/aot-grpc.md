@@ -33,6 +33,9 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > **What is left, in the order I would take it:**
 >
+> 0. **Compile-time endpoint metadata — MVP-blocking, and previously mis-recorded as closed.** It is how
+>    authorization is enforced, so it is not optional. `AttributeRenderer` is written; steps 1-4 are in
+>    the section below, and the differential harness comes first.
 > 1. **`linux-x64` native publish.** Unmeasured here; the serializer side historically matched win-x64
 >    warning-for-warning, so this is confirmation rather than discovery. Byte sizes are not comparable
 >    across RIDs.
@@ -46,10 +49,6 @@ serializer half is `aot.md` (user-facing) and `aot-findings.md` (working notes).
 >
 > **Closed rather than pending**, so nobody re-opens them by accident:
 >
-> - **compile-time endpoint metadata.** Cannot be done exactly: the list `GetMetadata` returns contains
->   compiler-synthesised `NullableContextAttribute`, whose type is `internal` to the declaring assembly,
->   so generated code cannot construct it. The reflective `GetMethod` it would have replaced is now
->   correct for overloaded operations instead. Details below.
 > - **vendoring `xxHash128`** to synthesise interceptor locations. ~2,000 lines from Roslyn's own copy;
 >   reflection into the host is 80. The synthesis route is proven and recorded as the fallback.
 
@@ -469,6 +468,41 @@ distinct names on the wire. That compiled cleanly and failed at server startup. 
 parameter types, which `GrpcOperationModel` already carried. `Overloads.input.cs` pins it, along with
 the reason the typeof list cannot reuse the signature rendering: `typeof(Foo?)` is CS8639 for a
 reference type, while the annotation is part of the type for `Nullable<T>`.
+
+### Compile-time metadata: REOPENED, and it is MVP-blocking
+
+Previously recorded here as closed-because-impossible. That was wrong, and the correction matters:
+endpoint metadata is **how authorization is enforced** in gRPC for .NET, so `[Authorize]` arriving as a
+real instance is a security property, not a fidelity nicety. "Cannot be reproduced exactly" is the wrong
+place to stop; the bar is **reproduce what carries meaning, and be loud about the rest**.
+
+`Internal/Grpc/AttributeRenderer.cs` is step 0 and is **done** - it renders an `AttributeData` to
+constructing source, or returns a reason. It has **no caller yet**, so the branch still emits the
+reflective call and behaviour is unchanged.
+
+The remaining work, in the order to do it:
+
+1. **The differential harness, before any emit.** For a contract with attributes at all three levels,
+   compare a reconstructed list against `binder.GetMetadata(...)` item by item. Build this *first*: it is
+   the only thing that can prove the two hard parts below are right, and both are easy to get subtly
+   wrong. `SubService.input.cs` is the contract shape to use.
+2. **The gather**, reproducing `GetMetadata`'s four sources **in order** - contract type, contract
+   method, service type, service method - because the consumer treats *later as higher priority*, so the
+   order is semantic and not just the set. Two traps, both established by probe rather than by reading:
+   - `GetCustomAttributes(inherit: true)` **does not walk base interfaces**, but does walk base classes
+     and overridden methods; `[AttributeUsage(Inherited = false)]` opts out; non-`AllowMultiple`
+     attributes dedup most-derived-wins.
+   - the implementation side resolves through `FindImplementationForInterfaceMember`, keyed on the
+     **declaring** interface - which is exactly what protobuf-net.Grpc#369 just taught the runtime, so
+     the two now agree.
+3. **`PBN4019`** for anything `AttributeRenderer` reports as unsupported, naming the attribute *and* the
+   operation. This is what converts today's silent risk into a build warning.
+4. **Emit**, replacing `__cfg.Binder.GetMetadata(...)` with the constructed list - and only then, since
+   until step 1 exists there is no way to know the replacement is faithful.
+
+Skipped silently, deliberately: the compiler-synthesised `NullableContext` family. Unconstructable from
+another assembly by construction, not consumed by ASP.NET Core, and present on nearly every annotated
+member - so warning about them would train a reader to ignore `PBN4019`.
 
 ### Metadata parity, and protobuf-net.Grpc#369 — landed, and we needed nothing
 
