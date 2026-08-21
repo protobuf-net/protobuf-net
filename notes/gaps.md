@@ -2717,10 +2717,14 @@ not reveal and reading the emitted hierarchy does:
 - so a hierarchy's slots would be produced and consumed across the classic-interop boundary, which
   is exactly the case B38's boundary map exists for — but the boundary there is per *contract*, and
   a hierarchy's measure spans several layers with the marker frames interleaved between them;
-- and the sub-type markers themselves are length-prefixed, so they either take slots (and the
-  stateful `WriteSubType` must be taught to consume them, which it currently cannot) or they do not
-  (and the measure must pass a null buffer down, suppressing the layer's members' slots too — which
-  changes what those members' *writes* expect).
+- and a sub-type marker **can be** length-prefixed — not always is (Marc): `[ProtoInclude(..,
+  DataFormat = Group)]` and `[ProtoSubType(.., isGroup: true)]` both make it **delimited**, which
+  carries no length and so takes no slot, exactly as a grouped member does under B38. So a
+  hierarchy's slot pattern depends on each link's framing, and the two cases have to coexist within
+  one chain. Where a marker *is* length-prefixed it either takes a slot — and the stateful
+  `WriteSubType` must be taught to consume it, which it currently cannot — or it does not, and the
+  measure must pass a null buffer down, suppressing the layer's members' slots too, which changes
+  what those members' *writes* expect.
 
 That is a genuine design question about where the measure/write boundary sits in a hierarchy, not a
 plumbing detail, and getting it wrong produces **wrong bytes rather than a build error**. Backed out
