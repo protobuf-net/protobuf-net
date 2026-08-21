@@ -1,4 +1,4 @@
-# Delimited encoding (groups)
+﻿# Delimited encoding (groups)
 
 Two ways exist to frame a sub-message on the wire, and protobuf-net supports both. The usual one is
 **length-prefixed**: a tag, a varint length, then that many bytes. The other is **delimited**: a start tag,
@@ -147,47 +147,52 @@ dotnet run -c Release -f net8.0 --project src/Benchmark -- --filter *DelimitedEn
 
 Numbers below are from an AMD Ryzen 9 7900X on .NET 8, BenchmarkDotNet 0.15.8, in nanoseconds; they are
 here to show the *shape* of the effect, and are worth re-measuring on your own data rather than trusting to
-three significant figures. The v4 columns are from a development branch and will move; Google.Protobuf is
+three significant figures. **Bold marks the fastest of the four current-library cells in each row.** The v4
+and Google.Protobuf columns are measured in the same process and so are directly comparable; the 3.3 columns
+necessarily are not, since the released package and a local build share an assembly name and cannot be
+referenced side by side. The v4 columns are from a development branch and will move; Google.Protobuf is
 3.34.1 and is unaffected by which protobuf-net branch it is measured beside.
 
 **Serialize to a `Stream`** - the back-fill route
 
 | shape, size | 3.3 prefixed | 3.3 delimited | v4 prefixed | v4 delimited | Google prefixed | Google delimited |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| deep, 8 | 284 | 264 | 246 | **123** | 172 | 128 |
-| deep, 64 | 3,168 | 2,325 | 1,653 | **363** | 6,453 | 613 |
-| deep, 512 | 90,798 | 77,941 | 13,877 | **2,967** | 765,402 | 4,710 |
-| wide, 8 | 353 | 356 | 240 | **139** | 159 | 151 |
-| wide, 64 | 2,177 | 2,111 | 1,219 | **367** | 730 | 655 |
-| wide, 512 | 16,848 | 16,430 | 9,131 | **2,522** | 5,424 | 4,863 |
+| deep, 8 | 284 | 264 | 160 | **124** | 174 | 131 |
+| deep, 64 | 3,168 | 2,325 | 770 | **361** | 6,948 | 612 |
+| deep, 512 | 90,798 | 77,941 | 5,870 | **2,917** | 776,843 | 4,620 |
+| wide, 8 | 353 | 356 | 178 | **134** | 161 | 153 |
+| wide, 64 | 2,177 | 2,111 | 693 | **386** | 754 | 673 |
+| wide, 512 | 16,848 | 16,430 | 5,117 | **2,566** | 5,507 | 4,989 |
 
 **Serialize to an `IBufferWriter<byte>`** - the measure-first route
 
 | shape, size | 3.3 prefixed | 3.3 delimited | v4 prefixed | v4 delimited | Google prefixed | Google delimited |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| deep, 8 | 638 | 277 | 226 | **107** | 108 | 64 |
-| deep, 64 | 6,897 | 2,740 | 1,636 | **330** | 6,776 | 466 |
-| deep, 512 | 120,501 | 81,601 | 14,044 | **2,340** | 787,929 | 4,424 |
-| wide, 8 | 648 | 337 | 213 | **107** | 93 | 81 |
-| wide, 64 | 4,308 | 2,182 | 1,172 | **345** | 636 | 554 |
-| wide, 512 | 33,130 | 16,925 | 9,050 | **2,611** | 5,153 | 4,581 |
+| deep, 8 | 638 | 277 | 185 | 126 | 154 | **86** |
+| deep, 64 | 6,897 | 2,740 | 805 | **337** | 6,332 | 498 |
+| deep, 512 | 120,501 | 81,601 | 5,846 | **2,389** | 666,432 | 4,324 |
+| wide, 8 | 648 | 337 | 154 | 109 | 92 | **83** |
+| wide, 64 | 4,308 | 2,182 | 673 | **353** | 648 | 571 |
+| wide, 512 | 33,130 | 16,925 | 5,045 | **2,598** | 5,299 | 4,718 |
 
 **Deserialize**
 
 | shape, size | 3.3 prefixed | 3.3 delimited | v4 prefixed | v4 delimited | Google prefixed | Google delimited |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| deep, 8 | 283 | 268 | 97 | 83 | 279 | 223 |
-| deep, 64 | 1,784 | 1,754 | 727 | 597 | 1,615 | 1,137 |
-| deep, 512 | 14,842 | 14,968 | 5,901 | 6,594 | 13,120 | 9,189 |
-| wide, 8 | 439 | 408 | 134 | 119 | 310 | 263 |
-| wide, 64 | 2,016 | 1,921 | 689 | 601 | 1,652 | 1,241 |
-| wide, 512 | 14,635 | 13,557 | 5,142 | 4,517 | 12,459 | 8,829 |
+| deep, 8 | 283 | 268 | 101 | **82** | 299 | 231 |
+| deep, 64 | 1,784 | 1,754 | 728 | **604** | 1,669 | 1,191 |
+| deep, 512 | 14,842 | 14,968 | **6,129** | 6,848 | 14,352 | 9,947 |
+| wide, 8 | 439 | 408 | 138 | **120** | 321 | 276 |
+| wide, 64 | 2,016 | 1,921 | 715 | **631** | 1,686 | 1,263 |
+| wide, 512 | 14,635 | 13,557 | 5,245 | **4,693** | 12,767 | 9,216 |
 
 Reading those honestly:
 
-- **On v4, delimited is the faster way to write, everywhere.** Every serialize cell, on both targets, by
-  2-6×: at depth 512 that is 13,877 ns against 2,967 ns to a stream, and 14,044 against 2,340 to a buffer
-  writer. There is no shape in this benchmark where length-prefixing wins on the write side.
+- **On v4, delimited is still the faster way to write, everywhere** - every serialize cell, on both
+  targets - but the margin has narrowed from 2-6× to roughly 1.3-2.4×, because the length-prefixed side
+  got faster rather than the delimited side slower. At depth 512 that is 5,870 ns against 2,917 to a
+  stream, and 5,846 against 2,389 to a buffer writer. There is still no shape here where length-prefixing
+  wins on the write side.
 - **On 3.3 the answer depends on the target.** Writing to an `IBufferWriter<byte>`, where a prefix costs a
   measuring pass over each sub-message, delimited wins every cell by 1.5-2.5×. Writing to a `Stream`, where
   the prefix is back-filled instead, the win narrows to depth - 14% at depth 512, 27% at depth 64, and a wash
@@ -195,15 +200,19 @@ Reading those honestly:
   nothing has to move.
 - **Google.Protobuf's length-prefixed writer goes quadratic in depth.** Its generated `WriteTo` calls
   `CalculateSize()` on each sub-message before writing it, and that call walks the whole subtree, so writing
-  a chain of *n* nested messages does *O(n²)* measuring work. At depth 512 that is 765 µs length-prefixed
-  against 4.7 µs delimited: the same data, the same library, **160× apart**, purely because the delimited
-  path never needs to know a length. protobuf-net keeps a length cache and stays out of that.
-- **Deserialization barely cares**, and is the one place delimited can lose: the reader has to walk to the
-  end tag where a length would have let it skip. Mostly it is a few percent ahead; at depth 512 on v4 it is
-  12% behind.
+  a chain of *n* nested messages does *O(n²)* measuring work. At depth 512 that is 777 µs length-prefixed
+  against 4.6 µs delimited: the same data, the same library, **168× apart**, purely because the delimited
+  path never needs to know a length. protobuf-net measures each sub-message once, whatever the depth, and
+  stays out of it.
+- **Deserialization mildly prefers delimited**, and is the one place it can lose: the reader has to walk to
+  the end tag where a length would have let it skip. It is 10-20% ahead in most cells; at depth 512 on v4 it
+  is 12% *behind*, which is the deepest case and the one where skipping would have paid most.
 - This is a framing comparison rather than a scoreboard, but for reference: v4 is ahead of Google.Protobuf
-  in every deserialize cell and every delimited-write cell, while Google still leads the *length-prefixed*
-  writes of wide graphs.
+  in **every** deserialize cell and every delimited-write cell, and now in the length-prefixed writes too
+  at 512 and (narrowly) at 64. What Google still leads is the *smallest* payloads - the 8-element cases -
+  where what separates them is per-call setup cost rather than framing: protobuf-net spends around 28 ns
+  opening and closing a writer before any bytes are written, which is a third of Google's entire time on a
+  payload that small and is invisible by 512.
 
 The numbers are from the compile-time model (`[ProtoModel]`); on 3.3 the reflection-based `RuntimeTypeModel`
 path is 10-35% slower on serialize and about 1.8× slower on deserialize, with the same shape to the framing
@@ -243,14 +252,14 @@ in a deep graph is true of every outer level:
 
   | deep chain | length-prefixed | delimited |
   | --- | ---: | ---: |
-  | depth 8 | 132 ns | 198 ns |
-  | depth 64 | 107 ns | 871 ns |
-  | depth 512 | 96 ns | 6,377 ns |
+  | depth 8 | 33 ns | 70 ns |
+  | depth 64 | 33 ns | 389 ns |
+  | depth 512 | 33 ns | 3,244 ns |
 
-  The length-prefixed column *falls* as the payload grows - 512 levels skip more cheaply than 8, since the
-  bytes are never touched - while the delimited column grows with the data. So: if you are routinely handed
-  large messages and read only a corner of them, keep the prefix. If you read what you are sent, this line
-  costs you nothing.
+  The length-prefixed column is **flat** - skipping 512 levels costs the same as skipping 8, because the
+  bytes are never touched at all - while the delimited column grows with the data, ending two orders of
+  magnitude apart. So: if you are routinely handed large messages and read only a corner of them, keep the
+  prefix. If you read what you are sent, this line costs you nothing.
 
 - **Changing the framing changes the bytes** - though what that costs you depends entirely on who reads
   them. protobuf-net itself is relaxed: its reader dispatches on the wire type actually present, not on how
