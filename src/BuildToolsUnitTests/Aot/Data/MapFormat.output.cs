@@ -117,6 +117,8 @@ partial class MapFormatModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapFormat.Maps>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapFormat.Nested>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapFormat.Maps>.Features

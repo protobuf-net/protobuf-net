@@ -117,6 +117,8 @@ partial class InheritUnsupportedModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.Unlinked>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 

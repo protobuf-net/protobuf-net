@@ -119,6 +119,8 @@ partial class MapModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade?>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Maps>.Features

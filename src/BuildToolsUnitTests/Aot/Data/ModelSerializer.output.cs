@@ -72,6 +72,8 @@ partial class ModelSerializerModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<long>>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ModelSerializer.Wrapped<string>>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         public ProtoBufGeneratedServices()
         {
             global::System.Diagnostics.Debug.Assert(

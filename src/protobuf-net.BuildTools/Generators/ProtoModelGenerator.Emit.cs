@@ -280,6 +280,12 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent + 1, "{");
 
+            // stands in for `this` inside the RawWrite_ statics: any member whose write stays
+            // stateful passes the services instance as its sub-serializer, and a static has no
+            // `this`. See SelfField.
+            Line(sb, indent + 2, $"private static readonly {ServicesTypeName} {SelfField} = new();");
+            sb.AppendLine();
+
             EmitExternalCategoryAsserts(sb, indent + 2, plan);
 
             // raw-read eligibility is CONTRACT-level only (shape and callbacks): any member the
@@ -1384,7 +1390,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({writeInstance});");
                 }
                 var writeBody = new StringBuilder();
-                EmitWriteMembers(writeBody, indent + 1, contract, writeInstance, raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth");
+                EmitWriteMembers(writeBody, indent + 1, contract, writeInstance, raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth", self: SelfField);
                 EmitCallback(writeBody, indent + 1, contract, writeInstance, ProtoCallbackKind.AfterSerialize);
                 AppendFoldingLengthTemp(sb, indent + 1, writeBody, "len");
                 Line(sb, indent, "}");
@@ -1775,7 +1781,7 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
             string instance = "value", bool raw = false, bool listAsSpan = false, bool immutableAsSpan = false,
             Dictionary<string, ProtoContractPlan>? measurable = null,
-            string depth = "state.RawDepthBudget")
+            string depth = "state.RawDepthBudget", string self = "this")
         {
             // Whether an enclosing Measure_ has already reserved slots for this contract's raw
             // sub-message members. A contract can be raw-WRITING without being MEASURABLE - it then
@@ -1812,7 +1818,7 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     Line(sb, indent, $"if (tmp{number} != null)");
                     Line(sb, indent, "{");
-                    Line(sb, indent + 1, $"{Map(member)}.WriteMap(ref state, {number}, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member)});");
+                    Line(sb, indent + 1, $"{Map(member)}.WriteMap(ref state, {number}, {MapFeatures(member)}, tmp{number}, {MapElementFeatures(member)}{MapSubSerializers(member, self)});");
                     Line(sb, indent, "}");
                     goto written;
                 }
@@ -1847,7 +1853,7 @@ namespace ProtoBuf.BuildTools.Generators
                         if (guard) Line(sb, indent, "}");
                         goto written;
                     }
-                    var writeRepeated = $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member)});";
+                    var writeRepeated = $"{Repeated(member)}.WriteRepeated(ref state, {number}, {RepeatedFeatures(member)}, tmp{number}{RepeatedSubSerializer(member, self)});";
                     if (member.Repeated.IsValueType)
                     {
                         Line(sb, indent, writeRepeated);
@@ -1870,13 +1876,13 @@ namespace ProtoBuf.BuildTools.Generators
                         // WriteAny takes the framing off the serializer itself, exactly as the
                         // non-nullable case does - the struct is never null, so presence has to be
                         // decided here instead
-                        Line(sb, indent + 1, $"state.WriteAny<{member.TypeName}>({number}, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
+                        Line(sb, indent + 1, $"state.WriteAny<{member.TypeName}>({number}, tmp{number}.GetValueOrDefault(), {SubSerializer(member, self)});");
                     }
                     else
                     {
                         // a nullable struct message: presence decides, and the unwrapped value goes
                         // straight to WriteMessage
-                        Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), {SubSerializer(member)});");
+                        Line(sb, indent + 1, $"state.WriteMessage<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}.GetValueOrDefault(), {SubSerializer(member, self)});");
                     }
                     Line(sb, indent, "}");
                     goto written;
@@ -2071,7 +2077,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // GetWireType extension that would let us write the header ourselves lives on
                         // an internal class, so generated code cannot reach it
                         Line(sb, indent, $"state.WriteAny<{member.TypeName}>({number}, tmp{number}, "
-                            + $"{SubSerializer(member)});");
+                            + $"{SubSerializer(member, self)});");
                         break;
                     case ProtoMemberKind.Message when raw && RawNativeMessageTarget(member, measurable) is { } target:
                     {
@@ -2136,7 +2142,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // likewise WriteMessage/WriteGroup(int, ...) skip nulls themselves. Group
                         // affects the *write* only - its read is an ordinary ReadMessage
                         var writeMessage = member.DataFormat == ProtoDataFormat.Group ? "WriteGroup" : "WriteMessage";
-                        Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, {SubSerializer(member)});");
+                        Line(sb, indent, $"state.{writeMessage}<{member.TypeName}>({number}, {Features}.CategoryRepeated, tmp{number}, {SubSerializer(member, self)});");
                         break;
                 }
 
@@ -3517,10 +3523,14 @@ namespace ProtoBuf.BuildTools.Generators
                 if (RawRepeatedBclMeasurable(member)) return false;
                 return RawRepeatedMessageTarget(member, measurable) is null;
             }
-            // a nullable STRUCT message would measure one GetValueOrDefault copy and write
-            // another; the copies are field-identical, but the shape is parked until a fixture
-            // proves it rather than reasoned safe
-            if (member.IsNullable && member.Kind == ProtoMemberKind.Message) return true;
+            // A nullable STRUCT message member was parked here "until a fixture proves it rather
+            // than reasoned safe" - and Structs.input.cs already carries one (`Point?
+            // MaybeLocation`, with a present-but-all-default sample), so the fixture existed
+            // before the park did. The measure and the write each take their own
+            // GetValueOrDefault() copy; the copies are field-identical, which is what the
+            // conformance and corpus suites now assert rather than anyone reasoning about it.
+            // The WRITE stays stateful (RawNativeMessageTarget refuses IsNullable), so the
+            // measure passes a null slot buffer and reserves nothing. gap B42.
             // the level-200 date/time pair is measurable now that BclHelpers can size the body
             if (BclMeasurable(member)) return false;
             return member.Kind switch
@@ -3725,6 +3735,20 @@ namespace ProtoBuf.BuildTools.Generators
         /// <c>WireTypeStartGroup</c> and which <c>InheritFrom</c> supplies wherever the member
         /// states no wire type of its own.
         /// </summary>
+        /// <summary>
+        /// What stands in for <c>this</c> inside a <c>RawWrite_</c> static. Any member whose write
+        /// stays STATEFUL passes the services instance as its sub-serializer (<c>WriteMessage(...,
+        /// this)</c>), and a static has no <c>this</c> - which is the real reason several member
+        /// shapes were excluded from measurability rather than anything about their arithmetic.
+        /// </summary>
+        /// <remarks>
+        /// <c>SerializerCache&lt;TProvider&gt;.InstanceField</c> would be the natural singleton and
+        /// is <c>internal</c>, so generated code cannot reach it; the services type is ours, so it
+        /// holds its own. A second instance is harmless - the type is stateless bar a
+        /// <c>[Conditional("DEBUG")]</c> constructor assert.
+        /// </remarks>
+        private const string SelfField = "Self";
+
         private static bool GroupFramed(ProtoMemberPlan member, ProtoContractPlan target)
             => member.DataFormat == ProtoDataFormat.Group || target.IsGroup;
 
@@ -3827,6 +3851,19 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent, $"if (tmp{number}.HasValue)");
                     Line(sb, indent, "{");
                     Line(sb, indent + 1, $"var val{number} = tmp{number}.GetValueOrDefault();");
+                    if (member.Kind == ProtoMemberKind.Message)
+                    {
+                        // Nullable<TStruct> sub-message: length-prefixed, so tag + varint(len) +
+                        // len, and RawScalarMeasure has nothing for Message - the same shape the
+                        // BCL arm below had to be added for, and the same `len += 1 + ;` if it is
+                        // missed. The WRITE stays stateful (RawNativeMessageTarget refuses
+                        // IsNullable), so this reserves NO slot and passes a null buffer down.
+                        Line(sb, indent + 1, $"sub = Measure_{Sanitise(member.TypeName!)}(val{number}, depth, null);");
+                        Line(sb, indent + 1, MeasureAdd(member, 2,
+                            "global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub"));
+                        Line(sb, indent, "}");
+                        goto measured;
+                    }
                     if (BclMeasurable(member))
                     {
                         // a BCL body is length-prefixed, so it is tag + varint(len) + len rather

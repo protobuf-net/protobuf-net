@@ -160,10 +160,12 @@ partial class GetterModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Getters>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Nested>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Point>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.
@@ -190,13 +192,26 @@ partial class GetterModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Getter.Getters global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Getters value)
             => RawRead_AotFixtures_Getter_Getters(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Getter.Getters>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Getters value)
         {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Getter_Getters(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Getter_Getters(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_Getter_Getters(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Getters value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
@@ -218,12 +233,10 @@ partial class GetterModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Child
-                var mark3 = state.RawSlots.Mark();
-                len = Measure_AotFixtures_Getter_Nested(tmp3, state.RawDepthBudget, state.RawSlots);
-                state.RawSlots.SeekTo(mark3);
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
-                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3, state.RawDepthBudget);
+                RawWrite_AotFixtures_Getter_Nested(ref state, tmp3, depth);
                 DebugAssertPosition(ref state, before + len, "Child");
             }
             var tmp4 = value.Value;
@@ -271,18 +284,103 @@ partial class GetterModel
             }
             var tmp11 = value.Where;
             state.WriteRawTag((11 << 3) | 2);  // Where
-            var mark11 = state.RawSlots.Mark();
-            len = Measure_AotFixtures_Getter_Point(tmp11, state.RawDepthBudget, state.RawSlots);
-            state.RawSlots.SeekTo(mark11);
+            len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_Getter_Point(ref state, tmp11, state.RawDepthBudget);
+            RawWrite_AotFixtures_Getter_Point(ref state, tmp11, depth);
             DebugAssertPosition(ref state, before + len, "Where");
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)
             {
-                state.WriteMessage<global::AotFixtures.Getter.Point>(12, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12.GetValueOrDefault(), this);
+                state.WriteMessage<global::AotFixtures.Getter.Point>(12, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12.GetValueOrDefault(), Self);
             }
+        }
+
+        private static long Measure_AotFixtures_Getter_Getters(global::AotFixtures.Getter.Getters value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            var tmp1 = value.Numbers;
+            if (tmp1 != null)
+            {
+                foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item1));
+                }
+            }
+            var tmp2 = value.Map;
+            if (tmp2 != null)
+            {
+                foreach (var pair2 in tmp2)
+                {
+                    long entry2 = 0;
+                    if (pair2.Key != 0) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
+                    if (pair2.Value != null) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Value);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // Map
+                }
+            }
+            var tmp3 = value.Child;
+            if (tmp3 != null)
+            {
+                var slot3 = slots.Reserve();
+                sub = Measure_AotFixtures_Getter_Nested(tmp3, depth, slots);
+                slots.Set(slot3, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
+            }
+            var tmp4 = value.Value;
+            if (tmp4 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp4));  // Value
+            var tmp5 = value.Text;
+            if (tmp5 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // Text
+            }
+            var tmp6 = value.Blob;
+            if (tmp6 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp6.Length) + tmp6.Length;  // Blob
+            }
+            var tmp7 = value.Maybe;
+            if (tmp7.HasValue)
+            {
+                var val7 = tmp7.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)val7));  // Maybe
+            }
+            var tmp8 = value.Colour;
+            if (tmp8 != default(global::AotFixtures.Getter.Shade)) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)tmp8));  // Colour
+            var tmp9 = value.When;
+            var bcl9 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp9);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bcl9) + bcl9;  // When
+            var tmp10 = value.Array;
+            if (tmp10 != null)
+            {
+                foreach (var item10 in tmp10)
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item10));
+                }
+            }
+            var tmp11 = value.Where;
+            var slot11 = slots.Reserve();
+            sub = Measure_AotFixtures_Getter_Point(tmp11, depth, slots);
+            slots.Set(slot11, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Where
+            var tmp12 = value.Maybe2;
+            if (tmp12.HasValue)
+            {
+                var val12 = tmp12.GetValueOrDefault();
+                sub = Measure_AotFixtures_Getter_Point(val12, depth, null);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Maybe2
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Getter.Getters>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Getter.Getters value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Getter_Getters(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.Getter.Getters RawRead_AotFixtures_Getter_Getters(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Getter.Getters value)

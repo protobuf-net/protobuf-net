@@ -68,6 +68,8 @@ partial class EnumsModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Enums.WithEnums>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Enums.WithEnums>.Features

@@ -166,6 +166,8 @@ partial class CallbacksModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Hooked>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Standard>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.AfterOnly>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 

@@ -112,9 +112,11 @@ partial class StructsModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.HasStructs>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.
@@ -141,28 +143,39 @@ partial class StructsModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Structs.HasStructs global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)
             => RawRead_AotFixtures_Structs_HasStructs(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.HasStructs>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.HasStructs value)
         {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Structs_HasStructs(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Structs_HasStructs(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_Structs_HasStructs(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.HasStructs value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
             var tmp1 = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
-            var mark1 = state.RawSlots.Mark();
-            var len = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawSlots);
-            state.RawSlots.SeekTo(mark1);
+            var len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_AotFixtures_Structs_Point(ref state, tmp1, state.RawDepthBudget);
+            RawWrite_AotFixtures_Structs_Point(ref state, tmp1, depth);
             DebugAssertPosition(ref state, before + len, "Location");
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)
             {
-                state.WriteMessage<global::AotFixtures.Structs.Point>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2.GetValueOrDefault(), this);
+                state.WriteMessage<global::AotFixtures.Structs.Point>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2.GetValueOrDefault(), Self);
             }
             var tmp3 = value.Other;
             if (tmp3 != 0)
@@ -170,6 +183,37 @@ partial class StructsModel
                 state.WriteRawTag((3 << 3) | 0);  // Other
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
             }
+        }
+
+        private static long Measure_AotFixtures_Structs_HasStructs(global::AotFixtures.Structs.HasStructs value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            var tmp1 = value.Location;
+            var slot1 = slots.Reserve();
+            sub = Measure_AotFixtures_Structs_Point(tmp1, depth, slots);
+            slots.Set(slot1, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Location
+            var tmp2 = value.MaybeLocation;
+            if (tmp2.HasValue)
+            {
+                var val2 = tmp2.GetValueOrDefault();
+                sub = Measure_AotFixtures_Structs_Point(val2, depth, null);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybeLocation
+            }
+            var tmp3 = value.Other;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Other
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.HasStructs>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Structs.HasStructs value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Structs_HasStructs(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.Structs.HasStructs RawRead_AotFixtures_Structs_HasStructs(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Structs.HasStructs value)

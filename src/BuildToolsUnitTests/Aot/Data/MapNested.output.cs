@@ -71,6 +71,8 @@ partial class MapNestedModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
         , global::ProtoBuf.Serializers.ISerializerProxy<long[]>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapNested.Nested>.Features

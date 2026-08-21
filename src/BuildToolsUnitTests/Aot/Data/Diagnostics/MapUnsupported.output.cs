@@ -218,6 +218,8 @@ partial class MapUnsupportedModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade?>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::System.Collections.Generic.List<int>>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Features

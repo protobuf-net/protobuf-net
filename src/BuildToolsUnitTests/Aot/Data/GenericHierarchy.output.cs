@@ -417,6 +417,8 @@ partial class GenericHierarchyModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

@@ -2897,9 +2897,32 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | **null-wrapping** (`[NullWrappedValue]`, `[NullWrappedCollection]`) | **yes** | *untracked before this* |
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
-| a **nullable struct** message member | yes, narrow — explicitly parked pending a fixture | *untracked before this* |
+| ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
 | a **value-type bytes** member (`Memory<byte>`, `ReadOnlyMemory<byte>`, `ArraySegment<byte>`) | yes, narrow | *untracked before this* |
 | a message member whose target is not itself measurable | **this is the cascade, not a gap of its own** | — |
+
+**Nullable-struct message members — done, and the recorded reason for parking them was not the real
+one.** The note said the measure and write each take their own `GetValueOrDefault()` copy and that
+the shape was "parked until a fixture proves it rather than reasoned safe" — but `Structs.input.cs`
+already carried `Point? MaybeLocation` *with* a present-but-all-default sample, so the fixture
+predated the park.
+
+The actual blocker was structural and had nothing to do with copies: **such a member's write stays
+stateful** (`state.WriteMessage<Point>(..., this)`), and `RawWrite_` is a **static**, so `this` was
+not available — `CS0026`. That is the same wall behind several other exclusions, so it was worth
+removing properly rather than working around: the services type now holds a
+`private static readonly ... Self = new()` and the write emitter threads a `self` (defaulting to
+`this`, so nothing else changes). `SerializerCache<TProvider>.InstanceField` would have been the
+natural singleton and is `internal`, unreachable from generated code; a second instance is harmless,
+the type being stateless bar a `[Conditional("DEBUG")]` constructor assert.
+
+**And it sprang the trap AGENTS.md documents by name.** The measure emitter reaches scalar kinds from
+three branches, and the *nullable* branch runs before the main switch — so the `case
+ProtoMemberKind.Message when member.IsNullable` arm I first added was unreachable, and the nullable
+branch's `RawScalarMeasure(...)!` turned null into an empty string and emitted `len += 1 + ;`. Third
+time that has bitten; the fix belongs beside the BCL arm that was added for exactly the same reason.
+
+Effect: `Structs` 3 → 7 `Measure_` occurrences, `Getter` 6 → 10, `TupleMembers` 12 → 16.
 
 #### Ranked, for "what next"
 

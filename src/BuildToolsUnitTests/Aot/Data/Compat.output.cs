@@ -462,6 +462,8 @@ partial class CompatModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Compat.Mixed>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.WellKnown>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Features

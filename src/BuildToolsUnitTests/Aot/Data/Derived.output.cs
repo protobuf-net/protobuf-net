@@ -117,6 +117,8 @@ partial class DerivedModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Derived.Ambiguous>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Derived.Derives>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

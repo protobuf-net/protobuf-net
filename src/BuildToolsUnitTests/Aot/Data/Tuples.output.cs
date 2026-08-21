@@ -305,6 +305,8 @@ partial class TuplesModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Tuple<int, string>>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<(int, string)>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 

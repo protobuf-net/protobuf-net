@@ -358,6 +358,8 @@ partial class SurrogateModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.Tag>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.TagSurrogate>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

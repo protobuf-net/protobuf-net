@@ -74,6 +74,8 @@ partial class EnumContractModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Size>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.EnumContract.Size?>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.EnumContract.Holder>.Features

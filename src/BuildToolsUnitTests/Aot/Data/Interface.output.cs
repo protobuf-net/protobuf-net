@@ -318,6 +318,8 @@ partial class InterfaceModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Tagged>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Cat>.Features

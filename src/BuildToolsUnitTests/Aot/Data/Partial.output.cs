@@ -215,6 +215,8 @@ partial class PartialModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Excluded>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Mixed>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)

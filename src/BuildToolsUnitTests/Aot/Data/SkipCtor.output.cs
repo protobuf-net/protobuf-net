@@ -118,6 +118,8 @@ partial class SkipCtorModel
         , global::ProtoBuf.Serializers.IFactory<global::AotFixtures.SkipCtor.Bypassed>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SkipCtor.Constructed>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Bypassed>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 

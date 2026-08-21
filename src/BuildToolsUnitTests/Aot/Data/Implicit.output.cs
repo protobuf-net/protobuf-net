@@ -264,6 +264,8 @@ partial class ImplicitModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.Ignoring>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.Mixed>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllFields>.Features

@@ -117,6 +117,8 @@ partial class MapKeyModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Keys>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapKey.Payload>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapKey.Keys>.Features

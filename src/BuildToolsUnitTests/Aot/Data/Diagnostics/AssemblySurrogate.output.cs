@@ -166,6 +166,8 @@ partial class AssemblySurrogateModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Version>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

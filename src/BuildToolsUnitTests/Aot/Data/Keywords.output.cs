@@ -166,6 +166,8 @@ partial class KeywordsModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Keywords>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Pair>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

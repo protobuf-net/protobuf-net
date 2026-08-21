@@ -71,6 +71,8 @@ partial class ExternalSerializerModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Thing>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Ticket>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         public ProtoBufGeneratedServices()
         {
             global::System.Diagnostics.Debug.Assert(

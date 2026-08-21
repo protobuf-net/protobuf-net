@@ -418,6 +418,8 @@ partial class OutOfBandSubTypeModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Vehicle>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Circle>.Features

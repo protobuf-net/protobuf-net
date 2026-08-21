@@ -317,6 +317,8 @@ partial class InheritModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Standalone>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Animal>.Features

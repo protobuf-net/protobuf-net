@@ -70,6 +70,8 @@ partial class PackedAllModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.PackedAll.Level>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.PackedAll.Level?>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)

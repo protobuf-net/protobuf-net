@@ -117,6 +117,8 @@ partial class DefaultsModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Declared>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Defaults.Parsed>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Defaults.Declared>.Features

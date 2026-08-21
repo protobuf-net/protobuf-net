@@ -169,6 +169,8 @@ partial class IncludeGroupModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Base>.Features

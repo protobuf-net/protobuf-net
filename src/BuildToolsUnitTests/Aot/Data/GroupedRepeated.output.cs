@@ -68,6 +68,8 @@ partial class GroupedRepeatedModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedRepeated.Node>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
         {
             if (value is null || value.Length == 0) return extra.ToArray();

@@ -117,6 +117,8 @@ partial class ImplicitPrivateModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitPrivate.Explicit>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitPrivate.Private>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitPrivate.Explicit>.Features

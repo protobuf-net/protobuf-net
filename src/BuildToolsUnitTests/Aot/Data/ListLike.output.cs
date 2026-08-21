@@ -117,6 +117,8 @@ partial class ListLikeModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.NotAList>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         // DEBUG-only: prove each measured length against the bytes actually written.
         // [Conditional] is resolved against YOUR compilation, so a Release build
         // removes both calls and the capture local with them; the bodies are #if DEBUG'd

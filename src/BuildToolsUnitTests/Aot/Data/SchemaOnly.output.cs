@@ -264,6 +264,8 @@ partial class SchemaOnlyModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.Plain>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.SchemaOnly>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Empty>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 

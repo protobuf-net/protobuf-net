@@ -119,6 +119,8 @@ partial class WrappedElementsModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrappedElements.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrappedElements.Shade?>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrappedElements.Payload>.Features

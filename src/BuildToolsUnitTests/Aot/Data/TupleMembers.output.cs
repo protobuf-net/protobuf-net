@@ -206,9 +206,11 @@ partial class TupleMembersModel
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<(int, (int, string))>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TupleMembers.HasTuples>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.
@@ -393,56 +395,61 @@ partial class TupleMembersModel
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.TupleMembers.HasTuples global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleMembers.HasTuples value)
             => RawRead_AotFixtures_TupleMembers_HasTuples(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TupleMembers.HasTuples>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleMembers.HasTuples value)
         {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_TupleMembers_HasTuples(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_TupleMembers_HasTuples(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleMembers.HasTuples value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
-            var mark1 = state.RawSlots.Mark();
-            len = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawSlots);
-            state.RawSlots.SeekTo(mark1);
+            len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite__int__string_(ref state, tmp1, state.RawDepthBudget);
+            RawWrite__int__string_(ref state, tmp1, depth);
             DebugAssertPosition(ref state, before + len, "Named");
             var tmp2 = value.Anonymous;
             state.WriteRawTag((2 << 3) | 2);  // Anonymous
-            var mark2 = state.RawSlots.Mark();
-            len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawSlots);
-            state.RawSlots.SeekTo(mark2);
+            len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite__int__string_(ref state, tmp2, state.RawDepthBudget);
+            RawWrite__int__string_(ref state, tmp2, depth);
             DebugAssertPosition(ref state, before + len, "Anonymous");
             var tmp3 = value.Deep;
             state.WriteRawTag((3 << 3) | 2);  // Deep
-            var mark3 = state.RawSlots.Mark();
-            len = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawSlots);
-            state.RawSlots.SeekTo(mark3);
+            len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite__int___int__string__(ref state, tmp3, state.RawDepthBudget);
+            RawWrite__int___int__string__(ref state, tmp3, depth);
             DebugAssertPosition(ref state, before + len, "Deep");
             var tmp4 = value.Pair;
             state.WriteRawTag((4 << 3) | 2);  // Pair
-            var mark4 = state.RawSlots.Mark();
-            len = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawSlots);
-            state.RawSlots.SeekTo(mark4);
+            len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
-            RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4, state.RawDepthBudget);
+            RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4, depth);
             DebugAssertPosition(ref state, before + len, "Pair");
             var tmp5 = value.MaybePair;
             if (tmp5.HasValue)
             {
-                state.WriteMessage<(int, string)>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5.GetValueOrDefault(), this);
+                state.WriteMessage<(int, string)>(5, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp5.GetValueOrDefault(), Self);
             }
             var tmp6 = value.Other;
             if (tmp6 != 0)
@@ -450,6 +457,52 @@ partial class TupleMembersModel
                 state.WriteRawTag((6 << 3) | 0);  // Other
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
             }
+        }
+
+        private static long Measure_AotFixtures_TupleMembers_HasTuples(global::AotFixtures.TupleMembers.HasTuples value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            var tmp1 = value.Named;
+            var slot1 = slots.Reserve();
+            sub = Measure__int__string_(tmp1, depth, slots);
+            slots.Set(slot1, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Named
+            var tmp2 = value.Anonymous;
+            var slot2 = slots.Reserve();
+            sub = Measure__int__string_(tmp2, depth, slots);
+            slots.Set(slot2, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Anonymous
+            var tmp3 = value.Deep;
+            var slot3 = slots.Reserve();
+            sub = Measure__int___int__string__(tmp3, depth, slots);
+            slots.Set(slot3, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Deep
+            var tmp4 = value.Pair;
+            var slot4 = slots.Reserve();
+            sub = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, depth, slots);
+            slots.Set(slot4, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Pair
+            var tmp5 = value.MaybePair;
+            if (tmp5.HasValue)
+            {
+                var val5 = tmp5.GetValueOrDefault();
+                sub = Measure__int__string_(val5, depth, null);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybePair
+            }
+            var tmp6 = value.Other;
+            if (tmp6 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp6));  // Other
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TupleMembers.HasTuples>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TupleMembers.HasTuples value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_TupleMembers_HasTuples(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.TupleMembers.HasTuples RawRead_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TupleMembers.HasTuples value)

@@ -418,6 +418,8 @@ partial class InterfaceMembersModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Named>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.Named>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InterfaceMembers.Box>.Features

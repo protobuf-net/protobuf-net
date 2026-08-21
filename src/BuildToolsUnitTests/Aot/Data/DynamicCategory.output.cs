@@ -70,6 +70,8 @@ partial class DynamicCategoryModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.DynamicCategory.Measure>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Reading>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.DynamicCategory.Label> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.DynamicCategory.Label>.Serializer

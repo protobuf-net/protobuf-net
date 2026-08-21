@@ -264,6 +264,8 @@ partial class RawPassModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Order>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

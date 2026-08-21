@@ -70,6 +70,8 @@ partial class MemberTypeAdviceModel
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade?>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 

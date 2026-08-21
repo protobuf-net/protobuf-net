@@ -215,6 +215,8 @@ partial class CompatElementsModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.Level300Map>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.WellKnownLists>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.CompatElements.CompatMaps>.Features

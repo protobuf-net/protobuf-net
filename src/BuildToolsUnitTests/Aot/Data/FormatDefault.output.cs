@@ -117,6 +117,8 @@ partial class FormatDefaultModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.Payment>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.TimestampPromotion>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.FormatDefault.Payment>.Features

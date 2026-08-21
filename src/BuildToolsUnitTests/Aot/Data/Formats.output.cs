@@ -117,6 +117,8 @@ partial class FormatsModel
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Inner>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
         {
             if (value is null || value.Length == 0) return extra.ToArray();

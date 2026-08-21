@@ -1835,6 +1835,8 @@ partial class CustomProtogenSerializer
         , global::ProtoBuf.Serializers.ISerializerProxy<global::ProtoBuf.Reflection.Access>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::ProtoBuf.Reflection.Access?>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)
         {
             if (value is null || value.Length == 0) return extra.ToArray();

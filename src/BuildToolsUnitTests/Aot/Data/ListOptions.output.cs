@@ -117,6 +117,8 @@ partial class ListOptionsModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.NotACollection>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListOptions.Options>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         private static T[] ArrayAppend<T>(T[] value, global::System.Collections.Generic.List<T> extra)

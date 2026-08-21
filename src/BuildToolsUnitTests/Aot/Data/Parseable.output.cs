@@ -166,6 +166,8 @@ partial class ParseableModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Parseable.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Parseable.NotParseable>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

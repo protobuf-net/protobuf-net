@@ -215,6 +215,8 @@ partial class NonPublicCtorModel
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

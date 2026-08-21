@@ -117,6 +117,8 @@ partial class ImplicitIgnoreModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitIgnore.Excluded>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.Excluded>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 

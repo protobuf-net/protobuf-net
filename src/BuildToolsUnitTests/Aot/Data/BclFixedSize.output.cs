@@ -115,6 +115,8 @@ partial class BclFixedSizeModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<(global::System.DateTime, global::System.TimeSpan)>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.BclFixedSize.Fixed>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.

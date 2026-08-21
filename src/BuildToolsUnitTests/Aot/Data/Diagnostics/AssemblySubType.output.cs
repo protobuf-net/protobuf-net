@@ -169,6 +169,8 @@ partial class AssemblySubTypeModel
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Node>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Branch>.Features

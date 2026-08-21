@@ -315,6 +315,8 @@ partial class UnlinkedModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.Sibling>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Unlinked>
     {
+        private static readonly ProtoBufGeneratedServices Self = new();
+
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Features
