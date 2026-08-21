@@ -2373,15 +2373,23 @@ evidence.
   1. **a boundary map** — an identity map used *only at crossings*, `object → cursor start`.
      `Measure_` entered through the hook records where its run began; `RawWrite_` entered through
      `Write` looks it up **once** and consumes positionally from there. One hash per crossing, zero
-     per node, and "at most twice" holds everywhere. This is the recommendation;
-  2. accept that a classic-interop subtree measures twice and writes once (three passes), which
-     regresses *mixed* models and breaks the invariant there;
-  3. use the array only when the whole model is raw-measurable — a compile-time property the
-     generator already has — and keep the dictionary otherwise. Simplest, but leaves mixed models
-     on today's path.
+     per node, and "at most twice" holds everywhere;
+  2. use the array only when the whole model is raw-measurable — a compile-time property the
+     generator already has — and keep today's dictionary otherwise;
+  3. accept that a classic-interop subtree measures twice and writes once (three passes).
 
-  This does not touch the measurements above: `DelimitedModel` is fully measurable, so the hook never
-  fires on the measured path.
+  **Decided (Marc, 2026-08-21): 1, falling back to 2; 3 is out.** The ordering turns on one
+  distinction that is easy to miss — and did get missed once here, which is why it is spelled out:
+  **3 is the only option that makes anything WORSE than today.** A mixed model goes from two passes
+  to three. 2 merely declines to *improve* mixed models, leaving them exactly where they are, so the
+  worst case is a missed opportunity rather than a regression — and it turns "be fully raw" into an
+  incentive instead of turning "not fully raw" into a new penalty. Marc: *"having the entire trick
+  only good on full raw mode is fine: it is a reason to drive full raw."*
+
+  Note this does not touch the measurements above: `DelimitedModel` is fully measurable, so the hook
+  never fires on the measured path.
+
+
 
 **There is NO cheap partial. Both candidates were tried and both fail** — recorded because each
 looks obviously right until checked, and the first was offered here before it was.
