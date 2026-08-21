@@ -66,20 +66,24 @@ partial class BytesModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Bytes.Blob>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Bytes.Blob global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Bytes.Blob value)
             => RawRead_AotFixtures_Bytes_Blob(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Bytes.Blob>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Bytes.Blob value)
+            => RawWrite_AotFixtures_Bytes_Blob(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Bytes_Blob(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Bytes.Blob value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Payload;
             if (tmp1 != null)
@@ -108,6 +112,43 @@ partial class BytesModel
             var tmp6 = value.ReadOnly;
             state.WriteFieldHeader(6, global::ProtoBuf.WireType.String);
             state.WriteBytes(tmp6);
+        }
+
+        private static long Measure_AotFixtures_Bytes_Blob(global::AotFixtures.Bytes.Blob value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Payload;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp1.Length) + tmp1.Length;  // Payload
+            }
+            var tmp2 = value.Other;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp2.Length) + tmp2.Length;  // Other
+            }
+            var tmp3 = value.Single;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(tmp3);  // Single
+            var tmp4 = value.Segment;
+            var bytes4 = ((global::System.ReadOnlyMemory<byte>)tmp4).Length;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bytes4) + bytes4;  // Segment
+            var tmp5 = value.Memory;
+            var bytes5 = ((global::System.ReadOnlyMemory<byte>)tmp5).Length;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bytes5) + bytes5;  // Memory
+            var tmp6 = value.ReadOnly;
+            var bytes6 = ((global::System.ReadOnlyMemory<byte>)tmp6).Length;
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)bytes6) + bytes6;  // ReadOnly
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Bytes.Blob>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Bytes.Blob value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Bytes_Blob(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.Bytes.Blob RawRead_AotFixtures_Bytes_Blob(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Bytes.Blob value)

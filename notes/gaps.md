@@ -2898,7 +2898,7 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
 | ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
-| a **value-type bytes** member (`Memory<byte>`, `ReadOnlyMemory<byte>`, `ArraySegment<byte>`) | yes, narrow | *untracked before this* |
+| ~~a **value-type bytes** member~~ | **DONE 2026-08-21** | below |
 | a message member whose target is not itself measurable | **this is the cascade, not a gap of its own** | — |
 
 **Nullable-struct message members — done, and the recorded reason for parking them was not the real
@@ -2923,6 +2923,14 @@ branch's `RawScalarMeasure(...)!` turned null into an empty string and emitted `
 time that has bitten; the fix belongs beside the BCL arm that was added for exactly the same reason.
 
 Effect: `Structs` 3 → 7 `Measure_` occurrences, `Getter` 6 → 10, `TupleMembers` 12 → 16.
+
+**Value-type bytes — done, 2026-08-21.** `Memory<byte>`, `ReadOnlyMemory<byte>` and
+`ArraySegment<byte>` are written **unguarded** (they cannot be null), so the measure must not guard
+either or the two disagree on a default instance. The only wrinkle is that `ArraySegment` counts with
+`.Count` and the other two with `.Length` — sidestepped entirely, since all three convert implicitly
+to `ReadOnlyMemory<byte>`, so one cast serves all of them and no type spelling has to be matched.
+(`DeclaredTypeName` is no help: it is populated only for tuple read locals.) `Bytes.output.cs` went
+from **zero** `Measure_` occurrences to two — that contract had no arithmetic measure at all.
 
 #### Ranked, for "what next"
 

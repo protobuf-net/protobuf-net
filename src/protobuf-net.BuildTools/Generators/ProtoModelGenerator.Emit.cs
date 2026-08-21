@@ -3543,7 +3543,9 @@ namespace ProtoBuf.BuildTools.Generators
                     // pure varints on the raw path - see RawScalarWrite; no BclHelpers sizing needed
                     or ProtoMemberKind.IntPtr or ProtoMemberKind.UIntPtr
                     or ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly => false,
-                ProtoMemberKind.Bytes => member.MemberIsValueType,
+                // the struct storage shapes measure too now (gap B42): they are written unguarded
+                // and their length is .Count / .Length, which is arithmetic like any other
+                ProtoMemberKind.Bytes => false,
                 ProtoMemberKind.Message => member.SubSerializerIsScalar || member.SubSerializerDynamic
                     || member.SubSerializer is not (null or "this")
                     || member.TypeName is null || !measurable.ContainsKey(member.TypeName),
@@ -4015,6 +4017,22 @@ namespace ProtoBuf.BuildTools.Generators
                             $"global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp{number}.OriginalString)"));
                         Line(sb, indent, "}");
                         break;
+                    // the struct shapes are written UNGUARDED (they cannot be null), so the
+                    // measure must not guard either or the two disagree on a default instance.
+                    //
+                    // All three - ArraySegment<byte>, Memory<byte>, ReadOnlyMemory<byte> - convert
+                    // implicitly to ReadOnlyMemory<byte>, so one cast serves all of them and no
+                    // spelling has to be matched. (ArraySegment counts with .Count and the other
+                    // two with .Length, which is the distinction this sidesteps; DeclaredTypeName
+                    // is no help, being populated only for tuple read locals.) gap B42.
+                    case ProtoMemberKind.Bytes when member.MemberIsValueType:
+                    {
+                        var count = $"bytes{number}";
+                        Line(sb, indent, $"var {count} = ((global::System.ReadOnlyMemory<byte>)tmp{number}).Length;");
+                        Line(sb, indent, MeasureAdd(member, 2,
+                            $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){count}) + {count}"));
+                        break;
+                    }
                     case ProtoMemberKind.Bytes:
                         Line(sb, indent, $"if (tmp{number} != null)");
                         Line(sb, indent, "{");
