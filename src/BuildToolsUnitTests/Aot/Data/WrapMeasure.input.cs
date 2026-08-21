@@ -14,6 +14,7 @@
 // exercises a different arm. The group form drops the length prefix for a start/end tag pair.
 using ProtoBuf;
 using ProtoBuf.Meta;
+using System.Collections.Generic;
 
 namespace AotFixtures.WrapMeasure;
 
@@ -36,12 +37,37 @@ public class Boxed
     [ProtoMember(9)] public int Trailer { get; set; }
 }
 
+// The COLLECTION scopes, which have the opposite inner rule to the lone form above: an element
+// wrapper carries OptionWrappedValueFieldPresence, so its inner field is written even for a zero -
+// [0] is 0A-02-08-00 where the lone int? 0 is 0A-00. A collection wrapper renumbers its contents to
+// field 1 and length-prefixes them, so null and empty become distinguishable (nothing vs 0A-00).
+[ProtoContract]
+public class Crate
+{
+    // element wrapping: a null element is an EMPTY wrapper, not an absent one
+    [ProtoMember(1), NullWrappedValue] public List<int?> Counts { get; set; }
+    [ProtoMember(2), NullWrappedValue(AsGroup = true)] public List<int?> Grouped { get; set; }
+    [ProtoMember(3), NullWrappedValue] public List<string> Labels { get; set; }
+    [ProtoMember(4), NullWrappedValue] public List<Tint?> Shades { get; set; }
+
+    // collection wrapping: null writes nothing, empty writes an empty wrapper
+    [ProtoMember(5), NullWrappedCollection] public List<int> Sizes { get; set; }
+    [ProtoMember(6), NullWrappedCollection(AsGroup = true)] public List<int> GroupedSizes { get; set; }
+    [ProtoMember(7), NullWrappedCollection] public List<string> Names { get; set; }
+
+    // ...and the two together, at different scopes
+    [ProtoMember(8), NullWrappedCollection, NullWrappedValue] public List<int?> Both { get; set; }
+    [ProtoMember(21), NullWrappedValue] public List<int?> Far { get; set; }
+    [ProtoMember(9)] public int Trailer { get; set; }
+}
+
 // nests it, so something above needs a length and the measure actually runs
 [ProtoContract]
 public class Carton
 {
     [ProtoMember(1)] public Boxed Inner { get; set; }
     [ProtoMember(2)] public int Tag { get; set; }
+    [ProtoMember(3)] public Crate Packed { get; set; }
 }
 
 public static class WrapMeasureSamples
@@ -58,10 +84,21 @@ public static class WrapMeasureSamples
         new Carton(),
         new Carton { Inner = new Boxed { Count = 0, Label = "" }, Tag = 3 },
         new Carton { Inner = new Boxed { Count = 5, Big = long.MaxValue }, Tag = 4 },
+
+        new Crate(),
+        // every collection present and EMPTY: nothing for element wrapping, an empty wrapper for
+        // collection wrapping - the pair that a shared rule would get wrong
+        new Crate { Counts = [], Grouped = [], Labels = [], Shades = [], Sizes = [], GroupedSizes = [], Names = [], Both = [], Far = [] },
+        // a null element in every element-wrapped scope, and a zero beside it: the zero is written
+        new Crate { Counts = [1, null, 0], Grouped = [null, 2, 0], Labels = ["", null, "a"], Shades = [Tint.Deep, null, Tint.None], Far = [null, 7] },
+        new Crate { Sizes = [1, 0, 300], GroupedSizes = [0, 4], Names = ["", "bc"] },
+        new Crate { Both = [1, null, 0], Trailer = 9 },
+        new Carton { Packed = new Crate { Counts = [null], Sizes = [] }, Tag = 5 },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Boxed))]
+[ProtoSerializable(typeof(Crate))]
 [ProtoSerializable(typeof(Carton))]
 public partial class WrapMeasureModel : TypeModel { }

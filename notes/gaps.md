@@ -2937,7 +2937,8 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | --- | --- | --- |
 | **maps** (any `Map.Factory`) | **yes, and common** | **B6** |
 | **null-wrapping** — lone `[NullWrappedValue]` | **DONE 2026-08-22** | below |
-| **null-wrapping** — collections and maps | **yes, still** | below |
+| **null-wrapping** — collections, scalar/string elements | **DONE 2026-08-22** | below |
+| **null-wrapping** — message elements, and maps | **yes, still** | below |
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
 | ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
@@ -3014,6 +3015,38 @@ pure features composition on the write, so the size is derivable in principle �
 adds `OptionWrappedValueFieldPresence`, which means the inner field is written *even when trivial*,
 i.e. **the opposite of the lone rule above** and a separate arm rather than a reuse of this one.
 
+**...and the COLLECTION scopes, same day.** Both of them, plus the two composed, on the same probe-
+first footing. The shapes, and the reason they are a separate arm rather than a reuse:
+
+| | bytes |
+| --- | --- |
+| element-wrapped `[1,null,0]` | `0A-02-08-01` `0A-00` `0A-02-08-00` |
+| element-wrapped `[""` ,`null`, `"a"]` | `0A-02-0A-00` `0A-00` `0A-03-0A-01-61` |
+| element-wrapped group `[1,null,0]` | `0B-08-01-0C` `0B-0C` `0B-08-00-0C` |
+| collection-wrapped `null` / `[]` / `[1,0]` | *nothing* / `0A-00` / `0A-04-08-01-08-00` |
+| collection-wrapped group `[1,0]` | `0B-08-01-08-00-0C` |
+| both, `[1,null]` | `0A-06-0A-02-08-01-0A-00` |
+
+Three facts drive the emitter, and only the first was predictable:
+
+- **an element wrapper always carries its inner field**, zero or not — that is
+  `OptionWrappedValueFieldPresence`, and it is the **inverse** of the lone rule recorded above. So
+  the collection arm has *no* trivial-value test at all, only a null one, and sharing code with the
+  lone arm would have been actively wrong in both directions;
+- **a collection wrapper renumbers its contents to field 1**, so the element tag is not the member's
+  own — and the elements inside it are unconditional, zero included;
+- **the two scopes compose by nesting**, which falls out for free: the element sum accumulates into
+  a local and the collection wrapper then measures that local exactly as it would any body.
+
+`null` versus `[]` is the whole point of collection wrapping and is the pair a single rule gets
+wrong, so the fixture carries a sample with every collection present and empty, beside one with a
+null element in every element-wrapped scope.
+
+Still out, and now the only null-wrapping left: **message elements** and **maps**. A wrapped element
+is written by the stateful engine, so its sub-message lengths do not come from the slot buffer —
+the recursion would have to measure with a null one, which is the nullable-struct shape rather than
+one more arm here. Maps add two-sided wrapping on top of that.
+
 #### Ranked, for "what next"
 
 1. **inheritance** (B41) — worst blast radius, and `[ProtoSubType]` just made it reachable from
@@ -3021,8 +3054,7 @@ i.e. **the opposite of the lone rule above** and a separate arm rather than a re
 2. **maps** (B6) — the most *common* shape on this list by some distance;
 3. **surrogates** — untracked until now, and a surrogated contract is ordinary enough in real
    models (`DateTimeOffset`, NodaTime) that this is likely hit more than its absence here suggests;
-4. ~~**null-wrapping**~~ — the lone form is done; the COLLECTION and MAP forms remain, and note
-   their element rule is the *inverse* of the lone one (field presence);
+4. ~~**null-wrapping**~~ — done bar wrapped MESSAGE elements and wrapped maps;
 5. **contract-level `IsGroup`** — cheap to establish, possibly free to fix, possibly backwards in
    the same way B35 was;
 6. the two narrow ones (nullable-struct message, value-type bytes) — fixture-sized, not features.

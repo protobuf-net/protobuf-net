@@ -3528,10 +3528,16 @@ namespace ProtoBuf.BuildTools.Generators
         {
             // a map's SIZE can be arithmetic even though its write stays on MapSerializer (gap B6)
             if (member.Map.Factory is not null) return !RawMapMeasurable(member);
-            // a LONE wrapped value can be measured arithmetically (gap B42) even though its
-            // write stays on WriteAny; wrapped COLLECTIONS and MAPS have not been derived
-            if (member.WrappedCollection) return true;
-            if (member.WrappedValue) return !WrappedValueMeasurable(member);
+            // Null-wrapping is measurable in both scopes (gap B42) even though every wrapped write
+            // stays stateful - WriteAny for a lone value, the repeated engine for a collection.
+            // The two have DIFFERENT inner rules and so different predicates: a lone wrapper omits
+            // a trivial inner field, an element wrapper always carries one.
+            if (member.WrappedValue || member.WrappedCollection)
+            {
+                return member.Repeated.Factory is not null || member.Map.Factory is not null
+                    ? !WrappedRepeatedMeasurable(member)
+                    : !WrappedValueMeasurable(member);
+            }
             // A packed column vets its OWN format - RawPackedWritable admits FixedSize on the
             // integer kinds and ZigZag on the signed ones - so it has to be asked BEFORE the
             // blanket non-default-format block below, or those two are refused there and never
@@ -3930,7 +3936,11 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent, "{");
                     }
                     var body = repeatedGuard ? indent + 1 : indent;
-                    if (RawPackedWritable(member, listAsSpan, immutableAsSpan))
+                    if (member.WrappedValue || member.WrappedCollection)
+                    {
+                        EmitWrappedRepeatedMeasure(sb, body, member, number, listAsSpan, immutableAsSpan);
+                    }
+                    else if (RawPackedWritable(member, listAsSpan, immutableAsSpan))
                     {
                         EmitRawPackedMeasure(sb, body, member, number, listAsSpan, immutableAsSpan);
                     }
@@ -4348,6 +4358,119 @@ namespace ProtoBuf.BuildTools.Generators
                     : $"len += {tagLen} + {payload};");
             }
             Line(sb, indent, "}");
+        }
+
+
+        /// <summary>
+        /// Whether a null-wrapped COLLECTION member has an arithmetic measure (gap B42). Element
+        /// wrapping, collection wrapping, and the two together all compose from the same two
+        /// pieces, so they share one predicate and one emitter.
+        /// </summary>
+        /// <remarks>
+        /// Deliberately excludes MESSAGE elements - the write leaves a wrapped element to the
+        /// stateful engine, so its sub-lengths do not come from the slot buffer and the recursion
+        /// would have to measure with a null one, which is a separate shape rather than one more
+        /// arm here. Maps are excluded for the same reason plus their two-sided wrapping. A
+        /// value-type collection is excluded from COLLECTION wrapping specifically: the whole point
+        /// of that scope is telling null from empty, and a struct collection has no null.
+        /// </remarks>
+        private static bool WrappedRepeatedMeasurable(ProtoMemberPlan member)
+            => (member.WrappedValue || member.WrappedCollection)
+            && member.Repeated.Factory is not null
+            && member.Map.Factory is null
+            && member.DataFormat == ProtoDataFormat.Default
+            && !member.IsPacked
+            && member.Kind is not ProtoMemberKind.Message
+            && (RawScalarMeasure(member, "x") is not null
+                || member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes)
+            && (!member.WrappedCollection || NeedsNullGuard(member));
+
+        /// <summary>
+        /// The measure for a null-wrapped collection. Probed rather than derived; the shapes are
+        /// recorded in notes/gaps.md B42, and the two scopes compose exactly as the features do.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>An ELEMENT wrapper always carries its inner field</b>, even for a zero - that is
+        /// <c>OptionWrappedValueFieldPresence</c>, and it is the <b>inverse</b> of the lone
+        /// <c>[NullWrappedValue]</c> rule, where a zero writes an empty wrapper. So there is no
+        /// trivial-value test here at all, only a null one: <c>[0]</c> is <c>0A-02-08-00</c> where
+        /// <c>[null]</c> is <c>0A-00</c>.
+        /// </para>
+        /// <para>
+        /// <b>A COLLECTION wrapper renumbers its contents to field 1</b> and length-prefixes them,
+        /// so <c>[1,0]</c> is <c>0A-04-08-01-08-00</c> - note the zero is present there too, an
+        /// element inside the wrapper being unconditional. An empty collection is <c>0A-00</c> and a
+        /// null one writes nothing, which is the distinction the feature exists for.
+        /// </para>
+        /// <para>
+        /// Both scopes take the group form independently (<c>AsGroup</c>), replacing the length
+        /// prefix with a start/end tag pair that folds to one constant.
+        /// </para>
+        /// </remarks>
+        private static void EmitWrappedRepeatedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member,
+            string number, bool listAsSpan, bool immutableAsSpan)
+        {
+            // inside a collection wrapper the elements are renumbered to field 1; outside it they
+            // keep the member's own number
+            var elementField = member.WrappedCollection ? 1 : member.FieldNumber;
+            var elementWire = member.WrappedValue
+                ? 2
+                : member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes
+                    ? 2 : RawScalarWireBits(member.Kind);
+            if (member.WrappedValue && member.WrappedValueGroup) elementWire = 3;
+            var elementTag = VarintLen((uint)((elementField << 3) | elementWire));
+
+            var accumulator = member.WrappedCollection ? $"col{number}" : "len";
+            if (member.WrappedCollection) Line(sb, indent, $"long {accumulator} = 0;");
+
+            var source = RepeatedSpan(member, number, listAsSpan, immutableAsSpan) ?? $"tmp{number}";
+            var item = $"item{number}";
+            var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
+            var reference = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes;
+            var scalar = nullableElement ? $"{item}.GetValueOrDefault()" : item;
+            var payload = member.Kind switch
+            {
+                ProtoMemberKind.String => $"global::ProtoBuf.ProtoWriter.State.MeasureRawString({item})",
+                ProtoMemberKind.Bytes
+                    => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){item}.Length) + {item}.Length",
+                _ => RawScalarMeasure(member, ScalarValue(member, scalar))!,
+            };
+
+            Line(sb, indent, $"foreach (var {item} in {source})");
+            Line(sb, indent, "{");
+            if (member.WrappedValue)
+            {
+                var inner = $"wrap{number}";
+                // a null element is an EMPTY wrapper, not an absent one - which is the whole point
+                Line(sb, indent + 1, nullableElement || reference
+                    ? $"long {inner} = {item} is null ? 0 : 1 + {payload};"
+                    : $"long {inner} = 1 + {payload};");
+                Line(sb, indent + 1, member.WrappedValueGroup
+                    ? $"{accumulator} += {elementTag * 2} + {inner};"
+                    : $"{accumulator} += {elementTag} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong){inner}) + {inner};");
+            }
+            else
+            {
+                // collection-wrapped but not element-wrapped: ordinary elements, renumbered. A null
+                // one is the same error the unwrapped path raises, and raising it in the MEASURE
+                // means no bytes have been written yet
+                if (reference || nullableElement)
+                {
+                    Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
+                }
+                Line(sb, indent + 1, $"{accumulator} += {elementTag} + {payload};");
+            }
+            Line(sb, indent, "}");
+
+            if (member.WrappedCollection)
+            {
+                var outerTag = VarintLen((uint)((member.FieldNumber << 3) | (member.WrappedCollectionGroup ? 3 : 2)));
+                Line(sb, indent, member.WrappedCollectionGroup
+                    ? $"len += {outerTag * 2} + {accumulator};  // {member.Name} (wrapped collection, group)"
+                    : $"len += {outerTag} + global::ProtoBuf.ProtoWriter.State"
+                        + $".MeasureRawVarint64((ulong){accumulator}) + {accumulator};  // {member.Name} (wrapped collection)");
+            }
         }
 
         /// <summary>
