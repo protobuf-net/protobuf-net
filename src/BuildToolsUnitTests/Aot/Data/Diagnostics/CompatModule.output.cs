@@ -151,7 +151,7 @@ partial class CompatModuleModel
             }
         }
 
-        private static long Measure_AotFixtures_CompatModule_FromModule(global::AotFixtures.CompatModule.FromModule value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_CompatModule_FromModule(global::AotFixtures.CompatModule.FromModule value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -177,7 +177,7 @@ partial class CompatModuleModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_CompatModule_FromModule(value, depth, slots);
+            var len = Measure_AotFixtures_CompatModule_FromModule(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -259,7 +259,7 @@ partial class CompatModuleModel
             }
         }
 
-        private static long Measure_AotFixtures_CompatModule_OverridesModule(global::AotFixtures.CompatModule.OverridesModule value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_CompatModule_OverridesModule(global::AotFixtures.CompatModule.OverridesModule value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -279,7 +279,7 @@ partial class CompatModuleModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_CompatModule_OverridesModule(value, depth, slots);
+            var len = Measure_AotFixtures_CompatModule_OverridesModule(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

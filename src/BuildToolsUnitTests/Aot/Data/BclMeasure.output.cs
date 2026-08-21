@@ -140,7 +140,7 @@ partial class BclMeasureModel
             }
         }
 
-        private static long Measure_AotFixtures_BclMeasure_Timings(global::AotFixtures.BclMeasure.Timings value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_BclMeasure_Timings(global::AotFixtures.BclMeasure.Timings value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -202,7 +202,7 @@ partial class BclMeasureModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_BclMeasure_Timings(value, depth, slots);
+            var len = Measure_AotFixtures_BclMeasure_Timings(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

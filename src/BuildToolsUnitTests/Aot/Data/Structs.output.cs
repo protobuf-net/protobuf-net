@@ -154,7 +154,7 @@ partial class StructsModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Structs_HasStructs(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Structs_HasStructs(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Structs_HasStructs(ref state, value, state.RawDepthBudget);
@@ -185,21 +185,21 @@ partial class StructsModel
             }
         }
 
-        private static long Measure_AotFixtures_Structs_HasStructs(global::AotFixtures.Structs.HasStructs value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Structs_HasStructs(global::AotFixtures.Structs.HasStructs value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
             var tmp1 = value.Location;
             var slot1 = slots.Reserve();
-            sub = Measure_AotFixtures_Structs_Point(tmp1, depth, slots);
+            sub = Measure_AotFixtures_Structs_Point(tmp1, depth, slots, context);
             slots.Set(slot1, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Location
             var tmp2 = value.MaybeLocation;
             if (tmp2.HasValue)
             {
                 var val2 = tmp2.GetValueOrDefault();
-                sub = Measure_AotFixtures_Structs_Point(val2, depth, null);
+                sub = Measure_AotFixtures_Structs_Point(val2, depth, null, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybeLocation
             }
             var tmp3 = value.Other;
@@ -211,7 +211,7 @@ partial class StructsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Structs_HasStructs(value, depth, slots);
+            var len = Measure_AotFixtures_Structs_HasStructs(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -319,7 +319,7 @@ partial class StructsModel
             }
         }
 
-        private static long Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -337,7 +337,7 @@ partial class StructsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Structs_Point(value, depth, slots);
+            var len = Measure_AotFixtures_Structs_Point(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 

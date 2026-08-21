@@ -274,7 +274,7 @@ partial class TupleMembersModel
         {
             var slots = state.RawSlots;
             var entry = slots.Mark();
-                Measure__int___int__string__(value, state.RawDepthBudget, slots);
+                Measure__int___int__string__(value, state.RawDepthBudget, slots, state.Context);
             slots.SeekTo(entry);
             RawWrite__int___int__string__(ref state, value, state.RawDepthBudget);
         }
@@ -295,7 +295,7 @@ partial class TupleMembersModel
             DebugAssertPosition(ref state, before + len, "Item2");
         }
 
-        private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -303,7 +303,7 @@ partial class TupleMembersModel
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
             var slot2 = slots.Reserve();
-            var sub = Measure__int__string_(tmp2, depth, slots);
+            var sub = Measure__int__string_(tmp2, depth, slots, context);
             slots.Set(slot2, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Item2
             return len;
@@ -313,7 +313,7 @@ partial class TupleMembersModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure__int___int__string__(value, depth, slots);
+            var len = Measure__int___int__string__(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -370,7 +370,7 @@ partial class TupleMembersModel
             }
         }
 
-        private static long Measure__int__string_((int, string) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure__int__string_((int, string) value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -388,7 +388,7 @@ partial class TupleMembersModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure__int__string_(value, depth, slots);
+            var len = Measure__int__string_(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -406,7 +406,7 @@ partial class TupleMembersModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_TupleMembers_HasTuples(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_TupleMembers_HasTuples(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_TupleMembers_HasTuples(ref state, value, state.RawDepthBudget);
@@ -459,36 +459,36 @@ partial class TupleMembersModel
             }
         }
 
-        private static long Measure_AotFixtures_TupleMembers_HasTuples(global::AotFixtures.TupleMembers.HasTuples value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_TupleMembers_HasTuples(global::AotFixtures.TupleMembers.HasTuples value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
             var tmp1 = value.Named;
             var slot1 = slots.Reserve();
-            sub = Measure__int__string_(tmp1, depth, slots);
+            sub = Measure__int__string_(tmp1, depth, slots, context);
             slots.Set(slot1, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Named
             var tmp2 = value.Anonymous;
             var slot2 = slots.Reserve();
-            sub = Measure__int__string_(tmp2, depth, slots);
+            sub = Measure__int__string_(tmp2, depth, slots, context);
             slots.Set(slot2, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Anonymous
             var tmp3 = value.Deep;
             var slot3 = slots.Reserve();
-            sub = Measure__int___int__string__(tmp3, depth, slots);
+            sub = Measure__int___int__string__(tmp3, depth, slots, context);
             slots.Set(slot3, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Deep
             var tmp4 = value.Pair;
             var slot4 = slots.Reserve();
-            sub = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, depth, slots);
+            sub = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, depth, slots, context);
             slots.Set(slot4, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Pair
             var tmp5 = value.MaybePair;
             if (tmp5.HasValue)
             {
                 var val5 = tmp5.GetValueOrDefault();
-                sub = Measure__int__string_(val5, depth, null);
+                sub = Measure__int__string_(val5, depth, null, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybePair
             }
             var tmp6 = value.Other;
@@ -500,7 +500,7 @@ partial class TupleMembersModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_TupleMembers_HasTuples(value, depth, slots);
+            var len = Measure_AotFixtures_TupleMembers_HasTuples(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -646,7 +646,7 @@ partial class TupleMembersModel
             }
         }
 
-        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -664,7 +664,7 @@ partial class TupleMembersModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, slots);
+            var len = Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 

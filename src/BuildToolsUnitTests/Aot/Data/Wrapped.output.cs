@@ -144,7 +144,7 @@ partial class WrappedModel
             }
         }
 
-        private static long Measure_AotFixtures_Wrapped_Nested(global::AotFixtures.Wrapped.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Wrapped_Nested(global::AotFixtures.Wrapped.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -157,7 +157,7 @@ partial class WrappedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Wrapped_Nested(value, depth, slots);
+            var len = Measure_AotFixtures_Wrapped_Nested(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

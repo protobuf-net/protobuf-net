@@ -205,7 +205,7 @@ partial class AssemblySurrogateModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_AssemblySurrogate_Holder(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_AssemblySurrogate_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_AssemblySurrogate_Holder(ref state, value, state.RawDepthBudget);
@@ -228,7 +228,7 @@ partial class AssemblySurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_AssemblySurrogate_Holder(global::AotFixtures.AssemblySurrogate.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_AssemblySurrogate_Holder(global::AotFixtures.AssemblySurrogate.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -236,7 +236,7 @@ partial class AssemblySurrogateModel
             if (tmp1 != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_System_Version(tmp1, depth, slots);
+                var sub = Measure_System_Version(tmp1, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Version
             }
@@ -247,7 +247,7 @@ partial class AssemblySurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_AssemblySurrogate_Holder(value, depth, slots);
+            var len = Measure_AotFixtures_AssemblySurrogate_Holder(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -307,7 +307,7 @@ partial class AssemblySurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(global::AotFixtures.AssemblySurrogate.VersionSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -323,7 +323,7 @@ partial class AssemblySurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(value, depth, slots);
+            var len = Measure_AotFixtures_AssemblySurrogate_VersionSurrogate(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -398,7 +398,7 @@ partial class AssemblySurrogateModel
             }
         }
 
-        private static long Measure_System_Version(global::System.Version value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_System_Version(global::System.Version value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.AssemblySurrogate.VersionSurrogate)value;
@@ -415,7 +415,7 @@ partial class AssemblySurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_System_Version(value, depth, slots);
+            var len = Measure_System_Version(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

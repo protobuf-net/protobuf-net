@@ -193,7 +193,7 @@ partial class ListsModel
             }
         }
 
-        private static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -211,7 +211,7 @@ partial class ListsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Lists_Inner(value, depth, slots);
+            var len = Measure_AotFixtures_Lists_Inner(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -264,7 +264,7 @@ partial class ListsModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Lists_Repeated(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Lists_Repeated(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Lists_Repeated(ref state, value, state.RawDepthBudget);
@@ -401,7 +401,7 @@ partial class ListsModel
             }
         }
 
-        private static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -462,7 +462,7 @@ partial class ListsModel
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     var slot9 = slots.Reserve();
-                    sub = Measure_AotFixtures_Lists_Inner(item9, depth, slots);
+                    sub = Measure_AotFixtures_Lists_Inner(item9, depth, slots, context);
                     slots.Set(slot9, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
@@ -474,7 +474,7 @@ partial class ListsModel
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     var slot10 = slots.Reserve();
-                    sub = Measure_AotFixtures_Lists_Inner(item10, depth, slots);
+                    sub = Measure_AotFixtures_Lists_Inner(item10, depth, slots, context);
                     slots.Set(slot10, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
@@ -506,7 +506,7 @@ partial class ListsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Lists_Repeated(value, depth, slots);
+            var len = Measure_AotFixtures_Lists_Repeated(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

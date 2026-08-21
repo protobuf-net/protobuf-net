@@ -388,7 +388,7 @@ partial class InheritAccessorModel
             }
         }
 
-        private static long Measure_AotFixtures_InheritAccessor_Holder(global::AotFixtures.InheritAccessor.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_InheritAccessor_Holder(global::AotFixtures.InheritAccessor.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -401,7 +401,7 @@ partial class InheritAccessorModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_InheritAccessor_Holder(value, depth, slots);
+            var len = Measure_AotFixtures_InheritAccessor_Holder(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 

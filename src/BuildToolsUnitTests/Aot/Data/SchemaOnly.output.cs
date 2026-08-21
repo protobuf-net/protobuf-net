@@ -281,7 +281,7 @@ partial class SchemaOnlyModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
         }
 
-        private static long Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_SchemaOnly_Empty(global::AotFixtures.SchemaOnly.Empty value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -292,7 +292,7 @@ partial class SchemaOnlyModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_SchemaOnly_Empty(value, depth, slots);
+            var len = Measure_AotFixtures_SchemaOnly_Empty(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -331,7 +331,7 @@ partial class SchemaOnlyModel
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_SchemaOnly_EmptyExtensible(global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -343,7 +343,7 @@ partial class SchemaOnlyModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_SchemaOnly_EmptyExtensible(value, depth, slots);
+            var len = Measure_AotFixtures_SchemaOnly_EmptyExtensible(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -393,7 +393,7 @@ partial class SchemaOnlyModel
             }
         }
 
-        private static long Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_SchemaOnly_Ignoring(global::AotFixtures.SchemaOnly.Ignoring value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -411,7 +411,7 @@ partial class SchemaOnlyModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_SchemaOnly_Ignoring(value, depth, slots);
+            var len = Measure_AotFixtures_SchemaOnly_Ignoring(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -479,7 +479,7 @@ partial class SchemaOnlyModel
             }
         }
 
-        private static long Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_SchemaOnly_Plain(global::AotFixtures.SchemaOnly.Plain value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -497,7 +497,7 @@ partial class SchemaOnlyModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_SchemaOnly_Plain(value, depth, slots);
+            var len = Measure_AotFixtures_SchemaOnly_Plain(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -565,7 +565,7 @@ partial class SchemaOnlyModel
             }
         }
 
-        private static long Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_SchemaOnly_SchemaOnly(global::AotFixtures.SchemaOnly.SchemaOnly value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -583,7 +583,7 @@ partial class SchemaOnlyModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_SchemaOnly_SchemaOnly(value, depth, slots);
+            var len = Measure_AotFixtures_SchemaOnly_SchemaOnly(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

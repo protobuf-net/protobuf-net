@@ -835,12 +835,12 @@ namespace ProtoBuf.BuildTools.Generators
                             return Option(diagnostics, PlanLocation.From(method), name,
                                 $"[{AttributeName(onMethod)}] on methods");
                         }
-                        if (!IsUsableCallback(method, callbackKind, out var takesContext))
+                        if (!IsUsableCallback(method, callbackKind, out var callbackArgument))
                         {
                             return Option(diagnostics, PlanLocation.From(method), name,
                                 $"this form of [{AttributeName(onMethod)}]");
                         }
-                        callbacks[(int)callbackKind] = new ProtoCallbackPlan(method.Name, takesContext);
+                        callbacks[(int)callbackKind] = new ProtoCallbackPlan(method.Name, callbackArgument);
                     }
                     continue;
                 }
@@ -3838,15 +3838,19 @@ namespace ProtoBuf.BuildTools.Generators
 
         /// <summary>
         /// Can generated code call this callback directly? It must be a public, non-static, void
-        /// method taking either nothing or a <c>StreamingContext</c>.
+        /// method taking nothing, a <c>StreamingContext</c>, or an <c>ISerializationContext</c>.
         /// </summary>
         /// <remarks>
         /// <c>MetaType</c> accepts a wider set of signatures (and reaches non-public ones by
-        /// reflection); anything outside this subset is refused rather than mis-called.
+        /// reflection); anything outside this subset is refused rather than mis-called. The two
+        /// context flavours are not interchangeable - only <c>ISerializationContext</c> carries the
+        /// context OBJECT, so it is the only one a callback can ask
+        /// <c>ProtoWriter.IsMeasuring</c> about, which is how it tells a measure-first contract's
+        /// two before-serialize passes apart.
         /// </remarks>
-        private static bool IsUsableCallback(IMethodSymbol method, ProtoCallbackKind kind, out bool takesContext)
+        private static bool IsUsableCallback(IMethodSymbol method, ProtoCallbackKind kind, out ProtoCallbackArgument argument)
         {
-            takesContext = false;
+            argument = ProtoCallbackArgument.None;
             if (method.IsStatic || method.DeclaredAccessibility != Accessibility.Public) return false;
             if (!method.ReturnsVoid || method.IsGenericMethod) return false;
 
@@ -3854,10 +3858,18 @@ namespace ProtoBuf.BuildTools.Generators
             {
                 case 0:
                     return true;
-                case 1 when method.Parameters[0].Type.ToDisplayString()
-                    == "System.Runtime.Serialization.StreamingContext":
-                    takesContext = true;
-                    return true;
+                case 1:
+                    switch (method.Parameters[0].Type.ToDisplayString())
+                    {
+                        case "System.Runtime.Serialization.StreamingContext":
+                            argument = ProtoCallbackArgument.StreamingContext;
+                            return true;
+                        case "ProtoBuf.ISerializationContext":
+                            argument = ProtoCallbackArgument.SerializationContext;
+                            return true;
+                        default:
+                            return false;
+                    }
                 default:
                     return false;
             }

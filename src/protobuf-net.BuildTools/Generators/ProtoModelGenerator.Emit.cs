@@ -247,6 +247,17 @@ namespace ProtoBuf.BuildTools.Generators
                 } while (grew);
             }
 
+            // Does anything in the model actually ASK which pass it is in? A measure-first contract
+            // fires before-serialize in both passes, so a callback taking an ISerializationContext
+            // must be handed one for which ProtoWriter.IsMeasuring answers true - which means
+            // wrapping the real context. Where no contract has a serialize callback at all there is
+            // nobody to tell apart, and the entry points hand the context straight through, so a
+            // callback-free model's emitted code is byte-for-byte what it was before this existed.
+            var measuresCallbacks = plan.RawWriter && plan.Contracts.Any(
+                contract => measurable is not null && measurable.ContainsKey(contract.TypeName)
+                && (HasCallback(contract, ProtoCallbackKind.BeforeSerialize)
+                    || HasCallback(contract, ProtoCallbackKind.AfterSerialize)));
+
             Line(sb, indent + 1, $"private sealed class {ServicesTypeName}");
             var prefix = ':';
             foreach (var contract in plan.Contracts)
@@ -361,7 +372,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!first) contracts.AppendLine();
                 first = false;
                 var raw = rawSet.Contains(contract.TypeName);
-                EmitContract(contracts, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, plan.ImmutableArrayAsSpan, measurable, slotConsumers);
+                EmitContract(contracts, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, plan.ImmutableArrayAsSpan, measurable, slotConsumers, measuresCallbacks);
                 if (raw)
                 {
                     EmitRawRead(contracts, indent + 2, contract, rawCallable);
@@ -1179,9 +1190,13 @@ namespace ProtoBuf.BuildTools.Generators
 
         private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false, bool rawWrite = false,
             bool listAsSpan = false, bool immutableAsSpan = false, Dictionary<string, ProtoContractPlan>? measurable = null,
-            HashSet<string>? slotConsumers = null)
+            HashSet<string>? slotConsumers = null, bool measuresCallbacks = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
+            // see the computation of this flag: only a model with a serialize callback somewhere
+            // needs the measure pass to be distinguishable, and only that model pays for it
+            string Measuring(string owner, string source)
+                => measuresCallbacks ? $"{owner}.AsMeasuring({source})" : source;
 
             // a hand-written serializer replaces the body entirely - including Features - so we hand
             // it out rather than implementing ISerializer<T> ourselves at all
@@ -1211,7 +1226,7 @@ namespace ProtoBuf.BuildTools.Generators
 
             if (contract.RootTypeName is { } root)
             {
-                EmitSubTypeContract(sb, indent, contract, root, raw, rawWrite, listAsSpan, immutableAsSpan, measurable);
+                EmitSubTypeContract(sb, indent, contract, root, raw, rawWrite, listAsSpan, immutableAsSpan, measurable, measuresCallbacks);
                 return;
             }
 
@@ -1344,14 +1359,14 @@ namespace ProtoBuf.BuildTools.Generators
                 if (contract.IsValueType)
                 {
                     Line(sb, indent + 1, "var entry = slots.Mark();");
-                    Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots);");
+                    Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots, {Measuring("slots", "state.Context")});");
                 }
                 else
                 {
                     Line(sb, indent + 1, "if (!slots.Leave(value, out var entry))");
                     Line(sb, indent + 1, "{");
                     Line(sb, indent + 2, "entry = slots.Mark();");
-                    Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots);");
+                    Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots, {Measuring("slots", "state.Context")});");
                     Line(sb, indent + 1, "}");
                 }
                 Line(sb, indent + 1, "slots.SeekTo(entry);");
@@ -1389,8 +1404,9 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({writeInstance});");
                 }
+                EmitCallback(sb, indent + 1, contract, writeInstance, ProtoCallbackKind.BeforeSerialize);
                 var writeBody = new StringBuilder();
-                EmitWriteMembers(writeBody, indent + 1, contract, writeInstance, raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth", self: SelfField);
+                EmitWriteMembers(writeBody, indent + 1, contract, writeInstance, raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth", self: SelfField, measuresCallbacks: measuresCallbacks);
                 EmitCallback(writeBody, indent + 1, contract, writeInstance, ProtoCallbackKind.AfterSerialize);
                 AppendFoldingLengthTemp(sb, indent + 1, writeBody, "len");
                 Line(sb, indent, "}");
@@ -1413,7 +1429,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // contracts' measure statics, which is the sub-message recursion) or reflective -
                 // and both reflective binders, NanoBench.ResolveMeasure and
                 // AotConformanceTests.MeasurableContractTests, already pass NonPublic
-                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots)");
+                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 // the same conversion the write performs, so the two walk identical members. It
@@ -1426,11 +1442,22 @@ namespace ProtoBuf.BuildTools.Generators
                     measureInstance = "surrogate";
                     Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
                 }
+                // the measure pass fires before-serialize exactly as the write pass does, so both
+                // observe the SAME object - which is the whole reason the length can be trusted.
+                // ProtoWriter.IsMeasuring(context) is how a consumer's callback tells them apart,
+                // and this is the behaviour the classic buffer-writer backend has always had
+                // (AGENTS.md: true, then false). gap B42.
+                EmitCallback(sb, indent + 1, contract, measureInstance, ProtoCallbackKind.BeforeSerialize, "context");
                 Line(sb, indent + 1, "long len = 0;");
                 // `len` is the accumulator here, so the sub-message temp needs its own name
                 var measureBody = new StringBuilder();
                 EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan, measureInstance);
                 AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
+                // ...and after-serialize likewise. The classic engine fires BOTH unconditionally in
+                // TypeSerializer.Write, so its null-writer measure pass has always run the pair; a
+                // generated measure that fired only the first would hand the same consumer a
+                // DIFFERENT sequence on a path chosen for them by the backend
+                EmitCallback(sb, indent + 1, contract, measureInstance, ProtoCallbackKind.AfterSerialize, "context");
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");
                 sb.AppendLine();
@@ -1450,7 +1477,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;");
                 Line(sb, indent + 1, "var entry = slots.Mark();");
-                Line(sb, indent + 1, $"var len = Measure_{san}(value, depth, slots);");
+                Line(sb, indent + 1, $"var len = Measure_{san}(value, depth, slots, {Measuring("slots", "context")});");
                 // only a reference type can be found again by identity; a struct would box to a
                 // different object on the way back and never match, so it is left to re-measure
                 if (!contract.IsValueType) Line(sb, indent + 1, "slots.Enter(value, entry);");
@@ -1473,7 +1500,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
             EmitCallback(sb, indent + 1, contract, instance, ProtoCallbackKind.BeforeSerialize);
             var members = new StringBuilder();
-            EmitWriteMembers(members, indent + 1, contract, instance, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable);
+            EmitWriteMembers(members, indent + 1, contract, instance, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, measuresCallbacks: measuresCallbacks);
             EmitCallback(members, indent + 1, contract, instance, ProtoCallbackKind.AfterSerialize);
             AppendFoldingLengthTemp(sb, indent + 1, members, "len");
             Line(sb, indent, "}");
@@ -1492,7 +1519,7 @@ namespace ProtoBuf.BuildTools.Generators
             => contract.Callbacks.Count > (int)kind && contract.Callbacks[(int)kind].MethodName is not null;
 
         private static void EmitCallback(StringBuilder sb, int indent, ProtoContractPlan contract,
-            string instance, ProtoCallbackKind kind)
+            string instance, ProtoCallbackKind kind, string context = "state.Context")
         {
             var callbacks = contract.Callbacks;
             if (callbacks.Count <= (int)kind) return;
@@ -1500,9 +1527,13 @@ namespace ProtoBuf.BuildTools.Generators
             var callback = callbacks[(int)kind];
             if (callback.MethodName is not { } method) return;
 
-            var argument = callback.TakesContext
-                ? "global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context)"
-                : "";
+            var argument = callback.Argument switch
+            {
+                ProtoCallbackArgument.StreamingContext
+                    => $"global::ProtoBuf.SerializationContext.AsStreamingContext({context})",
+                ProtoCallbackArgument.SerializationContext => context,
+                _ => "",
+            };
             Line(sb, indent, $"{instance}.{method}({argument});");
         }
 
@@ -1781,8 +1812,11 @@ namespace ProtoBuf.BuildTools.Generators
         private static void EmitWriteMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
             string instance = "value", bool raw = false, bool listAsSpan = false, bool immutableAsSpan = false,
             Dictionary<string, ProtoContractPlan>? measurable = null,
-            string depth = "state.RawDepthBudget", string self = "this")
+            string depth = "state.RawDepthBudget", string self = "this", bool measuresCallbacks = false)
         {
+            // see EmitContract: a callback-free model hands the context straight through
+            string Measuring(string owner, string source)
+                => measuresCallbacks ? $"{owner}.AsMeasuring({source})" : source;
             // Whether an enclosing Measure_ has already reserved slots for this contract's raw
             // sub-message members. A contract can be raw-WRITING without being MEASURABLE - it then
             // emits its body inline in ISerializer.Write with no measure prologue - and in that case
@@ -1849,7 +1883,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent, $"if (tmp{number} != null)");
                             Line(sb, indent, "{");
                         }
-                        EmitRawRepeatedWrite(sb, guard ? indent + 1 : indent, member, number, listAsSpan, immutableAsSpan, repeatedTarget, depth, enclosingMeasured);
+                        EmitRawRepeatedWrite(sb, guard ? indent + 1 : indent, member, number, listAsSpan, immutableAsSpan, repeatedTarget, depth, enclosingMeasured, measuresCallbacks);
                         if (guard) Line(sb, indent, "}");
                         goto written;
                     }
@@ -2128,7 +2162,7 @@ namespace ProtoBuf.BuildTools.Generators
                             // linear - the re-measure that makes a lazy scheme O(n^2) would need
                             // EVERY level to do this, and below here everything is slot-driven
                             Line(sb, inner, $"var mark{number} = state.RawSlots.Mark();");
-                            Line(sb, inner, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawSlots);");
+                            Line(sb, inner, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawSlots, {Measuring("state.RawSlots", "state.Context")});");
                             Line(sb, inner, $"state.RawSlots.SeekTo(mark{number});");
                         }
                         Line(sb, inner, $"state.WriteRawVarint64((ulong)len);");
@@ -2169,7 +2203,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// </remarks>
         private static void EmitSubTypeContract(StringBuilder sb, int indent, ProtoContractPlan contract, string root,
             bool raw = false, bool rawWrite = false, bool listAsSpan = false, bool immutableAsSpan = false,
-            Dictionary<string, ProtoContractPlan>? measurable = null)
+            Dictionary<string, ProtoContractPlan>? measurable = null, bool measuresCallbacks = false)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
             var sub = $"{Serializers}.ISubTypeSerializer<{contract.TypeName}>";
@@ -2229,7 +2263,7 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
             }
             var subTypeMembers = new StringBuilder();
-            EmitWriteMembers(subTypeMembers, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable);
+            EmitWriteMembers(subTypeMembers, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, measuresCallbacks: measuresCallbacks);
             AppendFoldingLengthTemp(sb, indent + 1, subTypeMembers, "len");
             Line(sb, indent, "}");
             sb.AppendLine();
@@ -3380,8 +3414,11 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static void EmitRawRepeatedWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
             bool listAsSpan, bool immutableAsSpan, ProtoContractPlan? messageTarget = null,
-            string depth = "state.RawDepthBudget", bool enclosingMeasured = true)
+            string depth = "state.RawDepthBudget", bool enclosingMeasured = true, bool measuresCallbacks = false)
         {
+            // see EmitContract: a callback-free model hands the context straight through
+            string Measuring(string owner, string source)
+                => measuresCallbacks ? $"{owner}.AsMeasuring({source})" : source;
             // a GROUPED message element is framed by a start/end tag pair rather than a length
             // prefix (gap B35): wire type 3 opens it, 4 closes it, and the field number is the same
             // in both - so the two tags fold to the same constant length and there is no length to
@@ -3422,7 +3459,7 @@ namespace ProtoBuf.BuildTools.Generators
                 else
                 {
                     Line(sb, indent + 1, $"var mark{number} = state.RawSlots.Mark();");
-                    Line(sb, indent + 1, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawSlots);");
+                    Line(sb, indent + 1, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawSlots, {Measuring("state.RawSlots", "state.Context")});");
                     Line(sb, indent + 1, $"state.RawSlots.SeekTo(mark{number});");
                 }
                 Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len);");
@@ -3463,14 +3500,20 @@ namespace ProtoBuf.BuildTools.Generators
             // they walk identical members. A surrogate carrying its own SERIALIZER is genuinely
             // different - there are no members to inline, the body is delegated - so it stays out.
             && contract.SurrogateSerializer is null
-            && contract.RootTypeName is null && contract.SubTypes.Count == 0
+            && contract.RootTypeName is null && contract.SubTypes.Count == 0;
             // [ProtoContract(IsGroup = true)] used to be excluded here. It never needed to be
             // (gap B42): a grouped contract carries NO length prefix, which makes it cheaper to
             // measure, not harder. What actually made the exclusion load-bearing is that the
             // measure and raw-write sites branched on the MEMBER's DataFormat alone and did not
             // know the TARGET was grouped - so both now ask GroupFramed(member, target). Same
             // shape as gap B35, where blocking grouped MEMBERS turned out to be backwards.
-            && !HasCallback(contract, ProtoCallbackKind.BeforeSerialize);
+            // A [ProtoBeforeSerialization] callback used to be refused here, and the refusal was
+            // load-bearing only because Measure_ had no ISerializationContext and so could not fire
+            // it - firing in the WRITE alone would let the object change between the passes and the
+            // measured length would not match the bytes. Threading a context removes that: both
+            // passes now fire it, which is precisely what the classic buffer-writer backend has
+            // always done. gap B42, and Marc's "does it have the State? could the State gain the
+            // context?" - it could, and did.
 
         /// <summary>
         /// Whether this member stops its contract having a pure-arithmetic measure. This is the
@@ -3860,7 +3903,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // BCL arm below had to be added for, and the same `len += 1 + ;` if it is
                         // missed. The WRITE stays stateful (RawNativeMessageTarget refuses
                         // IsNullable), so this reserves NO slot and passes a null buffer down.
-                        Line(sb, indent + 1, $"sub = Measure_{Sanitise(member.TypeName!)}(val{number}, depth, null);");
+                        Line(sb, indent + 1, $"sub = Measure_{Sanitise(member.TypeName!)}(val{number}, depth, null, context);");
                         Line(sb, indent + 1, MeasureAdd(member, 2,
                             "global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub"));
                         Line(sb, indent, "}");
@@ -4069,12 +4112,12 @@ namespace ProtoBuf.BuildTools.Generators
                         if (unaryTarget is not null && !unaryGrouped)
                         {
                             Line(sb, inner, $"var slot{number} = slots.Reserve();");
-                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, slots);");
+                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, slots, context);");
                             Line(sb, inner, $"slots.Set(slot{number}, sub);");
                         }
                         else
                         {
-                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, {(unaryTarget is null ? "null" : "slots")});");
+                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, {(unaryTarget is null ? "null" : "slots")}, context);");
                         }
                         if (GroupFramed(member, target))
                         {
@@ -4166,12 +4209,12 @@ namespace ProtoBuf.BuildTools.Generators
                 // element carries no length, so it takes no slot; see the unary site's note
                 if (member.DataFormat == ProtoDataFormat.Group)
                 {
-                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots);");
+                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots, context);");
                 }
                 else
                 {
                     Line(sb, indent + 1, $"var slot{number} = slots.Reserve();");
-                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots);");
+                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots, context);");
                     Line(sb, indent + 1, $"slots.Set(slot{number}, sub);");
                 }
                 // a grouped element carries no length prefix: start tag + body + end tag, and both

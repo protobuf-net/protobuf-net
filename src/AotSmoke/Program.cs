@@ -359,7 +359,12 @@ public class Audited
 
     public string Trace { get; set; } = "";
 
-    [ProtoBeforeSerialization] public void BeforeSer() => Trace += "bs;";
+    // takes the context so the two write passes can be told apart: a measure-first contract fires
+    // before-serialize in BOTH, and that is only tolerable because ProtoWriter.IsMeasuring answers.
+    // Nothing else here runs a consumer callback under ILC, so this is where that is proven
+    [ProtoBeforeSerialization]
+    public void BeforeSer(ISerializationContext context)
+        => Trace += ProtoWriter.IsMeasuring(context) ? "bs*;" : "bs;";
     [ProtoAfterSerialization] public void AfterSer() => Trace += "as;";
     [ProtoBeforeDeserialization] public void BeforeDes() => Trace += "bd;";
     [ProtoAfterDeserialization] public void AfterDes() => Trace += "ad;";
@@ -770,10 +775,10 @@ internal static class Program
         Check(ref failures, "Retries ([DefaultValue])", 0, clone.Retries);
 
         // callbacks: both families, and both ends of each
-        Check(ref failures, "Audited write hooks", "bs;as;", original.Audited.Trace);
+        Check(ref failures, "Audited write hooks", "bs*;as;bs;as;", original.Audited.Trace);
         Check(ref failures, "Audited read hooks", "bd;ad;", clone.Audited?.Trace);
         Check(ref failures, "Audited.Value", "a", clone.Audited?.Value);
-        Check(ref failures, "Tracked write hooks", "os;od;", original.Tracked.Trace);
+        Check(ref failures, "Tracked write hooks", "os;od;os;od;", original.Tracked.Trace);
         Check(ref failures, "Tracked read hooks", "ds;dd;", clone.Tracked?.Trace);
         Check(ref failures, "Tracked.Value", "t", clone.Tracked?.Value);
 

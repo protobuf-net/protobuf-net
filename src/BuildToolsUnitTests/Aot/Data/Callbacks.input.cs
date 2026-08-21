@@ -45,6 +45,42 @@ public class AfterOnly
     [ProtoAfterDeserialization] public void AfterDes() => Trace += "ad;";
 }
 
+// Nests a callback-bearing contract, so something above it needs a length and the measure pass
+// actually runs. Without this the fixture only ever serialized callback contracts as ROOTS, where
+// nothing needs a length and so the before-serialization hook fires exactly once - which is correct
+// but says nothing about the two-pass behaviour that gap B42 turns on.
+[ProtoContract]
+public class Holder
+{
+    [ProtoMember(1)] public Hooked Inner { get; set; }
+    [ProtoMember(2)] public int Tag { get; set; }
+}
+
+// Takes the ISerializationContext flavour, which is the only one carrying the context OBJECT and
+// so the only one ProtoWriter.IsMeasuring can be asked about. That matters because a measure-first
+// contract fires before-serialization in BOTH passes; a callback that cannot tell them apart sees
+// its side-effects doubled with no way to notice.
+[ProtoContract]
+public class Watched
+{
+    [ProtoMember(1)] public int Value { get; set; }
+
+    public string Trace { get; set; } = "";
+
+    [ProtoBeforeSerialization]
+    public void BeforeSer(ISerializationContext context)
+        => Trace += ProtoWriter.IsMeasuring(context) ? "bs*;" : "bs;";
+
+    [ProtoAfterSerialization] public void AfterSer() => Trace += "as;";
+}
+
+// ...and the same nested, which is where the measure pass actually runs
+[ProtoContract]
+public class WatchedHolder
+{
+    [ProtoMember(1)] public Watched Inner { get; set; }
+}
+
 public static class CallbacksSamples
 {
     public static object[] Values =>
@@ -53,6 +89,10 @@ public static class CallbacksSamples
         new Hooked { Value = 7 },
         new Standard { Value = 8 },
         new AfterOnly { Value = 9 },
+        new Holder(),
+        new Holder { Inner = new Hooked { Value = 3 }, Tag = 4 },
+        new Watched { Value = 5 },
+        new WatchedHolder { Inner = new Watched { Value = 6 } },
     ];
 }
 
@@ -60,6 +100,9 @@ public static class CallbacksSamples
 [ProtoSerializable(typeof(Hooked))]
 [ProtoSerializable(typeof(Standard))]
 [ProtoSerializable(typeof(AfterOnly))]
+[ProtoSerializable(typeof(Holder))]
+[ProtoSerializable(typeof(Watched))]
+[ProtoSerializable(typeof(WatchedHolder))]
 public partial class CallbacksModel : TypeModel
 {
 }

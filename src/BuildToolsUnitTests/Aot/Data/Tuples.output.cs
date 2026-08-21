@@ -358,7 +358,7 @@ partial class TuplesModel
             }
         }
 
-        private static long Measure__int__string_((int, string) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure__int__string_((int, string) value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -376,7 +376,7 @@ partial class TuplesModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure__int__string_(value, depth, slots);
+            var len = Measure__int__string_(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -436,7 +436,7 @@ partial class TuplesModel
             }
         }
 
-        private static long Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Tuples_ClassTuple(global::AotFixtures.Tuples.ClassTuple value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -454,7 +454,7 @@ partial class TuplesModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Tuples_ClassTuple(value, depth, slots);
+            var len = Measure_AotFixtures_Tuples_ClassTuple(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -508,7 +508,7 @@ partial class TuplesModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
         }
 
-        private static long Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Tuples_NamedLikeATuple(global::AotFixtures.Tuples.NamedLikeATuple value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -523,7 +523,7 @@ partial class TuplesModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Tuples_NamedLikeATuple(value, depth, slots);
+            var len = Measure_AotFixtures_Tuples_NamedLikeATuple(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -580,7 +580,7 @@ partial class TuplesModel
             }
         }
 
-        private static long Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Tuples_StructTuple(global::AotFixtures.Tuples.StructTuple value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -598,7 +598,7 @@ partial class TuplesModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Tuples_StructTuple(value, depth, slots);
+            var len = Measure_AotFixtures_Tuples_StructTuple(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -655,7 +655,7 @@ partial class TuplesModel
             }
         }
 
-        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -673,7 +673,7 @@ partial class TuplesModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, slots);
+            var len = Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -733,7 +733,7 @@ partial class TuplesModel
             }
         }
 
-        private static long Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_System_Tuple_int__string_(global::System.Tuple<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -751,7 +751,7 @@ partial class TuplesModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_System_Tuple_int__string_(value, depth, slots);
+            var len = Measure_System_Tuple_int__string_(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

@@ -365,7 +365,7 @@ partial class OrderingModel
             }
         }
 
-        private static long Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Ordering_Mixed(global::AotFixtures.Ordering.Mixed value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -380,7 +380,7 @@ partial class OrderingModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Ordering_Mixed(value, depth, slots);
+            var len = Measure_AotFixtures_Ordering_Mixed(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -445,7 +445,7 @@ partial class OrderingModel
             }
         }
 
-        private static long Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Ordering_OffsetIgnoredByXml(global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -458,7 +458,7 @@ partial class OrderingModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Ordering_OffsetIgnoredByXml(value, depth, slots);
+            var len = Measure_AotFixtures_Ordering_OffsetIgnoredByXml(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -505,7 +505,7 @@ partial class OrderingModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Ordering_Referencing(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Ordering_Referencing(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Ordering_Referencing(ref state, value, state.RawDepthBudget);
@@ -553,7 +553,7 @@ partial class OrderingModel
             }
         }
 
-        private static long Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Ordering_Referencing(global::AotFixtures.Ordering.Referencing value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -562,7 +562,7 @@ partial class OrderingModel
             if (tmp1 != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, slots);
+                sub = Measure_AotFixtures_Ordering_ViaDataMember(tmp1, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromDataContract
             }
@@ -570,7 +570,7 @@ partial class OrderingModel
             if (tmp2 != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, slots);
+                sub = Measure_AotFixtures_Ordering_ViaXmlElement(tmp2, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromXmlType
             }
@@ -581,7 +581,7 @@ partial class OrderingModel
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
                     var slot3 = slots.Reserve();
-                    sub = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, slots);
+                    sub = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, slots, context);
                     slots.Set(slot3, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
@@ -593,7 +593,7 @@ partial class OrderingModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Ordering_Referencing(value, depth, slots);
+            var len = Measure_AotFixtures_Ordering_Referencing(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -675,7 +675,7 @@ partial class OrderingModel
             }
         }
 
-        private static long Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Ordering_ViaDataMember(global::AotFixtures.Ordering.ViaDataMember value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -693,7 +693,7 @@ partial class OrderingModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Ordering_ViaDataMember(value, depth, slots);
+            var len = Measure_AotFixtures_Ordering_ViaDataMember(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -761,7 +761,7 @@ partial class OrderingModel
             }
         }
 
-        private static long Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Ordering_ViaDataMemberOffset(global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -779,7 +779,7 @@ partial class OrderingModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Ordering_ViaDataMemberOffset(value, depth, slots);
+            var len = Measure_AotFixtures_Ordering_ViaDataMemberOffset(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -847,7 +847,7 @@ partial class OrderingModel
             }
         }
 
-        private static long Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Ordering_ViaXmlElement(global::AotFixtures.Ordering.ViaXmlElement value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -865,7 +865,7 @@ partial class OrderingModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Ordering_ViaXmlElement(value, depth, slots);
+            var len = Measure_AotFixtures_Ordering_ViaXmlElement(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

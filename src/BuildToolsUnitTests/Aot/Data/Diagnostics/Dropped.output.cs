@@ -310,7 +310,7 @@ partial class DroppedModel
             }
         }
 
-        private static long Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Dropped_HasCallback(global::AotFixtures.Dropped.HasCallback value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -323,7 +323,7 @@ partial class DroppedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Dropped_HasCallback(value, depth, slots);
+            var len = Measure_AotFixtures_Dropped_HasCallback(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -391,7 +391,7 @@ partial class DroppedModel
             }
         }
 
-        private static long Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Dropped_HasUnsupportedMember(global::AotFixtures.Dropped.HasUnsupportedMember value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -413,7 +413,7 @@ partial class DroppedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Dropped_HasUnsupportedMember(value, depth, slots);
+            var len = Measure_AotFixtures_Dropped_HasUnsupportedMember(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -465,7 +465,7 @@ partial class DroppedModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Dropped_ReferencesDropped(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Dropped_ReferencesDropped(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Dropped_ReferencesDropped(ref state, value, state.RawDepthBudget);
@@ -488,7 +488,7 @@ partial class DroppedModel
             }
         }
 
-        private static long Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Dropped_ReferencesDropped(global::AotFixtures.Dropped.ReferencesDropped value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -496,7 +496,7 @@ partial class DroppedModel
             if (tmp1 != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, slots);
+                var sub = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp1, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
@@ -507,7 +507,7 @@ partial class DroppedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Dropped_ReferencesDropped(value, depth, slots);
+            var len = Measure_AotFixtures_Dropped_ReferencesDropped(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -562,7 +562,7 @@ partial class DroppedModel
             }
         }
 
-        private static long Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Dropped_UnrenderableDefault(global::AotFixtures.Dropped.UnrenderableDefault value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -575,7 +575,7 @@ partial class DroppedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Dropped_UnrenderableDefault(value, depth, slots);
+            var len = Measure_AotFixtures_Dropped_UnrenderableDefault(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -628,7 +628,7 @@ partial class DroppedModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
         }
 
-        private static long Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Dropped_UsesMemberOptions(global::AotFixtures.Dropped.UsesMemberOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -641,7 +641,7 @@ partial class DroppedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Dropped_UsesMemberOptions(value, depth, slots);
+            var len = Measure_AotFixtures_Dropped_UsesMemberOptions(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

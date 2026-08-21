@@ -154,7 +154,7 @@ partial class ListLikeModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_ListLike_Holder(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_ListLike_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_ListLike_Holder(ref state, value, state.RawDepthBudget);
@@ -183,7 +183,7 @@ partial class ListLikeModel
             }
         }
 
-        private static long Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -191,7 +191,7 @@ partial class ListLikeModel
             if (tmp1 != null)
             {
                 var slot1 = slots.Reserve();
-                var sub = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, slots);
+                var sub = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // NotAList
             }
@@ -204,7 +204,7 @@ partial class ListLikeModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ListLike_Holder(value, depth, slots);
+            var len = Measure_AotFixtures_ListLike_Holder(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -274,7 +274,7 @@ partial class ListLikeModel
             }
         }
 
-        private static long Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -292,7 +292,7 @@ partial class ListLikeModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ListLike_NotAList(value, depth, slots);
+            var len = Measure_AotFixtures_ListLike_NotAList(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

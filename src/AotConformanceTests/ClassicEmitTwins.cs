@@ -1,4 +1,4 @@
-// ClassicEmit twins — gap B18.
+﻿// ClassicEmit twins — gap B18.
 //
 // `[ProtoModel(ClassicEmit = true)]` is the escape hatch we point consumers at when the raw writer
 // cannot serve them; it is named in ProtoWriter.State.Raw.cs's own error text for the
@@ -37,13 +37,18 @@ namespace AotFixtures.GroupedElements
 namespace AotFixtures.Callbacks
 {
     /// <summary>
-    /// The sharpest of the twins: a before-serialize callback disqualifies a contract from
-    /// measure-first, so this is where the raw and classic paths are already least alike.
+    /// The sharpest of the twins. A before-serialize callback used to disqualify a contract from
+    /// measure-first outright; since gap B42 it does not - both passes fire the callback - so this
+    /// pair now compares a classic write against a measure-first one that runs consumer code in
+    /// each pass, which is a stronger test than it was.
     /// </summary>
     [ProtoModel(ClassicEmit = true)]
     [ProtoSerializable(typeof(Hooked))]
     [ProtoSerializable(typeof(Standard))]
     [ProtoSerializable(typeof(AfterOnly))]
+    [ProtoSerializable(typeof(Holder))]
+    [ProtoSerializable(typeof(Watched))]
+    [ProtoSerializable(typeof(WatchedHolder))]
     public partial class CallbacksClassicModel : TypeModel { }
 }
 

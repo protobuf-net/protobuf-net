@@ -720,7 +720,7 @@ partial class CompatModel
             }
         }
 
-        private static long Measure_AotFixtures_Compat_Legacy(global::AotFixtures.Compat.Legacy value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Compat_Legacy(global::AotFixtures.Compat.Legacy value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -766,7 +766,7 @@ partial class CompatModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Compat_Legacy(value, depth, slots);
+            var len = Measure_AotFixtures_Compat_Legacy(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -932,7 +932,7 @@ partial class CompatModel
             }
         }
 
-        private static long Measure_AotFixtures_Compat_Level240(global::AotFixtures.Compat.Level240 value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Compat_Level240(global::AotFixtures.Compat.Level240 value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -964,7 +964,7 @@ partial class CompatModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Compat_Level240(value, depth, slots);
+            var len = Measure_AotFixtures_Compat_Level240(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -1070,7 +1070,7 @@ partial class CompatModel
             }
         }
 
-        private static long Measure_AotFixtures_Compat_Level300(global::AotFixtures.Compat.Level300 value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Compat_Level300(global::AotFixtures.Compat.Level300 value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1108,7 +1108,7 @@ partial class CompatModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Compat_Level300(value, depth, slots);
+            var len = Measure_AotFixtures_Compat_Level300(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -1279,7 +1279,7 @@ partial class CompatModel
             }
         }
 
-        private static long Measure_AotFixtures_Compat_Mixed(global::AotFixtures.Compat.Mixed value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Compat_Mixed(global::AotFixtures.Compat.Mixed value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1302,7 +1302,7 @@ partial class CompatModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Compat_Mixed(value, depth, slots);
+            var len = Measure_AotFixtures_Compat_Mixed(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

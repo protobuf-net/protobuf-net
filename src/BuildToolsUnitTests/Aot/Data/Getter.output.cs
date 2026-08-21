@@ -203,7 +203,7 @@ partial class GetterModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Getter_Getters(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Getter_Getters(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Getter_Getters(ref state, value, state.RawDepthBudget);
@@ -296,7 +296,7 @@ partial class GetterModel
             }
         }
 
-        private static long Measure_AotFixtures_Getter_Getters(global::AotFixtures.Getter.Getters value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Getter_Getters(global::AotFixtures.Getter.Getters value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -324,7 +324,7 @@ partial class GetterModel
             if (tmp3 != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_AotFixtures_Getter_Nested(tmp3, depth, slots);
+                sub = Measure_AotFixtures_Getter_Nested(tmp3, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
@@ -361,14 +361,14 @@ partial class GetterModel
             }
             var tmp11 = value.Where;
             var slot11 = slots.Reserve();
-            sub = Measure_AotFixtures_Getter_Point(tmp11, depth, slots);
+            sub = Measure_AotFixtures_Getter_Point(tmp11, depth, slots, context);
             slots.Set(slot11, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Where
             var tmp12 = value.Maybe2;
             if (tmp12.HasValue)
             {
                 var val12 = tmp12.GetValueOrDefault();
-                sub = Measure_AotFixtures_Getter_Point(val12, depth, null);
+                sub = Measure_AotFixtures_Getter_Point(val12, depth, null, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Maybe2
             }
             return len;
@@ -378,7 +378,7 @@ partial class GetterModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Getter_Getters(value, depth, slots);
+            var len = Measure_AotFixtures_Getter_Getters(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -574,7 +574,7 @@ partial class GetterModel
             }
         }
 
-        private static long Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Getter_Nested(global::AotFixtures.Getter.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -587,7 +587,7 @@ partial class GetterModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Getter_Nested(value, depth, slots);
+            var len = Measure_AotFixtures_Getter_Nested(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -659,7 +659,7 @@ partial class GetterModel
             }
         }
 
-        private static long Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Getter_Point(global::AotFixtures.Getter.Point value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -672,7 +672,7 @@ partial class GetterModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Getter_Point(value, depth, slots);
+            var len = Measure_AotFixtures_Getter_Point(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 

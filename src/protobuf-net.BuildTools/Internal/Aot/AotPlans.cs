@@ -613,30 +613,47 @@ namespace ProtoBuf.BuildTools.Internal.Aot
     }
 
     /// <summary>
-    /// A serialization callback: the method to call, and whether it takes a <c>StreamingContext</c>.
+    /// What a callback asks for, of the shapes generated code can supply.
+    /// </summary>
+    /// <remarks>
+    /// <c>CallbackSet.CheckCallbackParameters</c> accepts four; these are the two with a reason to
+    /// be here. <see cref="SerializationContext"/> is the sharp one: it is the only flavour
+    /// carrying the context <b>object</b> rather than a copy of its data, so it is the only one
+    /// <c>ProtoWriter.IsMeasuring</c> can be asked about - which a measure-first contract needs,
+    /// since its before-serialize hook fires in both passes.
+    /// </remarks>
+    internal enum ProtoCallbackArgument
+    {
+        None,
+        StreamingContext,
+        SerializationContext,
+    }
+
+    /// <summary>
+    /// A serialization callback: the method to call, and what it asks to be handed.
     /// </summary>
     internal readonly struct ProtoCallbackPlan : IEquatable<ProtoCallbackPlan>
     {
-        public ProtoCallbackPlan(string methodName, bool takesContext)
+        public ProtoCallbackPlan(string methodName, ProtoCallbackArgument argument)
         {
             MethodName = methodName;
-            TakesContext = takesContext;
+            Argument = argument;
         }
 
         public string? MethodName { get; }
 
         /// <summary>
-        /// The <c>System.Runtime.Serialization</c> spelling takes one, supplied as
-        /// <c>SerializationContext.AsStreamingContext(state.Context)</c>.
+        /// What to pass: nothing, <c>SerializationContext.AsStreamingContext(state.Context)</c>,
+        /// or the context itself.
         /// </summary>
-        public bool TakesContext { get; }
+        public ProtoCallbackArgument Argument { get; }
 
         public bool Equals(ProtoCallbackPlan other)
-            => MethodName == other.MethodName && TakesContext == other.TakesContext;
+            => MethodName == other.MethodName && Argument == other.Argument;
 
         public override bool Equals(object? obj) => obj is ProtoCallbackPlan other && Equals(other);
 
-        public override int GetHashCode() => (MethodName?.GetHashCode() ?? 0) ^ (TakesContext ? 31 : 0);
+        public override int GetHashCode() => (MethodName?.GetHashCode() ?? 0) ^ ((int)Argument * 31);
     }
 
     /// <summary>

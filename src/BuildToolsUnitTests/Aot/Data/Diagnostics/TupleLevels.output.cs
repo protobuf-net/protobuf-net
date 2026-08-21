@@ -189,7 +189,7 @@ partial class TupleLevelsModel
             global::ProtoBuf.BclHelpers.WriteDecimal(ref state, tmp2);
         }
 
-        private static long Measure__global__System_Guid__decimal_((global::System.Guid, decimal) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure__global__System_Guid__decimal_((global::System.Guid, decimal) value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -206,7 +206,7 @@ partial class TupleLevelsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure__global__System_Guid__decimal_(value, depth, slots);
+            var len = Measure__global__System_Guid__decimal_(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -224,7 +224,7 @@ partial class TupleLevelsModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_TupleLevels_Agreeing(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_TupleLevels_Agreeing(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_TupleLevels_Agreeing(ref state, value, state.RawDepthBudget);
@@ -258,14 +258,14 @@ partial class TupleLevelsModel
             }
         }
 
-        private static long Measure_AotFixtures_TupleLevels_Agreeing(global::AotFixtures.TupleLevels.Agreeing value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_TupleLevels_Agreeing(global::AotFixtures.TupleLevels.Agreeing value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             long sub;
             var tmp1 = value.One;
             var slot1 = slots.Reserve();
-            sub = Measure__global__System_Guid__decimal_(tmp1, depth, slots);
+            sub = Measure__global__System_Guid__decimal_(tmp1, depth, slots, context);
             slots.Set(slot1, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // One
             var tmp2 = value.Two;
@@ -274,7 +274,7 @@ partial class TupleLevelsModel
                 foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
                 {
                     var slot2 = slots.Reserve();
-                    sub = Measure__global__System_Guid__decimal_(item2, depth, slots);
+                    sub = Measure__global__System_Guid__decimal_(item2, depth, slots, context);
                     slots.Set(slot2, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
@@ -286,7 +286,7 @@ partial class TupleLevelsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_TupleLevels_Agreeing(value, depth, slots);
+            var len = Measure_AotFixtures_TupleLevels_Agreeing(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

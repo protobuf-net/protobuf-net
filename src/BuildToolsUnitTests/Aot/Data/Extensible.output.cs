@@ -360,7 +360,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -374,7 +374,7 @@ partial class ExtensibleModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Extensible_ByHand(value, depth, slots);
+            var len = Measure_AotFixtures_Extensible_ByHand(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -484,7 +484,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -498,7 +498,7 @@ partial class ExtensibleModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Extensible_FromBase(value, depth, slots);
+            var len = Measure_AotFixtures_Extensible_FromBase(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -555,7 +555,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
 
-        private static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -569,7 +569,7 @@ partial class ExtensibleModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Extensible_TypedOnly(value, depth, slots);
+            var len = Measure_AotFixtures_Extensible_TypedOnly(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

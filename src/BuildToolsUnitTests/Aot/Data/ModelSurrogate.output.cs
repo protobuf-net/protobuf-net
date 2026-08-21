@@ -412,7 +412,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -427,7 +427,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(value, depth, slots);
+            var len = Measure_AotFixtures_ModelSurrogate_DateTimeOffsetSurrogate(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -485,7 +485,7 @@ partial class ModelSurrogateModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_ModelSurrogate_Holder(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_ModelSurrogate_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_ModelSurrogate_Holder(ref state, value, state.RawDepthBudget);
@@ -523,7 +523,7 @@ partial class ModelSurrogateModel
             DebugAssertPosition(ref state, before + len, "When");
         }
 
-        private static long Measure_AotFixtures_ModelSurrogate_Holder(global::AotFixtures.ModelSurrogate.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ModelSurrogate_Holder(global::AotFixtures.ModelSurrogate.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -532,18 +532,18 @@ partial class ModelSurrogateModel
             if (tmp1 != null)
             {
                 var slot1 = slots.Reserve();
-                sub = Measure_System_Version(tmp1, depth, slots);
+                sub = Measure_System_Version(tmp1, depth, slots, context);
                 slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Release
             }
             var tmp2 = value.Elapsed;
             var slot2 = slots.Reserve();
-            sub = Measure_AotFixtures_ModelSurrogate_Ticks(tmp2, depth, slots);
+            sub = Measure_AotFixtures_ModelSurrogate_Ticks(tmp2, depth, slots, context);
             slots.Set(slot2, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Elapsed
             var tmp3 = value.When;
             var slot3 = slots.Reserve();
-            sub = Measure_System_DateTimeOffset(tmp3, depth, slots);
+            sub = Measure_System_DateTimeOffset(tmp3, depth, slots, context);
             slots.Set(slot3, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // When
             return len;
@@ -553,7 +553,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ModelSurrogate_Holder(value, depth, slots);
+            var len = Measure_AotFixtures_ModelSurrogate_Holder(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -658,7 +658,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_ModelSurrogate_Ticks(global::AotFixtures.ModelSurrogate.Ticks value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ModelSurrogate_Ticks(global::AotFixtures.ModelSurrogate.Ticks value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = global::AotFixtures.ModelSurrogate.TicksConverter.ToSurrogate(value);
@@ -672,7 +672,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ModelSurrogate_Ticks(value, depth, slots);
+            var len = Measure_AotFixtures_ModelSurrogate_Ticks(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -700,7 +700,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ModelSurrogate_TicksSurrogate(global::AotFixtures.ModelSurrogate.TicksSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -713,7 +713,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ModelSurrogate_TicksSurrogate(value, depth, slots);
+            var len = Measure_AotFixtures_ModelSurrogate_TicksSurrogate(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -769,7 +769,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ModelSurrogate_VersionSurrogate(global::AotFixtures.ModelSurrogate.VersionSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -785,7 +785,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ModelSurrogate_VersionSurrogate(value, depth, slots);
+            var len = Measure_AotFixtures_ModelSurrogate_VersionSurrogate(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -870,7 +870,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        private static long Measure_System_DateTimeOffset(global::System.DateTimeOffset value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_System_DateTimeOffset(global::System.DateTimeOffset value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
@@ -886,7 +886,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_System_DateTimeOffset(value, depth, slots);
+            var len = Measure_System_DateTimeOffset(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -936,7 +936,7 @@ partial class ModelSurrogateModel
             }
         }
 
-        private static long Measure_System_Version(global::System.Version value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_System_Version(global::System.Version value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
@@ -953,7 +953,7 @@ partial class ModelSurrogateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_System_Version(value, depth, slots);
+            var len = Measure_System_Version(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

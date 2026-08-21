@@ -149,13 +149,27 @@ references it. One awkward member can therefore drop a large subtree onto the cl
 write-to-count path. When something is unexpectedly slow, check whether it is still measurable
 before looking anywhere else.
 
-**2. A `[ProtoBeforeSerialization]` callback disqualifies a contract, and that is load-bearing.**
-`Measure_` has no `ISerializationContext` and so cannot fire callbacks at all; refusing such
-contracts is the only thing keeping the length honest, since firing only in `RawWrite_` would let
-the object change between measuring and writing.
+**2. A `[ProtoBeforeSerialization]` callback fires in BOTH passes, and that is load-bearing.**
+It used to disqualify the contract outright — `Measure_` had no `ISerializationContext` and so could
+not fire callbacks at all — and this file recorded that refusal as necessary. It was not: firing
+only in `RawWrite_` would indeed let the object change between measuring and writing, but firing in
+*both* is correct, and is what the classic buffer-writer backend has always done. `Measure_` now
+takes a context and fires before-serialize *and* after-serialize around the arithmetic, exactly as
+`RawWrite_` does around the bytes, so both passes observe the same object. See `notes/gaps.md` B42.
 
-**How often a callback fires is per-BACKEND today**, which is easy to miss and is pinned by
-`CallbackMeasurePassTests`:
+Two parts of that are easy to break:
+
+- **the context the measure pass hands out is not `state.Context`.** It is a wrapper for which
+  `ProtoWriter.IsMeasuring` answers `true` (`RawLengthBuffer.AsMeasuring`, recognised through
+  `Internal.IMeasuringPassContext`). Firing twice while answering `false` both times would double a
+  consumer's side-effects with nothing to notice it by — worse than the old refusal. A model with no
+  serialize callback anywhere never emits the wrap.
+- **`ISerializationContext` is an accepted callback signature, and had to be**: it is the only
+  flavour carrying the context *object* rather than a copy of its data, so it is the only one that
+  can ask. A callback taking nothing or a `StreamingContext` still works and simply cannot tell.
+
+**How often a callback fires is per-BACKEND on the CLASSIC path**, which is easy to miss and is
+pinned by `CallbackMeasurePassTests`:
 
 | route | `BeforeSerialization` fires | `IsMeasuring` |
 | --- | ---: | --- |
@@ -168,6 +182,11 @@ width changes — so it crawls once. The buffer-writer path computes the length 
 prefix, writes for real, and then **validates** (`Length mismatch; calculated 'x', actual 'y'`), so
 it crawls twice. So a consumer's callback side-effect already behaves differently depending on
 which output they serialize to, with nobody having asked to measure.
+
+**A measure-first GENERATED contract is twice on both backends**, which is the alignment Marc asked
+for on 2026-08-14 arriving for one path ahead of the other. The generated `Write` measures and then
+writes whatever the destination is, so the table above is a statement about the *classic* engine and
+not about the model as a whole; `notes/gaps.md` B17 is the remaining half, the classic stream path.
 
 Where doubling happens it is *required*, not incidental: both passes must observe the same object,
 or the measured length will not match the bytes written — which is exactly what that validation
@@ -1242,8 +1261,15 @@ Placement is ref-emit's: the "before" hook fires **after construction but before
 and the "after" hook after it — so a deserialization callback sees a fully populated instance.
 
 We accept a narrower set of signatures than `MetaType` does: public, non-static, `void`, taking
-either nothing or a `StreamingContext`. `MetaType` reaches non-public ones by reflection and tolerates
-more shapes; anything outside our subset is refused rather than mis-called.
+nothing, a `StreamingContext`, or an `ISerializationContext`. `MetaType` reaches non-public ones by
+reflection and tolerates more shapes (`SerializationContext`, `System.Type`); anything outside our
+subset is refused rather than mis-called.
+
+**The three are not interchangeable, and the third earns its place.** Only `ISerializationContext`
+carries the context *object* rather than a copy of its data, so it is the only one a callback can
+hand to `ProtoWriter.IsMeasuring` — which is how it tells a measure-first contract's two
+before-serialization passes apart. A callback taking nothing or a `StreamingContext` still fires in
+both and simply cannot tell which it is in.
 
 ### `ImplicitFields`
 

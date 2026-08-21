@@ -2807,7 +2807,7 @@ model is entirely on the classic write path.**
 | **surrogate with its own serializer** | **stays out, and correctly** | below |
 | **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
 | ~~`[ProtoContract(IsGroup = true)]`~~ | **DONE 2026-08-21 — it was "never taught"** | below |
-| **`[ProtoBeforeSerialization]`** | **NO — load-bearing** | **B17** |
+| ~~`[ProtoBeforeSerialization]`~~ | **DONE 2026-08-21 — I was wrong that it was load-bearing** | below |
 
 **The callback one — I said "not a gap, must not be fixed", and that was wrong** (Marc, same day:
 *"does it have the State? could the State gain the context?"*). The correct statement is narrower:
@@ -2849,6 +2849,48 @@ it is a deliberate behaviour change and the test is the place it has to be argue
 is the classic-interop boundary, where `ProtoWriter.Measure` **caches** by identity and may call
 `IMeasuringSerializer.Measure` a variable number of times — so "at most twice" needs re-checking
 there specifically, not assumed from the pure-raw path.
+
+##### Callbacks — built, 2026-08-21
+
+The plan above survived contact, with **three things it had not anticipated**, each found by a gate
+rather than by reading:
+
+- **the context has to be a MEASURING one, and `state.Context` is not.**
+  `ProtoWriter.IsMeasuring` was `context is ProtoWriter writer && writer.IsMeasuringPass` — i.e. it
+  answers for the classic backend by that backend *being* a counting writer (`NullProtoWriter`).
+  The raw measure has no writer at all; it is arithmetic. So handing `state.Context` straight
+  through fires the callback twice with **`false` both times**, which is strictly worse than the
+  old refusal: the consumer's side-effects double and nothing tells them. `RawLengthBuffer` now
+  hands out a wrapper carrying the real context's model and user-state and differing only in that
+  one answer, recognised through an internal `IMeasuringPassContext` marker — so the two backends
+  give the same answer from different places, which is what that method's own doc always said
+  should happen. It is cached against the context it wraps, so a serialize costs one allocation and
+  a reused writer costs none; and a model with **no** serialize callback anywhere never emits the
+  call at all (`measuresCallbacks`, a model-level flag threaded beside `slotConsumers`).
+- **the generator did not accept the one callback signature that can ask.** It took a callback
+  taking nothing or a `StreamingContext`; `ISerializationContext` is the only flavour carrying the
+  context *object* rather than a copy of its data, and so the only one `IsMeasuring` works on. It
+  is now the third accepted shape (`ProtoCallbackArgument`). Without it the feature was
+  unusable by construction — and the symptom was the smoke test *dropping the contract*, not
+  disagreeing about hooks, which is a much better failure than it sounds.
+- **after-serialize fires in the measure pass too.** `TypeSerializer.Write` fires both
+  unconditionally, so the classic null-writer pass has always run the pair; a generated measure
+  firing only the first would hand the same consumer a *different sequence* on a path the backend
+  chose for them. So it is `bs,as,bs,as`, matching classic, rather than `bs,bs,as`.
+
+The classic-interop worry turned out to be unfounded in the direction it was raised: that boundary
+caches by identity through `RawLengthBuffer.Enter`/`Leave`, so a repeat crossing reuses the measured
+slots rather than re-measuring, and the count stays at two.
+
+Pinned by `MeasurableContractTests.TheMeasurePassIdentifiesItselfToCallbacks` (`bs*;as;bs;as;`, the
+`*` being `IsMeasuring`) and by `AotSmoke`, which is the only place a consumer callback runs under
+ILC. Verified: conformance 1640/1640, corpus 3131 compared 0 differ, goldens 639/639, smoke passed,
+`protobuf-net.Test` 1578/1578 — including `CallbackMeasurePassTests`, whose per-route counts are
+unchanged, it being an exercise of the classic backend.
+
+**Note the twin had to be seeded too.** `ClassicEmitTwins.cs` declares a `ClassicEmit` model per
+fixture, and a seed added to the fixture model but not to its twin fails as *"Type is not expected"*
+from six different test classes at once — which reads like a generator fault and is bookkeeping.
 
 **`IsGroup` at contract level — established and fixed, 2026-08-21.** The suspicion was right: a
 grouped contract carries no length prefix of its own, so measuring it is *easier*, not harder, and

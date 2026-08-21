@@ -265,7 +265,11 @@ namespace ProtoBuf
         /// </remarks>
         /// <param name="context">The context supplied to the callback.</param>
         public static bool IsMeasuring(ISerializationContext context)
-            => context is ProtoWriter writer && writer.IsMeasuringPass;
+            // two backends, two answers: the classic path measures by BEING a counting writer,
+            // while the generated raw path measures arithmetically and has no writer to be - so
+            // it wraps the real context instead. See Internal.IMeasuringPassContext.
+            => context is Internal.IMeasuringPassContext
+            || (context is ProtoWriter writer && writer.IsMeasuringPass);
 
         /// <summary>
         /// Whether this writer exists to count bytes rather than to emit them.

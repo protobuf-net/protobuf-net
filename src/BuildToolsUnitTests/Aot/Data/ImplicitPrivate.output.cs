@@ -142,7 +142,7 @@ partial class ImplicitPrivateModel
             }
         }
 
-        private static long Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ImplicitPrivate_Explicit(global::AotFixtures.ImplicitPrivate.Explicit value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -155,7 +155,7 @@ partial class ImplicitPrivateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ImplicitPrivate_Explicit(value, depth, slots);
+            var len = Measure_AotFixtures_ImplicitPrivate_Explicit(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -225,7 +225,7 @@ partial class ImplicitPrivateModel
             }
         }
 
-        private static long Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_ImplicitPrivate_Private(global::AotFixtures.ImplicitPrivate.Private value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -245,7 +245,7 @@ partial class ImplicitPrivateModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_ImplicitPrivate_Private(value, depth, slots);
+            var len = Measure_AotFixtures_ImplicitPrivate_Private(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

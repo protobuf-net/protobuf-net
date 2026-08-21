@@ -212,7 +212,7 @@ partial class NestedModel
             }
         }
 
-        private static long Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Nested_Address(global::AotFixtures.Nested.Address value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -228,7 +228,7 @@ partial class NestedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Nested_Address(value, depth, slots);
+            var len = Measure_AotFixtures_Nested_Address(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -272,7 +272,7 @@ partial class NestedModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Nested_Customer(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Nested_Customer(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Nested_Customer(ref state, value, state.RawDepthBudget);
@@ -301,7 +301,7 @@ partial class NestedModel
             }
         }
 
-        private static long Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Nested_Customer(global::AotFixtures.Nested.Customer value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -311,7 +311,7 @@ partial class NestedModel
             if (tmp2 != null)
             {
                 var slot2 = slots.Reserve();
-                var sub = Measure_AotFixtures_Nested_Address(tmp2, depth, slots);
+                var sub = Measure_AotFixtures_Nested_Address(tmp2, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Address
             }
@@ -322,7 +322,7 @@ partial class NestedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Nested_Customer(value, depth, slots);
+            var len = Measure_AotFixtures_Nested_Customer(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -377,7 +377,7 @@ partial class NestedModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Nested_Invoice(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Nested_Invoice(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Nested_Invoice(ref state, value, state.RawDepthBudget);
@@ -417,7 +417,7 @@ partial class NestedModel
             }
         }
 
-        private static long Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Nested_Invoice(global::AotFixtures.Nested.Invoice value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -428,7 +428,7 @@ partial class NestedModel
             if (tmp2 != null)
             {
                 var slot2 = slots.Reserve();
-                sub = Measure_AotFixtures_Nested_Customer(tmp2, depth, slots);
+                sub = Measure_AotFixtures_Nested_Customer(tmp2, depth, slots, context);
                 slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Customer
             }
@@ -436,7 +436,7 @@ partial class NestedModel
             if (tmp3 != null)
             {
                 var slot3 = slots.Reserve();
-                sub = Measure_AotFixtures_Nested_Address(tmp3, depth, slots);
+                sub = Measure_AotFixtures_Nested_Address(tmp3, depth, slots, context);
                 slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // ShipTo
             }
@@ -447,7 +447,7 @@ partial class NestedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Nested_Invoice(value, depth, slots);
+            var len = Measure_AotFixtures_Nested_Invoice(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

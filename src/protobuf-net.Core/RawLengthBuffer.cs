@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -97,6 +99,46 @@ namespace ProtoBuf
             return false;
         }
 
+        /// <summary>
+        /// The context a generated <c>Measure_</c> pass hands to a consumer's callbacks, for which
+        /// <see cref="ProtoWriter.IsMeasuring(ISerializationContext)"/> answers <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A measure-first contract fires <c>[ProtoBeforeSerialization]</c> in <b>both</b> passes,
+        /// because both must observe the same object or the measured length will not match the
+        /// bytes written. That is only tolerable if a callback can tell the passes apart - firing
+        /// twice indistinguishably would be worse than the old behaviour of refusing to measure
+        /// such a contract at all - and this is what makes it possible.
+        /// </para>
+        /// <para>
+        /// The classic buffer-writer backend answers the same question by <b>being</b> a counting
+        /// writer (<c>NullProtoWriter</c>). The raw measure has no writer at all - it is
+        /// arithmetic - so it borrows the real context's model and user-state and differs only in
+        /// this one answer. Cached against the context it wraps, so a whole serialize costs one
+        /// allocation and a reused writer costs none.
+        /// </para>
+        /// </remarks>
+        public ISerializationContext AsMeasuring(ISerializationContext context)
+        {
+            var measuring = _measuring;
+            if (measuring is null || !ReferenceEquals(measuring.Inner, context))
+            {
+                _measuring = measuring = new MeasuringContext(context);
+            }
+            return measuring;
+        }
+
+        private MeasuringContext _measuring;
+
+        private sealed class MeasuringContext : ISerializationContext, IMeasuringPassContext
+        {
+            internal readonly ISerializationContext Inner;
+            internal MeasuringContext(ISerializationContext inner) => Inner = inner;
+            public TypeModel Model => Inner.Model;
+            public object UserState => Inner.UserState;
+        }
+
         /// <summary>Whether the write pass consumed exactly what the measure pass produced.</summary>
         /// <remarks>
         /// The positional scheme's one real failure mode is the two passes disagreeing about which
@@ -128,6 +170,7 @@ namespace ProtoBuf
             _count = _read = 0;
             if (_boundary is not null && (pressure || _boundary.Count > retainedCap)) _boundary = null;
             else _boundary?.Clear();
+            if (pressure) _measuring = null; // it pins the writer it wraps
         }
 
         /// <summary>

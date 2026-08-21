@@ -265,7 +265,7 @@ partial class FieldModel
             }
         }
 
-        private static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -283,7 +283,7 @@ partial class FieldModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Field_DataFields(value, depth, slots);
+            var len = Measure_AotFixtures_Field_DataFields(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -361,7 +361,7 @@ partial class FieldModel
             }
         }
 
-        private static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -374,7 +374,7 @@ partial class FieldModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Field_FieldStruct(value, depth, slots);
+            var len = Measure_AotFixtures_Field_FieldStruct(value, depth, slots, context);
             return len <= int.MaxValue ? (int)len : -1;
         }
 
@@ -407,7 +407,7 @@ partial class FieldModel
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
                 var mark3 = state.RawSlots.Mark();
-                var len = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, state.RawSlots);
+                var len = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, state.RawSlots, state.Context);
                 state.RawSlots.SeekTo(mark3);
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
@@ -542,7 +542,7 @@ partial class FieldModel
             }
         }
 
-        private static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -555,7 +555,7 @@ partial class FieldModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Field_Nested(value, depth, slots);
+            var len = Measure_AotFixtures_Field_Nested(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

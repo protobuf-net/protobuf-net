@@ -214,7 +214,7 @@ partial class KeywordsModel
             }
         }
 
-        private static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -227,7 +227,7 @@ partial class KeywordsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Keywords_Inner(value, depth, slots);
+            var len = Measure_AotFixtures_Keywords_Inner(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -274,7 +274,7 @@ partial class KeywordsModel
             if (!slots.Leave(value, out var entry))
             {
                 entry = slots.Mark();
-                Measure_AotFixtures_Keywords_Keywords(value, state.RawDepthBudget, slots);
+                Measure_AotFixtures_Keywords_Keywords(value, state.RawDepthBudget, slots, state.Context);
             }
             slots.SeekTo(entry);
             RawWrite_AotFixtures_Keywords_Keywords(ref state, value, state.RawDepthBudget);
@@ -335,7 +335,7 @@ partial class KeywordsModel
             }
         }
 
-        private static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -359,7 +359,7 @@ partial class KeywordsModel
             if (tmp4 != null)
             {
                 var slot4 = slots.Reserve();
-                sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, slots);
+                sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, slots, context);
                 slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // class
             }
@@ -367,7 +367,7 @@ partial class KeywordsModel
             if (tmp5 != null)
             {
                 var slot5 = slots.Reserve();
-                sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, slots);
+                sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, slots, context);
                 slots.Set(slot5, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // lock
             }
@@ -380,7 +380,7 @@ partial class KeywordsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Keywords_Keywords(value, depth, slots);
+            var len = Measure_AotFixtures_Keywords_Keywords(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -522,7 +522,7 @@ partial class KeywordsModel
             }
         }
 
-        private static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -540,7 +540,7 @@ partial class KeywordsModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Keywords_Pair(value, depth, slots);
+            var len = Measure_AotFixtures_Keywords_Pair(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }

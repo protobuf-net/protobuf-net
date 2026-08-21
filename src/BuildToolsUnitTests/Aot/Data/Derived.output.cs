@@ -165,7 +165,7 @@ partial class DerivedModel
             }
         }
 
-        private static long Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        private static long Measure_AotFixtures_Derived_Ambiguous(global::AotFixtures.Derived.Ambiguous value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -181,7 +181,7 @@ partial class DerivedModel
         {
             if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
             var entry = slots.Mark();
-            var len = Measure_AotFixtures_Derived_Ambiguous(value, depth, slots);
+            var len = Measure_AotFixtures_Derived_Ambiguous(value, depth, slots, context);
             slots.Enter(value, entry);
             return len <= int.MaxValue ? (int)len : -1;
         }
@@ -243,7 +243,7 @@ partial class DerivedModel
             {
                 state.WriteRawTag((4 << 3) | 2);  // Ambiguous
                 var mark4 = state.RawSlots.Mark();
-                var len = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, state.RawSlots);
+                var len = Measure_AotFixtures_Derived_Ambiguous(tmp4, state.RawDepthBudget, state.RawSlots, state.Context);
                 state.RawSlots.SeekTo(mark4);
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
