@@ -79,4 +79,8 @@
         <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/bcl.proto" Link="protobuf-net/bcl.proto" />
         <EmbeddedResource Include="../protobuf-net.Reflection/protobuf-net/protogen.proto" Link="protobuf-net/protogen.proto" />
     </ItemGroup>
+  <PropertyGroup Label="package validation">
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>$(ProtoBufPackageBaseline)</PackageValidationBaselineVersion>
+  </PropertyGroup>
 </Project>

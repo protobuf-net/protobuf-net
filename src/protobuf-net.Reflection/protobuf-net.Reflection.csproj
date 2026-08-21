@@ -30,4 +30,8 @@
     <!-- net4x-only surface (e.g. persist-to-dll) -->
     <AdditionalFiles Include="PublicAPI/net462/PublicAPI.*.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net462'))" />
   </ItemGroup>
+  <PropertyGroup Label="package validation">
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>$(ProtoBufPackageBaseline)</PackageValidationBaselineVersion>
+  </PropertyGroup>
 </Project>

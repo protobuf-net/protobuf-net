@@ -1,0 +1,1 @@
+static ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<T>(ProtoBuf.CompatibilityLevel compatibilityLevel = ProtoBuf.CompatibilityLevel.NotSpecified, ProtoBuf.DataFormat dataFormat = ProtoBuf.DataFormat.Default) -> ProtoBuf.Serializers.ISerializer<T>

@@ -17,4 +17,8 @@
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
   </ItemGroup>
 
+  <PropertyGroup Label="package validation">
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>$(ProtoBufPackageBaseline)</PackageValidationBaselineVersion>
+  </PropertyGroup>
 </Project>
