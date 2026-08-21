@@ -2241,9 +2241,18 @@ the benchmark's generated model. Both contracts emit them; the prefixed path *is
 
 **What it is:** `state.RawLengths` is a `Dictionary<object, long>` with a custom
 `IEqualityComparer<object>` (`NetObjectCache.RawLengthComparer`), so every operation is an interface
-call plus `RuntimeHelpers.GetHashCode`. The generated prefixed writer performs **three per
-sub-message node** — `TryGetValue` miss and an indexer insert while measuring, `TryGetValue` hit
-while writing. The delimited writer performs **none**, which is exactly why it is the floor.
+call plus `RuntimeHelpers.GetHashCode`. The delimited writer performs **none**, which is exactly why
+it is the floor.
+
+**The count per node is 2 or 3, depending on shape, and the difference matters** — an earlier
+version of this entry said "three" flatly, which is wrong for the wide case. The emitted write site
+is `if (!TryGetValue(x, out len)) { len = Measure_(x); lengths[x] = len; }`, i.e. **lazy**: the probe
+*is* what triggers the measure, so there is no separate lookup afterwards.
+
+- **wide** (leaf children): probe-miss + insert = **2**. `Measure_` on a leaf touches the dictionary
+  not at all.
+- **deep**: the first write site's miss triggers one measure walk that inserts every descendant
+  (miss + insert each), and the write then descends hitting each = **3**.
 
 **Isolated by construction rather than by inference** — `src/Benchmark/LengthCarrierBenchmarks.cs`,
 which holds writer, graph and output bytes constant and varies *only how a measured length reaches
@@ -2328,10 +2337,39 @@ unexamined. The invariant itself is unaffected: eager-measure-then-write is stil
 - the array must ride the same lifecycle the dictionary does in `NetObjectCache` — the null-writer
   sidecar and `MeasureState`→`Serialize` hand-off both share it today.
 
-**A cheaper partial exists if the structural change is unwanted**: the measure side hashes *twice*
-per node (probe then insert), which `CollectionsMarshal.GetValueRefOrAddDefault` collapses to one.
-That keeps every semantic, is a two-line generator change, and should recover roughly a third of the
-dictionary cost. Not measured — worth measuring before choosing.
+**There is NO cheap partial. Both candidates were tried and both fail** — recorded because each
+looks obviously right until checked, and the first was offered here before it was.
+
+- **`CollectionsMarshal.GetValueRefOrAddDefault` is unusable in this position.** The idea was to
+  collapse the measure side's probe-then-insert into one hash. But the `ref` it hands back is
+  invalidated by *any* later mutation of the dictionary, and the recursive `Measure_` sitting between
+  the probe and the store inserts every descendant into **that same dictionary** — so by the time the
+  child's length is written through the ref, the ref points at the old bucket array. Demonstrated
+  rather than reasoned: take a ref, insert 64 entries, write 42 through it, read back — **0**. The
+  value is lost silently, which is the worst available failure. Reordering to measure-then-add
+  removes the hazard but also removes the probe, which is the next bullet.
+
+  It would also have needed a TFM condition: `GetValueRefOrAddDefault` is **net6+**, and
+  netstandard2.0/net472 have no `CollectionsMarshal` at all (verified by compiling). The existing
+  `listAsSpan` probe would not have covered it — `AsSpan` is net5+, so the capabilities differ by a
+  version and need separate probes, exactly as `immutableArrayAsSpan` already does for its own reason.
+- **"drop the measure-side probe" cannot be done either, because in the lazy scheme the probe IS the
+  mechanism.** Without it, `RawWrite_` re-measures each child's whole subtree at every level, which
+  is O(n²) in depth — precisely the shape that makes Google.Protobuf's prefixed deep case 787 µs.
+  Measured in the eager framing where it *is* expressible: 11,936 ns → 10,162 ns at wide-512, still
+  far worse than the array's 5,235 and worse than today's lazy 9,087.
+
+**The ordered array needs no framework API whatsoever**, so unlike either partial it carries **no TFM
+condition** and helps a netstandard2.0 or net472 consumer exactly as much as a net10 one. Given the
+partials are dead, it is this or nothing.
+
+**A methodological note, because the harness caught the author out.** `DictBaseline` — a hand-written
+copy of the current scheme, added to prove the harness reproduces `Generated` before trusting deltas
+from it — came in at **11,936 ns against `Generated`'s 9,087**. It was not faithful: it measured
+*eagerly* and then wrote, where the generator measures *lazily* at the write site. That is a second
+full traversal of every child list, and it costs 31%. Two things follow: the "3 hashes everywhere"
+claim above was wrong, and **eager-vs-lazy is itself worth ~30% independently of the container** — so
+the ordered array pays that traversal cost and still wins by 1.74×, rather than being flattered by it.
 
 **A secondary, smaller finding fell out of making the comparison fair:** the per-node guards
 (`ThrowUnexpectedSubtype` plus the null-element test) cost ~745 ns across 513 nodes, ~1.45 ns/node —

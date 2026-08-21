@@ -87,6 +87,8 @@ namespace Benchmark
             AssertSame(nameof(GeneratedDeep), Bytes(ViaModelDeep), Bytes(GeneratedDeep));
             AssertSame(nameof(GeneratedAlias), Bytes(ViaModelAlias), Bytes(GeneratedAlias));
             AssertSame(nameof(OrderedAlias), Bytes(ViaModelAlias), Bytes(OrderedAlias));
+            AssertSame(nameof(DictBaseline), Bytes(ViaModel), Bytes(DictBaseline));
+            AssertSame(nameof(DictNoProbe), Bytes(ViaModel), Bytes(DictNoProbe));
         }
 
         private byte[] Bytes(System.Func<long> route)
@@ -245,6 +247,115 @@ namespace Benchmark
             try { DelimitedModel.RawWriteDelimited(ref state, _aliasDelimited); state.Close(); }
             finally { state.Dispose(); }
             return _bw.WrittenCount;
+        }
+
+        /// <summary>
+        /// A hand-written copy of exactly what the generator emits today - three dictionary
+        /// operations per node. Exists to show the hand-written harness reproduces
+        /// <see cref="Generated"/>, so the delta to the variants below is trustworthy.
+        /// </summary>
+        [Benchmark, BenchmarkCategory("wide")]
+        public long DictBaseline()
+        {
+            _bw.Reset();
+            var state = ProtoWriter.State.Create(_bw, DelimitedModel.Instance);
+            try
+            {
+                MeasureDict(_wide, state.RawDepthBudget, state.RawLengths, probe: true);
+                WriteDict(ref state, _wide, state.RawDepthBudget);
+                state.Close();
+            }
+            finally { state.Dispose(); }
+            return _bw.WrittenCount;
+        }
+
+        /// <summary>
+        /// The same, minus the measure-side PROBE: measure unconditionally and store, so a node
+        /// costs one insert plus one write-site lookup instead of miss + insert + lookup. Needs no
+        /// framework API, so it carries no TFM condition. The only thing given up is dedup of an
+        /// aliased subtree, which <see cref="OrderedAlias"/> shows is worth little.
+        /// </summary>
+        [Benchmark, BenchmarkCategory("wide")]
+        public long DictNoProbe()
+        {
+            _bw.Reset();
+            var state = ProtoWriter.State.Create(_bw, DelimitedModel.Instance);
+            try
+            {
+                MeasureDict(_wide, state.RawDepthBudget, state.RawLengths, probe: false);
+                WriteDict(ref state, _wide, state.RawDepthBudget);
+                state.Close();
+            }
+            finally { state.Dispose(); }
+            return _bw.WrittenCount;
+        }
+
+        private static long MeasureDict(Node value, int depth,
+            Dictionary<object, long> lengths, bool probe)
+        {
+            if (--depth < 0) ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0, sub;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));
+            var tmp2 = value.Child;
+            if (tmp2 != null)
+            {
+                if (probe)
+                {
+                    if (!lengths.TryGetValue(tmp2, out sub))
+                    { sub = MeasureDict(tmp2, depth, lengths, probe); lengths[tmp2] = sub; }
+                }
+                else { sub = MeasureDict(tmp2, depth, lengths, probe); lengths[tmp2] = sub; }
+                len += 1 + ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+            }
+            var tmp3 = value.Children;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in CollectionsMarshal.AsSpan(tmp3))
+                {
+                    if (item3 is null) ProtoWriter.State.ThrowNullRepeatedContents<Node>();
+                    if (probe)
+                    {
+                        if (!lengths.TryGetValue(item3, out sub))
+                        { sub = MeasureDict(item3, depth, lengths, probe); lengths[item3] = sub; }
+                    }
+                    else { sub = MeasureDict(item3, depth, lengths, probe); lengths[item3] = sub; }
+                    len += 1 + ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                }
+            }
+            return len;
+        }
+
+        private static void WriteDict(ref ProtoWriter.State state, Node value, int depth)
+        {
+            if (--depth < 0) ProtoWriter.State.ThrowRawTooDeep();
+            ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
+            var tmp2 = value.Child;
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);
+                state.RawLengths.TryGetValue(tmp2, out var len);
+                state.WriteRawVarint64((ulong)len);
+                WriteDict(ref state, tmp2, depth);
+            }
+            var tmp3 = value.Children;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in CollectionsMarshal.AsSpan(tmp3))
+                {
+                    if (item3 is null) ProtoWriter.State.ThrowNullRepeatedContents<Node>();
+                    state.WriteRawTag((3 << 3) | 2);
+                    state.RawLengths.TryGetValue(item3, out var len);
+                    state.WriteRawVarint64((ulong)len);
+                    WriteDict(ref state, item3, depth);
+                }
+            }
         }
 
         // --- the ordered-array variant: a line-for-line copy of the generated pair, with the
