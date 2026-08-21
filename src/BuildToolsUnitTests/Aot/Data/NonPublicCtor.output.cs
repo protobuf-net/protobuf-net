@@ -24,7 +24,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.Holder>(value, GetSerializer<global::AotFixtures.NonPublicCtor.Holder>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.Holder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.Holder>(value, GetSerializer<global::AotFixtures.NonPublicCtor.Holder>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.Holder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +72,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.InternalCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +96,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.InternalCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -84,7 +120,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.PrivateCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -99,7 +144,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.PrivateCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -114,7 +168,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.ProtectedCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -129,7 +192,16 @@ partial class NonPublicCtorModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.ProtectedCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

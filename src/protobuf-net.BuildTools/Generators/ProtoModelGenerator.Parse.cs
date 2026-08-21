@@ -417,6 +417,11 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var isValueType = type.TypeKind == TypeKind.Struct;
+            // the DECLARED type's own answer, kept separate because `isValueType` is overwritten
+            // with the SURROGATE's below - which is right for construction and for
+            // ThrowUnexpectedSubtype, and wrong for anything that talks about the contract type
+            // itself. Emitting `value is null` against a surrogated struct was four CS0037s.
+            var declaredIsValueType = isValueType;
             var isInterface = type.TypeKind == TypeKind.Interface;
             if (!isValueType && !isInterface && type.TypeKind != TypeKind.Class)
             {
@@ -1603,7 +1608,8 @@ namespace ProtoBuf.BuildTools.Generators
                 usesConstructorAccessor: usesConstructorAccessor,
                 callbacks: new(callbacks),
                 isAbstract: type.IsAbstract && subTypes.Count == 0,
-                isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes);
+                isGroup: isGroup, ignoreUnknownSubTypes: ignoreUnknownSubTypes,
+                declaredIsValueType: declaredIsValueType);
         }
 
         /// <summary>

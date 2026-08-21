@@ -24,7 +24,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.Mixed>(value, GetSerializer<global::AotFixtures.Ordering.Mixed>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.Mixed>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.Mixed>(value, GetSerializer<global::AotFixtures.Ordering.Mixed>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.Mixed>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +72,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.OffsetIgnoredByXml>(value, GetSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +96,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.OffsetIgnoredByXml>(value, GetSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -84,7 +120,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.Referencing>(value, GetSerializer<global::AotFixtures.Ordering.Referencing>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.Referencing>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -99,7 +144,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.Referencing>(value, GetSerializer<global::AotFixtures.Ordering.Referencing>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.Referencing>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -114,7 +168,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMember>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMember>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.ViaDataMember>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -129,7 +192,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMember>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMember>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.ViaDataMember>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -144,7 +216,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMemberOffset>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -159,7 +240,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMemberOffset>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -174,7 +264,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.ViaXmlElement>(value, GetSerializer<global::AotFixtures.Ordering.ViaXmlElement>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.ViaXmlElement>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -189,7 +288,16 @@ partial class OrderingModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Ordering.ViaXmlElement>(value, GetSerializer<global::AotFixtures.Ordering.ViaXmlElement>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Ordering.ViaXmlElement>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

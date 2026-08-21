@@ -24,7 +24,16 @@ partial class DerivedModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Derived.Ambiguous>(value, GetSerializer<global::AotFixtures.Derived.Ambiguous>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Derived.Ambiguous>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class DerivedModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Derived.Ambiguous>(value, GetSerializer<global::AotFixtures.Derived.Ambiguous>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Derived.Ambiguous>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +72,16 @@ partial class DerivedModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Derived.Derives>(value, GetSerializer<global::AotFixtures.Derived.Derives>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Derived.Derives>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +96,16 @@ partial class DerivedModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.Derived.Derives>(value, GetSerializer<global::AotFixtures.Derived.Derives>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Derived.Derives>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

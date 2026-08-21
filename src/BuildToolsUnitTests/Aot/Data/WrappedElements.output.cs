@@ -24,7 +24,16 @@ partial class WrappedElementsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.WrappedElements.Payload>(value, GetSerializer<global::AotFixtures.WrappedElements.Payload>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.WrappedElements.Payload>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class WrappedElementsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.WrappedElements.Payload>(value, GetSerializer<global::AotFixtures.WrappedElements.Payload>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.WrappedElements.Payload>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +72,16 @@ partial class WrappedElementsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.WrappedElements.Wrapped>(value, GetSerializer<global::AotFixtures.WrappedElements.Wrapped>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.WrappedElements.Wrapped>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +96,16 @@ partial class WrappedElementsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.WrappedElements.Wrapped>(value, GetSerializer<global::AotFixtures.WrappedElements.Wrapped>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.WrappedElements.Wrapped>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

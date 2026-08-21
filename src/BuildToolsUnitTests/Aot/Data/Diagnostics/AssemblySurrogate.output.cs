@@ -24,7 +24,16 @@ partial class AssemblySurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.AssemblySurrogate.Holder>(value, GetSerializer<global::AotFixtures.AssemblySurrogate.Holder>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.AssemblySurrogate.Holder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class AssemblySurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.AssemblySurrogate.Holder>(value, GetSerializer<global::AotFixtures.AssemblySurrogate.Holder>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.AssemblySurrogate.Holder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +72,16 @@ partial class AssemblySurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.AssemblySurrogate.VersionSurrogate>(value, GetSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +96,16 @@ partial class AssemblySurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.AssemblySurrogate.VersionSurrogate>(value, GetSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.AssemblySurrogate.VersionSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -84,7 +120,16 @@ partial class AssemblySurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.Version>(value, GetSerializer<global::System.Version>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::System.Version>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -99,7 +144,16 @@ partial class AssemblySurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.Version>(value, GetSerializer<global::System.Version>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::System.Version>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

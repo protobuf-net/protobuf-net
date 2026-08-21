@@ -24,7 +24,16 @@ partial class MemberTypeAdviceModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>(value, GetSerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class MemberTypeAdviceModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>(value, GetSerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

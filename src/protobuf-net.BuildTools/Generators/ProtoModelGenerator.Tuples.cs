@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -210,7 +210,9 @@ namespace ProtoBuf.BuildTools.Generators
             return new ProtoContractPlan(
                 Qualified(compilation, type),
                 new(members.ToArray()), type.IsValueType, skipConstructor: false, isTuple: true,
-                isTupleLiteral: type.IsTupleType);
+                isTupleLiteral: type.IsTupleType,
+                // no surrogate here, so the declared answer is simply the type's own
+                declaredIsValueType: type.IsValueType);
         }
 
         /// <summary>

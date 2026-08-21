@@ -24,7 +24,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>(value, GetSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +48,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>(value, GetSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +72,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.Holder>(value, GetSerializer<global::AotFixtures.ModelSurrogate.Holder>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.Holder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +96,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.Holder>(value, GetSerializer<global::AotFixtures.ModelSurrogate.Holder>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.Holder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -84,7 +120,15 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.Ticks>(value, GetSerializer<global::AotFixtures.ModelSurrogate.Ticks>());
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.Ticks>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -99,7 +143,15 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.Ticks>(value, GetSerializer<global::AotFixtures.ModelSurrogate.Ticks>());
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.Ticks>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -114,7 +166,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.TicksSurrogate>(value, GetSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -129,7 +190,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.TicksSurrogate>(value, GetSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -144,7 +214,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.VersionSurrogate>(value, GetSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -159,7 +238,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.ModelSurrogate.VersionSurrogate>(value, GetSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -174,7 +262,15 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.DateTimeOffset>(value, GetSerializer<global::System.DateTimeOffset>());
+            long before = state.Position64;
+            GetSerializer<global::System.DateTimeOffset>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -189,7 +285,15 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.DateTimeOffset>(value, GetSerializer<global::System.DateTimeOffset>());
+            long before = state.Position64;
+            GetSerializer<global::System.DateTimeOffset>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -204,7 +308,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.Version>(value, GetSerializer<global::System.Version>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::System.Version>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -219,7 +332,16 @@ partial class ModelSurrogateModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.Version>(value, GetSerializer<global::System.Version>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::System.Version>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

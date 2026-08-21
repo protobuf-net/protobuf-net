@@ -24,7 +24,15 @@ partial class BclFixedSizeModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(global::System.DateTime, global::System.TimeSpan)>(value, GetSerializer<(global::System.DateTime, global::System.TimeSpan)>());
+            long before = state.Position64;
+            GetSerializer<(global::System.DateTime, global::System.TimeSpan)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +47,15 @@ partial class BclFixedSizeModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(global::System.DateTime, global::System.TimeSpan)>(value, GetSerializer<(global::System.DateTime, global::System.TimeSpan)>());
+            long before = state.Position64;
+            GetSerializer<(global::System.DateTime, global::System.TimeSpan)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +70,16 @@ partial class BclFixedSizeModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.BclFixedSize.Fixed>(value, GetSerializer<global::AotFixtures.BclFixedSize.Fixed>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.BclFixedSize.Fixed>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +94,16 @@ partial class BclFixedSizeModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.BclFixedSize.Fixed>(value, GetSerializer<global::AotFixtures.BclFixedSize.Fixed>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.BclFixedSize.Fixed>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

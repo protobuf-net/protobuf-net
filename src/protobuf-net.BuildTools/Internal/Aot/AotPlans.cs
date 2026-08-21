@@ -675,8 +675,13 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool externalSerializerCategoryKnown = true,
             string? surrogateSerializer = null,
             bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default,
-            bool isAbstract = false, bool isGroup = false, bool ignoreUnknownSubTypes = false)
+            bool isAbstract = false, bool isGroup = false, bool ignoreUnknownSubTypes = false,
+            bool declaredIsValueType = false)
         {
+            // NOT the same question as IsValueType, which follows the SURROGATE where there is
+            // one (right for construction and ThrowUnexpectedSubtype, wrong for anything naming
+            // the contract type itself - a `value is null` against a surrogated struct is CS0037)
+            DeclaredIsValueType = declaredIsValueType;
             IsGroup = isGroup;
             IgnoreUnknownSubTypes = ignoreUnknownSubTypes;
             IsAbstract = isAbstract;
@@ -706,6 +711,11 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// <c>WireTypeStartGroup</c> instead of <c>WireTypeString</c>.
         /// </summary>
         public bool IsGroup { get; }
+        /// <summary>
+        /// Whether <see cref="TypeName"/> is itself a value type - as opposed to
+        /// <see cref="IsValueType"/>, which describes the surrogate where one is declared.
+        /// </summary>
+        public bool DeclaredIsValueType { get; }
 
         /// <summary>
         /// From <c>[ProtoContract(IgnoreUnknownSubTypes = true)]</c>: omits
@@ -871,7 +881,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && ExternalSerializerIsScalar == other.ExternalSerializerIsScalar
                 && ExternalSerializerCategoryKnown == other.ExternalSerializerCategoryKnown
                 && SurrogateSerializer == other.SurrogateSerializer
-                && IsGroup == other.IsGroup && IgnoreUnknownSubTypes == other.IgnoreUnknownSubTypes;
+                && IsGroup == other.IsGroup && IgnoreUnknownSubTypes == other.IgnoreUnknownSubTypes
+                && DeclaredIsValueType == other.DeclaredIsValueType;
 
         public override bool Equals(object? obj) => Equals(obj as ProtoContractPlan);
 

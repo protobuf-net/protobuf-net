@@ -24,7 +24,15 @@ partial class TupleLevelsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(global::System.Guid, decimal)>(value, GetSerializer<(global::System.Guid, decimal)>());
+            long before = state.Position64;
+            GetSerializer<(global::System.Guid, decimal)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +47,15 @@ partial class TupleLevelsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(global::System.Guid, decimal)>(value, GetSerializer<(global::System.Guid, decimal)>());
+            long before = state.Position64;
+            GetSerializer<(global::System.Guid, decimal)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +70,16 @@ partial class TupleLevelsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.TupleLevels.Agreeing>(value, GetSerializer<global::AotFixtures.TupleLevels.Agreeing>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.TupleLevels.Agreeing>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +94,16 @@ partial class TupleLevelsModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.TupleLevels.Agreeing>(value, GetSerializer<global::AotFixtures.TupleLevels.Agreeing>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.TupleLevels.Agreeing>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

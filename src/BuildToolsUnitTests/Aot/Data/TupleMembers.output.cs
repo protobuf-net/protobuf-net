@@ -24,7 +24,15 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(int, (int, string))>(value, GetSerializer<(int, (int, string))>());
+            long before = state.Position64;
+            GetSerializer<(int, (int, string))>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -39,7 +47,15 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(int, (int, string))>(value, GetSerializer<(int, (int, string))>());
+            long before = state.Position64;
+            GetSerializer<(int, (int, string))>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -54,7 +70,15 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(int, string)>(value, GetSerializer<(int, string)>());
+            long before = state.Position64;
+            GetSerializer<(int, string)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -69,7 +93,15 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<(int, string)>(value, GetSerializer<(int, string)>());
+            long before = state.Position64;
+            GetSerializer<(int, string)>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -84,7 +116,16 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.TupleMembers.HasTuples>(value, GetSerializer<global::AotFixtures.TupleMembers.HasTuples>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.TupleMembers.HasTuples>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -99,7 +140,16 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::AotFixtures.TupleMembers.HasTuples>(value, GetSerializer<global::AotFixtures.TupleMembers.HasTuples>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.TupleMembers.HasTuples>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -114,7 +164,15 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.Collections.Generic.KeyValuePair<int, string>>(value, GetSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>());
+            long before = state.Position64;
+            GetSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -129,7 +187,15 @@ partial class TupleMembersModel
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::System.Collections.Generic.KeyValuePair<int, string>>(value, GetSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>());
+            long before = state.Position64;
+            GetSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {

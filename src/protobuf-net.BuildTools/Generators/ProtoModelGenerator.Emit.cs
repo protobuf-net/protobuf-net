@@ -142,8 +142,30 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent + 2, "var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);");
                         Line(sb, indent + 2, "try");
                         Line(sb, indent + 2, "{");
-                        Line(sb, indent + 3, $"return state.SerializeRoot<{contract.TypeName}>("
-                            + $"value, GetSerializer<{contract.TypeName}>());");
+                        // the root sequence, spelled out rather than delegated to SerializeRoot.
+                        // Everything it needs is public: Close() is CheckClear() + Cleanup(), and
+                        // CheckClear is not an assertion - it calls TryFlush, so it IS the final
+                        // flush; Abandon() is public and one line. What this skips is
+                        // WriteAsRoot's category switch, which for a generated contract is always
+                        // the CategoryMessage arm, i.e. `serializer.Write(...)`.
+                        //
+                        // The null test WriteAsRoot used to absorb has to come back, and it keys on
+                        // DeclaredIsValueType rather than IsValueType: the latter follows the
+                        // SURROGATE, so `value is null` against a surrogated struct is CS0037.
+                        if (!contract.DeclaredIsValueType)
+                        {
+                            Line(sb, indent + 3, "if (value is null) return 0;");
+                        }
+                        // Position64, not GetPosition(): the latter is internal (it just forwards here)
+                        Line(sb, indent + 3, "long before = state.Position64;");
+                        Line(sb, indent + 3, $"GetSerializer<{contract.TypeName}>().Write(ref state, value);");
+                        Line(sb, indent + 3, "state.Close();");
+                        Line(sb, indent + 3, "return state.Position64 - before;");
+                        Line(sb, indent + 2, "}");
+                        Line(sb, indent + 2, "catch");
+                        Line(sb, indent + 2, "{");
+                        Line(sb, indent + 3, "state.Abandon();");
+                        Line(sb, indent + 3, "throw;");
                         Line(sb, indent + 2, "}");
                         Line(sb, indent + 2, "finally");
                         Line(sb, indent + 2, "{");

@@ -23,7 +23,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.DescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -38,7 +47,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.DescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -53,7 +71,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>(value, GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -68,7 +95,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>(value, GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -83,7 +119,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>(value, GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -98,7 +143,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>(value, GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -113,7 +167,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -128,7 +191,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -143,7 +215,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -158,7 +239,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -173,7 +263,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -188,7 +287,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -203,7 +311,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -218,7 +335,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -233,7 +359,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumValueOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -248,7 +383,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.EnumValueOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -263,7 +407,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ExtensionRangeOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -278,7 +431,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ExtensionRangeOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -293,7 +455,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>(value, GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -308,7 +479,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>(value, GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -323,7 +503,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FeatureSet>(value, GetSerializer<global::Google.Protobuf.Reflection.FeatureSet>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FeatureSet>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -338,7 +527,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FeatureSet>(value, GetSerializer<global::Google.Protobuf.Reflection.FeatureSet>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FeatureSet>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -353,7 +551,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -368,7 +575,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -383,7 +599,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -398,7 +623,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -413,7 +647,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -428,7 +671,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -443,7 +695,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -458,7 +719,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>(value, GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -473,7 +743,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FileDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -488,7 +767,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FileDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -503,7 +791,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FileDescriptorSet>(value, GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -518,7 +815,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FileDescriptorSet>(value, GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -533,7 +839,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FileOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.FileOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FileOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -548,7 +863,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.FileOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.FileOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.FileOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -563,7 +887,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.MessageOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.MessageOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.MessageOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -578,7 +911,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.MessageOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.MessageOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.MessageOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -593,7 +935,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.MethodDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -608,7 +959,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.MethodDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -623,7 +983,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.MethodOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.MethodOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.MethodOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -638,7 +1007,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.MethodOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.MethodOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.MethodOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -653,7 +1031,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.OneofDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -668,7 +1055,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.OneofDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -683,7 +1079,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.OneofOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.OneofOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.OneofOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -698,7 +1103,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.OneofOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.OneofOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.OneofOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -713,7 +1127,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ServiceDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -728,7 +1151,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ServiceDescriptorProto>(value, GetSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -743,7 +1175,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ServiceOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.ServiceOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ServiceOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -758,7 +1199,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.ServiceOptions>(value, GetSerializer<global::Google.Protobuf.Reflection.ServiceOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.ServiceOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -773,7 +1223,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.SourceCodeInfo>(value, GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -788,7 +1247,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.SourceCodeInfo>(value, GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -803,7 +1271,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>(value, GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -818,7 +1295,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>(value, GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -833,7 +1319,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.UninterpretedOption>(value, GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -848,7 +1343,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.UninterpretedOption>(value, GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -863,7 +1367,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>(value, GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -878,7 +1391,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>(value, GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -893,7 +1415,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenEnumOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -908,7 +1439,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenEnumOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -923,7 +1463,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -938,7 +1487,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -953,7 +1511,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenFieldOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -968,7 +1535,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenFieldOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -983,7 +1559,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenFileOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -998,7 +1583,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenFileOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1013,7 +1607,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenMessageOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1028,7 +1631,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenMessageOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1043,7 +1655,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenMethodOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1058,7 +1679,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenMethodOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1073,7 +1703,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenOneofOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1088,7 +1727,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenOneofOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1103,7 +1751,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenServiceOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
@@ -1118,7 +1775,16 @@ partial class CustomProtogenSerializer
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
         try
         {
-            return state.SerializeRoot<global::ProtoBuf.Reflection.ProtogenServiceOptions>(value, GetSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>());
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
         }
         finally
         {
