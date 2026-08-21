@@ -2674,12 +2674,40 @@ Two things make this worth an entry rather than a shrug:
   look fast, which is exactly the shape that reads as "v4 didn't help much" in a consumer's
   benchmark.
 
-**Not investigated**: whether the exclusion is *necessary*. The write side of a hierarchy is
-`WriteSubType` dispatching down an `is` chain and nesting each layer in a sub-type marker — every
-layer of which is length-prefixed, so there is a length to compute and arithmetic that could compute
-it. The exclusion may simply predate the machinery rather than express a real obstacle. Worth
-establishing before anything is designed, since "hierarchies cannot be measured" and "hierarchies
-were never taught to measure" are very different findings.
+**ESTABLISHED 2026-08-21: it is "never taught", not "cannot be done"** — read off the emitted
+hierarchy rather than reasoned from the predicate.
+
+Two things the golden shows immediately. **A layer's own members are already written raw**
+(`state.WriteRawTag((1 << 3) | 2); state.WriteRawString(tmp1);`), so the member half needs nothing
+new. And **the only stateful part is the sub-type dispatch** — `state.WriteSubType(100, sub100,
+this)` — which is structurally just a nested length-prefixed frame, the same thing a sub-message
+member already measures today:
+
+```
+Measure_Shape(value, depth, slots):
+    len = 0
+    if (TypeModel.IsSubType(value)) {
+        if (value is Circle c)      { slot; sub = Measure_Circle(c, ..); len += 2 + varint(sub) + sub; }
+        else if (value is Square s) { sub = Measure_Square(s, ..);       len += 2 + sub + 2; }  // StartGroup
+    }
+    ... this layer's own members, arithmetic exactly as today ...
+```
+
+The tag widths fold, as everywhere else — field 100 is a constant. A `StartGroup`-framed sub-type
+(`[ProtoInclude(.., DataFormat = Group)]`) carries no length, so it takes **no slot**, which is the
+same carve-out B38 already needed for grouped members.
+
+**The positional invariant holds without new machinery**: both passes dispatch on `value`'s runtime
+type via the identical `is` chain, and that cannot differ between them — mutation between the passes
+is already unsupported for exactly this reason — so the branch taken, and therefore the slot order,
+agrees by construction.
+
+**What that leaves as the real work**, none of it novel: emit a `Measure_` per layer mirroring
+`WriteSubType`'s chain; relax `RawMeasurableShape`'s `RootTypeName is null && SubTypes.Count == 0`;
+and keep the all-or-nothing rule the hierarchy already has for dropping (one unmeasurable layer must
+take the whole hierarchy, since every type routes through the root). The `is` chain in the measure
+must be emitted from the *same* plan data as the write's, or the two can diverge — which is the
+B38 lesson restated, and the reason to generate both from one place rather than two.
 
 Related: `notes/gaps.md` B13 already measured `ThrowUnexpectedSubtype` in both shapes and decided to
 leave the hierarchy *check* alone; that is about the per-write type test, not about measurability,
