@@ -1,0 +1,13 @@
+Generator produced 6 diagnostics:
+Warning PBN3002 Aot/Data/Diagnostics/SubTypeUnsupported.input.cs L63 C14
+Contract 'AotFixtures.SubTypeUnsupported.CollidingBase' is omitted from the AOT model: 'AotFixtures.SubTypeUnsupported.First' and 'AotFixtures.SubTypeUnsupported.Second' are both declared as sub-types at field number 20.
+Warning PBN3002 Aot/Data/Diagnostics/SubTypeUnsupported.input.cs L82 C14
+Contract 'AotFixtures.SubTypeUnsupported.TwiceBase' is omitted from the AOT model: 'AotFixtures.SubTypeUnsupported.Twice' is declared as a sub-type more than once, at field numbers 30 and 31.
+Warning PBN3002 Aot/Data/Diagnostics/SubTypeUnsupported.input.cs L100 C2
+Contract 'AotFixtures.SubTypeUnsupported.SelfBase' is omitted from the AOT model: [ProtoSubType] declares 'AotFixtures.SubTypeUnsupported.SelfBase' as a sub-type of 'AotFixtures.SubTypeUnsupported.SelfBase', which does not derive from it, and protobuf-net refuses that too: "is not a valid sub-type of".
+Warning PBN3002 Aot/Data/Diagnostics/SubTypeUnsupported.input.cs L101 C2
+Contract 'AotFixtures.SubTypeUnsupported.StrangerBase' is omitted from the AOT model: [ProtoSubType] declares 'AotFixtures.SubTypeUnsupported.Stranger' as a sub-type of 'AotFixtures.SubTypeUnsupported.StrangerBase', which does not derive from it, and protobuf-net refuses that too: "is not a valid sub-type of".
+Warning PBN3002 Aot/Data/Diagnostics/SubTypeUnsupported.input.cs L102 C2
+Contract 'AotFixtures.SubTypeUnsupported.SealedBase' is omitted from the AOT model: [ProtoSubType] declares 'AotFixtures.SubTypeUnsupported.NotReallyDerived' as a sub-type of 'AotFixtures.SubTypeUnsupported.SealedBase', and protobuf-net refuses that too: "Sub-types can only be added to non-sealed classes".
+Warning PBN3002 Aot/Data/Diagnostics/SubTypeUnsupported.input.cs L103 C2
+Contract 'AotFixtures.SubTypeUnsupported.RangeBase' is omitted from the AOT model: [ProtoSubType] declares 'AotFixtures.SubTypeUnsupported.OutOfRange' as a sub-type of 'AotFixtures.SubTypeUnsupported.RangeBase' at field number 0, which is outside the valid range 1-536870911.

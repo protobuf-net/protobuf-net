@@ -255,6 +255,45 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                 );
 
         /// <inheritdoc/>
+        /// <summary>
+        /// Is this sub-type linked to its base by an out-of-band <c>[ProtoSubType]</c> declaration,
+        /// rather than by a <c>[ProtoInclude]</c> on the base?
+        /// </summary>
+        /// <remarks>
+        /// Only <b>this compilation's</b> assembly and module attributes are considered, and that is
+        /// a deliberate limit rather than an oversight: this runs from a syntax-node action, which
+        /// has no cheap way to find every <c>[ProtoModel]</c> in a compilation, and a declaration
+        /// made on a model class is therefore not seen here. The assembly and module sites are the
+        /// ones that matter for this diagnostic anyway - it can only fire for a type declared in
+        /// source, so the declaration that would excuse it is in the same compilation.
+        /// </remarks>
+        // spelled out rather than nameof'd: the attribute is [Experimental], and naming the
+        // symbol would make this assembly have to suppress PBN9001 to build
+        private const string ProtoSubTypeAttributeName = "ProtoSubTypeAttribute";
+
+        private static bool DeclaredOutOfBand(ref SyntaxNodeAnalysisContext context,
+            INamedTypeSymbol baseType, INamedTypeSymbol subType)
+        {
+            var compilation = context.SemanticModel.Compilation;
+            return Declares(compilation.Assembly.GetAttributes()) || Declares(compilation.SourceModule.GetAttributes());
+
+            bool Declares(ImmutableArray<AttributeData> attributes)
+            {
+                foreach (var attrib in attributes)
+                {
+                    var ac = attrib.AttributeClass;
+                    if (ac is null || ac.Name != ProtoSubTypeAttributeName || !ac.InProtoBufNamespace()) continue;
+
+                    var args = attrib.ConstructorArguments;
+                    if (args.Length is not (3 or 4)) continue;
+                    if (!SymbolEqualityComparer.Default.Equals(args[0].Value as ISymbol, baseType)) continue;
+                    if (!SymbolEqualityComparer.Default.Equals(args[1].Value as ISymbol, subType)) continue;
+                    return true;
+                }
+                return false;
+            }
+        }
+
         public override void Initialize(AnalysisContext ctx)
         {
             ctx.EnableConcurrentExecution();
@@ -595,6 +634,14 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                             additionalLocations: null,
                             properties: null
                         ));
+                    }
+                    if (!currentTypeIsDeclared && DeclaredOutOfBand(ref context, type.BaseType, type))
+                    {
+                        // the linkage exists, it is just not on the base type - which is the whole
+                        // point of [ProtoSubType]: the base may be in a package that has never heard
+                        // of this type. Telling someone to write a [ProtoInclude] they cannot write
+                        // is noise, so this counts as declared
+                        currentTypeIsDeclared = true;
                     }
                     if (!currentTypeIsDeclared)
                     {

@@ -1,4 +1,4 @@
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -41,6 +41,7 @@ internal static class Program
         var reference = RuntimeTypeModel.Create();
         reference.AutoCompile = false;
         ApplySurrogates(reference, corpus);
+        ApplySubTypes(reference);
         var refused = new Dictionary<Type, string>();
         foreach (var contract in corpus.Contracts)
         {
@@ -161,6 +162,52 @@ internal static class Program
                 null, [from], null)
                 ?? throw new InvalidOperationException($"{converter.Name}.{methodName}({from.Name}) not found");
             return Delegate.CreateDelegate(typeof(Func<,>).MakeGenericType(from, to), method);
+        }
+    }
+
+    /// <summary>
+    /// Replay every visible <c>[ProtoSubType]</c> declaration onto the reference model, exactly as
+    /// <see cref="ApplySurrogates"/> replays the surrogate ones and for the same reason.
+    /// </summary>
+    /// <remarks>
+    /// A <c>RuntimeTypeModel.Create()</c> knows nothing about these - the runtime model does not
+    /// honour them at all - so without the replay the reference serializes the sub-type as a
+    /// standalone contract, and every out-of-band hierarchy reads as a generator fault when it is
+    /// the opposite. Nothing in the corpus declares one today; this is here so that the *next*
+    /// thing added to it cannot be mis-diagnosed, which is a trap this harness has already fallen
+    /// into once for surrogates. The assemblies were loaded eagerly by ApplySurrogates.
+    /// </remarks>
+    private static void ApplySubTypes(RuntimeTypeModel reference)
+    {
+        const string ProtoSubTypeAttribute = "ProtoBuf.ProtoSubTypeAttribute";
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            object[] declarations;
+            try { declarations = assembly.GetCustomAttributes(inherit: false); }
+            catch { continue; } // a reflection-only or otherwise unloadable assembly
+
+            foreach (var declaration in declarations)
+            {
+                var type = declaration.GetType();
+                if (type.FullName != ProtoSubTypeAttribute) continue;
+
+                try
+                {
+                    var baseType = (Type)type.GetProperty("BaseType")!.GetValue(declaration)!;
+                    var subType = (Type)type.GetProperty("SubType")!.GetValue(declaration)!;
+                    var fieldNumber = (int)type.GetProperty("FieldNumber")!.GetValue(declaration)!;
+                    var isGroup = (bool)type.GetProperty("IsGroup")!.GetValue(declaration)!;
+
+                    reference.Add(baseType, applyDefaultBehaviour: true)
+                        .AddSubType(fieldNumber, subType, isGroup ? DataFormat.Group : DataFormat.Default);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"could not replay a sub-type from {assembly.GetName().Name}: "
+                        + Summarize(ex));
+                }
+            }
         }
     }
 

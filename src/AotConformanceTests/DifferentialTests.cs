@@ -1,4 +1,4 @@
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,6 +24,7 @@ namespace ProtoBuf.AotConformance
         private const string ProtoModelAttribute = "ProtoBuf.ProtoModelAttribute";
         private const string ProtoSerializableAttribute = "ProtoBuf.ProtoSerializableAttribute";
         private const string ProtoSurrogateAttribute = "ProtoBuf.ProtoSurrogateAttribute";
+        private const string ProtoSubTypeAttribute = "ProtoBuf.ProtoSubTypeAttribute";
 
         public static IEnumerable<object[]> GetCases()
             => from model in DiscoverModels()
@@ -205,6 +206,7 @@ namespace ProtoBuf.AotConformance
             }
 
             ApplySurrogates(runtime, modelType);
+            ApplySubTypes(runtime, modelType);
             runtime.Add(contractType, applyDefaultBehaviour: true);
             return runtime;
         }
@@ -245,6 +247,35 @@ namespace ProtoBuf.AotConformance
                 typeof(RuntimeTypeModel).GetMethod(nameof(RuntimeTypeModel.SetSurrogate))!
                     .MakeGenericMethod(underlying, surrogate)
                     .Invoke(runtime, [toSurrogate, toUnderlying, DataFormat.Default, CompatibilityLevel.NotSpecified]);
+            }
+        }
+
+        /// <summary>
+        /// Replay the model's <c>[ProtoSubType]</c> declarations, which are the compile-time
+        /// equivalent of <c>MetaType.AddSubType</c>.
+        /// </summary>
+        /// <remarks>
+        /// Without this the reference model has never heard of the linkage, so it serializes the
+        /// sub-type as a standalone contract and every out-of-band hierarchy looks like a generator
+        /// fault. Note this runs for <em>every</em> model, since the declarations may be on the
+        /// assembly; a type registered but never used costs nothing.
+        /// </remarks>
+        private static void ApplySubTypes(RuntimeTypeModel runtime, Type modelType)
+        {
+            var declarations = modelType.Assembly.GetCustomAttributes()
+                .Concat(modelType.GetCustomAttributes())
+                .Where(static x => x.GetType().FullName == ProtoSubTypeAttribute);
+
+            foreach (var declaration in declarations)
+            {
+                var type = declaration.GetType();
+                var baseType = (Type)type.GetProperty("BaseType")!.GetValue(declaration)!;
+                var subType = (Type)type.GetProperty("SubType")!.GetValue(declaration)!;
+                var fieldNumber = (int)type.GetProperty("FieldNumber")!.GetValue(declaration)!;
+                var isGroup = (bool)type.GetProperty("IsGroup")!.GetValue(declaration)!;
+
+                runtime.Add(baseType, applyDefaultBehaviour: true)
+                    .AddSubType(fieldNumber, subType, isGroup ? DataFormat.Group : DataFormat.Default);
             }
         }
 

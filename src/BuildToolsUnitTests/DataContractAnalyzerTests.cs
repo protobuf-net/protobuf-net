@@ -775,6 +775,58 @@ public class Bar : IFoo
         }
 
         [Fact]
+        public async Task DoesntReportIncludeNotDeclaredWhenLinkedOutOfBand()
+        {
+            // [ProtoSubType] is the answer *for* the shape PBN0013 complains about - a base that
+            // cannot name its sub-type - so nagging for a [ProtoInclude] the consumer is unable to
+            // write would be noise. Only the assembly and module sites are seen; see DeclaredOutOfBand
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+#pragma warning disable PBN9001
+[assembly: ProtoSubType(typeof(Foo), typeof(Bar), 10)]
+#pragma warning restore PBN9001
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Bar : Foo
+{
+    [ProtoMember(2)] public string Extra {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
+        }
+
+        [Fact]
+        public async Task DoesReportIncludeNotDeclaredWhenTheDeclarationNamesSomethingElse()
+        {
+            // ...and the suppression has to be specific: a declaration about another pair says
+            // nothing about this one
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+#pragma warning disable PBN9001
+[assembly: ProtoSubType(typeof(Foo), typeof(Other), 10)]
+#pragma warning restore PBN9001
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Other : Foo
+{
+    [ProtoMember(2)] public string Extra {get;set;}
+}
+[ProtoContract]
+public class Bar : Foo
+{
+    [ProtoMember(3)] public string More {get;set;}
+}");
+            Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared);
+        }
+
+        [Fact]
         public async Task DoesReportIncludeOfAnUnrelatedType()
         {
             // ...but the check still has to catch a genuinely unrelated include
