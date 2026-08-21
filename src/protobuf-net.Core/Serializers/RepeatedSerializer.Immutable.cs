@@ -1,4 +1,4 @@
-using ProtoBuf.Internal;
+﻿using ProtoBuf.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -73,8 +73,14 @@ namespace ProtoBuf.Serializers
             => values.Clear();
         protected override ImmutableArray<T> AddRange(ImmutableArray<T> values, ref ArraySegment<T> newValues, ISerializationContext context)
             => newValues.Count == 1 ? values.Add(newValues.Singleton()) : values.AddRange(
-#if BUILD_TOOLS // can't ref the updated lib
-                newValues
+#if BUILD_TOOLS
+                // BuildTools compiles against whatever System.Collections.Immutable the Roslyn
+                // baseline supplies, which is older and has no span-taking AddRange. The cast is
+                // not decoration: ArraySegment<T> converts implicitly to BOTH IEnumerable<T> and
+                // ReadOnlySpan<T>, so the moment a newer Immutable is visible here the call is
+                // CS0121-ambiguous. #1322 hit exactly that. Naming the overload keeps this source
+                // compiling against either version.
+                (System.Collections.Generic.IEnumerable<T>)newValues
 #else
                 new ReadOnlySpan<T>(newValues.Array, newValues.Offset, newValues.Count)
 #endif
