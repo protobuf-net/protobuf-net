@@ -2650,6 +2650,42 @@ plus the owner table in `AGENTS.md` for a free id when it does — `PBN3010`–`
 `AotMigrationAnalyzer`'s block and this belongs beside it.
 
 
+### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
+
+Found on the `main` merge of 2026-08-21, by running the "count the methods" diagnostic over the
+fixture that arrived with #1317. `OutOfBandSubType.output.cs` emits **zero** `Measure_` and **zero**
+`RawWrite_` — against `Simple.output.cs`'s two of each — while still emitting `RawRead_`. So reads
+are optimised and **writes are entirely classic** for that model.
+
+That is not new and not a merge fault: `RawMeasurableShape` has always required
+`RootTypeName is null && SubTypes.Count == 0`, so any contract in a hierarchy is excluded, and
+exclusion cascades to a fixed point through every referrer — one hierarchy can take a whole model
+off the raw write path. **What is new is the reachability.** `[ProtoSubType]` exists precisely to
+add a hierarchy to types you do *not* own, from beside the model, so a consumer can now turn a
+fully-measurable model into a fully-classic one by adding an attribute somewhere else entirely, with
+no diagnostic and nothing at the contract to look at.
+
+Two things make this worth an entry rather than a shrug:
+
+- **the failure is silent and non-local.** The contract that loses measure-first is not the one
+  carrying the attribute, and the cascade means the loss is not even confined to the hierarchy;
+- **the write path is where v4's gains are.** B38 measured 1.3×–2.3× on length-prefixed writes and
+  wide-512 overtaking Google.Protobuf; a model in this state gets none of it, while its reads still
+  look fast, which is exactly the shape that reads as "v4 didn't help much" in a consumer's
+  benchmark.
+
+**Not investigated**: whether the exclusion is *necessary*. The write side of a hierarchy is
+`WriteSubType` dispatching down an `is` chain and nesting each layer in a sub-type marker — every
+layer of which is length-prefixed, so there is a length to compute and arithmetic that could compute
+it. The exclusion may simply predate the machinery rather than express a real obstacle. Worth
+establishing before anything is designed, since "hierarchies cannot be measured" and "hierarchies
+were never taught to measure" are very different findings.
+
+Related: `notes/gaps.md` B13 already measured `ThrowUnexpectedSubtype` in both shapes and decided to
+leave the hierarchy *check* alone; that is about the per-write type test, not about measurability,
+and does not answer this.
+
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The design and the findings are in `notes/aot-schema-model.md`; the gap list is here, so there is
