@@ -730,7 +730,7 @@ only, and a subprocess timeout is exactly what contention in a full run would tr
 
 ## Future ideas
 
-### Out-of-band sub-types: `[ProtoInclude]` a type the base has never heard of
+### ~~Out-of-band sub-types~~ — built, as `[ProtoSubType]`
 
 **[protobuf-net#1308](https://github.com/protobuf-net/protobuf-net/issues/1308)** — transferred from
 protobuf-net.Grpc#318, because despite arriving in a gRPC AOT thread it is entirely about `AddSubType`
@@ -794,12 +794,66 @@ Two consequences worth stating in user-facing docs rather than discovering:
 - **your model stops being determined by your own source.** Adding a reference can change what a
   base-typed member puts on the wire. That is the feature working, and it is still surprising.
 
-**Open question to probe first, because it decides the syntax:** generic attributes are C# 11, which is
-fine for consumers (the floor is C# 12) and fine for the generator, which reads metadata and never
-reflects — but the attribute type would live in protobuf-net.Core, which multi-targets to `net462` and
-`netstandard2.0`, and generic attributes have had runtime-support caveats on older frameworks. If that
-bites, the non-generic spelling `[module: ProtoInclude(typeof(A), typeof(B), 100)]` sidesteps it, at the
-cost of the free type-chain check.
+**The open question was the syntax, and probing settled it against the generic form.** Generic
+attributes *compile* on every one of Core's TFMs — that much was as expected. What kills them is
+reflection: on .NET Framework, `GetCustomAttributes` on **any** member carrying a generic attribute
+throws `NotSupportedException: Generic types are not valid` — not for the generic one alone, for the
+whole call. `CustomAttributeData` is fine, and .NET 8 is fine. Probed with a net462 console app rather
+than reasoned about.
+
+That matters because `AttributeMap.Create` — the runtime model's entire attribute surface — is
+`GetCustomAttributes`, on types (`MetaType.ApplyDefaultBehaviour`) and on assemblies (twice, in
+`CompilerOptions`). So a generic spelling reachable from a contract type, or from the assembly of one,
+would take out a net4x consumer's *runtime* model with an exception naming nothing relevant. The
+attribute has no runtime meaning at all, so paying that is absurd; hence
+`[ProtoSubType(typeof(A), typeof(B), 100)]`, non-generic, with the type-chain check done by the
+generator rather than by the compiler.
+
+What shipped, against the design above:
+
+- **the sites are `[ProtoSurrogate]`'s, plus module** — model, assembly, module, and the same for
+  referenced assemblies. Module is there because the ticket's sketch spells it that way and it costs
+  one extra scan of a collection that is nearly always empty;
+- **the merge is a union with conflict detection**, as predicted, and it is done in `TryGetSubTypes` —
+  the single choke point `GetLinkedBases` runs through, so the emit needed **no** change whatsoever.
+  An out-of-band link is indistinguishable from a `[ProtoInclude]` by the time anything downstream
+  sees it, which is exactly the acceptance criterion the ticket asks for;
+- **an exact restatement is absorbed, not reported.** A consumer repeating a declaration a reference
+  already makes is a fair thing to write, and saying the same thing twice is not a conflict;
+- **the duplicate check covers both surfaces at once**, which is new for `[ProtoInclude]` too: two
+  sub-types at one field number, or one sub-type named twice, previously reached the emitter and
+  produced a duplicate switch label. The shipped analyzer says the same thing (`PBN0003`/`PBN0011`,
+  both errors), so no compiling source tree can contain one — which is also why the corpus did not
+  move;
+- **seeding turned out to be unnecessary**, contrary to the note above. Merging at `TryGetSubTypes`
+  makes the hierarchy self-seeding *from either end*: reaching the base enqueues the sub-types as
+  `reachable`, and seeding a sub-type finds the base through `GetLinkedBases`. Both directions are
+  pinned by `ProtoSubTypeReferenceTests`. The note was written before the choke-point merge was
+  worked out, and "mandatory" was inferred rather than measured;
+- **diagnostics are the generator's, not the analyzer's**, and are recorded against the base type but
+  reported only if that base is actually reached — otherwise a mistake in a library would warn in
+  every model that references it, including models with no interest in the hierarchy. They reuse
+  `PBN3002`; no new id was needed;
+- **the replay is in all three harnesses** — `AotRefGen`, `AotConformanceTests` and `AotDifferential` —
+  through the public `MetaType.AddSubType(fieldNumber, type, dataFormat)`. Only the first two have
+  anything to replay today; the corpus one is there so the *next* thing added to it cannot be
+  mis-diagnosed, which is the trap this harness fell into once already for surrogates.
+
+**`DataFormat` on the runtime `AddSubType` became a `bool` here**, on Marc's call: a sub-type is
+always a sub-message, so length-prefixed versus delimited is the only choice there is, and the other
+`DataFormat` values would silently mean nothing. The three states are "length-prefixed", "delimited"
+and "let protobuf-net decide", and the third is told from the first by **constructor arity** rather
+than by a sentinel — `(base, sub, field)` versus `(base, sub, field, group)`. Nothing consumes that
+distinction yet; it is in the metadata so that it can be, if the default framing ever changes.
+
+**One consequence is live rather than theoretical: `PBN0013`.** "The base-type is a proto-contract,
+but no include is declared for X" fires on every sub-type linked this way — nagging people to write
+the one attribute they cannot write. The analyzer now treats an **assembly-level or module-level**
+`[ProtoSubType]` as satisfying it. A declaration on a **model class** is not seen, and that is a real
+limit rather than an oversight: `DataContractAnalyzer` reports this from a *syntax-node* action, which
+has no cheap way to find every `[ProtoModel]` in a compilation, and there is no compilation-start hook
+in its current shape. Note the diagnostic already fired for anyone using runtime `AddSubType`, so this
+narrows a pre-existing false positive rather than introducing one.
 
 
 ### ~~An "announce" diagnostic~~ — built, as `PBN3012`/`PBN3013`

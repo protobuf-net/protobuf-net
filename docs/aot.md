@@ -287,6 +287,39 @@ You cannot put `[ProtoContract]` on `System.Uri` or a type from someone else's p
   surrogates for types it supports — a consumer referencing that package gets them automatically.
   That is how `protobuf-net.NodaTime` works.
 
+### Hierarchies the base type cannot declare
+
+`[ProtoInclude]` goes on the base, so it only works when the base can *name* its sub-types. It cannot
+when the sub-type is in a package the base library does not reference, or is a generic construction
+like `Tagged<Order>` that the base library could never have written down. At runtime that is what
+`AddSubType` is for; the compile-time equivalent is `[ProtoSubType]`:
+
+``` c#
+[ProtoModel]
+[ProtoSerializable(typeof(Shape))]
+[ProtoSubType(typeof(Shape), typeof(Tagged<Order>), 100)]
+public partial class MyModel : TypeModel { }
+```
+
+The outcome is exactly as though `Shape` had carried `[ProtoInclude(100, typeof(Tagged<Order>))]` all
+along — the same wire format, the same sub-type dispatch. Like `[ProtoSurrogate]` it can also be
+declared at **assembly** or **module** level, which is how a package ships the linkage for a
+hierarchy it extends; anything referencing that package picks it up.
+
+Two things differ from `[ProtoSurrogate]`, both worth knowing:
+
+- **declarations accumulate rather than override.** Two packages each adding a sub-type to one base
+  give a hierarchy with both — there is nothing to be more specific *about*. Two declarations that
+  genuinely conflict (one field number claimed twice, or one sub-type named twice) are reported with
+  `PBN3002` and the hierarchy is dropped;
+- **your model stops being determined by your own source.** Adding a package reference can change
+  what a base-typed member puts on the wire, and — because a hierarchy is all-or-nothing — a
+  sub-type someone else declared can drop a hierarchy rooted at a type you own.
+
+`[ProtoSubType]` is read by the generator only: **the runtime model does not honour it**, exactly as
+it does not honour `[ProtoSurrogate]`. If you use `RuntimeTypeModel` as well, keep calling
+`AddSubType` there.
+
 ### Parseable types are opt-in
 
 A type with a `ToString()` and a `static T Parse(string)` can go on the wire as a string, but only if
@@ -332,7 +365,7 @@ Two things worth doing before you trust it:
 ## What is supported
 
 Broadly, the code-first surface: contracts and members (properties *and* fields), inheritance via
-`[ProtoInclude]` including interface roots, enums, nullables, `[DefaultValue]`, `DataFormat` and
+`[ProtoInclude]` (and `[ProtoSubType]`) including interface roots, enums, nullables, `[DefaultValue]`, `DataFormat` and
 `IsRequired`, collections (arrays, `List<T>`, sets, queues, stacks, the immutable and concurrent
 families), dictionaries and `[ProtoMap]`, `CompatibilityLevel` and the BCL types it governs,
 null-wrapping, extensible contracts, serialization callbacks, `ShouldSerialize`/`Specified`,
