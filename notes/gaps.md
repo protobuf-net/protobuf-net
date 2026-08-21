@@ -2271,9 +2271,16 @@ model in `[GlobalSetup]`, and the hand-written pair carries the same depth guard
 | deep, 512 | 13,967 | 5,125 | 2,233 | 2.73× | 787,929 | **154× ours** |
 
 **The change takes every cell Google currently leads to level or ahead, bar the two smallest wide
-payloads** — and what is left there is fixed per-call cost, not framing: at wide-8 our *delimited*
-floor (86 ns) is already below Google's prefixed (93), so the length machinery is no longer what
-separates them.
+payloads** — and what is left there is fixed per-call cost, not framing. **B39 measures it**: 28 ns
+of that is opening and shutting a writer with nothing written at all, which is 30% of Google's entire
+93 ns at wide-8, and another ~28 ns is `Serialize<T>` dispatch that a typed overload removes. Neither
+is the length machinery, and neither is touched by this entry.
+
+**A caveat on the Google column, since it applies to every table above:** those figures are Google's
+*whole public path* (`value.WriteTo(bufferWriter)`), while the array prototypes called
+`ProtoWriter.State.Create` directly and so skipped `TypeModel.Serialize<T>`. Like-for-like at the
+public API, add B39's dispatch cost back to our side until the typed overloads exist — which is
+exactly why B39 is worth doing alongside this.
 
 **The right-hand columns are the proof, not the left.** Removing the dictionary moves
 prefixed-over-delimited from 3.6×/6.3× to **2.1×/2.3×** — which is what two passes *should* cost.
@@ -2390,7 +2397,6 @@ evidence.
   never fires on the measured path.
 
 
-
 **There is NO cheap partial. Both candidates were tried and both fail** — recorded because each
 looks obviously right until checked, and the first was offered here before it was.
 
@@ -2458,6 +2464,62 @@ the ordered array pays that traversal cost and still wins by 1.74×, rather than
 DTOs *are* sealed while this benchmark's are not, so a slice of the residual wide gap is that rather
 than framing. `docs/aot.md` already records the effect at ~0.6% on a message-dense payload; on a
 graph this node-dense it is larger.
+
+### B39. The `Serialize` entry path costs ~28 ns a call, and the writer setup another ~28 — **both measured; the typed-overload fix is proven by hand**
+
+Marc, 2026-08-21, prompted by B38's small-payload residue: *"is our Serialize path wrong? what
+happens if we add per-root-type typed (non-generic) Serialize methods that take overload priority
+away from the existing setup code... maybe experiment with a manually added single example rather
+than write the generator code?"* Done exactly that way — one hand-written overload on the
+benchmark's model, not a generator change.
+
+**First, a correction to how B38's comparison was framed.** Google's side of that benchmark is
+`value.WriteTo(bufferWriter)` — one interface call — while the array prototypes called
+`ProtoWriter.State.Create` directly and so **skipped `TypeModel.Serialize<T>` entirely**. Comparing
+our path-minus-dispatch against Google's whole path flattered us at the small end. Everything below
+is like-for-like.
+
+| n | `StateOnly` | via `Serialize<T>` | typed overload | saved | array + typed | Google |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 28 | 216 | 188 | **28** | 129 | 93 |
+| 64 | 28 | 1,178 | 1,152 | **26** | 679 | 641 |
+| 512 | 28 | 9,127 | 9,089 | **38** | 5,272 | 5,258 |
+
+**The typed overload works and recovers essentially all of the dispatch.** A non-generic
+`Serialize(IBufferWriter<byte>, TRoot)` on the model beats `TypeModel.Serialize<T>` at any call site
+naming a concrete type, and lands within noise of calling the generated static directly (188 against
+190). What it skips, per call, is a `TypeHelper<T>.ValueChecker.IsNull` indirection,
+`TryGetSerializer<T>` resolution, two `CheckClear`s, two `GetPosition`s and `WriteAsRoot`'s feature
+dispatch — all of it re-deciding at run time what a typed overload knows at compile time. Note
+`FEAT_DYNAMIC_REF` is documented in the csproj but **never actually defined**, so `SetRootObject` is
+compiled out and a typed path does not have to reproduce it.
+
+**Second, and larger at small sizes: `StateOnly` is 28 ns and does not vary with payload.** That is
+`State.Create` + `Close` + `Dispose` with *nothing written*. At wide-8 the whole cost decomposes as:
+
+| | ns | |
+| --- | ---: | --- |
+| fixed writer setup | 28 | **30% of Google's entire 93 ns** |
+| write work | 56 | (delimited 84 less the setup) |
+| measure work | 45 | (129 less delimited 84) |
+
+So our **write alone** (28 + 56 = 84) is 90% of what Google spends doing measure *and* write *and*
+setup. At tiny payloads the gap is not framing, not the length cache, and — once the typed overload
+lands — not dispatch either: it is that a protobuf-net writer costs 28 ns to open and shut.
+
+**Where that leaves B38's headline:** with both changes, level at 512, 1.06× behind at 64, 1.39×
+behind at 8. The array is what closes the large end; the remaining small-end gap is this entry, and
+the two are independent — either can land without the other.
+
+**Not started.** Two candidates, in order:
+
+- **emit the typed overloads** — one per root contract, non-generic, straight to the generated
+  static. Cheap, mechanical, and it composes with the array. The care needed is in *matching*
+  `SerializeRoot`'s guarantees rather than merely skipping them: `CheckClear` before and after, and
+  `Abandon` on the exception path, are not optional;
+- **then look at the 28 ns floor**, which is the bigger prize at small payloads and is untouched by
+  anything in B38. Unmeasured beyond the total — whether it is the writer pool, the buffer lease or
+  `Close`/`Dispose` is not yet known, and should be measured before anything is designed.
 
 ## C. Schema front-end (`[ProtoSchema]`)
 
