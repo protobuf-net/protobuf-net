@@ -36,9 +36,10 @@ public static class MapMeasureSamples
         new Lookup { ByNumber = new() { [1] = "one", [2] = "two" } },
         // a zero KEY: the entry carries only the value
         new Lookup { ByNumber = new() { [0] = "zero" } },
-        // NOTE: a null map VALUE is deliberately absent from these samples - the generated writer
-        // and RuntimeTypeModel disagree about it, which is a pre-existing divergence unrelated to
-        // the measure (it reproduces with the map measure reverted). See notes/gaps.md B43.
+        // NOTE: no null map VALUE here. protobuf-net does not round-trip one - the write omits it
+        // and the read hands back something that re-serializes as an empty string - which is a
+        // property of the RUNTIME model, not of the generated one. See notes/gaps.md B43; the
+        // fixture stays green rather than pinning a shape neither engine supports.
         // an EMPTY STRING value is written, unlike a null one
         new Lookup { ByNumber = new() { [8] = "" } },
         // both sides trivial: an empty entry, still emitted

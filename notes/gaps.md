@@ -2885,72 +2885,58 @@ throughput, and the reason to care is that the write path is where v4's gains ar
 and wide-512 overtaking Google.Protobuf).
 
 
-### B43. The generated map READ seeds a missing string value with `""`, where protobuf-net gives `null`
+### B43. A NULL MAP VALUE does not round-trip in protobuf-net — **diagnosis NOT settled; two wrong calls recorded**
 
-Found by the adversarial samples written for B6's fixture. **Not B6's doing** — it reproduces with
-the map measure reverted, which is how it was attributed rather than assumed.
+Found by the adversarial samples written for B6's fixture. `Dictionary<int, string> { [7] = null }`
+serializes to `0A-02-08-07` — the entry carries the key only, the null value omitted — and does not
+come back as it went in.
 
-**Corrected: this is a READ divergence, not a write one.** The first write-up of this entry said the
-generated model *wrote* different bytes; that was wrong, and the mistake is worth keeping because it
-was an easy one to make. The failing assertion is `DifferentialTests` **line 70**, not line 62 —
-line 62 compares the two *serializations* and **passes**. Both models write byte-identical output.
-Line 70 round-trips: it reads the reference's bytes with the **generated** model and re-serializes
-with the reference. So the object the generated reader produced differs.
+**I have diagnosed this twice and been wrong twice. Both are recorded, because the reasoning that
+produced them looked sound each time and the next person deserves the shape of the trap rather than
+a confident answer.**
 
-**The cause, one line of emitted code** (`MapMeasure.output.cs`):
+- **First call: "the generated model writes different bytes."** Wrong. `DifferentialTests` line 62
+  compares the two serializations and **passes** — both engines write byte-identical output. I had
+  read a failing line number off a stack trace without checking which assertion it was.
+- **Second call: "the generated reader seeds `""` where the runtime gives `null`; v4's bug."** Also
+  wrong, and this one produced a change I had to back out. The generated reader does seed `""`
+  (`string v1 = "";`, the generator's only such place — everything else uses `default`). Changing it
+  to `default` made line 70 pass **and line 71 fail** — and line 71 is
+  `Serialize(runtime, Deserialize(runtime, generatedBytes))`, i.e. **the runtime model reading its
+  own bytes**. So the runtime path *also* yields a non-null value for a missing side, and the
+  generator's `""` was matching it. Seeding `default` made the generated reader diverge from the
+  runtime one, which is the opposite of the intent.
 
-```csharp
-int k1 = default;
-string v1 = "";        // <-- a missing value materialises as EMPTY STRING
-```
+**Where that leaves it.** The shipped `""` is restored; the whole battery is green. What is
+established:
 
-`MapSerializer.ReadMap`, which the runtime model uses, leaves it `default` — i.e. `null`. So reading
-`0A-02-08-07` (an entry carrying only the key) gives `[7] = null` on the runtime path and
-`[7] = ""` on the generated one, and re-serializing the latter emits `12-00`.
+- both engines **write** identically (line 62 passes throughout);
+- a null map value is **not round-trip stable in protobuf-net at all** — write omits, read yields
+  something that re-serializes as `12-00`;
+- that behaviour is present on the **runtime** path, so it is not something the AOT generator
+  introduced.
 
-**Which answers "v3 core or v4 new bits": squarely v4.** It is the AOT generator's raw map reader;
-`MapSerializer`/`KeyValuePairSerializer` in Core are untouched and behave identically for both.
+What is **not** established is the mechanism. `KeyValuePairSerializer.Read` seeds
+`TValue value = pair.Value` — `default`, i.e. null — so on a straight reading the runtime should
+yield null and line 71 should pass. It does not. Something between `ReadMap` and that seeding is
+responsible and I have not found it.
 
-**It is a defensible choice that is nonetheless a divergence.** proto3 says a missing string field
-*is* the empty string, and seeding `""` follows that; protobuf-net's own runtime model gives `null`.
-The generator picked the protobuf reading and silently disagreed with the engine it is meant to
-match.
+**Next step is a standalone reproduction, not more harness archaeology.** Twenty lines: build the
+dictionary, serialize with `RuntimeTypeModel`, deserialize, inspect whether the value is `null` or
+`""`, re-serialize, dump both byte streams. Both of my wrong calls came from inferring behaviour
+from which assertion fired; that is exactly what a direct observation replaces.
 
-**Marc's angle is the interesting one, and it lands exactly here** (2026-08-21): the existing
-behaviour has to be largely preserved — there is explicit test coverage in the map logic — but
-`Dictionary<int, string>` and `Dictionary<int, string?>` are **distinguishable at compile time and
-not at run time**. So the AOT model can know something the runtime model cannot, and a non-nullable
-value is precisely the case where `""` is defensible while `string?` must stay `null`. That makes
-this a place where the generator can legitimately be *better* rather than merely different — but it
-has to be a deliberate, annotated decision, not the current accident of an initialiser.
+**Decision already taken for whenever the mechanism is known** (Marc, 2026-08-21): `string` seeds
+`""`, `string?` seeds `null` — never hand a null back through a non-nullable declaration, keep
+`null` where the consumer said it was expressible. The generator can tell those apart and the
+runtime cannot, which makes this somewhere the AOT model may legitimately be *better* rather than
+merely different. A scope-bound AOT-only configuration attribute is the escape hatch if it needs
+more nuance; not built until it does. **Note this is a deliberate divergence from the runtime
+model**, so it also needs the harnesses taught about it — the gates currently mean "match ref-emit"
+without exception.
 
-**DECIDED (Marc, 2026-08-21): `string` seeds `""`, `string?` seeds `null`** — never hand a null back
-through a non-nullable declaration, and keep `null` where the consumer said it was expressible. A
-scope-bound AOT-only configuration attribute is the escape hatch if it later needs more nuance;
-not built until it does.
-
-**Two things found while checking that, both of which change the work:**
-
-- **the `""` seed is unique to maps.** Across the goldens, `string k/v = ""` appears **only** in map
-  key and value locals; every ordinary member and tuple argument uses `default`. So this is not the
-  generator taking a considered proto3 position — it is one path disagreeing with the rest of the
-  generator. Whatever is decided should apply *uniformly*, and the map is the odd one out to bring
-  into line rather than the precedent to follow;
-- **the KEY is seeded the same way** (`string k2 = ""`), not just the value, so the decision governs
-  both sides.
-
-**The consequence that has to be weighed before building it:** the nullability-aware behaviour is a
-*deliberate divergence from `RuntimeTypeModel`*, which always yields `null`. The whole gate battery
-is "match ref-emit", so for a non-nullable `Dictionary<int, string>` the differential's line-70
-round-trip would fail by design — generated reads `""`, reference re-serializes it as `12-00`, and
-the reference's own bytes have no such field. That is reachable from any peer sending an entry with
-a missing value, not merely from malformed local data.
-
-So adopting it means teaching the harnesses about an intended divergence, which is a real change to
-what the gates *mean*. The cheaper intermediate, if that is unwelcome: seed `default` everywhere,
-which makes maps consistent with the rest of the generator **and** with the runtime model, and treat
-the nullability-aware behaviour as a separate, opt-in improvement once the harness question is
-settled.
+**The B6 fixture excludes the null sample**, with a comment pointing here, so the gate stays green: a
+permanently-red gate teaches people to ignore the gate.
 
 
 ## C. Schema front-end (`[ProtoSchema]`)
