@@ -183,13 +183,33 @@ nearest **length-prefixed ancestor**, i.e. the path from the root, not the membe
 | group at the root | `[false]` | `[false]` |
 | same group under a length-prefixed parent | `[false]` | `[true, false]` |
 
-**The invariant to hold is "AT MOST TWICE"** (Marc), for a node not duplicated in the tree — and
-that is what the length cache buys. Every length-prefixed ancestor needs a length for everything
-beneath it, so a naive measure-by-writing would re-walk the innermost node once per ancestor;
-memoising a sub-message's measured length by reference collapses that to one measure pass plus one
-write pass, whatever the depth. **Verified at depth 3: two calls, not eight**
-(`AtMostTwiceHoweverDeepTheNesting`). If that test ever reports more, the cache has stopped working
-and the cost is exponential in depth, not linear.
+**The invariant to hold is "AT MOST TWICE"** (Marc), for a node not duplicated in the tree. Every
+length-prefixed ancestor needs a length for everything beneath it, so a naive measure-by-writing
+would re-walk the innermost node once per ancestor — 2^depth crawls rather than 2. **Verified at
+depth 3: two calls, not eight** (`AtMostTwiceHoweverDeepTheNesting`).
+
+**Two different mechanisms hold that invariant, and conflating them has already misled once** — this
+paragraph used to explain both as "memoising by reference", which was only ever true of the first:
+
+- the **classic** path measures by writing, and `NetObjectCache._knownLengths` memoises by reference
+  identity. That really is what stops the exponential blowup, and it is what
+  `AtMostTwiceHoweverDeepTheNesting` exercises — note the test builds a `RuntimeTypeModel`, so it
+  says nothing at all about the raw path;
+- the **generated raw** path measures *arithmetically*, and its recursion visits each node once by
+  construction, so nothing needs memoising for the invariant to hold. What it needs is **transport**:
+  carrying n measured lengths from the measure pass to the write pass. Since 2026-08-21 that is
+  `RawLengthBuffer` — an append-only `long[]` consumed in visit order, no hashing at all. It was a
+  `Dictionary<object, long>` and that cost around half of a length-prefixed serialize; see
+  `notes/gaps.md` B38, which also records the three ways a positional scheme breaks that the design
+  did not predict.
+
+**The rule that falls out, and is worth stating because it is the whole correctness argument: a slot
+is reserved exactly where the write calls `Next()`, one for one, in the same order.** So the slot
+belongs to the *call site*, not to the contract being measured — a member that is measured but
+whose write does not read a length (a group, or anything handed to the classic engine) must reserve
+nothing, and a sub-tree the raw write will not walk is measured with a **null buffer** that
+suppresses reservation all the way down. Widening either eligibility predicate without the other
+now shifts every subsequent length rather than merely wasting a cache entry.
 
 **A SHARED (aliased) object in one graph is owed no memoisation — POLICY** (Marc, 2026-08-21).
 Where a design is faster for trees and slower for graphs that reference the same instance several
