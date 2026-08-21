@@ -2417,6 +2417,33 @@ looks obviously right until checked, and the first was offered here before it wa
 condition** and helps a netstandard2.0 or net472 consumer exactly as much as a net10 one. Given the
 partials are dead, it is this or nothing.
 
+**The edit list, enumerated from the source rather than estimated** (14 sites; the slot layout above
+is what keeps it this small):
+
+*Core* — `NetObjectCache` gains `long[] _rawSlots`, an append high-water `int`, a read cursor, and
+the boundary map `Dictionary<object, int>` (reusing the existing `RawLengthComparer`). All four ride
+the lifecycle `_rawLengths` already has: cleared by `ClearAndMaybeTrim`, and **swapped** by
+`InitializeFrom` — that swap is the `MeasureState`→`Serialize` hand-off, deliberately O(1) rather
+than a copy (a copy once cost 22 KB and 11%), so the count and map swap with the array and the read
+cursor resets. `ProtoWriter` exposes it, `ProtoWriter.State.Raw.cs` carries the API
+(`Reserve`/`Next`/`Mark`/`SeekTo`/`RecordBoundary`/`TryEnterBoundary`), and **every new member takes
+`[Experimental("PBN9002")]`** — the policy in `AGENTS.md`, which is easy to skip because the repo
+`NoWarn`s it and nothing here fails. `TryMeasureRaw` hands out the slot buffer in place of the
+dictionary. New members go in `PublicAPI.Unshipped.txt` with the `[PBN9002]` prefix.
+
+*Generator* — `Measure_` swaps its `Dictionary<object, long>` parameter, claims `int self =
+slots.Reserve()` on entry and writes `slots[self] = len` before returning; its four sub-message sites
+lose the probe-and-insert and simply recurse. `RawWrite_`'s four sub-message sites lose the
+probe-and-insert and read `state.RawSlots.Next()`. **The two struct arms collapse into the general
+one** — today they are special-cased ("a struct has no reference identity to key on") and call
+`Measure_` directly; positionally a struct child is an ordinary slot, so that carve-out disappears
+rather than needing a new branch. The entry points do the eager measure and the seek, and
+`IMeasuringSerializer<T>.Measure` records the boundary.
+
+*Gates* — every `.output.cs` golden churns (regenerate in **Debug**, review the diff); no
+`.reference.cs` moves, since ref-emit is untouched. Add the Release-cheap check that the write
+consumed exactly as many slots as the measure produced, to sit alongside `DebugAssertPosition`.
+
 **A methodological note, because the harness caught the author out.** `DictBaseline` — a hand-written
 copy of the current scheme, added to prove the harness reproduces `Generated` before trusting deltas
 from it — came in at **11,936 ns against `Generated`'s 9,087**. It was not faithful: it measured
