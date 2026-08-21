@@ -2728,7 +2728,19 @@ directly from `IMeasuringSerializer<T>.Measure`. `ProtoWriter.IsMeasuring(contex
 which is how a consumer's callback already tells the passes apart.
 
 **The cheap shape**: thread the context only into the `Measure_` of contracts that *have* a
-before-serialize callback, so the common case keeps its current signature and pays nothing. Then
+before-serialize callback, so the common case keeps its current signature and pays nothing.
+
+**The threading cascades, and that is the point rather than the cost** (Marc): with
+`Foo → Bar → Blap` and the callback on `Blap`, both `Bar` and `Foo` need the parameter purely to
+pass it along. So the "needs a context" set is a fixed point over referrers — the same shape as
+`measurable` and as B38's `slotConsumers`, and computed with the same machinery.
+
+**What makes that cheap rather than expensive is that the cascade already exists today, in a worse
+form.** `Blap`'s callback does not merely refuse `Blap`: exclusion propagates up through referrers,
+so `Bar` and `Foo` lose measure-first *entirely* and fall to write-to-count. Threading replaces a
+cascade of **exclusion** with a cascade of **parameter passing** — strictly better for exactly the
+contracts that are penalised now, and untouched for everything else. A model with no callbacks has
+an empty set and sees no change at all. Then
 measure fires with `IsMeasuring == true` and the write fires with `false`, which is the behaviour a
 consumer already gets from the buffer-writer backend.
 
