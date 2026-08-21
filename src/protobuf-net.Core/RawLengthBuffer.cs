@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -11,10 +11,19 @@ namespace ProtoBuf
     /// <remarks>
     /// <para>
     /// Both passes walk the graph pre-order over the same guards, so a slot index is all the
-    /// correlation needed and no hashing is required. A sub-tree occupies
-    /// <c>[self, descendants...]</c>: <c>Measure_</c> claims its own slot with <see cref="Reserve"/>
-    /// before recursing and fills it on the way out, so <c>RawWrite_</c> can read each child's
-    /// length with a bare <see cref="Next"/> and then recurse, with no index arithmetic at any site.
+    /// correlation needed and no hashing is required. <b>A slot is reserved exactly where the write
+    /// calls <see cref="Next"/>, one for one, in the same order</b> - so the slot belongs to the
+    /// CALL SITE, not to the contract being measured. The measure reserves at a length-prefixed
+    /// sub-message site, recurses, and fills the slot on the way out; the write reads it with a
+    /// bare <see cref="Next"/> and recurses, with no index arithmetic anywhere.
+    /// </para>
+    /// <para>
+    /// Two consequences follow, and both are load-bearing rather than tidy-ups. A member that is
+    /// measured but whose write reads no length - a <c>group</c>, which carries none, or anything
+    /// handed to the classic engine - must reserve <b>nothing</b>, or every later length shifts.
+    /// And a sub-tree the raw write will not walk is measured with a <b>null</b> buffer, which
+    /// suppresses reservation all the way down. An earlier draft had <c>Measure_</c> claim a slot
+    /// for itself, which cannot express "measured but not read"; see <c>notes/gaps.md</c> B38.
     /// </para>
     /// <para>
     /// This replaces a <c>Dictionary&lt;object, long&gt;</c> that cost three hash operations per
@@ -97,7 +106,13 @@ namespace ProtoBuf
         /// </remarks>
         public bool Balanced => _read == _count;
 
-        internal void Reset()
+        /// <summary>
+        /// Drops everything recorded, ready for a fresh root. The writer does this per serialize;
+        /// it is public because anything driving the generated <c>Measure_</c> statics directly
+        /// holds its own buffer and must - <see cref="Reserve"/> only ever moves forwards, so a
+        /// buffer reused without this grows without bound.
+        /// </summary>
+        public void Reset()
         {
             _count = _read = 0;
             _boundary?.Clear();

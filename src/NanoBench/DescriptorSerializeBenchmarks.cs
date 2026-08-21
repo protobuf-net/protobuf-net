@@ -178,9 +178,9 @@ public class DescriptorSerializeBenchmarks
     {
         // cleared per invoke: the row prices a cold measure INCLUDING cache population,
         // which is what a root serialize actually pays
-        // SeekTo(0) rather than a clear: the buffer is append-only and reused, so resetting the
-        // read cursor is all that is needed to measure the same graph again
-        _measureScratch.SeekTo(0);
+        // Reset, not SeekTo(0): Reserve() only ever moves forwards, so rewinding the READ cursor
+        // alone leaves the append cursor climbing and the buffer doubling every few iterations
+        _measureScratch.Reset();
         return s_generatedMeasure(_nanoSet, 512, _measureScratch);
     }
 

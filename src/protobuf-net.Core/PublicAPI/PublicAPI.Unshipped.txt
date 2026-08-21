@@ -91,6 +91,7 @@ ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax
 [PBN9002]ProtoBuf.RawLengthBuffer.Enter(object value, int index) -> void
 [PBN9002]ProtoBuf.RawLengthBuffer.Leave(object value, out int index) -> bool
 [PBN9002]ProtoBuf.RawLengthBuffer.Balanced.get -> bool
+[PBN9002]ProtoBuf.RawLengthBuffer.Reset() -> void
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool
 ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat
