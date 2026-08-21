@@ -1,4 +1,4 @@
-extern alias gpb;
+﻿extern alias gpb;
 
 using BenchmarkDotNet.Attributes;
 using ProtoBuf;
@@ -40,11 +40,15 @@ public class DescriptorSerializeBenchmarks
     private MemoryStream _ms = null!;
     private Meta.TypeModel _protogenModel = null!;
 
+    // the third parameter became a RawLengthBuffer when the generated measure/write pair moved
+    // from a reference-keyed dictionary to a positional one (notes/gaps.md B38). This binder is
+    // the reason that change is not invisible outside the generator: CreateDelegate matches the
+    // signature exactly, so a mismatch is a type-initializer failure at first use, not a warning.
     private delegate long GeneratedMeasure(Model.FileDescriptorSet value, int depth,
-        System.Collections.Generic.Dictionary<object, long> lengths);
+        global::ProtoBuf.RawLengthBuffer slots);
     private static readonly GeneratedMeasure s_generatedMeasure = ResolveMeasure();
 
-    // reference identity, both TFMs (the BCL's ReferenceEqualityComparer is net5+ only)
+    // still used by CollectStrings, which is unrelated to the length transport
     private sealed class RefComparer : System.Collections.Generic.IEqualityComparer<object>
     {
         internal static readonly RefComparer Instance = new();
@@ -53,7 +57,7 @@ public class DescriptorSerializeBenchmarks
             => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
     }
 
-    private readonly System.Collections.Generic.Dictionary<object, long> _measureScratch = new(RefComparer.Instance);
+    private readonly global::ProtoBuf.RawLengthBuffer _measureScratch = new();
 
     [GlobalSetup]
     public void Setup()
@@ -174,7 +178,9 @@ public class DescriptorSerializeBenchmarks
     {
         // cleared per invoke: the row prices a cold measure INCLUDING cache population,
         // which is what a root serialize actually pays
-        _measureScratch.Clear();
+        // SeekTo(0) rather than a clear: the buffer is append-only and reused, so resetting the
+        // read cursor is all that is needed to measure the same graph again
+        _measureScratch.SeekTo(0);
         return s_generatedMeasure(_nanoSet, 512, _measureScratch);
     }
 
