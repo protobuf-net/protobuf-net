@@ -107,6 +107,9 @@ already exists at the API level; the prototype shows it need not exist per-messa
   2. keyed memo on the writer (Marc's length-lookup sketch, morally v3's
      Measure/MeasureState machinery - inspect that in step 1): pooled
      Dictionary<object, long> by reference identity, post-order populated; costs a hash
+     [SUPERSEDED 2026-08-21, notes/gaps.md B38: the generated path now carries these lengths
+     positionally in a long[] with no hashing; the dictionary survives only as the boundary
+     map for a crossing into the classic engine]
      per node and needs an identity story for struct contracts;
   3. ordered length QUEUE: the root measure appends each sub-message length to a pooled
      buffer in traversal order, the write pass consumes via cursor - no keys, O(1),

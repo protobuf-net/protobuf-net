@@ -527,6 +527,14 @@ actually crosses the boundary deeply, and no existing one does.
 
 ### B16. Locals in the emitted bodies — **`lengths` and `len` done (2026-08-14, corrected 2026-08-16); `tmpN` folding still open**
 
+> **Superseded in part by B38 (2026-08-21).** Everything below about `state.RawLengths` is a
+> record of what was true then: the dictionary it describes is gone from the generated path,
+> replaced by a positional `long[]`, so the access-shape measurements here no longer apply to
+> current output. The *reasoning* is why it stays — the three-shapes comparison (per-site local
+> vs hoisted vs inline) and the rule that `tmpN` must remain a local because `value.Something`
+> is consumer code both still hold. The `tmpN` half of this entry is still open.
+
+
 Marc, 2026-08-14, on two shapes in the generated code:
 
 ```csharp
