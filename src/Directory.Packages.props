@@ -13,7 +13,7 @@
     <PackageVersion Include="System.ServiceModel.Primitives" Version="[8.1.2]" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="FSharp.Core" Version="10.1.203" />
+    <PackageVersion Include="FSharp.Core" Version="10.1.400" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
     <PackageVersion Include="coverlet.collector" Version="10.0.0" />
     <PackageVersion Include="Google.Protobuf" Version="3.34.1" />
