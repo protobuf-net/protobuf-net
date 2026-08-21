@@ -32,6 +32,7 @@
          build failure rather than a convention nobody enforces -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Pack="false" PrivateAssets="all" />
+    <PackageReference Include="System.Collections.Immutable" VersionOverride="10.0.11" />
 
     <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     <None Include="protobuf-net.BuildTools.props" Pack="true" PackagePath="build" />
