@@ -2521,6 +2521,56 @@ the two are independent — either can land without the other.
   anything in B38. Unmeasured beyond the total — whether it is the writer pool, the buffer lease or
   `Close`/`Dispose` is not yet known, and should be measured before anything is designed.
 
+### B40. Steering call sites onto the fast entry points, and the read path — **captured, not started** (Marc, 2026-08-21)
+
+B39 shows a typed non-generic `Serialize` recovers ~28 ns a call. This entry is the follow-on
+question Marc raised with it: *how do consumers actually end up on it*, and what the equivalent is
+for reading. **Logged deliberately without starting**, so the write-path sweep is not interrupted.
+
+**The shared constraint, which shapes every option below:** both a non-generic overload and a
+`new`-hiding generic bind only when the call site's **static receiver type is the generated model**.
+`TypeModel.Serialize<T>` is **not virtual** (checked — only `GetSerializer<T>`/`GetSerializerCore<T>`
+are), so a model cannot override it; anyone holding a `TypeModel` reference keeps the slow path
+whatever we emit. That is the same problem `PBN3010`'s fixer already solves by swapping the receiver
+to `Model.Instance`, so the machinery exists.
+
+**On `[Obsolete]` versus a diagnostic — the diagnostic, and this is already settled policy here.**
+`[Obsolete]` is `CS0618`, which is *global*: a consumer suppressing it to keep one legitimate generic
+call site loses the warning everywhere, including on genuinely obsolete API. A custom id is
+suppressible on its own. That is the standing preference and it applies cleanly here.
+
+But the decisive argument is Marc's, and it is about *precision* rather than harshness:
+
+> the advantage of the diagnostic approach is that we can decide in the analyzer whether they're
+> using generics **at the call site**
+
+`[Obsolete]` cannot tell `Serialize<Order>(...)` from `Serialize<TValue>(...)` inside a generic
+method — it fires on both, and the second has no typed overload to move to, so the warning would be
+unactionable and would train people to suppress it. An analyzer reads the type argument: **concrete
+→ report and offer the fixer; still-open type parameter → say nothing.** That distinction is the
+whole feature, and only an analyzer can make it. It also gets a code fix, which `[Obsolete]` never
+does.
+
+**The read path is harder, and the reason is structural:** there is usually no instance to pass, so
+overload resolution has nothing to bind on — `Deserialize<Order>(source)` and
+`Deserialize(typeof(Order), source)` both name the type rather than supplying a value. Options as
+raised, none evaluated:
+
+- **named methods per root** — `DeserializeOrder(...)`, with the analyzer redirecting both spellings
+  to it and a fixer applying it. Works, but puts a generated name per contract into the model's
+  surface, and reads oddly next to `Serialize(...)` overloads that need no suffix;
+- **make the generic path itself cheaper**, which would help every call site including the ones no
+  analyzer can reach (`TypeModel`-typed receivers, open type parameters). B39 already itemises what
+  the write side spends per call; the read side wants the same treatment before choosing;
+- a **`new`-hiding generic** on the model, dispatching through a generated type switch. Same
+  receiver-type constraint as the overloads, and still pays generic dispatch — probably dominated by
+  the other two.
+
+**Do not build the analyzer before the entry points exist**, and check `AnalyzerReleases.Unshipped.md`
+plus the owner table in `AGENTS.md` for a free id when it does — `PBN3010`–`PBN3013` is
+`AotMigrationAnalyzer`'s block and this belongs beside it.
+
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The design and the findings are in `notes/aot-schema-model.md`; the gap list is here, so there is
