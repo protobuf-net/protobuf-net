@@ -237,7 +237,42 @@ Legacy-mode members measured via the classic body against the null writer, landi
 length cache — which now lives on `NetObjectCache`, shared with the sidecar and the `MeasureState`
 hand-off, so the landing spot is already right.
 
-### B6. Maps measure-first — deferred
+### B6. ~~Maps measure-first~~ — **DONE 2026-08-21 for scalar/string sides**
+
+**Built.** A map's size is arithmetic even though its write stays on `MapSerializer.WriteMap` —
+measure and write eligibility are independent, as they already are for a repeated BCL member. So a
+map member stops blocking, and its contract keeps measure-first rather than dragging itself and
+every referrer onto write-to-count.
+
+The shape, read off `KeyValuePairSerializer.Write` rather than assumed:
+
+```
+per pair: memberTag + varint(entry) + entry
+where     entry = (key non-trivial   ? 1 + keyBody   : 0)
+                + (value non-trivial ? 1 + valueBody : 0)
+```
+
+The guards are the non-obvious half. **The entry is always emitted, even when empty** (`tag + 0x00`)
+— it is the pair's *contents* that are conditional, not the pair. Each side is tested
+**independently** via `HasNonTrivialValue`, so a default key or value gives a half-entry. And
+**`string` is non-trivial when merely non-null** — an empty string *is* written ("we write `""` for
+compat") — so it measures as a present zero-length field. Both inner tags fold to one byte, the
+field numbers being 1 and 2.
+
+**Scoped**: scalar and string sides, default formats. Enum sides (the underlying scalar needs a
+cast) and message values (a nested `Measure_` with a **null** slot buffer, since the write consumes
+no slots) are follow-ups, not obstacles.
+
+**The corpus caught the one real mistake instantly**: `ValueKind` is the *element's* kind for a
+repeated value, so `Dictionary<int, List<int>>` reported `Int32` and the measure emitted
+`pair.Value != 0` against a `List<int>`. `ValueSerializerFactory` is the marker for a model-resolved
+value and now excludes it.
+
+`MapMeasure.input.cs` exists because `Map.input.cs` structurally cannot cover this — it carries a
+message-valued map, which is unmeasurable, and one blocked member takes the whole contract, so no
+map measure was ever emitted there. The corpus exercises the new path 62 times; the fixture makes it
+reviewable and gives it a fast guard.
+
 
 Entry = one KV sub-message; both sides already have measure forms for the native kinds.
 
@@ -2848,6 +2883,43 @@ simply predate the machinery. Worth establishing before assuming either way.
 write-to-count path, which is what protobuf-net did before v4 and is still correct — the cost is
 throughput, and the reason to care is that the write path is where v4's gains are (B38: 1.3×–2.3×,
 and wide-512 overtaking Google.Protobuf).
+
+
+### B43. **A NULL MAP VALUE writes different bytes on the two paths** — pre-existing, found 2026-08-21
+
+Found by the adversarial samples written for B6's fixture, and **it is not B6's doing**: it
+reproduces with the map measure reverted, which is how it was attributed rather than assumed.
+
+`Dictionary<int, string> { [7] = null }`, serialized:
+
+| | bytes | meaning |
+| --- | --- | --- |
+| `RuntimeTypeModel` | `0A-02-08-07` | entry carries the key only; the null value is **omitted** |
+| generated model | `0A-04-08-07-12-00` | entry also carries field 2 as a **zero-length string** |
+
+So the two disagree on the wire, and they disagree in a way that survives a round-trip as a
+*semantic* difference: read back, one gives an absent value and the other an **empty string**.
+
+**What is odd, and why this is worth an entry rather than a quick fix:** the emitted `WriteMap` call
+is **byte-identical** to ref-emit's — same factory, same field number, same features, same key and
+value features, no explicit serializers. Both therefore reach the same
+`KeyValuePairSerializer.Write`, whose value guard is `HasNonTrivialValue`, which for `string` is
+`value is not null` and should skip. Something between those two identical-looking calls resolves
+differently, and until that is found the fix is unknown.
+
+Two candidates, neither checked: the pair serializer's `_valueSerializer` may be resolved from the
+model differently under the generated services type than under `RuntimeTypeModel`; or
+`TypeHelper<string>.ValueChecker` may not be the `PrimaryTypeProvider` implementation in one of the
+two. A twenty-line reproduction dumping both byte streams would separate them.
+
+**Is a null map value even legal?** Undecided here. protobuf-net refuses null *elements* in a
+repeated member outright (`ThrowNullRepeatedContents`), which is an argument that a null map value
+should be refused too rather than silently written either way. That is a decision for Marc; what is
+not defensible is the current state, where the two engines quietly write different bytes.
+
+**The B6 fixture deliberately excludes this sample** with a comment pointing here, so
+`MapMeasure.input.cs` stays green: a permanently-red gate teaches people to ignore the gate, which
+is worse than a recorded bug.
 
 
 ## C. Schema front-end (`[ProtoSchema]`)
