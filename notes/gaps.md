@@ -2711,11 +2711,34 @@ model is entirely on the classic write path.**
 | **`[ProtoContract(IsGroup = true)]`** | **unknown — reason not established** | *untracked before this* |
 | **`[ProtoBeforeSerialization]`** | **NO — load-bearing** | **B17** |
 
-**The callback one is not a gap and must not be "fixed".** `Measure_` has no `ISerializationContext`
-and so cannot fire callbacks at all; refusing such contracts is the only thing keeping the measured
-length honest, since firing only in `RawWrite_` would let the object change between measuring and
-writing. B17 is about the *silence*, not the refusal. That answers the "callbacks?" half of the
-question: already correct, already tracked, leave alone.
+**The callback one — I said "not a gap, must not be fixed", and that was wrong** (Marc, same day:
+*"does it have the State? could the State gain the context?"*). The correct statement is narrower:
+
+- firing **only** in `RawWrite_` would indeed be wrong, since the object could change between the
+  passes and the measured length would not match the bytes;
+- firing in **neither** is what happens today — the contract is refused outright;
+- firing in **both** is correct, and is **exactly what the classic buffer-writer path already
+  does**: `IsMeasuring` true, then false. AGENTS.md records that the doubling there is *required*,
+  not incidental, and Marc's 2026-08-14 decision was that twice becomes the consistent normal.
+
+So the refusal is a consequence of the **signature**, not of the semantics. `Measure_(value, depth,
+slots)` simply was never given a context — and one is in scope at both entry points already:
+`state.Context` (public) from `ISerializer<T>.Write`, and the `ISerializationContext` argument
+directly from `IMeasuringSerializer<T>.Measure`. `ProtoWriter.IsMeasuring(context)` is public too,
+which is how a consumer's callback already tells the passes apart.
+
+**The cheap shape**: thread the context only into the `Measure_` of contracts that *have* a
+before-serialize callback, so the common case keeps its current signature and pays nothing. Then
+measure fires with `IsMeasuring == true` and the write fires with `false`, which is the behaviour a
+consumer already gets from the buffer-writer backend.
+
+**What actually needs settling before building it** — counts, not correctness:
+`CallbackMeasurePassTests` pins exact firing counts per route, and generated models would move from
+"refused" to "twice". That is the alignment Marc asked for in B17/B14 rather than a regression, but
+it is a deliberate behaviour change and the test is the place it has to be argued. The awkward case
+is the classic-interop boundary, where `ProtoWriter.Measure` **caches** by identity and may call
+`IMeasuringSerializer.Measure` a variable number of times — so "at most twice" needs re-checking
+there specifically, not assumed from the pure-raw path.
 
 **`IsGroup` at contract level is the one I cannot justify from reading it.** A grouped contract
 carries no length prefix of its own, which is an argument that measuring it is *easier*, not harder —
