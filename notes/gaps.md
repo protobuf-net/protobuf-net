@@ -2521,7 +2521,7 @@ DTOs *are* sealed while this benchmark's are not, so a slice of the residual wid
 than framing. `docs/aot.md` already records the effect at ~0.6% on a message-dense payload; on a
 graph this node-dense it is larger.
 
-### B39. The `Serialize` entry path costs ~28 ns a call, and the writer setup another ~28 — **both measured; the typed-overload fix is proven by hand**
+### B39. ~~The `Serialize` entry path costs ~28 ns a call~~ — **typed overloads BUILT 2026-08-21; they recover 17 ns of the 28, and the writer-setup floor is now the larger half**
 
 Marc, 2026-08-21, prompted by B38's small-payload residue: *"is our Serialize path wrong? what
 happens if we add per-root-type typed (non-generic) Serialize methods that take overload priority
@@ -2567,15 +2567,38 @@ lands — not dispatch either: it is that a protobuf-net writer costs 28 ns to o
 behind at 8. The array is what closes the large end; the remaining small-end gap is this entry, and
 the two are independent — either can land without the other.
 
-**Not started.** Two candidates, in order:
+**BUILT, and measured on the shipped emission rather than on the prototype** — which matters,
+because the two are not the same and the difference is the whole design decision:
 
-- **emit the typed overloads** — one per root contract, non-generic, straight to the generated
-  static. Cheap, mechanical, and it composes with the array. The care needed is in *matching*
-  `SerializeRoot`'s guarantees rather than merely skipping them: `CheckClear` before and after, and
-  `Abandon` on the exception path, are not optional;
-- **then look at the 28 ns floor**, which is the bigger prize at small payloads and is untouched by
-  anything in B38. Unmeasured beyond the total — whether it is the writer pool, the buffer lease or
-  `Close`/`Dispose` is not yet known, and should be measured before anything is designed.
+| n | `Serialize<T>` | typed overload | saved | | `StateOnly` |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 159 | 143 | **17** | 10.5% | 30 |
+| 64 | 687 | 669 | **18** | 2.6% | 30 |
+| 512 | 5,100 | 5,196 | −97 | −1.9% | 30 |
+
+**It recovers 17 ns of the prototype's 28, and that shortfall is deliberate.** The prototype called
+`RawWrite_` directly, skipping `SerializeRoot` *and* `WriteAsRoot`. The shipped one stops at
+`SerializeRoot`, because `CheckClear` and `Abandon` are internal and generated code cannot reproduce
+the root sequence's guarantees — so it recovers the `TypeHelper<T>.ValueChecker` indirection and
+`TryGetSerializer<T>` resolution, and keeps paying `WriteAsRoot`'s feature dispatch. **~11 ns is the
+price of not reimplementing root semantics in generated code, and it is worth paying.**
+
+The 512 row is **noise, not a regression**: 5,196 against 5,100 with errors of ±98 and ±56, which
+overlap. Expected, since the whole saving is a fixed per-call cost — it is 10.5% of a small payload
+and arithmetically invisible on a large one.
+
+**So the honest summary is a real but modest win**, worth having because it is free at run time and
+zero-risk, but not the headline the 28 ns figure implied. **The larger half of the small-payload gap
+is now `StateOnly`**: 30 ns to open and shut a writer with nothing written, which is 21% of the
+entire typed call at n=8 and untouched by anything here.
+
+**Still open** — two candidates, in order:
+
+- **the ~30 ns writer-setup floor**, now the bigger prize at small payloads and untouched by both
+  B38 and the overloads. Unmeasured beyond the total — whether it is the writer pool, the buffer
+  lease or `Close`/`Dispose` is not yet known, and should be measured before anything is designed;
+- **a typed `Deserialize`**, which cannot use overload resolution at all (there is no instance to
+  bind on) and is therefore B40's problem rather than this one's.
 
 ### B40. Steering call sites onto the fast entry points, and the read path — **captured, not started** (Marc, 2026-08-21)
 
