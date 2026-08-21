@@ -191,6 +191,21 @@ write pass, whatever the depth. **Verified at depth 3: two calls, not eight**
 (`AtMostTwiceHoweverDeepTheNesting`). If that test ever reports more, the cache has stopped working
 and the cost is exponential in depth, not linear.
 
+**A SHARED (aliased) object in one graph is owed no memoisation — POLICY** (Marc, 2026-08-21).
+Where a design is faster for trees and slower for graphs that reference the same instance several
+times *in parallel* (not recursively), take it. The reasoning is not that the case is rare, though it
+is: it is that **anyone duplicating the same non-trivial object repeatedly has already declined to
+care about efficiency.** protobuf has no reference sharing on the wire, so every occurrence is
+written out in full whatever we do — someone who cared would send a cross-reference token instead.
+Optimising the *measure* pass for a graph whose *write* is already paying k× is optimising the wrong
+half.
+
+So the order of preference is: (a) live without memoisation between re-uses; and only if (a) is
+measured to hurt, (b) an opt-in AOT-only flag turning it back on. Do not reach for (b) speculatively
+— when this was measured for `notes/gaps.md` B38, (a) was **faster even on the aliased graph**
+(1.37×–1.49×), because re-measuring a small shared subtree costs less than the hashing that avoiding
+it buys. The flag would have protected a case that does not exist.
+
 **Decided (Marc, 2026-08-14): twice becomes the consistent normal for both backends**, rather than
 the stream being the odd one out — stated as "**once per pass over this node, at most twice**",
 since the number of passes is a property of the path. That is also where measure-first leads
