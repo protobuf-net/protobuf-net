@@ -25,6 +25,9 @@ public class Lookup
     [ProtoMember(2)] public Dictionary<string, int> ByName { get; set; }
     [ProtoMember(3)] public Dictionary<int, int> Counts { get; set; }
     [ProtoMember(4)] public Dictionary<string, string> Labels { get; set; }
+    // a NULLABLE value, which the map-side guard and body have to spell differently: `!= 0` lifts
+    // over int? and is false for null, but the payload cast needs GetValueOrDefault()
+    [ProtoMember(6)] public Dictionary<int, int?> Maybe { get; set; }
     [ProtoMember(5)] public int Trailer { get; set; }
 }
 
@@ -49,6 +52,7 @@ public static class MapMeasureSamples
         new Lookup { Labels = new() { ["k"] = "v", ["empty"] = "" } },
         // a map beside an ordinary member, so the whole contract's length is exercised
         new Lookup { Counts = new() { [5] = 6 }, Trailer = 42 },
+        new Lookup { Maybe = new() { [1] = 2, [2] = null, [3] = 0 } },
     ];
 }
 

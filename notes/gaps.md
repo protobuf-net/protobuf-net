@@ -3057,6 +3057,40 @@ Still out: **maps**, whose wrapping is two-sided — `OptionWrappedValueFieldPre
 map while `OptionWrappedValue` rides on the value features, so the two scopes do not compose the way
 they do for a collection, and it needs its own probe.
 
+**Maps: probed but NOT built, 2026-08-22 — the evidence is here so the next attempt starts from it.**
+Wrapping a map is a third arm rather than a variation, and the probe says so plainly:
+
+| | bytes |
+| --- | --- |
+| `{1:2}` value-wrapped `int?` | `0A-06-08-01-12-02-08-02` |
+| `{1:0}` value-wrapped `int?` | `0A-02-08-01` — **value side absent** |
+| `{1:null}` value-wrapped `int?` | `0A-02-08-01` — **identical to the zero above** |
+| `{1:""}` value-wrapped `string` | `0A-06-08-01-12-02-0A-00` — present |
+| `{1:null}` value-wrapped `string` | `0A-02-08-01` |
+| `{0:null}` | `0A-00` — both sides trivial, an empty entry |
+| group value `{1:2}` | `0A-06-08-01-13-08-02-14` |
+| collection-wrapped `null` / `{}` / `{1:2}` | *nothing* / `0A-00` / `0A-06-0A-04-08-01-10-02` |
+| both, `{1:null}` | `0A-04-0A-02-08-01` |
+
+Two findings worth keeping:
+
+- **a wrapped map value of zero and one of null are BYTE-IDENTICAL** (`0A-02-08-01` for both), which
+  is the opposite of what wrapping is for. The entry side is still gated by
+  `KeyValuePairSerializer.Write`'s `HasNonTrivialValue` on the *wrapped* value, and for `int?` that
+  is `GetValueOrDefault() != 0` — so the wrapper never gets the chance to distinguish them. It is not
+  a generator question at all; whether it is a protobuf-net bug is worth a separate look, and it is
+  recorded here because a measure written from the docs would produce different bytes and look wrong;
+- **collection-scope wrapping composes exactly as it does for a collection** — contents renumbered to
+  field 1, then wrapped — so that half is a reuse. It is the *value* scope that is new.
+
+What the build needs beyond the above is the **value scope** only. A first draft of this note claimed
+a nullable value spelling (`Dictionary<int, int?>`) would also need work, because `MapSideBody` emits
+`(ulong)(long)pair.Value`; that was **wrong**, and checking beat reasoning again. `(long)` on an
+`int?` is a legal explicit conversion, and it is guarded by `MapSideGuard`'s `pair.Value != 0`, which
+*lifts* and is `false` for null — so the cast never runs on one. `MapMeasure.input.cs` now carries a
+`Dictionary<int, int?>` with a null, a zero and a real value, and agrees with ref-emit; the shape was
+simply untested rather than broken.
+
 #### Ranked, for "what next"
 
 1. **inheritance** (B41) — worst blast radius, and `[ProtoSubType]` just made it reachable from

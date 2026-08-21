@@ -109,6 +109,11 @@ partial class MapMeasureModel
                 state.WriteRawTag((5 << 3) | 0);  // Trailer
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp5));
             }
+            var tmp6 = value.Maybe;
+            if (tmp6 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
         }
 
         private static long Measure_AotFixtures_MapMeasure_Lookup(global::AotFixtures.MapMeasure.Lookup value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -161,6 +166,17 @@ partial class MapMeasureModel
             }
             var tmp5 = value.Trailer;
             if (tmp5 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp5));  // Trailer
+            var tmp6 = value.Maybe;
+            if (tmp6 != null)
+            {
+                foreach (var pair6 in tmp6)
+                {
+                    long entry6 = 0;
+                    if (pair6.Key != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Key));
+                    if (pair6.Value != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry6) + entry6;  // Maybe
+                }
+            }
             return len;
         }
 
@@ -350,6 +366,52 @@ partial class MapMeasureModel
                     case (5 << 3) | 1:  // Trailer, field 5, fixed64
                         value.Trailer = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
+                    case (6 << 3) | 2:  // Maybe, field 6, map entry run
+                    {
+                        value.Maybe ??= new global::System.Collections.Generic.Dictionary<int, int?>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k6 = default;
+                            int? v6 = default;
+                            uint etag6 = state.ReadRawTag();
+                            while (etag6 != 0)
+                            {
+                                switch (etag6)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k6 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k6 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k6 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v6 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v6 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v6 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag6)) goto entryDone6;
+                                        if ((etag6 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag6);
+                                        state.SkipTag(etag6);
+                                        break;
+                                }
+                                etag6 = state.ReadRawTag();
+                            }
+                            entryDone6:
+                            state.PopScope(scope);
+                            value.Maybe[k6] = v6;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -360,7 +422,7 @@ partial class MapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
         }
     }
 }
