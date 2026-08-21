@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -124,7 +125,8 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
         internal static readonly DiagnosticDescriptor IncludeNotDeclared = new(
             id: "PBN0013",
             title: nameof(DataContractAnalyzer) + "." + nameof(IncludeNotDeclared),
-            messageFormat: "The base-type '{0}' is a proto-contract, but no include is declared for '{1}' and the " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + " flag is not set.",
+            messageFormat: "The base-type '{0}' is a proto-contract, but does not declare '{1}' as a sub-type; use [" + nameof(ProtoIncludeAttribute) + "], or [ProtoSubType] where '{0}' cannot name '{1}', or set " + nameof(ProtoContractAttribute.IgnoreUnknownSubTypes) + ".",
+            helpLinkUri: "https://docs.protobuf-net.dev/rules/PBN0013",
             category: Literals.CategoryUsage,
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -256,28 +258,68 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
 
         /// <inheritdoc/>
         /// <summary>
-        /// Is this sub-type linked to its base by an out-of-band <c>[ProtoSubType]</c> declaration,
-        /// rather than by a <c>[ProtoInclude]</c> on the base?
+        /// The <c>[ProtoSubType]</c> links declared in a compilation: sub-types linked to their base
+        /// out-of-band, rather than by a <c>[ProtoInclude]</c> on the base.
         /// </summary>
         /// <remarks>
-        /// Only <b>this compilation's</b> assembly and module attributes are considered, and that is
-        /// a deliberate limit rather than an oversight: this runs from a syntax-node action, which
-        /// has no cheap way to find every <c>[ProtoModel]</c> in a compilation, and a declaration
-        /// made on a model class is therefore not seen here. The assembly and module sites are the
-        /// ones that matter for this diagnostic anyway - it can only fire for a type declared in
-        /// source, so the declaration that would excuse it is in the same compilation.
+        /// All three declaration sites are covered - assembly, module, and any type, which is what
+        /// reaches a declaration made on a <c>[ProtoModel]</c> class. Only <b>this compilation</b> is
+        /// scanned, and that is complete rather than a shortcut: this exists to answer PBN0013, which
+        /// can only fire for a type declared in source, and a referenced assembly cannot name a type
+        /// from the assembly referencing it.
         /// </remarks>
-        // spelled out rather than nameof'd: the attribute is [Experimental], and naming the
-        // symbol would make this assembly have to suppress PBN9001 to build
-        private const string ProtoSubTypeAttributeName = "ProtoSubTypeAttribute";
-
-        private static bool DeclaredOutOfBand(ref SyntaxNodeAnalysisContext context,
-            INamedTypeSymbol baseType, INamedTypeSymbol subType)
+        private sealed class OutOfBandSubTypes
         {
-            var compilation = context.SemanticModel.Compilation;
-            return Declares(compilation.Assembly.GetAttributes()) || Declares(compilation.SourceModule.GetAttributes());
+            // spelled out rather than nameof'd: the attribute is [Experimental], and naming the
+            // symbol would make this assembly have to suppress PBN9001 to build
+            private const string ProtoSubTypeAttributeName = "ProtoSubTypeAttribute";
 
-            bool Declares(ImmutableArray<AttributeData> attributes)
+            private readonly Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> _byBase
+                = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
+
+            /// <remarks>
+            /// Matched on the <em>original definition</em> of each side, because a declaration names
+            /// a closed construction (<c>Tagged&lt;int&gt;</c>) while this diagnostic is reported
+            /// against the open declaration it came from (<c>Tagged&lt;T&gt;</c>), so a plain symbol
+            /// comparison never matches. Nothing is lost by the loosening: the open declaration is
+            /// the only place there is to report, so "some construction of this is declared" is the
+            /// most that can usefully be said. PBN0012 tolerates the same open/closed mismatch, for
+            /// the same reason.
+            /// </remarks>
+            public bool Declares(INamedTypeSymbol baseType, INamedTypeSymbol subType)
+                => _byBase.TryGetValue(baseType.OriginalDefinition, out var subTypes)
+                    && subTypes.Contains(subType.OriginalDefinition);
+
+            public static OutOfBandSubTypes Build(Compilation compilation)
+            {
+                var result = new OutOfBandSubTypes();
+                result.Collect(compilation.Assembly.GetAttributes());
+                result.Collect(compilation.SourceModule.GetAttributes());
+                // a declaration on a type - a [ProtoModel] class, in practice. The walk is over the
+                // types this compilation *declares*, so it is bounded by the project rather than by
+                // its references, and it happens at most once per compilation
+                Walk(compilation.Assembly.GlobalNamespace, result);
+                return result;
+
+                static void Walk(INamespaceOrTypeSymbol scope, OutOfBandSubTypes result)
+                {
+                    foreach (var member in scope.GetMembers())
+                    {
+                        switch (member)
+                        {
+                            case INamespaceSymbol ns:
+                                Walk(ns, result);
+                                break;
+                            case INamedTypeSymbol type:
+                                result.Collect(type.GetAttributes());
+                                Walk(type, result);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            private void Collect(ImmutableArray<AttributeData> attributes)
             {
                 foreach (var attrib in attributes)
                 {
@@ -286,11 +328,16 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
 
                     var args = attrib.ConstructorArguments;
                     if (args.Length is not (3 or 4)) continue;
-                    if (!SymbolEqualityComparer.Default.Equals(args[0].Value as ISymbol, baseType)) continue;
-                    if (!SymbolEqualityComparer.Default.Equals(args[1].Value as ISymbol, subType)) continue;
-                    return true;
+                    if (args[0].Value is not INamedTypeSymbol baseType) continue;
+                    if (args[1].Value is not INamedTypeSymbol subType) continue;
+
+                    if (!_byBase.TryGetValue(baseType.OriginalDefinition, out var subTypes))
+                    {
+                        _byBase.Add(baseType.OriginalDefinition,
+                            subTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default));
+                    }
+                    subTypes.Add(subType.OriginalDefinition);
                 }
-                return false;
             }
         }
 
@@ -298,14 +345,25 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
         {
             ctx.EnableConcurrentExecution();
             ctx.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze);
-            // the disable switch is read per-callback rather than once, because AnalysisContext has
-            // no compilation-start hook here; it is a dictionary lookup, which is cheap enough to be
-            // the first thing either callback does
-            ctx.RegisterSyntaxNodeAction(context =>
+            // the disable switch is read per-callback rather than once; it is a dictionary lookup,
+            // which is cheap enough to be the first thing every callback does
+            //
+            // the syntax-node action is registered from a compilation-start action purely so that
+            // the out-of-band [ProtoSubType] links can be found once and shared - they are a
+            // property of the compilation, not of any one type. Lazily, because the only thing that
+            // asks for them is PBN0013, i.e. a sub-type whose base declares no include for it: most
+            // compilations never build the set at all
+            ctx.RegisterCompilationStartAction(start =>
             {
-                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
-                ConsiderPossibleProtoBufType(ref context);
-            }, s_syntaxKinds);
+                var declaredSubTypes = new Lazy<OutOfBandSubTypes>(
+                    () => OutOfBandSubTypes.Build(start.Compilation));
+
+                start.RegisterSyntaxNodeAction(context =>
+                {
+                    if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                    ConsiderPossibleProtoBufType(ref context, declaredSubTypes);
+                }, s_syntaxKinds);
+            });
             ctx.RegisterCompilationAction(context =>
             {
                 if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
@@ -375,7 +433,8 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             }
         }
 
-        private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context)
+        private static void ConsiderPossibleProtoBufType(ref SyntaxNodeAnalysisContext context,
+            Lazy<OutOfBandSubTypes> declaredSubTypes)
         {
             if (context.ContainingSymbol is not INamedTypeSymbol type) return;
             
@@ -384,7 +443,7 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                 case TypeKind.Class:
                 case TypeKind.Struct:
                 case TypeKind.Interface:
-                    ConsiderPossibleDataContractType(ref context, type);
+                    ConsiderPossibleDataContractType(ref context, type, declaredSubTypes);
                     break;
                 case TypeKind.Enum:
                     ConsiderEnumType(ref context, type);
@@ -475,7 +534,8 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             }
         }
 
-        private static void ConsiderPossibleDataContractType(ref SyntaxNodeAnalysisContext context, INamedTypeSymbol type)
+        private static void ConsiderPossibleDataContractType(ref SyntaxNodeAnalysisContext context,
+            INamedTypeSymbol type, Lazy<OutOfBandSubTypes> declaredSubTypes)
         {
             var attribs = type.GetAttributes();
 
@@ -635,7 +695,7 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                             properties: null
                         ));
                     }
-                    if (!currentTypeIsDeclared && DeclaredOutOfBand(ref context, type.BaseType, type))
+                    if (!currentTypeIsDeclared && declaredSubTypes.Value.Declares(type.BaseType, type))
                     {
                         // the linkage exists, it is just not on the base type - which is the whole
                         // point of [ProtoSubType]: the base may be in a package that has never heard

@@ -848,12 +848,30 @@ distinction yet; it is in the metadata so that it can be, if the default framing
 
 **One consequence is live rather than theoretical: `PBN0013`.** "The base-type is a proto-contract,
 but no include is declared for X" fires on every sub-type linked this way — nagging people to write
-the one attribute they cannot write. The analyzer now treats an **assembly-level or module-level**
-`[ProtoSubType]` as satisfying it. A declaration on a **model class** is not seen, and that is a real
-limit rather than an oversight: `DataContractAnalyzer` reports this from a *syntax-node* action, which
-has no cheap way to find every `[ProtoModel]` in a compilation, and there is no compilation-start hook
-in its current shape. Note the diagnostic already fired for anyone using runtime `AddSubType`, so this
-narrows a pre-existing false positive rather than introducing one.
+the one attribute they cannot write. A `[ProtoSubType]` at any of its three sites now satisfies it.
+
+Getting there was worth recording, because the first cut covered only the assembly and module sites
+and I justified the gap with a cost claim that was **false**: that an analyzer reporting from a
+syntax-node action has no cheap way to find every `[ProtoModel]` in a compilation. `AnalysisContext`
+does have `RegisterCompilationStartAction` — the file's own comment said otherwise — and
+`AotMigrationAnalyzer` has been walking `compilation.Assembly.GlobalNamespace` from one since it
+shipped. So the gathering is now compilation-wide and **lazy**, forced only by a PBN0013 candidate,
+which is strictly less work than the analyzer that set the precedent does unconditionally.
+
+Two details that only showed up once it was tried:
+
+- **the sides must be matched on their `OriginalDefinition`s.** A declaration names a closed
+  construction (`Tagged<int>`); the diagnostic is reported against the open declaration it came from
+  (`Tagged<T>`). A plain symbol comparison never matches, and the fixture kept warning about exactly
+  the shape the ticket is about. `PBN0012` has a test for the same trap on generic interfaces.
+- **the message could not carry the whole story**, so `PBN0013` grew a `helpLinkUri` to
+  `docs/rules/PBN0013.md` — a per-rule page, following DapperAOT's layout. What needed the room is
+  the case an analyzer *cannot* decide: sub-types registered at another layer, via `AddSubType` on a
+  `RuntimeTypeModel`, where the warning is expected and should be ignored. The message names the two
+  routes it can check and leaves the rest to the link.
+
+Note the diagnostic already fired for anyone using runtime `AddSubType`, so all of this narrows a
+pre-existing false positive rather than introducing one.
 
 
 ### ~~An "announce" diagnostic~~ — built, as `PBN3012`/`PBN3013`

@@ -15,13 +15,8 @@ using ProtoBuf.Meta;
 // MetaType.AddSubType, so this is differentially covered like any other hierarchy.
 namespace AotFixtures.OutOfBandSubType;
 
-// PBN0013 says "the base is a contract, but declares no include for this type" - which is exactly
-// the situation [ProtoSubType] exists for, so the analyzer treats an assembly-level or module-level
-// declaration as satisfying it. It cannot see a declaration on a *model class*, as these are: it
-// runs from a syntax-node action, which has no cheap way to find every [ProtoModel] in a
-// compilation. Suppressed here rather than worked around, since the fixture is deliberately using
-// the model-level spelling.
-#pragma warning disable PBN0013
+// note there is no PBN0013 here, and that is the analyzer working: it treats a [ProtoSubType]
+// declaration at any of the three sites - including this model - as declaring the linkage.
 
 // no [ProtoInclude] here at all: this type is standing in for one in a base library that has never
 // heard of anything below it
@@ -107,4 +102,3 @@ public static class OutOfBandSubTypeSamples
 public partial class OutOfBandSubTypeModel : TypeModel
 {
 }
-#pragma warning restore PBN0013

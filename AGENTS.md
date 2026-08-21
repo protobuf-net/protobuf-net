@@ -761,11 +761,22 @@ runtime model does not honour it, exactly as it does not honour `[ProtoSurrogate
   a half-linked hierarchy is worse than none, since an unlinked sub-type emits standalone and silently
   disagrees on the wire.
 - **`PBN0013` had to be taught about it.** "No include is declared for X" fired on every sub-type
-  linked this way, nagging people to write the attribute they cannot write. An **assembly-level or
-  module-level** declaration now satisfies it; a declaration on a **model class** does not, because
-  `DataContractAnalyzer` reports this from a *syntax-node* action and has no cheap way to find every
-  `[ProtoModel]` in a compilation. `OutOfBandSubType.input.cs` therefore carries a `#pragma` and says
-  why.
+  linked this way, nagging people to write the attribute they cannot write. A `[ProtoSubType]` at
+  **any of the three sites** now satisfies it, which is what made `DataContractAnalyzer` grow a
+  `RegisterCompilationStartAction`: the declarations are a property of the compilation, so they are
+  gathered once (assembly, module, and every type the compilation declares, which is what reaches a
+  model class) and shared by the syntax-node action. Built **lazily** — only PBN0013 asks, so most
+  compilations never walk anything. Note the file's old comment claiming `AnalysisContext` has no
+  compilation-start hook was simply wrong; `AotMigrationAnalyzer` had been using one all along.
+- **the sides are matched on their `OriginalDefinition`s**, because a declaration names a *closed*
+  construction (`Tagged<int>`) while `PBN0013` is reported against the *open* declaration it came
+  from (`Tagged<T>`) — a plain symbol comparison never matches, which is the same trap `PBN0012` has
+  a test for. Nothing is lost: the open declaration is the only place there is to report.
+- **`PBN0013` carries a help link now** (`docs/rules/PBN0013.md`, following DapperAOT's per-rule
+  layout) because the message cannot hold the whole story. The part that needs the room: registering
+  at another layer — `AddSubType` on a `RuntimeTypeModel` — is invisible to any analyzer, so the
+  warning is *expected* there and can be ignored. New rule pages go in that folder and are linked by
+  `helpLinkUri`, not by prose in the message.
 - **the replay is in all three harnesses** — `AotRefGen`, `AotConformanceTests` and `AotDifferential` —
   through the public `MetaType.AddSubType(fieldNumber, type, dataFormat)`, beside the surrogate replay.
   Without it the reference model has never heard of the linkage and serializes the sub-type as a

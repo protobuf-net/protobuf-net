@@ -457,7 +457,9 @@ public class SuperFoo : Foo {}
 ");
             var diag = Assert.Single(diagnostics, x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared);
             Assert.Equal(DiagnosticSeverity.Warning, diag.Severity);
-            Assert.Equal($"The base-type 'Foo' is a proto-contract, but no include is declared for 'SuperFoo' and the IgnoreUnknownSubTypes flag is not set.", diag.GetMessage(CultureInfo.InvariantCulture));
+            Assert.Equal("The base-type 'Foo' is a proto-contract, but does not declare 'SuperFoo' as a sub-type; "
+                + "use [ProtoIncludeAttribute], or [ProtoSubType] where 'Foo' cannot name 'SuperFoo', or set IgnoreUnknownSubTypes.",
+                diag.GetMessage(CultureInfo.InvariantCulture));
         }
 
         [Fact]
@@ -794,6 +796,58 @@ public class Foo
 public class Bar : Foo
 {
     [ProtoMember(2)] public string Extra {get;set;}
+}");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNotDeclaredWhenLinkedOnAModel()
+        {
+            // the third declaration site: on the [ProtoModel] itself, which is where someone writing
+            // a model by hand is most likely to put it. This is why the analyzer looks at the types
+            // the compilation declares and not only at its assembly and module attributes
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+using ProtoBuf.Meta;
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Bar : Foo
+{
+    [ProtoMember(2)] public string Extra {get;set;}
+}
+#pragma warning disable PBN9001
+[ProtoModel]
+[ProtoSerializable(typeof(Foo))]
+[ProtoSubType(typeof(Foo), typeof(Bar), 10)]
+public partial class MyModel : TypeModel { }
+#pragma warning restore PBN9001");
+            Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
+        }
+
+        [Fact]
+        public async Task DoesntReportIncludeNotDeclaredForAGenericConstruction()
+        {
+            // the motivating shape for [ProtoSubType]: the declaration names a *closed* construction,
+            // while this diagnostic is reported against the open declaration it came from - so the
+            // two are matched on their original definitions
+            var diagnostics = await AnalyzeAsync(@"
+using ProtoBuf;
+#pragma warning disable PBN9001
+[assembly: ProtoSubType(typeof(Foo), typeof(Tagged<int>), 10)]
+#pragma warning restore PBN9001
+[ProtoContract]
+public class Foo
+{
+    [ProtoMember(1)] public string Name {get;set;}
+}
+[ProtoContract]
+public class Tagged<T> : Foo
+{
+    [ProtoMember(2)] public T Value {get;set;}
 }");
             Assert.Empty(diagnostics.Where(x => x.Descriptor == DataContractAnalyzer.IncludeNotDeclared));
         }
