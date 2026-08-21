@@ -1,0 +1,37 @@
+# Two ecosystems, for two different reasons.
+#
+# nuget: keeps the referenced packages current, and - more to the point - surfaces a security
+# advisory against something we depend on as a PR rather than as something someone has to notice.
+# Central package management means the versions all live in src/Directory.Packages.props, which
+# Dependabot understands.
+#
+# Roslyn is deliberately excluded. Microsoft.CodeAnalysis.CSharp.Workspaces is held at 4.3.1 on
+# purpose: it is the baseline the shipped analyzer compiles against, and it is what lets
+# protobuf-net.BuildTools.Legacy serve very old SDKs. Moving it is a decision to be argued rather
+# than a routine update - see AGENTS.md, "Don't rev the central Roslyn version speculatively".
+# (BuildToolsUnitTests already overrides it to 4.11.0 for its own reasons; that is a
+# VersionOverride in the csproj, which Dependabot does not touch.)
+#
+# github-actions: the workflows pin actions by commit SHA (see the note in release.yml), and a SHA
+# does not float. Dependabot is what moves those pins, rewriting the SHA and the trailing version
+# comment together. Without this, pinning would simply mean never updating.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      - dependency-name: Microsoft.CodeAnalysis.CSharp.Workspaces
+    groups:
+      # one PR per family rather than one per package; these move together anyway
+      microsoft:
+        patterns: [ "Microsoft.*", "System.*" ]
+      testing:
+        patterns: [ "xunit*", "*.Testing", "Microsoft.NET.Test.Sdk" ]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

@@ -11,6 +11,10 @@
 # whose computed version matches); the guard step below fails the run on any mismatch rather than
 # publishing a package that disagrees with its release.
 
+# Actions are pinned by commit SHA rather than by tag. A tag is mutable: whoever controls the
+# action repository can repoint v4 at different code, and this workflow holds id-token: write and
+# publishes to nuget.org, so that is where it genuinely matters. The trailing comment records
+# which release the SHA is, and Dependabot moves both together.
 name: Release
 
 on:
@@ -29,11 +33,11 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       with:
         fetch-depth: 0  # Fetch the full history (for versioning)
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
       with:
         dotnet-version: |
           8.0.x
@@ -64,13 +68,13 @@ jobs:
       run: dotnet pack Build.csproj --no-build -c Release /p:Packing=true /p:CI=true /p:PackageOutputPath=${{ github.workspace }}\.nupkgs
     # The packages survive as a run artifact even if the push fails
     - name: Upload packages
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: packages
         path: .nupkgs/*.nupkg
     - name: NuGet login (OIDC to temp API key)
       if: github.event_name == 'release'
-      uses: NuGet/login@v1
+      uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
       id: login
       with:
         user: ${{ secrets.NUGET_USER }}
