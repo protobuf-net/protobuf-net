@@ -272,7 +272,9 @@ namespace ProtoBuf.AotConformance
                 var baseType = (Type)type.GetProperty("BaseType")!.GetValue(declaration)!;
                 var subType = (Type)type.GetProperty("SubType")!.GetValue(declaration)!;
                 var fieldNumber = (int)type.GetProperty("FieldNumber")!.GetValue(declaration)!;
-                var isGroup = (bool)type.GetProperty("IsGroup")!.GetValue(declaration)!;
+                // null (the three-argument constructor) means "left to protobuf-net", which is
+                // length-prefixed today - the same wire form as an explicit false
+                var isGroup = type.GetProperty("IsGroup")!.GetValue(declaration) is true;
 
                 runtime.Add(baseType, applyDefaultBehaviour: true)
                     .AddSubType(fieldNumber, subType, isGroup ? DataFormat.Group : DataFormat.Default);

@@ -197,7 +197,9 @@ internal static class Program
                     var baseType = (Type)type.GetProperty("BaseType")!.GetValue(declaration)!;
                     var subType = (Type)type.GetProperty("SubType")!.GetValue(declaration)!;
                     var fieldNumber = (int)type.GetProperty("FieldNumber")!.GetValue(declaration)!;
-                    var isGroup = (bool)type.GetProperty("IsGroup")!.GetValue(declaration)!;
+                    // null (the three-argument constructor) is "left to protobuf-net", i.e.
+                    // length-prefixed today, exactly as an explicit false is
+                    var isGroup = type.GetProperty("IsGroup")!.GetValue(declaration) is true;
 
                     reference.Add(baseType, applyDefaultBehaviour: true)
                         .AddSubType(fieldNumber, subType, isGroup ? DataFormat.Group : DataFormat.Default);

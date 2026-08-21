@@ -148,7 +148,7 @@ namespace ProtoBuf.AotRefGen
             {
                 model.Add(declaration.BaseType, applyDefaultBehaviour: true)
                     .AddSubType(declaration.FieldNumber, declaration.SubType,
-                        declaration.IsGroup ? DataFormat.Group : DataFormat.Default);
+                        declaration.IsGroup == true ? DataFormat.Group : DataFormat.Default);
             }
         }
 

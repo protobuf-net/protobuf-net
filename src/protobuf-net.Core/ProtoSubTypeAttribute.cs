@@ -60,7 +60,8 @@ namespace ProtoBuf
         /// <param name="fieldNumber">The unique index (within <paramref name="baseType"/>) that will identify this data.</param>
         /// <param name="group">
         /// Whether the sub-message is written with group markers (<c>true</c>) or with a length
-        /// prefix (<c>false</c>).
+        /// prefix (<c>false</c>). Stating <c>false</c> is not the same as using the constructor
+        /// without this argument: both are length-prefixed today, but only one of them says so.
         /// </param>
         /// <remarks>
         /// A sub-type is always a sub-message, so length-prefixed versus delimited is the only
@@ -92,9 +93,15 @@ namespace ProtoBuf
         public int FieldNumber { get; }
 
         /// <summary>
-        /// Whether the sub-message is written with group markers rather than a length prefix;
-        /// false unless the constructor taking a <c>group</c> argument was used.
+        /// Whether the sub-message is written with group markers rather than a length prefix, or
+        /// <c>null</c> where the constructor taking a <c>group</c> argument was not used, leaving
+        /// the framing to protobuf-net.
         /// </summary>
-        public bool IsGroup { get; }
+        /// <remarks>
+        /// Deliberately three-state: "explicitly length-prefixed" and "not stated" are the same
+        /// thing on the wire today, and a <see cref="bool"/> would make them the same thing in the
+        /// metadata too — which would be a decision, not an omission, if the default ever moves.
+        /// </remarks>
+        public bool? IsGroup { get; }
     }
 }
