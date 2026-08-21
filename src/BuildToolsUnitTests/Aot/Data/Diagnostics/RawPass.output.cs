@@ -259,9 +259,9 @@ partial class RawPassModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Bag>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Chain>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Child>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Order>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
@@ -361,16 +361,62 @@ partial class RawPassModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.RawPass.Chain global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Chain value)
             => RawRead_AotFixtures_RawPass_Chain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Chain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Chain value)
         {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_RawPass_Chain(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_RawPass_Chain(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_RawPass_Chain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Chain value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var tmp1 = value.Inner;
-            state.WriteMessage<global::AotFixtures.RawPass.Holder>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Inner
+                var len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_RawPass_Holder(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Inner");
+            }
+        }
+
+        private static long Measure_AotFixtures_RawPass_Chain(global::AotFixtures.RawPass.Chain value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Inner;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_RawPass_Holder(tmp1, depth, slots);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Chain>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Chain value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_RawPass_Chain(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.RawPass.Chain RawRead_AotFixtures_RawPass_Chain(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Chain value)
@@ -472,19 +518,50 @@ partial class RawPassModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.RawPass.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Holder value)
             => RawRead_AotFixtures_RawPass_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.RawPass.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Holder value)
+            => RawWrite_AotFixtures_RawPass_Holder(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_RawPass_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Lookup;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, string>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString);
             }
+        }
+
+        private static long Measure_AotFixtures_RawPass_Holder(global::AotFixtures.RawPass.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Lookup;
+            if (tmp1 != null)
+            {
+                foreach (var pair1 in tmp1)
+                {
+                    long entry1 = 0;
+                    if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    if (pair1.Value != null) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair1.Value);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Lookup
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.RawPass.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.RawPass.Holder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_RawPass_Holder(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.RawPass.Holder RawRead_AotFixtures_RawPass_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.RawPass.Holder value)

@@ -3449,7 +3449,8 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static bool RawMemberMeasureBlocked(ProtoMemberPlan member, Dictionary<string, ProtoContractPlan> measurable, bool listAsSpan, bool immutableAsSpan)
         {
-            if (member.Map.Factory is not null) return true;
+            // a map's SIZE can be arithmetic even though its write stays on MapSerializer (gap B6)
+            if (member.Map.Factory is not null) return !RawMapMeasurable(member);
             if (member.WrappedValue || member.WrappedCollection) return true;
             // A packed column vets its OWN format - RawPackedWritable admits FixedSize on the
             // integer kinds and ZigZag on the signed ones - so it has to be asked BEFORE the
@@ -3585,6 +3586,69 @@ namespace ProtoBuf.BuildTools.Generators
         /// <see cref="RawScalarWrite"/>, byte for byte. A constant ("1", "4", "8") is returned
         /// as such so the caller can fold it into the tag length.
         /// </summary>
+        /// <summary>
+        /// The kinds a map key or value can be measured arithmetically (gap B6). Deliberately
+        /// narrower than what a map can CONTAIN: messages, enums, BCL types and any non-default
+        /// per-side <c>[ProtoMap]</c> format are excluded from this first cut.
+        /// </summary>
+        private static bool MapSideMeasurable(ProtoMemberKind kind) => kind is
+            ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
+            or ProtoMemberKind.Int16 or ProtoMemberKind.UInt32 or ProtoMemberKind.Byte
+            or ProtoMemberKind.UInt16 or ProtoMemberKind.Char or ProtoMemberKind.Int64
+            or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double
+            or ProtoMemberKind.String;
+
+        /// <summary>
+        /// Whether a map member's size is pure arithmetic, so its contract keeps measure-first.
+        /// The WRITE stays on <c>MapSerializer.WriteMap</c> either way - measure and write
+        /// eligibility are independent, exactly as for a repeated BCL member.
+        /// </summary>
+        private static bool RawMapMeasurable(ProtoMemberPlan member)
+            => member.Map.Factory is not null
+            && !member.WrappedValue && !member.WrappedCollection
+            && member.DataFormat == ProtoDataFormat.Default
+            && member.MapKeyFormat == ProtoDataFormat.Default
+            && member.MapValueFormat == ProtoDataFormat.Default
+            // an enum side is the underlying scalar on the wire but needs a cast to read, and a
+            // message side needs a nested Measure_ with a null slot buffer; both are follow-ups
+            && member.Map.KeyEnumTypeName is null && member.Map.ValueEnumTypeName is null
+            // A REPEATED VALUE (Dictionary<int, List<int>>) is legal - the one place nesting is -
+            // and ValueKind is then the ELEMENT's kind, so the scalar test above says "Int32" for
+            // a List<int> and the measure would emit `pair.Value != 0` against a List<int>. The
+            // corpus caught exactly that. ValueSerializerFactory is the marker: it is set when the
+            // value resolves its serializer from the model, which is what a repeated value does
+            && member.Map.ValueSerializerFactory is null
+            && MapSideMeasurable(member.Map.KeyKind) && MapSideMeasurable(member.Map.ValueKind);
+
+        /// <summary>
+        /// A map entry omits a trivial key or value - <c>KeyValuePairSerializer.Write</c> tests
+        /// <c>HasNonTrivialValue</c> on each side independently - so the measure must too, or a map
+        /// containing a default key or value measures long. Mirrors <see cref="ScalarGuard"/>, and
+        /// note <c>string</c> is non-trivial when merely NON-NULL: an empty string IS written.
+        /// </summary>
+        private static string MapSideGuard(ProtoMemberKind kind, string expression) => kind switch
+        {
+            ProtoMemberKind.Bool => expression,
+            ProtoMemberKind.Single => $"{expression} != 0f",
+            ProtoMemberKind.Double => $"{expression} != 0d",
+            ProtoMemberKind.String => $"{expression} != null",
+            _ => $"{expression} != 0",
+        };
+
+        /// <summary>The payload size of one map side, length prefix included where it has one.</summary>
+        private static string MapSideBody(ProtoMemberKind kind, string expression) => kind switch
+        {
+            ProtoMemberKind.String => $"global::ProtoBuf.ProtoWriter.State.MeasureRawString({expression})",
+            ProtoMemberKind.Bool => "1",
+            ProtoMemberKind.Single => "4",
+            ProtoMemberKind.Double => "8",
+            ProtoMemberKind.UInt32 or ProtoMemberKind.Byte or ProtoMemberKind.UInt16 or ProtoMemberKind.Char
+                => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32({expression})",
+            ProtoMemberKind.UInt64 => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64({expression})",
+            ProtoMemberKind.Int64 => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong){expression}))",
+            _ => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long){expression}))",
+        };
+
         private static string? RawScalarMeasure(ProtoMemberPlan member, string expression) => member.Kind switch
         {
             ProtoMemberKind.Bool => "1",
@@ -3652,6 +3716,38 @@ namespace ProtoBuf.BuildTools.Generators
                 var indent = condition is null ? baseIndent : baseIndent + 1;
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
                 Line(sb, indent, $"var tmp{number} = {MemberAccess(contract, member, "value")};");
+
+                if (member.Map.Factory is not null)
+                {
+                    // A map is a repeated message of key/value entries: per pair the writer emits
+                    // the member's tag, the entry length, then field 1 = key and field 2 = value.
+                    // Both of those tags are one byte for any wire type, since the field numbers
+                    // are 1 and 2 - so only the entry length varies and the rest folds.
+                    //
+                    // The entry is emitted even when EMPTY (tag + 0x00): it is the pair's CONTENTS
+                    // that are conditional, not the pair. KeyValuePairSerializer.Write tests
+                    // HasNonTrivialValue on each side independently, so a default key or value is
+                    // simply absent from the entry - which is why the measure guards each side
+                    // separately rather than measuring both unconditionally. gap B6.
+                    var mapTag = VarintLen((uint)((member.FieldNumber << 3) | 2));
+                    var pair = $"pair{number}";
+                    var entry = $"entry{number}";
+                    Line(sb, indent, $"if (tmp{number} != null)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, $"foreach (var {pair} in tmp{number})");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, $"long {entry} = 0;");
+                    Line(sb, indent + 2, $"if ({MapSideGuard(member.Map.KeyKind, $"{pair}.Key")}) "
+                        + $"{entry} += 1 + {MapSideBody(member.Map.KeyKind, $"{pair}.Key")};");
+                    Line(sb, indent + 2, $"if ({MapSideGuard(member.Map.ValueKind, $"{pair}.Value")}) "
+                        + $"{entry} += 1 + {MapSideBody(member.Map.ValueKind, $"{pair}.Value")};");
+                    Line(sb, indent + 2, $"len += {mapTag} + global::ProtoBuf.ProtoWriter.State"
+                        + $".MeasureRawVarint64((ulong){entry}) + {entry};  // {member.Name}");
+                    Line(sb, indent + 1, "}");
+                    Line(sb, indent, "}");
+                    if (condition is not null) Line(sb, baseIndent, "}");
+                    continue;
+                }
 
                 if (member.Repeated.Factory is not null)
                 {
