@@ -2924,9 +2924,33 @@ value is precisely the case where `""` is defensible while `string?` must stay `
 this a place where the generator can legitimately be *better* rather than merely different — but it
 has to be a deliberate, annotated decision, not the current accident of an initialiser.
 
-**Decision owed** before this is "fixed": match the runtime model unconditionally (`default`), or
-key the seed on the declared nullability. The second needs the nullable annotation threaded into the
-map plan, and needs deciding what an *unannotated* context does.
+**DECIDED (Marc, 2026-08-21): `string` seeds `""`, `string?` seeds `null`** — never hand a null back
+through a non-nullable declaration, and keep `null` where the consumer said it was expressible. A
+scope-bound AOT-only configuration attribute is the escape hatch if it later needs more nuance;
+not built until it does.
+
+**Two things found while checking that, both of which change the work:**
+
+- **the `""` seed is unique to maps.** Across the goldens, `string k/v = ""` appears **only** in map
+  key and value locals; every ordinary member and tuple argument uses `default`. So this is not the
+  generator taking a considered proto3 position — it is one path disagreeing with the rest of the
+  generator. Whatever is decided should apply *uniformly*, and the map is the odd one out to bring
+  into line rather than the precedent to follow;
+- **the KEY is seeded the same way** (`string k2 = ""`), not just the value, so the decision governs
+  both sides.
+
+**The consequence that has to be weighed before building it:** the nullability-aware behaviour is a
+*deliberate divergence from `RuntimeTypeModel`*, which always yields `null`. The whole gate battery
+is "match ref-emit", so for a non-nullable `Dictionary<int, string>` the differential's line-70
+round-trip would fail by design — generated reads `""`, reference re-serializes it as `12-00`, and
+the reference's own bytes have no such field. That is reachable from any peer sending an entry with
+a missing value, not merely from malformed local data.
+
+So adopting it means teaching the harnesses about an intended divergence, which is a real change to
+what the gates *mean*. The cheaper intermediate, if that is unwelcome: seed `default` everywhere,
+which makes maps consistent with the rest of the generator **and** with the runtime model, and treat
+the nullability-aware behaviour as a separate, opt-in improvement once the harness question is
+settled.
 
 
 ## C. Schema front-end (`[ProtoSchema]`)
