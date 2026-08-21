@@ -3528,7 +3528,10 @@ namespace ProtoBuf.BuildTools.Generators
         {
             // a map's SIZE can be arithmetic even though its write stays on MapSerializer (gap B6)
             if (member.Map.Factory is not null) return !RawMapMeasurable(member);
-            if (member.WrappedValue || member.WrappedCollection) return true;
+            // a LONE wrapped value can be measured arithmetically (gap B42) even though its
+            // write stays on WriteAny; wrapped COLLECTIONS and MAPS have not been derived
+            if (member.WrappedCollection) return true;
+            if (member.WrappedValue) return !WrappedValueMeasurable(member);
             // A packed column vets its OWN format - RawPackedWritable admits FixedSize on the
             // integer kinds and ZigZag on the signed ones - so it has to be asked BEFORE the
             // blanket non-default-format block below, or those two are refused there and never
@@ -3754,6 +3757,57 @@ namespace ProtoBuf.BuildTools.Generators
         /// One member's contribution to <c>len</c>, tag length folded as a literal; the payload
         /// half comes from <see cref="RawScalarMeasure"/> or the caller's own expression.
         /// </summary>
+        /// <summary>
+        /// The test a lone <c>[NullWrappedValue]</c>'s INNER field is written under, or null where
+        /// it is written unconditionally. Mirrors <c>IValueChecker&lt;T&gt;.HasNonTrivialValue</c>,
+        /// which is what <c>WriteAny</c> consults - not the member's own write guard, which
+        /// disagrees for enums.
+        /// </summary>
+        /// <remarks>
+        /// The reference kinds return null because the OUTER guard has already established
+        /// non-null, and their checker is exactly "is not null" - so an empty string writes an
+        /// empty inner field rather than nothing, which is protobuf-net's documented
+        /// write-<c>""</c>-for-compat behaviour and the one case a naive `!= default` gets wrong.
+        /// </remarks>
+        private static string? WrappedTrivialTest(ProtoMemberPlan member, string value)
+        {
+            // An ENUM's inner field is written even when zero: EnumSerializer supplies no
+            // IValueChecker, so the "non-null is non-trivial" default applies. Probed - `enum? Zero`
+            // is 0A-02-08-00 where `int? 0` is 0A-00 - and it is the one case where the member's own
+            // write guard (`!= default`) would have been the wrong rule to reuse.
+            if (member.EnumTypeName is not null) return null;
+            return member.Kind switch
+        {
+            ProtoMemberKind.Bool => value,
+            ProtoMemberKind.SByte or ProtoMemberKind.Byte or ProtoMemberKind.Int16
+                or ProtoMemberKind.UInt16 or ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 or ProtoMemberKind.Char
+                or ProtoMemberKind.Single or ProtoMemberKind.Double => $"{value} != 0",
+            // the reference kinds: the outer guard has settled non-null, and their checker is
+            // exactly that - so "" and [] write a present, empty inner field, for compat
+            ProtoMemberKind.String or ProtoMemberKind.Bytes => null,
+            _ => throw new InvalidOperationException($"no wrapped-value trivial test for {member.Kind}"),
+            };
+        }
+
+        /// <summary>
+        /// Whether a lone <c>[NullWrappedValue]</c> member has an arithmetic measure. Deliberately
+        /// a SHORT list: the wire shape here was established by probing, and every kind on it has
+        /// been probed. An enum is excluded because its inner field is written even when zero -
+        /// <c>EnumSerializer</c> supplies no <c>IValueChecker</c>, so the default "non-null is
+        /// non-trivial" applies - and admitting it on the strength of the numeric arm would emit a
+        /// short prefix for exactly the zero case. Anything else stays blocked, which costs only
+        /// the classic write path it already had.
+        /// </summary>
+        private static bool WrappedValueMeasurable(ProtoMemberPlan member)
+            => member.WrappedValue
+            && member.Repeated.Factory is null && member.Map.Factory is null
+            && member.Kind is ProtoMemberKind.Bool or ProtoMemberKind.SByte or ProtoMemberKind.Byte
+                or ProtoMemberKind.Int16 or ProtoMemberKind.UInt16 or ProtoMemberKind.Int32
+                or ProtoMemberKind.UInt32 or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64
+                or ProtoMemberKind.Char or ProtoMemberKind.Single or ProtoMemberKind.Double
+                or ProtoMemberKind.String or ProtoMemberKind.Bytes;
+
         private static string MeasureAdd(ProtoMemberPlan member, int wire, string payload)
         {
             var tagLen = VarintLen((uint)((member.FieldNumber << 3) | wire));
@@ -3886,6 +3940,58 @@ namespace ProtoBuf.BuildTools.Generators
                             RawRepeatedMessageTarget(member, measurable));
                     }
                     if (repeatedGuard) Line(sb, indent, "}");
+                    goto measured;
+                }
+
+                // A LONE [NullWrappedValue] (gap B42). The write is one stateful WriteAny call and
+                // stays that way; only the SIZE has to be arithmetic, which is the recurring point
+                // that measure and write eligibility are independent.
+                //
+                // The shape was PROBED rather than derived, and two of the four answers are not
+                // what the ordinary write guards would predict:
+                //   int? 0    -> 0A-00        (wrapper present, inner OMITTED)
+                //   int? 1    -> 0A-02-08-01
+                //   string "" -> 0A-02-0A-00  (inner PRESENT: "we write "" for compat")
+                //   enum? 0   -> 0A-02-08-00  (inner PRESENT - which is why enums stay blocked)
+                // ...so the inner field follows IValueChecker<T>.HasNonTrivialValue, which is
+                // `!= 0` for the numeric kinds, the value itself for bool, and `is not null` for
+                // the reference ones - NOT the member's own write guard, which differs for enums.
+                // The group form replaces the length prefix with a start/end tag pair: 0B-0C for
+                // an empty body, 0B-08-01-0C otherwise.
+                if (member.WrappedValue && member.Repeated.Factory is null && member.Map.Factory is null)
+                {
+                    var wrapGuard = member.IsNullable ? $"tmp{number}.HasValue" : $"tmp{number} != null";
+                    Line(sb, indent, $"if ({wrapGuard})");
+                    Line(sb, indent, "{");
+                    var wrapValue = $"tmp{number}";
+                    if (member.IsNullable)
+                    {
+                        wrapValue = $"val{number}";
+                        Line(sb, indent + 1, $"var {wrapValue} = tmp{number}.GetValueOrDefault();");
+                    }
+                    var inner = $"wrap{number}";
+                    // The inner field is number 1 whatever the outer member is, so its tag is one
+                    // byte and folds into the constant. A STRING has no RawScalarMeasure arm - it
+                    // has its own helper, which already includes the payload's own length prefix,
+                    // so `1 + MeasureRawString(x)` is the whole inner field. Missing that emitted
+                    // `long wrapN = 1 + ;` - the same `!`-turns-null-into-nothing trap AGENTS.md
+                    // records for the three scalar branches, in a fourth place.
+                    var innerBody = member.Kind switch
+                    {
+                        ProtoMemberKind.String
+                            => $"1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString({wrapValue})",
+                        ProtoMemberKind.Bytes
+                            => $"1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){wrapValue}.Length) + {wrapValue}.Length",
+                        _ => $"1 + {RawScalarMeasure(member, ScalarValue(member, wrapValue))!}",
+                    };
+                    Line(sb, indent + 1, WrappedTrivialTest(member, wrapValue) is { } trivial
+                        ? $"long {inner} = {trivial} ? {innerBody} : 0;"
+                        : $"long {inner} = {innerBody};");
+                    Line(sb, indent + 1, member.WrappedValueGroup
+                        ? MeasureAddGroup(member, inner)
+                        : MeasureAdd(member, 2, $"global::ProtoBuf.ProtoWriter.State"
+                            + $".MeasureRawVarint64((ulong){inner}) + {inner}"));
+                    Line(sb, indent, "}");
                     goto measured;
                 }
 

@@ -2936,7 +2936,8 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | what | gap? | tracked |
 | --- | --- | --- |
 | **maps** (any `Map.Factory`) | **yes, and common** | **B6** |
-| **null-wrapping** (`[NullWrappedValue]`, `[NullWrappedCollection]`) | **yes** | *untracked before this* |
+| **null-wrapping** — lone `[NullWrappedValue]` | **DONE 2026-08-22** | below |
+| **null-wrapping** — collections and maps | **yes, still** | below |
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
 | ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
@@ -2974,6 +2975,45 @@ to `ReadOnlyMemory<byte>`, so one cast serves all of them and no type spelling h
 (`DeclaredTypeName` is no help: it is populated only for tuple read locals.) `Bytes.output.cs` went
 from **zero** `Measure_` occurrences to two — that contract had no arithmetic measure at all.
 
+**Null-wrapping — the LONE form is measurable, 2026-08-22; collections and maps are not.** The
+write stays on `WriteAny` and always will — the extra message layer is not expressible as features
+on an ordinary write — but the *size* is arithmetic, which is the same measure-vs-write independence
+that B6 turned on for maps.
+
+**The wire shape was PROBED, and three of the answers contradict what the ordinary write guards
+would predict.** A lone wrapper's inner field follows `IValueChecker<T>.HasNonTrivialValue`, which is
+*not* the member's own write guard:
+
+| | bytes | inner field |
+| --- | --- | --- |
+| `int? 0` | `0A-00` | **omitted** |
+| `int? 1` | `0A-02-08-01` | present |
+| `string ""` | `0A-02-0A-00` | **present** — protobuf-net writes `""` for compat |
+| `byte[] []` | same shape | **present**, same reason |
+| `enum? Zero` | `0A-02-08-00` | **present** — `EnumSerializer` supplies no checker, so the default "non-null is non-trivial" applies |
+| `int? 0`, `AsGroup` | `0B-0C` | omitted, and no length prefix — a start/end tag pair |
+
+So reusing the member's `!= default` guard would have been right for the numeric kinds and wrong for
+enums, in exactly the zero case; and reusing `!= null` would have been wrong for every numeric zero.
+`WrappedTrivialTest` mirrors the checker instead, and throws for any kind not on the probed list —
+the generator's usual "slipped eligibility" self-check rather than a silent short prefix.
+
+`WrapMeasure.input.cs` exists because `Wrapped.input.cs` **cannot** cover this: it also carries
+wrapped collections and maps, and one blocked member takes the whole contract. Its samples put every
+wrapper present with every inner value trivial, which is the single case where all three candidate
+rules disagree, and a field past 15 so a folded-tag mistake shows up as a two-byte tag.
+
+A `string` needed its own arm: it has no `RawScalarMeasure` entry, and `MeasureRawString` already
+includes the payload's own length prefix. Missing that emitted `long wrapN = 1 + ;` — the fourth
+place the `!`-turns-null-into-nothing trap has bitten, and again the goldens caught it rather than
+review.
+
+Still blocked, and untracked beyond this line: **wrapped collections and wrapped maps**
+(`[NullWrappedValue]` on a collection/map, and `[NullWrappedCollection]` in either scope). Those are
+pure features composition on the write, so the size is derivable in principle — the element form
+adds `OptionWrappedValueFieldPresence`, which means the inner field is written *even when trivial*,
+i.e. **the opposite of the lone rule above** and a separate arm rather than a reuse of this one.
+
 #### Ranked, for "what next"
 
 1. **inheritance** (B41) — worst blast radius, and `[ProtoSubType]` just made it reachable from
@@ -2981,7 +3021,8 @@ from **zero** `Measure_` occurrences to two — that contract had no arithmetic 
 2. **maps** (B6) — the most *common* shape on this list by some distance;
 3. **surrogates** — untracked until now, and a surrogated contract is ordinary enough in real
    models (`DateTimeOffset`, NodaTime) that this is likely hit more than its absence here suggests;
-4. **null-wrapping** — a whole feature area with no measure story;
+4. ~~**null-wrapping**~~ — the lone form is done; the COLLECTION and MAP forms remain, and note
+   their element rule is the *inverse* of the lone one (field presence);
 5. **contract-level `IsGroup`** — cheap to establish, possibly free to fix, possibly backwards in
    the same way B35 was;
 6. the two narrow ones (nullable-struct message, value-type bytes) — fixture-sized, not features.
