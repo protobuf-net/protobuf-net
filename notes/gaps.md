@@ -2221,7 +2221,7 @@ The thing to avoid is the reflex of "a warning appeared, soften the analyzer". W
 deliberately contradictory, suppress at the fixture and say why in a comment; where it is *not*, the
 analyzer has found something and the fixture is wrong.
 
-### B38. Length-prefixed writes lag Google.Protobuf on wide graphs — **ISOLATED 2026-08-21: it is the `RawLengths` dictionary, worth 1.7×–2.8×**
+### B38. ~~Length-prefixed writes lag Google.Protobuf on wide graphs~~ — **BUILT 2026-08-21: positional length transport, 1.3×–2.3×, and wide-512 now leads Google**
 
 Marc, 2026-08-21: *"iirc there's still some scenarios in the tables where we lag Google.Protobuf -
 from memory, serialize prefixed?"* Correct, and `docs/delimited.md` concedes it in its own closing
@@ -2422,6 +2422,54 @@ looks obviously right until checked, and the first was offered here before it wa
 **The ordered array needs no framework API whatsoever**, so unlike either partial it carries **no TFM
 condition** and helps a netstandard2.0 or net472 consumer exactly as much as a net10 one. Given the
 partials are dead, it is this or nothing.
+
+**BUILT AND VERIFIED, 2026-08-21.** `ProtoBuf.RawLengthBuffer` replaces the dictionary on the
+generated raw path. Measured on the **public** path (`model.Serialize` to an `IBufferWriter`), so
+like-for-like with Google's `value.WriteTo`:
+
+| shape, n | was | now | gain | Google | vs Google |
+| --- | ---: | ---: | ---: | ---: | --- |
+| wide, 8 | 214 | 168 | 1.28× | 97 | 1.73× behind |
+| wide, 64 | 1,173 | 696 | 1.68× | 664 | 1.05× behind |
+| wide, 512 | 9,091 | 5,150 | 1.77× | 5,179 | **ours** |
+| deep, 8 | 226 | 146 | 1.55× | 112 | 1.30× behind |
+| deep, 64 | 1,636 | 757 | 2.16× | 6,174 | **8× ours** |
+| deep, 512 | 14,044 | 6,034 | 2.33× | ~788,000 | **130× ours** |
+
+The remaining small-payload gap is **B39**, not this: fixed writer setup plus `Serialize<T>`
+dispatch, neither of which the length machinery touches.
+
+**Three things were got wrong on the way, every one caught by a gate rather than by reading**, and
+none of them predictable from the design. They are the durable content of this entry:
+
+1. **Measure-eligibility is WIDER than write-eligibility.** The measure arm takes anything in
+   `measurable`; the write arm additionally refuses a nullable member, a non-default `DataFormat`,
+   and more. Under a dictionary that asymmetry was free — an entry nobody read cost nothing.
+   Positionally, a slot nobody consumes shifts every later length. A sub-tree the write will not
+   walk is now measured with a **null buffer**, which suppresses reservation all the way down.
+2. **A contract can be raw-WRITING without being MEASURABLE**, in which case nothing has filled its
+   slots and each site must measure on demand — exactly what the dictionary's `TryGetValue` *miss*
+   did ("the miss arm serves a root write"). Removing the probe removed that arm. It is a
+   compile-time question, so the emitter asks whether the *enclosing* contract is measurable.
+3. **A grouped sub-message consumes no slot**, and a fully-grouped tree consumes none at all, so it
+   must not be given a measure prologue. Emitting one unconditionally cost **2,453 ns → 3,934 ns**
+   on a 512-wide grouped graph — quietly undoing B35. The prologue is gated on a transitive
+   slot-consumer set.
+
+Points 2 and 3 are why **the slot belongs to the CALL SITE, not to the contract being measured**: a
+slot is reserved exactly where the write calls `Next()`, one for one, in order. The first draft had
+`Measure_` claim a slot for itself, which cannot express "measured but not read".
+
+**Gates:** `AotConformanceTests` 1709/1709; corpus differential **3123 compared, 0 differ**; goldens
+624/624; `protobuf-net.Test`, `Examples` and `protobuf-net.Reflection.Test` on net8.0 *and* net472;
+the "Generated model drift" CI gate clean; native publish **19 IL warnings, the recorded baseline**,
+passing; and `AotSmoke -c Debug`, where `DebugAssertPosition` checks every length-prefixed write
+against the bytes actually written — the sharpest available test of a positional scheme.
+
+**One measurement still owed:** delimited reads ~4% (wide) and ~7% (deep) above its pre-change
+figure. The grouped path emits identical code, so this is most likely run-to-run variance between
+sessions rather than a regression — but it was not measured in the same session, so it is recorded
+as unconfirmed rather than dismissed.
 
 **The edit list, enumerated from the source rather than estimated** (14 sites; the slot layout above
 is what keeps it this small):
