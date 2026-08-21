@@ -2885,58 +2885,50 @@ throughput, and the reason to care is that the write path is where v4's gains ar
 and wide-512 overtaking Google.Protobuf).
 
 
-### B43. A NULL MAP VALUE does not round-trip in protobuf-net — **diagnosis NOT settled; two wrong calls recorded**
+### B43. ~~A null map value diverges~~ — **SETTLED 2026-08-21: null is not REPRESENTABLE in a map; the generator was right all along**
 
-Found by the adversarial samples written for B6's fixture. `Dictionary<int, string> { [7] = null }`
-serializes to `0A-02-08-07` — the entry carries the key only, the null value omitted — and does not
-come back as it went in.
+Found by the adversarial samples written for B6's fixture, then diagnosed wrongly twice from the
+harness, then settled in twenty lines by running the thing directly. `RuntimeTypeModel` alone, no
+generator anywhere near it:
 
-**I have diagnosed this twice and been wrong twice. Both are recorded, because the reasoning that
-produced them looked sound each time and the next person deserves the shape of the trap rather than
-a confident answer.**
+```
+write(null value)      -> 0A-02-08-07
+read back              -> Map[7] is "" (length 0)      <-- the RUNTIME reader yields ""
+write(round-tripped)   -> 0A-04-08-07-12-00
+*** NOT ROUND-TRIP STABLE ***
 
-- **First call: "the generated model writes different bytes."** Wrong. `DifferentialTests` line 62
-  compares the two serializations and **passes** — both engines write byte-identical output. I had
-  read a failing line number off a stack trace without checking which assertion it was.
-- **Second call: "the generated reader seeds `""` where the runtime gives `null`; v4's bug."** Also
-  wrong, and this one produced a change I had to back out. The generated reader does seed `""`
-  (`string v1 = "";`, the generator's only such place — everything else uses `default`). Changing it
-  to `default` made line 70 pass **and line 71 fail** — and line 71 is
-  `Serialize(runtime, Deserialize(runtime, generatedBytes))`, i.e. **the runtime model reading its
-  own bytes**. So the runtime path *also* yields a non-null value for a missing side, and the
-  generator's `""` was matching it. Seeding `default` made the generated reader diverge from the
-  runtime one, which is the opposite of the intent.
+write(empty string)    -> 0A-04-08-07-12-00            <-- identical to the re-write above
+```
 
-**Where that leaves it.** The shipped `""` is restored; the whole battery is green. What is
-established:
+**The conclusion, and it is not a bug to fix.** `null` and `""` *are* distinguishable on the wire —
+an omitted value field versus a present zero-length one — but they **collapse on read**, because the
+reader has to produce *something* and produces `""`. So a null map value is **not representable**:
+protobuf-net writes it losslessly-looking and reads it back as an empty string, and no change to the
+generator can alter that, because the behaviour is entirely in the runtime path.
 
-- both engines **write** identically (line 62 passes throughout);
-- a null map value is **not round-trip stable in protobuf-net at all** — write omits, read yields
-  something that re-serializes as `12-00`;
-- that behaviour is present on the **runtime** path, so it is not something the AOT generator
-  introduced.
+**Which settles "v3 core or v4 new bits" the other way from my second answer: neither.** It is not a
+defect at all, it is what the map encoding can express. And the generated reader's `string v1 = "";`
+— the generator's only such seed, everything else using `default` — is **exactly correct**: it
+matches what the runtime reader yields. My "fix" to `default` would have made the generated reader
+the odd one out, and was backed out.
 
-What is **not** established is the mechanism. `KeyValuePairSerializer.Read` seeds
-`TValue value = pair.Value` — `default`, i.e. null — so on a straight reading the runtime should
-yield null and line 71 should pass. It does not. Something between `ReadMap` and that seeding is
-responsible and I have not found it.
+**Two wrong calls, both from the same mistake**, kept because the reasoning looked sound each time:
+first "the generated model writes different bytes" (line 62 compares serializations and *passes*),
+then "the generated reader seeds `""` where the runtime gives `null`" (line 71 is the runtime model
+reading its *own* bytes, and it fails). Both came from inferring behaviour from **which assertion
+fired**. The twenty-line reproduction settled in one run what two rounds of harness archaeology got
+backwards. Reach for it sooner.
 
-**Next step is a standalone reproduction, not more harness archaeology.** Twenty lines: build the
-dictionary, serialize with `RuntimeTypeModel`, deserialize, inspect whether the value is `null` or
-`""`, re-serialize, dump both byte streams. Both of my wrong calls came from inferring behaviour
-from which assertion fired; that is exactly what a direct observation replaces.
+**Marc's nullability idea survives, but the question it answers is sharper now.** For
+`Dictionary<int, string>` the runtime's `""` is already right and already matches. The interesting
+case is `Dictionary<int, string?>`, where the consumer has *declared* null expressible and the wire
+cannot represent it — so the options are to preserve null in the generated reader (a deliberate,
+harness-visible divergence from the runtime model, for a shape the wire cannot round-trip anyway),
+or to say so at build time. That is a real design question, and a better one than "which literal
+goes in the initialiser". A scope-bound AOT-only configuration attribute remains the escape hatch.
 
-**Decision already taken for whenever the mechanism is known** (Marc, 2026-08-21): `string` seeds
-`""`, `string?` seeds `null` — never hand a null back through a non-nullable declaration, keep
-`null` where the consumer said it was expressible. The generator can tell those apart and the
-runtime cannot, which makes this somewhere the AOT model may legitimately be *better* rather than
-merely different. A scope-bound AOT-only configuration attribute is the escape hatch if it needs
-more nuance; not built until it does. **Note this is a deliberate divergence from the runtime
-model**, so it also needs the harnesses taught about it — the gates currently mean "match ref-emit"
-without exception.
-
-**The B6 fixture excludes the null sample**, with a comment pointing here, so the gate stays green: a
-permanently-red gate teaches people to ignore the gate.
+**The B6 fixture excludes the null sample** with a comment pointing here — not because the behaviour
+is wrong, but because a sample neither engine can round-trip pins nothing.
 
 
 ## C. Schema front-end (`[ProtoSchema]`)
