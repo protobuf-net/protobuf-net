@@ -161,10 +161,59 @@ partial class WrapMeasureModel
         }
     }
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.WrapMeasure.Leaf value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.WrapMeasure.Leaf>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.WrapMeasure.Leaf value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.WrapMeasure.Leaf>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrapMeasure.Boxed>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrapMeasure.Carton>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrapMeasure.Crate>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrapMeasure.Leaf>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrapMeasure.Tint>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrapMeasure.Tint?>
     {
@@ -599,7 +648,16 @@ partial class WrapMeasureModel
             => RawRead_AotFixtures_WrapMeasure_Crate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Crate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrapMeasure.Crate value)
-            => RawWrite_AotFixtures_WrapMeasure_Crate(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_WrapMeasure_Crate(value, state.RawDepthBudget, slots, state.Context);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_WrapMeasure_Crate(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_WrapMeasure_Crate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrapMeasure.Crate value, int depth)
         {
@@ -651,6 +709,26 @@ partial class WrapMeasureModel
                 state.WriteRawTag((9 << 3) | 0);  // Trailer
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp9));
             }
+            var tmp10 = value.Parts;
+            if (tmp10 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 10, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp10, Self);
+            }
+            var tmp11 = value.GroupedParts;
+            if (tmp11 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 11, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp11, Self);
+            }
+            var tmp12 = value.Bundle;
+            if (tmp12 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 12, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp12, Self);
+            }
+            var tmp13 = value.BundledParts;
+            if (tmp13 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().WriteRepeated(ref state, 13, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp13, Self);
+            }
             var tmp21 = value.Far;
             if (tmp21 != null)
             {
@@ -662,6 +740,7 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.Counts;
             if (tmp1 != null)
             {
@@ -742,6 +821,62 @@ partial class WrapMeasureModel
             }
             var tmp9 = value.Trailer;
             if (tmp9 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp9));  // Trailer
+            var tmp10 = value.Parts;
+            if (tmp10 != null)
+            {
+                foreach (var item10 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp10))
+                {
+                    long wrap10 = 0;
+                    if (item10 is not null)
+                    {
+                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item10, depth, null, context);
+                        wrap10 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                    }
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap10) + wrap10;
+                }
+            }
+            var tmp11 = value.GroupedParts;
+            if (tmp11 != null)
+            {
+                foreach (var item11 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp11))
+                {
+                    long wrap11 = 0;
+                    if (item11 is not null)
+                    {
+                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item11, depth, null, context);
+                        wrap11 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                    }
+                    len += 2 + wrap11;
+                }
+            }
+            var tmp12 = value.Bundle;
+            if (tmp12 != null)
+            {
+                long col12 = 0;
+                foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
+                {
+                    if (item12 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.WrapMeasure.Leaf>();
+                    sub = Measure_AotFixtures_WrapMeasure_Leaf(item12, depth, null, context);
+                    col12 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                }
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col12) + col12;  // Bundle (wrapped collection)
+            }
+            var tmp13 = value.BundledParts;
+            if (tmp13 != null)
+            {
+                long col13 = 0;
+                foreach (var item13 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp13))
+                {
+                    long wrap13 = 0;
+                    if (item13 is not null)
+                    {
+                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item13, depth, null, context);
+                        wrap13 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                    }
+                    col13 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap13) + wrap13;
+                }
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col13) + col13;  // BundledParts (wrapped collection)
+            }
             var tmp21 = value.Far;
             if (tmp21 != null)
             {
@@ -884,6 +1019,58 @@ partial class WrapMeasureModel
                     case (9 << 3) | 1:  // Trailer, field 9, fixed64
                         value.Trailer = checked((int)unchecked((long)state.ReadRawFixed64()));
                         break;
+                    // raw read pass: legacy-mode - member Parts: null-wrapped
+                    case (10 << 3) | 0:
+                    case (10 << 3) | 1:
+                    case (10 << 3) | 2:  // Parts, field 10
+                    case (10 << 3) | 3:
+                    case (10 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp10 = value.Parts;
+                        tmp10 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp10, s_default);
+                        if (tmp10 != null) value.Parts = tmp10;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member GroupedParts: null-wrapped
+                    case (11 << 3) | 0:
+                    case (11 << 3) | 1:
+                    case (11 << 3) | 2:  // GroupedParts, field 11
+                    case (11 << 3) | 3:
+                    case (11 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp11 = value.GroupedParts;
+                        tmp11 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueGroup | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp11, s_default);
+                        if (tmp11 != null) value.GroupedParts = tmp11;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member Bundle: null-wrapped
+                    case (12 << 3) | 0:
+                    case (12 << 3) | 1:
+                    case (12 << 3) | 2:  // Bundle, field 12
+                    case (12 << 3) | 3:
+                    case (12 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp12 = value.Bundle;
+                        tmp12 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp12, s_default);
+                        if (tmp12 != null) value.Bundle = tmp12;
+                        break;
+                    }
+                    // raw read pass: legacy-mode - member BundledParts: null-wrapped
+                    case (13 << 3) | 0:
+                    case (13 << 3) | 1:
+                    case (13 << 3) | 2:  // BundledParts, field 13
+                    case (13 << 3) | 3:
+                    case (13 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp13 = value.BundledParts;
+                        tmp13 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.WrapMeasure.Leaf>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedCollection, tmp13, s_default);
+                        if (tmp13 != null) value.BundledParts = tmp13;
+                        break;
+                    }
                     // raw read pass: legacy-mode - member Far: null-wrapped
                     case (21 << 3) | 0:
                     case (21 << 3) | 1:
@@ -907,7 +1094,76 @@ partial class WrapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 21;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 21;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Leaf>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.WrapMeasure.Leaf global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Leaf>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrapMeasure.Leaf value)
+            => RawRead_AotFixtures_WrapMeasure_Leaf(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Leaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrapMeasure.Leaf value)
+            => RawWrite_AotFixtures_WrapMeasure_Leaf(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_WrapMeasure_Leaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrapMeasure.Leaf value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Id;
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Id
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
+        }
+
+        private static long Measure_AotFixtures_WrapMeasure_Leaf(global::AotFixtures.WrapMeasure.Leaf value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Id;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.WrapMeasure.Leaf>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.WrapMeasure.Leaf value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_WrapMeasure_Leaf(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.WrapMeasure.Leaf RawRead_AotFixtures_WrapMeasure_Leaf(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.WrapMeasure.Leaf value)
+        {
+            value ??= new global::AotFixtures.WrapMeasure.Leaf();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Id, field 1, varint
+                        value.Id = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Id, field 1, fixed32
+                        value.Id = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Id, field 1, fixed64
+                        value.Id = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.WrapMeasure.Tint> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.WrapMeasure.Tint>.Serializer

@@ -21,6 +21,12 @@ namespace AotFixtures.WrapMeasure;
 public enum Tint { None, Deep }
 
 [ProtoContract]
+public class Leaf
+{
+    [ProtoMember(1)] public int Id { get; set; }
+}
+
+[ProtoContract]
 public class Boxed
 {
     [ProtoMember(1), NullWrappedValue] public int? Count { get; set; }
@@ -58,6 +64,16 @@ public class Crate
     // ...and the two together, at different scopes
     [ProtoMember(8), NullWrappedCollection, NullWrappedValue] public List<int?> Both { get; set; }
     [ProtoMember(21), NullWrappedValue] public List<int?> Far { get; set; }
+
+    // MESSAGE elements, which reach the target's own Measure_ with a NULL slot buffer - a wrapped
+    // element is written by the stateful engine, so this sub-tree reserves nothing. An EMPTY
+    // message is the sharp sample: its wrapper is 0A-02-0A-00, i.e. a present inner field over a
+    // zero-length body, where a NULL element is 0A-00
+    [ProtoMember(10), NullWrappedValue] public List<Leaf> Parts { get; set; }
+    [ProtoMember(11), NullWrappedValue(AsGroup = true)] public List<Leaf> GroupedParts { get; set; }
+    [ProtoMember(12), NullWrappedCollection] public List<Leaf> Bundle { get; set; }
+    [ProtoMember(13), NullWrappedCollection, NullWrappedValue] public List<Leaf> BundledParts { get; set; }
+
     [ProtoMember(9)] public int Trailer { get; set; }
 }
 
@@ -93,6 +109,10 @@ public static class WrapMeasureSamples
         new Crate { Counts = [1, null, 0], Grouped = [null, 2, 0], Labels = ["", null, "a"], Shades = [Tint.Deep, null, Tint.None], Far = [null, 7] },
         new Crate { Sizes = [1, 0, 300], GroupedSizes = [0, 4], Names = ["", "bc"] },
         new Crate { Both = [1, null, 0], Trailer = 9 },
+        // an EMPTY message, a null, and a populated one, in every message scope
+        new Crate { Parts = [new Leaf { Id = 7 }, null, new Leaf()], GroupedParts = [new Leaf { Id = 8 }, null] },
+        new Crate { Bundle = [new Leaf { Id = 9 }, new Leaf()], BundledParts = [null, new Leaf { Id = 10 }] },
+        new Crate { Bundle = [], BundledParts = [] },
         new Carton { Packed = new Crate { Counts = [null], Sizes = [] }, Tag = 5 },
     ];
 }
@@ -100,5 +120,6 @@ public static class WrapMeasureSamples
 [ProtoModel]
 [ProtoSerializable(typeof(Boxed))]
 [ProtoSerializable(typeof(Crate))]
+[ProtoSerializable(typeof(Leaf))]
 [ProtoSerializable(typeof(Carton))]
 public partial class WrapMeasureModel : TypeModel { }

@@ -2937,8 +2937,8 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | --- | --- | --- |
 | **maps** (any `Map.Factory`) | **yes, and common** | **B6** |
 | **null-wrapping** — lone `[NullWrappedValue]` | **DONE 2026-08-22** | below |
-| **null-wrapping** — collections, scalar/string elements | **DONE 2026-08-22** | below |
-| **null-wrapping** — message elements, and maps | **yes, still** | below |
+| **null-wrapping** — lone, and both collection scopes | **DONE 2026-08-22** | below |
+| **null-wrapping** — MAPS only | **yes, still** | below |
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
 | ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
@@ -3042,10 +3042,20 @@ Three facts drive the emitter, and only the first was predictable:
 wrong, so the fixture carries a sample with every collection present and empty, beside one with a
 null element in every element-wrapped scope.
 
-Still out, and now the only null-wrapping left: **message elements** and **maps**. A wrapped element
-is written by the stateful engine, so its sub-message lengths do not come from the slot buffer —
-the recursion would have to measure with a null one, which is the nullable-struct shape rather than
-one more arm here. Maps add two-sided wrapping on top of that.
+**Message elements went in on the same pass**, and cost less than the paragraph parking them
+suggested: a wrapped element's payload is `1 + varint(sub) + sub` exactly as a scalar's is
+`1 + payload`, so the only new thing is *where* `sub` comes from. It comes from the target's own
+`Measure_` reached with a **null slot buffer** — the write leaves a wrapped element to the stateful
+engine, which computes its own sub-lengths, so this sub-tree must reserve **nothing** or every later
+length in the payload shifts. Same rule as a nullable-struct sub-message.
+
+The sharp sample is an **empty** message element: `0A-02-0A-00`, a present inner field over a
+zero-length body, where a *null* element is `0A-00`. A measure that treated "empty" and "absent"
+alike would agree with ref-emit on every populated sample and differ only there.
+
+Still out: **maps**, whose wrapping is two-sided — `OptionWrappedValueFieldPresence` rides on the
+map while `OptionWrappedValue` rides on the value features, so the two scopes do not compose the way
+they do for a collection, and it needs its own probe.
 
 #### Ranked, for "what next"
 
@@ -3054,7 +3064,7 @@ one more arm here. Maps add two-sided wrapping on top of that.
 2. **maps** (B6) — the most *common* shape on this list by some distance;
 3. **surrogates** — untracked until now, and a surrogated contract is ordinary enough in real
    models (`DateTimeOffset`, NodaTime) that this is likely hit more than its absence here suggests;
-4. ~~**null-wrapping**~~ — done bar wrapped MESSAGE elements and wrapped maps;
+4. ~~**null-wrapping**~~ — done bar wrapped MAPS;
 5. **contract-level `IsGroup`** — cheap to establish, possibly free to fix, possibly backwards in
    the same way B35 was;
 6. the two narrow ones (nullable-struct message, value-type bytes) — fixture-sized, not features.

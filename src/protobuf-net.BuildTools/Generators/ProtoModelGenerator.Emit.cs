@@ -3535,7 +3535,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (member.WrappedValue || member.WrappedCollection)
             {
                 return member.Repeated.Factory is not null || member.Map.Factory is not null
-                    ? !WrappedRepeatedMeasurable(member)
+                    ? !WrappedRepeatedMeasurable(member, measurable)
                     : !WrappedValueMeasurable(member);
             }
             // A packed column vets its OWN format - RawPackedWritable admits FixedSize on the
@@ -3938,7 +3938,9 @@ namespace ProtoBuf.BuildTools.Generators
                     var body = repeatedGuard ? indent + 1 : indent;
                     if (member.WrappedValue || member.WrappedCollection)
                     {
-                        EmitWrappedRepeatedMeasure(sb, body, member, number, listAsSpan, immutableAsSpan);
+                        EmitWrappedRepeatedMeasure(sb, body, member, number, listAsSpan, immutableAsSpan,
+                            member.Kind == ProtoMemberKind.Message && member.TypeName is { } wrappedTarget
+                                ? measurable[wrappedTarget] : null);
                     }
                     else if (RawPackedWritable(member, listAsSpan, immutableAsSpan))
                     {
@@ -4367,22 +4369,24 @@ namespace ProtoBuf.BuildTools.Generators
         /// pieces, so they share one predicate and one emitter.
         /// </summary>
         /// <remarks>
-        /// Deliberately excludes MESSAGE elements - the write leaves a wrapped element to the
-        /// stateful engine, so its sub-lengths do not come from the slot buffer and the recursion
-        /// would have to measure with a null one, which is a separate shape rather than one more
-        /// arm here. Maps are excluded for the same reason plus their two-sided wrapping. A
-        /// value-type collection is excluded from COLLECTION wrapping specifically: the whole point
-        /// of that scope is telling null from empty, and a struct collection has no null.
+        /// A MESSAGE element is included, and needs the target's own <c>Measure_</c> - reached with
+        /// a <b>null</b> slot buffer, because the write leaves a wrapped element to the stateful
+        /// engine and so consumes no slots. That is the same shape a nullable-struct sub-message
+        /// takes. Maps are still excluded: their wrapping is two-sided. A value-type collection is
+        /// excluded from COLLECTION wrapping specifically - the whole point of that scope is
+        /// telling null from empty, and a struct collection has no null.
         /// </remarks>
-        private static bool WrappedRepeatedMeasurable(ProtoMemberPlan member)
+        private static bool WrappedRepeatedMeasurable(ProtoMemberPlan member,
+            Dictionary<string, ProtoContractPlan> measurable)
             => (member.WrappedValue || member.WrappedCollection)
             && member.Repeated.Factory is not null
             && member.Map.Factory is null
             && member.DataFormat == ProtoDataFormat.Default
             && !member.IsPacked
-            && member.Kind is not ProtoMemberKind.Message
-            && (RawScalarMeasure(member, "x") is not null
-                || member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes)
+            && (member.Kind == ProtoMemberKind.Message
+                ? member.TypeName is not null && measurable.ContainsKey(member.TypeName)
+                : RawScalarMeasure(member, "x") is not null
+                    || member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes)
             && (!member.WrappedCollection || NeedsNullGuard(member));
 
         /// <summary>
@@ -4409,7 +4413,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// </para>
         /// </remarks>
         private static void EmitWrappedRepeatedMeasure(StringBuilder sb, int indent, ProtoMemberPlan member,
-            string number, bool listAsSpan, bool immutableAsSpan)
+            string number, bool listAsSpan, bool immutableAsSpan, ProtoContractPlan? messageTarget)
         {
             // inside a collection wrapper the elements are renumbered to field 1; outside it they
             // keep the member's own number
@@ -4429,6 +4433,16 @@ namespace ProtoBuf.BuildTools.Generators
             var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
             var reference = member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes;
             var scalar = nullableElement ? $"{item}.GetValueOrDefault()" : item;
+            // a MESSAGE element's payload is its own measured body plus that body's length prefix,
+            // and it is not an expression: the recursion has to run under the null test, so this
+            // arm emits statements where the others emit a term
+            if (messageTarget is not null)
+            {
+                EmitWrappedRepeatedMessageElement(sb, indent, member, number, source, item,
+                    messageTarget, elementTag, accumulator);
+                if (member.WrappedCollection) EmitWrappedCollectionTotal(sb, indent, member, accumulator);
+                return;
+            }
             var payload = member.Kind switch
             {
                 ProtoMemberKind.String => $"global::ProtoBuf.ProtoWriter.State.MeasureRawString({item})",
@@ -4463,14 +4477,63 @@ namespace ProtoBuf.BuildTools.Generators
             }
             Line(sb, indent, "}");
 
-            if (member.WrappedCollection)
+            if (member.WrappedCollection) EmitWrappedCollectionTotal(sb, indent, member, accumulator);
+        }
+
+        /// <summary>The collection wrapper itself, once its contents have been summed.</summary>
+        private static void EmitWrappedCollectionTotal(StringBuilder sb, int indent, ProtoMemberPlan member, string accumulator)
+        {
+            var outerTag = VarintLen((uint)((member.FieldNumber << 3) | (member.WrappedCollectionGroup ? 3 : 2)));
+            Line(sb, indent, member.WrappedCollectionGroup
+                ? $"len += {outerTag * 2} + {accumulator};  // {member.Name} (wrapped collection, group)"
+                : $"len += {outerTag} + global::ProtoBuf.ProtoWriter.State"
+                    + $".MeasureRawVarint64((ulong){accumulator}) + {accumulator};  // {member.Name} (wrapped collection)");
+        }
+
+        /// <summary>
+        /// The message-element arm of <see cref="EmitWrappedRepeatedMeasure"/>: the target's own
+        /// measure, under the null test, with a <b>null</b> slot buffer.
+        /// </summary>
+        /// <remarks>
+        /// The null buffer is the load-bearing part. A wrapped element's write goes through the
+        /// stateful repeated engine, which computes its own sub-lengths, so this sub-tree reserves
+        /// NOTHING - reserving here would shift every later length in the payload. Same rule as the
+        /// nullable-struct sub-message; see <c>RawLengthBuffer</c>'s remarks.
+        /// </remarks>
+        private static void EmitWrappedRepeatedMessageElement(StringBuilder sb, int indent, ProtoMemberPlan member,
+            string number, string source, string item, ProtoContractPlan target, int elementTag, string accumulator)
+        {
+            var targetName = Sanitise(member.TypeName!);
+            var canBeNull = !target.DeclaredIsValueType;
+            Line(sb, indent, $"foreach (var {item} in {source})");
+            Line(sb, indent, "{");
+            if (member.WrappedValue)
             {
-                var outerTag = VarintLen((uint)((member.FieldNumber << 3) | (member.WrappedCollectionGroup ? 3 : 2)));
-                Line(sb, indent, member.WrappedCollectionGroup
-                    ? $"len += {outerTag * 2} + {accumulator};  // {member.Name} (wrapped collection, group)"
-                    : $"len += {outerTag} + global::ProtoBuf.ProtoWriter.State"
-                        + $".MeasureRawVarint64((ulong){accumulator}) + {accumulator};  // {member.Name} (wrapped collection)");
+                var inner = $"wrap{number}";
+                Line(sb, indent + 1, $"long {inner} = 0;");
+                if (canBeNull)
+                {
+                    Line(sb, indent + 1, $"if ({item} is not null)");
+                    Line(sb, indent + 1, "{");
+                }
+                var body = canBeNull ? indent + 2 : indent + 1;
+                Line(sb, body, $"sub = Measure_{targetName}({item}, depth, null, context);");
+                Line(sb, body, $"{inner} = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
+                if (canBeNull) Line(sb, indent + 1, "}");
+                Line(sb, indent + 1, member.WrappedValueGroup
+                    ? $"{accumulator} += {elementTag * 2} + {inner};"
+                    : $"{accumulator} += {elementTag} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong){inner}) + {inner};");
             }
+            else
+            {
+                if (canBeNull)
+                {
+                    Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
+                }
+                Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, null, context);");
+                Line(sb, indent + 1, $"{accumulator} += {elementTag} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
+            }
+            Line(sb, indent, "}");
         }
 
         /// <summary>
