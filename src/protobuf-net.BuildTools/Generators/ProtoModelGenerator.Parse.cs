@@ -224,6 +224,7 @@ namespace ProtoBuf.BuildTools.Generators
                     annotateTrimming: SupportsTrimAnnotations(compilation), enums: new(enumPlans),
                     aliases: new(DeclaredAliases(compilation).ToArray()),
                     emitInstance: CanEmitInstance(model),
+                    emitTypedSerialize: !model.GetMembers("Serialize").Any(),
                     // hiding the constructor only makes sense alongside something to use instead,
                     // and only when they have not written one themselves - a declared constructor is
                     // both the opt-out and the way to keep `new` working

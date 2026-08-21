@@ -17,6 +17,126 @@ partial class NonPublicCtorModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.NonPublicCtor.Holder value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.Holder>(value, GetSerializer<global::AotFixtures.NonPublicCtor.Holder>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.NonPublicCtor.Holder value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.Holder>(value, GetSerializer<global::AotFixtures.NonPublicCtor.Holder>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.NonPublicCtor.InternalCtor value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.InternalCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.NonPublicCtor.InternalCtor value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.InternalCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.NonPublicCtor.PrivateCtor value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.PrivateCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.NonPublicCtor.PrivateCtor value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.PrivateCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.NonPublicCtor.ProtectedCtor value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.ProtectedCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.NonPublicCtor.ProtectedCtor value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.NonPublicCtor.ProtectedCtor>(value, GetSerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.NonPublicCtor.InternalCtor>
@@ -166,16 +286,7 @@ partial class NonPublicCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.InternalCtor>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.InternalCtor value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_NonPublicCtor_InternalCtor(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_NonPublicCtor_InternalCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.InternalCtor value, int depth)
         {
@@ -240,16 +351,7 @@ partial class NonPublicCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.PrivateCtor>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.PrivateCtor value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_NonPublicCtor_PrivateCtor(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_NonPublicCtor_PrivateCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.PrivateCtor value, int depth)
         {
@@ -319,16 +421,7 @@ partial class NonPublicCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.NonPublicCtor.ProtectedCtor>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.ProtectedCtor value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_NonPublicCtor_ProtectedCtor(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_NonPublicCtor_ProtectedCtor(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.ProtectedCtor value, int depth)
         {

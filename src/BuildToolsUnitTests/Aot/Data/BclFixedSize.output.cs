@@ -17,6 +17,66 @@ partial class BclFixedSizeModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, (global::System.DateTime, global::System.TimeSpan) value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<(global::System.DateTime, global::System.TimeSpan)>(value, GetSerializer<(global::System.DateTime, global::System.TimeSpan)>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, (global::System.DateTime, global::System.TimeSpan) value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<(global::System.DateTime, global::System.TimeSpan)>(value, GetSerializer<(global::System.DateTime, global::System.TimeSpan)>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.BclFixedSize.Fixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.BclFixedSize.Fixed>(value, GetSerializer<global::AotFixtures.BclFixedSize.Fixed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.BclFixedSize.Fixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.BclFixedSize.Fixed>(value, GetSerializer<global::AotFixtures.BclFixedSize.Fixed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<(global::System.DateTime, global::System.TimeSpan)>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.BclFixedSize.Fixed>
@@ -80,13 +140,7 @@ partial class BclFixedSizeModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(global::System.DateTime, global::System.TimeSpan)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (global::System.DateTime, global::System.TimeSpan) value)
-        {
-            var slots = state.RawSlots;
-            var entry = slots.Mark();
-                Measure__global__System_DateTime__global__System_TimeSpan_(value, state.RawDepthBudget, slots);
-            slots.SeekTo(entry);
-            RawWrite__global__System_DateTime__global__System_TimeSpan_(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite__global__System_DateTime__global__System_TimeSpan_(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite__global__System_DateTime__global__System_TimeSpan_(ref global::ProtoBuf.ProtoWriter.State state, (global::System.DateTime, global::System.TimeSpan) value, int depth)
         {

@@ -17,6 +17,186 @@ partial class UnlinkedModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Unlinked.Derived value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Derived>(value, GetSerializer<global::AotFixtures.Unlinked.Derived>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Unlinked.Derived value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Derived>(value, GetSerializer<global::AotFixtures.Unlinked.Derived>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Unlinked.ForkedBase value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.ForkedBase>(value, GetSerializer<global::AotFixtures.Unlinked.ForkedBase>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Unlinked.ForkedBase value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.ForkedBase>(value, GetSerializer<global::AotFixtures.Unlinked.ForkedBase>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Unlinked.FromPlain value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.FromPlain>(value, GetSerializer<global::AotFixtures.Unlinked.FromPlain>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Unlinked.FromPlain value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.FromPlain>(value, GetSerializer<global::AotFixtures.Unlinked.FromPlain>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Unlinked.Reuses value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Reuses>(value, GetSerializer<global::AotFixtures.Unlinked.Reuses>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Unlinked.Reuses value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Reuses>(value, GetSerializer<global::AotFixtures.Unlinked.Reuses>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Unlinked.Sibling value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Sibling>(value, GetSerializer<global::AotFixtures.Unlinked.Sibling>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Unlinked.Sibling value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Sibling>(value, GetSerializer<global::AotFixtures.Unlinked.Sibling>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Unlinked.Unlinked value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Unlinked>(value, GetSerializer<global::AotFixtures.Unlinked.Unlinked>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Unlinked.Unlinked value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Unlinked.Unlinked>(value, GetSerializer<global::AotFixtures.Unlinked.Unlinked>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Derived>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.ForkedBase>
@@ -36,16 +216,7 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Derived(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Unlinked_Derived(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Unlinked_Derived(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Unlinked_Derived(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Unlinked_Derived(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Derived value, int depth)
         {
@@ -181,16 +352,7 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_FromPlain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.FromPlain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Unlinked_FromPlain(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Unlinked_FromPlain(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Unlinked_FromPlain(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Unlinked_FromPlain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.FromPlain value, int depth)
         {
@@ -259,16 +421,7 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Reuses(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Reuses>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Unlinked_Reuses(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Unlinked_Reuses(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Unlinked_Reuses(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Unlinked_Reuses(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Reuses value, int depth)
         {
@@ -389,16 +542,7 @@ partial class UnlinkedModel
             => RawRead_AotFixtures_Unlinked_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Unlinked_Unlinked(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Unlinked_Unlinked(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Unlinked_Unlinked(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Unlinked_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Unlinked value, int depth)
         {

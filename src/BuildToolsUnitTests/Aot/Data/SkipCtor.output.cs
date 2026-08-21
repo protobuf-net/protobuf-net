@@ -17,6 +17,66 @@ partial class SkipCtorModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SkipCtor.Bypassed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SkipCtor.Bypassed>(value, GetSerializer<global::AotFixtures.SkipCtor.Bypassed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SkipCtor.Bypassed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SkipCtor.Bypassed>(value, GetSerializer<global::AotFixtures.SkipCtor.Bypassed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SkipCtor.Constructed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SkipCtor.Constructed>(value, GetSerializer<global::AotFixtures.SkipCtor.Constructed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SkipCtor.Constructed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SkipCtor.Constructed>(value, GetSerializer<global::AotFixtures.SkipCtor.Constructed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SkipCtor.Bypassed>
         , global::ProtoBuf.Serializers.IFactory<global::AotFixtures.SkipCtor.Bypassed>
@@ -56,16 +116,7 @@ partial class SkipCtorModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Bypassed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SkipCtor_Bypassed(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SkipCtor_Bypassed(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SkipCtor_Bypassed(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SkipCtor_Bypassed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Bypassed value, int depth)
         {
@@ -117,16 +168,7 @@ partial class SkipCtorModel
             => RawRead_AotFixtures_SkipCtor_Constructed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SkipCtor.Constructed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SkipCtor_Constructed(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SkipCtor_Constructed(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SkipCtor_Constructed(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SkipCtor_Constructed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SkipCtor.Constructed value, int depth)
         {

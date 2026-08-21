@@ -17,6 +17,186 @@ partial class TuplesModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, (int, string) value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<(int, string)>(value, GetSerializer<(int, string)>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, (int, string) value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<(int, string)>(value, GetSerializer<(int, string)>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Tuples.ClassTuple value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Tuples.ClassTuple>(value, GetSerializer<global::AotFixtures.Tuples.ClassTuple>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Tuples.ClassTuple value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Tuples.ClassTuple>(value, GetSerializer<global::AotFixtures.Tuples.ClassTuple>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Tuples.NamedLikeATuple value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Tuples.NamedLikeATuple>(value, GetSerializer<global::AotFixtures.Tuples.NamedLikeATuple>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Tuples.NamedLikeATuple value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Tuples.NamedLikeATuple>(value, GetSerializer<global::AotFixtures.Tuples.NamedLikeATuple>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Tuples.StructTuple value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Tuples.StructTuple>(value, GetSerializer<global::AotFixtures.Tuples.StructTuple>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Tuples.StructTuple value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Tuples.StructTuple>(value, GetSerializer<global::AotFixtures.Tuples.StructTuple>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::System.Collections.Generic.KeyValuePair<int, string> value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::System.Collections.Generic.KeyValuePair<int, string>>(value, GetSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::System.Collections.Generic.KeyValuePair<int, string> value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::System.Collections.Generic.KeyValuePair<int, string>>(value, GetSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::System.Tuple<int, string> value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::System.Tuple<int, string>>(value, GetSerializer<global::System.Tuple<int, string>>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::System.Tuple<int, string> value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::System.Tuple<int, string>>(value, GetSerializer<global::System.Tuple<int, string>>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Tuples.ClassTuple>
@@ -60,13 +240,7 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
-        {
-            var slots = state.RawSlots;
-            var entry = slots.Mark();
-                Measure__int__string_(value, state.RawDepthBudget, slots);
-            slots.SeekTo(entry);
-            RawWrite__int__string_(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite__int__string_(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value, int depth)
         {
@@ -144,16 +318,7 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Tuples.ClassTuple>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.ClassTuple value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Tuples_ClassTuple(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Tuples_ClassTuple(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Tuples_ClassTuple(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Tuples_ClassTuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.ClassTuple value, int depth)
         {
@@ -228,13 +393,7 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Tuples.NamedLikeATuple>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.NamedLikeATuple value)
-        {
-            var slots = state.RawSlots;
-            var entry = slots.Mark();
-                Measure_AotFixtures_Tuples_NamedLikeATuple(value, state.RawDepthBudget, slots);
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Tuples_NamedLikeATuple(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Tuples_NamedLikeATuple(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Tuples_NamedLikeATuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.NamedLikeATuple value, int depth)
         {
@@ -303,13 +462,7 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Tuples.StructTuple>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.StructTuple value)
-        {
-            var slots = state.RawSlots;
-            var entry = slots.Mark();
-                Measure_AotFixtures_Tuples_StructTuple(value, state.RawDepthBudget, slots);
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Tuples_StructTuple(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Tuples_StructTuple(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Tuples_StructTuple(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Tuples.StructTuple value, int depth)
         {
@@ -384,13 +537,7 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
-        {
-            var slots = state.RawSlots;
-            var entry = slots.Mark();
-                Measure_System_Collections_Generic_KeyValuePair_int__string_(value, state.RawDepthBudget, slots);
-            slots.SeekTo(entry);
-            RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
         {
@@ -468,16 +615,7 @@ partial class TuplesModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Tuple<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_System_Tuple_int__string_(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_System_Tuple_int__string_(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_System_Tuple_int__string_(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_System_Tuple_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Tuple<int, string> value, int depth)
         {

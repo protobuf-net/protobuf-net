@@ -17,6 +17,156 @@ partial class SchemaOnlyModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SchemaOnly.Empty value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.Empty>(value, GetSerializer<global::AotFixtures.SchemaOnly.Empty>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SchemaOnly.Empty value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.Empty>(value, GetSerializer<global::AotFixtures.SchemaOnly.Empty>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SchemaOnly.EmptyExtensible value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.EmptyExtensible>(value, GetSerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SchemaOnly.EmptyExtensible value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.EmptyExtensible>(value, GetSerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SchemaOnly.Ignoring value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.Ignoring>(value, GetSerializer<global::AotFixtures.SchemaOnly.Ignoring>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SchemaOnly.Ignoring value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.Ignoring>(value, GetSerializer<global::AotFixtures.SchemaOnly.Ignoring>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SchemaOnly.Plain value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.Plain>(value, GetSerializer<global::AotFixtures.SchemaOnly.Plain>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SchemaOnly.Plain value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.Plain>(value, GetSerializer<global::AotFixtures.SchemaOnly.Plain>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.SchemaOnly.SchemaOnly value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.SchemaOnly>(value, GetSerializer<global::AotFixtures.SchemaOnly.SchemaOnly>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.SchemaOnly.SchemaOnly value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.SchemaOnly.SchemaOnly>(value, GetSerializer<global::AotFixtures.SchemaOnly.SchemaOnly>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.Empty>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>
@@ -31,16 +181,7 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Empty(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Empty>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SchemaOnly_Empty(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SchemaOnly_Empty(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SchemaOnly_Empty(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SchemaOnly_Empty(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Empty value, int depth)
         {
@@ -89,16 +230,7 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.EmptyExtensible>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SchemaOnly_EmptyExtensible(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SchemaOnly_EmptyExtensible(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.EmptyExtensible value, int depth)
         {
@@ -149,16 +281,7 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SchemaOnly_Ignoring(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SchemaOnly_Ignoring(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SchemaOnly_Ignoring(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SchemaOnly_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Ignoring value, int depth)
         {
@@ -244,16 +367,7 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_Plain(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.Plain>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SchemaOnly_Plain(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SchemaOnly_Plain(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SchemaOnly_Plain(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SchemaOnly_Plain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.Plain value, int depth)
         {
@@ -339,16 +453,7 @@ partial class SchemaOnlyModel
             => RawRead_AotFixtures_SchemaOnly_SchemaOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SchemaOnly.SchemaOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_SchemaOnly_SchemaOnly(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_SchemaOnly_SchemaOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SchemaOnly.SchemaOnly value, int depth)
         {

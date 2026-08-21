@@ -103,6 +103,58 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, $"=> {Serializers}.SerializerCache.Get<{ServicesTypeName}, T>();");
             sb.AppendLine();
 
+            // PER-CONTRACT TYPED ENTRY POINTS (gap B39). A non-generic overload beats
+            // TypeModel.Serialize<T> at any call site naming a concrete type, and skips what that
+            // path re-decides per call: a TypeHelper<T>.ValueChecker indirection for the null test,
+            // and TryGetSerializer<T> resolution. Measured at ~28ns a call, which is a third of
+            // Google.Protobuf's ENTIRE time on a small payload and invisible on a large one.
+            //
+            // It stops at SerializeRoot rather than going lower, deliberately: CheckClear and
+            // Abandon are internal, so generated code cannot reproduce the root sequence's
+            // guarantees, and skipping them to save a branch would trade correctness for noise.
+            //
+            // Emitted for every contract we implement rather than only for the declared seeds -
+            // any contract is a legal root, and "seed" is about model closure, not about what a
+            // consumer may serialize. Proxied contracts are excluded: their serializer is
+            // hand-written and may not even be message-category, so the root framing is not ours
+            // to assume.
+            if (plan.EmitTypedSerialize)
+            {
+                foreach (var contract in plan.Contracts)
+                {
+                    if (contract.ExternalSerializerTypeName is not null) continue;
+                    // NO null short-circuit here. It looks free, and it is not: on a SURROGATED
+                    // contract `IsValueType` describes the surrogate while TypeName is the
+                    // underlying type, so `value is null` was emitted against structs like Ticks
+                    // and DateTimeOffset (CS0037). It is also unnecessary - WriteAsRoot already
+                    // tests TypeHelper<T>.CanBeNull and writes nothing, and SerializeRoot then
+                    // returns after-before, which is 0. Same answer, one fewer thing to get wrong.
+                    foreach (var destination in new[] { "System.IO.Stream", "System.Buffers.IBufferWriter<byte>" })
+                    {
+                        // no cref on the contract type: a closed generic renders as Wrapper<int>,
+                        // and the angle brackets would have to be escaped for XML doc comments
+                        Line(sb, indent + 1, "/// <summary>Serializes the supplied value.</summary>");
+                        Line(sb, indent + 1, "/// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>:"
+                            + " it resolves the serializer at compile time rather than per call.</remarks>");
+                        Line(sb, indent + 1, $"public long Serialize(global::{destination} destination,"
+                            + $" {contract.TypeName} value, object userState = null)");
+                        Line(sb, indent + 1, "{");
+                        Line(sb, indent + 2, "var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);");
+                        Line(sb, indent + 2, "try");
+                        Line(sb, indent + 2, "{");
+                        Line(sb, indent + 3, $"return state.SerializeRoot<{contract.TypeName}>("
+                            + $"value, GetSerializer<{contract.TypeName}>());");
+                        Line(sb, indent + 2, "}");
+                        Line(sb, indent + 2, "finally");
+                        Line(sb, indent + 2, "{");
+                        Line(sb, indent + 3, "state.Dispose();");
+                        Line(sb, indent + 2, "}");
+                        Line(sb, indent + 1, "}");
+                        sb.AppendLine();
+                    }
+                }
+            }
+
             // write-side: the contracts whose serialized SIZE is computable by pure arithmetic
             // (a generated Measure_ static), which is what lets a message member emit an exact
             // length prefix and call the target's RawWrite_ directly, instead of the stateful

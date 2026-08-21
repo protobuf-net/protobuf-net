@@ -17,6 +17,186 @@ partial class OrderingModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Ordering.Mixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.Mixed>(value, GetSerializer<global::AotFixtures.Ordering.Mixed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Ordering.Mixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.Mixed>(value, GetSerializer<global::AotFixtures.Ordering.Mixed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Ordering.OffsetIgnoredByXml value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.OffsetIgnoredByXml>(value, GetSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Ordering.OffsetIgnoredByXml value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.OffsetIgnoredByXml>(value, GetSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Ordering.Referencing value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.Referencing>(value, GetSerializer<global::AotFixtures.Ordering.Referencing>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Ordering.Referencing value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.Referencing>(value, GetSerializer<global::AotFixtures.Ordering.Referencing>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Ordering.ViaDataMember value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMember>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMember>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Ordering.ViaDataMember value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMember>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMember>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Ordering.ViaDataMemberOffset value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMemberOffset>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Ordering.ViaDataMemberOffset value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.ViaDataMemberOffset>(value, GetSerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Ordering.ViaXmlElement value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.ViaXmlElement>(value, GetSerializer<global::AotFixtures.Ordering.ViaXmlElement>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Ordering.ViaXmlElement value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Ordering.ViaXmlElement>(value, GetSerializer<global::AotFixtures.Ordering.ViaXmlElement>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.Mixed>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>
@@ -55,16 +235,7 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Mixed value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Ordering_Mixed(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Ordering_Mixed(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Ordering_Mixed(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Ordering_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Mixed value, int depth)
         {
@@ -150,16 +321,7 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.OffsetIgnoredByXml>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Ordering_OffsetIgnoredByXml(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Ordering_OffsetIgnoredByXml(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.OffsetIgnoredByXml value, int depth)
         {
@@ -383,16 +545,7 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_ViaDataMember(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMember>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMember value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Ordering_ViaDataMember(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Ordering_ViaDataMember(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Ordering_ViaDataMember(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMember value, int depth)
         {
@@ -478,16 +631,7 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaDataMemberOffset>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Ordering_ViaDataMemberOffset(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Ordering_ViaDataMemberOffset(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaDataMemberOffset value, int depth)
         {
@@ -573,16 +717,7 @@ partial class OrderingModel
             => RawRead_AotFixtures_Ordering_ViaXmlElement(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Ordering.ViaXmlElement>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaXmlElement value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Ordering_ViaXmlElement(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Ordering_ViaXmlElement(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Ordering_ViaXmlElement(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.ViaXmlElement value, int depth)
         {

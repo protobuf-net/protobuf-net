@@ -17,6 +17,156 @@ partial class ImplicitModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Implicit.AllFields value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.AllFields>(value, GetSerializer<global::AotFixtures.Implicit.AllFields>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Implicit.AllFields value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.AllFields>(value, GetSerializer<global::AotFixtures.Implicit.AllFields>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Implicit.AllPublic value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.AllPublic>(value, GetSerializer<global::AotFixtures.Implicit.AllPublic>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Implicit.AllPublic value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.AllPublic>(value, GetSerializer<global::AotFixtures.Implicit.AllPublic>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Implicit.FirstTag value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.FirstTag>(value, GetSerializer<global::AotFixtures.Implicit.FirstTag>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Implicit.FirstTag value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.FirstTag>(value, GetSerializer<global::AotFixtures.Implicit.FirstTag>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Implicit.Ignoring value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.Ignoring>(value, GetSerializer<global::AotFixtures.Implicit.Ignoring>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Implicit.Ignoring value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.Ignoring>(value, GetSerializer<global::AotFixtures.Implicit.Ignoring>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Implicit.Mixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.Mixed>(value, GetSerializer<global::AotFixtures.Implicit.Mixed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Implicit.Mixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            return state.SerializeRoot<global::AotFixtures.Implicit.Mixed>(value, GetSerializer<global::AotFixtures.Implicit.Mixed>());
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.AllFields>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Implicit.AllPublic>
@@ -33,16 +183,7 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_AllFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllFields value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Implicit_AllFields(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Implicit_AllFields(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Implicit_AllFields(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Implicit_AllFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllFields value, int depth)
         {
@@ -147,16 +288,7 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_AllPublic(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.AllPublic>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllPublic value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Implicit_AllPublic(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Implicit_AllPublic(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Implicit_AllPublic(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Implicit_AllPublic(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.AllPublic value, int depth)
         {
@@ -259,16 +391,7 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_FirstTag(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.FirstTag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.FirstTag value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Implicit_FirstTag(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Implicit_FirstTag(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Implicit_FirstTag(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Implicit_FirstTag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.FirstTag value, int depth)
         {
@@ -354,16 +477,7 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_Ignoring(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Ignoring>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Ignoring value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Implicit_Ignoring(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Implicit_Ignoring(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Implicit_Ignoring(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Implicit_Ignoring(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Ignoring value, int depth)
         {
@@ -432,16 +546,7 @@ partial class ImplicitModel
             => RawRead_AotFixtures_Implicit_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Implicit.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Mixed value)
-        {
-            var slots = state.RawSlots;
-            if (!slots.Leave(value, out var entry))
-            {
-                entry = slots.Mark();
-                Measure_AotFixtures_Implicit_Mixed(value, state.RawDepthBudget, slots);
-            }
-            slots.SeekTo(entry);
-            RawWrite_AotFixtures_Implicit_Mixed(ref state, value, state.RawDepthBudget);
-        }
+            => RawWrite_AotFixtures_Implicit_Mixed(ref state, value, state.RawDepthBudget);
 
         public static void RawWrite_AotFixtures_Implicit_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Implicit.Mixed value, int depth)
         {

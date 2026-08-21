@@ -92,6 +92,7 @@ namespace Benchmark
             AssertSame(nameof(LazyOrdered), Bytes(ViaModel), Bytes(LazyOrdered));
             AssertSame(nameof(LazyOrderedDeep), Bytes(ViaModelDeep), Bytes(LazyOrderedDeep));
             AssertSame(nameof(LazyOrderedAlias), Bytes(ViaModelAlias), Bytes(LazyOrderedAlias));
+            AssertSame(nameof(TypedSerialize), Bytes(ViaModel), Bytes(TypedSerialize));
         }
 
         private byte[] Bytes(System.Func<long> route)
@@ -107,6 +108,35 @@ namespace Benchmark
             for (int i = 0; i < expected.Length; i++)
                 if (expected[i] != actual[i])
                     throw new System.Exception($"{what}: byte {i} is {actual[i]:x2}, expected {expected[i]:x2}");
+        }
+
+        /// <summary>
+        /// Marc's suggestion: a per-root-type <b>non-generic</b> <c>Serialize</c> on the generated
+        /// model, which wins overload resolution against <c>TypeModel.Serialize&lt;T&gt;</c> and
+        /// goes straight to the generated static. Skips the <c>TypeHelper&lt;T&gt;</c> null check,
+        /// <c>TryGetSerializer&lt;T&gt;</c> resolution and <c>WriteAsRoot</c>'s feature dispatch.
+        /// Hand-written here rather than generated, to price it before building it.
+        /// </summary>
+        [Benchmark]
+        public long TypedSerialize()
+        {
+            _bw.Reset();
+            DelimitedModel.Instance.Serialize(_bw, _wide);
+            return _bw.WrittenCount;
+        }
+
+        /// <summary>
+        /// The fixed floor: open a writer state over the buffer and close it, writing nothing.
+        /// Whatever this costs is not attributable to framing, the length cache, or the contract.
+        /// </summary>
+        [Benchmark]
+        public long StateOnly()
+        {
+            _bw.Reset();
+            var state = ProtoWriter.State.Create(_bw, DelimitedModel.Instance);
+            try { state.Close(); }
+            finally { state.Dispose(); }
+            return _bw.WrittenCount;
         }
 
         [Benchmark(Baseline = true)]
@@ -547,13 +577,26 @@ namespace Benchmark
     /// </summary>
     public partial class DelimitedModel
     {
+        /// <summary>
+        /// Goes through the generated <c>ISerializer.Write</c>, which is where the measure prologue
+        /// lives. Calling <c>RawWrite_</c> directly stopped being valid at gap B38 - the write
+        /// consumes lengths by POSITION, so something must have filled the slots first - and the
+        /// harness caught exactly that by asserting bytes in <c>[GlobalSetup]</c>: byte 3 came back
+        /// 00 where 02 was expected, which is a length nobody measured. Measure_ itself is private
+        /// to the nested services class and a containing type cannot reach a nested type's privates,
+        /// so the interface is the way in.
+        /// </summary>
         internal static void RawWritePrefixed(ref ProtoWriter.State state, Node value)
-            => ProtoBufGeneratedServices.RawWrite_Benchmark_DelimitedEncodingBenchmarks_LengthPrefixedNode(
-                ref state, value, state.RawDepthBudget);
+            => Instance.GetSerializer<Node>().Write(ref state, value);
 
         internal static void RawWriteDelimited(ref ProtoWriter.State state, DNode value)
             => ProtoBufGeneratedServices.RawWrite_Benchmark_DelimitedEncodingBenchmarks_DelimitedNode(
                 ref state, value, state.RawDepthBudget);
+
+        // the hand-written typed overload that used to live here is GONE: the generator emits it
+        // now (gap B39), and while it was here the collision guard (any member named Serialize
+        // suppresses emission) correctly refused to generate one - so this benchmark was measuring
+        // the prototype rather than the shipped thing.
     }
 
     /// <summary>A reusable single-array <see cref="IBufferWriter{T}"/>, so the target costs nothing.</summary>

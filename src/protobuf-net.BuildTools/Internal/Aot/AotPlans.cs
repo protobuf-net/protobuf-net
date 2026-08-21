@@ -888,7 +888,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             bool annotateTrimming = false, EquatableArray<ProtoEnumPlan> enums = default,
             EquatableArray<string> aliases = default, bool emitInstance = true,
             bool emitConstructor = false, bool isSealed = false, bool rawReader = false, bool rawWriter = false,
-            bool listAsSpan = false, bool immutableArrayAsSpan = false)
+            bool listAsSpan = false, bool immutableArrayAsSpan = false, bool emitTypedSerialize = true)
         {
             Namespace = nameSpace;
             TypeName = typeName;
@@ -903,6 +903,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             RawWriter = rawWriter;
             ListAsSpan = listAsSpan;
             ImmutableArrayAsSpan = immutableArrayAsSpan;
+            EmitTypedSerialize = emitTypedSerialize;
         }
 
         /// <summary>
@@ -911,7 +912,8 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </summary>
         public ProtoModelPlan WithContracts(EquatableArray<ProtoContractPlan> contracts)
             => new(Namespace, TypeName, contracts, AnnotateTrimming, Enums, Aliases, EmitInstance,
-                EmitConstructor, IsSealed, RawReader, RawWriter, ListAsSpan, ImmutableArrayAsSpan);
+                EmitConstructor, IsSealed, RawReader, RawWriter, ListAsSpan, ImmutableArrayAsSpan,
+                EmitTypedSerialize);
 
         /// <summary>
         /// Whether the raw reader surface (<c>ProtoReader.State.ReadRawTag</c> and friends) is
@@ -998,6 +1000,20 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         /// </remarks>
         public bool EmitConstructor { get; }
 
+        /// <summary>
+        /// Whether to emit the per-contract non-generic <c>Serialize</c> overloads, which beat
+        /// <c>TypeModel.Serialize&lt;T&gt;</c> at any call site naming a concrete type and skip its
+        /// per-call resolution (see <c>notes/gaps.md</c> B39).
+        /// </summary>
+        /// <remarks>
+        /// Suppressed where the consumer's half of the partial declares anything called
+        /// <c>Serialize</c> - a matching signature would be CS0111 in their own build, and since
+        /// that is their code the answer is to emit nothing rather than to complain. Deliberately
+        /// keyed on the NAME rather than on signatures: an overload set we only partly understand is
+        /// exactly where a silent binding change would hide.
+        /// </remarks>
+        public bool EmitTypedSerialize { get; }
+
         /// <summary>Whether the consumer's model is sealed, which decides the constructor's accessibility.</summary>
         public bool IsSealed { get; }
 
@@ -1042,6 +1058,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && Contracts.Equals(other.Contracts) && AnnotateTrimming == other.AnnotateTrimming
                 && Enums.Equals(other.Enums) && Aliases.Equals(other.Aliases)
                 && EmitInstance == other.EmitInstance && EmitConstructor == other.EmitConstructor
+                && EmitTypedSerialize == other.EmitTypedSerialize
                 && IsSealed == other.IsSealed && RawReader == other.RawReader
                 && RawWriter == other.RawWriter && ListAsSpan == other.ListAsSpan
                 && ImmutableArrayAsSpan == other.ImmutableArrayAsSpan;
