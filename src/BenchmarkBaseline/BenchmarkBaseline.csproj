@@ -15,8 +15,10 @@
     <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.cs" />
     <Compile Remove="..\Benchmark\BufferStrategyBenchmarks.generated.cs" />
     <Compile Remove="..\Benchmark\MeasuringSerializerBenchmarks.cs" />
-    <!-- uses the compile-time model, which the 2.4.x baseline package has no notion of -->
+    <!-- use the compile-time model, which the 2.4.x baseline package has no notion of; the
+         length-carrier one additionally calls the v4 raw writer surface directly -->
     <Compile Remove="..\Benchmark\DelimitedEncodingBenchmarks.cs" />
+    <Compile Remove="..\Benchmark\LengthCarrierBenchmarks.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

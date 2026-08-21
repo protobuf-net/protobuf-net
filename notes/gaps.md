@@ -2221,6 +2221,125 @@ The thing to avoid is the reflex of "a warning appeared, soften the analyzer". W
 deliberately contradictory, suppress at the fixture and say why in a comment; where it is *not*, the
 analyzer has found something and the fixture is wrong.
 
+### B38. Length-prefixed writes lag Google.Protobuf on wide graphs — **ISOLATED 2026-08-21: it is the `RawLengths` dictionary, worth 1.7×–2.8×**
+
+Marc, 2026-08-21: *"iirc there's still some scenarios in the tables where we lag Google.Protobuf -
+from memory, serialize prefixed?"* Correct, and `docs/delimited.md` concedes it in its own closing
+bullet: *"Google still leads the length-prefixed writes of wide graphs."*
+
+**Which cells, exactly** (`BufferWide`, re-measured on `v4` at 4270ee79, unchanged from the doc):
+every **length-prefixed** serialize of a *wide* graph, plus the shallow `deep, 8` pair — Google by
+1.5×–2.3×. Every delimited cell and every deserialize cell is ours, and the deep prefixed cells are
+ours by 4×–56× (Google's `CalculateSize()`-per-level goes quadratic).
+
+**It is not B35 repeating.** The first check was the B35 diagnostic — count `Measure_`/`RawWrite_` in
+the benchmark's generated model. Both contracts emit them; the prefixed path *is* on measure-first.
+
+**The tell is internal, and needs no comparison with Google at all.** Measure-first should cost about
+**two passes**, so prefixed ought to land near 2× delimited. It was landing at **3.6× (wide)** and
+**6.3× (deep)**. That excess is the whole story.
+
+**What it is:** `state.RawLengths` is a `Dictionary<object, long>` with a custom
+`IEqualityComparer<object>` (`NetObjectCache.RawLengthComparer`), so every operation is an interface
+call plus `RuntimeHelpers.GetHashCode`. The generated prefixed writer performs **three per
+sub-message node** — `TryGetValue` miss and an indexer insert while measuring, `TryGetValue` hit
+while writing. The delimited writer performs **none**, which is exactly why it is the floor.
+
+**Isolated by construction rather than by inference** — `src/Benchmark/LengthCarrierBenchmarks.cs`,
+which holds writer, graph and output bytes constant and varies *only how a measured length reaches
+its write site*: the generated statics (dictionary) against a hand-written pair carrying the same
+lengths in an append-only `long[]` consumed by index. Both are checked **byte-for-byte** against the
+model in `[GlobalSetup]`, and the hand-written pair carries the same depth guard,
+`ThrowUnexpectedSubtype` and null-element checks the generated one does, so the comparison is fair.
+
+| shape, n | dictionary (today) | ordered array | delimited (floor) | gain | today/delim | ordered/delim |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| wide, 8 | 187 | 130 | 85 | 1.44× | 2.2× | 1.5× |
+| wide, 64 | 1,155 | 677 | 333 | 1.71× | 3.5× | 2.0× |
+| wide, 512 | 9,087 | 5,235 | 2,497 | 1.74× | 3.6× | 2.1× |
+| deep, 8 | 219 | 108 | 83 | 2.03× | 2.6× | 1.3× |
+| deep, 64 | 1,626 | 619 | 292 | 2.63× | 5.6× | 2.1× |
+| deep, 512 | 14,254 | 5,138 | 2,249 | 2.77× | 6.3× | 2.3× |
+
+**The right-hand columns are the proof, not the left.** Removing the dictionary moves
+prefixed-over-delimited from 3.6×/6.3× to **2.1×/2.3×** — which is what two passes *should* cost.
+The anomaly is fully accounted for; what remains is the irreducible price of needing a length.
+
+**Against Google this closes the gap but does not beat it**, and that correction matters: at
+wide-512 it is 5,235 against Google's 5,258, i.e. **level**, not ahead. At wide-64 (677 vs 641) and
+wide-8 (130 vs 93) we would still be a little behind, on fixed cost. The deep cells were never in
+question.
+
+**Why the cache is expensive here is a design point, not a bug.** In the generated raw path the
+`Measure_` statics are a single recursive arithmetic traversal, so within one measure pass every node
+is visited once *by the shape of the recursion*. What the dictionary buys is **lazy** measurement:
+`RawWrite_` measures a child on cache-miss at the write site, and the entries that measure deposits
+are what stop the next level re-measuring — without it, lazy measurement is O(n²) in depth. So the
+dictionary is not redundant; it is what makes the *current* scheme linear.
+
+An ordered array is therefore **not a drop-in replacement for the container** — it is a different
+scheme: **measure eagerly at the raw boundary, then write**, with position as the correlation. That
+is already what the `IMeasuredProtoOutput` path does, so it is not a new idea in the codebase.
+
+**Do not confuse this cache with the classic one.** `NetObjectCache` holds two: `_knownLengths`
+(keyed by `ObjectKey`) serves the **classic** measure-by-writing path, where memoisation genuinely
+prevents 2^depth crawls and `AtMostTwiceHoweverDeepTheNesting` pins it — note that test builds a
+`RuntimeTypeModel`, so it does not exercise `_rawLengths` at all. `AGENTS.md`'s "AT MOST TWICE"
+paragraph explains the raw cache using the classic cache's rationale, which is how this sat
+unexamined. The invariant itself is unaffected: eager-measure-then-write is still exactly two passes.
+
+**What it would cost to build, and the risk to weigh** (not started — decision owed):
+
+- an ordered array is **positional**, where a dictionary is self-correcting by identity. It is sound
+  only while `Measure_` and `RawWrite_` visit sub-messages in the same order — true by construction
+  (one plan, identical guard conditions, slot taken pre-order before recursing) but a real coupling.
+  `DebugAssertPosition` already catches a desync in DEBUG; a Release-cheap "the write consumed
+  exactly as many slots as the measure produced" check is worth having too;
+- **mutation between the passes gets worse, not merely equally bad.** Today a stale length corrupts
+  one field; positionally it shifts every subsequent field. Both are already why
+  `[ProtoBeforeSerialization]` disqualifies measure-first, so this narrows no supported scenario;
+- **the shape that would genuinely break positional is UNSTABLE ENUMERATION, not aliasing** — a
+  member whose second traversal yields different items (a lazily-evaluated `IEnumerable<T>`, or a
+  derived collection whose `GetEnumerator` is a hiding redeclaration). **That is already closed, for
+  an unrelated reason.** `RawRepeatedMessageTarget` admits only `CreateList`/`CreateVector` with
+  `!TakesCollectionType`, and `RawRepeatedWritable` adds `CreateImmutableArray` on the same terms —
+  i.e. `List<T>`, `T[]` and `ImmutableArray<T>` **exactly**, all traversed as a span over a backing
+  array. Derived lists are already excluded with the comment *"foreach binds to the DECLARED type's
+  GetEnumerator, which could be a hiding redeclaration"*. So the conservatism that protects the
+  write already supplies the determinism positional indexing needs, and nothing reaching the raw
+  path can enumerate differently twice. Worth re-checking if those predicates are ever widened;
+- **aliasing does NOT break it, and does not even flip the verdict** (Marc raised this: one instance
+  used several times in parallel, not recursively). Correctness holds *because* the array does not
+  dedupe — each occurrence takes its own slot and its own recursive slot-run, and both passes
+  traverse every occurrence, so they stay in lockstep. Only the memoisation is lost: the dictionary
+  measures a shared subtree once and the array measures it per occurrence, bounded at 2× the total
+  traversals (`m + k·m` visits against `2·k·m`). Measured on a root holding the **same** 9-node
+  subtree instance *n* times, bytes asserted identical:
+
+  | n | dictionary (today) | ordered array | delimited | gain |
+  | ---: | ---: | ---: | ---: | ---: |
+  | 8 | 908 | 609 | 404 | 1.49× |
+  | 64 | 6,182 | 4,469 | 2,874 | 1.38× |
+  | 512 | 48,855 | 35,725 | 22,548 | 1.37× |
+
+  So the array wins even where the dictionary is at its best: re-measuring a small shared subtree is
+  cheaper than the hashing that avoiding it costs. 1.37× is the **floor** of this change, against
+  1.74×/2.77× on ordinary trees;
+- the array must ride the same lifecycle the dictionary does in `NetObjectCache` — the null-writer
+  sidecar and `MeasureState`→`Serialize` hand-off both share it today.
+
+**A cheaper partial exists if the structural change is unwanted**: the measure side hashes *twice*
+per node (probe then insert), which `CollectionsMarshal.GetValueRefOrAddDefault` collapses to one.
+That keeps every semantic, is a two-line generator change, and should recover roughly a third of the
+dictionary cost. Not measured — worth measuring before choosing.
+
+**A secondary, smaller finding fell out of making the comparison fair:** the per-node guards
+(`ThrowUnexpectedSubtype` plus the null-element test) cost ~745 ns across 513 nodes, ~1.45 ns/node —
+14% of the prefixed time at wide-512. `sealed` elides `ThrowUnexpectedSubtype` and Google's generated
+DTOs *are* sealed while this benchmark's are not, so a slice of the residual wide gap is that rather
+than framing. `docs/aot.md` already records the effect at ~0.6% on a message-dense payload; on a
+graph this node-dense it is larger.
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The design and the findings are in `notes/aot-schema-model.md`; the gap list is here, so there is
