@@ -2686,6 +2686,72 @@ leave the hierarchy *check* alone; that is about the per-write type test, not ab
 and does not answer this.
 
 
+### B42. **THE MEASURE-FIRST EXCLUSION LIST** — every way a contract loses the raw write path, in one place
+
+Marc, 2026-08-21: *"how many other big gaps do we have? inheritance? callbacks? do we have a list?"*
+Not really, until now: the authoritative list is the two predicates themselves, and `gaps.md` covered
+only some of them. This entry is the index; it is **derived from the source, not remembered**, and
+should be re-derived rather than trusted if the predicates move.
+
+**Why it matters more than the count suggests:** exclusion is computed to a **fixed point**, so one
+blocked member removes its *whole contract*, and that removes every contract that references it. A
+single awkward member can take an entire model off measure-first, and the only symptom is that
+writes are slow — reads still look fine, because read eligibility is separate and much wider.
+The diagnostic is to count methods in the generated output: **zero `Measure_`/`RawWrite_` means the
+model is entirely on the classic write path.**
+
+#### Contract-level (`RawMeasurableShape`) — six exclusions
+
+| what | gap? | tracked |
+| --- | --- | --- |
+| **inheritance** (`RootTypeName`, `SubTypes`) | **yes, and the biggest** | **B41** |
+| **surrogate** (`SurrogateTypeName`) | **yes** | *untracked before this* |
+| **surrogate with its own serializer** | yes, narrower | *untracked before this* |
+| **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
+| **`[ProtoContract(IsGroup = true)]`** | **unknown — reason not established** | *untracked before this* |
+| **`[ProtoBeforeSerialization]`** | **NO — load-bearing** | **B17** |
+
+**The callback one is not a gap and must not be "fixed".** `Measure_` has no `ISerializationContext`
+and so cannot fire callbacks at all; refusing such contracts is the only thing keeping the measured
+length honest, since firing only in `RawWrite_` would let the object change between measuring and
+writing. B17 is about the *silence*, not the refusal. That answers the "callbacks?" half of the
+question: already correct, already tracked, leave alone.
+
+**`IsGroup` at contract level is the one I cannot justify from reading it.** A grouped contract
+carries no length prefix of its own, which is an argument that measuring it is *easier*, not harder —
+compare B35, where blocking grouped *members* turned out to be backwards and cost 5.7×. It may
+simply predate the machinery. Worth establishing before assuming either way.
+
+#### Member-level (`RawMemberMeasureBlocked`) — what blocks a member, and so its whole contract
+
+| what | gap? | tracked |
+| --- | --- | --- |
+| **maps** (any `Map.Factory`) | **yes, and common** | **B6** |
+| **null-wrapping** (`[NullWrappedValue]`, `[NullWrappedCollection]`) | **yes** | *untracked before this* |
+| non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
+| a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
+| a **nullable struct** message member | yes, narrow — explicitly parked pending a fixture | *untracked before this* |
+| a **value-type bytes** member (`Memory<byte>`, `ReadOnlyMemory<byte>`, `ArraySegment<byte>`) | yes, narrow | *untracked before this* |
+| a message member whose target is not itself measurable | **this is the cascade, not a gap of its own** | — |
+
+#### Ranked, for "what next"
+
+1. **inheritance** (B41) — worst blast radius, and `[ProtoSubType]` just made it reachable from
+   outside the contract entirely. Unknown whether the exclusion is necessary at all;
+2. **maps** (B6) — the most *common* shape on this list by some distance;
+3. **surrogates** — untracked until now, and a surrogated contract is ordinary enough in real
+   models (`DateTimeOffset`, NodaTime) that this is likely hit more than its absence here suggests;
+4. **null-wrapping** — a whole feature area with no measure story;
+5. **contract-level `IsGroup`** — cheap to establish, possibly free to fix, possibly backwards in
+   the same way B35 was;
+6. the two narrow ones (nullable-struct message, value-type bytes) — fixture-sized, not features.
+
+**None of these is a correctness problem.** Every one of them falls back to the classic
+write-to-count path, which is what protobuf-net did before v4 and is still correct — the cost is
+throughput, and the reason to care is that the write path is where v4's gains are (B38: 1.3×–2.3×,
+and wide-512 overtaking Google.Protobuf).
+
+
 ## C. Schema front-end (`[ProtoSchema]`)
 
 The design and the findings are in `notes/aot-schema-model.md`; the gap list is here, so there is
