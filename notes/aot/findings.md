@@ -730,6 +730,78 @@ only, and a subprocess timeout is exactly what contention in a full run would tr
 
 ## Future ideas
 
+### Out-of-band sub-types: `[ProtoInclude]` a type the base has never heard of
+
+**[protobuf-net#1308](https://github.com/protobuf-net/protobuf-net/issues/1308)** — transferred from
+protobuf-net.Grpc#318, because despite arriving in a gRPC AOT thread it is entirely about `AddSubType`
+and nothing to do with gRPC.
+
+The shape proposed there:
+
+``` c#
+[module: ProtoInclude<A, B>(100)] // near the [ProtoModel]
+
+class A { }        // in some base lib with no knowledge of B
+class B : A { }
+```
+
+The design notes below are from working it through against the generator; they supersede parts of the
+issue thread, which is a conversation rather than a specification.
+
+**Discovery is already solved, by `[ProtoSurrogate]`.** That is the same problem — an out-of-band
+declaration that has to cross assembly boundaries — and it is declarable on the **model** *and* on an
+**assembly**, gathered least-to-most specific (referenced assemblies → this assembly → the model). Use
+those sites rather than inventing new ones: it subsumes both options in the thread, and it brings the
+case neither covers, a library shipping the linkage for types its consumer never names (the NodaTime
+hand-off, pinned by `ProtoSurrogateReferenceTests`). Note the rejected option is already recorded: the
+gather scans **assembly attributes only**, because scanning every type in every reference is not
+bounded.
+
+**Where the surrogate precedent misleads: surrogates override, includes accumulate.** Most-specific-wins
+is right for "here is how to serialize `Uri`" and wrong here — if two references each declare a sub-type
+of `A`, both exist and both must be emitted. Same gathering, different merge: union, with conflict
+detection on the field number, and a deterministic order so the emitted `is` chain is stable.
+
+**`RuntimeTypeModel` does not need to honour it at all** — it does not honour `[ProtoSurrogate]` either.
+This is a compile-time-only extension point. What that costs is a **replay in `AotDifferential`**, beside
+the existing surrogate replay, using the public `MetaType.AddSubType(fieldNumber, type)` (and its
+`DataFormat` overload, since `[ProtoInclude]`'s `Group` reaches the wire). Without it the reference model
+knows nothing of the declaration and throws where we correctly emit, which reads as a generator fault and
+is the opposite — exactly the trap recorded for surrogates in `differential.md`. That makes this the
+*second* instance of the rule, and the same trap if a gathering source is ever added without the replay.
+
+Scope, as far as it has been thought through:
+
+- **generator** — merge into `TryGetSubTypes`, which is the single choke point `GetLinkedBases` runs
+  through; the emit needs no change at all, since the `is` chain and `ReadSubType` are keyed on the
+  resolved sub-type list, not on where the declaration came from;
+- **seeding is mandatory, not optional** — an out-of-band sub-type is reachable from nothing, so without
+  being treated as a seed it is declared and never emitted;
+- **analyzer** — mostly extending existing rules to a new declaration site (`PBN0001` invalid field
+  number, `PBN0003` duplicate, `PBN0011` duplicate include, `PBN0013` include not declared) rather than
+  new ones. `[ProtoReserved]` interacts: it is enforced, not decorative, so an out-of-band include
+  claiming a reserved number needs the same check, now cross-assembly;
+- **the generic constraint does `PBN0012`'s job for free** — `where TSub : class, TSuper` makes an
+  invalid type chain a *compile* error. Weigh that against the open question below. And note `PBN0012`
+  shipped with a bug (it compared `BaseType` only, so it errored on every interface hierarchy); the same
+  trap is live here, since interfaces are inheritance roots too.
+
+Two consequences worth stating in user-facing docs rather than discovering:
+
+- **the cascade's blame goes off-assembly.** A hierarchy is all-or-nothing — one unsupported member
+  anywhere drops the whole thing — so a third party's `B` can now take out a hierarchy rooted at *your*
+  `A`, including types you own. `PBN3004` exists for cascade drops but its message assumes a local cause;
+- **your model stops being determined by your own source.** Adding a reference can change what a
+  base-typed member puts on the wire. That is the feature working, and it is still surprising.
+
+**Open question to probe first, because it decides the syntax:** generic attributes are C# 11, which is
+fine for consumers (the floor is C# 12) and fine for the generator, which reads metadata and never
+reflects — but the attribute type would live in protobuf-net.Core, which multi-targets to `net462` and
+`netstandard2.0`, and generic attributes have had runtime-support caveats on older frameworks. If that
+bites, the non-generic spelling `[module: ProtoInclude(typeof(A), typeof(B), 100)]` sidesteps it, at the
+cost of the free type-chain check.
+
+
 ### ~~An "announce" diagnostic~~ — built, as `PBN3012`/`PBN3013`
 
 Kept for the reasoning, since the severity split is the whole design and it is not the one I first
