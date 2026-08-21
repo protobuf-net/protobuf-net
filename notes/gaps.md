@@ -2261,14 +2261,19 @@ lengths in an append-only `long[]` consumed by index. Both are checked **byte-fo
 model in `[GlobalSetup]`, and the hand-written pair carries the same depth guard,
 `ThrowUnexpectedSubtype` and null-element checks the generated one does, so the comparison is fair.
 
-| shape, n | dictionary (today) | ordered array | delimited (floor) | gain | today/delim | ordered/delim |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| wide, 8 | 187 | 130 | 85 | 1.44× | 2.2× | 1.5× |
-| wide, 64 | 1,155 | 677 | 333 | 1.71× | 3.5× | 2.0× |
-| wide, 512 | 9,087 | 5,235 | 2,497 | 1.74× | 3.6× | 2.1× |
-| deep, 8 | 219 | 108 | 83 | 2.03× | 2.6× | 1.3× |
-| deep, 64 | 1,626 | 619 | 292 | 2.63× | 5.6× | 2.1× |
-| deep, 512 | 14,254 | 5,138 | 2,249 | 2.77× | 6.3× | 2.3× |
+| shape, n | dictionary (today) | ordered array (eager) | delimited (floor) | gain | Google | vs Google after |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| wide, 8 | 187 | 129 | 86 | 1.44× | 93 | 1.39× behind |
+| wide, 64 | 1,155 | 678 | 334 | 1.70× | 641 | 1.06× behind |
+| wide, 512 | 9,058 | 5,226 | 2,514 | 1.73× | 5,258 | **level** |
+| deep, 8 | 219 | 107 | 81 | 2.05× | 108 | **level** |
+| deep, 64 | 1,624 | 618 | 291 | 2.63× | 6,776 | **11× ours** |
+| deep, 512 | 13,967 | 5,125 | 2,233 | 2.73× | 787,929 | **154× ours** |
+
+**The change takes every cell Google currently leads to level or ahead, bar the two smallest wide
+payloads** — and what is left there is fixed per-call cost, not framing: at wide-8 our *delimited*
+floor (86 ns) is already below Google's prefixed (93), so the length machinery is no longer what
+separates them.
 
 **The right-hand columns are the proof, not the left.** Removing the dictionary moves
 prefixed-over-delimited from 3.6×/6.3× to **2.1×/2.3×** — which is what two passes *should* cost.
@@ -2296,6 +2301,27 @@ prevents 2^depth crawls and `AtMostTwiceHoweverDeepTheNesting` pins it — note 
 `RuntimeTypeModel`, so it does not exercise `_rawLengths` at all. `AGENTS.md`'s "AT MOST TWICE"
 paragraph explains the raw cache using the classic cache's rationale, which is how this sat
 unexamined. The invariant itself is unaffected: eager-measure-then-write is still exactly two passes.
+
+**EAGER measure is not a detail of the prototype, it is REQUIRED — proven by getting it wrong.**
+The obvious refinement is to keep the generator's existing *lazy* shape (measure triggered from the
+write site) and just swap the container: mark the cursor, measure, rewind, consume. It is faster on
+wide graphs — 4,084 ns against eager's 5,226 at wide-512, because a leaf child is measured inline
+immediately before being written instead of the child list being walked twice. **And it is O(n²) on
+deep ones: 586,745 ns at depth 512, against 5,125 eager.** Every level re-measures everything below
+it, which is precisely Google.Protobuf's 787 µs shape.
+
+The reason is the one this entry already records and the author still walked into: **the dictionary's
+probe is what makes lazy linear.** Take the probe away and the only thing that can stop the
+re-measure is having measured the whole subtree up front. So the choice is not "eager or lazy" — it
+is "dictionary + lazy" or "array + eager", and the array pays a second traversal of every child list
+(~30%) as its entry fee. It still wins by 1.7×–2.7× regardless, because zero hashing is worth more
+than one extra traversal.
+
+Recorded because the wide-only measurement looks like a free further win and is a trap. A refinement
+does exist — measure lazily where the contract statically cannot contain another length-prefixed
+sub-message — but it does **not** fire for the common shape: `Node` *declares* sub-message members
+and merely holds null in them at run time, so the static test says no. Not worth building on that
+evidence.
 
 **What it would cost to build, and the risk to weigh** (not started — decision owed):
 
@@ -2335,7 +2361,27 @@ unexamined. The invariant itself is unaffected: eager-measure-then-write is stil
   cheaper than the hashing that avoiding it costs. 1.37× is the **floor** of this change, against
   1.74×/2.77× on ordinary trees;
 - the array must ride the same lifecycle the dictionary does in `NetObjectCache` — the null-writer
-  sidecar and `MeasureState`→`Serialize` hand-off both share it today.
+  sidecar and `MeasureState`→`Serialize` hand-off both share it today;
+- **a positional cursor cannot cross the classic-interop boundary, and this is the one real design
+  constraint.** `TryMeasureRaw` hands the cache out so the classic engine's measure hook
+  (`ProtoWriter.Measure` → `IMeasuringSerializer<T>.Measure`) can fill it, and a *later*
+  `ISerializer<T>.Write` → `RawWrite_` consumes it. Those are separate calls with arbitrary work
+  between them — the engine may measure several objects before writing any, which is what
+  `SetKnownLength`/`TryGetKnownLength` exist for. Identity spans that; a cursor does not. Three ways
+  out, in preference order:
+
+  1. **a boundary map** — an identity map used *only at crossings*, `object → cursor start`.
+     `Measure_` entered through the hook records where its run began; `RawWrite_` entered through
+     `Write` looks it up **once** and consumes positionally from there. One hash per crossing, zero
+     per node, and "at most twice" holds everywhere. This is the recommendation;
+  2. accept that a classic-interop subtree measures twice and writes once (three passes), which
+     regresses *mixed* models and breaks the invariant there;
+  3. use the array only when the whole model is raw-measurable — a compile-time property the
+     generator already has — and keep the dictionary otherwise. Simplest, but leaves mixed models
+     on today's path.
+
+  This does not touch the measurements above: `DelimitedModel` is fully measurable, so the hook never
+  fires on the measured path.
 
 **There is NO cheap partial. Both candidates were tried and both fail** — recorded because each
 looks obviously right until checked, and the first was offered here before it was.

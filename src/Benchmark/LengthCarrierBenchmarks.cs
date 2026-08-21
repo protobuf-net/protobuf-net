@@ -89,6 +89,9 @@ namespace Benchmark
             AssertSame(nameof(OrderedAlias), Bytes(ViaModelAlias), Bytes(OrderedAlias));
             AssertSame(nameof(DictBaseline), Bytes(ViaModel), Bytes(DictBaseline));
             AssertSame(nameof(DictNoProbe), Bytes(ViaModel), Bytes(DictNoProbe));
+            AssertSame(nameof(LazyOrdered), Bytes(ViaModel), Bytes(LazyOrdered));
+            AssertSame(nameof(LazyOrderedDeep), Bytes(ViaModelDeep), Bytes(LazyOrderedDeep));
+            AssertSame(nameof(LazyOrderedAlias), Bytes(ViaModelAlias), Bytes(LazyOrderedAlias));
         }
 
         private byte[] Bytes(System.Func<long> route)
@@ -354,6 +357,123 @@ namespace Benchmark
                     state.RawLengths.TryGetValue(item3, out var len);
                     state.WriteRawVarint64((ulong)len);
                     WriteDict(ref state, item3, depth);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The ordered array kept in the generator's existing <b>lazy</b> shape: no separate
+        /// eager pass, the measure is still triggered from the write site. The convention that
+        /// makes it work is that <c>MeasureLazy</c> claims a slot for <b>itself</b> first, so a
+        /// subtree occupies <c>[self, descendants...]</c> and the write consumes in the same order.
+        /// The write site marks the cursor, measures (which fills the run), rewinds, and reads.
+        /// </summary>
+        [Benchmark, BenchmarkCategory("wide")]
+        public long LazyOrdered()
+        {
+            _bw.Reset();
+            var state = ProtoWriter.State.Create(_bw, DelimitedModel.Instance);
+            try
+            {
+                int cursor = 0;
+                WriteLazy(ref state, _wide, state.RawDepthBudget, ref cursor);
+                state.Close();
+            }
+            finally { state.Dispose(); }
+            return _bw.WrittenCount;
+        }
+
+        [Benchmark, BenchmarkCategory("deep")]
+        public long LazyOrderedDeep()
+        {
+            _bw.Reset();
+            var state = ProtoWriter.State.Create(_bw, DelimitedModel.Instance);
+            try
+            {
+                int cursor = 0;
+                WriteLazy(ref state, _deep, state.RawDepthBudget, ref cursor);
+                state.Close();
+            }
+            finally { state.Dispose(); }
+            return _bw.WrittenCount;
+        }
+
+        [Benchmark, BenchmarkCategory("alias")]
+        public long LazyOrderedAlias()
+        {
+            _bw.Reset();
+            var state = ProtoWriter.State.Create(_bw, DelimitedModel.Instance);
+            try
+            {
+                int cursor = 0;
+                WriteLazy(ref state, _alias, state.RawDepthBudget, ref cursor);
+                state.Close();
+            }
+            finally { state.Dispose(); }
+            return _bw.WrittenCount;
+        }
+
+        /// <summary>Claims slot <c>cursor</c> for <paramref name="value"/>, then its descendants.</summary>
+        private long MeasureLazy(Node value, int depth, ref int cursor)
+        {
+            if (--depth < 0) ProtoWriter.State.ThrowRawTooDeep();
+            int self = cursor++;
+            if (self >= _lengths.Length) System.Array.Resize(ref _lengths, _lengths.Length * 2);
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));
+            var tmp2 = value.Child;
+            if (tmp2 != null)
+            {
+                var sub = MeasureLazy(tmp2, depth, ref cursor);
+                len += 1 + ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+            }
+            var tmp3 = value.Children;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in CollectionsMarshal.AsSpan(tmp3))
+                {
+                    if (item3 is null) ProtoWriter.State.ThrowNullRepeatedContents<Node>();
+                    var sub = MeasureLazy(item3, depth, ref cursor);
+                    len += 1 + ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                }
+            }
+            _lengths[self] = len;
+            return len;
+        }
+
+        private void WriteLazy(ref ProtoWriter.State state, Node value, int depth, ref int cursor)
+        {
+            if (--depth < 0) ProtoWriter.State.ThrowRawTooDeep();
+            ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
+            var tmp2 = value.Child;
+            if (tmp2 != null)
+            {
+                state.WriteRawTag((2 << 3) | 2);
+                int mark = cursor;
+                MeasureLazy(tmp2, depth, ref cursor);   // fills [mark, ...]
+                cursor = mark;                          // rewind and consume the same run
+                state.WriteRawVarint64((ulong)_lengths[cursor++]);
+                WriteLazy(ref state, tmp2, depth, ref cursor);
+            }
+            var tmp3 = value.Children;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in CollectionsMarshal.AsSpan(tmp3))
+                {
+                    if (item3 is null) ProtoWriter.State.ThrowNullRepeatedContents<Node>();
+                    state.WriteRawTag((3 << 3) | 2);
+                    int mark = cursor;
+                    MeasureLazy(item3, depth, ref cursor);
+                    cursor = mark;
+                    state.WriteRawVarint64((ulong)_lengths[cursor++]);
+                    WriteLazy(ref state, item3, depth, ref cursor);
                 }
             }
         }
