@@ -2702,6 +2702,37 @@ type via the identical `is` chain, and that cannot differ between them — mutat
 is already unsupported for exactly this reason — so the branch taken, and therefore the slot order,
 agrees by construction.
 
+**STARTED AND BACKED OUT, 2026-08-21 — and the reason is the part worth keeping.** The two
+predicate changes are easy and were made in minutes: drop the hierarchy clause from
+`RawMeasurableShape`, and add a `HasRawWrite(contract)` guard to `RawNativeMessageTarget` /
+`RawRepeatedMessageTarget` so nothing emits a direct call to a body a hierarchy does not have
+(measurable and "has a `RawWrite_`" stop being the same question). Both compiled first time.
+
+What stopped it is the **interaction with B38's positional slots**, which reading the predicate does
+not reveal and reading the emitted hierarchy does:
+
+- `EmitSubTypeContract` writes a layer's own members with `raw: rawWrite`, so **a layer's members are
+  already written raw** — including `len = state.RawSlots.Next()` for a measurable sub-message
+  member. That write is reached from `WriteSubType`, i.e. from the *stateful* path;
+- so a hierarchy's slots would be produced and consumed across the classic-interop boundary, which
+  is exactly the case B38's boundary map exists for — but the boundary there is per *contract*, and
+  a hierarchy's measure spans several layers with the marker frames interleaved between them;
+- and the sub-type markers themselves are length-prefixed, so they either take slots (and the
+  stateful `WriteSubType` must be taught to consume them, which it currently cannot) or they do not
+  (and the measure must pass a null buffer down, suppressing the layer's members' slots too — which
+  changes what those members' *writes* expect).
+
+That is a genuine design question about where the measure/write boundary sits in a hierarchy, not a
+plumbing detail, and getting it wrong produces **wrong bytes rather than a build error**. Backed out
+with the tree green rather than half-landed.
+
+**The shape to design first, before touching the emitter again:** a leaf's `ISerializer.Write`
+delegates to the **root's** `WriteSubType` (`=> ((rootSub)this).WriteSubType(ref state, value)`), so
+`Measure_Circle` must equal `Measure_Shape` — two functions per layer, not one:
+`MeasureSubType_{layer}` for the layer's own contribution (its marker chain plus its own members),
+and `Measure_{layer}` delegating to `MeasureSubType_{root}`. Decide the slot question against that
+shape rather than against a single contract.
+
 **What that leaves as the real work**, none of it novel: emit a `Measure_` per layer mirroring
 `WriteSubType`'s chain; relax `RawMeasurableShape`'s `RootTypeName is null && SubTypes.Count == 0`;
 and keep the all-or-nothing rule the hierarchy already has for dropping (one unmeasurable layer must
