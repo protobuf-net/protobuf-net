@@ -1368,14 +1368,24 @@ namespace ProtoBuf.BuildTools.Generators
                 // working out which contracts are reachable through a group, which is exactly
                 // the kind of predicate whose failure mode is a process-killing stack overflow
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
+                // a surrogated contract's body IS the surrogate's members, reached through a
+                // conversion - so the raw write converts first and works off that local, exactly
+                // as the classic inline write does. Note the sub-type test is on the SURROGATE,
+                // which is what carries any sub-types (gap B42).
+                var writeInstance = "value";
+                if (contract.SurrogateTypeName is not null)
+                {
+                    writeInstance = "surrogate";
+                    Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
+                }
                 if (!contract.IsValueType && !contract.IsTuple && !contract.IsSealed
                     && !contract.IgnoreUnknownSubTypes)
                 {
-                    Line(sb, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                    Line(sb, indent + 1, $"global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype({writeInstance});");
                 }
                 var writeBody = new StringBuilder();
-                EmitWriteMembers(writeBody, indent + 1, contract, "value", raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth");
-                EmitCallback(writeBody, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
+                EmitWriteMembers(writeBody, indent + 1, contract, writeInstance, raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth");
+                EmitCallback(writeBody, indent + 1, contract, writeInstance, ProtoCallbackKind.AfterSerialize);
                 AppendFoldingLengthTemp(sb, indent + 1, writeBody, "len");
                 Line(sb, indent, "}");
                 sb.AppendLine();
@@ -1400,10 +1410,20 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
+                // the same conversion the write performs, so the two walk identical members. It
+                // runs once per pass rather than once per serialize, which is the "at most twice"
+                // property every measure-first contract already has - a conversion with side
+                // effects was never safe here, exactly as a before-serialize callback is not
+                var measureInstance = "value";
+                if (contract.SurrogateTypeName is not null)
+                {
+                    measureInstance = "surrogate";
+                    Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
+                }
                 Line(sb, indent + 1, "long len = 0;");
                 // `len` is the accumulator here, so the sub-message temp needs its own name
                 var measureBody = new StringBuilder();
-                EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan);
+                EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan, measureInstance);
                 AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");
@@ -2064,7 +2084,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // graph the measure just proved finite.
                         var targetName = Sanitise(member.TypeName!);
                         var inner = indent;
-                        if (!target.IsValueType)
+                        if (!target.DeclaredIsValueType)
                         {
                             Line(sb, indent, $"if (tmp{number} != null)");
                             Line(sb, indent, "{");
@@ -2081,7 +2101,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 3);  // {member.Name} (start group)");
                             Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number}, {depth});");
                             Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 4);  // {member.Name} (end group)");
-                            if (!target.IsValueType) Line(sb, indent, "}");
+                            if (!target.DeclaredIsValueType) Line(sb, indent, "}");
                             break;
                         }
                         Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
@@ -2109,7 +2129,7 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, inner, $"{DriftCapture};");
                         Line(sb, inner, $"RawWrite_{targetName}(ref state, tmp{number}, {depth});");
                         Line(sb, inner, $"{DriftAssert}, \"{member.Name}\");");
-                        if (!target.IsValueType) Line(sb, indent, "}");
+                        if (!target.DeclaredIsValueType) Line(sb, indent, "}");
                         break;
                     }
                     case ProtoMemberKind.Message:
@@ -3374,7 +3394,7 @@ namespace ProtoBuf.BuildTools.Generators
             // the packed read fast path does
             var nullableElement = member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) == true;
             if (member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes || nullableElement
-                || (messageTarget is not null && !messageTarget.IsValueType))
+                || (messageTarget is not null && !messageTarget.DeclaredIsValueType))
             {
                 Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
             }
@@ -3432,7 +3452,10 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static bool RawMeasurableShape(ProtoContractPlan contract)
             => contract.ExternalSerializerTypeName is null
-            && contract.SurrogateTypeName is null
+            // a SURROGATE is fine (gap B42): its body is the surrogate's members reached through a
+            // conversion, and both the raw write and the measure now perform that conversion, so
+            // they walk identical members. A surrogate carrying its own SERIALIZER is genuinely
+            // different - there are no members to inline, the body is delegated - so it stays out.
             && contract.SurrogateSerializer is null
             && contract.RootTypeName is null && contract.SubTypes.Count == 0
             // [ProtoContract(IsGroup = true)] used to be excluded here. It never needed to be
@@ -3712,6 +3735,13 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
+        /// NOTE on the null guards below and in the write: they ask whether the MEMBER can be null,
+        /// which is a question about its DECLARED type - so they use <c>DeclaredIsValueType</c>, not
+        /// <c>IsValueType</c>, which describes the SURROGATE where one is declared. Getting that
+        /// wrong emits <c>!= null</c> against a struct (CS0019) the moment a surrogated value type
+        /// becomes measurable; gap B42.
+        /// </summary>
+        /// <summary>
         /// The measure mirror of <see cref="EmitWriteMembers"/> for a measurable contract: the
         /// same member order, the same guards, and payload arithmetic in place of writes. The
         /// eligibility fixed point guarantees every member here has a form; a kind falling to
@@ -3719,19 +3749,20 @@ namespace ProtoBuf.BuildTools.Generators
         /// a silently short prefix.
         /// </summary>
         private static void EmitMeasureMembers(StringBuilder sb, int baseIndent, ProtoContractPlan contract,
-            Dictionary<string, ProtoContractPlan> measurable, bool listAsSpan, bool immutableAsSpan)
+            Dictionary<string, ProtoContractPlan> measurable, bool listAsSpan, bool immutableAsSpan,
+            string instance = "value")
         {
             foreach (var member in contract.Members)
             {
                 var condition = member.WriteCondition;
                 if (condition is not null)
                 {
-                    Line(sb, baseIndent, $"if (value.{condition})");
+                    Line(sb, baseIndent, $"if ({instance}.{condition})");
                     Line(sb, baseIndent, "{");
                 }
                 var indent = condition is null ? baseIndent : baseIndent + 1;
                 var number = member.FieldNumber.ToString(CultureInfo.InvariantCulture);
-                Line(sb, indent, $"var tmp{number} = {MemberAccess(contract, member, "value")};");
+                Line(sb, indent, $"var tmp{number} = {MemberAccess(contract, member, instance)};");
 
                 if (member.Map.Factory is not null)
                 {
@@ -3959,7 +3990,7 @@ namespace ProtoBuf.BuildTools.Generators
                         var target = measurable[member.TypeName!];
                         var targetName = Sanitise(member.TypeName!);
                         var inner = indent;
-                        if (!target.IsValueType)
+                        if (!target.DeclaredIsValueType)
                         {
                             Line(sb, indent, $"if (tmp{number} != null)");
                             Line(sb, indent, "{");
@@ -4003,7 +4034,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, inner, MeasureAdd(member, 2,
                                 $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub"));
                         }
-                        if (!target.IsValueType) Line(sb, indent, "}");
+                        if (!target.DeclaredIsValueType) Line(sb, indent, "}");
                         break;
                     }
                     default:
@@ -4059,7 +4090,7 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent, $"foreach (var {item} in {source})");
             Line(sb, indent, "{");
             if (member.Kind is ProtoMemberKind.String or ProtoMemberKind.Bytes || nullableElement
-                || (messageTarget is not null && !messageTarget.IsValueType))
+                || (messageTarget is not null && !messageTarget.DeclaredIsValueType))
             {
                 Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
             }

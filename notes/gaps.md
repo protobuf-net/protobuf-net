@@ -2803,8 +2803,8 @@ model is entirely on the classic write path.**
 | what | gap? | tracked |
 | --- | --- | --- |
 | **inheritance** (`RootTypeName`, `SubTypes`) | **yes, and the biggest** | **B41** |
-| **surrogate** (`SurrogateTypeName`) | **yes** | *untracked before this* |
-| **surrogate with its own serializer** | yes, narrower | *untracked before this* |
+| ~~surrogate (`SurrogateTypeName`)~~ | **DONE 2026-08-21 — also "never taught"** | below |
+| **surrogate with its own serializer** | **stays out, and correctly** | below |
 | **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
 | ~~`[ProtoContract(IsGroup = true)]`~~ | **DONE 2026-08-21 — it was "never taught"** | below |
 | **`[ProtoBeforeSerialization]`** | **NO — load-bearing** | **B17** |
@@ -2868,6 +2868,26 @@ member states no wire type of its own.
 
 Verified: `ContractOptions`'s `Grouped` contract now emits a `Measure_` where it previously emitted
 none; conformance 1747/1747, corpus 3123 compared 0 differ, goldens 639/639.
+
+**Surrogates — done, 2026-08-21, and the third "never taught" in a row.** A surrogated contract's
+body already *was* raw: the emitted write converts (`var surrogate = (CodeSurrogate)value;`) and
+then writes the surrogate's members with `WriteRawTag`/`WriteRawVarint64`. Only the measure was
+missing, and only because `EmitMeasureMembers` hard-coded `value` as the instance while
+`EmitWriteMembers` had always taken one. Both now emit the same conversion, so they walk identical
+members.
+
+**A surrogate carrying its own SERIALIZER stays excluded, and that one is real**: there are no
+members to inline — the body is delegated to that serializer — so there is nothing to measure
+arithmetically.
+
+**The trap it sprang, twice, is the same one B39 hit**: on a surrogated contract `IsValueType`
+describes the **surrogate**, so a member typed as a surrogated *struct* (`Money`, `Ticks`) got
+`!= null` emitted against it (CS0019), and its repeated form got `is null` (CS0037). Every null
+guard that asks "can this MEMBER be null?" must use `DeclaredIsValueType`; seven sites, and the two
+in the repeated-element checks were missed on the first pass because I edited by line number after
+the file had shifted. Textual replacement caught them.
+
+Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6 to 18.
 
 #### Member-level (`RawMemberMeasureBlocked`) — what blocks a member, and so its whole contract
 

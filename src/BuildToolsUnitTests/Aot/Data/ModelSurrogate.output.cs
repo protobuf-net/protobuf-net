@@ -351,14 +351,37 @@ partial class ModelSurrogateModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.Ticks>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.TicksSurrogate>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.VersionSurrogate>
-        , global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>
-        , global::ProtoBuf.Serializers.ISerializer<global::System.Version>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.DateTimeOffset>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Version>
     {
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
@@ -449,20 +472,88 @@ partial class ModelSurrogateModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ModelSurrogate.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Holder value)
             => RawRead_AotFixtures_ModelSurrogate_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.Holder value)
         {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_ModelSurrogate_Holder(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_ModelSurrogate_Holder(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_ModelSurrogate_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.Holder value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
+            long before = 0;
             var tmp1 = value.Release;
-            state.WriteMessage<global::System.Version>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Release
+                len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_System_Version(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Release");
+            }
             var tmp2 = value.Elapsed;
-            state.WriteMessage<global::AotFixtures.ModelSurrogate.Ticks>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            state.WriteRawTag((2 << 3) | 2);  // Elapsed
+            len = state.RawSlots.Next();
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite_AotFixtures_ModelSurrogate_Ticks(ref state, tmp2, depth);
+            DebugAssertPosition(ref state, before + len, "Elapsed");
             var tmp3 = value.When;
-            state.WriteMessage<global::System.DateTimeOffset>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+            state.WriteRawTag((3 << 3) | 2);  // When
+            len = state.RawSlots.Next();
+            state.WriteRawVarint64((ulong)len);
+            DebugCapturePosition(ref state, ref before);
+            RawWrite_System_DateTimeOffset(ref state, tmp3, depth);
+            DebugAssertPosition(ref state, before + len, "When");
+        }
+
+        private static long Measure_AotFixtures_ModelSurrogate_Holder(global::AotFixtures.ModelSurrogate.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            var tmp1 = value.Release;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                sub = Measure_System_Version(tmp1, depth, slots);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Release
+            }
+            var tmp2 = value.Elapsed;
+            var slot2 = slots.Reserve();
+            sub = Measure_AotFixtures_ModelSurrogate_Ticks(tmp2, depth, slots);
+            slots.Set(slot2, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Elapsed
+            var tmp3 = value.When;
+            var slot3 = slots.Reserve();
+            sub = Measure_System_DateTimeOffset(tmp3, depth, slots);
+            slots.Set(slot3, sub);
+            len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // When
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.Holder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ModelSurrogate_Holder(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.ModelSurrogate.Holder RawRead_AotFixtures_ModelSurrogate_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Holder value)
@@ -524,7 +615,7 @@ partial class ModelSurrogateModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.ModelSurrogate.Ticks global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ModelSurrogate.Ticks value)
         {
@@ -550,7 +641,11 @@ partial class ModelSurrogateModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ModelSurrogate.Ticks>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.Ticks value)
+            => RawWrite_AotFixtures_ModelSurrogate_Ticks(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_ModelSurrogate_Ticks(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ModelSurrogate.Ticks value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = global::AotFixtures.ModelSurrogate.TicksConverter.ToSurrogate(value);
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Value;
@@ -559,6 +654,25 @@ partial class ModelSurrogateModel
                 state.WriteRawTag((1 << 3) | 0);  // Value
                 state.WriteRawVarint64(unchecked((ulong)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_ModelSurrogate_Ticks(global::AotFixtures.ModelSurrogate.Ticks value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            var surrogate = global::AotFixtures.ModelSurrogate.TicksConverter.ToSurrogate(value);
+            long len = 0;
+            var tmp1 = surrogate.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ModelSurrogate.Ticks>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ModelSurrogate.Ticks value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ModelSurrogate_Ticks(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
@@ -702,7 +816,7 @@ partial class ModelSurrogateModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::System.DateTimeOffset global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.DateTimeOffset value)
         {
@@ -733,7 +847,11 @@ partial class ModelSurrogateModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.DateTimeOffset>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.DateTimeOffset value)
+            => RawWrite_System_DateTimeOffset(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_System_DateTimeOffset(ref global::ProtoBuf.ProtoWriter.State state, global::System.DateTimeOffset value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Ticks;
@@ -750,10 +868,31 @@ partial class ModelSurrogateModel
             }
         }
 
+        private static long Measure_System_DateTimeOffset(global::System.DateTimeOffset value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            var surrogate = (global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate)value;
+            long len = 0;
+            var tmp1 = surrogate.Ticks;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)tmp1));  // Ticks
+            var tmp2 = surrogate.OffsetMinutes;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // OffsetMinutes
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.DateTimeOffset>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.DateTimeOffset value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_System_DateTimeOffset(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::System.Version global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Read(ref global::ProtoBuf.ProtoReader.State state, global::System.Version value)
         {
@@ -780,7 +919,11 @@ partial class ModelSurrogateModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Version>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Version value)
+            => RawWrite_System_Version(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_System_Version(ref global::ProtoBuf.ProtoWriter.State state, global::System.Version value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(surrogate);
             var tmp1 = surrogate.Value;
@@ -789,6 +932,28 @@ partial class ModelSurrogateModel
                 state.WriteRawTag((1 << 3) | 2);  // Value
                 state.WriteRawString(tmp1);
             }
+        }
+
+        private static long Measure_System_Version(global::System.Version value, int depth, global::ProtoBuf.RawLengthBuffer slots)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            var surrogate = (global::AotFixtures.ModelSurrogate.VersionSurrogate)value;
+            long len = 0;
+            var tmp1 = surrogate.Value;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Value
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Version>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.Version value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_System_Version(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
