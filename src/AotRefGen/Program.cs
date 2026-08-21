@@ -1,4 +1,4 @@
-using ICSharpCode.Decompiler;
+﻿using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using ProtoBuf.Meta;
 using System;
@@ -125,6 +125,33 @@ namespace ProtoBuf.AotRefGen
             }
         }
 
+        /// <summary>
+        /// Replay the model's <c>[ProtoSubType]</c> declarations onto the reference model, which is
+        /// what <c>MetaType.AddSubType</c> exists for.
+        /// </summary>
+        /// <remarks>
+        /// Without this the reference model has never heard of the linkage and serializes the
+        /// sub-type as a standalone contract, so the comparison would be against a
+        /// differently-configured model rather than against ref-emit - the same trap the surrogate
+        /// replay above exists for. Gathered from the assembly and then the model, as the generator
+        /// gathers them; unlike surrogates these accumulate rather than override.
+        /// </remarks>
+        private static void ApplySubTypes(RuntimeTypeModel model, Type modelType)
+        {
+            var declarations = modelType.Assembly
+                .GetCustomAttributes(typeof(ProtoSubTypeAttribute), inherit: false)
+                .Cast<ProtoSubTypeAttribute>()
+                .Concat(modelType.GetCustomAttributes(typeof(ProtoSubTypeAttribute), inherit: false)
+                    .Cast<ProtoSubTypeAttribute>());
+
+            foreach (var declaration in declarations)
+            {
+                model.Add(declaration.BaseType, applyDefaultBehaviour: true)
+                    .AddSubType(declaration.FieldNumber, declaration.SubType,
+                        declaration.IsGroup == true ? DataFormat.Group : DataFormat.Default);
+            }
+        }
+
         private static Delegate MakeConverter(Type converter, string methodName, Type from, Type to)
         {
             var method = converter.GetMethod(methodName, BindingFlags.Public | BindingFlags.Static,
@@ -160,6 +187,7 @@ namespace ProtoBuf.AotRefGen
                 .Any(static x => x.AllowParseableTypes);
 
             ApplySurrogates(model, modelType);
+            ApplySubTypes(model, modelType);
 
             foreach (var seed in seeds) model.Add(seed, applyDefaultBehaviour: true);
 

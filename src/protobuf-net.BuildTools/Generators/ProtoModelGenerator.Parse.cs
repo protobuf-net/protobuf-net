@@ -19,6 +19,7 @@ namespace ProtoBuf.BuildTools.Generators
         private const string ProtoPartialIgnoreAttributeName = "ProtoBuf.ProtoPartialIgnoreAttribute";
         private const string ProtoPartialMemberAttributeName = "ProtoBuf.ProtoPartialMemberAttribute";
         private const string ProtoSurrogateAttributeName = "ProtoBuf.ProtoSurrogateAttribute";
+        private const string ProtoSubTypeAttributeName = "ProtoBuf.ProtoSubTypeAttribute";
         private const string ProtoMapAttributeName = "ProtoBuf.ProtoMapAttribute";
         private const string NullWrappedValueAttributeName = "ProtoBuf.NullWrappedValueAttribute";
         private const string NullWrappedCollectionAttributeName = "ProtoBuf.NullWrappedCollectionAttribute";
@@ -58,6 +59,11 @@ namespace ProtoBuf.BuildTools.Generators
 
             var diagnostics = new List<PlanDiagnostic>();
             var surrogates = GetSurrogates(compilation, model, diagnostics);
+            // out-of-band [ProtoSubType] links, which reach the same place a [ProtoInclude] on the
+            // base type would; anything wrong with a declaration is recorded against the base and
+            // reported only if that base is actually reached, so a library's mistake does not warn
+            // in a model that never uses the hierarchy
+            var declaredSubTypes = GetDeclaredSubTypes(compilation, model);
             var parsed = new Dictionary<string, ProtoContractPlan>(StringComparer.Ordinal);
             var enums = new Dictionary<string, ProtoEnumPlan>(StringComparer.Ordinal);
             var visited = new HashSet<string>(StringComparer.Ordinal);
@@ -155,7 +161,7 @@ namespace ProtoBuf.BuildTools.Generators
                     continue;
                 }
 
-                var contract = ParseContract(compilation, type, diagnostics, surrogates,
+                var contract = ParseContract(compilation, type, diagnostics, surrogates, declaredSubTypes,
                     allowParseableTypes, out var reachable, tupleLevels, tupleConflicts, cancellationToken);
                 if (contract is not null) parsed.Add(key, contract);
                 foreach (var next in reachable) pending.Enqueue(next);
@@ -272,6 +278,7 @@ namespace ProtoBuf.BuildTools.Generators
             INamedTypeSymbol type,
             List<PlanDiagnostic> diagnostics,
             Dictionary<string, SurrogateDeclaration> surrogates,
+            SubTypeDeclarations declaredSubTypes,
             bool allowParseableTypes,
             out List<INamedTypeSymbol> reachable,
             Dictionary<string, int> tupleLevels,
@@ -337,11 +344,21 @@ namespace ProtoBuf.BuildTools.Generators
 
             // the [ProtoInclude] links are read up-front: they decide whether inheritance is legal
             // here at all, and whether an abstract type has a reason to exist
-            if (!TryGetSubTypes(type, out var subTypes))
+            if (!TryGetSubTypes(type, declaredSubTypes, out var subTypes))
             {
                 return Option(diagnostics, at, name, "this form of [ProtoInclude]");
             }
-            var linkedBases = GetLinkedBases(type);
+            // a [ProtoSubType] declaration this type is the base of, that we could not honour. It is
+            // reported here rather than where it was read, so that a mistake in a *referenced*
+            // library only surfaces for a hierarchy this model actually reaches - and it drops the
+            // base, which cascades to every sub-type, because a half-linked hierarchy is worse than
+            // none: the sub-types would emit standalone and silently disagree on the wire
+            if (declaredSubTypes.Problem(type) is { } problem)
+            {
+                return Contract(diagnostics, problem.At.Equals(default(PlanLocation)) ? at : problem.At,
+                    name, problem.Reason);
+            }
+            var linkedBases = GetLinkedBases(type, declaredSubTypes);
             // legal C#, and each hierarchy works in isolation, but protobuf-net refuses the pair once
             // both are in one model - and the generator's model is always one model. Both ref-emit
             // paths refuse it, with different wording: the compiled path says "can only participate
@@ -1416,6 +1433,33 @@ namespace ProtoBuf.BuildTools.Generators
             var subTypePlans = new ProtoSubTypePlan[subTypes.Count];
             if (subTypes.Count != 0 || linkedBase is not null)
             {
+                // Two sub-types at one field number, or one sub-type named twice, is a duplicate
+                // switch label in ReadSubType and would not compile. The shipped analyzer says the
+                // same thing (PBN0003/PBN0011) for [ProtoInclude] alone; checked here because this
+                // is the one place that sees both surfaces at once, after the same DerivesFrom
+                // filtering - which matters, since a generic base's includes are shared by every
+                // closed construction and only one of them applies to each
+                for (int i = 0; i < subTypes.Count; i++)
+                {
+                    for (int j = i + 1; j < subTypes.Count; j++)
+                    {
+                        if (subTypes[i].Tag == subTypes[j].Tag)
+                        {
+                            return Contract(diagnostics, at, name,
+                                $"'{Simplify(subTypes[i].Type.ToDisplayString())}' and "
+                                + $"'{Simplify(subTypes[j].Type.ToDisplayString())}' are both declared as "
+                                + $"sub-types at field number {subTypes[i].Tag.ToString(CultureInfo.InvariantCulture)}");
+                        }
+                        if (SymbolEqualityComparer.Default.Equals(subTypes[i].Type, subTypes[j].Type))
+                        {
+                            return Contract(diagnostics, at, name,
+                                $"'{Simplify(subTypes[i].Type.ToDisplayString())}' is declared as a sub-type "
+                                + $"more than once, at field numbers {subTypes[i].Tag.ToString(CultureInfo.InvariantCulture)} "
+                                + $"and {subTypes[j].Tag.ToString(CultureInfo.InvariantCulture)}");
+                        }
+                    }
+                }
+
                 // members and sub-type tags share one switch in ReadSubType, so a collision between
                 // them is a duplicate label just as much as two members would be
                 foreach (var subType in subTypes)
@@ -1442,7 +1486,7 @@ namespace ProtoBuf.BuildTools.Generators
                         + "but is a value type, and protobuf-net refuses that too: \"Unexpected sub-type\"");
                 }
 
-                rootTypeName = GetHierarchyRoot(type).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                rootTypeName = GetHierarchyRoot(type, declaredSubTypes).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                 if (linkedBase is not null) reachable.Add(linkedBase);
                 for (int i = 0; i < subTypes.Count; i++)
                 {
@@ -1855,7 +1899,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// False if any of them uses a form we cannot reproduce, in which case the caller must
         /// refuse the contract rather than emit a partial hierarchy.
         /// </returns>
-        private static bool TryGetSubTypes(INamedTypeSymbol type,
+        private static bool TryGetSubTypes(INamedTypeSymbol type, SubTypeDeclarations declared,
             out List<(int Tag, INamedTypeSymbol Type, bool IsGroup)> subTypes)
         {
             subTypes = new List<(int, INamedTypeSymbol, bool)>();
@@ -1891,6 +1935,25 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!DerivesFrom(derived, type)) continue;
 
                 subTypes.Add((tag, derived, isGroup));
+            }
+
+            // an out-of-band [ProtoSubType] reaches exactly the same place: the outcome is as though
+            // the base type had carried the [ProtoInclude] itself. An exact restatement of one it
+            // *does* carry is absorbed rather than treated as a duplicate - saying the same thing
+            // twice is harmless, and a consumer restating a library's declaration is a fair thing to
+            // write. Anything else that collides is caught by the duplicate check in ParseContract,
+            // which sees both surfaces at once
+            foreach (var extra in declared.For(type))
+            {
+                var known = false;
+                foreach (var existing in subTypes)
+                {
+                    if (existing.Tag != extra.Tag || existing.IsGroup != extra.IsGroup) continue;
+                    if (!SymbolEqualityComparer.Default.Equals(existing.Type, extra.Type)) continue;
+                    known = true;
+                    break;
+                }
+                if (!known) subTypes.Add(extra);
             }
             return true;
         }
@@ -1974,6 +2037,147 @@ namespace ProtoBuf.BuildTools.Generators
         {
             var conversion = compilation.ClassifyConversion(from, to);
             return conversion.Exists && (conversion.IsUserDefined || conversion.IsIdentity);
+        }
+
+        /// <summary>
+        /// The out-of-band <c>[ProtoSubType]</c> links in force for a model, keyed by the base type
+        /// they extend, together with anything wrong with a declaration.
+        /// </summary>
+        /// <remarks>
+        /// A problem is recorded rather than reported: it is raised only if the base type is
+        /// actually reached, so a mistake in a library nobody in this model uses stays quiet.
+        /// </remarks>
+        private sealed class SubTypeDeclarations
+        {
+            public static readonly SubTypeDeclarations Empty = new SubTypeDeclarations();
+
+            private readonly Dictionary<INamedTypeSymbol, List<(int Tag, INamedTypeSymbol Type, bool IsGroup)>> _byBase
+                = new Dictionary<INamedTypeSymbol, List<(int, INamedTypeSymbol, bool)>>(SymbolEqualityComparer.Default);
+
+            private readonly Dictionary<INamedTypeSymbol, (PlanLocation At, string Reason)> _problems
+                = new Dictionary<INamedTypeSymbol, (PlanLocation, string)>(SymbolEqualityComparer.Default);
+
+            public void Add(INamedTypeSymbol baseType, int tag, INamedTypeSymbol subType, bool isGroup)
+            {
+                if (!_byBase.TryGetValue(baseType, out var list))
+                {
+                    _byBase.Add(baseType, list = new List<(int, INamedTypeSymbol, bool)>());
+                }
+                foreach (var existing in list)
+                {
+                    // the same declaration reached us twice - a consumer restating what a reference
+                    // already offers, most likely. Saying the same thing twice is not a conflict
+                    if (existing.Tag == tag && existing.IsGroup == isGroup
+                        && SymbolEqualityComparer.Default.Equals(existing.Type, subType))
+                    {
+                        return;
+                    }
+                }
+                list.Add((tag, subType, isGroup));
+            }
+
+            /// <summary>Record why a declaration could not be honoured; the first one wins.</summary>
+            public void RecordProblem(INamedTypeSymbol baseType, PlanLocation at, string reason)
+            {
+                if (!_problems.ContainsKey(baseType)) _problems.Add(baseType, (at, reason));
+            }
+
+            public (PlanLocation At, string Reason)? Problem(INamedTypeSymbol baseType)
+                => _problems.TryGetValue(baseType, out var problem) ? problem : default((PlanLocation, string)?);
+
+            /// <summary>
+            /// The links declared for a base type, in a deterministic order - the emitted <c>is</c>
+            /// chain follows this, and gather order depends on the reference list.
+            /// </summary>
+            public IEnumerable<(int Tag, INamedTypeSymbol Type, bool IsGroup)> For(INamedTypeSymbol baseType)
+            {
+                if (!_byBase.TryGetValue(baseType, out var list)) return Array.Empty<(int, INamedTypeSymbol, bool)>();
+                return list
+                    .OrderBy(static x => x.Tag)
+                    .ThenBy(static x => x.Type.ToDisplayString(), StringComparer.Ordinal);
+            }
+        }
+
+        /// <summary>
+        /// Gather the <c>[ProtoSubType]</c> declarations a model can see: the compile-time
+        /// equivalent of <c>MetaType.AddSubType</c>, for a hierarchy the base type cannot describe
+        /// itself because it has never heard of the sub-type.
+        /// </summary>
+        /// <remarks>
+        /// The sites are <c>[ProtoSurrogate]</c>'s, for the same reason: an out-of-band declaration
+        /// has to be able to cross an assembly boundary, so a library can ship the linkage for types
+        /// its consumer never names. Referenced assemblies (and their modules) are scanned, then
+        /// this assembly and its module, then the model - but unlike surrogates these <b>accumulate
+        /// rather than override</b>: two references each naming a sub-type of one base give a
+        /// hierarchy with both, so the merge is a union and conflicts are reported instead.
+        /// <para>
+        /// Scanning <em>assembly and module</em> attributes is cheap and bounded, where scanning
+        /// every type in every reference would not be.
+        /// </para>
+        /// </remarks>
+        private static SubTypeDeclarations GetDeclaredSubTypes(Compilation compilation, INamedTypeSymbol model)
+        {
+            SubTypeDeclarations? result = null;
+            foreach (var reference in compilation.SourceModule.ReferencedAssemblySymbols)
+            {
+                Collect(reference.GetAttributes());
+                foreach (var module in reference.Modules) Collect(module.GetAttributes());
+            }
+            Collect(compilation.Assembly.GetAttributes());
+            Collect(compilation.SourceModule.GetAttributes());
+            Collect(model.GetAttributes());
+            return result ?? SubTypeDeclarations.Empty;
+
+            void Collect(IEnumerable<AttributeData> attributes)
+            {
+                foreach (var attribute in attributes)
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() != ProtoSubTypeAttributeName) continue;
+
+                    // (base, sub, fieldNumber) or (base, sub, fieldNumber, group); the second form is
+                    // how "explicitly length-prefixed" is told from "left to protobuf-net", which is
+                    // why it is an overload rather than an optional argument
+                    var arguments = attribute.ConstructorArguments;
+                    if (arguments.Length is not (3 or 4)) continue;
+                    if (arguments[0].Value is not INamedTypeSymbol baseType) continue;
+                    if (arguments[1].Value is not INamedTypeSymbol subType) continue;
+                    if (arguments[2].Value is not int fieldNumber) continue;
+                    var isGroup = arguments.Length == 4 && arguments[3].Value is true;
+
+                    result ??= new SubTypeDeclarations();
+                    var at = PlanLocation.From(attribute.ApplicationSyntaxReference is { } syntax
+                        ? Location.Create(syntax.SyntaxTree, syntax.Span) : null);
+                    var pair = $"'{Simplify(subType.ToDisplayString())}' as a sub-type of "
+                        + $"'{Simplify(baseType.ToDisplayString())}'";
+
+                    // MetaType.AddSubType's own guards, in the order it applies them. Each of these
+                    // throws there, so a declaration that trips one does not work in protobuf-net
+                    // either - reporting beats emitting something that disagrees with it
+                    if (fieldNumber is < 1 or > 536870911)
+                    {
+                        result.RecordProblem(baseType, at, $"[ProtoSubType] declares {pair} at field number "
+                            + fieldNumber.ToString(CultureInfo.InvariantCulture)
+                            + ", which is outside the valid range 1-536870911");
+                        continue;
+                    }
+                    if (baseType.IsSealed || baseType.IsUnboundGenericType
+                        || baseType.TypeKind is not (TypeKind.Class or TypeKind.Interface))
+                    {
+                        result.RecordProblem(baseType, at, $"[ProtoSubType] declares {pair}, and protobuf-net "
+                            + "refuses that too: \"Sub-types can only be added to non-sealed classes\"");
+                        continue;
+                    }
+                    if (subType.IsUnboundGenericType || !DerivesFrom(subType, baseType))
+                    {
+                        // note this also catches a type declared as a sub-type of *itself*
+                        result.RecordProblem(baseType, at, $"[ProtoSubType] declares {pair}, which does not derive "
+                            + "from it, and protobuf-net refuses that too: \"is not a valid sub-type of\"");
+                        continue;
+                    }
+
+                    result.Add(baseType, fieldNumber, subType, isGroup);
+                }
+            }
         }
 
         /// <summary>
@@ -2267,9 +2471,9 @@ namespace ProtoBuf.BuildTools.Generators
         /// declaration is not a hierarchy â€” protobuf-net treats the derived type as its own contract.
         /// </summary>
         // note: no list pattern here - netstandard2.0 has no System.Index, which one would require
-        private static INamedTypeSymbol? GetLinkedBase(INamedTypeSymbol type)
+        private static INamedTypeSymbol? GetLinkedBase(INamedTypeSymbol type, SubTypeDeclarations declared)
         {
-            var bases = GetLinkedBases(type);
+            var bases = GetLinkedBases(type, declared);
             return bases.Count == 0 ? null : bases[0];
         }
 
@@ -2278,7 +2482,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// and legal to <em>write</em>, but protobuf-net refuses it — see <see cref="GetLinkedBase"/>'s
         /// callers, which treat a count above one as a dropped contract.
         /// </summary>
-        private static List<INamedTypeSymbol> GetLinkedBases(INamedTypeSymbol type)
+        private static List<INamedTypeSymbol> GetLinkedBases(INamedTypeSymbol type, SubTypeDeclarations declared)
         {
             var found = new List<INamedTypeSymbol>();
             if (Links(type.BaseType)) found.Add(type.BaseType!);
@@ -2295,7 +2499,7 @@ namespace ProtoBuf.BuildTools.Generators
             bool Links(INamedTypeSymbol? baseType)
             {
                 if (baseType is not { SpecialType: not SpecialType.System_Object }) return false;
-                if (!TryGetSubTypes(baseType, out var subTypes)) return false;
+                if (!TryGetSubTypes(baseType, declared, out var subTypes)) return false;
 
                 foreach (var candidate in subTypes)
                 {
@@ -2309,9 +2513,9 @@ namespace ProtoBuf.BuildTools.Generators
         /// The top of a type's hierarchy: every type in one reads and writes through the root's
         /// <c>ISubTypeSerializer</c>.
         /// </summary>
-        private static INamedTypeSymbol GetHierarchyRoot(INamedTypeSymbol type)
+        private static INamedTypeSymbol GetHierarchyRoot(INamedTypeSymbol type, SubTypeDeclarations declared)
         {
-            while (GetLinkedBase(type) is { } linked) type = linked;
+            while (GetLinkedBase(type, declared) is { } linked) type = linked;
             return type;
         }
 

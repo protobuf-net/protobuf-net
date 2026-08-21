@@ -711,6 +711,82 @@ sub-type markers (`Dog` then `Cat`); same-branch merges, in either direction, ar
 `Inherit.input.cs`'s `Holder` samples stay on one branch because of it, since the differential suite
 manufactures repeated fields by concatenating every sample of a type.
 
+#### Out-of-band sub-types: `[ProtoSubType]`
+
+`[ProtoInclude]` lives on the base, so it cannot express a hierarchy whose base has never heard of the
+sub-type — a base in a package that does not reference yours, or a sub-type like `Tagged<Order>` that
+no base library could have named. `AddSubType` is the runtime answer; `[ProtoSubType(typeof(Base),
+typeof(Sub), fieldNumber)]` is the compile-time one (protobuf-net#1308). It is **generator-only**: the
+runtime model does not honour it, exactly as it does not honour `[ProtoSurrogate]`.
+
+- **the merge happens in `TryGetSubTypes`, and that is the whole trick.** It is the single choke point
+  `GetLinkedBases` (and so `GetHierarchyRoot`) runs through, so nothing downstream can tell an
+  out-of-band link from a `[ProtoInclude]` — the emit needed **no** change at all.
+- **sites are `[ProtoSurrogate]`'s plus module**: referenced assemblies (and their modules), this
+  assembly, its module, then the model. Scanning assembly/module attributes is bounded; scanning every
+  type in every reference is not, which is the same reason recorded for surrogates.
+- **they accumulate rather than override** — the one place the surrogate precedent misleads. Two
+  packages each adding a sub-type to one base give a hierarchy with both. An *exact* restatement of a
+  declaration (same base, sub, number and framing) is absorbed rather than reported, since a consumer
+  repeating a reference's declaration is a fair thing to write.
+- **no seeding is needed**, and the design note in `notes/aot/findings.md` was wrong about this before
+  it was built: merging at the choke point makes the hierarchy self-seeding from *either* end —
+  reaching the base enqueues the sub-types as `reachable`, and seeding a sub-type finds the base
+  through `GetLinkedBases`. `ProtoSubTypeReferenceTests` pins both directions.
+- **framing is a `bool`, not a `DataFormat`.** A sub-type is always a sub-message, so length-prefixed
+  versus delimited is the only choice there is; the other `DataFormat` values would silently mean
+  nothing. "Left to protobuf-net" is told from "explicitly length-prefixed" by **constructor arity**
+  (`(base, sub, field)` vs `(base, sub, field, group)`), which is why it is an overload rather than an
+  optional argument. Nothing consumes that distinction yet.
+- **it is deliberately not generic.** `[ProtoInclude<A, B>(100)]` was the shape proposed in the ticket
+  and `where TSub : class, TSuper` would have done `PBN0012`'s job for free — but on .NET Framework,
+  `GetCustomAttributes` on *any* member carrying a generic attribute throws `NotSupportedException:
+  Generic types are not valid`, and `AttributeMap.Create` is `GetCustomAttributes`, on both types and
+  assemblies. An attribute with no runtime meaning must not be able to break a net4x consumer's
+  runtime model. Probed with a net462 console app; `CustomAttributeData` is fine, net8.0 is fine.
+- **validation is `MetaType.AddSubType`'s**, in its order, and each refusal *matches* protobuf-net
+  rather than falling short: field number outside 1–536870911, a sealed/struct/unbound base
+  ("Sub-types can only be added to non-sealed classes"), and a sub-type that does not derive from the
+  base ("is not a valid sub-type of") — which also catches a type declared as a sub-type of itself,
+  since `DerivesFrom` starts at `BaseType`.
+- **duplicates are checked across both surfaces at once**, in `ParseContract` after the `DerivesFrom`
+  filtering — which matters, because a generic base's includes are shared by every closed construction
+  and only one applies to each. This is new for `[ProtoInclude]` too: two sub-types at one field
+  number, or one sub-type named twice, previously reached the emitter and produced a duplicate switch
+  label. `PBN0003`/`PBN0011` are *errors*, so no compiling source tree contains one — hence the corpus
+  did not move.
+- **a bad declaration is recorded against the base and reported only if that base is reached.** A
+  declaration lives on an assembly, so reporting eagerly would warn about a library's mistake in every
+  model that references it. It reports `PBN3002` and drops the base, which cascades to the sub-types —
+  a half-linked hierarchy is worse than none, since an unlinked sub-type emits standalone and silently
+  disagrees on the wire.
+- **`PBN0013` had to be taught about it.** "No include is declared for X" fired on every sub-type
+  linked this way, nagging people to write the attribute they cannot write. A `[ProtoSubType]` at
+  **any of the three sites** now satisfies it, which is what made `DataContractAnalyzer` grow a
+  `RegisterCompilationStartAction`: the declarations are a property of the compilation, so they are
+  gathered once (assembly, module, and every type the compilation declares, which is what reaches a
+  model class) and shared by the syntax-node action. Built **lazily** — only PBN0013 asks, so most
+  compilations never walk anything. Note the file's old comment claiming `AnalysisContext` has no
+  compilation-start hook was simply wrong; `AotMigrationAnalyzer` had been using one all along.
+- **the sides are matched on their `OriginalDefinition`s**, because a declaration names a *closed*
+  construction (`Tagged<int>`) while `PBN0013` is reported against the *open* declaration it came
+  from (`Tagged<T>`) — a plain symbol comparison never matches, which is the same trap `PBN0012` has
+  a test for. Nothing is lost: the open declaration is the only place there is to report.
+- **`PBN0013` carries a help link now** (`docs/rules/PBN0013.md`, following DapperAOT's per-rule
+  layout) because the message cannot hold the whole story. The part that needs the room: registering
+  at another layer — `AddSubType` on a `RuntimeTypeModel` — is invisible to any analyzer, so the
+  warning is *expected* there and can be ignored. New rule pages go in that folder and are linked by
+  `helpLinkUri`, not by prose in the message.
+- **the replay is in all three harnesses** — `AotRefGen`, `AotConformanceTests` and `AotDifferential` —
+  through the public `MetaType.AddSubType(fieldNumber, type, dataFormat)`, beside the surrogate replay.
+  Without it the reference model has never heard of the linkage and serializes the sub-type as a
+  standalone contract, which reads as a generator fault and is the opposite.
+- fixture layout follows the assembly-attribute rule already recorded for surrogates: the Data/
+  fixture declares on the **model** (a declaration in Data/ at assembly level would apply to every
+  fixture, and `AotRefGen` would then register those types in every model and grow every
+  `.reference.cs`), `Diagnostics/AssemblySubType` covers the assembly and module spellings in
+  isolation, and `ProtoSubTypeReferenceTests` covers the genuinely cross-assembly hand-off.
+
 ### Compatibility level and the BCL types
 
 `DateTime`, `TimeSpan`, `Guid` and `decimal` are the **only** things the compatibility level touches,
