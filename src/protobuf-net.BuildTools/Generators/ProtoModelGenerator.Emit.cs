@@ -136,6 +136,43 @@ namespace ProtoBuf.BuildTools.Generators
                 } while (changed);
             }
 
+            // Which contracts' RawWrite_ actually READS a slot, transitively. A grouped sub-message
+            // carries no length, so a fully-grouped tree consumes none at all - and must not be
+            // given an eager measure pass it has no use for. That is not a micro-optimisation: gap
+            // B35 is precisely the finding that delimited writes need NO measure, and emitting one
+            // unconditionally measured 2,453ns -> 3,934ns on a 512-wide grouped graph before this
+            // was put back. Transitive because the root's measure is what fills the slots for the
+            // whole sub-tree the write walks, so ANY consumer below it makes the root a consumer.
+            var slotConsumers = new HashSet<string>();
+            if (plan.RawWriter)
+            {
+                bool grew;
+                do
+                {
+                    grew = false;
+                    foreach (var contract in plan.Contracts)
+                    {
+                        if (slotConsumers.Contains(contract.TypeName)) continue;
+                        foreach (var member in contract.Members)
+                        {
+                            var unary = RawNativeMessageTarget(member, measurable);
+                            var repeated = RawRepeatedMessageTarget(member, measurable);
+                            var target = unary ?? repeated;
+                            if (target is null) continue;
+                            // a length-prefixed site reads a slot; a grouped one does not, but its
+                            // body is still walked, so a consumer below it still counts
+                            if (member.DataFormat != ProtoDataFormat.Group
+                                || slotConsumers.Contains(target.TypeName))
+                            {
+                                slotConsumers.Add(contract.TypeName);
+                                grew = true;
+                                break;
+                            }
+                        }
+                    }
+                } while (grew);
+            }
+
             Line(sb, indent + 1, $"private sealed class {ServicesTypeName}");
             var prefix = ':';
             foreach (var contract in plan.Contracts)
@@ -244,7 +281,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (!first) contracts.AppendLine();
                 first = false;
                 var raw = rawSet.Contains(contract.TypeName);
-                EmitContract(contracts, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, plan.ImmutableArrayAsSpan, measurable);
+                EmitContract(contracts, indent + 2, contract, raw, plan.RawWriter, plan.ListAsSpan, plan.ImmutableArrayAsSpan, measurable, slotConsumers);
                 if (raw)
                 {
                     EmitRawRead(contracts, indent + 2, contract, rawCallable);
@@ -1061,7 +1098,8 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         private static void EmitContract(StringBuilder sb, int indent, ProtoContractPlan contract, bool raw = false, bool rawWrite = false,
-            bool listAsSpan = false, bool immutableAsSpan = false, Dictionary<string, ProtoContractPlan>? measurable = null)
+            bool listAsSpan = false, bool immutableAsSpan = false, Dictionary<string, ProtoContractPlan>? measurable = null,
+            HashSet<string>? slotConsumers = null)
         {
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
 
@@ -1207,8 +1245,44 @@ namespace ProtoBuf.BuildTools.Generators
                 // sub-message engine in between. Eligibility guarantees no surrogate, hierarchy,
                 // extension data or before-serialize callback reaches here.
                 var san = Sanitise(contract.TypeName);
+                // the write pass consumes lengths BY POSITION, so the measure has to have run and
+                // the read cursor has to be sitting at this object's first child. Two ways in:
+                // the classic engine already measured us through the IMeasuringSerializer hook and
+                // recorded where our run began (Leave), or nothing has measured us and we do it
+                // here. Either way we then seek past our OWN slot to our first child's. gap B38.
+                // Only a contract whose write actually READS a slot needs the measure prologue.
+                // A fully-grouped tree reads none - no length is on the wire anywhere in it - and
+                // giving it one costs a whole extra traversal for nothing; measured at 2,453ns ->
+                // 3,934ns on a 512-wide grouped graph, which is gap B35 being undone by accident.
+                if (slotConsumers is null || slotConsumers.Contains(contract.TypeName))
+                {
                 Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
-                Line(sb, indent + 1, $"=> RawWrite_{san}(ref state, value, state.RawDepthBudget);");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, "var slots = state.RawSlots;");
+                // a struct has no reference identity, so it can never be found by Leave; it always
+                // takes the measure-here arm, which is correct and merely costs a walk
+                if (contract.IsValueType)
+                {
+                    Line(sb, indent + 1, "var entry = slots.Mark();");
+                    Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots);");
+                }
+                else
+                {
+                    Line(sb, indent + 1, "if (!slots.Leave(value, out var entry))");
+                    Line(sb, indent + 1, "{");
+                    Line(sb, indent + 2, "entry = slots.Mark();");
+                    Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots);");
+                    Line(sb, indent + 1, "}");
+                }
+                Line(sb, indent + 1, "slots.SeekTo(entry);");
+                Line(sb, indent + 1, $"RawWrite_{san}(ref state, value, state.RawDepthBudget);");
+                Line(sb, indent, "}");
+                }
+                else
+                {
+                    Line(sb, indent, $"void {self}.Write(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
+                    Line(sb, indent + 1, $"=> RawWrite_{san}(ref state, value, state.RawDepthBudget);");
+                }
                 sb.AppendLine();
                 Line(sb, indent, $"public static void RawWrite_{san}(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value, int depth)");
                 Line(sb, indent, "{");
@@ -1249,7 +1323,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // contracts' measure statics, which is the sub-message recursion) or reflective -
                 // and both reflective binders, NanoBench.ResolveMeasure and
                 // AotConformanceTests.MeasurableContractTests, already pass NonPublic
-                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)");
+                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
                 Line(sb, indent + 1, "long len = 0;");
@@ -1268,9 +1342,20 @@ namespace ProtoBuf.BuildTools.Generators
                 // body wider than the interface's int reply, spilling the pathological giant
                 // to the traversal, which is long-capable end to end.
                 Line(sb, indent, $"int {Serializers}.IMeasuringSerializer<{contract.TypeName}>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, {contract.TypeName} value)");
-                Line(sb, indent + 1, "=> global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)");
-                Line(sb, indent + 2, $"&& Measure_{san}(value, depth, lengths) is var len && len <= int.MaxValue");
-                Line(sb, indent + 2, "? (int)len : -1;");
+                // THE BOUNDARY: this measure and the matching Write are separate calls with
+                // arbitrary work between them, so the positional cursor cannot span it - the
+                // engine may measure several objects before writing any. Record where this run
+                // began against the object, so the later Write can find it again: one hash per
+                // crossing, none per node. gap B38.
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, "if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;");
+                Line(sb, indent + 1, "var entry = slots.Mark();");
+                Line(sb, indent + 1, $"var len = Measure_{san}(value, depth, slots);");
+                // only a reference type can be found again by identity; a struct would box to a
+                // different object on the way back and never match, so it is left to re-measure
+                if (!contract.IsValueType) Line(sb, indent + 1, "slots.Enter(value, entry);");
+                Line(sb, indent + 1, "return len <= int.MaxValue ? (int)len : -1;");
+                Line(sb, indent, "}");
                 return;
             }
 
@@ -1598,6 +1683,13 @@ namespace ProtoBuf.BuildTools.Generators
             Dictionary<string, ProtoContractPlan>? measurable = null,
             string depth = "state.RawDepthBudget")
         {
+            // Whether an enclosing Measure_ has already reserved slots for this contract's raw
+            // sub-message members. A contract can be raw-WRITING without being MEASURABLE - it then
+            // emits its body inline in ISerializer.Write with no measure prologue - and in that case
+            // nothing has filled the slots, so each site must measure on demand. Under the old
+            // dictionary this was dynamic (a TryGetValue miss, "the miss arm serves a root write");
+            // positionally it is a compile-time question, and this is it. gap B38.
+            var enclosingMeasured = measurable is not null && measurable.ContainsKey(contract.TypeName);
             foreach (var member in contract.Members)
             {
                 // a conditional member wraps its whole write, and *replaces* the trivial-value guard
@@ -1657,7 +1749,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent, $"if (tmp{number} != null)");
                             Line(sb, indent, "{");
                         }
-                        EmitRawRepeatedWrite(sb, guard ? indent + 1 : indent, member, number, listAsSpan, immutableAsSpan, repeatedTarget, depth);
+                        EmitRawRepeatedWrite(sb, guard ? indent + 1 : indent, member, number, listAsSpan, immutableAsSpan, repeatedTarget, depth, enclosingMeasured);
                         if (guard) Line(sb, indent, "}");
                         goto written;
                     }
@@ -1919,28 +2011,25 @@ namespace ProtoBuf.BuildTools.Generators
                             break;
                         }
                         Line(sb, inner, $"state.WriteRawTag(({member.FieldNumber} << 3) | 2);  // {member.Name}");
-                        if (target.IsValueType)
+                        // the eager measure pass already put this child's length in a slot;
+                        // read it back by position. Both walks are pre-order over the same guards,
+                        // so a bare Next() lands on the right one - no probe, no hash, no index
+                        // arithmetic. The struct carve-out that used to sit here ("no reference
+                        // identity to key on") went with the keying: positionally a struct child
+                        // is an ordinary slot. gap B38.
+                        if (enclosingMeasured)
                         {
-                            // a struct has no reference identity to key on
-                            Line(sb, inner, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
+                            Line(sb, inner, "len = state.RawSlots.Next();");
                         }
                         else
                         {
-                            // usually a HIT: an enclosing measure already walked this object and
-                            // recorded it (the ??= cache); the miss arm serves a root write
-                            // NO local for the cache (gap B16, measured): a per-site local is the
-                            // WORST of the three shapes - 43.1ns against 38.2 hoisted and 38.5
-                            // inline, over 8 sites. Hoisting and reading inline are a dead heat,
-                            // so the inline form wins on being simpler AND on safety: there is no
-                            // hoisted local to go stale if NetObjectCache.InitializeFrom ever
-                            // swapped _rawLengths mid-body. Contrast tmpN, which must stay a
-                            // local - `value.Something` is consumer code, so reading it twice is
-                            // a correctness risk, not merely a cost.
-                            Line(sb, inner, $"if (!state.RawLengths.TryGetValue(tmp{number}, out len))");
-                            Line(sb, inner, "{");
-                            Line(sb, inner + 1, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawLengths);");
-                            Line(sb, inner + 1, $"state.RawLengths[tmp{number}] = len;");
-                            Line(sb, inner, "}");
+                            // nothing measured us, so measure this child now: one walk that fills
+                            // its whole run, after which RawWrite_ consumes it slot by slot. Still
+                            // linear - the re-measure that makes a lazy scheme O(n^2) would need
+                            // EVERY level to do this, and below here everything is slot-driven
+                            Line(sb, inner, $"var mark{number} = state.RawSlots.Mark();");
+                            Line(sb, inner, $"len = Measure_{targetName}(tmp{number}, state.RawDepthBudget, state.RawSlots);");
+                            Line(sb, inner, $"state.RawSlots.SeekTo(mark{number});");
                         }
                         Line(sb, inner, $"state.WriteRawVarint64((ulong)len);");
                         Line(sb, inner, $"{DriftCapture};");
@@ -3135,19 +3224,27 @@ namespace ProtoBuf.BuildTools.Generators
         private static void AppendFoldingLengthTemp(StringBuilder sb, int indent, StringBuilder bodyBuilder, string name)
         {
             var body = bodyBuilder.ToString();
-            var assignment = name + " = Measure_";
+            // the temp is assigned from an arithmetic measure, or - on the write side since gap
+            // B38 - from the ordered length buffer. Both spellings count towards the same local:
+            // missing the second is why the descriptor model briefly emitted an undeclared `len`.
+            var assignments = new[] { name + " = Measure_", name + " = state.RawSlots.Next()" };
             var sites = 0;
-            for (var at = body.IndexOf(assignment, StringComparison.Ordinal); at >= 0;
-                at = body.IndexOf(assignment, at + assignment.Length, StringComparison.Ordinal))
+            string single = null;
+            foreach (var assignment in assignments)
             {
-                sites++;
+                for (var at = body.IndexOf(assignment, StringComparison.Ordinal); at >= 0;
+                    at = body.IndexOf(assignment, at + assignment.Length, StringComparison.Ordinal))
+                {
+                    sites++;
+                    single = assignment;
+                }
             }
             if (sites == 1)
             {
                 var outParameter = "out " + name + ")";
                 body = body.IndexOf(outParameter, StringComparison.Ordinal) >= 0
                     ? body.Replace(outParameter, "out var " + name + ")")
-                    : body.Replace(assignment, "var " + assignment);
+                    : body.Replace(single, "var " + single);
             }
             else if (sites > 1)
             {
@@ -3183,7 +3280,7 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static void EmitRawRepeatedWrite(StringBuilder sb, int indent, ProtoMemberPlan member, string number,
             bool listAsSpan, bool immutableAsSpan, ProtoContractPlan? messageTarget = null,
-            string depth = "state.RawDepthBudget")
+            string depth = "state.RawDepthBudget", bool enclosingMeasured = true)
         {
             // a GROUPED message element is framed by a start/end tag pair rather than a length
             // prefix (gap B35): wire type 3 opens it, 4 closes it, and the field number is the same
@@ -3218,17 +3315,15 @@ namespace ProtoBuf.BuildTools.Generators
             else if (messageTarget is not null)
             {
                 var targetName = Sanitise(member.TypeName!);
-                if (messageTarget.IsValueType)
+                if (enclosingMeasured)
                 {
-                    Line(sb, indent + 1, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawLengths);");
+                    Line(sb, indent + 1, "len = state.RawSlots.Next();");   // gap B38, as above
                 }
                 else
                 {
-                    Line(sb, indent + 1, $"if (!state.RawLengths.TryGetValue({item}, out len))");
-                    Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawLengths);");
-                    Line(sb, indent + 2, $"state.RawLengths[{item}] = len;");
-                    Line(sb, indent + 1, "}");
+                    Line(sb, indent + 1, $"var mark{number} = state.RawSlots.Mark();");
+                    Line(sb, indent + 1, $"len = Measure_{targetName}({item}, state.RawDepthBudget, state.RawSlots);");
+                    Line(sb, indent + 1, $"state.RawSlots.SeekTo(mark{number});");
                 }
                 Line(sb, indent + 1, $"state.WriteRawVarint64((ulong)len);");
                 Line(sb, indent + 1, $"{DriftCapture};");
@@ -3684,18 +3779,30 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent, "{");
                             inner++;
                         }
-                        if (target.IsValueType)
+                        // THE SLOT BELONGS TO THE SITE, not to the contract being measured, and
+                        // that is the whole correctness argument: a slot is reserved exactly where
+                        // the write will call Next(), one for one, in the same order. Three cases,
+                        // and getting any of them wrong shifts every later length (gap B38):
+                        //   - length-prefixed raw write -> reserve here, fill after the recursion;
+                        //   - GROUPED raw write -> no length on the wire, so no slot, but the body
+                        //     is still walked by RawWrite_ so its own sites still reserve;
+                        //   - classic write -> a null buffer, which suppresses reservation all the
+                        //     way down: that sub-tree is re-measured by its own Write entry.
+                        // Measure-eligibility is WIDER than write-eligibility (the measure arm takes
+                        // anything in `measurable`; the write arm additionally refuses a nullable
+                        // member, a non-default format, ...), which under the old dictionary was
+                        // free - an entry nobody read cost nothing - and positionally is not.
+                        var unaryTarget = RawNativeMessageTarget(member, measurable);
+                        var unaryGrouped = member.DataFormat == ProtoDataFormat.Group;
+                        if (unaryTarget is not null && !unaryGrouped)
                         {
-                            // a struct has no reference identity to key on
-                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, lengths);");
+                            Line(sb, inner, $"var slot{number} = slots.Reserve();");
+                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, slots);");
+                            Line(sb, inner, $"slots.Set(slot{number}, sub);");
                         }
                         else
                         {
-                            Line(sb, inner, $"if (!lengths.TryGetValue(tmp{number}, out sub))");
-                            Line(sb, inner, "{");
-                            Line(sb, inner + 1, $"sub = Measure_{targetName}(tmp{number}, depth, lengths);");
-                            Line(sb, inner + 1, $"lengths[tmp{number}] = sub;");
-                            Line(sb, inner, "}");
+                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, {(unaryTarget is null ? "null" : "slots")});");
                         }
                         if (member.DataFormat == ProtoDataFormat.Group)
                         {
@@ -3782,17 +3889,18 @@ namespace ProtoBuf.BuildTools.Generators
             else if (messageTarget is not null)
             {
                 var targetName = Sanitise(member.TypeName!);
-                if (messageTarget.IsValueType)
+                // reached only where messageTarget is non-null, and the caller obtained that from
+                // RawRepeatedMessageTarget - i.e. it IS the write-eligibility test. A grouped
+                // element carries no length, so it takes no slot; see the unary site's note
+                if (member.DataFormat == ProtoDataFormat.Group)
                 {
-                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, lengths);");
+                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots);");
                 }
                 else
                 {
-                    Line(sb, indent + 1, $"if (!lengths.TryGetValue({item}, out sub))");
-                    Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"sub = Measure_{targetName}({item}, depth, lengths);");
-                    Line(sb, indent + 2, $"lengths[{item}] = sub;");
-                    Line(sb, indent + 1, "}");
+                    Line(sb, indent + 1, $"var slot{number} = slots.Reserve();");
+                    Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots);");
+                    Line(sb, indent + 1, $"slots.Set(slot{number}, sub);");
                 }
                 // a grouped element carries no length prefix: start tag + body + end tag, and both
                 // tags encode to the same width (same field number, wire type differs only in the

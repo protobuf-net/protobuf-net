@@ -26,6 +26,15 @@ namespace ProtoBuf
 
         internal Dictionary<object, long> RawLengths => _rawLengths;
 
+        // the ordered replacement for _rawLengths on the generated raw path: same job - carry a
+        // measured sub-message length from Measure_ to RawWrite_ - but keyed by POSITION, which
+        // costs no hashing at all. notes/gaps.md B38. Kept beside the dictionary rather than
+        // replacing it outright, because the classic engine's own measure-by-writing path still
+        // uses _knownLengths and the two must not be confused.
+        private RawLengthBuffer _rawSlots = new();
+
+        internal RawLengthBuffer RawSlots => _rawSlots;
+
         // reference identity regardless of user Equals/GetHashCode overrides; the BCL's
         // ReferenceEqualityComparer is net5+ only, and this must serve every TFM
         private sealed class RawLengthComparer : IEqualityComparer<object>
@@ -279,6 +288,7 @@ namespace ProtoBuf
 
             ClearAndMaybeTrim(ref _knownLengths, pressure, static () => new());
             ClearAndMaybeTrim(ref _rawLengths, pressure, static () => new(RawLengthComparer.Instance));
+            _rawSlots.Trim(pressure, RetainedEntryCap);
             _hit = _miss = 0;
         }
 
@@ -341,6 +351,9 @@ namespace ProtoBuf
                 var raw = _rawLengths;
                 _rawLengths = obj._rawLengths;
                 obj._rawLengths = raw;
+
+                // same O(1) hand-off for the ordered buffer; a copy here once cost 22 KB and 11%
+                _rawSlots.SwapWith(obj._rawSlots);
             }
         }
 

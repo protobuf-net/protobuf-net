@@ -74,7 +74,16 @@ partial class GroupedElementsModel
             => RawRead_AotFixtures_GroupedElements_Grouped(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Grouped>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Grouped value)
-            => RawWrite_AotFixtures_GroupedElements_Grouped(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_GroupedElements_Grouped(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_GroupedElements_Grouped(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_GroupedElements_Grouped(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Grouped value, int depth)
         {
@@ -110,11 +119,7 @@ partial class GroupedElementsModel
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedElements.Item>();
                     state.WriteRawTag((3 << 3) | 2);  // Plain
-                    if (!state.RawLengths.TryGetValue(item3, out var len))
-                    {
-                        len = Measure_AotFixtures_GroupedElements_Item(item3, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item3] = len;
-                    }
+                    var len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_AotFixtures_GroupedElements_Item(ref state, item3, depth);
@@ -130,7 +135,7 @@ partial class GroupedElementsModel
             }
         }
 
-        private static long Measure_AotFixtures_GroupedElements_Grouped(global::AotFixtures.GroupedElements.Grouped value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GroupedElements_Grouped(global::AotFixtures.GroupedElements.Grouped value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -141,11 +146,7 @@ partial class GroupedElementsModel
                 foreach (var item1 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp1))
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedElements.Item>();
-                    if (!lengths.TryGetValue(item1, out sub))
-                    {
-                        sub = Measure_AotFixtures_GroupedElements_Item(item1, depth, lengths);
-                        lengths[item1] = sub;
-                    }
+                    sub = Measure_AotFixtures_GroupedElements_Item(item1, depth, slots);
                     len += 2 + sub;
                 }
             }
@@ -155,11 +156,7 @@ partial class GroupedElementsModel
                 foreach (var item2 in tmp2)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedElements.Item>();
-                    if (!lengths.TryGetValue(item2, out sub))
-                    {
-                        sub = Measure_AotFixtures_GroupedElements_Item(item2, depth, lengths);
-                        lengths[item2] = sub;
-                    }
+                    sub = Measure_AotFixtures_GroupedElements_Item(item2, depth, slots);
                     len += 2 + sub;
                 }
             }
@@ -169,31 +166,29 @@ partial class GroupedElementsModel
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedElements.Item>();
-                    if (!lengths.TryGetValue(item3, out sub))
-                    {
-                        sub = Measure_AotFixtures_GroupedElements_Item(item3, depth, lengths);
-                        lengths[item3] = sub;
-                    }
+                    var slot3 = slots.Reserve();
+                    sub = Measure_AotFixtures_GroupedElements_Item(item3, depth, slots);
+                    slots.Set(slot3, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp5 = value.Single;
             if (tmp5 != null)
             {
-                if (!lengths.TryGetValue(tmp5, out sub))
-                {
-                    sub = Measure_AotFixtures_GroupedElements_Item(tmp5, depth, lengths);
-                    lengths[tmp5] = sub;
-                }
+                sub = Measure_AotFixtures_GroupedElements_Item(tmp5, depth, slots);
                 len += 2 + sub;  // Single (group: no length prefix)
             }
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.Grouped>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GroupedElements.Grouped value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_GroupedElements_Grouped(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_GroupedElements_Grouped(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.GroupedElements.Grouped RawRead_AotFixtures_GroupedElements_Grouped(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Grouped value)
         {
@@ -407,7 +402,16 @@ partial class GroupedElementsModel
             => RawRead_AotFixtures_GroupedElements_GroupedOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.GroupedOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.GroupedOnly value)
-            => RawWrite_AotFixtures_GroupedElements_GroupedOnly(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_GroupedElements_GroupedOnly(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_GroupedElements_GroupedOnly(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_GroupedElements_GroupedOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.GroupedOnly value, int depth)
         {
@@ -434,7 +438,7 @@ partial class GroupedElementsModel
             }
         }
 
-        private static long Measure_AotFixtures_GroupedElements_GroupedOnly(global::AotFixtures.GroupedElements.GroupedOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GroupedElements_GroupedOnly(global::AotFixtures.GroupedElements.GroupedOnly value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -443,11 +447,7 @@ partial class GroupedElementsModel
             var tmp2 = value.Body;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out var sub))
-                {
-                    sub = Measure_AotFixtures_GroupedElements_Item(tmp2, depth, lengths);
-                    lengths[tmp2] = sub;
-                }
+                var sub = Measure_AotFixtures_GroupedElements_Item(tmp2, depth, slots);
                 len += 2 + sub;  // Body (group: no length prefix)
             }
             var tmp3 = value.Trailer;
@@ -459,9 +459,13 @@ partial class GroupedElementsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.GroupedOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GroupedElements.GroupedOnly value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_GroupedElements_GroupedOnly(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_GroupedElements_GroupedOnly(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.GroupedElements.GroupedOnly RawRead_AotFixtures_GroupedElements_GroupedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.GroupedOnly value)
         {
@@ -514,7 +518,16 @@ partial class GroupedElementsModel
             => RawRead_AotFixtures_GroupedElements_Item(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Item>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Item value)
-            => RawWrite_AotFixtures_GroupedElements_Item(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_GroupedElements_Item(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_GroupedElements_Item(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Item value, int depth)
         {
@@ -534,7 +547,7 @@ partial class GroupedElementsModel
             }
         }
 
-        private static long Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GroupedElements_Item(global::AotFixtures.GroupedElements.Item value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -549,9 +562,13 @@ partial class GroupedElementsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.Item>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GroupedElements.Item value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_GroupedElements_Item(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_GroupedElements_Item(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.GroupedElements.Item RawRead_AotFixtures_GroupedElements_Item(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Item value)
         {
@@ -596,7 +613,16 @@ partial class GroupedElementsModel
             => RawRead_AotFixtures_GroupedElements_Node(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Node>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Node value)
-            => RawWrite_AotFixtures_GroupedElements_Node(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_GroupedElements_Node(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_GroupedElements_Node(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_GroupedElements_Node(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Node value, int depth)
         {
@@ -617,7 +643,7 @@ partial class GroupedElementsModel
             }
         }
 
-        private static long Measure_AotFixtures_GroupedElements_Node(global::AotFixtures.GroupedElements.Node value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_GroupedElements_Node(global::AotFixtures.GroupedElements.Node value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -626,20 +652,20 @@ partial class GroupedElementsModel
             var tmp2 = value.GroupTail;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out var sub))
-                {
-                    sub = Measure_AotFixtures_GroupedElements_Node(tmp2, depth, lengths);
-                    lengths[tmp2] = sub;
-                }
+                var sub = Measure_AotFixtures_GroupedElements_Node(tmp2, depth, slots);
                 len += 2 + sub;  // GroupTail (group: no length prefix)
             }
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GroupedElements.Node>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GroupedElements.Node value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_GroupedElements_Node(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_GroupedElements_Node(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.GroupedElements.Node RawRead_AotFixtures_GroupedElements_Node(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GroupedElements.Node value)
         {

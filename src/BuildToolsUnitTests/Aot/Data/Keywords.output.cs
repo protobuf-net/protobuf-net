@@ -54,7 +54,16 @@ partial class KeywordsModel
             => RawRead_AotFixtures_Keywords_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Inner value)
-            => RawWrite_AotFixtures_Keywords_Inner(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Keywords_Inner(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Keywords_Inner(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Inner value, int depth)
         {
@@ -68,7 +77,7 @@ partial class KeywordsModel
             }
         }
 
-        private static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Keywords_Inner(global::AotFixtures.Keywords.Inner value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -78,9 +87,13 @@ partial class KeywordsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Inner value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Keywords_Inner(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Keywords_Inner(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Keywords.Inner RawRead_AotFixtures_Keywords_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Inner value)
         {
@@ -119,7 +132,16 @@ partial class KeywordsModel
             => RawRead_AotFixtures_Keywords_Keywords(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Keywords>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Keywords value)
-            => RawWrite_AotFixtures_Keywords_Keywords(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Keywords_Keywords(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Keywords_Keywords(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Keywords value, int depth)
         {
@@ -152,11 +174,7 @@ partial class KeywordsModel
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // class
-                if (!state.RawLengths.TryGetValue(tmp4, out len))
-                {
-                    len = Measure_AotFixtures_Keywords_Inner(tmp4, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp4] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Keywords_Inner(ref state, tmp4, depth);
@@ -166,11 +184,7 @@ partial class KeywordsModel
             if (tmp5 != null)
             {
                 state.WriteRawTag((5 << 3) | 2);  // lock
-                if (!state.RawLengths.TryGetValue(tmp5, out len))
-                {
-                    len = Measure_AotFixtures_Keywords_Pair(tmp5, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp5] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Keywords_Pair(ref state, tmp5, depth);
@@ -184,7 +198,7 @@ partial class KeywordsModel
             }
         }
 
-        private static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Keywords_Keywords(global::AotFixtures.Keywords.Keywords value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -207,21 +221,17 @@ partial class KeywordsModel
             var tmp4 = value.@class;
             if (tmp4 != null)
             {
-                if (!lengths.TryGetValue(tmp4, out sub))
-                {
-                    sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, lengths);
-                    lengths[tmp4] = sub;
-                }
+                var slot4 = slots.Reserve();
+                sub = Measure_AotFixtures_Keywords_Inner(tmp4, depth, slots);
+                slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // class
             }
             var tmp5 = value.@lock;
             if (tmp5 != null)
             {
-                if (!lengths.TryGetValue(tmp5, out sub))
-                {
-                    sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, lengths);
-                    lengths[tmp5] = sub;
-                }
+                var slot5 = slots.Reserve();
+                sub = Measure_AotFixtures_Keywords_Pair(tmp5, depth, slots);
+                slots.Set(slot5, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // lock
             }
             var tmp6 = value.value;
@@ -230,9 +240,13 @@ partial class KeywordsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Keywords>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Keywords value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Keywords_Keywords(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Keywords_Keywords(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Keywords.Keywords RawRead_AotFixtures_Keywords_Keywords(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Keywords.Keywords value)
         {
@@ -355,7 +369,16 @@ partial class KeywordsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Keywords.Pair>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value)
-            => RawWrite_AotFixtures_Keywords_Pair(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Keywords_Pair(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Keywords_Pair(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Keywords_Pair(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Keywords.Pair value, int depth)
         {
@@ -371,7 +394,7 @@ partial class KeywordsModel
             }
         }
 
-        private static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Keywords_Pair(global::AotFixtures.Keywords.Pair value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -386,9 +409,13 @@ partial class KeywordsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Keywords.Pair>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Keywords.Pair value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Keywords_Pair(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Keywords_Pair(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

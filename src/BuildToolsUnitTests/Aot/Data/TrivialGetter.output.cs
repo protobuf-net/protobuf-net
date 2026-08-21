@@ -30,7 +30,16 @@ partial class TrivialGetterModel
             => RawRead_AotFixtures_TrivialGetter_Backed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Backed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value)
-            => RawWrite_AotFixtures_TrivialGetter_Backed(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_TrivialGetter_Backed(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_TrivialGetter_Backed(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Backed value, int depth)
         {
@@ -59,7 +68,7 @@ partial class TrivialGetterModel
             }
         }
 
-        private static long Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_TrivialGetter_Backed(global::AotFixtures.TrivialGetter.Backed value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -82,9 +91,13 @@ partial class TrivialGetterModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Backed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Backed value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_TrivialGetter_Backed(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_TrivialGetter_Backed(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.TrivialGetter.Backed RawRead_AotFixtures_TrivialGetter_Backed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Backed value)
         {
@@ -154,7 +167,16 @@ partial class TrivialGetterModel
             => RawRead_AotFixtures_TrivialGetter_Computed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.TrivialGetter.Computed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value)
-            => RawWrite_AotFixtures_TrivialGetter_Computed(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_TrivialGetter_Computed(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_TrivialGetter_Computed(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TrivialGetter.Computed value, int depth)
         {
@@ -168,7 +190,7 @@ partial class TrivialGetterModel
             }
         }
 
-        private static long Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_TrivialGetter_Computed(global::AotFixtures.TrivialGetter.Computed value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -178,9 +200,13 @@ partial class TrivialGetterModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.TrivialGetter.Computed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.TrivialGetter.Computed value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_TrivialGetter_Computed(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_TrivialGetter_Computed(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.TrivialGetter.Computed RawRead_AotFixtures_TrivialGetter_Computed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.TrivialGetter.Computed value)
         {

@@ -75,7 +75,16 @@ partial class SurrogateModel
             => RawRead_AotFixtures_Surrogate_CodeSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
-            => RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Surrogate_CodeSurrogate(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.CodeSurrogate value, int depth)
         {
@@ -89,7 +98,7 @@ partial class SurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Surrogate_CodeSurrogate(global::AotFixtures.Surrogate.CodeSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -99,9 +108,13 @@ partial class SurrogateModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.CodeSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Surrogate.CodeSurrogate value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Surrogate_CodeSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Surrogate_CodeSurrogate(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Surrogate.CodeSurrogate RawRead_AotFixtures_Surrogate_CodeSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.CodeSurrogate value)
         {
@@ -291,7 +304,16 @@ partial class SurrogateModel
             => RawRead_AotFixtures_Surrogate_MoneySurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
-            => RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Surrogate_MoneySurrogate(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.MoneySurrogate value, int depth)
         {
@@ -305,7 +327,7 @@ partial class SurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Surrogate_MoneySurrogate(global::AotFixtures.Surrogate.MoneySurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -315,9 +337,13 @@ partial class SurrogateModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.MoneySurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Surrogate.MoneySurrogate value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Surrogate_MoneySurrogate(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Surrogate_MoneySurrogate(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Surrogate.MoneySurrogate RawRead_AotFixtures_Surrogate_MoneySurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.MoneySurrogate value)
         {
@@ -397,7 +423,16 @@ partial class SurrogateModel
             => RawRead_AotFixtures_Surrogate_TagSurrogate(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Surrogate.TagSurrogate>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value)
-            => RawWrite_AotFixtures_Surrogate_TagSurrogate(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Surrogate_TagSurrogate(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Surrogate_TagSurrogate(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Surrogate.TagSurrogate value, int depth)
         {
@@ -411,7 +446,7 @@ partial class SurrogateModel
             }
         }
 
-        private static long Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Surrogate_TagSurrogate(global::AotFixtures.Surrogate.TagSurrogate value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -424,9 +459,13 @@ partial class SurrogateModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Surrogate.TagSurrogate>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Surrogate.TagSurrogate value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Surrogate_TagSurrogate(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Surrogate_TagSurrogate(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Surrogate.TagSurrogate RawRead_AotFixtures_Surrogate_TagSurrogate(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Surrogate.TagSurrogate value)
         {

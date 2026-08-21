@@ -198,6 +198,10 @@ namespace ProtoBuf
         // InitializeFrom hand-off both share it for free; see the notes on the field itself
         internal System.Collections.Generic.Dictionary<object, long> RawLengths => netCache.RawLengths;
 
+        // the ordered replacement for the above (notes/gaps.md B38); lives in the same place for
+        // the same reason, so the sidecar and the measure hand-off keep working unchanged
+        internal RawLengthBuffer RawSlots => netCache.RawSlots;
+
         [StructLayout(LayoutKind.Auto)]
         internal readonly struct WriteState
         {

@@ -53,7 +53,16 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_DataFields(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.DataFields>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value)
-            => RawWrite_AotFixtures_Field_DataFields(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Field_DataFields(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Field_DataFields(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.DataFields value, int depth)
         {
@@ -73,7 +82,7 @@ partial class FieldModel
             }
         }
 
-        private static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_DataFields(global::AotFixtures.Field.DataFields value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -88,9 +97,13 @@ partial class FieldModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.DataFields>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Field.DataFields value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Field_DataFields(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Field_DataFields(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Field.DataFields RawRead_AotFixtures_Field_DataFields(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.DataFields value)
         {
@@ -152,7 +165,13 @@ partial class FieldModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.FieldStruct>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value)
-            => RawWrite_AotFixtures_Field_FieldStruct(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            var entry = slots.Mark();
+                Measure_AotFixtures_Field_FieldStruct(value, state.RawDepthBudget, slots);
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Field_FieldStruct(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Field_FieldStruct(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.FieldStruct value, int depth)
         {
@@ -165,7 +184,7 @@ partial class FieldModel
             }
         }
 
-        private static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_FieldStruct(global::AotFixtures.Field.FieldStruct value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -175,9 +194,12 @@ partial class FieldModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.FieldStruct>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Field.FieldStruct value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Field_FieldStruct(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Field_FieldStruct(value, depth, slots);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -207,11 +229,9 @@ partial class FieldModel
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Message
-                if (!state.RawLengths.TryGetValue(tmp3, out var len))
-                {
-                    len = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len;
-                }
+                var mark3 = state.RawSlots.Mark();
+                var len = Measure_AotFixtures_Field_Nested(tmp3, state.RawDepthBudget, state.RawSlots);
+                state.RawSlots.SeekTo(mark3);
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_Field_Nested(ref state, tmp3, state.RawDepthBudget);
@@ -331,7 +351,16 @@ partial class FieldModel
             => RawRead_AotFixtures_Field_Nested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Field.Nested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value)
-            => RawWrite_AotFixtures_Field_Nested(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Field_Nested(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Field_Nested(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Nested value, int depth)
         {
@@ -345,7 +374,7 @@ partial class FieldModel
             }
         }
 
-        private static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Field_Nested(global::AotFixtures.Field.Nested value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -355,9 +384,13 @@ partial class FieldModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Field.Nested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Field.Nested value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Field_Nested(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Field_Nested(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Field.Nested RawRead_AotFixtures_Field_Nested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Field.Nested value)
         {

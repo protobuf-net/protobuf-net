@@ -27,7 +27,16 @@ partial class BclLevel240Model
             => RawRead_AotFixtures_BclLevel240_Level240(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BclLevel240.Level240>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BclLevel240.Level240 value)
-            => RawWrite_AotFixtures_BclLevel240_Level240(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_BclLevel240_Level240(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_BclLevel240_Level240(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_BclLevel240_Level240(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BclLevel240.Level240 value, int depth)
         {
@@ -61,7 +70,7 @@ partial class BclLevel240Model
             global::ProtoBuf.BclHelpers.WriteDuration(ref state, tmp5);
         }
 
-        private static long Measure_AotFixtures_BclLevel240_Level240(global::AotFixtures.BclLevel240.Level240 value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_BclLevel240_Level240(global::AotFixtures.BclLevel240.Level240 value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -95,9 +104,13 @@ partial class BclLevel240Model
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.BclLevel240.Level240>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.BclLevel240.Level240 value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_BclLevel240_Level240(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_BclLevel240_Level240(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.BclLevel240.Level240 RawRead_AotFixtures_BclLevel240_Level240(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BclLevel240.Level240 value)
         {

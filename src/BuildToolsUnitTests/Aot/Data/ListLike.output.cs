@@ -51,7 +51,16 @@ partial class ListLikeModel
             => RawRead_AotFixtures_ListLike_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value)
-            => RawWrite_AotFixtures_ListLike_Holder(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_ListLike_Holder(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_ListLike_Holder(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value, int depth)
         {
@@ -62,11 +71,7 @@ partial class ListLikeModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // NotAList
-                if (!state.RawLengths.TryGetValue(tmp1, out var len))
-                {
-                    len = Measure_AotFixtures_ListLike_NotAList(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_ListLike_NotAList(ref state, tmp1, depth);
@@ -80,18 +85,16 @@ partial class ListLikeModel
             }
         }
 
-        private static long Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ListLike_Holder(global::AotFixtures.ListLike.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             var tmp1 = value.NotAList;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out var sub))
-                {
-                    sub = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, lengths);
-                    lengths[tmp1] = sub;
-                }
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_ListLike_NotAList(tmp1, depth, slots);
+                slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // NotAList
             }
             var tmp2 = value.Other;
@@ -100,9 +103,13 @@ partial class ListLikeModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListLike.Holder value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_ListLike_Holder(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ListLike_Holder(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.ListLike.Holder RawRead_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.Holder value)
         {
@@ -149,7 +156,16 @@ partial class ListLikeModel
             => RawRead_AotFixtures_ListLike_NotAList(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ListLike.NotAList>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value)
-            => RawWrite_AotFixtures_ListLike_NotAList(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_ListLike_NotAList(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_ListLike_NotAList(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.NotAList value, int depth)
         {
@@ -169,7 +185,7 @@ partial class ListLikeModel
             }
         }
 
-        private static long Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ListLike_NotAList(global::AotFixtures.ListLike.NotAList value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -184,9 +200,13 @@ partial class ListLikeModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ListLike.NotAList>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ListLike.NotAList value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_ListLike_NotAList(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ListLike_NotAList(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.ListLike.NotAList RawRead_AotFixtures_ListLike_NotAList(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ListLike.NotAList value)
         {

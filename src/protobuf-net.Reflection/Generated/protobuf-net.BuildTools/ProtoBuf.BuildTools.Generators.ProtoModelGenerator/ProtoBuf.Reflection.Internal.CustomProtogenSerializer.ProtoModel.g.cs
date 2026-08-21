@@ -107,7 +107,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_DescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_DescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_DescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_DescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_DescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto value, int depth)
         {
@@ -131,11 +140,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     state.WriteRawTag((2 << 3) | 2);  // Fields
-                    if (!state.RawLengths.TryGetValue(item2, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item2, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item2] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, item2, depth);
@@ -149,11 +154,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
                     state.WriteRawTag((3 << 3) | 2);  // NestedTypes
-                    if (!state.RawLengths.TryGetValue(item3, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_DescriptorProto(item3, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item3] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_DescriptorProto(ref state, item3, depth);
@@ -167,11 +168,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
                     state.WriteRawTag((4 << 3) | 2);  // EnumTypes
-                    if (!state.RawLengths.TryGetValue(item4, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(item4, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item4] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto(ref state, item4, depth);
@@ -185,11 +182,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>();
                     state.WriteRawTag((5 << 3) | 2);  // ExtensionRanges
-                    if (!state.RawLengths.TryGetValue(item5, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(item5, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item5] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref state, item5, depth);
@@ -203,11 +196,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     state.WriteRawTag((6 << 3) | 2);  // Extensions
-                    if (!state.RawLengths.TryGetValue(item6, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item6, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item6] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, item6, depth);
@@ -218,11 +207,7 @@ partial class CustomProtogenSerializer
             if (tmp7 != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp7, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_MessageOptions(tmp7, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp7] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_MessageOptions(ref state, tmp7, depth);
@@ -235,11 +220,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item8 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.OneofDescriptorProto>();
                     state.WriteRawTag((8 << 3) | 2);  // OneofDecls
-                    if (!state.RawLengths.TryGetValue(item8, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_OneofDescriptorProto(item8, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item8] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_OneofDescriptorProto(ref state, item8, depth);
@@ -253,11 +234,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>();
                     state.WriteRawTag((9 << 3) | 2);  // ReservedRanges
-                    if (!state.RawLengths.TryGetValue(item9, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(item9, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item9] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref state, item9, depth);
@@ -283,7 +260,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_DescriptorProto(global::Google.Protobuf.Reflection.DescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_DescriptorProto(global::Google.Protobuf.Reflection.DescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -302,11 +279,9 @@ partial class CustomProtogenSerializer
                 foreach (var item2 in tmp2)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
-                    if (!lengths.TryGetValue(item2, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item2, depth, lengths);
-                        lengths[item2] = sub;
-                    }
+                    var slot2 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item2, depth, slots);
+                    slots.Set(slot2, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -316,11 +291,9 @@ partial class CustomProtogenSerializer
                 foreach (var item3 in tmp3)
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
-                    if (!lengths.TryGetValue(item3, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_DescriptorProto(item3, depth, lengths);
-                        lengths[item3] = sub;
-                    }
+                    var slot3 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_DescriptorProto(item3, depth, slots);
+                    slots.Set(slot3, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -330,11 +303,9 @@ partial class CustomProtogenSerializer
                 foreach (var item4 in tmp4)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
-                    if (!lengths.TryGetValue(item4, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(item4, depth, lengths);
-                        lengths[item4] = sub;
-                    }
+                    var slot4 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(item4, depth, slots);
+                    slots.Set(slot4, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -344,11 +315,9 @@ partial class CustomProtogenSerializer
                 foreach (var item5 in tmp5)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>();
-                    if (!lengths.TryGetValue(item5, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(item5, depth, lengths);
-                        lengths[item5] = sub;
-                    }
+                    var slot5 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(item5, depth, slots);
+                    slots.Set(slot5, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -358,22 +327,18 @@ partial class CustomProtogenSerializer
                 foreach (var item6 in tmp6)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
-                    if (!lengths.TryGetValue(item6, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item6, depth, lengths);
-                        lengths[item6] = sub;
-                    }
+                    var slot6 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item6, depth, slots);
+                    slots.Set(slot6, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp7 = value.Options;
             if (tmp7 != null)
             {
-                if (!lengths.TryGetValue(tmp7, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_MessageOptions(tmp7, depth, lengths);
-                    lengths[tmp7] = sub;
-                }
+                var slot7 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_MessageOptions(tmp7, depth, slots);
+                slots.Set(slot7, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             var tmp8 = value.OneofDecls;
@@ -382,11 +347,9 @@ partial class CustomProtogenSerializer
                 foreach (var item8 in tmp8)
                 {
                     if (item8 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.OneofDescriptorProto>();
-                    if (!lengths.TryGetValue(item8, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_OneofDescriptorProto(item8, depth, lengths);
-                        lengths[item8] = sub;
-                    }
+                    var slot8 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_OneofDescriptorProto(item8, depth, slots);
+                    slots.Set(slot8, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -396,11 +359,9 @@ partial class CustomProtogenSerializer
                 foreach (var item9 in tmp9)
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>();
-                    if (!lengths.TryGetValue(item9, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(item9, depth, lengths);
-                        lengths[item9] = sub;
-                    }
+                    var slot9 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(item9, depth, slots);
+                    slots.Set(slot9, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -423,9 +384,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.DescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_DescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_DescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.DescriptorProto RawRead_Google_Protobuf_Reflection_DescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto value)
         {
@@ -566,7 +531,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
-            => RawWrite_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value, int depth)
         {
@@ -589,11 +563,7 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp3, out var len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, tmp3, depth);
@@ -602,7 +572,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -619,11 +589,9 @@ partial class CustomProtogenSerializer
             var tmp3 = value.Options;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out var sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp3, depth, lengths);
-                    lengths[tmp3] = sub;
-                }
+                var slot3 = slots.Reserve();
+                var sub = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(tmp3, depth, slots);
+                slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -631,9 +599,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ExtensionRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange value)
         {
@@ -710,7 +682,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -729,9 +701,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange RawRead_Google_Protobuf_Reflection_DescriptorProto_ReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange value)
         {
@@ -779,7 +755,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_EnumDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_EnumDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value, int depth)
         {
@@ -803,11 +788,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>();
                     state.WriteRawTag((2 << 3) | 2);  // Values
-                    if (!state.RawLengths.TryGetValue(item2, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(item2, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item2] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref state, item2, depth);
@@ -818,11 +799,7 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp3, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_EnumOptions(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_EnumOptions(ref state, tmp3, depth);
@@ -835,11 +812,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>();
                     state.WriteRawTag((4 << 3) | 2);  // ReservedRanges
-                    if (!state.RawLengths.TryGetValue(item4, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(item4, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item4] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref state, item4, depth);
@@ -865,7 +838,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_EnumDescriptorProto(global::Google.Protobuf.Reflection.EnumDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_EnumDescriptorProto(global::Google.Protobuf.Reflection.EnumDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -884,22 +857,18 @@ partial class CustomProtogenSerializer
                 foreach (var item2 in tmp2)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>();
-                    if (!lengths.TryGetValue(item2, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(item2, depth, lengths);
-                        lengths[item2] = sub;
-                    }
+                    var slot2 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(item2, depth, slots);
+                    slots.Set(slot2, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp3 = value.Options;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_EnumOptions(tmp3, depth, lengths);
-                    lengths[tmp3] = sub;
-                }
+                var slot3 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_EnumOptions(tmp3, depth, slots);
+                slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             var tmp4 = value.ReservedRanges;
@@ -908,11 +877,9 @@ partial class CustomProtogenSerializer
                 foreach (var item4 in tmp4)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>();
-                    if (!lengths.TryGetValue(item4, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(item4, depth, lengths);
-                        lengths[item4] = sub;
-                    }
+                    var slot4 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(item4, depth, slots);
+                    slots.Set(slot4, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -935,9 +902,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_EnumDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.EnumDescriptorProto RawRead_Google_Protobuf_Reflection_EnumDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto value)
         {
@@ -1039,7 +1010,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1058,9 +1029,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange RawRead_Google_Protobuf_Reflection_EnumDescriptorProto_EnumReservedRange(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange value)
         {
@@ -1108,7 +1083,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_EnumOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumOptions value)
-            => RawWrite_Google_Protobuf_Reflection_EnumOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_EnumOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_EnumOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumOptions value, int depth)
         {
@@ -1135,11 +1119,7 @@ partial class CustomProtogenSerializer
             if (tmp7 != null)
             {
                 state.WriteRawTag((7 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp7, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp7, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp7] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp7, depth);
@@ -1152,11 +1132,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -1166,7 +1142,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_EnumOptions(global::Google.Protobuf.Reflection.EnumOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_EnumOptions(global::Google.Protobuf.Reflection.EnumOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1189,11 +1165,9 @@ partial class CustomProtogenSerializer
             var tmp7 = value.Features;
             if (tmp7 != null)
             {
-                if (!lengths.TryGetValue(tmp7, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp7, depth, lengths);
-                    lengths[tmp7] = sub;
-                }
+                var slot7 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp7, depth, slots);
+                slots.Set(slot7, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -1202,11 +1176,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -1215,9 +1187,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_EnumOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_EnumOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.EnumOptions RawRead_Google_Protobuf_Reflection_EnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumOptions value)
         {
@@ -1294,7 +1270,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value, int depth)
         {
@@ -1320,11 +1305,7 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp3, out var len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref state, tmp3, depth);
@@ -1333,7 +1314,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(global::Google.Protobuf.Reflection.EnumValueDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(global::Google.Protobuf.Reflection.EnumValueDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1353,11 +1334,9 @@ partial class CustomProtogenSerializer
             var tmp3 = value.Options;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out var sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp3, depth, lengths);
-                    lengths[tmp3] = sub;
-                }
+                var slot3 = slots.Reserve();
+                var sub = Measure_Google_Protobuf_Reflection_EnumValueOptions(tmp3, depth, slots);
+                slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -1365,9 +1344,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_EnumValueDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.EnumValueDescriptorProto RawRead_Google_Protobuf_Reflection_EnumValueDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueDescriptorProto value)
         {
@@ -1420,7 +1403,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_EnumValueOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.EnumValueOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
-            => RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_EnumValueOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_EnumValueOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.EnumValueOptions value, int depth)
         {
@@ -1437,11 +1429,7 @@ partial class CustomProtogenSerializer
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp2, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp2, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp2] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp2, depth);
@@ -1456,11 +1444,7 @@ partial class CustomProtogenSerializer
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // FeatureSupport
-                if (!state.RawLengths.TryGetValue(tmp4, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp4, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp4] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref state, tmp4, depth);
@@ -1473,11 +1457,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -1487,7 +1467,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_EnumValueOptions(global::Google.Protobuf.Reflection.EnumValueOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_EnumValueOptions(global::Google.Protobuf.Reflection.EnumValueOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1500,11 +1480,9 @@ partial class CustomProtogenSerializer
             var tmp2 = value.Features;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp2, depth, lengths);
-                    lengths[tmp2] = sub;
-                }
+                var slot2 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp2, depth, slots);
+                slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             if (value.ShouldSerializeDebugRedact())
@@ -1515,11 +1493,9 @@ partial class CustomProtogenSerializer
             var tmp4 = value.FeatureSupport;
             if (tmp4 != null)
             {
-                if (!lengths.TryGetValue(tmp4, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp4, depth, lengths);
-                    lengths[tmp4] = sub;
-                }
+                var slot4 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp4, depth, slots);
+                slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FeatureSupport
             }
             var tmp999 = value.UninterpretedOptions;
@@ -1528,11 +1504,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -1541,9 +1515,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.EnumValueOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.EnumValueOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_EnumValueOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_EnumValueOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.EnumValueOptions RawRead_Google_Protobuf_Reflection_EnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.EnumValueOptions value)
         {
@@ -1619,7 +1597,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
-            => RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value, int depth)
         {
@@ -1634,11 +1621,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>();
                     state.WriteRawTag((2 << 3) | 2);  // Declarations
-                    if (!state.RawLengths.TryGetValue(item2, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(item2, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item2] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(ref state, item2, depth);
@@ -1655,11 +1638,7 @@ partial class CustomProtogenSerializer
             if (tmp50 != null)
             {
                 state.WriteRawTag((50 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp50, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp50] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp50, depth);
@@ -1672,11 +1651,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -1686,7 +1661,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(global::Google.Protobuf.Reflection.ExtensionRangeOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(global::Google.Protobuf.Reflection.ExtensionRangeOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1697,11 +1672,9 @@ partial class CustomProtogenSerializer
                 foreach (var item2 in tmp2)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>();
-                    if (!lengths.TryGetValue(item2, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(item2, depth, lengths);
-                        lengths[item2] = sub;
-                    }
+                    var slot2 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(item2, depth, slots);
+                    slots.Set(slot2, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -1713,11 +1686,9 @@ partial class CustomProtogenSerializer
             var tmp50 = value.Features;
             if (tmp50 != null)
             {
-                if (!lengths.TryGetValue(tmp50, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, depth, lengths);
-                    lengths[tmp50] = sub;
-                }
+                var slot50 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, depth, slots);
+                slots.Set(slot50, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -1726,11 +1697,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -1739,9 +1708,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.ExtensionRangeOptions RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions value)
         {
@@ -1855,7 +1828,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -1895,9 +1868,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration RawRead_Google_Protobuf_Reflection_ExtensionRangeOptions_Declaration(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration value)
         {
@@ -2023,7 +2000,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FeatureSet(global::Google.Protobuf.Reflection.FeatureSet value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FeatureSet(global::Google.Protobuf.Reflection.FeatureSet value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -2072,9 +2049,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FeatureSet>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FeatureSet value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FeatureSet(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FeatureSet(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FeatureSet RawRead_Google_Protobuf_Reflection_FeatureSet(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FeatureSet value)
         {
@@ -2176,7 +2157,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_FieldDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value, int depth)
         {
@@ -2241,11 +2231,7 @@ partial class CustomProtogenSerializer
             if (tmp8 != null)
             {
                 state.WriteRawTag((8 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp8, out var len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FieldOptions(tmp8, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp8] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FieldOptions(ref state, tmp8, depth);
@@ -2274,7 +2260,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FieldDescriptorProto(global::Google.Protobuf.Reflection.FieldDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FieldDescriptorProto(global::Google.Protobuf.Reflection.FieldDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -2328,11 +2314,9 @@ partial class CustomProtogenSerializer
             var tmp8 = value.Options;
             if (tmp8 != null)
             {
-                if (!lengths.TryGetValue(tmp8, out var sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FieldOptions(tmp8, depth, lengths);
-                    lengths[tmp8] = sub;
-                }
+                var slot8 = slots.Reserve();
+                var sub = Measure_Google_Protobuf_Reflection_FieldOptions(tmp8, depth, slots);
+                slots.Set(slot8, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             if (value.ShouldSerializeOneofIndex())
@@ -2358,9 +2342,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FieldDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FieldDescriptorProto RawRead_Google_Protobuf_Reflection_FieldDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldDescriptorProto value)
         {
@@ -2473,7 +2461,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_FieldOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FieldOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FieldOptions value)
-            => RawWrite_Google_Protobuf_Reflection_FieldOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_FieldOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_FieldOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_FieldOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FieldOptions value, int depth)
         {
@@ -2545,11 +2542,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item20 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>();
                     state.WriteRawTag((20 << 3) | 2);  // EditionDefaults
-                    if (!state.RawLengths.TryGetValue(item20, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(item20, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item20] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_FieldOptions_EditionDefault(ref state, item20, depth);
@@ -2560,11 +2553,7 @@ partial class CustomProtogenSerializer
             if (tmp21 != null)
             {
                 state.WriteRawTag((21 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp21, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp21, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp21] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp21, depth);
@@ -2574,11 +2563,7 @@ partial class CustomProtogenSerializer
             if (tmp22 != null)
             {
                 state.WriteRawTag((22 << 3) | 2);  // feature_support
-                if (!state.RawLengths.TryGetValue(tmp22, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp22, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp22] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref state, tmp22, depth);
@@ -2591,11 +2576,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -2605,7 +2586,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FieldOptions(global::Google.Protobuf.Reflection.FieldOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FieldOptions(global::Google.Protobuf.Reflection.FieldOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -2669,32 +2650,26 @@ partial class CustomProtogenSerializer
                 foreach (var item20 in tmp20)
                 {
                     if (item20 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>();
-                    if (!lengths.TryGetValue(item20, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(item20, depth, lengths);
-                        lengths[item20] = sub;
-                    }
+                    var slot20 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(item20, depth, slots);
+                    slots.Set(slot20, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp21 = value.Features;
             if (tmp21 != null)
             {
-                if (!lengths.TryGetValue(tmp21, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp21, depth, lengths);
-                    lengths[tmp21] = sub;
-                }
+                var slot21 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp21, depth, slots);
+                slots.Set(slot21, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp22 = value.feature_support;
             if (tmp22 != null)
             {
-                if (!lengths.TryGetValue(tmp22, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp22, depth, lengths);
-                    lengths[tmp22] = sub;
-                }
+                var slot22 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(tmp22, depth, slots);
+                slots.Set(slot22, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // feature_support
             }
             var tmp999 = value.UninterpretedOptions;
@@ -2703,11 +2678,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -2716,9 +2689,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FieldOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FieldOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FieldOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FieldOptions RawRead_Google_Protobuf_Reflection_FieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions value)
         {
@@ -2910,7 +2887,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(global::Google.Protobuf.Reflection.FieldOptions.EditionDefault value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(global::Google.Protobuf.Reflection.FieldOptions.EditionDefault value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -2932,9 +2909,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FieldOptions.EditionDefault value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FieldOptions_EditionDefault(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FieldOptions.EditionDefault RawRead_Google_Protobuf_Reflection_FieldOptions_EditionDefault(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions.EditionDefault value)
         {
@@ -3024,7 +3005,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -3064,9 +3045,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport RawRead_Google_Protobuf_Reflection_FieldOptions_FeatureSupport(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport value)
         {
@@ -3135,7 +3120,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_FileDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_FileDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_FileDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_FileDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_FileDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileDescriptorProto value, int depth)
         {
@@ -3178,11 +3172,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
                     state.WriteRawTag((4 << 3) | 2);  // MessageTypes
-                    if (!state.RawLengths.TryGetValue(item4, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_DescriptorProto(item4, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item4] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_DescriptorProto(ref state, item4, depth);
@@ -3196,11 +3186,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
                     state.WriteRawTag((5 << 3) | 2);  // EnumTypes
-                    if (!state.RawLengths.TryGetValue(item5, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(item5, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item5] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_EnumDescriptorProto(ref state, item5, depth);
@@ -3214,11 +3200,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ServiceDescriptorProto>();
                     state.WriteRawTag((6 << 3) | 2);  // Services
-                    if (!state.RawLengths.TryGetValue(item6, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(item6, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item6] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_ServiceDescriptorProto(ref state, item6, depth);
@@ -3232,11 +3214,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
                     state.WriteRawTag((7 << 3) | 2);  // Extensions
-                    if (!state.RawLengths.TryGetValue(item7, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item7, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item7] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_FieldDescriptorProto(ref state, item7, depth);
@@ -3247,11 +3225,7 @@ partial class CustomProtogenSerializer
             if (tmp8 != null)
             {
                 state.WriteRawTag((8 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp8, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FileOptions(tmp8, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp8] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FileOptions(ref state, tmp8, depth);
@@ -3261,11 +3235,7 @@ partial class CustomProtogenSerializer
             if (tmp9 != null)
             {
                 state.WriteRawTag((9 << 3) | 2);  // SourceCodeInfo
-                if (!state.RawLengths.TryGetValue(tmp9, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_SourceCodeInfo(tmp9, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp9] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_SourceCodeInfo(ref state, tmp9, depth);
@@ -3317,7 +3287,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FileDescriptorProto(global::Google.Protobuf.Reflection.FileDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FileDescriptorProto(global::Google.Protobuf.Reflection.FileDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -3353,11 +3323,9 @@ partial class CustomProtogenSerializer
                 foreach (var item4 in tmp4)
                 {
                     if (item4 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.DescriptorProto>();
-                    if (!lengths.TryGetValue(item4, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_DescriptorProto(item4, depth, lengths);
-                        lengths[item4] = sub;
-                    }
+                    var slot4 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_DescriptorProto(item4, depth, slots);
+                    slots.Set(slot4, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -3367,11 +3335,9 @@ partial class CustomProtogenSerializer
                 foreach (var item5 in tmp5)
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
-                    if (!lengths.TryGetValue(item5, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(item5, depth, lengths);
-                        lengths[item5] = sub;
-                    }
+                    var slot5 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_EnumDescriptorProto(item5, depth, slots);
+                    slots.Set(slot5, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -3381,11 +3347,9 @@ partial class CustomProtogenSerializer
                 foreach (var item6 in tmp6)
                 {
                     if (item6 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.ServiceDescriptorProto>();
-                    if (!lengths.TryGetValue(item6, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(item6, depth, lengths);
-                        lengths[item6] = sub;
-                    }
+                    var slot6 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(item6, depth, slots);
+                    slots.Set(slot6, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -3395,32 +3359,26 @@ partial class CustomProtogenSerializer
                 foreach (var item7 in tmp7)
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
-                    if (!lengths.TryGetValue(item7, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item7, depth, lengths);
-                        lengths[item7] = sub;
-                    }
+                    var slot7 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_FieldDescriptorProto(item7, depth, slots);
+                    slots.Set(slot7, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp8 = value.Options;
             if (tmp8 != null)
             {
-                if (!lengths.TryGetValue(tmp8, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FileOptions(tmp8, depth, lengths);
-                    lengths[tmp8] = sub;
-                }
+                var slot8 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FileOptions(tmp8, depth, slots);
+                slots.Set(slot8, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             var tmp9 = value.SourceCodeInfo;
             if (tmp9 != null)
             {
-                if (!lengths.TryGetValue(tmp9, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_SourceCodeInfo(tmp9, depth, lengths);
-                    lengths[tmp9] = sub;
-                }
+                var slot9 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_SourceCodeInfo(tmp9, depth, slots);
+                slots.Set(slot9, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // SourceCodeInfo
             }
             var tmp10 = value.PublicDependencies;
@@ -3466,9 +3424,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FileDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FileDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FileDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FileDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FileDescriptorProto RawRead_Google_Protobuf_Reflection_FileDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileDescriptorProto value)
         {
@@ -3643,7 +3605,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_FileDescriptorSet(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileDescriptorSet value)
-            => RawWrite_Google_Protobuf_Reflection_FileDescriptorSet(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_FileDescriptorSet(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_FileDescriptorSet(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_FileDescriptorSet(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileDescriptorSet value, int depth)
         {
@@ -3657,11 +3628,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FileDescriptorProto>();
                     state.WriteRawTag((1 << 3) | 2);  // Files
-                    if (!state.RawLengths.TryGetValue(item1, out var len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_FileDescriptorProto(item1, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item1] = len;
-                    }
+                    var len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_FileDescriptorProto(ref state, item1, depth);
@@ -3671,7 +3638,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FileDescriptorSet(global::Google.Protobuf.Reflection.FileDescriptorSet value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FileDescriptorSet(global::Google.Protobuf.Reflection.FileDescriptorSet value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -3681,11 +3648,9 @@ partial class CustomProtogenSerializer
                 foreach (var item1 in tmp1)
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.FileDescriptorProto>();
-                    if (!lengths.TryGetValue(item1, out var sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_FileDescriptorProto(item1, depth, lengths);
-                        lengths[item1] = sub;
-                    }
+                    var slot1 = slots.Reserve();
+                    var sub = Measure_Google_Protobuf_Reflection_FileDescriptorProto(item1, depth, slots);
+                    slots.Set(slot1, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -3694,9 +3659,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FileDescriptorSet>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FileDescriptorSet value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FileDescriptorSet(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FileDescriptorSet(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FileDescriptorSet RawRead_Google_Protobuf_Reflection_FileDescriptorSet(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileDescriptorSet value)
         {
@@ -3738,7 +3707,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_FileOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.FileOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileOptions value)
-            => RawWrite_Google_Protobuf_Reflection_FileOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_FileOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_FileOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_FileOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.FileOptions value, int depth)
         {
@@ -3891,11 +3869,7 @@ partial class CustomProtogenSerializer
             if (tmp50 != null)
             {
                 state.WriteRawTag((50 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp50, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp50] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp50, depth);
@@ -3908,11 +3882,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -3922,7 +3892,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_FileOptions(global::Google.Protobuf.Reflection.FileOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_FileOptions(global::Google.Protobuf.Reflection.FileOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -4060,11 +4030,9 @@ partial class CustomProtogenSerializer
             var tmp50 = value.Features;
             if (tmp50 != null)
             {
-                if (!lengths.TryGetValue(tmp50, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, depth, lengths);
-                    lengths[tmp50] = sub;
-                }
+                var slot50 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp50, depth, slots);
+                slots.Set(slot50, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -4073,11 +4041,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -4086,9 +4052,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.FileOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.FileOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_FileOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_FileOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.FileOptions RawRead_Google_Protobuf_Reflection_FileOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.FileOptions value)
         {
@@ -4288,7 +4258,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_MessageOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MessageOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MessageOptions value)
-            => RawWrite_Google_Protobuf_Reflection_MessageOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_MessageOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_MessageOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_MessageOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MessageOptions value, int depth)
         {
@@ -4325,11 +4304,7 @@ partial class CustomProtogenSerializer
             if (tmp12 != null)
             {
                 state.WriteRawTag((12 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp12, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp12, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp12] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp12, depth);
@@ -4342,11 +4317,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -4356,7 +4327,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_MessageOptions(global::Google.Protobuf.Reflection.MessageOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_MessageOptions(global::Google.Protobuf.Reflection.MessageOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -4389,11 +4360,9 @@ partial class CustomProtogenSerializer
             var tmp12 = value.Features;
             if (tmp12 != null)
             {
-                if (!lengths.TryGetValue(tmp12, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp12, depth, lengths);
-                    lengths[tmp12] = sub;
-                }
+                var slot12 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp12, depth, slots);
+                slots.Set(slot12, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -4402,11 +4371,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -4415,9 +4382,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MessageOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.MessageOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_MessageOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_MessageOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.MessageOptions RawRead_Google_Protobuf_Reflection_MessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MessageOptions value)
         {
@@ -4512,7 +4483,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_MethodDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_MethodDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_MethodDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_MethodDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_MethodDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value, int depth)
         {
@@ -4550,11 +4530,7 @@ partial class CustomProtogenSerializer
             if (tmp4 != null)
             {
                 state.WriteRawTag((4 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp4, out var len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_MethodOptions(tmp4, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp4] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_MethodOptions(ref state, tmp4, depth);
@@ -4573,7 +4549,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_MethodDescriptorProto(global::Google.Protobuf.Reflection.MethodDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_MethodDescriptorProto(global::Google.Protobuf.Reflection.MethodDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -4604,11 +4580,9 @@ partial class CustomProtogenSerializer
             var tmp4 = value.Options;
             if (tmp4 != null)
             {
-                if (!lengths.TryGetValue(tmp4, out var sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_MethodOptions(tmp4, depth, lengths);
-                    lengths[tmp4] = sub;
-                }
+                var slot4 = slots.Reserve();
+                var sub = Measure_Google_Protobuf_Reflection_MethodOptions(tmp4, depth, slots);
+                slots.Set(slot4, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             if (value.ShouldSerializeClientStreaming())
@@ -4626,9 +4600,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MethodDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_MethodDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_MethodDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.MethodDescriptorProto RawRead_Google_Protobuf_Reflection_MethodDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodDescriptorProto value)
         {
@@ -4702,7 +4680,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_MethodOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.MethodOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MethodOptions value)
-            => RawWrite_Google_Protobuf_Reflection_MethodOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_MethodOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_MethodOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_MethodOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.MethodOptions value, int depth)
         {
@@ -4725,11 +4712,7 @@ partial class CustomProtogenSerializer
             if (tmp35 != null)
             {
                 state.WriteRawTag((35 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp35, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp35, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp35] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp35, depth);
@@ -4742,11 +4725,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -4756,7 +4735,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_MethodOptions(global::Google.Protobuf.Reflection.MethodOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_MethodOptions(global::Google.Protobuf.Reflection.MethodOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -4774,11 +4753,9 @@ partial class CustomProtogenSerializer
             var tmp35 = value.Features;
             if (tmp35 != null)
             {
-                if (!lengths.TryGetValue(tmp35, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp35, depth, lengths);
-                    lengths[tmp35] = sub;
-                }
+                var slot35 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp35, depth, slots);
+                slots.Set(slot35, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -4787,11 +4764,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -4800,9 +4775,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.MethodOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.MethodOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_MethodOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_MethodOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.MethodOptions RawRead_Google_Protobuf_Reflection_MethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.MethodOptions value)
         {
@@ -4870,7 +4849,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_OneofDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_OneofDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_OneofDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_OneofDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_OneofDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value, int depth)
         {
@@ -4890,11 +4878,7 @@ partial class CustomProtogenSerializer
             if (tmp2 != null)
             {
                 state.WriteRawTag((2 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp2, out var len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_OneofOptions(tmp2, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp2] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_OneofOptions(ref state, tmp2, depth);
@@ -4903,7 +4887,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_OneofDescriptorProto(global::Google.Protobuf.Reflection.OneofDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_OneofDescriptorProto(global::Google.Protobuf.Reflection.OneofDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -4918,11 +4902,9 @@ partial class CustomProtogenSerializer
             var tmp2 = value.Options;
             if (tmp2 != null)
             {
-                if (!lengths.TryGetValue(tmp2, out var sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_OneofOptions(tmp2, depth, lengths);
-                    lengths[tmp2] = sub;
-                }
+                var slot2 = slots.Reserve();
+                var sub = Measure_Google_Protobuf_Reflection_OneofOptions(tmp2, depth, slots);
+                slots.Set(slot2, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -4930,9 +4912,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.OneofDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_OneofDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_OneofDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.OneofDescriptorProto RawRead_Google_Protobuf_Reflection_OneofDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofDescriptorProto value)
         {
@@ -4976,7 +4962,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_OneofOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.OneofOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.OneofOptions value)
-            => RawWrite_Google_Protobuf_Reflection_OneofOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_OneofOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_OneofOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_OneofOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.OneofOptions value, int depth)
         {
@@ -4988,11 +4983,7 @@ partial class CustomProtogenSerializer
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp1, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp1, depth);
@@ -5005,11 +4996,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -5019,7 +5006,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_OneofOptions(global::Google.Protobuf.Reflection.OneofOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_OneofOptions(global::Google.Protobuf.Reflection.OneofOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5027,11 +5014,9 @@ partial class CustomProtogenSerializer
             var tmp1 = value.Features;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp1, depth, lengths);
-                    lengths[tmp1] = sub;
-                }
+                var slot1 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp1, depth, slots);
+                slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -5040,11 +5025,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -5053,9 +5036,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.OneofOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.OneofOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_OneofOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_OneofOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.OneofOptions RawRead_Google_Protobuf_Reflection_OneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.OneofOptions value)
         {
@@ -5105,7 +5092,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_ServiceDescriptorProto(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
-            => RawWrite_Google_Protobuf_Reflection_ServiceDescriptorProto(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_ServiceDescriptorProto(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_ServiceDescriptorProto(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value, int depth)
         {
@@ -5129,11 +5125,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.MethodDescriptorProto>();
                     state.WriteRawTag((2 << 3) | 2);  // Methods
-                    if (!state.RawLengths.TryGetValue(item2, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_MethodDescriptorProto(item2, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item2] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_MethodDescriptorProto(ref state, item2, depth);
@@ -5144,11 +5136,7 @@ partial class CustomProtogenSerializer
             if (tmp3 != null)
             {
                 state.WriteRawTag((3 << 3) | 2);  // Options
-                if (!state.RawLengths.TryGetValue(tmp3, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp3, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp3] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref state, tmp3, depth);
@@ -5157,7 +5145,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(global::Google.Protobuf.Reflection.ServiceDescriptorProto value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(global::Google.Protobuf.Reflection.ServiceDescriptorProto value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5176,22 +5164,18 @@ partial class CustomProtogenSerializer
                 foreach (var item2 in tmp2)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.MethodDescriptorProto>();
-                    if (!lengths.TryGetValue(item2, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_MethodDescriptorProto(item2, depth, lengths);
-                        lengths[item2] = sub;
-                    }
+                    var slot2 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_MethodDescriptorProto(item2, depth, slots);
+                    slots.Set(slot2, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             var tmp3 = value.Options;
             if (tmp3 != null)
             {
-                if (!lengths.TryGetValue(tmp3, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp3, depth, lengths);
-                    lengths[tmp3] = sub;
-                }
+                var slot3 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_ServiceOptions(tmp3, depth, slots);
+                slots.Set(slot3, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Options
             }
             len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value);
@@ -5199,9 +5183,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ServiceDescriptorProto>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_ServiceDescriptorProto(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.ServiceDescriptorProto RawRead_Google_Protobuf_Reflection_ServiceDescriptorProto(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceDescriptorProto value)
         {
@@ -5257,7 +5245,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_ServiceOptions(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.ServiceOptions>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
-            => RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_ServiceOptions(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_ServiceOptions(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.ServiceOptions value, int depth)
         {
@@ -5274,11 +5271,7 @@ partial class CustomProtogenSerializer
             if (tmp34 != null)
             {
                 state.WriteRawTag((34 << 3) | 2);  // Features
-                if (!state.RawLengths.TryGetValue(tmp34, out len))
-                {
-                    len = Measure_Google_Protobuf_Reflection_FeatureSet(tmp34, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp34] = len;
-                }
+                len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_Google_Protobuf_Reflection_FeatureSet(ref state, tmp34, depth);
@@ -5291,11 +5284,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
                     state.WriteRawTag((999 << 3) | 2);  // UninterpretedOptions
-                    if (!state.RawLengths.TryGetValue(item999, out len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item999] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, item999, depth);
@@ -5305,7 +5294,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_ServiceOptions(global::Google.Protobuf.Reflection.ServiceOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_ServiceOptions(global::Google.Protobuf.Reflection.ServiceOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5318,11 +5307,9 @@ partial class CustomProtogenSerializer
             var tmp34 = value.Features;
             if (tmp34 != null)
             {
-                if (!lengths.TryGetValue(tmp34, out sub))
-                {
-                    sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp34, depth, lengths);
-                    lengths[tmp34] = sub;
-                }
+                var slot34 = slots.Reserve();
+                sub = Measure_Google_Protobuf_Reflection_FeatureSet(tmp34, depth, slots);
+                slots.Set(slot34, sub);
                 len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Features
             }
             var tmp999 = value.UninterpretedOptions;
@@ -5331,11 +5318,9 @@ partial class CustomProtogenSerializer
                 foreach (var item999 in tmp999)
                 {
                     if (item999 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption>();
-                    if (!lengths.TryGetValue(item999, out sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, lengths);
-                        lengths[item999] = sub;
-                    }
+                    var slot999 = slots.Reserve();
+                    sub = Measure_Google_Protobuf_Reflection_UninterpretedOption(item999, depth, slots);
+                    slots.Set(slot999, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -5344,9 +5329,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.ServiceOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.ServiceOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_ServiceOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_ServiceOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.ServiceOptions RawRead_Google_Protobuf_Reflection_ServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.ServiceOptions value)
         {
@@ -5405,7 +5394,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_SourceCodeInfo(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.SourceCodeInfo value)
-            => RawWrite_Google_Protobuf_Reflection_SourceCodeInfo(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_SourceCodeInfo(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_SourceCodeInfo(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_SourceCodeInfo(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.SourceCodeInfo value, int depth)
         {
@@ -5419,11 +5417,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>();
                     state.WriteRawTag((1 << 3) | 2);  // Locations
-                    if (!state.RawLengths.TryGetValue(item1, out var len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(item1, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item1] = len;
-                    }
+                    var len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_SourceCodeInfo_Location(ref state, item1, depth);
@@ -5433,7 +5427,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_SourceCodeInfo(global::Google.Protobuf.Reflection.SourceCodeInfo value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_SourceCodeInfo(global::Google.Protobuf.Reflection.SourceCodeInfo value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5443,11 +5437,9 @@ partial class CustomProtogenSerializer
                 foreach (var item1 in tmp1)
                 {
                     if (item1 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>();
-                    if (!lengths.TryGetValue(item1, out var sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(item1, depth, lengths);
-                        lengths[item1] = sub;
-                    }
+                    var slot1 = slots.Reserve();
+                    var sub = Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(item1, depth, slots);
+                    slots.Set(slot1, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -5456,9 +5448,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.SourceCodeInfo value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_SourceCodeInfo(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_SourceCodeInfo(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.SourceCodeInfo RawRead_Google_Protobuf_Reflection_SourceCodeInfo(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.SourceCodeInfo value)
         {
@@ -5547,7 +5543,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(global::Google.Protobuf.Reflection.SourceCodeInfo.Location value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(global::Google.Protobuf.Reflection.SourceCodeInfo.Location value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5591,9 +5587,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.SourceCodeInfo.Location value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_SourceCodeInfo_Location(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.SourceCodeInfo.Location RawRead_Google_Protobuf_Reflection_SourceCodeInfo_Location(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.SourceCodeInfo.Location value)
         {
@@ -5685,7 +5685,16 @@ partial class CustomProtogenSerializer
             => RawRead_Google_Protobuf_Reflection_UninterpretedOption(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::Google.Protobuf.Reflection.UninterpretedOption>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
-            => RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_Google_Protobuf_Reflection_UninterpretedOption(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_Google_Protobuf_Reflection_UninterpretedOption(ref global::ProtoBuf.ProtoWriter.State state, global::Google.Protobuf.Reflection.UninterpretedOption value, int depth)
         {
@@ -5699,11 +5708,7 @@ partial class CustomProtogenSerializer
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>();
                     state.WriteRawTag((2 << 3) | 2);  // Names
-                    if (!state.RawLengths.TryGetValue(item2, out var len))
-                    {
-                        len = Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(item2, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item2] = len;
-                    }
+                    var len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref state, item2, depth);
@@ -5758,7 +5763,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_UninterpretedOption(global::Google.Protobuf.Reflection.UninterpretedOption value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_UninterpretedOption(global::Google.Protobuf.Reflection.UninterpretedOption value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5768,11 +5773,9 @@ partial class CustomProtogenSerializer
                 foreach (var item2 in tmp2)
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>();
-                    if (!lengths.TryGetValue(item2, out var sub))
-                    {
-                        sub = Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(item2, depth, lengths);
-                        lengths[item2] = sub;
-                    }
+                    var slot2 = slots.Reserve();
+                    var sub = Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(item2, depth, slots);
+                    slots.Set(slot2, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -5820,9 +5823,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.UninterpretedOption>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.UninterpretedOption value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_UninterpretedOption(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_UninterpretedOption(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.UninterpretedOption RawRead_Google_Protobuf_Reflection_UninterpretedOption(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption value)
         {
@@ -5917,7 +5924,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -5933,9 +5940,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_Google_Protobuf_Reflection_UninterpretedOption_NamePart(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::Google.Protobuf.Reflection.UninterpretedOption.NamePart RawRead_Google_Protobuf_Reflection_UninterpretedOption_NamePart(ref global::ProtoBuf.ProtoReader.State state, global::Google.Protobuf.Reflection.UninterpretedOption.NamePart value)
         {
@@ -6007,7 +6018,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenEnumOptions(global::ProtoBuf.Reflection.ProtogenEnumOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenEnumOptions(global::ProtoBuf.Reflection.ProtogenEnumOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6028,9 +6039,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenEnumOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenEnumOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenEnumOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenEnumOptions RawRead_ProtoBuf_Reflection_ProtogenEnumOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumOptions value)
         {
@@ -6096,7 +6111,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenEnumValueOptions(global::ProtoBuf.Reflection.ProtogenEnumValueOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenEnumValueOptions(global::ProtoBuf.Reflection.ProtogenEnumValueOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6110,9 +6125,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenEnumValueOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenEnumValueOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenEnumValueOptions RawRead_ProtoBuf_Reflection_ProtogenEnumValueOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenEnumValueOptions value)
         {
@@ -6179,7 +6198,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenFieldOptions(global::ProtoBuf.Reflection.ProtogenFieldOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenFieldOptions(global::ProtoBuf.Reflection.ProtogenFieldOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6199,9 +6218,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenFieldOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenFieldOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenFieldOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenFieldOptions RawRead_ProtoBuf_Reflection_ProtogenFieldOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFieldOptions value)
         {
@@ -6313,7 +6336,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenFileOptions(global::ProtoBuf.Reflection.ProtogenFileOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenFileOptions(global::ProtoBuf.Reflection.ProtogenFileOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6348,9 +6371,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenFileOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenFileOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenFileOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenFileOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenFileOptions RawRead_ProtoBuf_Reflection_ProtogenFileOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenFileOptions value)
         {
@@ -6470,7 +6497,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenMessageOptions(global::ProtoBuf.Reflection.ProtogenMessageOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenMessageOptions(global::ProtoBuf.Reflection.ProtogenMessageOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6498,9 +6525,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenMessageOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenMessageOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenMessageOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenMessageOptions RawRead_ProtoBuf_Reflection_ProtogenMessageOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMessageOptions value)
         {
@@ -6581,7 +6612,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenMethodOptions(global::ProtoBuf.Reflection.ProtogenMethodOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenMethodOptions(global::ProtoBuf.Reflection.ProtogenMethodOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6595,9 +6626,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenMethodOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenMethodOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenMethodOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenMethodOptions RawRead_ProtoBuf_Reflection_ProtogenMethodOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenMethodOptions value)
         {
@@ -6653,7 +6688,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenOneofOptions(global::ProtoBuf.Reflection.ProtogenOneofOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenOneofOptions(global::ProtoBuf.Reflection.ProtogenOneofOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6669,9 +6704,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenOneofOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenOneofOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenOneofOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenOneofOptions RawRead_ProtoBuf_Reflection_ProtogenOneofOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenOneofOptions value)
         {
@@ -6737,7 +6776,7 @@ partial class CustomProtogenSerializer
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_ProtoBuf_Reflection_ProtogenServiceOptions(global::ProtoBuf.Reflection.ProtogenServiceOptions value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_ProtoBuf_Reflection_ProtogenServiceOptions(global::ProtoBuf.Reflection.ProtogenServiceOptions value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -6753,9 +6792,13 @@ partial class CustomProtogenSerializer
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::ProtoBuf.Reflection.ProtogenServiceOptions>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_ProtoBuf_Reflection_ProtogenServiceOptions(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_ProtoBuf_Reflection_ProtogenServiceOptions(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::ProtoBuf.Reflection.ProtogenServiceOptions RawRead_ProtoBuf_Reflection_ProtogenServiceOptions(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Reflection.ProtogenServiceOptions value)
         {

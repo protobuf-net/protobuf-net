@@ -75,7 +75,16 @@ partial class ListsModel
             => RawRead_AotFixtures_Lists_Inner(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Inner>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value)
-            => RawWrite_AotFixtures_Lists_Inner(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Lists_Inner(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Lists_Inner(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Inner value, int depth)
         {
@@ -95,7 +104,7 @@ partial class ListsModel
             }
         }
 
-        private static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Lists_Inner(global::AotFixtures.Lists.Inner value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -110,9 +119,13 @@ partial class ListsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Inner>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Lists.Inner value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Lists_Inner(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Lists_Inner(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Lists.Inner RawRead_AotFixtures_Lists_Inner(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Inner value)
         {
@@ -157,7 +170,16 @@ partial class ListsModel
             => RawRead_AotFixtures_Lists_Repeated(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Lists.Repeated>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value)
-            => RawWrite_AotFixtures_Lists_Repeated(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Lists_Repeated(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Lists_Repeated(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Lists.Repeated value, int depth)
         {
@@ -237,11 +259,7 @@ partial class ListsModel
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     state.WriteRawTag((9 << 3) | 2);  // Messages
-                    if (!state.RawLengths.TryGetValue(item9, out len))
-                    {
-                        len = Measure_AotFixtures_Lists_Inner(item9, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item9] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_AotFixtures_Lists_Inner(ref state, item9, depth);
@@ -255,11 +273,7 @@ partial class ListsModel
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
                     state.WriteRawTag((10 << 3) | 2);  // MessageArray
-                    if (!state.RawLengths.TryGetValue(item10, out len))
-                    {
-                        len = Measure_AotFixtures_Lists_Inner(item10, state.RawDepthBudget, state.RawLengths);
-                        state.RawLengths[item10] = len;
-                    }
+                    len = state.RawSlots.Next();
                     state.WriteRawVarint64((ulong)len);
                     DebugCapturePosition(ref state, ref before);
                     RawWrite_AotFixtures_Lists_Inner(ref state, item10, depth);
@@ -298,7 +312,7 @@ partial class ListsModel
             }
         }
 
-        private static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Lists_Repeated(global::AotFixtures.Lists.Repeated value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -358,11 +372,9 @@ partial class ListsModel
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp9))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
-                    if (!lengths.TryGetValue(item9, out sub))
-                    {
-                        sub = Measure_AotFixtures_Lists_Inner(item9, depth, lengths);
-                        lengths[item9] = sub;
-                    }
+                    var slot9 = slots.Reserve();
+                    sub = Measure_AotFixtures_Lists_Inner(item9, depth, slots);
+                    slots.Set(slot9, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -372,11 +384,9 @@ partial class ListsModel
                 foreach (var item10 in tmp10)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
-                    if (!lengths.TryGetValue(item10, out sub))
-                    {
-                        sub = Measure_AotFixtures_Lists_Inner(item10, depth, lengths);
-                        lengths[item10] = sub;
-                    }
+                    var slot10 = slots.Reserve();
+                    sub = Measure_AotFixtures_Lists_Inner(item10, depth, slots);
+                    slots.Set(slot10, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -404,9 +414,13 @@ partial class ListsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Lists.Repeated>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Lists.Repeated value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Lists_Repeated(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Lists_Repeated(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Lists.Repeated RawRead_AotFixtures_Lists_Repeated(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Lists.Repeated value)
         {

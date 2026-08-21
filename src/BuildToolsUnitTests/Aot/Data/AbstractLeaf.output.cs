@@ -53,7 +53,16 @@ partial class AbstractLeafModel
             => RawRead_AotFixtures_AbstractLeaf_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value)
-            => RawWrite_AotFixtures_AbstractLeaf_Holder(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_AbstractLeaf_Holder(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_AbstractLeaf_Holder(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value, int depth)
         {
@@ -64,11 +73,7 @@ partial class AbstractLeafModel
             if (tmp1 != null)
             {
                 state.WriteRawTag((1 << 3) | 2);  // Value
-                if (!state.RawLengths.TryGetValue(tmp1, out var len))
-                {
-                    len = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, state.RawDepthBudget, state.RawLengths);
-                    state.RawLengths[tmp1] = len;
-                }
+                var len = state.RawSlots.Next();
                 state.WriteRawVarint64((ulong)len);
                 DebugCapturePosition(ref state, ref before);
                 RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, tmp1, depth);
@@ -82,18 +87,16 @@ partial class AbstractLeafModel
             }
         }
 
-        private static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_AbstractLeaf_Holder(global::AotFixtures.AbstractLeaf.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
-                if (!lengths.TryGetValue(tmp1, out var sub))
-                {
-                    sub = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth, lengths);
-                    lengths[tmp1] = sub;
-                }
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_AbstractLeaf_Shape(tmp1, depth, slots);
+                slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }
             var tmp2 = value.Name;
@@ -105,9 +108,13 @@ partial class AbstractLeafModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AbstractLeaf.Holder value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_AbstractLeaf_Holder(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_AbstractLeaf_Holder(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.AbstractLeaf.Holder RawRead_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AbstractLeaf.Holder value)
         {
@@ -174,7 +181,16 @@ partial class AbstractLeafModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AbstractLeaf.Shape>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value)
-            => RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_AbstractLeaf_Shape(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_AbstractLeaf_Shape(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_AbstractLeaf_Shape(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Shape value, int depth)
         {
@@ -188,7 +204,7 @@ partial class AbstractLeafModel
             }
         }
 
-        private static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_AbstractLeaf_Shape(global::AotFixtures.AbstractLeaf.Shape value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -198,9 +214,13 @@ partial class AbstractLeafModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AbstractLeaf.Shape>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AbstractLeaf.Shape value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_AbstractLeaf_Shape(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_AbstractLeaf_Shape(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

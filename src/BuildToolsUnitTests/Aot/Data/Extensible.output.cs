@@ -103,7 +103,16 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_ByHand(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.ByHand>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value)
-            => RawWrite_AotFixtures_Extensible_ByHand(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Extensible_ByHand(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Extensible_ByHand(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.ByHand value, int depth)
         {
@@ -118,7 +127,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_ByHand(global::AotFixtures.Extensible.ByHand value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -129,9 +138,13 @@ partial class ExtensibleModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.ByHand>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.ByHand value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Extensible_ByHand(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Extensible_ByHand(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Extensible.ByHand RawRead_AotFixtures_Extensible_ByHand(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.ByHand value)
         {
@@ -223,7 +236,16 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_FromBase(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.FromBase>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value)
-            => RawWrite_AotFixtures_Extensible_FromBase(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Extensible_FromBase(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Extensible_FromBase(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.FromBase value, int depth)
         {
@@ -238,7 +260,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value);
         }
 
-        private static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_FromBase(global::AotFixtures.Extensible.FromBase value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -249,9 +271,13 @@ partial class ExtensibleModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.FromBase>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.FromBase value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Extensible_FromBase(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Extensible_FromBase(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Extensible.FromBase RawRead_AotFixtures_Extensible_FromBase(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.FromBase value)
         {
@@ -290,7 +316,16 @@ partial class ExtensibleModel
             => RawRead_AotFixtures_Extensible_TypedOnly(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.TypedOnly>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value)
-            => RawWrite_AotFixtures_Extensible_TypedOnly(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Extensible_TypedOnly(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Extensible_TypedOnly(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Extensible.TypedOnly value, int depth)
         {
@@ -305,7 +340,7 @@ partial class ExtensibleModel
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.TypedOnly));
         }
 
-        private static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Extensible_TypedOnly(global::AotFixtures.Extensible.TypedOnly value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -316,9 +351,13 @@ partial class ExtensibleModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.TypedOnly>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.TypedOnly value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Extensible_TypedOnly(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Extensible_TypedOnly(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Extensible.TypedOnly RawRead_AotFixtures_Extensible_TypedOnly(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.TypedOnly value)
         {

@@ -376,6 +376,14 @@ namespace ProtoBuf
             public System.Collections.Generic.Dictionary<object, long> RawLengths => _writer.RawLengths;
 
             /// <summary>
+            /// The ordered length transport the generated measure/write pair uses: sub-message
+            /// lengths carried by POSITION rather than by reference identity, which costs no
+            /// hashing. See <see cref="RawLengthBuffer"/> and <c>notes/gaps.md</c> B38.
+            /// </summary>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public RawLengthBuffer RawSlots => _writer.RawSlots;
+
+            /// <summary>
             /// The remaining nesting budget for a generated measure recursion, honouring
             /// <see cref="Meta.TypeModel.MaxDepth"/> exactly as the raw reader's depth cap does.
             /// Only the measure walk needs guarding: the write recursion that follows traverses
@@ -417,6 +425,35 @@ namespace ProtoBuf
                 lengths = null;
                 return false;
             }
+
+            /// <summary>
+            /// As <see cref="TryMeasureRaw(ISerializationContext, out int, out System.Collections.Generic.Dictionary{object, long})"/>,
+            /// for the ordered length transport (<see cref="RawLengthBuffer"/>) that replaces it.
+            /// </summary>
+            /// <remarks>
+            /// A separate NAME rather than an overload, deliberately: the generated call site says
+            /// <c>out var</c>, which two overloads differing only in that parameter cannot resolve.
+            /// It also lets the previously-generated descriptor model keep compiling while the
+            /// generator moves over, which matters because protobuf-net.BuildTools compiles
+            /// protobuf-net.Reflection's sources in - including its committed generator output - so
+            /// the two cannot change in one step.
+            /// </remarks>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public static bool TryMeasureRawSlots(ISerializationContext context, out int depthBudget,
+                out RawLengthBuffer slots)
+            {
+                if (context is ProtoWriter writer)
+                {
+                    depthBudget = (writer.Model is null ? Meta.TypeModel.DefaultMaxDepth : writer.Model.MaxDepth) - writer.Depth;
+                    slots = writer.RawSlots;
+                    return true;
+                }
+                depthBudget = 0;
+                slots = null;
+                return false;
+            }
+
+
 
             /// <summary>Throws for an exhausted measure budget - a cyclic or pathologically deep
             /// object graph - mirroring the stateful writer's depth failure.</summary>

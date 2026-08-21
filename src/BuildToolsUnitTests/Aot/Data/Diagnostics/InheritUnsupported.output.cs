@@ -46,7 +46,16 @@ partial class InheritUnsupportedModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
-            => RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_InheritUnsupported_AbstractLeaf(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_InheritUnsupported_AbstractLeaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth)
         {
@@ -60,7 +69,7 @@ partial class InheritUnsupportedModel
             }
         }
 
-        private static long Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_InheritUnsupported_AbstractLeaf(global::AotFixtures.InheritUnsupported.AbstractLeaf value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -70,9 +79,13 @@ partial class InheritUnsupportedModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.AbstractLeaf>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritUnsupported.AbstractLeaf value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_InheritUnsupported_AbstractLeaf(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_InheritUnsupported_AbstractLeaf(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -83,7 +96,16 @@ partial class InheritUnsupportedModel
             => RawRead_AotFixtures_InheritUnsupported_Unlinked(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
-            => RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_InheritUnsupported_Unlinked(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InheritUnsupported.Unlinked value, int depth)
         {
@@ -97,7 +119,7 @@ partial class InheritUnsupportedModel
             }
         }
 
-        private static long Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_InheritUnsupported_Unlinked(global::AotFixtures.InheritUnsupported.Unlinked value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -107,9 +129,13 @@ partial class InheritUnsupportedModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritUnsupported.Unlinked>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritUnsupported.Unlinked value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_InheritUnsupported_Unlinked(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_InheritUnsupported_Unlinked(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.InheritUnsupported.Unlinked RawRead_AotFixtures_InheritUnsupported_Unlinked(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritUnsupported.Unlinked value)
         {

@@ -83,7 +83,13 @@ partial class TupleMembersModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(int, (int, string))>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value)
-            => RawWrite__int___int__string__(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            var entry = slots.Mark();
+                Measure__int___int__string__(value, state.RawDepthBudget, slots);
+            slots.SeekTo(entry);
+            RawWrite__int___int__string__(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite__int___int__string__(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value, int depth)
         {
@@ -94,29 +100,34 @@ partial class TupleMembersModel
             state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             var tmp2 = value.Item2;
             state.WriteRawTag((2 << 3) | 2);  // Item2
-            var len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
+            var len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite__int__string_(ref state, tmp2, depth);
             DebugAssertPosition(ref state, before + len, "Item2");
         }
 
-        private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__int___int__string__((int, (int, string)) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
             var tmp1 = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Item1
             var tmp2 = value.Item2;
-            var sub = Measure__int__string_(tmp2, depth, lengths);
+            var slot2 = slots.Reserve();
+            var sub = Measure__int__string_(tmp2, depth, slots);
+            slots.Set(slot2, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Item2
             return len;
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<(int, (int, string))>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (int, (int, string)) value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure__int___int__string__(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure__int___int__string__(value, depth, slots);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -155,7 +166,13 @@ partial class TupleMembersModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(int, string)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value)
-            => RawWrite__int__string_(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            var entry = slots.Mark();
+                Measure__int__string_(value, state.RawDepthBudget, slots);
+            slots.SeekTo(entry);
+            RawWrite__int__string_(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite__int__string_(ref global::ProtoBuf.ProtoWriter.State state, (int, string) value, int depth)
         {
@@ -171,7 +188,7 @@ partial class TupleMembersModel
             }
         }
 
-        private static long Measure__int__string_((int, string) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__int__string_((int, string) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -186,9 +203,12 @@ partial class TupleMembersModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<(int, string)>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (int, string) value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure__int__string_(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure__int__string_(value, depth, slots);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -205,28 +225,36 @@ partial class TupleMembersModel
             long before = 0;
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
-            len = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawLengths);
+            var mark1 = state.RawSlots.Mark();
+            len = Measure__int__string_(tmp1, state.RawDepthBudget, state.RawSlots);
+            state.RawSlots.SeekTo(mark1);
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite__int__string_(ref state, tmp1, state.RawDepthBudget);
             DebugAssertPosition(ref state, before + len, "Named");
             var tmp2 = value.Anonymous;
             state.WriteRawTag((2 << 3) | 2);  // Anonymous
-            len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawLengths);
+            var mark2 = state.RawSlots.Mark();
+            len = Measure__int__string_(tmp2, state.RawDepthBudget, state.RawSlots);
+            state.RawSlots.SeekTo(mark2);
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite__int__string_(ref state, tmp2, state.RawDepthBudget);
             DebugAssertPosition(ref state, before + len, "Anonymous");
             var tmp3 = value.Deep;
             state.WriteRawTag((3 << 3) | 2);  // Deep
-            len = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawLengths);
+            var mark3 = state.RawSlots.Mark();
+            len = Measure__int___int__string__(tmp3, state.RawDepthBudget, state.RawSlots);
+            state.RawSlots.SeekTo(mark3);
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite__int___int__string__(ref state, tmp3, state.RawDepthBudget);
             DebugAssertPosition(ref state, before + len, "Deep");
             var tmp4 = value.Pair;
             state.WriteRawTag((4 << 3) | 2);  // Pair
-            len = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawLengths);
+            var mark4 = state.RawSlots.Mark();
+            len = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp4, state.RawDepthBudget, state.RawSlots);
+            state.RawSlots.SeekTo(mark4);
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, tmp4, state.RawDepthBudget);
@@ -369,7 +397,13 @@ partial class TupleMembersModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value)
-            => RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            var entry = slots.Mark();
+                Measure_System_Collections_Generic_KeyValuePair_int__string_(value, state.RawDepthBudget, slots);
+            slots.SeekTo(entry);
+            RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_System_Collections_Generic_KeyValuePair_int__string_(ref global::ProtoBuf.ProtoWriter.State state, global::System.Collections.Generic.KeyValuePair<int, string> value, int depth)
         {
@@ -385,7 +419,7 @@ partial class TupleMembersModel
             }
         }
 
-        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_System_Collections_Generic_KeyValuePair_int__string_(global::System.Collections.Generic.KeyValuePair<int, string> value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -400,9 +434,12 @@ partial class TupleMembersModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::System.Collections.Generic.KeyValuePair<int, string>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::System.Collections.Generic.KeyValuePair<int, string> value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_System_Collections_Generic_KeyValuePair_int__string_(value, depth, slots);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

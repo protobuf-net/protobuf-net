@@ -58,7 +58,9 @@ partial class StructsModel
             long before = 0;
             var tmp1 = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
-            var len = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawLengths);
+            var mark1 = state.RawSlots.Mark();
+            var len = Measure_AotFixtures_Structs_Point(tmp1, state.RawDepthBudget, state.RawSlots);
+            state.RawSlots.SeekTo(mark1);
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite_AotFixtures_Structs_Point(ref state, tmp1, state.RawDepthBudget);
@@ -160,7 +162,13 @@ partial class StructsModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Structs.Point>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value)
-            => RawWrite_AotFixtures_Structs_Point(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            var entry = slots.Mark();
+                Measure_AotFixtures_Structs_Point(value, state.RawDepthBudget, slots);
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Structs_Point(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Structs_Point(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Structs.Point value, int depth)
         {
@@ -179,7 +187,7 @@ partial class StructsModel
             }
         }
 
-        private static long Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Structs_Point(global::AotFixtures.Structs.Point value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -194,9 +202,12 @@ partial class StructsModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Structs.Point>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Structs.Point value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Structs_Point(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Structs_Point(value, depth, slots);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
     }

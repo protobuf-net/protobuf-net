@@ -50,7 +50,16 @@ partial class PartialModel
             => RawRead_AotFixtures_Partial_Contested(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Contested>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value)
-            => RawWrite_AotFixtures_Partial_Contested(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Partial_Contested(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Partial_Contested(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Contested value, int depth)
         {
@@ -70,7 +79,7 @@ partial class PartialModel
             }
         }
 
-        private static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Contested(global::AotFixtures.Partial.Contested value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -82,9 +91,13 @@ partial class PartialModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Contested>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Contested value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Partial_Contested(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Partial_Contested(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Partial.Contested RawRead_AotFixtures_Partial_Contested(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Contested value)
         {
@@ -268,7 +281,16 @@ partial class PartialModel
             => RawRead_AotFixtures_Partial_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value)
-            => RawWrite_AotFixtures_Partial_Excluded(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Partial_Excluded(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Partial_Excluded(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Excluded value, int depth)
         {
@@ -282,7 +304,7 @@ partial class PartialModel
             }
         }
 
-        private static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Excluded(global::AotFixtures.Partial.Excluded value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -292,9 +314,13 @@ partial class PartialModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Excluded>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Excluded value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Partial_Excluded(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Partial_Excluded(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Partial.Excluded RawRead_AotFixtures_Partial_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Excluded value)
         {
@@ -333,7 +359,16 @@ partial class PartialModel
             => RawRead_AotFixtures_Partial_Mixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Partial.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value)
-            => RawWrite_AotFixtures_Partial_Mixed(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Partial_Mixed(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Partial_Mixed(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Partial.Mixed value, int depth)
         {
@@ -353,7 +388,7 @@ partial class PartialModel
             }
         }
 
-        private static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_Partial_Mixed(global::AotFixtures.Partial.Mixed value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -365,9 +400,13 @@ partial class PartialModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Partial.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Partial.Mixed value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_Partial_Mixed(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Partial_Mixed(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.Partial.Mixed RawRead_AotFixtures_Partial_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Partial.Mixed value)
         {

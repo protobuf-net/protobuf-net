@@ -27,7 +27,16 @@ partial class SerializerDeclarationModel
             => RawRead_AotFixtures_SerializerDeclaration_Untouched(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.SerializerDeclaration.Untouched>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SerializerDeclaration.Untouched value)
-            => RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_SerializerDeclaration_Untouched(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_SerializerDeclaration_Untouched(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.SerializerDeclaration.Untouched value, int depth)
         {
@@ -41,7 +50,7 @@ partial class SerializerDeclarationModel
             }
         }
 
-        private static long Measure_AotFixtures_SerializerDeclaration_Untouched(global::AotFixtures.SerializerDeclaration.Untouched value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_SerializerDeclaration_Untouched(global::AotFixtures.SerializerDeclaration.Untouched value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -51,9 +60,13 @@ partial class SerializerDeclarationModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.SerializerDeclaration.Untouched>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.SerializerDeclaration.Untouched value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_SerializerDeclaration_Untouched(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_SerializerDeclaration_Untouched(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.SerializerDeclaration.Untouched RawRead_AotFixtures_SerializerDeclaration_Untouched(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.SerializerDeclaration.Untouched value)
         {

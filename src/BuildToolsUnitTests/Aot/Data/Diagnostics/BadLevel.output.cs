@@ -27,7 +27,16 @@ partial class BadLevelModel
             => RawRead_AotFixtures_BadLevel_GoodLevel(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BadLevel.GoodLevel>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value)
-            => RawWrite_AotFixtures_BadLevel_GoodLevel(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_BadLevel_GoodLevel(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_BadLevel_GoodLevel(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BadLevel.GoodLevel value, int depth)
         {
@@ -41,7 +50,7 @@ partial class BadLevelModel
             }
         }
 
-        private static long Measure_AotFixtures_BadLevel_GoodLevel(global::AotFixtures.BadLevel.GoodLevel value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_BadLevel_GoodLevel(global::AotFixtures.BadLevel.GoodLevel value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -51,9 +60,13 @@ partial class BadLevelModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.BadLevel.GoodLevel>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.BadLevel.GoodLevel value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_BadLevel_GoodLevel(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_BadLevel_GoodLevel(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.BadLevel.GoodLevel RawRead_AotFixtures_BadLevel_GoodLevel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BadLevel.GoodLevel value)
         {

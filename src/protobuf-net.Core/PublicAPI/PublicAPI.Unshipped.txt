@@ -79,6 +79,18 @@ ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax
 [PBN9002]static ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<T>() -> void
 [PBN9002]static ProtoBuf.ProtoWriter.State.ThrowRawTooDeep() -> void
 [PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, long> lengths) -> bool
+[PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(ProtoBuf.ISerializationContext context, out int depthBudget, out ProtoBuf.RawLengthBuffer slots) -> bool
+[PBN9002]ProtoBuf.ProtoWriter.State.RawSlots.get -> ProtoBuf.RawLengthBuffer
+[PBN9002]ProtoBuf.RawLengthBuffer
+[PBN9002]ProtoBuf.RawLengthBuffer.RawLengthBuffer() -> void
+[PBN9002]ProtoBuf.RawLengthBuffer.Reserve() -> int
+[PBN9002]ProtoBuf.RawLengthBuffer.Set(int index, long length) -> void
+[PBN9002]ProtoBuf.RawLengthBuffer.Next() -> long
+[PBN9002]ProtoBuf.RawLengthBuffer.Mark() -> int
+[PBN9002]ProtoBuf.RawLengthBuffer.SeekTo(int index) -> void
+[PBN9002]ProtoBuf.RawLengthBuffer.Enter(object value, int index) -> void
+[PBN9002]ProtoBuf.RawLengthBuffer.Leave(object value, out int index) -> bool
+[PBN9002]ProtoBuf.RawLengthBuffer.Balanced.get -> bool
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool
 ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat

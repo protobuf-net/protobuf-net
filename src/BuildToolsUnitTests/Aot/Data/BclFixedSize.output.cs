@@ -80,7 +80,13 @@ partial class BclFixedSizeModel
         }
 
         void global::ProtoBuf.Serializers.ISerializer<(global::System.DateTime, global::System.TimeSpan)>.Write(ref global::ProtoBuf.ProtoWriter.State state, (global::System.DateTime, global::System.TimeSpan) value)
-            => RawWrite__global__System_DateTime__global__System_TimeSpan_(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            var entry = slots.Mark();
+                Measure__global__System_DateTime__global__System_TimeSpan_(value, state.RawDepthBudget, slots);
+            slots.SeekTo(entry);
+            RawWrite__global__System_DateTime__global__System_TimeSpan_(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite__global__System_DateTime__global__System_TimeSpan_(ref global::ProtoBuf.ProtoWriter.State state, (global::System.DateTime, global::System.TimeSpan) value, int depth)
         {
@@ -93,7 +99,7 @@ partial class BclFixedSizeModel
             global::ProtoBuf.BclHelpers.WriteTimeSpan(ref state, tmp2);
         }
 
-        private static long Measure__global__System_DateTime__global__System_TimeSpan_((global::System.DateTime, global::System.TimeSpan) value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure__global__System_DateTime__global__System_TimeSpan_((global::System.DateTime, global::System.TimeSpan) value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -107,9 +113,12 @@ partial class BclFixedSizeModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<(global::System.DateTime, global::System.TimeSpan)>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, (global::System.DateTime, global::System.TimeSpan) value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure__global__System_DateTime__global__System_TimeSpan_(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure__global__System_DateTime__global__System_TimeSpan_(value, depth, slots);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
@@ -120,7 +129,16 @@ partial class BclFixedSizeModel
             => RawRead_AotFixtures_BclFixedSize_Fixed(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.BclFixedSize.Fixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BclFixedSize.Fixed value)
-            => RawWrite_AotFixtures_BclFixedSize_Fixed(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_BclFixedSize_Fixed(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_BclFixedSize_Fixed(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_BclFixedSize_Fixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BclFixedSize.Fixed value, int depth)
         {
@@ -152,7 +170,7 @@ partial class BclFixedSizeModel
             }
             var tmp5 = value.Pair;
             state.WriteRawTag((5 << 3) | 2);  // Pair
-            var len = Measure__global__System_DateTime__global__System_TimeSpan_(tmp5, state.RawDepthBudget, state.RawLengths);
+            var len = state.RawSlots.Next();
             state.WriteRawVarint64((ulong)len);
             DebugCapturePosition(ref state, ref before);
             RawWrite__global__System_DateTime__global__System_TimeSpan_(ref state, tmp5, depth);
@@ -168,7 +186,7 @@ partial class BclFixedSizeModel
             }
         }
 
-        private static long Measure_AotFixtures_BclFixedSize_Fixed(global::AotFixtures.BclFixedSize.Fixed value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_BclFixedSize_Fixed(global::AotFixtures.BclFixedSize.Fixed value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -192,7 +210,9 @@ partial class BclFixedSizeModel
                 len += 9;  // MaybeTook
             }
             var tmp5 = value.Pair;
-            var sub = Measure__global__System_DateTime__global__System_TimeSpan_(tmp5, depth, lengths);
+            var slot5 = slots.Reserve();
+            var sub = Measure__global__System_DateTime__global__System_TimeSpan_(tmp5, depth, slots);
+            slots.Set(slot5, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Pair
             var tmp6 = value.PlainWhen;
             var bcl6 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp6);
@@ -207,9 +227,13 @@ partial class BclFixedSizeModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.BclFixedSize.Fixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.BclFixedSize.Fixed value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_BclFixedSize_Fixed(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_BclFixedSize_Fixed(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.BclFixedSize.Fixed RawRead_AotFixtures_BclFixedSize_Fixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.BclFixedSize.Fixed value)
         {

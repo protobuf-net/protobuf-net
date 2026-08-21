@@ -28,7 +28,16 @@ partial class ImplicitIgnoreModel
             => RawRead_AotFixtures_ImplicitIgnore_Excluded(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.Excluded>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
-            => RawWrite_AotFixtures_ImplicitIgnore_Excluded(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_ImplicitIgnore_Excluded(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_ImplicitIgnore_Excluded(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.Excluded value, int depth)
         {
@@ -54,7 +63,7 @@ partial class ImplicitIgnoreModel
             }
         }
 
-        private static long Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitIgnore_Excluded(global::AotFixtures.ImplicitIgnore.Excluded value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -68,9 +77,13 @@ partial class ImplicitIgnoreModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitIgnore.Excluded>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ImplicitIgnore.Excluded value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_ImplicitIgnore_Excluded(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ImplicitIgnore_Excluded(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.ImplicitIgnore.Excluded RawRead_AotFixtures_ImplicitIgnore_Excluded(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.Excluded value)
         {
@@ -127,7 +140,16 @@ partial class ImplicitIgnoreModel
             => RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
-            => RawWrite_AotFixtures_ImplicitIgnore_PartiallyPinned(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(value, state.RawDepthBudget, slots);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_ImplicitIgnore_PartiallyPinned(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth)
         {
@@ -153,7 +175,7 @@ partial class ImplicitIgnoreModel
             }
         }
 
-        private static long Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::System.Collections.Generic.Dictionary<object, long> lengths)
+        private static long Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(global::AotFixtures.ImplicitIgnore.PartiallyPinned value, int depth, global::ProtoBuf.RawLengthBuffer slots)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
@@ -167,9 +189,13 @@ partial class ImplicitIgnoreModel
         }
 
         int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ImplicitIgnore.PartiallyPinned>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
-            => global::ProtoBuf.ProtoWriter.State.TryMeasureRaw(context, out var depth, out var lengths)
-                && Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(value, depth, lengths) is var len && len <= int.MaxValue
-                ? (int)len : -1;
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ImplicitIgnore_PartiallyPinned(value, depth, slots);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
 
         private static global::AotFixtures.ImplicitIgnore.PartiallyPinned RawRead_AotFixtures_ImplicitIgnore_PartiallyPinned(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ImplicitIgnore.PartiallyPinned value)
         {

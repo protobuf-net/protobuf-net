@@ -32,11 +32,11 @@ Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModel
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
 Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L155 C545
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L448 C396
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L461 C396
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L453 C396
-'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
-Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L479 C407
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L466 C396
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
 Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L492 C407
+'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
+Warning CS0618 protobuf-net.BuildTools/ProtoBuf.BuildTools.Generators.ProtoModelGenerator/AotFixtures.CompatElements.CompatElementsModel.ProtoModel.g.cs L505 C407
 'DataFormat.WellKnown' is obsolete: 'This option is replaced with CompatibilityLevel, and is only used for Level200, where it changes this field to Level240'
