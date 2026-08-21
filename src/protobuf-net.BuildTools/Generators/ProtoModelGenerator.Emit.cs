@@ -2070,7 +2070,7 @@ namespace ProtoBuf.BuildTools.Generators
                             Line(sb, indent, "{");
                             inner++;
                         }
-                        if (member.DataFormat == ProtoDataFormat.Group)
+                        if (GroupFramed(member, target))
                         {
                             // THE point of a group, and the whole of gap B14: framed by a
                             // start/end tag pair rather than a length prefix, so there is no
@@ -3435,7 +3435,12 @@ namespace ProtoBuf.BuildTools.Generators
             && contract.SurrogateTypeName is null
             && contract.SurrogateSerializer is null
             && contract.RootTypeName is null && contract.SubTypes.Count == 0
-            && !contract.IsGroup
+            // [ProtoContract(IsGroup = true)] used to be excluded here. It never needed to be
+            // (gap B42): a grouped contract carries NO length prefix, which makes it cheaper to
+            // measure, not harder. What actually made the exclusion load-bearing is that the
+            // measure and raw-write sites branched on the MEMBER's DataFormat alone and did not
+            // know the TARGET was grouped - so both now ask GroupFramed(member, target). Same
+            // shape as gap B35, where blocking grouped MEMBERS turned out to be backwards.
             && !HasCallback(contract, ProtoCallbackKind.BeforeSerialize);
 
         /// <summary>
@@ -3689,6 +3694,17 @@ namespace ProtoBuf.BuildTools.Generators
         /// of the tag are the wire type — so the two encoded lengths are always equal, and the
         /// pair folds to one literal.
         /// </remarks>
+        /// <summary>
+        /// Whether a unary message member is framed by a start/end tag pair rather than a length
+        /// prefix. Two independent routes reach it, and both must be honoured at every site that
+        /// decides framing: <c>[ProtoMember(DataFormat = Group)]</c> on the MEMBER, and
+        /// <c>[ProtoContract(IsGroup = true)]</c> on the TARGET, whose features carry
+        /// <c>WireTypeStartGroup</c> and which <c>InheritFrom</c> supplies wherever the member
+        /// states no wire type of its own.
+        /// </summary>
+        private static bool GroupFramed(ProtoMemberPlan member, ProtoContractPlan target)
+            => member.DataFormat == ProtoDataFormat.Group || target.IsGroup;
+
         private static string MeasureAddGroup(ProtoMemberPlan member, string payload)
         {
             var tagLen = VarintLen((uint)((member.FieldNumber << 3) | 3));
@@ -3974,7 +3990,7 @@ namespace ProtoBuf.BuildTools.Generators
                         {
                             Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, {(unaryTarget is null ? "null" : "slots")});");
                         }
-                        if (member.DataFormat == ProtoDataFormat.Group)
+                        if (GroupFramed(member, target))
                         {
                             // no length prefix: a start-group tag, the body, an end-group tag.
                             // Both tags carry the same field number and differ only in wire type

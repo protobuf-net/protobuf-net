@@ -2806,7 +2806,7 @@ model is entirely on the classic write path.**
 | **surrogate** (`SurrogateTypeName`) | **yes** | *untracked before this* |
 | **surrogate with its own serializer** | yes, narrower | *untracked before this* |
 | **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
-| **`[ProtoContract(IsGroup = true)]`** | **unknown — reason not established** | *untracked before this* |
+| ~~`[ProtoContract(IsGroup = true)]`~~ | **DONE 2026-08-21 — it was "never taught"** | below |
 | **`[ProtoBeforeSerialization]`** | **NO — load-bearing** | **B17** |
 
 **The callback one — I said "not a gap, must not be fixed", and that was wrong** (Marc, same day:
@@ -2850,10 +2850,24 @@ is the classic-interop boundary, where `ProtoWriter.Measure` **caches** by ident
 `IMeasuringSerializer.Measure` a variable number of times — so "at most twice" needs re-checking
 there specifically, not assumed from the pure-raw path.
 
-**`IsGroup` at contract level is the one I cannot justify from reading it.** A grouped contract
-carries no length prefix of its own, which is an argument that measuring it is *easier*, not harder —
-compare B35, where blocking grouped *members* turned out to be backwards and cost 5.7×. It may
-simply predate the machinery. Worth establishing before assuming either way.
+**`IsGroup` at contract level — established and fixed, 2026-08-21.** The suspicion was right: a
+grouped contract carries no length prefix of its own, so measuring it is *easier*, not harder, and
+the exclusion was "never taught" rather than necessary — the same shape as B35, where blocking
+grouped *members* turned out to be backwards.
+
+What made it load-bearing until now is that **two sites decided framing from the MEMBER's
+`DataFormat` alone** and did not know the *target contract* was grouped: the raw write's
+start/end-tag branch, and the measure's `MeasureAddGroup` branch. Removing the exclusion without
+teaching them would have emitted a length prefix over a group-framed body — wrong bytes, not a
+build error.
+
+Both now ask `GroupFramed(member, target)`, which honours **both routes to group framing**:
+`[ProtoMember(DataFormat = Group)]` on the member, and `[ProtoContract(IsGroup = true)]` on the
+target, whose features carry `WireTypeStartGroup` and which `InheritFrom` supplies wherever the
+member states no wire type of its own.
+
+Verified: `ContractOptions`'s `Grouped` contract now emits a `Measure_` where it previously emitted
+none; conformance 1747/1747, corpus 3123 compared 0 differ, goldens 639/639.
 
 #### Member-level (`RawMemberMeasureBlocked`) — what blocks a member, and so its whole contract
 
