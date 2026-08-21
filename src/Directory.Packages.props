@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageVersion Include="FSharp.Core" Version="10.1.203" />
     <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
-    <PackageVersion Include="coverlet.collector" Version="10.0.0" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
     <PackageVersion Include="Google.Protobuf" Version="3.36.0" />
     <PackageVersion Include="ICSharpCode.Decompiler" Version="10.1.1.8388" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.80.0" />
