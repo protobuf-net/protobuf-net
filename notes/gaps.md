@@ -2885,41 +2885,48 @@ throughput, and the reason to care is that the write path is where v4's gains ar
 and wide-512 overtaking Google.Protobuf).
 
 
-### B43. **A NULL MAP VALUE writes different bytes on the two paths** — pre-existing, found 2026-08-21
+### B43. The generated map READ seeds a missing string value with `""`, where protobuf-net gives `null`
 
-Found by the adversarial samples written for B6's fixture, and **it is not B6's doing**: it
-reproduces with the map measure reverted, which is how it was attributed rather than assumed.
+Found by the adversarial samples written for B6's fixture. **Not B6's doing** — it reproduces with
+the map measure reverted, which is how it was attributed rather than assumed.
 
-`Dictionary<int, string> { [7] = null }`, serialized:
+**Corrected: this is a READ divergence, not a write one.** The first write-up of this entry said the
+generated model *wrote* different bytes; that was wrong, and the mistake is worth keeping because it
+was an easy one to make. The failing assertion is `DifferentialTests` **line 70**, not line 62 —
+line 62 compares the two *serializations* and **passes**. Both models write byte-identical output.
+Line 70 round-trips: it reads the reference's bytes with the **generated** model and re-serializes
+with the reference. So the object the generated reader produced differs.
 
-| | bytes | meaning |
-| --- | --- | --- |
-| `RuntimeTypeModel` | `0A-02-08-07` | entry carries the key only; the null value is **omitted** |
-| generated model | `0A-04-08-07-12-00` | entry also carries field 2 as a **zero-length string** |
+**The cause, one line of emitted code** (`MapMeasure.output.cs`):
 
-So the two disagree on the wire, and they disagree in a way that survives a round-trip as a
-*semantic* difference: read back, one gives an absent value and the other an **empty string**.
+```csharp
+int k1 = default;
+string v1 = "";        // <-- a missing value materialises as EMPTY STRING
+```
 
-**What is odd, and why this is worth an entry rather than a quick fix:** the emitted `WriteMap` call
-is **byte-identical** to ref-emit's — same factory, same field number, same features, same key and
-value features, no explicit serializers. Both therefore reach the same
-`KeyValuePairSerializer.Write`, whose value guard is `HasNonTrivialValue`, which for `string` is
-`value is not null` and should skip. Something between those two identical-looking calls resolves
-differently, and until that is found the fix is unknown.
+`MapSerializer.ReadMap`, which the runtime model uses, leaves it `default` — i.e. `null`. So reading
+`0A-02-08-07` (an entry carrying only the key) gives `[7] = null` on the runtime path and
+`[7] = ""` on the generated one, and re-serializing the latter emits `12-00`.
 
-Two candidates, neither checked: the pair serializer's `_valueSerializer` may be resolved from the
-model differently under the generated services type than under `RuntimeTypeModel`; or
-`TypeHelper<string>.ValueChecker` may not be the `PrimaryTypeProvider` implementation in one of the
-two. A twenty-line reproduction dumping both byte streams would separate them.
+**Which answers "v3 core or v4 new bits": squarely v4.** It is the AOT generator's raw map reader;
+`MapSerializer`/`KeyValuePairSerializer` in Core are untouched and behave identically for both.
 
-**Is a null map value even legal?** Undecided here. protobuf-net refuses null *elements* in a
-repeated member outright (`ThrowNullRepeatedContents`), which is an argument that a null map value
-should be refused too rather than silently written either way. That is a decision for Marc; what is
-not defensible is the current state, where the two engines quietly write different bytes.
+**It is a defensible choice that is nonetheless a divergence.** proto3 says a missing string field
+*is* the empty string, and seeding `""` follows that; protobuf-net's own runtime model gives `null`.
+The generator picked the protobuf reading and silently disagreed with the engine it is meant to
+match.
 
-**The B6 fixture deliberately excludes this sample** with a comment pointing here, so
-`MapMeasure.input.cs` stays green: a permanently-red gate teaches people to ignore the gate, which
-is worse than a recorded bug.
+**Marc's angle is the interesting one, and it lands exactly here** (2026-08-21): the existing
+behaviour has to be largely preserved — there is explicit test coverage in the map logic — but
+`Dictionary<int, string>` and `Dictionary<int, string?>` are **distinguishable at compile time and
+not at run time**. So the AOT model can know something the runtime model cannot, and a non-nullable
+value is precisely the case where `""` is defensible while `string?` must stay `null`. That makes
+this a place where the generator can legitimately be *better* rather than merely different — but it
+has to be a deliberate, annotated decision, not the current accident of an initialiser.
+
+**Decision owed** before this is "fixed": match the runtime model unconditionally (`default`), or
+key the seed on the declared nullability. The second needs the nullable annotation threaded into the
+map plan, and needs deciding what an *unannotated* context does.
 
 
 ## C. Schema front-end (`[ProtoSchema]`)
