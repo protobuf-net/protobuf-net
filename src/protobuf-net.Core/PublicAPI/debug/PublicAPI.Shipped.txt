@@ -1,0 +1,3 @@
+ProtoBuf.Meta.TypeModel.ForwardsOnly.get -> bool
+ProtoBuf.Meta.TypeModel.ForwardsOnly.set -> void
+static ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<T>(ProtoBuf.CompatibilityLevel compatibilityLevel, ProtoBuf.DataFormat dataFormat) -> ProtoBuf.Serializers.ISerializer<T>

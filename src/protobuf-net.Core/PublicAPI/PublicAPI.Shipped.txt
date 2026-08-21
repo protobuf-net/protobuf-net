@@ -169,6 +169,8 @@ ProtoBuf.MemberSerializationOptions.Packed = 1 -> ProtoBuf.MemberSerializationOp
 ProtoBuf.MemberSerializationOptions.Required = 2 -> ProtoBuf.MemberSerializationOptions
 ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.ProtoSyntax.Default = -1 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax
+ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.ProtoSyntax.Proto2 = 0 -> ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.ProtoSyntax.Proto3 = 1 -> ProtoBuf.Meta.ProtoSyntax
 ProtoBuf.Meta.SchemaGenerationFlags
@@ -255,8 +257,6 @@ ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, obj
 ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver) -> object
 ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int fieldNumber) -> object
 ProtoBuf.Meta.TypeModel.DynamicTypeFormatting -> ProtoBuf.Meta.TypeFormatEventHandler
-ProtoBuf.Meta.TypeModel.ForwardsOnly.get -> bool
-ProtoBuf.Meta.TypeModel.ForwardsOnly.set -> void
 ProtoBuf.Meta.TypeModel.GetSchema(System.Type type, ProtoBuf.Meta.ProtoSyntax syntax) -> string
 ProtoBuf.Meta.TypeModel.GetSchema(System.Type type) -> string
 ProtoBuf.Meta.TypeModel.IsDefined(System.Type type) -> bool
@@ -762,7 +762,6 @@ static ProtoBuf.Meta.TypeModel.Create() -> ProtoBuf.Meta.TypeModel
 static ProtoBuf.Meta.TypeModel.CreateForAssembly(System.Reflection.Assembly assembly) -> ProtoBuf.Meta.TypeModel
 static ProtoBuf.Meta.TypeModel.CreateForAssembly(System.Type type) -> ProtoBuf.Meta.TypeModel
 static ProtoBuf.Meta.TypeModel.CreateForAssembly<T>() -> ProtoBuf.Meta.TypeModel
-static ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<T>(ProtoBuf.CompatibilityLevel compatibilityLevel, ProtoBuf.DataFormat dataFormat) -> ProtoBuf.Serializers.ISerializer<T>
 static ProtoBuf.Meta.TypeModel.GetSerializer<TProvider, T>() -> ProtoBuf.Serializers.ISerializer<T>
 static ProtoBuf.Meta.TypeModel.IsSubType<T>(T value) -> bool
 static ProtoBuf.Meta.TypeModel.ThrowCannotCreateInstance(System.Type type, System.Exception inner = null) -> void

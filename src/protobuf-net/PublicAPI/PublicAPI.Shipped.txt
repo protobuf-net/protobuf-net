@@ -229,6 +229,8 @@ ProtoBuf.Meta.MetaType.UseConstructor.get -> bool
 ProtoBuf.Meta.MetaType.UseConstructor.set -> void
 ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.ProtoSyntax.Default = -1 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
+ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
+ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.ProtoSyntax.Proto2 = 0 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.ProtoSyntax.Proto3 = 1 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.RuntimeTypeModel
@@ -298,7 +300,6 @@ ProtoBuf.Meta.RuntimeTypeModel.InferTagFromNameDefault.set -> void
 ProtoBuf.Meta.RuntimeTypeModel.InternStrings.get -> bool
 ProtoBuf.Meta.RuntimeTypeModel.InternStrings.set -> void
 ProtoBuf.Meta.RuntimeTypeModel.LockContended -> ProtoBuf.Meta.LockContentedEventHandler
-ProtoBuf.Meta.RuntimeTypeModel.LockCount.get -> int
 ProtoBuf.Meta.RuntimeTypeModel.MakeDefault() -> void
 ProtoBuf.Meta.RuntimeTypeModel.MetadataTimeoutMilliseconds.get -> int
 ProtoBuf.Meta.RuntimeTypeModel.MetadataTimeoutMilliseconds.set -> void
@@ -365,8 +366,6 @@ ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, obj
 ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int expectedField, ProtoBuf.TypeResolver resolver) -> object (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.TypeModel.DeserializeWithLengthPrefix(System.IO.Stream source, object value, System.Type type, ProtoBuf.PrefixStyle style, int fieldNumber) -> object (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.TypeModel.DynamicTypeFormatting -> ProtoBuf.Meta.TypeFormatEventHandler (forwarded, contained in protobuf-net.Core)
-ProtoBuf.Meta.TypeModel.ForwardsOnly.get -> bool (forwarded, contained in protobuf-net.Core)
-ProtoBuf.Meta.TypeModel.ForwardsOnly.set -> void (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.TypeModel.GetSchema(System.Type type, ProtoBuf.Meta.ProtoSyntax syntax) -> string (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.TypeModel.GetSchema(System.Type type) -> string (forwarded, contained in protobuf-net.Core)
 ProtoBuf.Meta.TypeModel.IsDefined(System.Type type) -> bool (forwarded, contained in protobuf-net.Core)
@@ -817,7 +816,6 @@ static ProtoBuf.Meta.TypeModel.Create() -> ProtoBuf.Meta.TypeModel (forwarded, c
 static ProtoBuf.Meta.TypeModel.CreateForAssembly(System.Reflection.Assembly assembly) -> ProtoBuf.Meta.TypeModel (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.Meta.TypeModel.CreateForAssembly(System.Type type) -> ProtoBuf.Meta.TypeModel (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.Meta.TypeModel.CreateForAssembly<T>() -> ProtoBuf.Meta.TypeModel (forwarded, contained in protobuf-net.Core)
-static ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<T>(ProtoBuf.CompatibilityLevel compatibilityLevel, ProtoBuf.DataFormat dataFormat) -> ProtoBuf.Serializers.ISerializer<T> (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.Meta.TypeModel.GetSerializer<TProvider, T>() -> ProtoBuf.Serializers.ISerializer<T> (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.Meta.TypeModel.IsSubType<T>(T value) -> bool (forwarded, contained in protobuf-net.Core)
 static ProtoBuf.Meta.TypeModel.ThrowCannotCreateInstance(System.Type type, System.Exception inner = null) -> void (forwarded, contained in protobuf-net.Core)

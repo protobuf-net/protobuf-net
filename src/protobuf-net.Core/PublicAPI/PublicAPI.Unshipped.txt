@@ -1,5 +1,3 @@
-﻿ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax
-ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax
 ﻿[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
 [PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.set -> void
 [PBN9001]ProtoBuf.ProtoSchemaAttribute
@@ -124,3 +122,10 @@ static ProtoBuf.BclHelpers.MeasureTimeSpan(System.TimeSpan value) -> int
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(int fieldNumber, System.ReadOnlySpan<ulong> values) -> long
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<int> values) -> long
 [PBN9002]static ProtoBuf.ProtoWriter.State.MeasureRawPackedZigZag(int fieldNumber, System.ReadOnlySpan<long> values) -> long
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.BaseType.get -> System.Type
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.FieldNumber.get -> int
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.IsGroup.get -> bool?
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.ProtoSubTypeAttribute(System.Type baseType, System.Type subType, int fieldNumber) -> void
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.ProtoSubTypeAttribute(System.Type baseType, System.Type subType, int fieldNumber, bool group) -> void
+[PBN9001]ProtoBuf.ProtoSubTypeAttribute.SubType.get -> System.Type

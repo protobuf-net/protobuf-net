@@ -1,5 +1,3 @@
-﻿ProtoBuf.Meta.ProtoSyntax.Edition2023 = 2 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
-ProtoBuf.Meta.ProtoSyntax.Edition2024 = 3 -> ProtoBuf.Meta.ProtoSyntax (forwarded, contained in protobuf-net.Core)
 ﻿[PBN9002]ProtoBuf.ProtoReader.ReadScope (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoReader.ReadScope.ReadScope() -> void (forwarded, contained in protobuf-net.Core)
 [PBN9002]ProtoBuf.ProtoReader.State.AppendExtensionData(uint tag, ProtoBuf.IExtensible instance) -> void (forwarded, contained in protobuf-net.Core)

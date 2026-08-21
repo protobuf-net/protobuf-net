@@ -28,4 +28,8 @@
   <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <PackageReference Include="Grpc.Net.Client" />
   </ItemGroup>
+  <PropertyGroup Label="package validation">
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>$(ProtoBufPackageBaseline)</PackageValidationBaselineVersion>
+  </PropertyGroup>
 </Project>
