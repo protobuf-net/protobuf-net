@@ -210,8 +210,8 @@ partial class MapUnsupportedModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.EnumKey>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.EnumValue>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.MappedEnum>
         , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.RepeatedValue>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapUnsupported.Shade>
@@ -223,19 +223,50 @@ partial class MapUnsupportedModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.MapUnsupported.EnumKey global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
             => RawRead_AotFixtures_MapUnsupported_EnumKey(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumKey>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.EnumKey value)
+            => RawWrite_AotFixtures_MapUnsupported_EnumKey(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_MapUnsupported_EnumKey(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.EnumKey value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+        }
+
+        private static long Measure_AotFixtures_MapUnsupported_EnumKey(global::AotFixtures.MapUnsupported.EnumKey value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                foreach (var pair1 in tmp1)
+                {
+                    long entry1 = 0;
+                    entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
+                    if (pair1.Value != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Value
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.EnumKey>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapUnsupported.EnumKey value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MapUnsupported_EnumKey(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.MapUnsupported.EnumKey RawRead_AotFixtures_MapUnsupported_EnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumKey value)
@@ -306,19 +337,50 @@ partial class MapUnsupportedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.MapUnsupported.EnumValue global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)
             => RawRead_AotFixtures_MapUnsupported_EnumValue(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapUnsupported.EnumValue>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.EnumValue value)
+            => RawWrite_AotFixtures_MapUnsupported_EnumValue(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_MapUnsupported_EnumValue(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapUnsupported.EnumValue value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+        }
+
+        private static long Measure_AotFixtures_MapUnsupported_EnumValue(global::AotFixtures.MapUnsupported.EnumValue value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                foreach (var pair1 in tmp1)
+                {
+                    long entry1 = 0;
+                    if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Value
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapUnsupported.EnumValue>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapUnsupported.EnumValue value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MapUnsupported_EnumValue(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.MapUnsupported.EnumValue RawRead_AotFixtures_MapUnsupported_EnumValue(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapUnsupported.EnumValue value)

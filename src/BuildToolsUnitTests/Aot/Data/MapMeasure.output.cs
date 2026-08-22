@@ -67,6 +67,8 @@ partial class MapMeasureModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapMeasure.Lookup>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue>
+        , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue?>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
 
@@ -113,6 +115,16 @@ partial class MapMeasureModel
             if (tmp6 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, int?>().WriteMap(ref state, 6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp6, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
+            var tmp7 = value.Shades;
+            if (tmp7 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapMeasure.Hue>().WriteMap(ref state, 7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp7, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
+            }
+            var tmp8 = value.ByShade;
+            if (tmp8 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapMeasure.Hue, int>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
         }
 
@@ -175,6 +187,28 @@ partial class MapMeasureModel
                     if (pair6.Key != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Key));
                     if (pair6.Value != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Value));
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry6) + entry6;  // Maybe
+                }
+            }
+            var tmp7 = value.Shades;
+            if (tmp7 != null)
+            {
+                foreach (var pair7 in tmp7)
+                {
+                    long entry7 = 0;
+                    if (pair7.Key != 0) entry7 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair7.Key));
+                    entry7 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair7.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry7) + entry7;  // Shades
+                }
+            }
+            var tmp8 = value.ByShade;
+            if (tmp8 != null)
+            {
+                foreach (var pair8 in tmp8)
+                {
+                    long entry8 = 0;
+                    entry8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair8.Key));
+                    if (pair8.Value != 0) entry8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair8.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry8) + entry8;  // ByShade
                 }
             }
             return len;
@@ -412,6 +446,98 @@ partial class MapMeasureModel
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
                     }
+                    case (7 << 3) | 2:  // Shades, field 7, map entry run
+                    {
+                        value.Shades ??= new global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapMeasure.Hue>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k7 = default;
+                            global::AotFixtures.MapMeasure.Hue v7 = default;
+                            uint etag7 = state.ReadRawTag();
+                            while (etag7 != 0)
+                            {
+                                switch (etag7)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k7 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k7 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k7 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v7 = (global::AotFixtures.MapMeasure.Hue)(unchecked((int)state.ReadRawVarint32()));
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v7 = (global::AotFixtures.MapMeasure.Hue)(unchecked((int)state.ReadRawFixed32()));
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v7 = (global::AotFixtures.MapMeasure.Hue)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag7)) goto entryDone7;
+                                        if ((etag7 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag7);
+                                        state.SkipTag(etag7);
+                                        break;
+                                }
+                                etag7 = state.ReadRawTag();
+                            }
+                            entryDone7:
+                            state.PopScope(scope);
+                            value.Shades[k7] = v7;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    case (8 << 3) | 2:  // ByShade, field 8, map entry run
+                    {
+                        value.ByShade ??= new global::System.Collections.Generic.Dictionary<global::AotFixtures.MapMeasure.Hue, int>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            global::AotFixtures.MapMeasure.Hue k8 = default;
+                            int v8 = default;
+                            uint etag8 = state.ReadRawTag();
+                            while (etag8 != 0)
+                            {
+                                switch (etag8)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k8 = (global::AotFixtures.MapMeasure.Hue)(unchecked((int)state.ReadRawVarint32()));
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k8 = (global::AotFixtures.MapMeasure.Hue)(unchecked((int)state.ReadRawFixed32()));
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k8 = (global::AotFixtures.MapMeasure.Hue)(checked((int)unchecked((long)state.ReadRawFixed64())));
+                                        break;
+                                    case (2 << 3) | 0:  // value, varint
+                                        v8 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (2 << 3) | 5:  // value, fixed32
+                                        v8 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (2 << 3) | 1:  // value, fixed64
+                                        v8 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    default:
+                                        if (state.IsScopeEnd(etag8)) goto entryDone8;
+                                        if ((etag8 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag8);
+                                        state.SkipTag(etag8);
+                                        break;
+                                }
+                                etag8 = state.ReadRawTag();
+                            }
+                            entryDone8:
+                            state.PopScope(scope);
+                            value.ByShade[k8] = v8;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -422,7 +548,13 @@ partial class MapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
         }
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Hue> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.MapMeasure.Hue>();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Hue?> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue?>.Serializer
+            => global::ProtoBuf.Serializers.EnumSerializer.CreateInt32<global::AotFixtures.MapMeasure.Hue>();
     }
 }

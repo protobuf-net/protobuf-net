@@ -18,6 +18,8 @@ using System.Collections.Generic;
 
 namespace AotFixtures.MapMeasure;
 
+public enum Hue { None = 0, Warm = 1 }
+
 [ProtoContract]
 public class Lookup
 {
@@ -28,6 +30,9 @@ public class Lookup
     // a NULLABLE value, which the map-side guard and body have to spell differently: `!= 0` lifts
     // over int? and is false for null, but the payload cast needs GetValueOrDefault()
     [ProtoMember(6)] public Dictionary<int, int?> Maybe { get; set; }
+    // an ENUM side is written even when zero, unlike a plain scalar - probed
+    [ProtoMember(7)] public Dictionary<int, Hue> Shades { get; set; }
+    [ProtoMember(8)] public Dictionary<Hue, int> ByShade { get; set; }
     [ProtoMember(5)] public int Trailer { get; set; }
 }
 
@@ -53,6 +58,9 @@ public static class MapMeasureSamples
         // a map beside an ordinary member, so the whole contract's length is exercised
         new Lookup { Counts = new() { [5] = 6 }, Trailer = 42 },
         new Lookup { Maybe = new() { [1] = 2, [2] = null, [3] = 0 } },
+        // a zero enum on either side is still written
+        new Lookup { Shades = new() { [1] = Hue.Warm, [2] = Hue.None }, ByShade = new() { [Hue.None] = 5, [Hue.Warm] = 0 } },
+        // present-but-empty vs null vs populated
     ];
 }
 

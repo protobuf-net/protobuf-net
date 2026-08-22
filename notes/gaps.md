@@ -237,7 +237,7 @@ Legacy-mode members measured via the classic body against the null writer, landi
 length cache — which now lives on `NetObjectCache`, shared with the sidecar and the `MeasureState`
 hand-off, so the landing spot is already right.
 
-### B6. ~~Maps measure-first~~ — **DONE 2026-08-21 for scalar/string sides**
+### B6. ~~Maps measure-first~~ — **scalar/string sides 2026-08-21, ENUM sides 2026-08-22; message values blocked on B43**
 
 **Built.** A map's size is arithmetic even though its write stays on `MapSerializer.WriteMap` —
 measure and write eligibility are independent, as they already are for a repeated BCL member. So a
@@ -275,6 +275,39 @@ reviewable and gives it a fast guard.
 
 
 Entry = one KV sub-message; both sides already have measure forms for the native kinds.
+
+
+#### Enum map sides — DONE 2026-08-22; message VALUES investigated and blocked
+
+An enum side is the underlying scalar on the wire plus a cast, which is what the old comment here
+predicted. One thing it did not predict, and it is the same trap the lone null-wrapped enum sprang:
+
+**an enum map side is written even when ZERO.** Probed — `{1:None}` is `0A-04-08-01-10-00`, and
+`{None:1}` is `0A-04-08-00-10-01`, where a plain `int` of 0 is omitted from the entry entirely.
+`KeyValuePairSerializer.Write` asks `HasNonTrivialValue`, and `EnumSerializer` supplies no
+`IValueChecker`, so the "non-null is non-trivial" default applies. So the enum arm carries **no
+guard at all**, and reusing the scalar guard would have measured short for exactly the zero case.
+
+**Message VALUES were built and then backed out**, and the evidence is worth keeping because the
+shape looks trivially adjacent to the enum one:
+
+- with message values admitted, the corpus went from **0 mismatches to 13**, every one of them a
+  wrong LENGTH PREFIX rather than wrong content: same total payload, one byte different at a
+  prefix. Removing message values alone took it back to 0, so the enum half is independently clean;
+- the reproduction is a **null map value**. In a fixture, `Dictionary<int, Leaf>` with `[3] = null`
+  has the reference emitting `4A-02-08-03` (key only) and the generated model emitting
+  `4A-04-08-03-12-00` — a present, empty value message. That is a **write-side** divergence, and it
+  is B43's subject: *null is not representable in a map*;
+- **measuring is what turns that latent disagreement into a broken payload.** While such a contract
+  was unmeasurable its length prefix came from writing-to-count, which necessarily matched whatever
+  the writer did, right or wrong. An arithmetic measure does not, so a pre-existing disagreement
+  stops being invisible and starts being a corrupt frame.
+
+So message-valued maps stay out **until B43 is settled**, which is the honest ordering: the fix is
+not in the measure. `MapMeasure.input.cs` carries the enum pair, with a zero on each side.
+
+Still out beyond that: a message **key** (the write path refuses one too), and any non-default
+key/value format.
 
 ### B7. The presized lease (buffer core step 3) — parked
 
@@ -3252,9 +3285,9 @@ struck through — so this is a short list now rather than a survey. What remain
    fixed shape. Needs a decision before code;
 2. **null-wrapped maps** — the last null-wrapping shape, probed and recorded below but not built.
    Its *value* scope is genuinely new; its collection scope is a reuse of what already works;
-3. **map sides that are enums or messages** (B6) — an enum side is the underlying scalar plus a
-   cast, a message side is a nested `Measure_` with a null slot buffer. Both shapes now exist
-   elsewhere, so this is assembly rather than design;
+3. **map MESSAGE values** (B6) — enum sides landed 2026-08-22; message values were built and
+   **backed out**, because measuring them turns B43's latent null-map-value disagreement into a
+   wrong length prefix (corpus 0 → 13). Blocked on B43, not on the measure;
 4. ~~**external serializers**~~ (B31) — **DONE 2026-08-22**, and it was the *same question as the
    surrogate case*, asked at the member site rather than the contract one: **does the serializer
    implement `IMeasuringSerializer<T>`?**

@@ -3580,7 +3580,7 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool RawMemberMeasureBlocked(ProtoMemberPlan member, Dictionary<string, ProtoContractPlan> measurable, bool listAsSpan, bool immutableAsSpan)
         {
             // a map's SIZE can be arithmetic even though its write stays on MapSerializer (gap B6)
-            if (member.Map.Factory is not null) return !RawMapMeasurable(member);
+            if (member.Map.Factory is not null) return !RawMapMeasurable(member, measurable);
             // Null-wrapping is measurable in both scopes (gap B42) even though every wrapped write
             // stays stateful - WriteAny for a lone value, the repeated engine for a collection.
             // The two have DIFFERENT inner rules and so different predicates: a lone wrapper omits
@@ -3783,22 +3783,67 @@ namespace ProtoBuf.BuildTools.Generators
         /// The WRITE stays on <c>MapSerializer.WriteMap</c> either way - measure and write
         /// eligibility are independent, exactly as for a repeated BCL member.
         /// </summary>
-        private static bool RawMapMeasurable(ProtoMemberPlan member)
+        private static bool RawMapMeasurable(ProtoMemberPlan member,
+            Dictionary<string, ProtoContractPlan> measurable)
             => member.Map.Factory is not null
             && !member.WrappedValue && !member.WrappedCollection
             && member.DataFormat == ProtoDataFormat.Default
             && member.MapKeyFormat == ProtoDataFormat.Default
             && member.MapValueFormat == ProtoDataFormat.Default
-            // an enum side is the underlying scalar on the wire but needs a cast to read, and a
-            // message side needs a nested Measure_ with a null slot buffer; both are follow-ups
-            && member.Map.KeyEnumTypeName is null && member.Map.ValueEnumTypeName is null
             // A REPEATED VALUE (Dictionary<int, List<int>>) is legal - the one place nesting is -
             // and ValueKind is then the ELEMENT's kind, so the scalar test above says "Int32" for
             // a List<int> and the measure would emit `pair.Value != 0` against a List<int>. The
             // corpus caught exactly that. ValueSerializerFactory is the marker: it is set when the
             // value resolves its serializer from the model, which is what a repeated value does
             && member.Map.ValueSerializerFactory is null
-            && MapSideMeasurable(member.Map.KeyKind) && MapSideMeasurable(member.Map.ValueKind);
+            && MapSideMeasurable(member.Map.KeyKind)
+            && MapSideMeasurable(member.Map.ValueKind)
+            && member.Map.KeyKind != ProtoMemberKind.Message;
+
+        /// <summary>
+        /// Whether a map side is an <b>enum</b>, which is the underlying scalar on the wire but
+        /// differs from it in one way that matters here.
+        /// </summary>
+        /// <remarks>
+        /// <b>An enum side is written even when ZERO</b> - probed: <c>{1:None}</c> is
+        /// <c>0A-04-08-01-10-00</c> where an <c>int</c> value of 0 is omitted entirely.
+        /// <c>KeyValuePairSerializer.Write</c> asks <c>HasNonTrivialValue</c>, and
+        /// <c>EnumSerializer</c> supplies no <c>IValueChecker</c>, so the "non-null is non-trivial"
+        /// default applies. Same rule, and the same trap, as a lone null-wrapped enum.
+        /// </remarks>
+        private static bool MapSideIsEnum(ProtoMapPlan map, bool key)
+            => (key ? map.KeyEnumTypeName : map.ValueEnumTypeName) is not null;
+
+        /// <summary>
+        /// One side of a map entry's contribution to the entry length. Three shapes, and they do
+        /// not share a guard: a plain scalar is omitted when trivial, an ENUM is written even when
+        /// zero, and a MESSAGE recurses (so it emits statements rather than a term).
+        /// </summary>
+        private static void EmitMapSide(StringBuilder sb, int indent, ProtoMemberPlan member,
+            bool key, string expression, string entry, string number)
+        {
+            var kind = key ? member.Map.KeyKind : member.Map.ValueKind;
+            if (kind == ProtoMemberKind.Message)
+            {
+                // present-but-empty is a real case: {1:Leaf()} writes 12-00, where {1:null} omits
+                // the side entirely. The null buffer is the same rule as everywhere the write stays
+                // stateful - MapSerializer.WriteMap computes its own sub-lengths, so nothing here
+                // may reserve a slot
+                var target = Sanitise((key ? null : member.Map.ValueTypeName)!);
+                Line(sb, indent, $"if ({expression} != null)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, $"sub = Measure_{target}({expression}, depth, null, context);");
+                Line(sb, indent + 1, $"{entry} += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
+                Line(sb, indent, "}");
+                return;
+            }
+            // an enum is the underlying scalar on the wire, but needs the cast to get there - and
+            // carries NO trivial-value guard, which is the whole reason this is not one line
+            var enumSide = MapSideIsEnum(member.Map, key);
+            var value = enumSide ? $"({UnderlyingKeyword(kind)}){expression}" : expression;
+            var add = $"{entry} += 1 + {MapSideBody(kind, value)};";
+            Line(sb, indent, enumSide ? add : $"if ({MapSideGuard(kind, expression)}) {add}");
+        }
 
         /// <summary>
         /// A map entry omits a trivial key or value - <c>KeyValuePairSerializer.Write</c> tests
@@ -4001,10 +4046,8 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, $"foreach (var {pair} in tmp{number})");
                     Line(sb, indent + 1, "{");
                     Line(sb, indent + 2, $"long {entry} = 0;");
-                    Line(sb, indent + 2, $"if ({MapSideGuard(member.Map.KeyKind, $"{pair}.Key")}) "
-                        + $"{entry} += 1 + {MapSideBody(member.Map.KeyKind, $"{pair}.Key")};");
-                    Line(sb, indent + 2, $"if ({MapSideGuard(member.Map.ValueKind, $"{pair}.Value")}) "
-                        + $"{entry} += 1 + {MapSideBody(member.Map.ValueKind, $"{pair}.Value")};");
+                    EmitMapSide(sb, indent + 2, member, key: true, $"{pair}.Key", entry, number);
+                    EmitMapSide(sb, indent + 2, member, key: false, $"{pair}.Value", entry, number);
                     Line(sb, indent + 2, $"len += {mapTag} + global::ProtoBuf.ProtoWriter.State"
                         + $".MeasureRawVarint64((ulong){entry}) + {entry};  // {member.Name}");
                     Line(sb, indent + 1, "}");

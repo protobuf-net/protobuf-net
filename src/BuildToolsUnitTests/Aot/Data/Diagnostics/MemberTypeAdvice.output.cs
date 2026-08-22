@@ -66,26 +66,57 @@ partial class MemberTypeAdviceModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MemberTypeAdvice.Shade?>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.MemberTypeAdvice.MapWithEnumKey global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
             => RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
+            => RawWrite_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.ByShade;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+        }
+
+        private static long Measure_AotFixtures_MemberTypeAdvice_MapWithEnumKey(global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.ByShade;
+            if (tmp1 != null)
+            {
+                foreach (var pair1 in tmp1)
+                {
+                    long entry1 = 0;
+                    entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
+                    if (pair1.Value != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // ByShade
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MemberTypeAdvice.MapWithEnumKey>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MemberTypeAdvice_MapWithEnumKey(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.MemberTypeAdvice.MapWithEnumKey RawRead_AotFixtures_MemberTypeAdvice_MapWithEnumKey(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value)
