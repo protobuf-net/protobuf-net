@@ -163,6 +163,54 @@ partial class CallbacksModel
 
     /// <summary>Serializes the supplied value.</summary>
     /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Callbacks.Mixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.Mixed>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Callbacks.Mixed value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.Mixed>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
     public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Callbacks.Standard value, object userState = null)
     {
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
@@ -309,6 +357,7 @@ partial class CallbacksModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.AfterOnly>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Hooked>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Mixed>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Standard>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Watched>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.WatchedHolder>
@@ -585,6 +634,82 @@ partial class CallbacksModel
             }
             afterRead:
             value.AfterDes();
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Mixed>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.Callbacks.Mixed global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Mixed>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Mixed value)
+            => RawRead_AotFixtures_Callbacks_Mixed(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.Mixed>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.Mixed value)
+            => RawWrite_AotFixtures_Callbacks_Mixed(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Callbacks_Mixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.Mixed value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            value.BeforeSer(state.Context);
+            var tmp1 = value.Value;
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
+            value.AfterSer(global::ProtoBuf.SerializationContext.AsStreamingContext(state.Context));
+        }
+
+        private static long Measure_AotFixtures_Callbacks_Mixed(global::AotFixtures.Callbacks.Mixed value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            value.BeforeSer(context);
+            long len = 0;
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            value.AfterSer(global::ProtoBuf.SerializationContext.AsStreamingContext(context));
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Mixed>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Callbacks.Mixed value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Callbacks_Mixed(value, depth, slots, slots.AsMeasuring(context));
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.Callbacks.Mixed RawRead_AotFixtures_Callbacks_Mixed(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.Mixed value)
+        {
+            value ??= new global::AotFixtures.Callbacks.Mixed();
+            value.BeforeDes();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // Value, field 1, varint
+                        value.Value = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (1 << 3) | 5:  // Value, field 1, fixed32
+                        value.Value = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // Value, field 1, fixed64
+                        value.Value = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) goto afterRead;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            afterRead:
+            value.AfterDes(state.Context);
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1;

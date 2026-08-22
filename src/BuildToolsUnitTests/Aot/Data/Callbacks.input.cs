@@ -81,6 +81,26 @@ public class WatchedHolder
     [ProtoMember(1)] public Watched Inner { get; set; }
 }
 
+// ONE contract whose four callbacks take three different shapes, which gap B9 asked for: the
+// validator (CallbackSet.CheckCallbackParameters), the reflection invoker, ref-emit and this
+// generator all have to agree on the accepted set, and they demonstrably disagreed once before.
+// The differential comparing this against RuntimeTypeModel is that cross-check.
+[ProtoContract]
+public class Mixed
+{
+    [ProtoMember(1)] public int Value { get; set; }
+
+    public string Trace { get; set; } = "";
+
+    [ProtoBeforeSerialization]
+    public void BeforeSer(ISerializationContext context)
+        => Trace += ProtoWriter.IsMeasuring(context) ? "bs*;" : "bs;";
+
+    [ProtoAfterSerialization] public void AfterSer(StreamingContext context) => Trace += "as;";
+    [ProtoBeforeDeserialization] public void BeforeDes() => Trace += "bd;";
+    [ProtoAfterDeserialization] public void AfterDes(ISerializationContext context) => Trace += "ad;";
+}
+
 public static class CallbacksSamples
 {
     public static object[] Values =>
@@ -93,6 +113,8 @@ public static class CallbacksSamples
         new Holder { Inner = new Hooked { Value = 3 }, Tag = 4 },
         new Watched { Value = 5 },
         new WatchedHolder { Inner = new Watched { Value = 6 } },
+        new Mixed { Value = 7 },
+        new Holder { Inner = new Hooked { Value = 8 }, Tag = 9 },
     ];
 }
 
@@ -103,6 +125,7 @@ public static class CallbacksSamples
 [ProtoSerializable(typeof(Holder))]
 [ProtoSerializable(typeof(Watched))]
 [ProtoSerializable(typeof(WatchedHolder))]
+[ProtoSerializable(typeof(Mixed))]
 public partial class CallbacksModel : TypeModel
 {
 }

@@ -49,6 +49,7 @@ namespace AotFixtures.Callbacks
     [ProtoSerializable(typeof(Holder))]
     [ProtoSerializable(typeof(Watched))]
     [ProtoSerializable(typeof(WatchedHolder))]
+    [ProtoSerializable(typeof(Mixed))]
     public partial class CallbacksClassicModel : TypeModel { }
 }
 

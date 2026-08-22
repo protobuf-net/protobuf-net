@@ -321,7 +321,27 @@ compilation — continuously, while typing. Fixing it would remove that *and* ma
 feeding both the DTO and model emissions possible, which is the only way to remove the schema
 path's double parse (see C9).
 
-### B9. Callback context shapes in the AOT generator — deferred
+### B9. ~~Callback context shapes in the AOT generator~~ — **CLOSED 2026-08-22**
+
+Closed as a by-product of B42's callback work rather than on its own: `ISerializationContext` is now
+an accepted callback signature, which it had to be, because it is the only flavour carrying the
+context *object* and so the only one `ProtoWriter.IsMeasuring` can be asked about — and a
+measure-first contract fires before-serialization in **both** passes. Denying it would have meant
+firing twice with no way to tell the passes apart, which is worse than the refusal this entry
+described.
+
+The coverage this entry asked for is in `Callbacks.input.cs`:
+
+- **a mixed model** — `Hooked` (no parameter), `Standard` (`StreamingContext`), `Watched`
+  (`ISerializationContext`), `AfterOnly` (only one of the four points);
+- **one contract whose callbacks differ from each other** — `Mixed`, whose four take three shapes;
+- **the cross-check between the four implementations.** The differential compares each against
+  `RuntimeTypeModel`, so `CallbackSet.CheckCallbackParameters`, the reflection invoker, ref-emit and
+  the generator must agree on the accepted set for it to pass. They demonstrably disagreed once, and
+  that is what this pins.
+
+Original entry follows, for the reasoning.
+**Original:**
 
 Closes a gap this arc created: `ISerializationContext` works on the runtime paths, but the
 generator accepts only "no parameter" or `StreamingContext`, so a contract whose callback takes
