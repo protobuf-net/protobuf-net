@@ -3371,7 +3371,9 @@ only if the per-layer curve *flattened* rather than merely shifting, since lengt
 were superlinear in depth (173 ns/layer at 16 against 105 at 1). It is now **304 / 155 / 106 ns per
 layer at depth 1 / 4 / 16 - decreasing.** Nested length discovery is gone, not smaller.
 
-Measurable contracts in the corpus: **2499 → 2657, +158.** Note the census predicted +179 and was
+Measurable contracts in the corpus: **2499 → 2657, +158** at the time of that measurement; **2803**
+once B6's message-valued maps landed on top (and 164 hierarchy layers now carry a `MeasureSub_`,
+up from 153, because the map work unblocked hierarchies that a map member had been holding out). Note the census predicted +179 and was
 over by 21, all of it the all-or-nothing rule evicting hierarchies it had counted - a constraint
 nobody knew about when the census was run. Of the +158, **153 are hierarchy layers**, so the cascade
 contributed exactly **5** - which is what the census independently predicted, and confirms its
