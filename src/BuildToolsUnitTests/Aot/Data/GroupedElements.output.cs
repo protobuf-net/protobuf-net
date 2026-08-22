@@ -620,6 +620,7 @@ partial class GroupedElementsModel
                             }
                             entryDone4:
                             state.PopScope(scope);
+                            v4 ??= ReadEmpty_AotFixtures_GroupedElements_Item(state.Context);
                             value.Plain[k4] = v4;
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
@@ -828,6 +829,19 @@ partial class GroupedElementsModel
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
+        }
+
+        private static global::AotFixtures.GroupedElements.Item ReadEmpty_AotFixtures_GroupedElements_Item(global::ProtoBuf.ISerializationContext context)
+        {
+            var state = global::ProtoBuf.ProtoReader.State.Create(default(global::System.ReadOnlyMemory<byte>), context?.Model, context?.UserState);
+            try
+            {
+                return RawRead_AotFixtures_GroupedElements_Item(ref state, default);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GroupedElements.Node>.Features

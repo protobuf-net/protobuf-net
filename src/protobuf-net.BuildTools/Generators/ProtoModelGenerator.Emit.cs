@@ -422,6 +422,27 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
 
+            // gap B45: which contracts are reached as a MESSAGE map value. Only those need the
+            // empty-payload helper, and scoping it matters - emitting one beside every RawRead_
+            // would add a method per contract to a model that has thousands of them.
+            var mapValueReads = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var contract in plan.Contracts)
+            {
+                foreach (var member in contract.Members)
+                {
+                    // the SAME predicate the entry loop is gated on, not a broader one: a map whose
+                    // value falls back to MapSerializer never inlines an entry loop, so it needs no
+                    // helper - and emitting one would name a RawRead_ that does not exist (an
+                    // interface-valued map is exactly that shape, and broke the build first time)
+                    if (member.Map.Factory is not null && member.Map.ValueKind == ProtoMemberKind.Message
+                        && member.Map.ValueTypeName is { } valueType
+                        && RawMemberFallbackReason(member, rawCallable) is null)
+                    {
+                        mapValueReads.Add(valueType);
+                    }
+                }
+            }
+
             var contracts = new StringBuilder();
             var first = true;
             foreach (var contract in plan.Contracts)
@@ -433,6 +454,7 @@ namespace ProtoBuf.BuildTools.Generators
                 if (raw)
                 {
                     EmitRawRead(contracts, indent + 2, contract, rawCallable);
+                    if (mapValueReads.Contains(contract.TypeName)) EmitReadEmpty(contracts, indent + 2, contract);
                 }
                 else if (plan.RawReader && rawReasons.TryGetValue(contract.TypeName, out var why))
                 {
@@ -469,6 +491,43 @@ namespace ProtoBuf.BuildTools.Generators
         /// costs itself, not the contract; only contract-level shape falls back to the classic
         /// body, with a comment in the output saying why.
         /// </summary>
+        /// <summary>
+        /// The empty-payload read a map entry needs when it carried a key and no value (gap B45).
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A mirror of <c>KeyValuePairSerializer.CreateDefault</c>, which is what the runtime does
+        /// and which we bypass by inlining the map entry loop rather than going through
+        /// <c>MapSerializer</c>. An entry with no value field is legal and <b>common</b> - it is
+        /// what protobuf-net writes whenever the value is trivial - and the runtime never hands
+        /// back a null map value for one.
+        /// </para>
+        /// <para>
+        /// <b>Reading an empty payload is not the same as constructing</b>, which is the whole
+        /// reason this is not simply <c>new T()</c>: going through the read fires the deserialize
+        /// callbacks, exactly as the runtime's does. protobuf-net's own comment for it is "useful
+        /// in case the type is using a non-trivial constructor or factory API".
+        /// </para>
+        /// </remarks>
+        private static void EmitReadEmpty(StringBuilder sb, int indent, ProtoContractPlan contract)
+        {
+            var san = Sanitise(contract.TypeName);
+            sb.AppendLine();
+            Line(sb, indent, $"private static {contract.TypeName} ReadEmpty_{san}(global::ProtoBuf.ISerializationContext context)");
+            Line(sb, indent, "{");
+            Line(sb, indent + 1, "var state = global::ProtoBuf.ProtoReader.State.Create("
+                + "default(global::System.ReadOnlyMemory<byte>), context?.Model, context?.UserState);");
+            Line(sb, indent + 1, "try");
+            Line(sb, indent + 1, "{");
+            Line(sb, indent + 2, $"return RawRead_{san}(ref state, default);");
+            Line(sb, indent + 1, "}");
+            Line(sb, indent + 1, "finally");
+            Line(sb, indent + 1, "{");
+            Line(sb, indent + 2, "state.Dispose();");
+            Line(sb, indent + 1, "}");
+            Line(sb, indent, "}");
+        }
+
         private static void EmitRawRead(StringBuilder sb, int indent, ProtoContractPlan contract,
             HashSet<string> rawSet)
         {
@@ -622,6 +681,20 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 5, "}");
                     Line(sb, indent + 5, $"entryDone{n}:");
                     Line(sb, indent + 5, "state.PopScope(scope);");
+                    // gap B45: an entry with a key and NO value field is legal and COMMON - it is
+                    // what protobuf-net writes whenever the value is trivial - and the runtime
+                    // never yields a null map value for it. KeyValuePairSerializer.Read tests
+                    // ValueChecker.IsNull and then calls CreateDefault, which for a message reads
+                    // an EMPTY PAYLOAD through the serializer rather than returning default,
+                    // "useful in case the type is using a non-trivial constructor or factory API".
+                    // We inline the entry loop instead of going through KeyValuePairSerializer, so
+                    // that step is ours to reproduce - and reproducing it by CONSTRUCTING would be
+                    // subtly wrong, since reading an empty payload also fires the deserialize
+                    // callbacks. See ReadEmpty_.
+                    if (map.ValueKind == ProtoMemberKind.Message)
+                    {
+                        Line(sb, indent + 5, $"v{n} ??= ReadEmpty_{Sanitise(map.ValueTypeName!)}(state.Context);");
+                    }
                     Line(sb, indent + 5, insert);
                     Line(sb, indent + 4, $"}} while ((tag = state.ReadRawTag()) == last);");
                     Line(sb, indent + 4, "continue;");

@@ -307,6 +307,7 @@ partial class MapModel
                             }
                             entryDone2:
                             state.PopScope(scope);
+                            v2 ??= ReadEmpty_AotFixtures_Map_Payload(state.Context);
                             value.Messages[k2] = v2;
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
@@ -764,6 +765,19 @@ partial class MapModel
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
+
+        private static global::AotFixtures.Map.Payload ReadEmpty_AotFixtures_Map_Payload(global::ProtoBuf.ISerializationContext context)
+        {
+            var state = global::ProtoBuf.ProtoReader.State.Create(default(global::System.ReadOnlyMemory<byte>), context?.Model, context?.UserState);
+            try
+            {
+                return RawRead_AotFixtures_Map_Payload(ref state, default);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Map.Shade> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.Map.Shade>.Serializer

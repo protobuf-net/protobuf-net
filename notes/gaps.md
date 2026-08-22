@@ -4461,7 +4461,7 @@ weaker discriminators were tried and rejected first: the token alone cannot say 
 `-fieldNumber`), and `_scope == position` does not separate them either, because a length-bounded
 root leaves `_scope` equal to the position at the end of an unterminated group too.
 
-### B45. A missing MESSAGE value in a map reads back as `null` from the generated model, and as an empty instance from the runtime — **open**
+### B45. ~~A missing MESSAGE value in a map reads back as `null` from the generated model~~ — **FIXED 2026-08-22**
 
 Found 2026-08-22 while investigating B6's message-value question, and **independent of it**:
 reproduced with message-value measurement disabled, so nothing about measure-first is involved.
@@ -4485,9 +4485,31 @@ back as `""` because the reader has to produce something. Here a null *message* 
 an empty instance for exactly the same reason. The runtime is self-consistent — a map value is never
 null coming out — and the generated reader is the odd one out.
 
-**No fixture carries it**, because one would fail the differential; the repro above is the record.
-Adding it is the first step of fixing it. Note it is only visible through a *read*: writing is
-byte-identical, which is why the corpus never caught it and why it needed a hand-built payload.
+**Only a READ can see it**: writing is byte-identical either way, which is why the corpus - which
+compares bytes - never caught it, and why the repro needs a hand-built payload.
+
+#### Fixed 2026-08-22 — and the cause was one level up from where this entry looked
+
+This entry assumed the two paths differed inside `KeyValuePairSerializer`. They do not: **the
+generated map read never reaches it.** For the native shape the generator inlines its own entry
+loop, seeding `v = default` and assigning `map[k] = v` at `entryDone`, so `CreateDefault` was simply
+never on our path. That is also why the fix is ours to write rather than a flag to set.
+
+`ReadEmpty_<T>` mirrors `CreateDefault`: it creates a reader state over an **empty** buffer and calls
+`RawRead_<T>` through it. Reading an empty payload is deliberately not the same as `new T()` - it
+also fires the deserialize callbacks, which is exactly what the runtime does, and protobuf-net's own
+comment for it is *"useful in case the type is using a non-trivial constructor or factory API"*.
+
+Two things worth keeping:
+
+- **the helper is scoped to types actually reached as a map value**, and by the *same* predicate the
+  entry loop is gated on (`RawMemberFallbackReason(member, ...) is null`), not a broader one. A
+  broader set names a `RawRead_` that does not exist - an **interface**-valued map is exactly that
+  shape, since a hierarchy reads through `RawReadSub_`, and it broke the build on the first attempt.
+  Scoping also matters for size: a helper beside every `RawRead_` would add a method per contract to
+  a model that has thousands.
+- **`MapMissingValueTests` asserts the reference first**, so a change in protobuf-net's own behaviour
+  surfaces as the premise failing rather than as a mysterious failure of ours.
 
 ### B46. ~~A serialize callback on a HIERARCHY layer never fires~~ — **SERIALIZE half FIXED 2026-08-22; the DESERIALIZE half is still open**
 

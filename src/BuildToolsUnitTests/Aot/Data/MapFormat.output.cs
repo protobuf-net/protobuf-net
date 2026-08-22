@@ -488,6 +488,7 @@ partial class MapFormatModel
                             }
                             entryDone12:
                             state.PopScope(scope);
+                            v12 ??= ReadEmpty_AotFixtures_MapFormat_Nested(state.Context);
                             value.NoMapMessage.Add(k12, v12);
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
@@ -585,6 +586,19 @@ partial class MapFormatModel
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
+
+        private static global::AotFixtures.MapFormat.Nested ReadEmpty_AotFixtures_MapFormat_Nested(global::ProtoBuf.ISerializationContext context)
+        {
+            var state = global::ProtoBuf.ProtoReader.State.Create(default(global::System.ReadOnlyMemory<byte>), context?.Model, context?.UserState);
+            try
+            {
+                return RawRead_AotFixtures_MapFormat_Nested(ref state, default);
+            }
+            finally
+            {
+                state.Dispose();
+            }
         }
     }
 }
