@@ -3270,9 +3270,91 @@ to know *both* types, so it is available only to per-contract typed overloads, n
 
 So: share the implementation. The duplication buys nothing on the path that would need it.
 
-### B41. A HIERARCHY is off measure-first entirely — **STILL OPEN, but UNBLOCKED.** Design settled and prize sized 2026-08-22; the attempt was backed out, and the crash that forced that is now diagnosed and fixed
+### B41. ~~A HIERARCHY is off measure-first entirely~~ — **CLOSED 2026-08-22: measured AND written raw, 2.99× at depth 16**
 
-**Status in one line: hierarchies are still off measure-first.** What 2026-08-22 produced is the
+**Status in one line: hierarchies are on measure-first, both halves, and the superlinearity in depth
+is gone.** Landed in two commits on 2026-08-22 - `6676b011` (measure) and `7700b849` (write) - and
+the second exists because the first was measured and found to be a **regression on its own**. The
+history below is kept because the two-stage shape is the lesson, not an accident of sequencing.
+
+#### What landed
+
+`MeasureSub_` mirrors `WriteSubType` statement for statement, and `RawWriteSub_` mirrors
+`MeasureSub_`. A length-prefixed marker writes tag, the length from the slot the measure reserved,
+then the sub-type's layer walk; a delimited one writes start tag, body, end tag and reserves nothing.
+The recursion is between the **statics**, never back through the interface, so the measure prologue
+runs once per top-level write however deep the chain.
+
+Four things needed care, and three of them were not in the design:
+
+- **a hierarchy is ALL-OR-NOTHING in the measurable set.** Every layer's `Measure_` forwards to the
+  root's `MeasureSub_` and each marker arm calls its sub-type's, so one unmeasurable layer leaves
+  calls to bodies that were never emitted. The symptom is a pile of `CS0103` in the **consumer's**
+  build, not a diagnostic here - which is exactly how it was found, five of them in the corpus.
+- **only the ROOT may use `Leave`.** The boundary recorded by `IMeasuringSerializer<T>` describes a
+  root-based run, because `Measure_T` forwards to the root. A derived layer's own `WriteSubType` is
+  reachable only from the stateful engine and its run would be a different, shorter one, so it
+  always measures afresh rather than seeking to a boundary describing something else.
+- **a marker-only layer asks `IsSubType` before measuring at all.** A root instance that is not
+  sub-typed writes no marker, so the prologue would walk for a length nobody reads; the measure
+  takes the same branch on the same object, so the two stay paired. Left unconditional this cost
+  **18% at depth 1** - enough to put the generated model *behind* the classic engine on that shape.
+- **a hierarchy target has no `RawWrite_`.** `RawWriteEntry` names the root's `RawWriteSub_`, which
+  keeps the member's measure and its write both root-based.
+
+#### The numbers, like-for-like against the previous generator
+
+`InheritanceDepthBenchmarks`, net8.0, same job both sides. Generated, length-prefixed markers:
+
+| depth | before | after | |
+| ---: | ---: | ---: | --- |
+| 1 | 295 ns | 304 ns | parity - no marker is written at all |
+| 4 | 1,115 ns | 620 ns | **1.80×** |
+| 16 | 5,058 ns | 1,693 ns | **2.99×** (0.71 → **0.24** of the classic engine) |
+
+Delimited markers improve too - 2,573 → 1,190 ns at depth 16, **2.16×** - because the layer's own
+members go raw even where the markers never needed a length.
+
+`InheritanceCascadeBenchmarks` (new) covers what the depth suite structurally cannot: a contract
+that HOLDS a hierarchy, which is what the cascade reaches.
+
+| shape, depth 16 | before | after | |
+| --- | ---: | ---: | --- |
+| carrier with 2 other members | 5,603 ns | 1,839 ns | **3.05×** |
+| carrier with 26 other members | 6,180 ns | 2,488 ns | **2.48×**, and the 48 B/op is gone |
+
+**The falsifiable half was the SHAPE, and it held.** The baseline note said the win would be real
+only if the per-layer curve *flattened* rather than merely shifting, since length-prefixed markers
+were superlinear in depth (173 ns/layer at 16 against 105 at 1). It is now **304 / 155 / 106 ns per
+layer at depth 1 / 4 / 16 - decreasing.** Nested length discovery is gone, not smaller.
+
+Measurable contracts in the corpus: **2499 → 2657, +158.** Note the census predicted +179 and was
+over by 21, all of it the all-or-nothing rule evicting hierarchies it had counted - a constraint
+nobody knew about when the census was run. Of the +158, **153 are hierarchy layers**, so the cascade
+contributed exactly **5** - which is what the census independently predicted, and confirms its
+finding that hierarchies are effectively leaves in this corpus.
+
+#### Stage 1 alone was a REGRESSION, and that is the transferable lesson
+
+The plan was explicitly staged: hierarchies join `measurable`, the write stays stateful, "that gets
+the whole +179 with no change to what is written". It passed every gate - corpus 3134/0, conformance
+1767, goldens - and was **slower**: 3-5% and +48 B/op on the 26-member carrier.
+
+The cause is obvious in hindsight and was not predicted: the carrier measured the hierarchy
+arithmetically, and the engine then re-crawled the same sub-tree to write it. **A measure that
+nothing consumes is pure cost.** It also allocated the slot buffer that a measure-first root needs.
+
+So "measurable but not raw-writable" is a sound *state* - a delegating surrogate is exactly that -
+but it is not a sound *milestone* for something whose write could consume the measure. Had the gates
+been the only evidence, this would have shipped as a win.
+
+**It is also why `InheritanceCascadeBenchmarks` exists.** `InheritanceDepthBenchmarks` serializes
+the hierarchy as a ROOT, so it was flat before and after stage 1 - correctly, and uninformatively.
+A benchmark that cannot see the change you made is not evidence that the change was neutral.
+
+#### The original design and sizing, kept
+
+What 2026-08-22 produced is the
 design (agreed, and it is just a nested sub-message), the size of the prize measured two independent
 ways, a perf baseline to prove any future claim against, and one real bug found and fixed on the way.
 The feature itself is not built.
@@ -3551,9 +3633,12 @@ model is entirely on the classic write path.**
 
 #### Contract-level (`RawMeasurableShape`) — six exclusions
 
+Note the count is historical: `RawMeasurableShape` is now down to the surrogate pair, inheritance
+having gone on 2026-08-22. Re-derive from the predicate rather than trusting the number.
+
 | what | gap? | tracked |
 | --- | --- | --- |
-| **inheritance** (`RootTypeName`, `SubTypes`) | **yes, and the biggest** | **B41** |
+| ~~**inheritance** (`RootTypeName`, `SubTypes`)~~ | **DONE 2026-08-22 — measured AND written raw, 2.99×** | **B41** |
 | ~~surrogate (`SurrogateTypeName`)~~ | **DONE 2026-08-21 — also "never taught"** | below |
 | surrogate with a NON-MEASURING serializer | **fallback, not a gap — DECIDED 2026-08-22** | below |
 | ~~external serializer~~ (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | **DONE 2026-08-22 when it MEASURES** | **B31** |
@@ -4403,3 +4488,42 @@ null coming out — and the generated reader is the odd one out.
 **No fixture carries it**, because one would fail the differential; the repro above is the record.
 Adding it is the first step of fixing it. Note it is only visible through a *read*: writing is
 byte-identical, which is why the corpus never caught it and why it needed a hand-built payload.
+
+### B46. A serialize callback on a HIERARCHY layer never fires, on either pass — **open, and it predates measure-first**
+
+**Found while building B41, and deliberately not fixed there.** `EmitSubTypeContract` has never
+called `EmitCallback`: a hierarchy contract's `ISerializer<T>.Write` is a one-line delegation to the
+root's `WriteSubType`, and `WriteSubType` walks markers and members with no callback anywhere. So
+`[ProtoBeforeSerialization]`, `[ProtoAfterSerialization]` and the `[OnSerializing]`/`[OnSerialized]`
+family are **silently dropped** for any type in a `[ProtoInclude]` hierarchy.
+
+Confirmed by fixture rather than by reading: `Data/Diagnostics/HierarchyCallback.input.cs` declares
+a base with both protobuf-net callbacks and a derived layer with `[OnSerializing]`, and the emitted
+output contains no call to any of the three. It sits under `Diagnostics/` so it can be *inspected*
+without being linked into `AotRefGen` or `AotConformanceTests` - not because it reports a
+diagnostic, which it does not.
+
+Three things worth stating before anyone picks this up:
+
+- **B41 did not introduce it and does not widen it.** `MeasureSub_` mirrors the write deliberately,
+  including the absence, so the measure and the write observe the same object and cannot disagree
+  about a length. Firing in the measure alone would be strictly worse than firing in neither.
+- **the deserialize side is fine.** `ReadSubType` is a different emitter and does fire its pair;
+  this is the serialize half only.
+- **the conformance suite WOULD catch a fix that got it wrong**, which is the cheap way in: it
+  compares generated bytes against `RuntimeTypeModel`, and ref-emit's `TypeSerializer` does fire
+  these - so a callback that *mutates* a serialized member is a byte-level difference today. That
+  also means a fixture for it belongs in `Data/` proper once the fix lands, not in `Diagnostics/`.
+
+**What is NOT established is the expected sequence**, and it should be probed rather than reasoned
+about before anything is emitted: ref-emit gives each layer its own `TypeSerializer`, so the
+question is whether a two-layer hierarchy fires the base's callback once, twice, or in a particular
+order relative to the derived layer's. Probe `RuntimeTypeModel` with a trace-appending callback on
+each layer and copy whatever it does - the same method that settled the `[ProtoPartialMember]`
+precedence table.
+
+**Priority: low on frequency, high on surprise.** A callback that silently never runs is the failure
+mode this file exists to catch, but a hierarchy carrying one is rare enough that the corpus contains
+none - the 3134-contract differential is byte-identical today, which is evidence that nothing in it
+has this shape rather than evidence that the shape works.
+

@@ -1,4 +1,4 @@
-﻿# protobuf-net — notes for agents
+# protobuf-net — notes for agents
 
 Only non-obvious things live here; the code is the reference for everything else.
 
@@ -990,6 +990,38 @@ inherited ones belong to the layer that declares them.
   runtime.
 - A hierarchy is **all-or-nothing** in the cascade: one dropped member anywhere takes the whole
   hierarchy, since the root dispatches to each sub-type by name and every type routes back to the root.
+  **It is all-or-nothing in the MEASURABLE set for the same reason**, and that is a separate fixed
+  point that had to be taught the rule (gap B41): every layer's `Measure_` forwards to the root's
+  `MeasureSub_`, and each marker arm calls its sub-type's, so one unmeasurable layer leaves calls to
+  bodies that were never emitted. The symptom is a pile of `CS0103` in the **consumer's** build
+  rather than a diagnostic here.
+
+**A hierarchy takes the measure-first raw path, since 2026-08-22 (gap B41).** It was excluded, and
+the exclusion was never principled — a sub-type marker *is* a nested sub-message, which was already
+measured for a member. Two statics per layer, mirroring the two interface methods:
+
+- **`MeasureSub_`** mirrors `WriteSubType` statement for statement, and **`RawWriteSub_`** mirrors
+  `MeasureSub_`. Marker order is load-bearing where one sub-type derives from another (`Puppy : Dog`),
+  and the three cannot drift because all walk `contract.SubTypes` in its own order.
+- **`Measure_` for any layer forwards to the ROOT's `MeasureSub_`**, because `ISerializer<T>.Write`
+  routes to the root's `WriteSubType` whatever `T` is — so a member declared as the base measures the
+  whole chain. For the same reason a hierarchy target has no `RawWrite_`: `RawWriteEntry` names the
+  root's `RawWriteSub_`, keeping the measure and the write both root-based.
+- **Only the ROOT may use `Leave`.** The boundary recorded by `IMeasuringSerializer<T>` describes a
+  root-based run; a derived layer's own `WriteSubType` is reachable only from the stateful engine and
+  its run would be a different, shorter one, so it always measures afresh.
+- **A marker-only layer asks `IsSubType` before measuring at all.** A root instance that is not
+  sub-typed writes no marker, so the prologue would walk for a length nobody reads; the measure takes
+  the same branch on the same object, so the two stay paired. Left unconditional this cost **18% at
+  depth 1** — enough to put the generated model behind the classic engine on that shape.
+- **A serialize callback on a hierarchy layer is NOT fired**, by either the write or the measure.
+  That is a pre-existing divergence from ref-emit rather than anything measure-first introduced, and
+  `MeasureSub_` mirrors the write deliberately so the two cannot disagree about it. See
+  `notes/gaps.md` B46; `Diagnostics/HierarchyCallback` pins today's behaviour.
+
+The prize was the **cascade** as much as the hierarchy itself: +158 contracts measurable in the
+corpus (2499 → 2657), and 2.99× on a depth-16 length-prefixed hierarchy, with the per-layer curve
+now *decreasing* rather than superlinear.
 
 #### Interfaces are inheritance roots
 
