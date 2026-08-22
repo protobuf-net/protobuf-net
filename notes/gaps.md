@@ -1850,7 +1850,7 @@ holds the arc and its cuts, and says outright that there is no `PORTING.md` so n
 again. Writing a real porting guide is still worth doing if the museum API ever needs a migration
 story for consumers; that is a documentation decision, not a dangling-link bug.
 
-### B30. `[ProtoDataFormat]` follow-ups — **items 1, 2, 4 and 5 DONE; item 3 (the silent no-op) remains**
+### B30. ~~`[ProtoDataFormat]` follow-ups~~ — **CLOSED 2026-08-22: all five items done**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
 anywhere the resolver returns `Default` and the emitted bytes are identical, so the blast radius for
@@ -1916,9 +1916,16 @@ Its measure-first cost is recorded in **B26**, which is where the work is. The r
   under `FixedSize`). The first also carries a second `long` member with no attribute of its own, so
   a per-member rather than per-type default would show up.
 
-**Item 3 remains** — a declaration that can never match (`typeof(Guid?)`, `typeof(List<Guid>)`) is a
-silent no-op, because both sides unwrap the *member* but never the declared type. Analyzer-shaped,
-and it needs an id and a release-tracking entry rather than a message change.
+**Item 3 — DONE 2026-08-22, as `PBN0027`.** A declaration naming a type the resolver can never be
+asked about (`typeof(Guid?)`, `typeof(List<Guid>)`, `typeof(Guid[])`) is now a warning naming the
+type to use instead. The analyzer is the right layer rather than the generator: the declaration is
+wrong wherever it sits, whether or not any contract in *this* compilation reaches it.
+
+Registered on the **attribute** rather than on a declaration, so one callback covers every scope the
+resolver reads — a type, a module, an assembly. `string` is excluded from the collection test
+deliberately: it is a scalar here and a reasonable thing to declare a default for, despite being
+`IEnumerable<char>`. The tests assert both directions, since a rule that never fires and a rule that
+always fires look identical from a green build.
 
 ### B31. ~~An EXTERNAL serializer takes its member off measure-first~~ — **NARROWED 2026-08-22 to a non-measuring one**
 

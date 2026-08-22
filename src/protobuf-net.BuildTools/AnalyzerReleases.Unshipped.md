@@ -15,3 +15,4 @@ PBN3020  | ProtoBuf | Warning  | No additional file matches a `[ProtoSchema]` pa
 PBN3021  | ProtoBuf | Warning  | A `[ProtoSchema]` path matches more than one additional file
 PBN3022  | ProtoBuf | Warning  | A `[ProtoSchema]` file could not be parsed
 PBN3023  | ProtoBuf | Warning  | A `[ProtoSchema]` shape is not supported by the AOT model yet
+PBN0027  | Usage    | Warning  | A `[ProtoDataFormat]` declaration whose type can never be matched

@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using ProtoBuf.BuildTools.Internal;
 using System;
@@ -242,6 +243,14 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
 
+        internal static readonly DiagnosticDescriptor DataFormatDeclarationCannotMatch = new(
+            id: "PBN0027",
+            title: nameof(DataContractAnalyzer) + "." + nameof(DataFormatDeclarationCannotMatch),
+            messageFormat: "[ProtoDataFormat(typeof({0}), ...)] can never apply to anything: the default is keyed on the {1}, so this declaration is silently ignored - use typeof({2}) instead.",
+            category: Literals.CategoryUsage,
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
         private static readonly ImmutableArray<DiagnosticDescriptor> s_SupportedDiagnostics = Utils.GetDeclared(typeof(DataContractAnalyzer));
 
         /// <inheritdoc/>
@@ -341,6 +350,65 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
             }
         }
 
+        /// <summary>
+        /// A <c>[ProtoDataFormat]</c> naming a type the resolver can never be asked about.
+        /// </summary>
+        /// <remarks>
+        /// Both sides unwrap the <b>member</b> - a collection selects its element, and a
+        /// <c>Nullable&lt;T&gt;</c> unwraps to <c>T</c> - but the declared type is compared as
+        /// written. So <c>typeof(Guid?)</c> and <c>typeof(List&lt;Guid&gt;)</c> match nothing at
+        /// all, silently. Gap B30 item 3; the analyzer is the right layer because the declaration
+        /// is wrong wherever it sits, whether or not any contract in this compilation reaches it.
+        /// </remarks>
+        private static void ConsiderDataFormatDeclaration(ref SyntaxNodeAnalysisContext context)
+        {
+            if (context.Node is not AttributeSyntax attribute) return;
+            if (context.SemanticModel.GetSymbolInfo(attribute, context.CancellationToken).Symbol
+                is not IMethodSymbol { ContainingType: { } attributeType }) return;
+            if (attributeType.ToDisplayString() != "ProtoBuf.ProtoDataFormatAttribute") return;
+            if (attribute.ArgumentList?.Arguments.Count is not (> 0)) return;
+
+            var first = attribute.ArgumentList.Arguments[0];
+            if (first.Expression is not TypeOfExpressionSyntax typeOf) return;
+            if (context.SemanticModel.GetTypeInfo(typeOf.Type, context.CancellationToken).Type is not { } declared) return;
+
+            string? keyedOn = null, instead = null;
+            if (declared is INamedTypeSymbol { IsGenericType: true } nullable
+                && nullable.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+            {
+                keyedOn = "underlying type of a Nullable<T>";
+                instead = nullable.TypeArguments[0].ToDisplayString();
+            }
+            else if (ElementOfCollection(declared) is { } element)
+            {
+                keyedOn = "element type of a collection";
+                instead = element.ToDisplayString();
+            }
+            if (keyedOn is null) return;
+
+            context.ReportDiagnostic(Diagnostic.Create(DataFormatDeclarationCannotMatch,
+                typeOf.Type.GetLocation(), declared.ToDisplayString(), keyedOn, instead));
+        }
+
+        /// <summary>
+        /// The element of an array or <c>IEnumerable&lt;T&gt;</c>, or null. <c>string</c> is
+        /// excluded deliberately - it is a scalar here, and a perfectly reasonable thing to declare
+        /// a default for even though it implements <c>IEnumerable&lt;char&gt;</c>.
+        /// </summary>
+        private static ITypeSymbol? ElementOfCollection(ITypeSymbol declared)
+        {
+            if (declared.SpecialType == SpecialType.System_String) return null;
+            if (declared is IArrayTypeSymbol array) return array.ElementType;
+            foreach (var iface in declared.AllInterfaces)
+            {
+                if (iface.ConstructedFrom?.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)
+                {
+                    return iface.TypeArguments[0];
+                }
+            }
+            return null;
+        }
+
         public override void Initialize(AnalysisContext ctx)
         {
             ctx.EnableConcurrentExecution();
@@ -364,6 +432,14 @@ internal static readonly DiagnosticDescriptor DeclaredAndIgnored = new(
                     ConsiderPossibleProtoBufType(ref context, declaredSubTypes);
                 }, s_syntaxKinds);
             });
+            // gap B30 item 3: an ambient [ProtoDataFormat] whose declared type can never be matched.
+            // Registered on the ATTRIBUTE rather than on a declaration, so it reaches every scope the
+            // resolver reads - a type, a module, or an assembly - with one callback.
+            ctx.RegisterSyntaxNodeAction(context =>
+            {
+                if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
+                ConsiderDataFormatDeclaration(ref context);
+            }, SyntaxKind.Attribute);
             ctx.RegisterCompilationAction(context =>
             {
                 if (context.Options.AnalyzerConfigOptionsProvider.BuildToolsDisabled()) return;
