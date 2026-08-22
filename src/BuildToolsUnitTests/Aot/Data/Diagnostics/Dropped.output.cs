@@ -467,8 +467,9 @@ partial class DroppedModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Dropped_ReferencesDropped(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Dropped_ReferencesDropped(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Dropped_ReferencesDropped(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Dropped.ReferencesDropped value, int depth)

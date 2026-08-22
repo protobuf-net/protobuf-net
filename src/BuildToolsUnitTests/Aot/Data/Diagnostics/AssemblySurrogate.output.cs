@@ -207,8 +207,9 @@ partial class AssemblySurrogateModel
                 entry = slots.Mark();
                 Measure_AotFixtures_AssemblySurrogate_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_AssemblySurrogate_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_AssemblySurrogate_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySurrogate.Holder value, int depth)

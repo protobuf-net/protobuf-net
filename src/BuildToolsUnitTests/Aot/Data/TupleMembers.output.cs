@@ -275,8 +275,9 @@ partial class TupleMembersModel
             var slots = state.RawSlots;
             var entry = slots.Mark();
                 Measure__int___int__string__(value, state.RawDepthBudget, slots, state.Context);
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite__int___int__string__(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite__int___int__string__(ref global::ProtoBuf.ProtoWriter.State state, (int, (int, string)) value, int depth)
@@ -408,8 +409,9 @@ partial class TupleMembersModel
                 entry = slots.Mark();
                 Measure_AotFixtures_TupleMembers_HasTuples(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_TupleMembers_HasTuples(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_TupleMembers_HasTuples(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleMembers.HasTuples value, int depth)

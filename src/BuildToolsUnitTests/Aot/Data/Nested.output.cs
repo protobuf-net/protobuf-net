@@ -274,8 +274,9 @@ partial class NestedModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Nested_Customer(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Nested_Customer(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Nested_Customer(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Customer value, int depth)
@@ -379,8 +380,9 @@ partial class NestedModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Nested_Invoice(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Nested_Invoice(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Nested_Invoice(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Nested.Invoice value, int depth)

@@ -125,8 +125,9 @@ partial class GroupedRepeatedModel
                 entry = slots.Mark();
                 Measure_AotFixtures_GroupedRepeated_Node(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_GroupedRepeated_Node(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_GroupedRepeated_Node(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedRepeated.Node value, int depth)

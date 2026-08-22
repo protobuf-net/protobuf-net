@@ -548,8 +548,9 @@ partial class GenericModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Generic_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Generic_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Generic_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Holder value, int depth)
@@ -1085,8 +1086,9 @@ partial class GenericModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Nested> value, int depth)
@@ -1190,8 +1192,9 @@ partial class GenericModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Generic.Wrapper<global::AotFixtures.Generic.Wrapper<int>> value, int depth)

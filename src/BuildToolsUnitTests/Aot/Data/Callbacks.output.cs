@@ -623,8 +623,9 @@ partial class CallbacksModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Callbacks_Holder(value, state.RawDepthBudget, slots, slots.AsMeasuring(state.Context));
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Callbacks_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Callbacks_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.Holder value, int depth)
@@ -801,17 +802,19 @@ partial class CallbacksModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedBase value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_Callbacks_HookedBase(value, state.RawDepthBudget, slots, slots.AsMeasuring(state.Context));
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_Callbacks_HookedBase(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_Callbacks_HookedBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedBase value, int depth)
@@ -988,8 +991,9 @@ partial class CallbacksModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Callbacks_HookedHolder(value, state.RawDepthBudget, slots, slots.AsMeasuring(state.Context));
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Callbacks_HookedHolder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Callbacks_HookedHolder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedHolder value, int depth)
@@ -1306,8 +1310,9 @@ partial class CallbacksModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Callbacks_WatchedHolder(value, state.RawDepthBudget, slots, slots.AsMeasuring(state.Context));
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Callbacks_WatchedHolder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Callbacks_WatchedHolder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.WatchedHolder value, int depth)

@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
@@ -180,6 +180,16 @@ internal sealed class Corpus
                         if (remaining-- > 0) Console.Error.WriteLine(text.TrimEnd());
                     }
                 }
+            }
+
+            // triage aid: PBN_SOURCE=1 writes the WHOLE generated source out even when it compiles.
+            // PBN_DUMP's 14-line window is fine for a signature but useless for reading a method
+            // that is longer than that, and the on-failure dump below is unreachable when the
+            // problem is wrong BYTES rather than a build break - which is most of them.
+            if (Environment.GetEnvironmentVariable("PBN_SOURCE") is { Length: > 0 }
+                && Dump(output) is { } dumped)
+            {
+                Console.Error.WriteLine("generated source written to " + dumped);
             }
 
             var emit = output.Emit(peStream);

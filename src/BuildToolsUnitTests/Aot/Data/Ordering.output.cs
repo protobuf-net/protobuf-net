@@ -507,8 +507,9 @@ partial class OrderingModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Ordering_Referencing(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Ordering_Referencing(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Ordering_Referencing(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Ordering.Referencing value, int depth)

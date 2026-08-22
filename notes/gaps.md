@@ -237,7 +237,7 @@ Legacy-mode members measured via the classic body against the null writer, landi
 length cache — which now lives on `NetObjectCache`, shared with the sidecar and the `MeasureState`
 hand-off, so the landing spot is already right.
 
-### B6. ~~Maps measure-first~~ — **scalar/string sides 2026-08-21, ENUM sides 2026-08-22; message values blocked on B43**
+### B6. ~~Maps measure-first~~ — **CLOSED 2026-08-23: scalar/string, ENUM and MESSAGE sides all measure**
 
 **Built.** A map's size is arithmetic even though its write stays on `MapSerializer.WriteMap` —
 measure and write eligibility are independent, as they already are for a repeated BCL member. So a
@@ -305,8 +305,51 @@ looks trivially adjacent to the enum one:
   does — `PBN_DUMP` gets the emitted measure for a named contract, and the failing ones are listed
   in `notes/aot/differential.md` after a run with the arm re-enabled.
 
-So message-valued maps stay out **until that is diagnosed**, which is the honest ordering: a measure
-that is wrong for reasons nobody can name is worse than a gap.
+#### DIAGNOSED AND FIXED 2026-08-23 — and it was neither the arithmetic nor maps
+
+The map measure was correct all along; reading the emitted source confirmed it term by term. **The
+bug was `RawLengthBuffer.SeekTo` discarding the previous read cursor, and it belonged to
+re-entrancy rather than to maps.**
+
+A message map value is written by the stateful `MapSerializer`, which calls back into
+`ISerializer<T>.Write` — and by then the **caller** is part-way through consuming its own run on
+that same shared buffer. The callee ran its own measure prologue (`Mark`, measure, `SeekTo`) and
+left the cursor inside its nested run, so the caller's next `Next()` returned one of the *callee's*
+lengths. Hence a wrong length prefix on a sibling written **after** the re-entrant member, with the
+total payload unchanged — precisely the reported shape, including the two cases that were *longer*
+rather than shorter, which no "we forgot to add something" theory ever explained.
+
+`SeekTo` returns the prior cursor now, and both re-entrant entry points — `ISerializer.Write` and
+`WriteSubType` — restore it. **This was never specific to maps**: any measure-first target reached
+through the stateful engine had it, and message-valued maps were merely the shape that made it
+reachable.
+
+**What actually cracked it was tooling, not insight**, which is worth recording because two previous
+sittings reasoned about it instead:
+
+- `PBN_SOURCE=1` dumps the whole generated corpus source **even when it compiles**. `PBN_DUMP`'s
+  14-line window is fine for a signature and useless for a method longer than that, and the
+  on-failure dump is unreachable when the problem is wrong *bytes*;
+- the 12 failures are **all in the schema-generated half** — `PBN_NO_SCHEMAS=1` gives 1357 compared
+  and 0 differ. That is why no hand-written fixture ever reproduced it, and it pointed at what those
+  DTOs have that the hand-written corpus does not;
+- reproducing it needs **both** a map whose value type reserves slots of its own **and** a
+  slot-reading member after the map in field order. `MapMeasure` now carries both; with either half
+  alone the fixture stays green, which is exactly why the first two attempts at a fixture said
+  nothing at all.
+
+#### A second, independent bug fell out of the same fixture
+
+A nullable map side measured as `pair.Value != 0` — a **lifted** comparison, where `null != 0` is
+**true**. So the guard admitted a null entry and the cast beneath it threw *"Nullable object must
+have a value"*. Both guard and body now go through `GetValueOrDefault()`, collapsing null and zero
+exactly as the runtime's `HasNonTrivialValue` does.
+
+It was **latent rather than absent**, and the mechanism is worth knowing: `Lookup` had no message
+member, so it was not a slot consumer, so its `ISerializer.Write` carried no measure prologue and
+`Measure_` was never reached on the root path at all. Adding one message member to the fixture
+executed a method that had been emitted-but-unrun. The fixture comment asserting that `!= 0` "is
+false for null" was simply wrong, and is corrected.
 
 Still out beyond that: a message **key** (the write path refuses one too), and any non-default
 key/value format.

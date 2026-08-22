@@ -226,8 +226,9 @@ partial class TupleLevelsModel
                 entry = slots.Mark();
                 Measure_AotFixtures_TupleLevels_Agreeing(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_TupleLevels_Agreeing(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_TupleLevels_Agreeing(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.TupleLevels.Agreeing value, int depth)

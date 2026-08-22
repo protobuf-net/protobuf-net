@@ -261,8 +261,9 @@ partial class InitModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Init_Inits(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Init_Inits(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Init_Inits(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Init.Inits value, int depth)

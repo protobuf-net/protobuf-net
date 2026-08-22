@@ -679,17 +679,19 @@ partial class InterfaceMembersModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.IBox<int>>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.IBox<int> value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_InterfaceMembers_IBox_int_(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_InterfaceMembers_IBox_int_(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_InterfaceMembers_IBox_int_(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.IBox<int> value, int depth)
@@ -784,14 +786,16 @@ partial class InterfaceMembersModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.IMiddle>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.IMiddle value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 var entry = slots.Mark();
                 MeasureSub_AotFixtures_InterfaceMembers_IMiddle(value, state.RawDepthBudget, slots, state.Context);
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_InterfaceMembers_IMiddle(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_InterfaceMembers_IMiddle(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.IMiddle value, int depth)
@@ -886,17 +890,19 @@ partial class InterfaceMembersModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.INameable>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.INameable value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_InterfaceMembers_INameable(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_InterfaceMembers_INameable(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_InterfaceMembers_INameable(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.INameable value, int depth)
@@ -991,17 +997,19 @@ partial class InterfaceMembersModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InterfaceMembers.IRoot>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.IRoot value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_InterfaceMembers_IRoot(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_InterfaceMembers_IRoot(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_InterfaceMembers_IRoot(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.InterfaceMembers.IRoot value, int depth)

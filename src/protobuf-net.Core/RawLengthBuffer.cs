@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
@@ -112,8 +112,25 @@ namespace ProtoBuf
         /// <summary>The index the next <see cref="Reserve"/> will hand out.</summary>
         public int Mark() => _count;
 
-        /// <summary>Positions the read cursor, which a write pass then consumes forwards from.</summary>
-        public void SeekTo(int index) => _read = index;
+        /// <summary>
+        /// Positions the read cursor, which a write pass then consumes forwards from, and returns
+        /// where it was.
+        /// </summary>
+        /// <remarks>
+        /// <b>The return value is what makes a re-entrant write safe</b>, and it is not decoration.
+        /// A measure-first contract reached through the STATEFUL engine - a message map value, a
+        /// mixed parent - runs its own measure prologue on this same shared buffer, so it appends a
+        /// run and moves the cursor into it. Without restoring, the caller's next
+        /// <see cref="Next"/> returns a length belonging to that nested run, and the symptom is a
+        /// wrong length prefix on a sibling member written AFTER the re-entrant one, with the total
+        /// payload unchanged. See <c>notes/gaps.md</c> B6.
+        /// </remarks>
+        public int SeekTo(int index)
+        {
+            var prior = _read;
+            _read = index;
+            return prior;
+        }
 
         /// <summary>
         /// Records where a sub-tree's slots begin, against the object they describe, so a later

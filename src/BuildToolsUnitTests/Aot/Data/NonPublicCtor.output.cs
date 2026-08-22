@@ -256,8 +256,9 @@ partial class NonPublicCtorModel
                 entry = slots.Mark();
                 Measure_AotFixtures_NonPublicCtor_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_NonPublicCtor_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_NonPublicCtor_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.NonPublicCtor.Holder value, int depth)

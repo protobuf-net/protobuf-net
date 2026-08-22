@@ -156,8 +156,9 @@ partial class ListLikeModel
                 entry = slots.Mark();
                 Measure_AotFixtures_ListLike_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_ListLike_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_ListLike_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ListLike.Holder value, int depth)

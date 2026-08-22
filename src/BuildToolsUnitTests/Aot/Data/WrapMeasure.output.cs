@@ -573,8 +573,9 @@ partial class WrapMeasureModel
                 entry = slots.Mark();
                 Measure_AotFixtures_WrapMeasure_Carton(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_WrapMeasure_Carton(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_WrapMeasure_Carton(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrapMeasure.Carton value, int depth)
@@ -732,8 +733,9 @@ partial class WrapMeasureModel
                 entry = slots.Mark();
                 Measure_AotFixtures_WrapMeasure_Crate(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_WrapMeasure_Crate(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_WrapMeasure_Crate(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.WrapMeasure.Crate value, int depth)
@@ -1309,9 +1311,9 @@ partial class WrapMeasureModel
                 {
                     long entry1 = 0;
                     if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
-                    if (pair1.Value != 0)
+                    if (pair1.Value.GetValueOrDefault() != 0)
                     {
-                        long wrap1 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
+                        long wrap1 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value.GetValueOrDefault()));
                         entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap1) + wrap1;
                     }
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Counts
@@ -1339,9 +1341,9 @@ partial class WrapMeasureModel
                 {
                     long entry3 = 0;
                     if (pair3.Key != 0) entry3 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
-                    if (pair3.Value != 0)
+                    if (pair3.Value.GetValueOrDefault() != 0)
                     {
-                        long wrap3 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Value));
+                        long wrap3 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Value.GetValueOrDefault()));
                         entry3 += 2 + wrap3;
                     }
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry3) + entry3;  // Grouped
@@ -1368,9 +1370,9 @@ partial class WrapMeasureModel
                 {
                     long entry5 = 0;
                     if (pair5.Key != 0) entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
-                    if (pair5.Value != 0)
+                    if (pair5.Value.GetValueOrDefault() != 0)
                     {
-                        long wrap5 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Value));
+                        long wrap5 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Value.GetValueOrDefault()));
                         entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap5) + wrap5;
                     }
                     col5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry5) + entry5;  // Both

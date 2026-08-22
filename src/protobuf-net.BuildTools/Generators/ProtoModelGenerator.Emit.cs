@@ -1531,8 +1531,15 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 2, $"Measure_{san}(value, state.RawDepthBudget, slots, {Measuring("slots", "state.Context")});");
                     Line(sb, indent + 1, "}");
                 }
-                Line(sb, indent + 1, "slots.SeekTo(entry);");
+                // ...and RESTORE it afterwards. This body is re-entrant: the stateful engine
+                // reaches it for a message map value or a mixed parent, and by then the CALLER is
+                // part-way through consuming its own run on this same shared buffer. Leaving the
+                // cursor inside our nested run makes the caller's next Next() return one of our
+                // lengths - a wrong length prefix on a sibling written after us, with the total
+                // payload unchanged, which is exactly the shape gap B6 chased for two sittings.
+                Line(sb, indent + 1, "var resume = slots.SeekTo(entry);");
                 Line(sb, indent + 1, $"RawWrite_{san}(ref state, value, state.RawDepthBudget);");
+                Line(sb, indent + 1, "slots.SeekTo(resume);");
                 Line(sb, indent, "}");
                 }
                 else
@@ -2449,6 +2456,12 @@ namespace ProtoBuf.BuildTools.Generators
                 // the same object, so it reserves nothing either and the two stay paired.
                 var markersOnly = contract.SubTypes.Count != 0
                     && !MembersConsumeSlots(contract, measurable, slotConsumers);
+                // `resume` is declared OUTSIDE the guard and sentinelled, so the restore can sit
+                // after RawWriteSub_ whether or not the prologue ran. The restore matters because
+                // this body is re-entrant through the stateful engine (see ISerializer.Write): the
+                // caller may be part-way through consuming its own run on this shared buffer.
+                Line(sb, indent + 1, "var slots = state.RawSlots;");
+                Line(sb, indent + 1, "var resume = -1;");
                 var guard = indent + 1;
                 if (markersOnly)
                 {
@@ -2456,7 +2469,6 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, "{");
                     guard++;
                 }
-                Line(sb, guard, "var slots = state.RawSlots;");
                 if (contract.TypeName == root)
                 {
                     Line(sb, guard, "if (!slots.Leave(value, out var entry))");
@@ -2470,13 +2482,28 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, guard, "var entry = slots.Mark();");
                     Line(sb, guard, $"MeasureSub_{san}(value, state.RawDepthBudget, slots, {Measuring("slots", "state.Context")});");
                 }
-                Line(sb, guard, "slots.SeekTo(entry);");
+                Line(sb, guard, "resume = slots.SeekTo(entry);");
                 if (markersOnly) Line(sb, indent + 1, "}");
+                Line(sb, indent + 1, $"RawWriteSub_{san}(ref state, value, state.RawDepthBudget);");
+                Line(sb, indent + 1, "if (resume >= 0) slots.SeekTo(resume);");
+                Line(sb, indent, "}");
+                sb.AppendLine();
+                EmitRawWriteSubBody(sb, indent, contract, root, san, listAsSpan, immutableAsSpan,
+                    measurable, measuresCallbacks);
+                return;
             }
             Line(sb, indent + 1, $"RawWriteSub_{san}(ref state, value, state.RawDepthBudget);");
             Line(sb, indent, "}");
             sb.AppendLine();
+            EmitRawWriteSubBody(sb, indent, contract, root, san, listAsSpan, immutableAsSpan,
+                measurable, measuresCallbacks);
+        }
 
+        /// <summary>The <c>RawWriteSub_</c> static itself, shared by both prologue shapes.</summary>
+        private static void EmitRawWriteSubBody(StringBuilder sb, int indent, ProtoContractPlan contract,
+            string root, string san, bool listAsSpan, bool immutableAsSpan,
+            Dictionary<string, ProtoContractPlan> measurable, bool measuresCallbacks)
+        {
             Line(sb, indent, $"public static void RawWriteSub_{san}(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value, int depth)");
             Line(sb, indent, "{");
             // the same guard RawWrite_ carries, and for the same reason: a DELIMITED marker has no
@@ -4365,9 +4392,9 @@ namespace ProtoBuf.BuildTools.Generators
         /// as such so the caller can fold it into the tag length.
         /// </summary>
         /// <summary>
-        /// The kinds a map key or value can be measured arithmetically (gap B6). Deliberately
-        /// narrower than what a map can CONTAIN: messages, enums, BCL types and any non-default
-        /// per-side <c>[ProtoMap]</c> format are excluded from this first cut.
+        /// The SCALAR kinds a map key or value can be measured arithmetically (gap B6). Enums and
+        /// message values are handled by their own clauses in <see cref="RawMapMeasurable"/>; BCL
+        /// types and any non-default per-side <c>[ProtoMap]</c> format remain excluded.
         /// </summary>
         private static bool MapSideMeasurable(ProtoMemberKind kind) => kind is
             ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
@@ -4400,7 +4427,13 @@ namespace ProtoBuf.BuildTools.Generators
             // value resolves its serializer from the model, which is what a repeated value does
             && member.Map.ValueSerializerFactory is null
             && MapSideMeasurable(member.Map.KeyKind)
-            && MapSideMeasurable(member.Map.ValueKind)
+            // a MESSAGE value recurses into the target's own Measure_ (gap B6). It needs the
+            // target to be measurable, and nothing more - the entry arithmetic is the same shape
+            // as any other length-prefixed sub-message. What blocked it for two sittings was not
+            // this predicate but a re-entrancy bug one layer down; see RawLengthBuffer.SeekTo.
+            && (MapSideMeasurable(member.Map.ValueKind)
+                || (member.Map.ValueKind == ProtoMemberKind.Message
+                    && member.Map.ValueTypeName is { } valueType && measurable.ContainsKey(valueType)))
             && member.Map.KeyKind != ProtoMemberKind.Message;
 
         /// <summary>
@@ -4440,10 +4473,22 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, "}");
                 return;
             }
+            // A NULLABLE side must be unwrapped for BOTH the guard and the body, and the guard is
+            // the half that is easy to get wrong: `x != 0` on an int? is a LIFTED comparison, and
+            // `null != 0` is TRUE - so the plain spelling admits a null entry and the cast beneath
+            // it then throws "Nullable object must have a value". GetValueOrDefault() collapses
+            // null and zero, which is what the runtime does: HasNonTrivialValue omits both.
+            //
+            // This was latent rather than absent: Lookup had no message member, so it was not a
+            // slot consumer, so ISerializer.Write carried no measure prologue and Measure_ was
+            // never reached on the root path. Adding one message member to the fixture exposed it.
+            var nullableSide = (key ? member.Map.KeyTypeName : member.Map.ValueTypeName)
+                ?.EndsWith("?", StringComparison.Ordinal) == true;
+            var unwrapped = nullableSide ? $"{expression}.GetValueOrDefault()" : expression;
             // an enum is the underlying scalar on the wire, but needs the cast to get there - and
             // carries NO trivial-value guard, which is the whole reason this is not one line
             var enumSide = MapSideIsEnum(member.Map, key);
-            var value = enumSide ? $"({UnderlyingKeyword(kind)}){expression}" : expression;
+            var value = enumSide ? $"({UnderlyingKeyword(kind)}){unwrapped}" : unwrapped;
 
             // A [NullWrappedValue] map wraps the VALUE only - a key cannot be null. The guard is
             // unchanged, and still asks HasNonTrivialValue of the UNWRAPPED value: probed, a
@@ -4452,7 +4497,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (!key && member.WrappedValue)
             {
                 var inner = $"wrap{number}";
-                Line(sb, indent, $"if ({MapSideGuard(kind, expression)})");
+                Line(sb, indent, $"if ({MapSideGuard(kind, unwrapped)})");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, $"long {inner} = 1 + {MapSideBody(kind, value)};");
                 Line(sb, indent + 1, member.WrappedValueGroup
@@ -4463,7 +4508,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
 
             var add = $"{entry} += 1 + {MapSideBody(kind, value)};";
-            Line(sb, indent, enumSide ? add : $"if ({MapSideGuard(kind, expression)}) {add}");
+            Line(sb, indent, enumSide ? add : $"if ({MapSideGuard(kind, unwrapped)}) {add}");
         }
 
         /// <summary>

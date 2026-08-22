@@ -537,8 +537,9 @@ partial class OutOfBandSubTypeModel
                 entry = slots.Mark();
                 Measure_AotFixtures_OutOfBandSubType_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_OutOfBandSubType_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_OutOfBandSubType_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Holder value, int depth)
@@ -738,17 +739,19 @@ partial class OutOfBandSubTypeModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Shape value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_OutOfBandSubType_Shape(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_OutOfBandSubType_Shape(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_OutOfBandSubType_Shape(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Shape value, int depth)
@@ -1132,17 +1135,19 @@ partial class OutOfBandSubTypeModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Vehicle value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_OutOfBandSubType_Vehicle(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_OutOfBandSubType_Vehicle(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_OutOfBandSubType_Vehicle(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Vehicle value, int depth)

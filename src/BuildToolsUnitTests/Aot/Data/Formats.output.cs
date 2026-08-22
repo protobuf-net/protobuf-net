@@ -757,8 +757,9 @@ partial class FormatsModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Formats_SizedHolder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Formats_SizedHolder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Formats_SizedHolder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.SizedHolder value, int depth)

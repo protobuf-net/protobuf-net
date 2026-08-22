@@ -33,7 +33,31 @@ public class Lookup
     // an ENUM side is written even when zero, unlike a plain scalar - probed
     [ProtoMember(7)] public Dictionary<int, Hue> Shades { get; set; }
     [ProtoMember(8)] public Dictionary<Hue, int> ByShade { get; set; }
+    // a MESSAGE value (gap B6). Multiple entries matter: the corpus symptom was a length that
+    // looked like it covered ONE entry rather than all of them
+    [ProtoMember(9)] public Dictionary<int, Note> Notes { get; set; }
+    // a slot-consuming MESSAGE member AFTER the map in field order. The map's write hands back to
+    // the stateful MapSerializer, whose value write re-enters the slot machinery (Mark/SeekTo) -
+    // so anything reading a slot after it is where cursor corruption would show. Every corpus
+    // contract that disagrees has this shape; Lookup did not, which is why it stayed green.
+    [ProtoMember(10)] public Note Tail { get; set; }
     [ProtoMember(5)] public int Trailer { get; set; }
+}
+
+[ProtoContract]
+public class Note
+{
+    [ProtoMember(1)] public string Text { get; set; }
+    [ProtoMember(2)] public int Rank { get; set; }
+    // a repeated MESSAGE, so this type's own measure RESERVES SLOTS. That is the difference
+    // between the corpus contracts that disagree and the ones that do not - see notes/gaps.md B6.
+    [ProtoMember(3)] public List<Tag> Tags { get; set; }
+}
+
+[ProtoContract]
+public class Tag
+{
+    [ProtoMember(1)] public string Name { get; set; }
 }
 
 public static class MapMeasureSamples
@@ -61,6 +85,16 @@ public static class MapMeasureSamples
         // a zero enum on either side is still written
         new Lookup { Shades = new() { [1] = Hue.Warm, [2] = Hue.None }, ByShade = new() { [Hue.None] = 5, [Hue.Warm] = 0 } },
         // present-but-empty vs null vs populated
+        new Lookup { Notes = new() { [1] = new Note { Text = "a", Rank = 1 } } },
+        new Lookup { Notes = new() { [1] = new Note { Text = "a", Rank = 1 }, [2] = new Note { Text = "bb", Rank = 2 } } },
+        new Lookup { Notes = new() { [1] = new Note(), [2] = new Note { Text = "x" }, [3] = new Note { Rank = 9 } } },
+        new Lookup { Notes = new() { [0] = new Note { Text = "zerokey" } }, Trailer = 7 },
+        // the value type reserves slots of its own, which the plain Note above does not
+        new Lookup { Notes = new() { [1] = new Note { Text = "a", Tags = [new Tag { Name = "t1" }] } } },
+        new Lookup { Notes = new() { [1] = new Note { Text = "a", Tags = [new Tag { Name = "t1" }, new Tag { Name = "t2" }] }, [2] = new Note { Rank = 3 } }, Trailer = 9 },
+        // a map, then a message member that READS A SLOT after it
+        new Lookup { Notes = new() { [1] = new Note { Text = "a", Tags = [new Tag { Name = "t1" }] } }, Tail = new Note { Text = "tail", Tags = [new Tag { Name = "z" }] } },
+        new Lookup { Notes = new() { [1] = new Note { Text = "aaaaaaaaaa", Tags = [new Tag { Name = "t1" }, new Tag { Name = "t2" }] }, [2] = new Note { Text = "bb" } }, Tail = new Note { Text = "tail", Rank = 4 }, Trailer = 3 },
     ];
 }
 

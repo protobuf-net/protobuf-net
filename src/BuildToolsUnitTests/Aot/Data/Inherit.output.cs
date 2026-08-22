@@ -355,17 +355,19 @@ partial class InheritModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Animal value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_Inherit_Animal(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_Inherit_Animal(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_Inherit_Animal(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Animal value, int depth)
@@ -575,14 +577,16 @@ partial class InheritModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Dog>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Dog value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 var entry = slots.Mark();
                 MeasureSub_AotFixtures_Inherit_Dog(value, state.RawDepthBudget, slots, state.Context);
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_Inherit_Dog(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_Inherit_Dog(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Dog value, int depth)
@@ -697,8 +701,9 @@ partial class InheritModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Inherit_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Inherit_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Holder value, int depth)

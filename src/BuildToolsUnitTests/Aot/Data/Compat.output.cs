@@ -1251,17 +1251,19 @@ partial class CompatModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.LevelledBase>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.LevelledBase value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_Compat_LevelledBase(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_Compat_LevelledBase(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_Compat_LevelledBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.LevelledBase value, int depth)

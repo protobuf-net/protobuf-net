@@ -205,8 +205,9 @@ partial class GetterModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Getter_Getters(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Getter_Getters(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Getter_Getters(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Getter.Getters value, int depth)

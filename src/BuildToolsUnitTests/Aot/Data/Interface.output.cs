@@ -545,17 +545,19 @@ partial class InterfaceModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.IAnimal>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.IAnimal value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_Interface_IAnimal(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_Interface_IAnimal(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_Interface_IAnimal(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.IAnimal value, int depth)
@@ -673,17 +675,19 @@ partial class InterfaceModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.INamed>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.INamed value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_Interface_INamed(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_Interface_INamed(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_Interface_INamed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.INamed value, int depth)
@@ -893,8 +897,9 @@ partial class InterfaceModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Interface_Zoo(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Interface_Zoo(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Interface_Zoo(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Zoo value, int depth)

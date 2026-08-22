@@ -65,12 +65,133 @@ partial class MapMeasureModel
         }
     }
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.MapMeasure.Note value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MapMeasure.Note>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.MapMeasure.Note value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MapMeasure.Note>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.MapMeasure.Tag value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MapMeasure.Tag>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.MapMeasure.Tag value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.MapMeasure.Tag>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapMeasure.Lookup>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapMeasure.Note>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapMeasure.Tag>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue?>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
+
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Lookup>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
@@ -79,12 +200,23 @@ partial class MapMeasureModel
             => RawRead_AotFixtures_MapMeasure_Lookup(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Lookup>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapMeasure.Lookup value)
-            => RawWrite_AotFixtures_MapMeasure_Lookup(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_MapMeasure_Lookup(value, state.RawDepthBudget, slots, state.Context);
+            }
+            var resume = slots.SeekTo(entry);
+            RawWrite_AotFixtures_MapMeasure_Lookup(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
+        }
 
         public static void RawWrite_AotFixtures_MapMeasure_Lookup(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapMeasure.Lookup value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
             var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.ByNumber;
             if (tmp1 != null)
@@ -127,6 +259,21 @@ partial class MapMeasureModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapMeasure.Hue, int>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            var tmp9 = value.Notes;
+            if (tmp9 != null)
+            {
+                global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapMeasure.Note>().WriteMap(ref state, 9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp9, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, null, Self);
+            }
+            var tmp10 = value.Tail;
+            if (tmp10 != null)
+            {
+                state.WriteRawTag((10 << 3) | 2);  // Tail
+                var len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_MapMeasure_Note(ref state, tmp10, depth);
+                DebugAssertPosition(ref state, before + len, "Tail");
+            }
             state.SyncRawDepth(rawDepth);
         }
 
@@ -134,6 +281,7 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long sub;
             var tmp1 = value.ByNumber;
             if (tmp1 != null)
             {
@@ -187,7 +335,7 @@ partial class MapMeasureModel
                 {
                     long entry6 = 0;
                     if (pair6.Key != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Key));
-                    if (pair6.Value != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Value));
+                    if (pair6.Value.GetValueOrDefault() != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Value.GetValueOrDefault()));
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry6) + entry6;  // Maybe
                 }
             }
@@ -212,6 +360,29 @@ partial class MapMeasureModel
                     if (pair8.Value != 0) entry8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair8.Value));
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry8) + entry8;  // ByShade
                 }
+            }
+            var tmp9 = value.Notes;
+            if (tmp9 != null)
+            {
+                foreach (var pair9 in tmp9)
+                {
+                    long entry9 = 0;
+                    if (pair9.Key != 0) entry9 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair9.Key));
+                    if (pair9.Value != null)
+                    {
+                        sub = Measure_AotFixtures_MapMeasure_Note(pair9.Value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+                        entry9 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                    }
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry9) + entry9;  // Notes
+                }
+            }
+            var tmp10 = value.Tail;
+            if (tmp10 != null)
+            {
+                var slot10 = slots.Reserve();
+                sub = Measure_AotFixtures_MapMeasure_Note(tmp10, depth, slots, context);
+                slots.Set(slot10, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Tail
             }
             return len;
         }
@@ -540,6 +711,60 @@ partial class MapMeasureModel
                         } while ((tag = state.ReadRawTag()) == last);
                         continue;
                     }
+                    case (9 << 3) | 2:  // Notes, field 9, map entry run
+                    {
+                        value.Notes ??= new global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapMeasure.Note>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            int k9 = default;
+                            global::AotFixtures.MapMeasure.Note v9 = default;
+                            uint etag9 = state.ReadRawTag();
+                            while (etag9 != 0)
+                            {
+                                switch (etag9)
+                                {
+                                    case (1 << 3) | 0:  // key, varint
+                                        k9 = unchecked((int)state.ReadRawVarint32());
+                                        break;
+                                    case (1 << 3) | 5:  // key, fixed32
+                                        k9 = unchecked((int)state.ReadRawFixed32());
+                                        break;
+                                    case (1 << 3) | 1:  // key, fixed64
+                                        k9 = checked((int)unchecked((long)state.ReadRawFixed64()));
+                                        break;
+                                    case (2 << 3) | 2:  // value, length-prefixed
+                                    case (2 << 3) | 3:  // value, group
+                                    {
+                                        var vscope = state.PushScope(etag9);
+                                        v9 = RawRead_AotFixtures_MapMeasure_Note(ref state, v9);
+                                        state.PopScope(vscope);
+                                        break;
+                                    }
+                                    default:
+                                        if (state.IsScopeEnd(etag9)) goto entryDone9;
+                                        if ((etag9 >> 3) is 1 or 2) state.ThrowUnexpectedWireType(etag9);
+                                        state.SkipTag(etag9);
+                                        break;
+                                }
+                                etag9 = state.ReadRawTag();
+                            }
+                            entryDone9:
+                            state.PopScope(scope);
+                            v9 ??= ReadEmpty_AotFixtures_MapMeasure_Note(state.Context);
+                            value.Notes[k9] = v9;
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    case (10 << 3) | 2:  // Tail, field 10, length-prefixed
+                    case (10 << 3) | 3:  // Tail, field 10, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Tail = RawRead_AotFixtures_MapMeasure_Note(ref state, value.Tail);
+                        state.PopScope(scope);
+                        break;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -550,7 +775,225 @@ partial class MapMeasureModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Note>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.MapMeasure.Note global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Note>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapMeasure.Note value)
+            => RawRead_AotFixtures_MapMeasure_Note(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Note>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapMeasure.Note value)
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_MapMeasure_Note(value, state.RawDepthBudget, slots, state.Context);
+            }
+            var resume = slots.SeekTo(entry);
+            RawWrite_AotFixtures_MapMeasure_Note(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
+        }
+
+        public static void RawWrite_AotFixtures_MapMeasure_Note(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapMeasure.Note value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
+            var tmp1 = value.Text;
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Text
+                state.WriteRawString(tmp1);
+            }
+            var tmp2 = value.Rank;
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Rank
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
+            var tmp3 = value.Tags;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.MapMeasure.Tag>();
+                    state.WriteRawTag((3 << 3) | 2);  // Tags
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWrite_AotFixtures_MapMeasure_Tag(ref state, item3, depth);
+                    DebugAssertPosition(ref state, before + len, "Tags");
+                }
+            }
+        }
+
+        private static long Measure_AotFixtures_MapMeasure_Note(global::AotFixtures.MapMeasure.Note value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Text;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Text
+            }
+            var tmp2 = value.Rank;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Rank
+            var tmp3 = value.Tags;
+            if (tmp3 != null)
+            {
+                foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp3))
+                {
+                    if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.MapMeasure.Tag>();
+                    var slot3 = slots.Reserve();
+                    var sub = Measure_AotFixtures_MapMeasure_Tag(item3, depth, slots, context);
+                    slots.Set(slot3, sub);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapMeasure.Note>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapMeasure.Note value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MapMeasure_Note(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.MapMeasure.Note RawRead_AotFixtures_MapMeasure_Note(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapMeasure.Note value)
+        {
+            value ??= new global::AotFixtures.MapMeasure.Note();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Text, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Text = tmp1;
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Rank, field 2, varint
+                        value.Rank = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Rank, field 2, fixed32
+                        value.Rank = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Rank, field 2, fixed64
+                        value.Rank = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (3 << 3) | 2:  // Tags, field 3, length-prefixed
+                    case (3 << 3) | 3:  // Tags, field 3, group
+                    {
+                        value.Tags ??= new global::System.Collections.Generic.List<global::AotFixtures.MapMeasure.Tag>();
+                        var last = tag;
+                        do
+                        {
+                            var scope = state.PushScope(last);
+                            value.Tags.Add(RawRead_AotFixtures_MapMeasure_Tag(ref state, null));
+                            state.PopScope(scope);
+                        } while ((tag = state.ReadRawTag()) == last);
+                        continue;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+        }
+
+        private static global::AotFixtures.MapMeasure.Note ReadEmpty_AotFixtures_MapMeasure_Note(global::ProtoBuf.ISerializationContext context)
+        {
+            var state = global::ProtoBuf.ProtoReader.State.Create(default(global::System.ReadOnlyMemory<byte>), context?.Model, context?.UserState);
+            try
+            {
+                return RawRead_AotFixtures_MapMeasure_Note(ref state, default);
+            }
+            finally
+            {
+                state.Dispose();
+            }
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Tag>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.MapMeasure.Tag global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Tag>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapMeasure.Tag value)
+            => RawRead_AotFixtures_MapMeasure_Tag(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Tag>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapMeasure.Tag value)
+            => RawWrite_AotFixtures_MapMeasure_Tag(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_MapMeasure_Tag(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.MapMeasure.Tag value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Name;
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Name
+                state.WriteRawString(tmp1);
+            }
+        }
+
+        private static long Measure_AotFixtures_MapMeasure_Tag(global::AotFixtures.MapMeasure.Tag value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Name;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.MapMeasure.Tag>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.MapMeasure.Tag value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_MapMeasure_Tag(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.MapMeasure.Tag RawRead_AotFixtures_MapMeasure_Tag(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.MapMeasure.Tag value)
+        {
+            value ??= new global::AotFixtures.MapMeasure.Tag();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Name, field 1, length-prefixed
+                    {
+                        var tmp1 = state.ReadRawString();
+                        if (tmp1 != null) value.Name = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.MapMeasure.Hue> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.MapMeasure.Hue>.Serializer

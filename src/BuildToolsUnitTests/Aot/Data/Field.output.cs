@@ -394,8 +394,9 @@ partial class FieldModel
                 entry = slots.Mark();
                 Measure_AotFixtures_Field_Fields(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_Field_Fields(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_Field_Fields(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Field.Fields value, int depth)

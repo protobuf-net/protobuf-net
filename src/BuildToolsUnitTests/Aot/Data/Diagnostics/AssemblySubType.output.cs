@@ -363,17 +363,19 @@ partial class AssemblySubTypeModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Node value)
         {
+            var slots = state.RawSlots;
+            var resume = -1;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
-                var slots = state.RawSlots;
                 if (!slots.Leave(value, out var entry))
                 {
                     entry = slots.Mark();
                     MeasureSub_AotFixtures_AssemblySubType_Node(value, state.RawDepthBudget, slots, state.Context);
                 }
-                slots.SeekTo(entry);
+                resume = slots.SeekTo(entry);
             }
             RawWriteSub_AotFixtures_AssemblySubType_Node(ref state, value, state.RawDepthBudget);
+            if (resume >= 0) slots.SeekTo(resume);
         }
 
         public static void RawWriteSub_AotFixtures_AssemblySubType_Node(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Node value, int depth)

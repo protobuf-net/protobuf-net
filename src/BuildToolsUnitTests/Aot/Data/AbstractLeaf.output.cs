@@ -158,8 +158,9 @@ partial class AbstractLeafModel
                 entry = slots.Mark();
                 Measure_AotFixtures_AbstractLeaf_Holder(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_AbstractLeaf_Holder(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_AbstractLeaf_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AbstractLeaf.Holder value, int depth)

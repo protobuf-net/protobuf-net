@@ -86,7 +86,7 @@
 [PBN9002]ProtoBuf.RawLengthBuffer.Set(int index, long length) -> void
 [PBN9002]ProtoBuf.RawLengthBuffer.Next() -> long
 [PBN9002]ProtoBuf.RawLengthBuffer.Mark() -> int
-[PBN9002]ProtoBuf.RawLengthBuffer.SeekTo(int index) -> void
+[PBN9002]ProtoBuf.RawLengthBuffer.SeekTo(int index) -> int
 [PBN9002]ProtoBuf.RawLengthBuffer.Enter(object value, int index) -> void
 [PBN9002]ProtoBuf.RawLengthBuffer.Leave(object value, out int index) -> bool
 [PBN9002]ProtoBuf.RawLengthBuffer.Balanced.get -> bool

@@ -331,8 +331,9 @@ partial class DepthBoundaryModel
             var slots = state.RawSlots;
             var entry = slots.Mark();
                 Measure_AotFixtures_DepthBoundary_Link(value, state.RawDepthBudget, slots, state.Context);
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_DepthBoundary_Link(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_DepthBoundary_Link(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DepthBoundary.Link value, int depth)
@@ -390,8 +391,9 @@ partial class DepthBoundaryModel
                 entry = slots.Mark();
                 Measure_AotFixtures_DepthBoundary_Rung(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_DepthBoundary_Rung(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_DepthBoundary_Rung(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.DepthBoundary.Rung value, int depth)

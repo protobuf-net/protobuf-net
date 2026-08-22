@@ -376,8 +376,9 @@ partial class RawPassModel
                 entry = slots.Mark();
                 Measure_AotFixtures_RawPass_Chain(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_RawPass_Chain(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_RawPass_Chain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Chain value, int depth)
@@ -616,8 +617,9 @@ partial class RawPassModel
                 entry = slots.Mark();
                 Measure_AotFixtures_RawPass_Order(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_RawPass_Order(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_RawPass_Order(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.RawPass.Order value, int depth)

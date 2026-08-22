@@ -226,8 +226,9 @@ partial class BclFixedSizeModel
                 entry = slots.Mark();
                 Measure_AotFixtures_BclFixedSize_Fixed(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_BclFixedSize_Fixed(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_BclFixedSize_Fixed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.BclFixedSize.Fixed value, int depth)

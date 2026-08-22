@@ -323,8 +323,9 @@ partial class GroupedElementsModel
                 entry = slots.Mark();
                 Measure_AotFixtures_GroupedElements_Grouped(value, state.RawDepthBudget, slots, state.Context);
             }
-            slots.SeekTo(entry);
+            var resume = slots.SeekTo(entry);
             RawWrite_AotFixtures_GroupedElements_Grouped(ref state, value, state.RawDepthBudget);
+            slots.SeekTo(resume);
         }
 
         public static void RawWrite_AotFixtures_GroupedElements_Grouped(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.GroupedElements.Grouped value, int depth)
