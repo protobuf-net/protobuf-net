@@ -1,4 +1,4 @@
-﻿# Gaps and their decisions
+# Gaps and their decisions
 
 **One reviewable place.** Every known gap, with a *decision* against it rather than just an
 absence — an unrecorded gap reads as an oversight, and gets re-discovered and re-argued.
@@ -3270,7 +3270,7 @@ to know *both* types, so it is available only to per-contract typed overloads, n
 
 So: share the implementation. The duplication buys nothing on the path that would need it.
 
-### B41. A HIERARCHY is off measure-first entirely — **STILL OPEN.** Design settled and prize sized 2026-08-22; the implementation attempt was backed out
+### B41. A HIERARCHY is off measure-first entirely — **STILL OPEN, but UNBLOCKED.** Design settled and prize sized 2026-08-22; the attempt was backed out, and the crash that forced that is now diagnosed and fixed
 
 **Status in one line: hierarchies are still off measure-first.** What 2026-08-22 produced is the
 design (agreed, and it is just a nested sub-message), the size of the prize measured two independent
@@ -3449,9 +3449,33 @@ output — not a wrong-bytes failure. Bisected as far as was productive:
 - **not** the schema corpus (`PBN_NO_SCHEMAS=1` unchanged);
 - deterministic, and reverting restores 3134 compared / 0 differ.
 
-Not diagnosed, and deliberately not guessed at. The next attempt should start by getting the
-generated corpus source onto disk and compiling it standalone, rather than by re-deriving the
-design — which is settled.
+**DIAGNOSED AND FIXED 2026-08-22 (`da8274e2`) — it was the HARNESS, not the generated code.**
+Reproduced standalone rather than reasoned about, which is why this is a fact: `Filler.Construct`
+reaches a **delegate** type, which has no parameterless constructor, so it falls to the candidate
+loop and finds the runtime's `(object, IntPtr)`. `Build` then supplies a function pointer from
+`Scalar` — `(IntPtr)(n + 1)`, so **never zero** — and `Delegate.DelegateConstruct` validates it,
+fails, and FailFasts. A 20-line repro produces byte-identical output to the trace above, down to the
+error code and the frame order.
+
+Two details are the whole reason it stayed hidden. The `try { … } catch { /* try the next */ }`
+around the invoke **cannot see it** — an engine failure is not an exception — so the process dies
+with no comparison output. And a **zero** pointer *would* have been caught (verified: it throws
+`TargetInvocationException`); it is the counter never yielding zero that makes it fatal.
+
+The fix refuses delegates up front. Nothing there could ever build one, so it only refuses something
+already impossible — just survivably, reported as "no route" like any other. **The corpus is
+unchanged by it** — 3134 compared, 0 differ, the same 4 unbuildable — which is the point: this
+removes a landmine rather than papering over a failure.
+
+**What is still not established is why stage 1 REACHED a delegate**, and that is now a much smaller
+question than it was: on current `v4` the guard refuses nothing, so no delegate is reached today. The
+retry therefore starts by re-applying stage 1 and re-running — and if something still goes wrong,
+it now produces a diagnosable error instead of killing the process, which was the real obstacle.
+
+**Worth generalising:** a gate that can FailFast is worse than a gate that fails, because it reports
+nothing at all — and the bisection recorded above ("not the hook, not the interface list, not
+tiering, not the schemas") was expensive precisely because every probe returned the same
+zero-information crash.
 
 ##### The perf baseline, 2026-08-22 — and it is the strongest argument for doing this
 
