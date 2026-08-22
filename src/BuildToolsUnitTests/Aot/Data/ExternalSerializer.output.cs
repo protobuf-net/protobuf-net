@@ -65,8 +65,58 @@ partial class ExternalSerializerModel
         }
     }
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.ExternalSerializer.Panel value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ExternalSerializer.Panel>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.ExternalSerializer.Panel value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.ExternalSerializer.Panel>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>
+        : global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Gauge>
+        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ExternalSerializer.Panel>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Stamp>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Thing>
         , global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Ticket>
@@ -75,6 +125,12 @@ partial class ExternalSerializerModel
 
         public ProtoBufGeneratedServices()
         {
+            global::System.Diagnostics.Debug.Assert(
+                (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>().Features
+                    & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
+                    == global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage,
+                "AotFixtures.ExternalSerializer.Gauge is generated as CategoryMessage, but its serializer disagrees; "
+                    + "set IsScalar = true on its [ProtoContract] or [ProtoSerializer] declaration, or correct the serializer.");
             global::System.Diagnostics.Debug.Assert(
                 (global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.StampSerializer, global::AotFixtures.ExternalSerializer.Stamp>().Features
                     & (global::ProtoBuf.Serializers.SerializerFeatures.CategoryScalar | global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage))
@@ -96,6 +152,11 @@ partial class ExternalSerializerModel
         }
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
+        global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Gauge> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Gauge>.Serializer
+            => global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>();
+
+        // raw read pass: skipped - contract shape (value type, tuple, surrogate or external serializer)
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Holder>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
@@ -172,6 +233,96 @@ partial class ExternalSerializerModel
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Panel>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.ExternalSerializer.Panel global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Panel>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Panel value)
+            => RawRead_AotFixtures_ExternalSerializer_Panel(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Panel>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ExternalSerializer.Panel value)
+            => RawWrite_AotFixtures_ExternalSerializer_Panel(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_ExternalSerializer_Panel(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.ExternalSerializer.Panel value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Gauge;
+            state.WriteMessage<global::AotFixtures.ExternalSerializer.Gauge>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>());
+            var tmp2 = value.Label;
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Label
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
+        }
+
+        private static long Measure_AotFixtures_ExternalSerializer_Panel(global::AotFixtures.ExternalSerializer.Panel value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Gauge;
+            if (tmp1 != null)
+            {
+                var sub = ((global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ExternalSerializer.Gauge>)global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>()).Measure(context, global::ProtoBuf.WireType.String, tmp1);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Gauge
+            }
+            var tmp2 = value.Label;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Label
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.ExternalSerializer.Panel>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.ExternalSerializer.Panel value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_ExternalSerializer_Panel(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.ExternalSerializer.Panel RawRead_AotFixtures_ExternalSerializer_Panel(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.ExternalSerializer.Panel value)
+        {
+            value ??= new global::AotFixtures.ExternalSerializer.Panel();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Gauge: hand-written serializer
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Gauge, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Gauge;
+                        tmp1 = state.ReadMessage<global::AotFixtures.ExternalSerializer.Gauge>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>());
+                        if (tmp1 != null) value.Gauge = tmp1;
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Label, field 2, varint
+                        value.Label = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Label, field 2, fixed32
+                        value.Label = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Label, field 2, fixed64
+                        value.Label = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.ExternalSerializer.Stamp> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.ExternalSerializer.Stamp>.Serializer

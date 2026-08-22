@@ -1792,7 +1792,7 @@ Its measure-first cost is recorded in **B26**, which is where the work is. The r
    AGENTS.md already calls the refusal "a small deliberate over-reach" — the one-line fix is to
    exempt `decimal` from it.
 
-### B31. An EXTERNAL serializer takes its member off measure-first — widened by `[ProtoSerializer]`
+### B31. ~~An EXTERNAL serializer takes its member off measure-first~~ — **NARROWED 2026-08-22 to a non-measuring one**
 
 `RawMemberMeasureBlocked` excludes any member whose sub-serializer is external:
 
@@ -1813,9 +1813,12 @@ widely-used value type and demote every contract that contains one. Narrower tha
 radius (only explicitly-bound types, not every member of a scalar kind across an assembly), but the
 same shape, and equally **silent**: no diagnostic says a contract left the fast path.
 
-**Not a defect in the feature, and probably not fixable in general** — the whole point of a
-hand-written serializer is that we do not know what it emits. Two things could narrow it, neither
-attempted:
+**Not a defect in the feature, and not fixable in GENERAL** — the whole point of a hand-written
+serializer is that we do not know what it emits. But "in general" is doing a lot of work in that
+sentence, and the 2026-08-22 Core audit narrowed it considerably: `Guid`, `decimal`, `DateTime`,
+`TimeSpan`, `Duration`, `Timestamp` and `Empty` all measure now, so the serializers a real consumer
+is most likely to meet through `[ProtoSerializer]` **do** answer. Two things could narrow it
+further, the first now much more worthwhile than when it was written:
 
 - an **`IMeasuringSerializer<T>` external serializer could be asked**, exactly as the classic engine
   already asks one (`ProtoWriter.cs`'s `OptionTrySkipWritingWhenMeasuring` interception). A
@@ -1823,6 +1826,56 @@ attempted:
   arithmetically; the raw path currently ignores that and blocks anyway;
 - the **info diagnostic** proposed in B26 would cover this case too, since it is the same question
   from the consumer's side: *why did my model leave the optimised path?*
+
+#### Narrowed and BUILT, 2026-08-22
+
+Marc: *"presumably this logic for surrogates also applies to item 4 on our list?"* — it does, and the
+first bullet above was already the answer; a ranked-list entry summarising this gap had meanwhile
+claimed the opposite (*"unknowable at compile time by definition, so probably correctly out"*), which
+is the summary being worse than the note it summarised.
+
+**The size never needed to be knowable at compile time.** The measure runs at run time; all it has
+to be is *arithmetic rather than a traversal*, and a serializer implementing
+`IMeasuringSerializer<T>` is saying precisely that. So the member-level block is now
+`SubSerializerMeasurable`, and the emitted measure delegates:
+
+```csharp
+sub = ((IMeasuringSerializer<Gauge>)SerializerCache.Get<GaugeSerializer, Gauge>())
+    .Measure(context, WireType.String, tmp1);
+len += 1 + MeasureRawVarint64((ulong)sub) + sub;
+```
+
+Four conditions, each for its own reason:
+
+- **the serializer must implement the interface** for that exact target — an ordinary Roslyn check
+  against `AllInterfaces`. Note this works for the **inbuilt** provider too: `GetSubSerializer`
+  returns the expression `"null"` there because `PrimaryTypeProvider` is internal and a consumer
+  cannot *name* it, but un-nameable is not un-**inspectable** — the symbol is right there. The
+  measure names it through the public `TypeModel.GetInbuiltSerializer<T>(default, default)`;
+- **the category must be KNOWN** (`SubSerializerIsScalar`/`SubSerializerDynamic` both refused). An
+  undetermined category defers framing to `WriteAny` at run time, so the measure cannot tell whether
+  a length prefix is in play — and a scalar one is framed by the serializer's own wire type, which
+  is a different sum;
+- **default `DataFormat` only** — `Group` on a unary message is otherwise allowed through, and is a
+  different framing again;
+- **no slot is reserved.** The write hands this member to the stateful engine, which computes its
+  own length, so reserving here would shift every later length in the payload (gap B38's rule).
+
+**This pays off much more since the same day's Core audit**, which made `Guid`, `decimal`,
+`DateTime`, `TimeSpan`, `Duration`, `Timestamp` and `Empty` measuring — those are exactly the
+serializers a real consumer meets through an inbuilt type or a `[ProtoSerializer]` declaration.
+
+`ExternalSerializer.input.cs` grew `GaugeSerializer`/`Gauge` (measuring, message category) and a
+`Panel` contract holding one. `Panel` is deliberately separate from `Holder`, which carries the
+NON-measuring `Thing`: a measuring member there would have proven nothing, since one blocked member
+takes the whole contract. The serializer's body is fixed-width so a wrong prefix is unmissable, and
+a zero-reading sample is included because that body is written regardless.
+
+**It also found a third spelling for `AppendFoldingLengthTemp`.** That helper declares the `sub`
+local by matching assignment text, and knew `sub = Measure_` and `sub = state.RawSlots.Next()`. The
+delegating form matched neither, so the first build emitted an undeclared `sub` — **in the
+consumer's compilation**, which is where that class of mistake always lands. Same failure as when
+the buffer spelling was added.
 
 ### B32. ~~`PublicAPI.Shipped.txt` has drifted~~ — **24 of 28 symbols fixed 2026-08-19; the residue is `#if DEBUG` API, which no tracking file can satisfy**
 
@@ -3174,8 +3227,17 @@ struck through — so this is a short list now rather than a survey. What remain
 3. **map sides that are enums or messages** (B6) — an enum side is the underlying scalar plus a
    cast, a message side is a nested `Measure_` with a null slot buffer. Both shapes now exist
    elsewhere, so this is assembly rather than design;
-4. **external serializers** (B31) — a hand-written serializer's size is unknowable at compile time
-   by definition, so this one is probably *correctly* out; worth confirming rather than assuming;
+4. ~~**external serializers**~~ (B31) — **DONE 2026-08-22**, and it was the *same question as the
+   surrogate case*, asked at the member site rather than the contract one: **does the serializer
+   implement `IMeasuringSerializer<T>`?**
+   A ranked-list entry here previously said a hand-written serializer's size is "unknowable at
+   compile time by definition, so this one is probably correctly out". That was wrong, and it
+   **contradicted B31's own text**, which had already identified the narrowing. The size does not
+   need to be known at compile time — the measure runs at run time; it only has to be *arithmetic
+   rather than write-to-count*, and a serializer implementing the measuring interface is saying
+   exactly that. The extra condition beyond the surrogate case is that the **category must be
+   known**: an undetermined-category member defers its framing to `WriteAny` at run time, so the
+   measure cannot tell whether a length prefix is in play;
 5. **the `DataFormat` tail** (B26, B30) — the constant-width formats are the cheap ones, and B30's
    ambient-default angle is what makes them matter more than their frequency suggests.
 

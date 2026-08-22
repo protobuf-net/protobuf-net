@@ -76,12 +76,62 @@ public readonly struct Stamp
     public int Value { get; }
 }
 
+// ...and one that MEASURES. That is the whole of gap B31: the size need not be knowable at compile
+// time - the measure runs at run time - it only has to be obtainable without writing the value to a
+// counting writer. A member of this type therefore keeps its containing contract on measure-first,
+// where the non-measuring Thing above takes it off. Fixed-width on purpose: the point under test is
+// the delegation, and an exact constant makes a wrong length prefix unmissable.
+public sealed class GaugeSerializer : ISerializer<Gauge>, IMeasuringSerializer<Gauge>
+{
+    SerializerFeatures ISerializer<Gauge>.Features
+        => SerializerFeatures.CategoryMessage | SerializerFeatures.WireTypeString;
+
+    Gauge ISerializer<Gauge>.Read(ref ProtoReader.State state, Gauge value)
+    {
+        value ??= new Gauge();
+        int field;
+        while ((field = state.ReadFieldHeader()) > 0)
+        {
+            if (field == 1) value.Reading = state.ReadInt32();
+            else state.SkipField();
+        }
+        return value;
+    }
+
+    void ISerializer<Gauge>.Write(ref ProtoWriter.State state, Gauge value)
+    {
+        state.WriteFieldHeader(1, WireType.Fixed32);
+        state.WriteInt32(value.Reading);
+    }
+
+    // one-byte tag for field 1, then four bytes: the body this writer emits, every time
+    int IMeasuringSerializer<Gauge>.Measure(ISerializationContext context, WireType wireType, Gauge value)
+        => 1 + 4;
+}
+
+[ProtoContract(Serializer = typeof(GaugeSerializer))]
+public class Gauge
+{
+    public int Reading { get; set; }
+}
+
 [ProtoContract]
 public class Holder
 {
     [ProtoMember(1)] public Thing Thing { get; set; }
     [ProtoMember(2)] public Ticket Ticket { get; set; }
     [ProtoMember(3)] public Stamp Stamp { get; set; }
+}
+
+// Deliberately its OWN contract rather than another member of Holder: Holder carries the
+// non-measuring Thing, which takes it off measure-first regardless, so a measuring member there
+// would prove nothing. This one has only measurable members, so it emits a Measure_ - and that
+// measure is the delegating arm.
+[ProtoContract]
+public class Panel
+{
+    [ProtoMember(1)] public Gauge Gauge { get; set; }
+    [ProtoMember(2)] public int Label { get; set; }
 }
 
 public static class ExternalSerializerSamples
@@ -92,11 +142,16 @@ public static class ExternalSerializerSamples
         new Holder { Thing = new Thing { Value = 1 } },
         new Holder { Ticket = new Ticket(2), Stamp = new Stamp(3) },
         new Holder { Thing = new Thing { Value = 4 }, Ticket = new Ticket(5), Stamp = new Stamp(6) },
+        new Panel(),
+        new Panel { Gauge = new Gauge { Reading = 7 }, Label = 8 },
+        // a zero reading still writes its fixed32, so the measured 5 must hold for it too
+        new Panel { Gauge = new Gauge(), Label = 9 },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Holder))]
+[ProtoSerializable(typeof(Panel))]
 public partial class ExternalSerializerModel : TypeModel
 {
 }

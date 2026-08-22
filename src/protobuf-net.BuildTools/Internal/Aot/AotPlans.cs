@@ -247,6 +247,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ProtoMapPlan map = default, bool usesAccessor = false, int compatibilityLevel = 200,
             int declaredCompatibilityLevel = 200,
             bool isReadOnly = false, string? subSerializer = null, bool subSerializerIsScalar = false, bool subSerializerDynamic = false,
+            bool subSerializerMeasures = false,
             string? writeCondition = null, string? specifiedMember = null,
             string? accessorField = null,
             ProtoDataFormat mapKeyFormat = ProtoDataFormat.Default,
@@ -263,6 +264,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             SubSerializer = subSerializer;
             SubSerializerIsScalar = subSerializerIsScalar;
             SubSerializerDynamic = subSerializerDynamic;
+            SubSerializerMeasures = subSerializerMeasures;
             IsReadOnly = isReadOnly;
             CompatibilityLevel = compatibilityLevel;
             DeclaredCompatibilityLevel = declaredCompatibilityLevel;
@@ -442,6 +444,18 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public bool SubSerializerDynamic { get; }
 
         /// <summary>
+        /// The member's sub-serializer implements <c>IMeasuringSerializer&lt;T&gt;</c>, so its size
+        /// can be obtained arithmetically instead of by writing it to a counting writer.
+        /// </summary>
+        /// <remarks>
+        /// This is what keeps a member with a hand-written or inbuilt serializer - and so its whole
+        /// contract, and everything referencing that - on measure-first. The size is not knowable at
+        /// COMPILE time and does not need to be: the measure runs at run time, and it only has to be
+        /// arithmetic rather than a traversal. See notes/gaps.md B31.
+        /// </remarks>
+        public bool SubSerializerMeasures { get; }
+
+        /// <summary>
         /// The <c>{Name}Specified</c> property or <c>ShouldSerialize{Name}()</c> call that decides
         /// whether to write this member, without the leading instance. It <em>replaces</em> the
         /// trivial-value guard rather than adding to it, and wraps the whole write.
@@ -524,6 +538,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && UsesAccessor == other.UsesAccessor && CompatibilityLevel == other.CompatibilityLevel
                 && DeclaredCompatibilityLevel == other.DeclaredCompatibilityLevel
                 && IsReadOnly == other.IsReadOnly && SubSerializer == other.SubSerializer
+                && SubSerializerMeasures == other.SubSerializerMeasures
                 && AccessorField == other.AccessorField && AccessorReads == other.AccessorReads
                 && MapKeyFormat == other.MapKeyFormat && MapValueFormat == other.MapValueFormat
                 && DisableMap == other.DisableMap

@@ -1424,7 +1424,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // reason and this contract is dropped by cascade with a message that chains
                     // an inbuilt type (see GetSubSerializer) is served by protobuf-net itself, so it
                     // is neither ours to emit nor a reason to drop anything by cascade
-                    var subSerializer = GetSubSerializer(compilation, message!, serializers);
+                    var subSerializer = GetSubSerializer(compilation, message!, serializers, out var subSerializerType);
                     if (subSerializer != "null") reachable.Add(message!);
 
                     // a hand-written serializer may present the type as a *scalar*, which frames the
@@ -1465,7 +1465,8 @@ namespace ProtoBuf.BuildTools.Generators
                         declaredTypeName: declaredTypeName,
                         isPacked: isPacked, overwriteList: overwriteList, wrappedValue: wrappedValue, wrappedValueGroup: wrappedValueGroup, wrappedCollection: wrappedCollection, wrappedCollectionGroup: wrappedCollectionGroup,
                         dataFormat: dataFormat, isRequired: isRequired, usesAccessor: usesAccessor, compatibilityLevel: compatibilityLevel, declaredCompatibilityLevel: declaredCompatibilityLevel, isReadOnly: isReadOnly, writeCondition: writeCondition, specifiedMember: specifiedMember,
-                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, subSerializerIsScalar: subScalar, subSerializerDynamic: subDynamic, mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
+                        accessorField: accessorField, accessorReads: accessorReads, subSerializer: subSerializer, subSerializerIsScalar: subScalar, subSerializerDynamic: subDynamic,
+                        subSerializerMeasures: SerializerMeasures(compilation, subSerializerType, message!), mapKeyFormat: mapKeyFormat, mapValueFormat: mapValueFormat, disableMap: disableMap));
                 }
                 else
                 {
@@ -2721,13 +2722,29 @@ namespace ProtoBuf.BuildTools.Generators
         /// since we never implement <c>ISerializer&lt;T&gt;</c> for those.
         /// </summary>
         private static string? GetSubSerializer(Compilation compilation, INamedTypeSymbol type, ExternalSerializers serializers)
+            => GetSubSerializer(compilation, type, serializers, out _);
+
+        /// <summary>
+        /// As <see cref="GetSubSerializer(Compilation, INamedTypeSymbol, ExternalSerializers)"/>,
+        /// and additionally hands back the serializer's own SYMBOL.
+        /// </summary>
+        /// <remarks>
+        /// Including for the inbuilt case, where the expression is deliberately <c>"null"</c>
+        /// because protobuf-net's own provider is internal and a consumer's code cannot name it.
+        /// Being un-nameable does not make it un-INSPECTABLE: the symbol is right here, so a caller
+        /// can ask whether it implements <c>IMeasuringSerializer&lt;T&gt;</c>. See notes/gaps.md B31.
+        /// </remarks>
+        private static string? GetSubSerializer(Compilation compilation, INamedTypeSymbol type,
+            ExternalSerializers serializers, out INamedTypeSymbol? serializerType)
         {
+            serializerType = null;
             var declaration = ResolveSerializerDeclaration(compilation, serializers, type, out var closedSerializer);
             if (DeclarationApplies(declaration, type))
             {
                 // unlike the own-attribute route below, an inaccessible serializer here is not
                 // treated as "inbuilt" - it is a refusal from ExternalContract when that type is
                 // itself parsed, and this member cascades along with it
+                serializerType = closedSerializer;
                 return $"global::ProtoBuf.Serializers.SerializerCache.Get<"
                     + Qualified(compilation, closedSerializer!) + ", "
                     + Qualified(compilation, type) + ">()";
@@ -2740,6 +2757,7 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     if (argument.Key == "Serializer" && argument.Value.Value is INamedTypeSymbol external)
                     {
+                        serializerType = external;
                         // an inaccessible serializer means an inbuilt type - protobuf-net's own
                         // well-known types point at the internal PrimaryTypeProvider. Passing null
                         // lets TypeModel.GetSerializer<T> find it, which is how it resolves anyway.
@@ -2754,6 +2772,30 @@ namespace ProtoBuf.BuildTools.Generators
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Whether a serializer can size a value ARITHMETICALLY rather than by writing it to a
+        /// counting writer - i.e. whether it implements <c>IMeasuringSerializer&lt;T&gt;</c> for
+        /// this exact target.
+        /// </summary>
+        /// <remarks>
+        /// This is the whole of the "can a hand-written serializer keep its member on measure-first"
+        /// question. The size need not be knowable at COMPILE time - the measure runs at run time -
+        /// so a serializer implementing this interface is telling us precisely what we need.
+        /// See notes/gaps.md B31, and the same question asked of a surrogate's serializer.
+        /// </remarks>
+        private static bool SerializerMeasures(Compilation compilation, INamedTypeSymbol? serializer, ITypeSymbol target)
+        {
+            if (serializer is null) return false;
+            var measuring = compilation.GetTypeByMetadataName("ProtoBuf.Serializers.IMeasuringSerializer`1");
+            if (measuring is null) return false; // an older protobuf-net.Core: simply do not measure
+            var wanted = measuring.Construct(target);
+            foreach (var candidate in serializer.AllInterfaces)
+            {
+                if (SymbolEqualityComparer.Default.Equals(candidate, wanted)) return true;
+            }
+            return false;
         }
 
         /// <summary>

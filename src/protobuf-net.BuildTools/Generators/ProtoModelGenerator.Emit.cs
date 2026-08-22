@@ -3358,10 +3358,17 @@ namespace ProtoBuf.BuildTools.Generators
         private static void AppendFoldingLengthTemp(StringBuilder sb, int indent, StringBuilder bodyBuilder, string name)
         {
             var body = bodyBuilder.ToString();
-            // the temp is assigned from an arithmetic measure, or - on the write side since gap
-            // B38 - from the ordered length buffer. Both spellings count towards the same local:
-            // missing the second is why the descriptor model briefly emitted an undeclared `len`.
-            var assignments = new[] { name + " = Measure_", name + " = state.RawSlots.Next()" };
+            // The temp is assigned from an arithmetic measure, from the ordered length buffer (the
+            // write side, gap B38), or by DELEGATING to a serializer that measures itself (gap
+            // B31). All three spellings count towards the same local, and missing one is an
+            // undeclared-variable break in the CONSUMER's build rather than a test failure here:
+            // that is how the second was found, and then the third.
+            var assignments = new[]
+            {
+                name + " = Measure_",
+                name + " = state.RawSlots.Next()",
+                name + " = ((global::ProtoBuf.Serializers.IMeasuringSerializer",
+            };
             var sites = 0;
             string single = null;
             foreach (var assignment in assignments)
@@ -3598,12 +3605,42 @@ namespace ProtoBuf.BuildTools.Generators
                 // the struct storage shapes measure too now (gap B42): they are written unguarded
                 // and their length is .Count / .Length, which is arithmetic like any other
                 ProtoMemberKind.Bytes => false,
+                // A hand-written or INBUILT serializer that implements IMeasuringSerializer<T> can
+                // be ASKED, which is the whole of gap B31: the size need not be known at compile
+                // time, only obtained without a traversal. The target is deliberately NOT required
+                // to be in `measurable` - we call the serializer's Measure, not a generated one.
+                // Excluded: a scalar or undetermined category (the framing is not ours to predict)
+                // and a non-default format (Group on a unary message is otherwise allowed through).
+                ProtoMemberKind.Message when SubSerializerMeasurable(member) => false,
                 ProtoMemberKind.Message => member.SubSerializerIsScalar || member.SubSerializerDynamic
                     || member.SubSerializer is not (null or "this")
                     || member.TypeName is null || !measurable.ContainsKey(member.TypeName),
                 _ => true,
             };
         }
+
+        /// <summary>
+        /// Whether a unary message member delegates to a serializer that can size itself. That
+        /// makes the member measurable without its target having a generated <c>Measure_</c> - the
+        /// two are different routes to the same length. See <c>notes/gaps.md</c> B31.
+        /// </summary>
+        private static bool SubSerializerMeasurable(ProtoMemberPlan member)
+            => member.SubSerializerMeasures
+            && member.SubSerializer is not (null or "this")
+            && !member.SubSerializerIsScalar && !member.SubSerializerDynamic
+            && member.Map.Factory is null && member.Repeated.Factory is null
+            && member.DataFormat == ProtoDataFormat.Default;
+
+        /// <summary>
+        /// The expression yielding a member's sub-serializer. Usually the one the write already
+        /// uses; the exception is the INBUILT case, whose write passes a literal <c>null</c> and
+        /// lets resolution find the provider - a measure has to name it, and
+        /// <c>GetInbuiltSerializer</c> is the public way to reach an internal provider.
+        /// </summary>
+        private static string SubSerializerExpression(ProtoMemberPlan member)
+            => member.SubSerializer is null or "null" or "this"
+                ? $"global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<{member.TypeName}>(default, default)"
+                : member.SubSerializer;
 
         /// <summary>
         /// The measurable target of a plain unary message member, or null where the classic
@@ -4201,6 +4238,25 @@ namespace ProtoBuf.BuildTools.Generators
                             $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint)tmp{number}.Length) + tmp{number}.Length"));
                         Line(sb, indent, "}");
                         break;
+                    // delegated: the serializer sizes itself, so there is no generated Measure_ to
+                    // call and nothing in `measurable` to look up. It reserves NO slot either - the
+                    // write hands this member to the stateful engine, which computes its own length
+                    case ProtoMemberKind.Message when SubSerializerMeasurable(member):
+                    {
+                        var delegated = indent;
+                        if (!member.MemberIsValueType)
+                        {
+                            Line(sb, indent, $"if (tmp{number} != null)");
+                            Line(sb, indent, "{");
+                            delegated++;
+                        }
+                        Line(sb, delegated, $"sub = (({Serializers}.IMeasuringSerializer<{member.TypeName}>)"
+                            + $"{SubSerializerExpression(member)}).Measure(context, global::ProtoBuf.WireType.String, tmp{number});");
+                        Line(sb, delegated, MeasureAdd(member, 2,
+                            "global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub"));
+                        if (!member.MemberIsValueType) Line(sb, indent, "}");
+                        break;
+                    }
                     case ProtoMemberKind.Message:
                     {
                         var target = measurable[member.TypeName!];
