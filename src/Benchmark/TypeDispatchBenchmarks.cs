@@ -4,8 +4,9 @@
 // dispatch and only the dispatch.
 //
 // net8-only deliberately: the question is about the modern runtime, and the net472 leg of this
-// project has nothing to say about it. The companion TypeDispatch.generated.cs holds sixty-four
-// empty contract types and three sizes of dispatch chain; see notes/gaps.md B40.
+// project has nothing to say about it. The companion TypeDispatch.generated.cs holds 512 empty
+// contract types and three sizes of dispatch chain - SMALL (8), MEDIUM (64) and HUGE (512), because
+// the strategies differ in how they SCALE and a narrow band cannot show that; see notes/gaps.md B40.
 #if NET8_0_OR_GREATER
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
@@ -67,7 +68,9 @@ namespace Benchmark
     {
         public enum Position { First, Last, Rotating }
 
-        [Params(4, 16, 64)] public int Size { get; set; }
+        // SMALL / MEDIUM / HUGE. The ladder is wide on purpose: the strategies differ in how they
+        // SCALE, and a band that stops at 64 cannot tell an O(1) lookup from a short linear scan.
+        [Params(8, 64, 512)] public int Size { get; set; }
         [Params(Position.First, Position.Last, Position.Rotating)] public Position Where { get; set; }
 
         private object[] _objects = Array.Empty<object>();
@@ -126,17 +129,17 @@ namespace Benchmark
         [Benchmark(Description = "object: if-chain")]
         public int Object_IfChain() => Size switch
         {
-            4 => TypeDispatch.IfChainObject4(NextObject()),
-            16 => TypeDispatch.IfChainObject16(NextObject()),
-            _ => TypeDispatch.IfChainObject64(NextObject()),
+            8 => TypeDispatch.IfChainObject8(NextObject()),
+            64 => TypeDispatch.IfChainObject64(NextObject()),
+            _ => TypeDispatch.IfChainObject512(NextObject()),
         };
 
         [Benchmark(Description = "object: type-pattern switch")]
         public int Object_TypeSwitch() => Size switch
         {
-            4 => TypeDispatch.TypeSwitch4(NextObject()),
-            16 => TypeDispatch.TypeSwitch16(NextObject()),
-            _ => TypeDispatch.TypeSwitch64(NextObject()),
+            8 => TypeDispatch.TypeSwitch8(NextObject()),
+            64 => TypeDispatch.TypeSwitch64(NextObject()),
+            _ => TypeDispatch.TypeSwitch512(NextObject()),
         };
 
         [Benchmark(Description = "Type: dictionary")]
@@ -146,9 +149,9 @@ namespace Benchmark
         [Benchmark(Description = "Type: if-chain")]
         public int Type_IfChain() => Size switch
         {
-            4 => TypeDispatch.IfChainType4(NextType()),
-            16 => TypeDispatch.IfChainType16(NextType()),
-            _ => TypeDispatch.IfChainType64(NextType()),
+            8 => TypeDispatch.IfChainType8(NextType()),
+            64 => TypeDispatch.IfChainType64(NextType()),
+            _ => TypeDispatch.IfChainType512(NextType()),
         };
     }
 
@@ -168,29 +171,28 @@ namespace Benchmark
         [GlobalSetup]
         public void Setup()
         {
-            TypeDispatch.BuildMap(64);
+            TypeDispatch.BuildMap(512);
             TypeDispatch.RegisterHelpers();
         }
 
-        [Benchmark(Baseline = true, Description = "Helper<T>.Index (first)")]
-        public int Helper_First() => Helper<TypeDispatch.C0>.Index;
+        [Benchmark(Baseline = true, Description = "Helper<T>.Index")]
+        public int Helper() => Helper<TypeDispatch.C511>.Index;
 
-        [Benchmark(Description = "Helper<T>.Index (last)")]
-        public int Helper_Last() => Helper<TypeDispatch.C63>.Index;
+        [Benchmark(Description = "dictionary, 512-entry map")]
+        public int Dictionary()
+            => TypeDispatch.Map.TryGetValue(typeof(TypeDispatch.C511), out var i) ? i : -1;
 
-        [Benchmark(Description = "dictionary (first)")]
-        public int Dictionary_First()
-            => TypeDispatch.Map.TryGetValue(typeof(TypeDispatch.C0), out var i) ? i : -1;
+        [Benchmark(Description = "if-chain, small model (8 arms, last)")]
+        public int IfChain_Small() => TypeDispatch.IfChainGeneric8<TypeDispatch.C7>();
 
-        [Benchmark(Description = "dictionary (last)")]
-        public int Dictionary_Last()
-            => TypeDispatch.Map.TryGetValue(typeof(TypeDispatch.C63), out var i) ? i : -1;
+        [Benchmark(Description = "if-chain, medium model (64 arms, last)")]
+        public int IfChain_Medium() => TypeDispatch.IfChainGeneric64<TypeDispatch.C63>();
 
-        [Benchmark(Description = "if-chain over typeof(T), 64 arms (first)")]
-        public int IfChain_First() => TypeDispatch.IfChainGeneric64<TypeDispatch.C0>();
+        [Benchmark(Description = "if-chain, huge model (512 arms, last)")]
+        public int IfChain_Huge() => TypeDispatch.IfChainGeneric512<TypeDispatch.C511>();
 
-        [Benchmark(Description = "if-chain over typeof(T), 64 arms (last)")]
-        public int IfChain_Last() => TypeDispatch.IfChainGeneric64<TypeDispatch.C63>();
+        [Benchmark(Description = "if-chain, huge model (512 arms, first)")]
+        public int IfChain_Huge_First() => TypeDispatch.IfChainGeneric512<TypeDispatch.C0>();
     }
 }
 #endif

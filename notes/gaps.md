@@ -3009,13 +3009,98 @@ input shape*, and the input shape — not the strategy — turns out to be what 
 every case resolving a contract to an `int` index and nothing else. Four strategies (a
 `Dictionary<Type,int>`, an if-chain, a C# type-pattern `switch`, and a per-`T`
 `Helper<T>.Index` static), across the three shapes the real signatures have (generic `T`, an
-`object` instance, a bare `Type`), at model sizes 4/16/64, and — for the position-sensitive
+`object` instance, a bare `Type`), at model sizes 8/64/512 - small, medium and huge - and — for the position-sensitive
 strategies — with the target first, last, and rotating through every type. `VirtualOnly` is the
 floor: an abstract method overridden once, so every other number reads as *that plus the dispatch*.
 
-`TypeDispatch.generated.cs` is its companion: sixty-four empty contract types and three sizes of
-each chain, generated because writing a 64-arm chain three ways by hand is exactly the sort of thing
-that acquires a typo nobody notices.
+`TypeDispatch.generated.cs` is its companion: **512** empty contract types and three sizes of each
+chain, generated because writing a 512-arm chain four ways by hand is exactly the sort of thing that
+acquires a typo nobody notices.
+
+##### Results: the GENERIC shape (net8, 2026-08-22)
+
+Model size is a first-class axis, not a footnote (Marc: *"we need to consider small, medium and huge
+model sizes, in terms of the number of types"*) — the strategies differ in how they **scale**, and a
+ladder that stops at 64 cannot tell an O(1) lookup from a short linear scan. Small **8**, medium
+**64**, huge **512**:
+
+| strategy | small | medium | huge |
+| --- | ---: | ---: | ---: |
+| `Helper<T>.Index` | 0.001 ns | 0.001 ns | **0.001 ns** |
+| `Dictionary<Type,int>` | — | — | **5.93 ns** |
+| if-chain, target **last** | 0.72 ns | 5.94 ns | **47.5 ns** |
+| if-chain, target **first** | — | — | 0.21 ns |
+
+**`Helper<T>.Index` wins outright on the generic path, and is the only strategy that does not care
+how big the model is.** It is a static field on a per-`T` generic type, so there is no lookup at
+all: the JIT resolves the address per instantiation. Registration is one assignment per contract at
+model construction, and **0 means "not mine"**, so a model that has never heard of a type answers
+without branching on a lookup *result*.
+
+Two honest caveats on that number:
+
+- **0.001 ns means "optimised away", not "measured as fast"** — with a constant `T` in a tight loop
+  the read hoists. The real figure is "a static field read", which is ~0-1 ns, not zero; the
+  benchmark cannot separate the two and should not be quoted as if it could;
+- it is **per-`T` global state**, so two models in one process share the slot. That is a design
+  problem, not a performance one, and it is the thing to solve before adopting this: an index into
+  *which* model's table? The obvious answers are a per-model generation counter, or making the slot
+  hold the serializer rather than an index.
+
+**The if-chain is ~O(n) and that is the finding the wide ladder bought.** 0.72 → 5.94 → 47.5 ns
+worst-case. At 64 types it is already level with the dictionary; at 512 it is **8× worse**. Note
+also that it is *not* free even in the best case (0.21 ns at the front of 512), because for a
+reference type the generic code is shared (`__Canon`) — `typeof(T) == typeof(Foo)` is a real runtime
+comparison, not a folded constant. A value-type contract would fold; contracts are overwhelmingly
+classes.
+
+**The dictionary is flat at ~5.9 ns** and does not care about size, which is the point of comparison
+for everything else: any strategy that cannot beat ~6 ns is not worth the API churn.
+
+##### Results: the NON-GENERIC shapes (net8, 2026-08-22)
+
+`VirtualOnly` — an abstract method overridden once — is **~1.15 ns** and flat. That is the price of
+virtualising at all, before any steering, and every number below should be read against it.
+
+**`object` shape** (the non-generic `Serialize(Stream, object)`), ns:
+
+| size | dictionary | if-chain (first / last / rotating) | type-pattern switch (first / last / rotating) |
+| ---: | ---: | ---: | ---: |
+| 8 | 7.6–8.1 | 1.17 / 2.14 / 2.18 | 0.98 / 2.12 / 1.82 |
+| 64 | 7.6–7.9 | 1.17 / 12.5 / 6.99 | 1.15 / 12.5 / 7.08 |
+| 512 | 7.5–8.4 | 1.16 / **95.9** / 51.1 | 1.34 / **95.5** / 51.3 |
+
+**`Type` shape** (the non-generic `Deserialize(Stream, object, Type)`), ns:
+
+| size | dictionary | if-chain (first / last / rotating) |
+| ---: | ---: | ---: |
+| 8 | 6.5–7.1 | 0.52 / 1.08 / 0.88 |
+| 64 | 6.5 | 0.97 / 6.69 / 5.69 |
+| 512 | 6.5–7.0 | 0.96 / **47.7** / 32.6 |
+
+**Four things fall out, and the first kills one of the four candidate strategies.**
+
+1. **A C# type-pattern `switch` is not a strategy — it is an if-chain with different syntax.** The
+   two are within noise of each other at *every* size and position (95.45 vs 95.85 ns at 512/last).
+   Roslyn compiles a type switch to sequential `isinst`; there is no jump table to be had, because
+   type tests are not ordinal. So "a switch block, specifically for Serialize which has an object"
+   is answered: it buys nothing over the chain, and it cannot express the `Type` shape at all.
+2. **The `object` shape costs about twice the `Type` shape in a chain** — 95.9 vs 47.7 ns at
+   512/last. `isinst` against an instance is more work than comparing two type handles. So the
+   non-generic *write* path is intrinsically the more expensive of the two to steer, which is the
+   opposite of where the analyzer work has been aimed.
+3. **The dictionary is the only non-generic strategy that does not care about model size**, at
+   ~6.5 ns (`Type`) and ~7.6–8.4 ns (`object`, which additionally pays `GetType()`). The crossover
+   against a chain is around **64 types** for the realistic rotating case — below that a chain wins,
+   above it the chain loses badly.
+4. **Dispatch dominates virtualisation.** At ~6.5–8.4 ns the lookup is five to seven times the
+   ~1.15 ns virtual call, so the question "should these be virtual" is not really a question about
+   the `callvirt`; it is a question about what the override then has to do.
+
+**The asymmetry that matters for the design:** there is no `Helper<T>` for the non-generic shapes —
+`T` is what makes that trick possible. So a virtual non-generic entry point pays a real lookup
+whatever we do, while a virtual *generic* one need not. If only some of the six are made virtual,
+that is the line to draw them on.
 
 ### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
 
