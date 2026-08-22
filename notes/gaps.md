@@ -631,8 +631,9 @@ to believe it.
   length-prefixed member dereferenced it. Reachable since nullable-struct message members became
   measurable on 2026-08-21, and never fixtured. Fixed with `RawLengthBuffer.Discard` — a shared
   instance whose `Reserve`/`Set` are no-ops — rather than a null test at every call site.
-- **gap B44**, below: a stateful hand-back inside a **grouped** raw body writes a stream the reader
-  rejects. Left as its own entry, since it is a wire bug rather than a depth one.
+- **gap B44**, below: a stateful hand-back inside a **grouped** raw body wrote a stream the reader
+  rejected. Its own entry, since it was a reader bug rather than a depth one — and fixed the same
+  day.
 ### B16. Locals in the emitted bodies — **`lengths` and `len` done (2026-08-14, corrected 2026-08-16); `tmpN` folding still open**
 
 > **Superseded in part by B38 (2026-08-21).** Everything below about `state.RawLengths` is a
@@ -3780,31 +3781,30 @@ ordering constraint between these two items.
 | ~~the tag ladder: keep or revert?~~ | **Settled 2026-08-14: narrowed, not reverted.** Split by *dynamic population* rather than kept or dropped wholesale — the one- and two-byte arms and the bool fold stay, the folded 3/4/5-byte arms go back to the shipped encoder. Two follow-on micro-ideas (`&` for `&&`, hoisting `RemainingInCurrent`) were answered by inspection and need no measurement; the reasoning is in the comment block |
 | ~~when to rewrite `docs/aot.md`'s "needs its own project" advice~~ | **Done**, pre-emptively on `aot-schema-model`, so it arrives with the merge |
 
-### B44. A stateful hand-back inside a GROUPED raw body corrupts the stream — **open, and it is a wire bug**
+### B44. ~~A stateful hand-back inside a GROUPED raw body corrupts the stream~~ — **FIXED 2026-08-22, same day it was found**
 
-Found 2026-08-22 while building B15's fixture, not looked for.
-
-**Repro.** A contract with a grouped self-recursive member and a nullable-struct message member —
-`Rung { [ProtoMember(1, DataFormat = Group)] Rung Next; [ProtoMember(2)] Link? Side; }`, where
-`Link` is a `[ProtoContract] struct` holding a `Rung`. Serializing
-`Rung { Next = Rung { Side = Link { Target = Rung { } } } }` and reading it back throws
+Found while building B15's fixture, not looked for: round-tripping a contract with a grouped
+self-recursive member *and* a nullable-struct message member threw
 `ProtoException: Sub-message not read entirely; expected -1, was 7`.
 
-**What is and is not implicated**, established by bisecting the samples rather than by reading:
+**The WRITE was always right.** The generated model and `RuntimeTypeModel` produce byte-identical
+output for that shape (`18-05-23-12-04-0A-02-18-07-18-06-24`), and the runtime model reads its own
+bytes back happily. Establishing that first is what turned a vague "grouped members are broken" into
+a one-line fix — the differential reports a *read* failure and a *write* failure identically, as an
+exception, so the direction has to be checked rather than assumed.
 
-- the same shape with `Next` **length-prefixed** round-trips (the differential covers it);
-- a grouped chain **without** `Side` round-trips at depth 2;
-- `Side` at the **root**, outside any group, round-trips.
+**The cause is two negative encodings colliding.** `StartSubItem` saves the enclosing `_scope` in
+the returned `SubItemToken` and `EndSubItem` checks `value64 < position` — "did this sub-item overrun
+the scope it suspended". Inside a raw **group** scope, `_scope` is not a position at all: the raw
+reader encodes a group as `-fieldNumber` and deliberately leaves position unbounded
+(`PushGroup`). So the saved value is negative, the comparison reads it as a position far behind the
+cursor, and a perfectly good stream is rejected.
 
-So it is specifically a stateful call (`state.WriteMessage`, here for a nullable-struct member the
-raw path refuses) made from inside a raw body that is itself framed by group tags.
+The fix is one condition — `value64 >= 0 &&` — restoring the check to the case it was written for.
+A negative saved scope is a group sentinel and is restored verbatim, which is what
+`_scope = value64` already did correctly on the next line.
 
-**The likely cause, unconfirmed:** the raw path deliberately does not maintain writer state, and the
-stateful `WriteMessage` consults state the raw group framing has not set — the same class of problem
-as B15, one field along. B15 was about `Depth`; this is about whatever `WriteMessage` reads to close
-its sub-item. That is a hypothesis, not a diagnosis; it wants the emitted bytes decoded by hand
-before anything is changed.
-
-**Why it has not bitten before:** it needs a grouped member *and* a stateful fallback in the same
-body, and no fixture had both. `DepthBoundary.input.cs` now keeps them deliberately apart, with a
-comment saying why, so the fixture stays green while this is open.
+**Why it had not bitten:** it needs a grouped member *and* a stateful hand-back in the same body.
+The raw reader's hand-back (`StashTag` + `ReadMessage`) is used for maps, repeated engines and BCL
+kinds, and the raw group scope arrived with gap B35 — but no fixture had both at once until
+`DepthBoundary.input.cs`, which now carries one deliberately.

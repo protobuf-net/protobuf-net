@@ -788,7 +788,14 @@ namespace ProtoBuf
                         break;
                     default:
                         long position = Position;
-                        if (value64 < position) ThrowProtoException($"Sub-message not read entirely; expected {value64}, was {position}");
+                        // value64 is the ENCLOSING scope this sub-item suspended, and the check is
+                        // "did we overrun it". A NEGATIVE one is not a position at all: it is the
+                        // raw reader's group sentinel (see ProtoReader.State.Raw's _scope, where a
+                        // group encodes as -fieldNumber and position is deliberately unbounded), so
+                        // comparing it as a position rejects a perfectly good stream. Reached
+                        // whenever a generated raw read hands ONE member back to the stateful
+                        // machinery from inside a raw GROUP scope - gap B44.
+                        if (value64 >= 0 && value64 < position) ThrowProtoException($"Sub-message not read entirely; expected {value64}, was {position}");
                         if (_scope != position && _scope != long.MaxValue)
                         {
                             ThrowProtoException($"Sub-message not read correctly (end {_scope} vs {position})");

@@ -27,9 +27,9 @@ public class Rung
     // raw write's own budget as the only guard on the way down. That is the only shape that can
     // observe gap B15 at all, and RawDepthBoundaryTests builds its ladder through this member.
     //
-    // NOTE the samples never put Side underneath Deep. That combination writes a stream the reader
-    // rejects ("Sub-message not read entirely") - a stateful hand-back inside a GROUPED raw body -
-    // and it is gap B44, not this fixture's subject.
+    // A sample DOES put Side underneath Deep: that combination used to write a stream the reader
+    // rejected - a stateful hand-back inside a GROUPED raw body, gap B44 - and pinning it here is
+    // what stops that regressing. The bytes were always right; the reader was wrong.
     [ProtoMember(4, DataFormat = DataFormat.Group)] public Rung Deep { get; set; }
     // stateful: crosses back into the engine, which then re-enters the raw path for Target
     [ProtoMember(2)] public Link? Side { get; set; }
@@ -66,6 +66,8 @@ public static class DepthBoundarySamples
         new Rung { Id = 3, Side = new Link { Target = new Rung { Id = 4 } } },
         new Rung { Id = 5, Next = new Rung { Id = 6, Side = new Link { Target = new Rung { Id = 7 } } } },
         new Rung { Id = 8, Deep = new Rung { Id = 9, Deep = new Rung { Id = 10 } } },
+        // gap B44: a stateful hand-back (Side) from inside a GROUPED raw body (Deep)
+        new Rung { Id = 14, Deep = new Rung { Id = 15, Side = new Link { Target = new Rung { Id = 16 } } } },
         new Step { Id = 11 },
         new Step { Id = 12, Deep = new Step { Id = 13 } },
     ];
