@@ -364,7 +364,7 @@ The remaining native-AOT warnings need the reflective paths not to exist on the 
 reflect. The real arguments are one less layer of indirection on the generated path, and possibly
 size — get a size estimate first.
 
-### B12. An intermittent `Examples` failure on net472 — unresolved, not closed
+### B12. An intermittent `Examples` failure on net472 — **harness made self-diagnosing 2026-08-22; still unproven either way**
 
 Seen twice in full-traversal runs, never reproducible standalone, never captured by name.
 Everything points at `PEVerify.AssertValid`: it shells out to `PEVerify.exe` with a **20-second
@@ -372,6 +372,21 @@ timeout** (`src/Examples/PEVerify.cs`), it is inside `#if !COREFX` so it is net4
 subprocess timeout is exactly what contention in a full run would trip. Tied to
 `Compile(name, path)`, so no AOT path can reach it.
 
+**What was actually done, since the failure cannot be chased directly:** the harness was throwing
+its own evidence away, which is most of why two sightings produced nothing. It now
+
+- **captures the child's stdout and stderr** and reports them on a non-zero exit, where before a
+  genuine verification failure said only *"expected 0, actual 1"* and named nothing;
+- **reads those asynchronously**, so a chatty child cannot fill its pipe and deadlock the wait —
+  which would itself have looked like the timeout being blamed;
+- allows **120s** rather than 20, overridable with `PBN_PEVERIFY_TIMEOUT`, because the cost of being
+  wrong here is an unreproducible red build rather than a slow one (a passing run exits in well
+  under a second);
+- says on timeout that it is a **contention symptom rather than invalid IL**, so a future sighting
+  is classified at the point it happens rather than argued about afterwards.
+
+This is deliberately *not* recorded as a fix. The cause is still unproven, and if the theory is
+wrong the next sighting will now say so.
 ### B13. ~~`ThrowUnexpectedSubtype` on every write~~ — **settled: it costs ~0.6%**
 
 Raised by Marc, 2026-08-14: the generated writer emits
@@ -634,7 +649,7 @@ to believe it.
 - **gap B44**, below: a stateful hand-back inside a **grouped** raw body wrote a stream the reader
   rejected. Its own entry, since it was a reader bug rather than a depth one — and fixed the same
   day.
-### B16. Locals in the emitted bodies — **`lengths` and `len` done (2026-08-14, corrected 2026-08-16); `tmpN` folding still open**
+### B16. Locals in the emitted bodies — **`lengths` and `len` done; `tmpN` folding DEFERRED 2026-08-22, blocker recorded**
 
 > **Superseded in part by B38 (2026-08-21).** Everything below about `state.RawLengths` is a
 > record of what was true then: the dictionary it describes is gone from the generated path,
@@ -885,6 +900,27 @@ So the right instrument is **the local count on a large contract**, not a nanose
 and the honest status is that the idea is agreed and unimplemented, not that it was tried and
 failed. The same applies to the `lenN` temporaries.
 
+#### Decision, 2026-08-22: the `tmpN` half is DEFERRED, with the blocker established
+
+Not "still open" vaguely — the specific obstacle was found and is worth recording, because it is
+what a future attempt has to solve rather than rediscover.
+
+**Folding by type means renaming, and the name is threaded through roughly fifty emission sites.**
+`tmp{number}` is composed at each site from the member's number; folding replaces it with a
+per-*type* name, so every one of those sites has to ask a shared allocator instead. That is a large
+mechanical change to the emitter with a real chance of a subtle scoping mistake, and the read path
+is a `switch` whose sections share one declaration space — so a fold that is safe in the
+straight-line write and measure bodies is *not* automatically safe there.
+
+**And the benefit cannot be measured on this machine.** The claim is about RyuJIT's tracked-local
+limit and about zero-init in the consumer's assembly; both are throughput effects, and the
+benchmarking controls here were running 1.6–1.8× slow when last checked. Landing a fifty-site
+emitter change on an unmeasured hypothesis is the wrong trade, and the same "measure it" discipline
+that retracted the ~1 µs figure in B1 applies to the premise here too.
+
+So: deferred until there is a quiet machine, at which point the first step is to *measure a
+1000-local body* rather than to start renaming.
+
 ### B17. Callbacks and measure-first — **the GENERATED half is BUILT (2026-08-21/22); the classic STREAM path is what remains**
 
 > **Resolution, read this first — the analysis below is the design argument and several of its
@@ -1022,6 +1058,27 @@ to settle first, and only the second is hard:
 
 Note this also interacts with **B1** (packed writes) and **B5** (counting mode for mixed
 contracts), both of which want the measure path to reach further into shapes it currently declines.
+
+#### Decision, 2026-08-22: the classic STREAM half stays as it is, for now
+
+The generated half is built. Making the classic stream path fire twice as well would complete Marc's
+2026-08-14 alignment, and it is deliberately **not** being done yet, on this entry's own reasoning:
+
+- the stream writer *reserves, writes and back-fills*, so making it consistent means replacing one
+  back-fill shuffle — a memmove, and only when the varint width changes — with **a full second
+  crawl**. That is a real slowdown on the path that has no arithmetic measure to fall back on;
+- this entry already concluded that is "an argument for converging the two as measure-first widens
+  rather than changing the classic stream writer on its own", and measure-first has widened a great
+  deal this week rather than stopped;
+- the classic engine is the **control** for every raw-vs-classic number (AGENTS.md, "Don't improve
+  the legacy library"), and doubling its work on one backend and not the other would make those
+  comparisons harder to read, not easier;
+- **B14 is still coupled to it**: how often a callback fires inside a grouped tree depends on
+  whether grouped trees are measured, so the two cannot be settled independently.
+
+The consumer-visible consequence is unchanged and is documented in `AGENTS.md`: on the *classic*
+engine a nested contract's callback fires once to a stream and twice to an `IBufferWriter`. A
+*generated* contract now fires twice on both, which is the alignment arriving for one path first.
 
 ### B18. ~~`ClassicEmit` is never exercised by any gate~~ — **closed 2026-08-14**
 

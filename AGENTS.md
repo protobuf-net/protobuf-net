@@ -587,7 +587,7 @@ it.
 
 | block | owner |
 | --- | --- |
-| `PBN0001`–`PBN0026` | `DataContractAnalyzer` |
+| `PBN0001`–`PBN0027` | `DataContractAnalyzer` |
 | `PBN1000+` | `ProtoFileGenerator`'s schema errors |
 | **`PBN2001`–`PBN2010`** | **`ServiceContractAnalyzer`** (the gRPC analyzers, since #735) |
 | `PBN3000`–`PBN3004` | `ProtoModelGenerator` — the language floor and the four drop reasons |
