@@ -1,4 +1,4 @@
-﻿[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
+[PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.get -> bool
 [PBN9001]ProtoBuf.ProtoModelAttribute.ClassicEmit.set -> void
 [PBN9001]ProtoBuf.ProtoSchemaAttribute
 [PBN9001]ProtoBuf.ProtoSchemaAttribute.Path.get -> string
@@ -79,6 +79,7 @@
 [PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRaw(ProtoBuf.ISerializationContext context, out int depthBudget, out System.Collections.Generic.Dictionary<object, long> lengths) -> bool
 [PBN9002]static ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(ProtoBuf.ISerializationContext context, out int depthBudget, out ProtoBuf.RawLengthBuffer slots) -> bool
 [PBN9002]ProtoBuf.ProtoWriter.State.RawSlots.get -> ProtoBuf.RawLengthBuffer
+[PBN9002]ProtoBuf.ProtoWriter.State.SyncRawDepth(int budget) -> int
 [PBN9002]ProtoBuf.RawLengthBuffer
 [PBN9002]ProtoBuf.RawLengthBuffer.RawLengthBuffer() -> void
 [PBN9002]ProtoBuf.RawLengthBuffer.Reserve() -> int
@@ -90,6 +91,8 @@
 [PBN9002]ProtoBuf.RawLengthBuffer.Leave(object value, out int index) -> bool
 [PBN9002]ProtoBuf.RawLengthBuffer.Balanced.get -> bool
 [PBN9002]ProtoBuf.RawLengthBuffer.Reset() -> void
+[PBN9002]static readonly ProtoBuf.RawLengthBuffer.Discard -> ProtoBuf.RawLengthBuffer
+[PBN9002]ProtoBuf.RawLengthBuffer.AsMeasuring(ProtoBuf.ISerializationContext context) -> ProtoBuf.ISerializationContext
 const ProtoBuf.Meta.TypeModel.MinimumBufferSize = 128 -> int
 static ProtoBuf.ProtoWriter.IsMeasuring(ProtoBuf.ISerializationContext context) -> bool
 ProtoBuf.DataFormat.Delimited = 4 -> ProtoBuf.DataFormat
