@@ -1,0 +1,3 @@
+Generator produced 1 diagnostics:
+Warning PBN3003 Aot/Data/Diagnostics/AmbientFormatRefusal.input.cs L20 C38
+Contract 'AotFixtures.AmbientFormatRefusal.Stamped' is omitted from the AOT model: DataFormat.ZigZag on a BCL type (applied to this member by a [ProtoDataFormat(typeof(System.DateTime), DataFormat.ZigZag)] declaration on its contract, module or assembly, not by the member itself) is not supported yet.

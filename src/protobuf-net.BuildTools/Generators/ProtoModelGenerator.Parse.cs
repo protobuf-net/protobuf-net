@@ -823,6 +823,13 @@ namespace ProtoBuf.BuildTools.Generators
             var callbacks = new ProtoCallbackPlan[4];
 
             var members = new List<ProtoMemberPlan>();
+            // gap B30 item 1: resolved ONCE per contract rather than per member. The ambient
+            // walk is the only cost [ProtoDataFormat] puts on a compilation that never uses it, and
+            // that is what grates against the ProtoBufDisableBuildTools promise - so the question
+            // "does any declaration exist at all" is asked before any per-member work, and asked
+            // without building a key.
+            bool? anyAmbientFormat = null;
+
             foreach (var symbol in memberSource.GetMembers())
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -1292,6 +1299,7 @@ namespace ProtoBuf.BuildTools.Generators
                 // but a collection's element can be, and only the unwrap-after-select order handles
                 // that). Must see the effective value before the compatibility-level and
                 // ZigZag/Group checks below do
+                string? ambientFormatFor = null;
                 if (dataFormat == ProtoDataFormat.Default && !isMap && !wrappedValue && !wrappedCollection)
                 {
                     var selected = isCollection && ResolveRepeated(memberType) is { Element: { } element }
@@ -1299,9 +1307,15 @@ namespace ProtoBuf.BuildTools.Generators
                     var scalarType = selected is INamedTypeSymbol { IsGenericType: true } nullableSelected
                         && nullableSelected.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T
                         ? nullableSelected.TypeArguments[0] : selected;
-                    if (GetDataFormatDefault(compilation, memberSource, scalarType) is { } ambient)
+                    anyAmbientFormat ??= HasAnyDataFormatDeclaration(memberSource);
+                    if (anyAmbientFormat.Value
+                        && GetDataFormatDefault(compilation, memberSource, scalarType) is { } ambient)
                     {
                         dataFormat = ambient;
+                        // gap B30 item 2: a refusal reported against a member that carries no format
+                        // attribute is baffling, and it costs the whole contract plus its referrers.
+                        // Remember that the format was AMBIENT so the message can say so.
+                        ambientFormatFor = Qualified(compilation, scalarType);
                     }
                 }
 
@@ -1328,7 +1342,13 @@ namespace ProtoBuf.BuildTools.Generators
                     // dropped the contract and cascaded. gap B30 item 5.
                     if (dataFormat == ProtoDataFormat.ZigZag && kind != ProtoMemberKind.Decimal)
                     {
-                        return Option(diagnostics, atMember, name, "DataFormat.ZigZag on a BCL type");
+                        return Option(diagnostics, atMember, name, ambientFormatFor is null
+                            ? "DataFormat.ZigZag on a BCL type"
+                            // reads on into Option's " is not supported yet." suffix, so it is
+                            // phrased as a parenthetical rather than a trailing clause
+                            : $"DataFormat.ZigZag on a BCL type (applied to this member by a "
+                                + $"[ProtoDataFormat(typeof({Unqualify(ambientFormatFor)}), DataFormat.ZigZag)] "
+                                + "declaration on its contract, module or assembly, not by the member itself)");
                     }
                     if (declaredDefault is not null)
                     {
@@ -2145,6 +2165,39 @@ namespace ProtoBuf.BuildTools.Generators
         /// types), then the module, then the assembly — a sibling of <see cref="GetCompatibilityLevel"/>,
         /// keyed per scalar type because <c>[ProtoDataFormat]</c> is <c>AllowMultiple</c>.
         /// </summary>
+        /// <summary>
+        /// Whether <c>[ProtoDataFormat]</c> is declared ANYWHERE the resolver would look, without
+        /// deciding what it says. The early-out for gap B30 item 1.
+        /// </summary>
+        /// <remarks>
+        /// Same three scopes and the same order as <see cref="GetDataFormatDefault"/>, so a false
+        /// here means that method could not have found anything. Deliberately does not build the
+        /// scalar key or qualify anything: on a compilation that never uses the feature this is the
+        /// whole cost, and it is paid once per contract rather than once per member.
+        /// </remarks>
+        /// <summary>Drops the <c>global::</c> prefix, for a name that appears in a MESSAGE.</summary>
+        private static string Unqualify(string qualified)
+            => qualified.StartsWith("global::", StringComparison.Ordinal) ? qualified.Substring(8) : qualified;
+
+        private static bool HasAnyDataFormatDeclaration(INamedTypeSymbol contract)
+        {
+            for (INamedTypeSymbol? current = contract; current is not null; current = current.BaseType)
+            {
+                if (DeclaresDataFormat(current)) return true;
+            }
+            return DeclaresDataFormat(contract.ContainingModule)
+                || DeclaresDataFormat(contract.ContainingAssembly);
+
+            static bool DeclaresDataFormat(ISymbol symbol)
+            {
+                foreach (var attribute in symbol.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() == ProtoDataFormatAttributeName) return true;
+                }
+                return false;
+            }
+        }
+
         private static ProtoDataFormat? GetDataFormatDefault(
             Compilation compilation, INamedTypeSymbol contract, ITypeSymbol scalarType)
         {

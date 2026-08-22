@@ -1850,7 +1850,7 @@ holds the arc and its cuts, and says outright that there is no `PORTING.md` so n
 again. Writing a real porting guide is still worth doing if the museum API ever needs a migration
 story for consumers; that is a documentation decision, not a dangling-link bug.
 
-### B30. `[ProtoDataFormat]` follow-ups, carried over from the #1276 review — **open, none blocking**
+### B30. `[ProtoDataFormat]` follow-ups — **items 1, 2, 4 and 5 DONE; item 3 (the silent no-op) remains**
 
 Merged into `v4` on 2026-08-17. The feature is sound: **inert when unused** (with no declaration
 anywhere the resolver returns `Default` and the emitted bytes are identical, so the blast radius for
@@ -1891,6 +1891,34 @@ Its measure-first cost is recorded in **B26**, which is where the work is. The r
    plain `[ProtoMember(1, DataFormat = ZigZag)]`; `[ProtoDataFormat]` only widens the aperture.
    AGENTS.md already calls the refusal "a small deliberate over-reach" — the one-line fix is to
    exempt `decimal` from it.
+
+
+#### Items 1, 2 and 4 — DONE 2026-08-22
+
+- **1, the early-out.** `HasAnyDataFormatDeclaration` asks "does any declaration exist at all"
+  before any per-member work, and asks it **without building a key**; the answer is cached for the
+  contract rather than recomputed per member. So a compilation that never uses the feature now pays
+  one attribute scan per contract instead of a base-chain walk plus a `Qualified` string per member,
+  which is what made this grate against the `ProtoBufDisableBuildTools` promise. The magnitude is
+  still unmeasured — the *shape* is what was wrong.
+- **2, the refusal names the ambient source.** `PBN3003` now reads *"DataFormat.ZigZag on a BCL type
+  (applied to this member by a `[ProtoDataFormat(typeof(System.DateTime), DataFormat.ZigZag)]`
+  declaration on its contract, module or assembly, not by the member itself)"*. Phrased as a
+  parenthetical because `Option` appends *" is not supported yet."* and the first draft ran into it
+  ungrammatically — the golden `.txt` is what showed that, which is the reason to fixture a message
+  rather than eyeball it. `Data/Diagnostics/AmbientFormatRefusal.input.cs` pins it, and is
+  **contract**-scoped deliberately: the golden tests compile each input alone, but `AotRefGen` and
+  `AotConformanceTests` link every fixture into one assembly, so an assembly- or module-scoped
+  declaration would silently re-format every other fixture's members.
+- **4, the schema tests.** `AmbientDefaultReachesTheEmittedSchema` and
+  `AmbientDefaultSwitchesGuidBetweenStringAndBytesInTheSchema` cover the two shapes worth covering:
+  width (`sfixed64`/`sint32`) and *kind* (a level-300 `Guid` is `string` by default and `bytes`
+  under `FixedSize`). The first also carries a second `long` member with no attribute of its own, so
+  a per-member rather than per-type default would show up.
+
+**Item 3 remains** — a declaration that can never match (`typeof(Guid?)`, `typeof(List<Guid>)`) is a
+silent no-op, because both sides unwrap the *member* but never the declared type. Analyzer-shaped,
+and it needs an id and a release-tracking entry rather than a message change.
 
 ### B31. ~~An EXTERNAL serializer takes its member off measure-first~~ — **NARROWED 2026-08-22 to a non-measuring one**
 

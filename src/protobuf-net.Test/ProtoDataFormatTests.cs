@@ -200,6 +200,59 @@ namespace ProtoBuf.Test
             Assert.Contains(".google.protobuf.Timestamp", schema);
         }
 
+        [ProtoContract]
+        [ProtoDataFormat(typeof(long), DataFormat.FixedSize)]
+        [ProtoDataFormat(typeof(int), DataFormat.ZigZag)]
+        public class SchemaShapes
+        {
+            [ProtoMember(1)] public long Fixed { get; set; }
+            [ProtoMember(2)] public int Zigged { get; set; }
+            [ProtoMember(3)] public long Plain { get; set; }
+        }
+
+        [ProtoContract]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        [ProtoDataFormat(typeof(Guid), DataFormat.FixedSize)]
+        public class SchemaGuidBytes
+        {
+            [ProtoMember(1)] public Guid Id { get; set; }
+        }
+
+        [ProtoContract]
+        [CompatibilityLevel(CompatibilityLevel.Level300)]
+        public class SchemaGuidString
+        {
+            [ProtoMember(1)] public Guid Id { get; set; }
+        }
+
+        /// <summary>
+        /// The ambient default rewrites the emitted <c>.proto</c>, which is arguably its most
+        /// user-visible consequence and was covered nowhere - gap B30 item 4.
+        /// </summary>
+        [Fact]
+        public void AmbientDefaultReachesTheEmittedSchema()
+        {
+            var schema = Log(RuntimeTypeModel.Create().GetSchema(typeof(SchemaShapes), ProtoSyntax.Proto3));
+            Assert.Contains("sfixed64 Fixed", schema);
+            Assert.Contains("sint32 Zigged", schema);
+            // field 3 is the SAME CLR type as field 1 and takes the same ambient default, so a
+            // schema that varied per member would show it: this pins that the default is per TYPE
+            Assert.Contains("sfixed64 Plain", schema);
+        }
+
+        /// <summary>
+        /// The same, for the one case where the ambient default changes the wire TYPE rather than
+        /// its width: a level-300 Guid is a string by default and bytes under FixedSize.
+        /// </summary>
+        [Fact]
+        public void AmbientDefaultSwitchesGuidBetweenStringAndBytesInTheSchema()
+        {
+            Assert.Contains("string Id", Log(
+                RuntimeTypeModel.Create().GetSchema(typeof(SchemaGuidString), ProtoSyntax.Proto3)));
+            Assert.Contains("bytes Id", Log(
+                RuntimeTypeModel.Create().GetSchema(typeof(SchemaGuidBytes), ProtoSyntax.Proto3)));
+        }
+
         [Fact]
         public void AssemblyScopedGuidDefaultApplies()
             => Assert.Equal(DataFormat.FixedSize, TypeDataFormatHelper.GetTypeDataFormat(
