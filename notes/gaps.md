@@ -3270,7 +3270,12 @@ to know *both* types, so it is available only to per-contract typed overloads, n
 
 So: share the implementation. The duplication buys nothing on the path that would need it.
 
-### B41. A HIERARCHY is off measure-first entirely — **design SETTLED 2026-08-22 (it is just a nested sub-message); first attempt backed out on an unexplained CLR fault in the corpus harness**
+### B41. A HIERARCHY is off measure-first entirely — **STILL OPEN.** Design settled and prize sized 2026-08-22; the implementation attempt was backed out
+
+**Status in one line: hierarchies are still off measure-first.** What 2026-08-22 produced is the
+design (agreed, and it is just a nested sub-message), the size of the prize measured two independent
+ways, a perf baseline to prove any future claim against, and one real bug found and fixed on the way.
+The feature itself is not built.
 
 Found on the `main` merge of 2026-08-21, by running the "count the methods" diagnostic over the
 fixture that arrived with #1317. `OutOfBandSubType.output.cs` emits **zero** `Measure_` and **zero**
@@ -3447,6 +3452,53 @@ output — not a wrong-bytes failure. Bisected as far as was productive:
 Not diagnosed, and deliberately not guessed at. The next attempt should start by getting the
 generated corpus source onto disk and compiling it standalone, rather than by re-deriving the
 design — which is settled.
+
+##### The perf baseline, 2026-08-22 — and it is the strongest argument for doing this
+
+There was **no inheritance perf coverage at all** before this: `grep -rln "ProtoInclude"
+src/Benchmark/*.cs` had zero hits. `DelimitedEncodingBenchmarks` compares length-prefixed against
+delimited, but only through ordinary sub-message *members*, never through sub-type markers — and
+those are the two things that multiply, because a hierarchy writes one marker **per layer**.
+
+`InheritanceDepthBenchmarks` fills that in. Two 16-deep `[ProtoInclude]` chains differing in exactly
+one thing (`DataFormat.Group` on the include), serialized through the ROOT so the runtime type
+decides how many markers are written; depth 1 is the no-inheritance control. **No Google.Protobuf
+column, and there cannot be one** (Marc) — it has no concept of inheritance, so every comparison
+here is internal. `GlobalSetup` asserts classic and generated produce identical bytes before any
+timing, so a silently-dropped hierarchy cannot masquerade as a fast one.
+
+| depth | classic prefixed | classic delimited | generated prefixed | generated delimited |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 104.9 ns | 113.3 (1.08) | 78.7 (0.75) | 79.6 (0.76) |
+| 4 | 459.2 ns | 290.1 (0.63) | 302.1 (0.66) | **167.8 (0.37)** |
+| 16 | 2,773.2 ns | 1,273.9 (0.46) | 1,702.5 (0.61) | **736.0 (0.27)** |
+
+**The finding is the SHAPE, not the ratio: length-prefixed markers are superlinear in depth and
+delimited ones are linear.** Per layer:
+
+| | depth 1 | depth 4 | depth 16 |
+| --- | ---: | ---: | ---: |
+| classic prefixed | 105 | 115 | **173** |
+| classic delimited | 113 | 73 | **80** |
+| generated prefixed | 79 | 76 | **106** |
+| generated delimited | 80 | 42 | **46** |
+
+That is the quadratic the design predicts: every length-prefixed marker needs its whole sub-tree
+counted, and there are *depth* of them, so the crawls nest. A delimited marker needs no length, so
+its per-layer cost stays flat — B35's finding reappearing, amplified by depth exactly as expected.
+Delimited is the bigger of the two levers (2.2× on the classic engine alone, against 1.6× for the
+engine alone), and together they are **3.8× at depth 16**.
+
+**This sizes B41 independently of the contract count, and as a falsifiable prediction rather than a
+hope.** Generated-prefixed at depth 16 is 1,702 ns where generated-delimited is 736 ns, and the
+entire gap is length discovery. Measure-first replaces those nested crawls with arithmetic, so it
+should (a) close most of that gap — up to ~2.3× on prefixed hierarchies — and (b) **flatten the
+per-layer curve**, which is the part that would prove the quadratic is gone rather than merely
+smaller. If it lands and the curve is still bent, the diagnosis was wrong.
+
+**One anomaly recorded rather than smoothed over:** at depth 1 there are no markers at all, so the
+two families do identical work — yet classic shows 104.9 against 113.3, an 8% gap. Generated shows
+78.7 against 79.6, which is noise. The classic 8% is unexplained and no explanation is claimed.
 
 ##### The one thing worth keeping, and it is a real fix
 
@@ -3836,13 +3888,14 @@ simply untested rather than broken.
 **As of 2026-08-22 there is one item on this list.** Everything else in the two tables above is
 struck through, decided as a fallback, or blocked on a named prerequisite rather than on effort.
 
-1. **inheritance** (B41) — the last real gap, and still the worst blast radius: a whole hierarchy
-   leaves the measurable set together, and `[ProtoSubType]` made that reachable from outside the
-   contract entirely. It is also the only one where the exclusion may be *necessary* rather than
-   never-taught, which is the question to settle first — a sub-type marker is a length-prefixed
-   sub-message, but **optionally** delimited, so "one slot per marker" is not a fixed shape, and the
-   positional scheme's whole correctness argument is that reservations match `Next()` calls one for
-   one, in order. **Needs a decision before code.**
+1. **inheritance** (B41) — the last real gap, and now the best-prepared one. The question of whether
+   the exclusion was *necessary* is **settled: it was not.** A sub-type marker is a nested
+   sub-message, optionally grouped and optionally present, and the engine frames it — so no slot is
+   involved and the earlier "one slot per marker is not a fixed shape" objection is withdrawn.
+   Prize measured two ways: **+179 contracts** (88.5% → 95.1% of the corpus), and **up to ~2.3×** on
+   a deep prefixed hierarchy, whose per-layer cost is currently superlinear. A first implementation
+   was **backed out** on an unexplained CLR fault in the corpus harness; the entry says where to
+   restart. **No decision outstanding — this is ready to build.**
 
 Held behind something else, not behind effort:
 

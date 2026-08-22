@@ -19,6 +19,10 @@
          length-carrier one additionally calls the v4 raw writer surface directly -->
     <Compile Remove="..\Benchmark\DelimitedEncodingBenchmarks.cs" />
     <Compile Remove="..\Benchmark\LengthCarrierBenchmarks.cs" />
+    <!-- same reason as the two above: it drives a compile-time [ProtoModel], which the 2.4.x
+         baseline package has no notion of. The generated companion goes with it. -->
+    <Compile Remove="..\Benchmark\InheritanceDepthBenchmarks.cs" />
+    <Compile Remove="..\Benchmark\InheritanceDepth.generated.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
