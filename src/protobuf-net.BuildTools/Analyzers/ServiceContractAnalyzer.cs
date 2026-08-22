@@ -145,6 +145,15 @@ namespace ProtoBuf.BuildTools.Analyzers
 
             foreach (var member in type.GetMembers())
             {
+                // Constants, static members and nested types are not candidate operations at all,
+                // so reporting them is noise rather than a warning about anything (#1314). Since
+                // C# 8 an interface can declare all three, and the runtime binder enumerates
+                // instance methods - it never looks at these, so neither should this.
+                //
+                // Note an INSTANCE property or event still reports, which is the case this rule
+                // exists for: someone declaring one and expecting it to be an operation.
+                if (member.IsStatic || member is INamedTypeSymbol) continue;
+
                 if (member is not IMethodSymbol method)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(InvalidMemberKind, Utils.PickLocation(ref context, member)));
