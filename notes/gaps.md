@@ -3102,6 +3102,61 @@ virtualising at all, before any steering, and every number below should be read 
 whatever we do, while a virtual *generic* one need not. If only some of the six are made virtual,
 that is the line to draw them on.
 
+##### Results: how the map is SPELLED is worth ~2×
+
+Since a lookup is unavoidable for the non-generic shapes, the question stops being "map or chain"
+and becomes "how good can the map be". `Dictionary<Type,int>` is the obvious spelling and is not the
+best one: `Type`'s equality and hashing go through virtual members, while the thing actually being
+compared is a **type handle** — a pointer. `MapRepresentationBenchmarks` (ns):
+
+| shape / size | `Dictionary<Type,int>` | `Dictionary<IntPtr,int>` on `TypeHandle.Value` | binary search over handles |
+| --- | ---: | ---: | ---: |
+| `Type`, 8 | 6.56 | **3.00** | 3.36 |
+| `Type`, 64 | 6.61 | **3.14** | 5.84 |
+| `Type`, 512 | 6.83 | **3.08** | 8.50 |
+| `object`, 8 | 7.80 | **3.51** | — |
+| `object`, 64 | 7.82 | **4.14** | — |
+| `object`, 512 | 8.16 | **3.83** | — |
+
+**The handle-keyed map is ~2× the obvious one, at every size, on both shapes** — and stays flat,
+which the binary search does not (O(log n): it beats `Dictionary<Type,int>` at 8, ties around 64,
+and loses at 512). So the non-generic floor is **~3–4 ns**, not the ~6.5–8.2 ns the first pass
+suggested.
+
+**Caveats before anyone banks it**, none of them fatal but all of them real:
+
+- an `IntPtr` key does **not keep the `Type` alive**. That is fine *here* only because a model
+  already holds its contract types through their serializers — but it means the map cannot be the
+  only reference, and a collectible `AssemblyLoadContext` could in principle unload a type and see
+  its handle reused. A model that spans ALCs is not a shape protobuf-net supports today, so this is
+  a "write it down" rather than a blocker;
+- it is a *runtime-internal* identity. It is stable within a process, which is all a per-model table
+  needs, but it must never be persisted or compared across processes;
+- `object` still pays `GetType()` on top, which is why its column is consistently ~0.5–1 ns above
+  the `Type` one.
+
+##### Where that leaves the decision
+
+| shape | best strategy | cost | scales with model size? |
+| --- | --- | ---: | --- |
+| generic `T` | `Helper<T>.Index` | ~0 (a static field read) | **no** |
+| `Type` | handle-keyed map | ~3.1 ns | **no** |
+| `object` | handle-keyed map | ~3.5–4.1 ns | **no** |
+
+Plus the ~1.15 ns `callvirt` in every case. So a virtual non-generic entry point costs on the order
+of **5 ns** of steering — against the ~28 ns B39 measured for the entry path it would be steering
+*onto*. That is the shape of the argument for doing it; the design questions that remain are not
+performance ones:
+
+1. **`Helper<T>` is per-`T` global state**, so two models in one process share the slot. Solve that
+   before adopting it — a per-model generation stamp, or a slot holding the serializer rather than
+   an index.
+2. **Which of the six** become virtual. The generic pair can be near-free; the non-generic pair
+   cannot. `Measure` follows whichever way its siblings go.
+3. **Chains are only worth it for small models** — competitive to about 64 types, catastrophic at
+   512 (95 ns worst case). A generator that emits one would need a size cutoff, which is a second
+   thing to get wrong; the handle map is one shape at every size.
+
 ### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
 
 Found on the `main` merge of 2026-08-21, by running the "count the methods" diagnostic over the
