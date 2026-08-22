@@ -2939,7 +2939,7 @@ entire typed call at n=8 and untouched by anything here.
 - **a typed `Deserialize`**, which cannot use overload resolution at all (there is no instance to
   bind on) and is therefore B40's problem rather than this one's.
 
-### B40. Steering call sites onto the fast entry points, and the read path — **captured, not started** (Marc, 2026-08-21)
+### B40. Steering call sites, and making the core APIs VIRTUAL — **dispatch benchmarked 2026-08-22; the design decision is open**
 
 B39 shows a typed non-generic `Serialize` recovers ~28 ns a call. This entry is the follow-on
 question Marc raised with it: *how do consumers actually end up on it*, and what the equivalent is
@@ -2988,6 +2988,34 @@ raised, none evaluated:
 plus the owner table in `AGENTS.md` for a free id when it does — `PBN3010`–`PBN3013` is
 `AotMigrationAnalyzer`'s block and this belongs beside it.
 
+
+#### Reframed 2026-08-22 (Marc): make the core APIs VIRTUAL, and benchmark the dispatch first
+
+> I would say that B40 covers *both* read and write paths, when we consider folks binding to the
+> TypeModel API. Our existing generated overloads *help* steer writes, but don't eliminate the
+> generic (and possibly even non-generic) path entirely. I think we should give open thought to
+> making the core APIs virtual - probably 2x read and 2x write and possibly 2x measure, where the 2x
+> is generic+non-generic.
+
+That subsumes the "steering" framing above rather than replacing it: an analyzer can only reach call
+sites it can see, and a `TypeModel`-typed receiver is exactly the one it cannot. A virtual core API
+needs no call-site cooperation at all — which is why it is worth costing before choosing.
+
+**What is virtual is not one decision but up to six**: `Serialize<T>` / `Serialize(object)`,
+`Deserialize<T>` / `Deserialize(Type)`, and possibly the two `Measure` shapes. Each has a *different
+input shape*, and the input shape — not the strategy — turns out to be what decides the answer.
+
+**`src/Benchmark/TypeDispatchBenchmarks.cs` measures the dispatch in isolation**: no serialization,
+every case resolving a contract to an `int` index and nothing else. Four strategies (a
+`Dictionary<Type,int>`, an if-chain, a C# type-pattern `switch`, and a per-`T`
+`Helper<T>.Index` static), across the three shapes the real signatures have (generic `T`, an
+`object` instance, a bare `Type`), at model sizes 4/16/64, and — for the position-sensitive
+strategies — with the target first, last, and rotating through every type. `VirtualOnly` is the
+floor: an abstract method overridden once, so every other number reads as *that plus the dispatch*.
+
+`TypeDispatch.generated.cs` is its companion: sixty-four empty contract types and three sizes of
+each chain, generated because writing a 64-arm chain three ways by hand is exactly the sort of thing
+that acquires a typo nobody notices.
 
 ### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
 
