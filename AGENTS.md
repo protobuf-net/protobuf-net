@@ -226,9 +226,15 @@ paragraph used to explain both as "memoising by reference", which was only ever 
 is reserved exactly where the write calls `Next()`, one for one, in the same order.** So the slot
 belongs to the *call site*, not to the contract being measured — a member that is measured but
 whose write does not read a length (a group, or anything handed to the classic engine) must reserve
-nothing, and a sub-tree the raw write will not walk is measured with a **null buffer** that
-suppresses reservation all the way down. Widening either eligibility predicate without the other
-now shifts every subsequent length rather than merely wasting a cache entry.
+nothing, and a sub-tree the raw write will not walk is measured with **`RawLengthBuffer.Discard`**,
+a shared instance whose `Reserve`/`Set` are no-ops. Widening either eligibility predicate without
+the other now shifts every subsequent length rather than merely wasting a cache entry.
+
+That was a literal `null` until 2026-08-22, and the phrase "suppresses reservation all the way down"
+was **not true of it**: the callee's own `Reserve()` sites are unconditional, so the first nested
+length-prefixed member below such a sub-tree dereferenced it. Reachable from the moment
+nullable-struct message members became measurable, and never fixtured until `DepthBoundary`. A
+no-op instance suppresses it for real, and without a null test at every call site.
 
 **A SHARED (aliased) object in one graph is owed no memoisation — POLICY** (Marc, 2026-08-21).
 Where a design is faster for trees and slower for graphs that reference the same instance several
@@ -260,6 +266,17 @@ touching `writer.Depth` — the "raw API does not maintain all the members" conv
 `RawWrite_` checks it, deliberately: the alternative is a predicate over which contracts are
 reachable through a group, and that predicate's failure mode is an uncatchable stack overflow.
 `GroupCycleTests` drives exactly that graph.
+
+**The two caps have to ADD across a hand-back, and did not** (gap B15, fixed 2026-08-22). Where a
+raw body falls *back* to the stateful engine, the engine counts from `writer.Depth`, last set at the
+outer boundary — so a deep raw chain that then went stateful under-counted. `state.SyncRawDepth`
+sets it on entry and restores on exit, emitted **only** into a `RawWrite_` whose body actually
+contains a hand-back, so a fully-raw body pays nothing.
+
+Note this is only observable on a **fully unmeasured** chain — every nesting site a group — because
+a *measure* recursion crosses a stateful boundary without re-seeding and is therefore already
+additive. `RawDepthBoundaryTests` ladders through grouped members for exactly that reason, and was
+rewritten twice because the first two versions passed with the fix removed.
 
 Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract emits a local
 per member — 1000 in the corpus's worst case — and at roughly 8 KB a frame the stack is exhausted
@@ -801,8 +818,15 @@ formats come from `[ProtoMap]`, and land on the two wire-type arguments rather t
 share ordinals — `DataFormat.FixedSize` is 3, which is `ProtoDataFormat.Group` — so a cast compiles,
 silently mis-maps, and produces a map that disagrees with ref-emit on the wire. This was caught by
 diffing against `MapFormat.reference.cs`, where `ZigZag` (ordinal 1 in both) worked and everything
-else did not, which is exactly the shape of bug a partial test would miss. An **enum** on either side is refused for the same reason a repeated enum is: the
-serializer is resolved from the model.
+else did not, which is exactly the shape of bug a partial test would miss.
+
+An **enum** on either side **works**, through the same `ISerializerProxy` route a repeated enum
+takes — this file claimed it was "refused" until 2026-08-22, contradicting its own account of that
+support four hundred lines above. `MapMeasure.input.cs` carries an enum key and an enum value, and
+both round-trip against ref-emit. What *was* missing until then is the arithmetic measure, and note
+the rule it needed, because it is the opposite of the scalar one: **an enum map side is written even
+when zero** (`{1:None}` is `0A-04-08-01-10-00`), since `EnumSerializer` supplies no `IValueChecker`
+and the "non-null is non-trivial" default applies.
 
 A **repeated value is supported**, and is the one place nesting is legal at all:
 `TestIfNestedNotSupported` exempts maps, so `Dictionary<int, List<int>>` works where

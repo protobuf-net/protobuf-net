@@ -426,13 +426,18 @@ Three things made this cheap, and one of them was already broken:
   `IsMeasuringPass` is a virtual on `ProtoWriter`, `true` on the null writer. Any future
   counting backend overrides it instead of being added to a type test elsewhere.
 
-**Gap, and it is live: the AOT generator does not accept this callback shape.** It allows only
-"no parameter" or `StreamingContext`, so a contract whose callback takes `ISerializationContext`
-is *dropped* (with a diagnostic - safe, but useless to an AOT consumer who wants exactly this).
-Widening it is task #4, which should also cover MIXED models - different contracts in one model
-using different context shapes, and one contract whose four callbacks differ - and should
-cross-check that the validator, the invoker, the ref-emit path and the generator agree on the
-accepted set. They already disagreed once.
+**~~Gap, and it is live: the AOT generator does not accept this callback shape.~~ CLOSED
+2026-08-22** (`notes/gaps.md` B9). It allowed only "no parameter" or `StreamingContext`, so a
+contract whose callback took `ISerializationContext` was *dropped* — with a diagnostic, so safe, but
+useless to an AOT consumer who wanted exactly this. It is the third accepted shape now, and it had
+to be: a measure-first contract fires before-serialization in **both** passes, so a callback that
+cannot ask which pass it is in would see its side-effects silently doubled.
+
+The coverage this paragraph asked for is in `Callbacks.input.cs`: a MIXED model (four contracts
+using three different context shapes) and one contract whose four callbacks differ from each other,
+with the differential against `RuntimeTypeModel` acting as the cross-check that the validator, the
+invoker, the ref-emit path and the generator agree on the accepted set — which they had disagreed
+about once before.
 
 **Asking requires a specific parameter shape, and that is fine** (Marc, explicitly): the shape
 is `ISerializationContext`, which is *pre-existing* - the invoker and the ref-emit path always

@@ -2789,7 +2789,9 @@ none of them predictable from the design. They are the durable content of this e
    `measurable`; the write arm additionally refuses a nullable member, a non-default `DataFormat`,
    and more. Under a dictionary that asymmetry was free — an entry nobody read cost nothing.
    Positionally, a slot nobody consumes shifts every later length. A sub-tree the write will not
-   walk is now measured with a **null buffer**, which suppresses reservation all the way down.
+   walk is now measured with **`RawLengthBuffer.Discard`**, which suppresses reservation all the
+   way down. (It was a literal `null` until 2026-08-22, which did *not* suppress anything — the
+   callee's `Reserve()` sites are unconditional. See B15.)
 2. **A contract can be raw-WRITING without being MEASURABLE**, in which case nothing has filled its
    slots and each site must measure on demand — exactly what the dictionary's `TryGetValue` *miss*
    did ("the miss arm serves a root write"). Removing the probe removed that arm. It is a
@@ -3058,8 +3060,8 @@ not reveal and reading the emitted hierarchy does:
   hierarchy's slot pattern depends on each link's framing, and the two cases have to coexist within
   one chain. Where a marker *is* length-prefixed it either takes a slot — and the stateful
   `WriteSubType` must be taught to consume it, which it currently cannot — or it does not, and the
-  measure must pass a null buffer down, suppressing the layer's members' slots too, which changes
-  what those members' *writes* expect.
+  measure must pass `RawLengthBuffer.Discard` down, suppressing the layer's members' slots too,
+  which changes what those members' *writes* expect.
 
 That is a genuine design question about where the measure/write boundary sits in a hierarchy, not a
 plumbing detail, and getting it wrong produces **wrong bytes rather than a build error**. Backed out

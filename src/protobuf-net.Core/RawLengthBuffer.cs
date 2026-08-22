@@ -23,9 +23,10 @@ namespace ProtoBuf
     /// Two consequences follow, and both are load-bearing rather than tidy-ups. A member that is
     /// measured but whose write reads no length - a <c>group</c>, which carries none, or anything
     /// handed to the classic engine - must reserve <b>nothing</b>, or every later length shifts.
-    /// And a sub-tree the raw write will not walk is measured with a <b>null</b> buffer, which
-    /// suppresses reservation all the way down. An earlier draft had <c>Measure_</c> claim a slot
-    /// for itself, which cannot express "measured but not read"; see <c>notes/gaps.md</c> B38.
+    /// And a sub-tree the raw write will not walk is measured with <see cref="Discard"/>, which
+    /// suppresses reservation all the way down - see its own remarks for why that is an instance
+    /// rather than a <c>null</c>. An earlier draft had <c>Measure_</c> claim a slot for itself,
+    /// which cannot express "measured but not read"; see <c>notes/gaps.md</c> B38.
     /// </para>
     /// <para>
     /// This replaces a <c>Dictionary&lt;object, long&gt;</c> that cost three hash operations per
