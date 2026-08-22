@@ -3148,14 +3148,80 @@ of **5 ns** of steering — against the ~28 ns B39 measured for the entry path i
 *onto*. That is the shape of the argument for doing it; the design questions that remain are not
 performance ones:
 
-1. **`Helper<T>` is per-`T` global state**, so two models in one process share the slot. Solve that
-   before adopting it — a per-model generation stamp, or a slot holding the serializer rather than
-   an index.
+1. ~~**`Helper<T>` is per-`T` global state**~~ — **answered below**: nest it in the generated model
+   and the slots are distinct by the type system, and have it hold the serializer interface rather
+   than an index so there is no switch to generate either.
 2. **Which of the six** become virtual. The generic pair can be near-free; the non-generic pair
    cannot. `Measure` follows whichever way its siblings go.
 3. **Chains are only worth it for small models** — competitive to about 64 types, catastrophic at
    512 (95 ns worst case). A generator that emits one would need a size cutoff, which is a second
    thing to get wrong; the handle map is one shape at every size.
+
+##### Marc's two proposals, measured (2026-08-22)
+
+> Helper<T> is local, and rather than int, uses some interface that the services or typemodel
+> implements for multiple T, allowing static construction to be `Helper<Foo>.Instance = Instance;`
+> ... for non-generic, that is harder because of the overlap; maybe a delegate tuple?
+
+**The generic proposal is right, and it is better in three separate ways rather than one.**
+
+1. **Nesting `Helper<T>` inside the generated model removes the shared-slot objection outright** —
+   not mitigates it. `MyModel.Helper<Foo>` and `OtherModel.Helper<Foo>` are *different types*, so
+   the statics are distinct by the type system rather than by convention. That was the one real
+   problem with the `int` version and it is gone.
+2. **Holding the interface rather than an index removes the second half of the job.** An `int` still
+   has to become a call, which means a `switch` arm per contract *in the generated source*. The
+   interface form has no index, no switch, and no generated source that grows with the model - the
+   static already holds the thing you wanted, so it is one field read and a call.
+3. **`null` means "not mine"** and falls through to base, exactly as `0` did.
+
+Measured (`HelperShapeBenchmarks`), with `IThing.Do` reading a field off its argument so it cannot
+constant-fold:
+
+| | ns |
+| --- | ---: |
+| direct call, no dispatch | 0.007 |
+| `Helper<T>.Instance`, model of 8 | 0.017 |
+| `Helper<T>.Instance`, model of 64 | 0.004 |
+| `Helper<T>.Instance`, model of 512 | 0.004 |
+| `Helper<T>.Index` then switch, model of 8 | 0.030 |
+
+**Do not quote these as measurements** — every arm is below what the harness can resolve, and the
+ordering across them is noise (512 "beating" 8 is the tell). The two claims they *do* support are
+the ones that were in doubt:
+
+- the generic path is **at most a fraction of a nanosecond**, against ~3-6 ns for any lookup;
+- **512 interfaces on one services type costs nothing measurable.** That was the genuine risk - the
+  runtime's interface dispatch cache - and it does not materialise.
+
+**The non-generic side: the finish is not where the cost is, and the tuple copy was never a problem.**
+
+| size | lookup only | delegate | tuple (copied) | handler object | tuple by **ref** |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 8 | 3.58 | 4.33 | 4.11 | 4.14 | 4.32 |
+| 64 | 3.60 | 4.41 | 4.18 | 4.20 | 5.08 |
+| 512 | 3.91 | 4.77 | 4.46 | 4.73 | 4.83 |
+
+- **finishing the job costs ~0.5-0.9 ns** on top of the lookup, and all four finishes sit within
+  ~0.4 ns of each other. **The choice is not a performance decision.**
+- **`CollectionsMarshal.GetValueRefOrNullRef` does not pay here**, which is worth recording so it is
+  not retried: it is level with the copy at 8 and 512 and slightly worse at 64. The copy it avoids
+  is three word-moves, and the `ref` costs a call plus an `Unsafe.IsNullRef` test to save them.
+  (The `GetValueRefOrAddDefault` sibling is the "add if missing" form and is the wrong shape - a
+  miss should fall through to base, not plant an empty entry.)
+- **caveat on the copied tuple**: the benchmark uses one of the three delegates, so the JIT can drop
+  the other two field-loads as dead. The number therefore says "a tuple is free *when you use one
+  delegate*", which is the common case but not the general one. Using two or three, or letting the
+  struct escape, would not be covered by this measurement.
+- **the ref is safe here for a reason worth writing down** (Marc: *"we won't be mutating post
+  construction, so that's fine"*): `GetValueRefOrNullRef` hands back a reference into the entry,
+  invalidated by any mutation - and a model's table is built at construction and never written
+  again.
+
+So: choose the non-generic finish on **ergonomics and AOT-friendliness**, not speed. A delegate or
+delegate-tuple can be prepared statically by the generator; a handler object costs one allocation
+per contract but can carry state; the `int`-plus-`switch` form is the only one whose *generated
+source* scales with the model, and it buys nothing for that.
 
 ### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
 
