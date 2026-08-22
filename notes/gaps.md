@@ -288,23 +288,25 @@ predicted. One thing it did not predict, and it is the same trap the lone null-w
 `IValueChecker`, so the "non-null is non-trivial" default applies. So the enum arm carries **no
 guard at all**, and reusing the scalar guard would have measured short for exactly the zero case.
 
-**Message VALUES were built and then backed out**, and the evidence is worth keeping because the
-shape looks trivially adjacent to the enum one:
+**Message VALUES were built and backed out**, and the evidence is worth keeping because the shape
+looks trivially adjacent to the enum one:
 
-- with message values admitted, the corpus went from **0 mismatches to 13**, every one of them a
-  wrong LENGTH PREFIX rather than wrong content: same total payload, one byte different at a
-  prefix. Removing message values alone took it back to 0, so the enum half is independently clean;
-- the reproduction is a **null map value**. In a fixture, `Dictionary<int, Leaf>` with `[3] = null`
-  has the reference emitting `4A-02-08-03` (key only) and the generated model emitting
-  `4A-04-08-03-12-00` — a present, empty value message. That is a **write-side** divergence, and it
-  is B43's subject: *null is not representable in a map*;
-- **measuring is what turns that latent disagreement into a broken payload.** While such a contract
-  was unmeasurable its length prefix came from writing-to-count, which necessarily matched whatever
-  the writer did, right or wrong. An arithmetic measure does not, so a pre-existing disagreement
-  stops being invisible and starts being a corrupt frame.
+- with message values admitted, the corpus went from **0 mismatches to 12–13**, every one of them a
+  wrong **length prefix** rather than wrong content: same total payload, one differing byte, the
+  generated prefix consistently *shorter*. Removing message values alone took it back to 0, so the
+  enum half is independently clean;
+- **the cause is NOT established.** A first note here blamed null map values and cited B43. That was
+  wrong, and checking beat reasoning again: a fixture with `Dictionary<int, Leaf>` containing a null
+  value **serializes byte-identically** in both models, with message-value measurement enabled *or*
+  disabled. B43 is a *read* collapse for string values and has nothing to do with a short prefix on
+  write;
+- what is known is only the correlation: enabling the arm produces short prefixes on ~12 corpus
+  contracts, and no hand-written fixture reproduces it yet. The next step is to build a fixture that
+  does — `PBN_DUMP` gets the emitted measure for a named contract, and the failing ones are listed
+  in `notes/aot/differential.md` after a run with the arm re-enabled.
 
-So message-valued maps stay out **until B43 is settled**, which is the honest ordering: the fix is
-not in the measure. `MapMeasure.input.cs` carries the enum pair, with a zero on each side.
+So message-valued maps stay out **until that is diagnosed**, which is the honest ordering: a measure
+that is wrong for reasons nobody can name is worse than a gap.
 
 Still out beyond that: a message **key** (the write path refuses one too), and any non-default
 key/value format.
@@ -3925,3 +3927,31 @@ can branch on which negative it is holding, and every existing path is left byte
 weaker discriminators were tried and rejected first: the token alone cannot say (both are
 `-fieldNumber`), and `_scope == position` does not separate them either, because a length-bounded
 root leaves `_scope` equal to the position at the end of an unterminated group too.
+
+### B45. A missing MESSAGE value in a map reads back as `null` from the generated model, and as an empty instance from the runtime — **open**
+
+Found 2026-08-22 while investigating B6's message-value question, and **independent of it**:
+reproduced with message-value measurement disabled, so nothing about measure-first is involved.
+
+A map entry carrying a key and **no value field** is legal and common — it is what protobuf-net
+writes for a trivial value. Reading one back:
+
+```
+bytes            4A-02-08-03                 (entry: key 3, no value)
+runtime model    Parts[3] = new Leaf()       <-- an EMPTY INSTANCE
+generated model  Parts[3] = null
+```
+
+The runtime path is `KeyValuePairSerializer.Read`, which tests `ValueChecker.IsNull(value)` and then
+calls `CreateDefault` — and that deliberately *reads an empty payload through the serializer* rather
+than returning `default`, with the comment "useful in case the type is using a non-trivial
+constructor or factory API". So the runtime never yields a null map value; ours does.
+
+**This is the mirror of B43 and settles it the same way round.** There, a null *string* value read
+back as `""` because the reader has to produce something. Here a null *message* value reads back as
+an empty instance for exactly the same reason. The runtime is self-consistent — a map value is never
+null coming out — and the generated reader is the odd one out.
+
+**No fixture carries it**, because one would fail the differential; the repro above is the record.
+Adding it is the first step of fixing it. Note it is only visible through a *read*: writing is
+byte-identical, which is why the corpus never caught it and why it needed a hand-built payload.
