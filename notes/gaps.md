@@ -2972,7 +2972,7 @@ model is entirely on the classic write path.**
 | **inheritance** (`RootTypeName`, `SubTypes`) | **yes, and the biggest** | **B41** |
 | ~~surrogate (`SurrogateTypeName`)~~ | **DONE 2026-08-21 — also "never taught"** | below |
 | surrogate with a NON-MEASURING serializer | **fallback, not a gap — DECIDED 2026-08-22** | below |
-| **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
+| ~~external serializer~~ (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | **DONE 2026-08-22 when it MEASURES** | **B31** |
 | ~~`[ProtoContract(IsGroup = true)]`~~ | **DONE 2026-08-21 — it was "never taught"** | below |
 | ~~`[ProtoBeforeSerialization]`~~ | **DONE 2026-08-21 — I was wrong that it was load-bearing** | below |
 
@@ -3142,7 +3142,8 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 
 | what | gap? | tracked |
 | --- | --- | --- |
-| **maps** — enum or message on either side, a repeated value, or any non-default format | **yes** | **B6** |
+| **maps** — a MESSAGE value (blocked on B43), a message key, a repeated value, or a non-default format | **yes** | **B6** |
+| ~~maps — ENUM sides~~ | **DONE 2026-08-22** | **B6** |
 | ~~maps — plain scalar/string sides at the default format~~ | **DONE 2026-08-21** | **B6** |
 | ~~null-wrapping — lone, both collection scopes, message elements~~ | **DONE 2026-08-22** | below |
 | ~~null-wrapping — maps~~ | **DONE 2026-08-22** (scalar/string values) | below |
@@ -3313,38 +3314,28 @@ simply untested rather than broken.
 
 #### Ranked, for "what next"
 
-Most of what those two tables listed went in over 2026-08-21/22 — seven of their fifteen rows are
-struck through — so this is a short list now rather than a survey. What remains, in order:
+**As of 2026-08-22 there is one item on this list.** Everything else in the two tables above is
+struck through, decided as a fallback, or blocked on a named prerequisite rather than on effort.
 
-1. **inheritance** (B41) — still the worst blast radius of anything here: a whole
-   hierarchy leaves the measurable set together, and `[ProtoSubType]` made that reachable from
-   outside the contract entirely. It is also the only one where the exclusion may be *necessary*
-   rather than never-taught, which is the question to settle first — a sub-type marker is a
-   length-prefixed sub-message, but **optionally** delimited, so "one slot per marker" is not a
-   fixed shape. Needs a decision before code;
-2. ~~**null-wrapped maps**~~ — **DONE 2026-08-22** for scalar and string values; an enum or message
-   value follows the same exclusions maps have generally;
-3. **map MESSAGE values** (B6) — enum sides landed 2026-08-22; message values were built and
-   **backed out**, because measuring them turns B43's latent null-map-value disagreement into a
-   wrong length prefix (corpus 0 → 13). Blocked on B43, not on the measure;
-4. ~~**external serializers**~~ (B31) — **DONE 2026-08-22**, and it was the *same question as the
-   surrogate case*, asked at the member site rather than the contract one: **does the serializer
-   implement `IMeasuringSerializer<T>`?**
-   A ranked-list entry here previously said a hand-written serializer's size is "unknowable at
-   compile time by definition, so this one is probably correctly out". That was wrong, and it
-   **contradicted B31's own text**, which had already identified the narrowing. The size does not
-   need to be known at compile time — the measure runs at run time; it only has to be *arithmetic
-   rather than write-to-count*, and a serializer implementing the measuring interface is saying
-   exactly that. The extra condition beyond the surrogate case is that the **category must be
-   known**: an undetermined-category member defers its framing to `WriteAny` at run time, so the
-   measure cannot tell whether a length prefix is in play;
-5. ~~**the `DataFormat` tail**~~ (B26, B30) — **unary scalars DONE 2026-08-22**. What is left is an
-   *unpacked repeated* member with a format, where the element wire type is still derived from the
-   kind alone — a smaller and better-understood job than this entry used to describe.
+1. **inheritance** (B41) — the last real gap, and still the worst blast radius: a whole hierarchy
+   leaves the measurable set together, and `[ProtoSubType]` made that reachable from outside the
+   contract entirely. It is also the only one where the exclusion may be *necessary* rather than
+   never-taught, which is the question to settle first — a sub-type marker is a length-prefixed
+   sub-message, but **optionally** delimited, so "one slot per marker" is not a fixed shape, and the
+   positional scheme's whole correctness argument is that reservations match `Next()` calls one for
+   one, in order. **Needs a decision before code.**
 
-Three that were on this list are settled rather than done: a **surrogate with its own serializer**
-stays out correctly (it delegates, so there are no members to inline), the **cascade** row is not a
-gap at all, and **contract-level `IsGroup`** turned out to be backwards in the same way B35 was.
+Held behind something else, not behind effort:
+
+- **map MESSAGE values** — built, measured, and backed out: measuring them turns B43's latent
+  null-map-value disagreement into a wrong length prefix (corpus 0 → 13). Blocked on **B43**;
+- **unpacked repeated members with a non-default `DataFormat`** — the unary half landed; the
+  element wire type is still derived from the kind alone, which is the piece to fix (B26/B30).
+
+Settled rather than done, and not to be re-argued as absences: a **non-measuring** custom or
+surrogate serializer is a *fallback* (Marc, 2026-08-22) — it takes the classic write-to-count path,
+which is correct, and the remedy is the consumer's; the **cascade** row was never a gap of its own;
+and **contract-level `IsGroup`** turned out to be backwards in the same way B35 was.
 
 **None of these is a correctness problem.** Every one of them falls back to the classic
 write-to-count path, which is what protobuf-net did before v4 and is still correct — the cost is
