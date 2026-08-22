@@ -316,11 +316,34 @@ partial class InterfaceModel
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.INamed>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Interface.Tagged>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Tagged>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Interface.Zoo>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
+
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Cat>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
@@ -333,6 +356,12 @@ partial class InterfaceModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Cat>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Cat value)
         {
+            RawWriteSub_AotFixtures_Interface_Cat(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Interface_Cat(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Cat value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Name;
             if (tmp1 != null)
@@ -421,6 +450,12 @@ partial class InterfaceModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Dog>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Dog value)
         {
+            RawWriteSub_AotFixtures_Interface_Dog(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Interface_Dog(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Dog value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Name;
             if (tmp1 != null)
@@ -512,13 +547,41 @@ partial class InterfaceModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_Interface_IAnimal(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Interface_IAnimal(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Interface_IAnimal(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.IAnimal value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len;
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.Interface.Dog sub10)
                 {
-                    state.WriteSubType(10, sub10, this);
+                    state.WriteRawTag((10 << 3) | 2);  // global::AotFixtures.Interface.Dog
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Interface_Dog(ref state, sub10, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Interface.Dog");
                 }
                 else if (value is global::AotFixtures.Interface.Cat sub11)
                 {
-                    state.WriteSubType(11, sub11, this);
+                    state.WriteRawTag((11 << 3) | 2);  // global::AotFixtures.Interface.Cat
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Interface_Cat(ref state, sub11, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Interface.Cat");
                 }
                 else
                 {
@@ -539,12 +602,16 @@ partial class InterfaceModel
             {
                 if (value is global::AotFixtures.Interface.Dog layer10)
                 {
+                    var slot10 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Interface_Dog(layer10, depth, slots, context);
+                    slots.Set(slot10, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Interface.Dog
                 }
                 else if (value is global::AotFixtures.Interface.Cat layer11)
                 {
+                    var slot11 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Interface_Cat(layer11, depth, slots, context);
+                    slots.Set(slot11, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Interface.Cat
                 }
                 else
@@ -608,9 +675,31 @@ partial class InterfaceModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_Interface_INamed(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Interface_INamed(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Interface_INamed(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.INamed value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.Interface.Tagged sub10)
                 {
-                    state.WriteSubType(10, sub10, this);
+                    state.WriteRawTag((10 << 3) | 2);  // global::AotFixtures.Interface.Tagged
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Interface_Tagged(ref state, sub10, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Interface.Tagged");
                 }
                 else
                 {
@@ -636,7 +725,9 @@ partial class InterfaceModel
             {
                 if (value is global::AotFixtures.Interface.Tagged layer10)
                 {
+                    var slot10 = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Interface_Tagged(layer10, depth, slots, context);
+                    slots.Set(slot10, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Interface.Tagged
                 }
                 else
@@ -704,6 +795,12 @@ partial class InterfaceModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Interface.Tagged>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Tagged value)
         {
+            RawWriteSub_AotFixtures_Interface_Tagged(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Interface_Tagged(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Tagged value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Label;
             if (tmp1 != null)
@@ -783,25 +880,126 @@ partial class InterfaceModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Interface.Zoo global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Interface.Zoo value)
             => RawRead_AotFixtures_Interface_Zoo(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Interface.Zoo>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Zoo value)
         {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Interface_Zoo(value, state.RawDepthBudget, slots, state.Context);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Interface_Zoo(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_Interface_Zoo(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Interface.Zoo value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long len;
+            long before = 0;
             var tmp1 = value.Star;
-            state.WriteMessage<global::AotFixtures.Interface.IAnimal>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Star
+                len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWriteSub_AotFixtures_Interface_IAnimal(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Star");
+            }
             var tmp2 = value.All;
             if (tmp2 != null)
             {
-                global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::AotFixtures.Interface.IAnimal>().WriteRepeated(ref state, 2, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp2, this);
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Interface.IAnimal>();
+                    state.WriteRawTag((2 << 3) | 2);  // All
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Interface_IAnimal(ref state, item2, depth);
+                    DebugAssertPosition(ref state, before + len, "All");
+                }
             }
             var tmp3 = value.Tag;
-            state.WriteMessage<global::AotFixtures.Interface.INamed>(3, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp3, this);
+            if (tmp3 != null)
+            {
+                state.WriteRawTag((3 << 3) | 2);  // Tag
+                len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWriteSub_AotFixtures_Interface_INamed(ref state, tmp3, depth);
+                DebugAssertPosition(ref state, before + len, "Tag");
+            }
             var tmp4 = value.Backup;
-            state.WriteMessage<global::AotFixtures.Interface.IAnimal>(4, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp4, this);
+            if (tmp4 != null)
+            {
+                state.WriteRawTag((4 << 3) | 2);  // Backup
+                len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWriteSub_AotFixtures_Interface_IAnimal(ref state, tmp4, depth);
+                DebugAssertPosition(ref state, before + len, "Backup");
+            }
+        }
+
+        private static long Measure_AotFixtures_Interface_Zoo(global::AotFixtures.Interface.Zoo value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            var tmp1 = value.Star;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                sub = Measure_AotFixtures_Interface_IAnimal(tmp1, depth, slots, context);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Star
+            }
+            var tmp2 = value.All;
+            if (tmp2 != null)
+            {
+                foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp2))
+                {
+                    if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Interface.IAnimal>();
+                    var slot2 = slots.Reserve();
+                    sub = Measure_AotFixtures_Interface_IAnimal(item2, depth, slots, context);
+                    slots.Set(slot2, sub);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                }
+            }
+            var tmp3 = value.Tag;
+            if (tmp3 != null)
+            {
+                var slot3 = slots.Reserve();
+                sub = Measure_AotFixtures_Interface_INamed(tmp3, depth, slots, context);
+                slots.Set(slot3, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Tag
+            }
+            var tmp4 = value.Backup;
+            if (tmp4 != null)
+            {
+                var slot4 = slots.Reserve();
+                sub = Measure_AotFixtures_Interface_IAnimal(tmp4, depth, slots, context);
+                slots.Set(slot4, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Backup
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Interface.Zoo>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Interface.Zoo value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Interface_Zoo(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.Interface.Zoo RawRead_AotFixtures_Interface_Zoo(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Interface.Zoo value)

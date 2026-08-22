@@ -319,6 +319,29 @@ partial class UnlinkedModel
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Derived>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -401,9 +424,31 @@ partial class UnlinkedModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_Unlinked_ForkedBase(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Unlinked_ForkedBase(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Unlinked_ForkedBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.ForkedBase value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.Unlinked.Sibling sub10)
                 {
-                    state.WriteSubType(10, sub10, this);
+                    state.WriteRawTag((10 << 3) | 2);  // global::AotFixtures.Unlinked.Sibling
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Unlinked_Sibling(ref state, sub10, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Unlinked.Sibling");
                 }
                 else
                 {
@@ -429,7 +474,9 @@ partial class UnlinkedModel
             {
                 if (value is global::AotFixtures.Unlinked.Sibling layer10)
                 {
+                    var slot10 = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Unlinked_Sibling(layer10, depth, slots, context);
+                    slots.Set(slot10, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Unlinked.Sibling
                 }
                 else
@@ -635,6 +682,12 @@ partial class UnlinkedModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.Sibling>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Sibling value)
         {
+            RawWriteSub_AotFixtures_Unlinked_Sibling(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Unlinked_Sibling(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Unlinked.Sibling value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp2 = value.Linked;
             if (tmp2 != 0)

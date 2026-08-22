@@ -173,6 +173,29 @@ partial class AssemblySubTypeModel
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Branch>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -184,6 +207,12 @@ partial class AssemblySubTypeModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Branch>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Branch value)
         {
+            RawWriteSub_AotFixtures_AssemblySubType_Branch(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_AssemblySubType_Branch(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Branch value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Count;
             if (tmp1 != 0)
@@ -256,6 +285,12 @@ partial class AssemblySubTypeModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Leaf>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Leaf value)
         {
+            RawWriteSub_AotFixtures_AssemblySubType_Leaf(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_AssemblySubType_Leaf(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Leaf value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Value;
             if (tmp1 != 0)
@@ -330,13 +365,41 @@ partial class AssemblySubTypeModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_AssemblySubType_Node(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_AssemblySubType_Node(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_AssemblySubType_Node(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.AssemblySubType.Node value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len;
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.AssemblySubType.Leaf sub50)
                 {
-                    state.WriteSubType(50, sub50, this);
+                    state.WriteRawTag((50 << 3) | 2);  // global::AotFixtures.AssemblySubType.Leaf
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_AssemblySubType_Leaf(ref state, sub50, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.AssemblySubType.Leaf");
                 }
                 else if (value is global::AotFixtures.AssemblySubType.Branch sub51)
                 {
-                    state.WriteSubType(51, sub51, this);
+                    state.WriteRawTag((51 << 3) | 2);  // global::AotFixtures.AssemblySubType.Branch
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_AssemblySubType_Branch(ref state, sub51, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.AssemblySubType.Branch");
                 }
                 else
                 {
@@ -363,12 +426,16 @@ partial class AssemblySubTypeModel
             {
                 if (value is global::AotFixtures.AssemblySubType.Leaf layer50)
                 {
+                    var slot50 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_AssemblySubType_Leaf(layer50, depth, slots, context);
+                    slots.Set(slot50, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.AssemblySubType.Leaf
                 }
                 else if (value is global::AotFixtures.AssemblySubType.Branch layer51)
                 {
+                    var slot51 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_AssemblySubType_Branch(layer51, depth, slots, context);
+                    slots.Set(slot51, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.AssemblySubType.Branch
                 }
                 else

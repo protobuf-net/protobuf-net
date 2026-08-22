@@ -106,7 +106,15 @@ namespace BuildToolsUnitTests.Aot
             // consumer says so
             Assert.Contains("ISubTypeSerializer<global::Shapes.Shape>", result.GeneratedCode);
             Assert.Contains("value is global::Shapes.Round.Circle sub100", result.GeneratedCode);
-            Assert.Contains("state.WriteSubType(100, sub100, this)", result.GeneratedCode);
+            // the marker itself, in whichever shape this hierarchy took. A MEASURABLE hierarchy
+            // writes it raw - tag, length from the slot the measure reserved, then the sub-type's
+            // own layer walk - and an unmeasurable one hands it to the engine. The linkage is the
+            // thing under test either way, so asserting on one spelling would make this a test of
+            // measure-first eligibility instead (gap B41).
+            Assert.True(
+                result.GeneratedCode.Contains("state.WriteSubType(100, sub100, this)")
+                || result.GeneratedCode.Contains("RawWriteSub_Shapes_Round_Circle(ref state, sub100"),
+                "the sub-type marker was written in neither the stateful nor the raw shape");
         }
 
         [Fact]

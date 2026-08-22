@@ -466,6 +466,29 @@ partial class CompatModel
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Compat.Formats>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
 
@@ -627,6 +650,12 @@ partial class CompatModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Compat.InheritsLevel>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.InheritsLevel value)
         {
+            RawWriteSub_AotFixtures_Compat_InheritsLevel(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Compat_InheritsLevel(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.InheritsLevel value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Id;
             if (tmp1 != global::System.Guid.Empty)
@@ -1224,9 +1253,31 @@ partial class CompatModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_Compat_LevelledBase(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Compat_LevelledBase(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Compat_LevelledBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Compat.LevelledBase value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.Compat.InheritsLevel sub100)
                 {
-                    state.WriteSubType(100, sub100, this);
+                    state.WriteRawTag((100 << 3) | 2);  // global::AotFixtures.Compat.InheritsLevel
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Compat_InheritsLevel(ref state, sub100, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Compat.InheritsLevel");
                 }
                 else
                 {
@@ -1249,7 +1300,9 @@ partial class CompatModel
             {
                 if (value is global::AotFixtures.Compat.InheritsLevel layer100)
                 {
+                    var slot100 = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Compat_InheritsLevel(layer100, depth, slots, context);
+                    slots.Set(slot100, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Compat.InheritsLevel
                 }
                 else

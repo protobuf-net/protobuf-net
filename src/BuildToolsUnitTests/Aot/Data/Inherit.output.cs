@@ -321,6 +321,29 @@ partial class InheritModel
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Animal>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -334,13 +357,41 @@ partial class InheritModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_Inherit_Animal(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Inherit_Animal(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Inherit_Animal(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Animal value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len;
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.Inherit.Dog sub100)
                 {
-                    state.WriteSubType(100, sub100, this);
+                    state.WriteRawTag((100 << 3) | 2);  // global::AotFixtures.Inherit.Dog
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Inherit_Dog(ref state, sub100, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Inherit.Dog");
                 }
                 else if (value is global::AotFixtures.Inherit.Cat sub101)
                 {
-                    state.WriteSubType(101, sub101, this);
+                    state.WriteRawTag((101 << 3) | 2);  // global::AotFixtures.Inherit.Cat
+                    len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Inherit_Cat(ref state, sub101, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Inherit.Cat");
                 }
                 else
                 {
@@ -367,12 +418,16 @@ partial class InheritModel
             {
                 if (value is global::AotFixtures.Inherit.Dog layer100)
                 {
+                    var slot100 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Inherit_Dog(layer100, depth, slots, context);
+                    slots.Set(slot100, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Dog
                 }
                 else if (value is global::AotFixtures.Inherit.Cat layer101)
                 {
+                    var slot101 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Inherit_Cat(layer101, depth, slots, context);
+                    slots.Set(slot101, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Cat
                 }
                 else
@@ -445,6 +500,12 @@ partial class InheritModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Cat>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Cat value)
         {
+            RawWriteSub_AotFixtures_Inherit_Cat(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Inherit_Cat(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Cat value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             var tmp1 = value.Purrs;
             if (tmp1)
             {
@@ -516,9 +577,28 @@ partial class InheritModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                var entry = slots.Mark();
+                MeasureSub_AotFixtures_Inherit_Dog(value, state.RawDepthBudget, slots, state.Context);
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Inherit_Dog(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Inherit_Dog(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Dog value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.Inherit.Puppy sub200)
                 {
-                    state.WriteSubType(200, sub200, this);
+                    state.WriteRawTag((200 << 3) | 2);  // global::AotFixtures.Inherit.Puppy
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Inherit_Puppy(ref state, sub200, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Inherit.Puppy");
                 }
                 else
                 {
@@ -544,7 +624,9 @@ partial class InheritModel
             {
                 if (value is global::AotFixtures.Inherit.Puppy layer200)
                 {
+                    var slot200 = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Inherit_Puppy(layer200, depth, slots, context);
+                    slots.Set(slot200, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Puppy
                 }
                 else
@@ -608,16 +690,32 @@ partial class InheritModel
             => RawRead_AotFixtures_Inherit_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Holder value)
-            => RawWrite_AotFixtures_Inherit_Holder(ref state, value, state.RawDepthBudget);
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Inherit_Holder(value, state.RawDepthBudget, slots, state.Context);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Inherit_Holder(ref state, value, state.RawDepthBudget);
+        }
 
         public static void RawWrite_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Holder value, int depth)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
-            var rawDepth = state.SyncRawDepth(depth);
+            long before = 0;
             var tmp1 = value.Animal;
-            state.WriteMessage<global::AotFixtures.Inherit.Animal>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, Self);
-            state.SyncRawDepth(rawDepth);
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Animal
+                var len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWriteSub_AotFixtures_Inherit_Animal(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Animal");
+            }
         }
 
         private static long Measure_AotFixtures_Inherit_Holder(global::AotFixtures.Inherit.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -627,7 +725,9 @@ partial class InheritModel
             var tmp1 = value.Animal;
             if (tmp1 != null)
             {
-                var sub = Measure_AotFixtures_Inherit_Animal(tmp1, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_Inherit_Animal(tmp1, depth, slots, context);
+                slots.Set(slot1, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Animal
             }
             return len;
@@ -687,6 +787,12 @@ partial class InheritModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Puppy value)
         {
+            RawWriteSub_AotFixtures_Inherit_Puppy(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Inherit_Puppy(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Puppy value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Age;
             if (tmp1 != 0)

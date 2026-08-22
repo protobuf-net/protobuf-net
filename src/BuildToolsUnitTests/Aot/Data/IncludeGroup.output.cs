@@ -173,6 +173,29 @@ partial class IncludeGroupModel
 
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
+        // DEBUG-only: prove each measured length against the bytes actually written.
+        // [Conditional] is resolved against YOUR compilation, so a Release build
+        // removes both calls and the capture local with them; the bodies are #if DEBUG'd
+        // too, so even calling one directly costs nothing there.
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugCapturePosition(ref global::ProtoBuf.ProtoWriter.State state, ref long position)
+        {
+#if DEBUG
+            position = state.Position64;
+#endif
+        }
+
+        [global::System.Diagnostics.Conditional("DEBUG")]
+        private static void DebugAssertPosition(ref global::ProtoBuf.ProtoWriter.State state, long expected, string member)
+        {
+#if DEBUG
+            var actual = state.Position64;
+            // interpolated only on failure: this runs per length-prefixed member in a Debug build
+            if (actual != expected) global::System.Diagnostics.Debug.Fail(
+                $"Length drift writing '{member}': measured length and bytes written differ by {actual - expected}.");
+#endif
+        }
+
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Base>.Features
             => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
@@ -186,14 +209,37 @@ partial class IncludeGroupModel
         {
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_IncludeGroup_Base(value, state.RawDepthBudget, slots, state.Context);
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_IncludeGroup_Base(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_IncludeGroup_Base(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.IncludeGroup.Base value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
                 if (value is global::AotFixtures.IncludeGroup.Grouped sub3)
                 {
-                    state.WriteFieldHeader(3, global::ProtoBuf.WireType.StartGroup);
-                    state.WriteSubType(sub3, this);
+                    state.WriteRawTag((3 << 3) | 3);  // global::AotFixtures.IncludeGroup.Grouped (start group)
+                    RawWriteSub_AotFixtures_IncludeGroup_Grouped(ref state, sub3, depth);
+                    state.WriteRawTag((3 << 3) | 4);  // global::AotFixtures.IncludeGroup.Grouped (end group)
                 }
                 else if (value is global::AotFixtures.IncludeGroup.Plain sub4)
                 {
-                    state.WriteSubType(4, sub4, this);
+                    state.WriteRawTag((4 << 3) | 2);  // global::AotFixtures.IncludeGroup.Plain
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_IncludeGroup_Plain(ref state, sub4, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.IncludeGroup.Plain");
                 }
                 else
                 {
@@ -230,7 +276,9 @@ partial class IncludeGroupModel
                 }
                 else if (value is global::AotFixtures.IncludeGroup.Plain layer4)
                 {
+                    var slot4 = slots.Reserve();
                     sub = MeasureSub_AotFixtures_IncludeGroup_Plain(layer4, depth, slots, context);
+                    slots.Set(slot4, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.IncludeGroup.Plain
                 }
                 else
@@ -314,6 +362,12 @@ partial class IncludeGroupModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Grouped>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.IncludeGroup.Grouped value)
         {
+            RawWriteSub_AotFixtures_IncludeGroup_Grouped(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_IncludeGroup_Grouped(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.IncludeGroup.Grouped value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Extra;
             if (tmp1 != 0)
@@ -386,6 +440,12 @@ partial class IncludeGroupModel
 
         void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.IncludeGroup.Plain value)
         {
+            RawWriteSub_AotFixtures_IncludeGroup_Plain(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_IncludeGroup_Plain(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.IncludeGroup.Plain value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             var tmp1 = value.Extra;
             if (tmp1 != 0)
