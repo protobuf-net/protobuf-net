@@ -113,9 +113,107 @@ partial class FormatsModel
         }
     }
 
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Formats.Sized value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Formats.Sized>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Formats.Sized value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Formats.Sized>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Formats.SizedHolder value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Formats.SizedHolder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Formats.SizedHolder value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Formats.SizedHolder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Formatted>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Inner>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Sized>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.SizedHolder>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
 
@@ -450,6 +548,304 @@ partial class FormatsModel
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Sized>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.Formats.Sized global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Sized>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Sized value)
+            => RawRead_AotFixtures_Formats_Sized(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.Sized>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Sized value)
+            => RawWrite_AotFixtures_Formats_Sized(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Formats_Sized(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.Sized value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.ZigInt;
+            if (tmp1 != 0)
+            {
+                state.WriteFieldHeader(1, global::ProtoBuf.WireType.SignedVarint);
+                state.WriteInt32(tmp1);
+            }
+            var tmp2 = value.ZigLong;
+            if (tmp2 != 0)
+            {
+                state.WriteFieldHeader(2, global::ProtoBuf.WireType.SignedVarint);
+                state.WriteInt64(tmp2);
+            }
+            var tmp3 = value.FixInt;
+            if (tmp3 != 0)
+            {
+                state.WriteFieldHeader(3, global::ProtoBuf.WireType.Fixed32);
+                state.WriteInt32(tmp3);
+            }
+            var tmp4 = value.FixLong;
+            if (tmp4 != 0)
+            {
+                state.WriteFieldHeader(4, global::ProtoBuf.WireType.Fixed64);
+                state.WriteInt64(tmp4);
+            }
+            var tmp5 = value.FixUInt;
+            if (tmp5 != 0)
+            {
+                state.WriteFieldHeader(5, global::ProtoBuf.WireType.Fixed32);
+                state.WriteUInt32(tmp5);
+            }
+            var tmp6 = value.NullableZig;
+            if (tmp6.HasValue)
+            {
+                var val6 = tmp6.GetValueOrDefault();
+                state.WriteFieldHeader(6, global::ProtoBuf.WireType.SignedVarint);
+                state.WriteInt32(val6);
+            }
+            var tmp7 = value.Plain;
+            if (tmp7 != 0)
+            {
+                state.WriteRawTag((7 << 3) | 0);  // Plain
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp7));
+            }
+            var tmp20 = value.FarFixed;
+            if (tmp20 != 0)
+            {
+                state.WriteFieldHeader(20, global::ProtoBuf.WireType.Fixed32);
+                state.WriteInt32(tmp20);
+            }
+        }
+
+        private static long Measure_AotFixtures_Formats_Sized(global::AotFixtures.Formats.Sized value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.ZigInt;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(unchecked((uint)((tmp1 << 1) ^ (tmp1 >> 31))));  // ZigInt
+            var tmp2 = value.ZigLong;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)((tmp2 << 1) ^ (tmp2 >> 63))));  // ZigLong
+            var tmp3 = value.FixInt;
+            if (tmp3 != 0) len += 5;  // FixInt
+            var tmp4 = value.FixLong;
+            if (tmp4 != 0) len += 9;  // FixLong
+            var tmp5 = value.FixUInt;
+            if (tmp5 != 0) len += 5;  // FixUInt
+            var tmp6 = value.NullableZig;
+            if (tmp6.HasValue)
+            {
+                var val6 = tmp6.GetValueOrDefault();
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(unchecked((uint)((val6 << 1) ^ (val6 >> 31))));  // NullableZig
+            }
+            var tmp7 = value.Plain;
+            if (tmp7 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp7));  // Plain
+            var tmp20 = value.FarFixed;
+            if (tmp20 != 0) len += 6;  // FarFixed
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.Sized>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Formats.Sized value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Formats_Sized(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.Formats.Sized RawRead_AotFixtures_Formats_Sized(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.Sized value)
+        {
+            value ??= new global::AotFixtures.Formats.Sized();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 0:  // ZigInt, field 1, varint
+                        value.ZigInt = state.ReadRawZigZag32();
+                        break;
+                    case (1 << 3) | 5:  // ZigInt, field 1, fixed32
+                        value.ZigInt = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (1 << 3) | 1:  // ZigInt, field 1, fixed64
+                        value.ZigInt = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (2 << 3) | 0:  // ZigLong, field 2, varint
+                        value.ZigLong = state.ReadRawZigZag64();
+                        break;
+                    case (2 << 3) | 1:  // ZigLong, field 2, fixed64
+                        value.ZigLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (2 << 3) | 5:  // ZigLong, field 2, fixed32
+                        value.ZigLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 5:  // FixInt, field 3, fixed32
+                        value.FixInt = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (3 << 3) | 0:  // FixInt, field 3, varint
+                        value.FixInt = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (3 << 3) | 1:  // FixInt, field 3, fixed64
+                        value.FixInt = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (4 << 3) | 1:  // FixLong, field 4, fixed64
+                        value.FixLong = unchecked((long)state.ReadRawFixed64());
+                        break;
+                    case (4 << 3) | 0:  // FixLong, field 4, varint
+                        value.FixLong = unchecked((long)state.ReadRawVarint64());
+                        break;
+                    case (4 << 3) | 5:  // FixLong, field 4, fixed32
+                        value.FixLong = (long)unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (5 << 3) | 5:  // FixUInt, field 5, fixed32
+                        value.FixUInt = state.ReadRawFixed32();
+                        break;
+                    case (5 << 3) | 0:  // FixUInt, field 5, varint
+                        value.FixUInt = state.ReadRawVarint32();
+                        break;
+                    case (5 << 3) | 1:  // FixUInt, field 5, fixed64
+                        value.FixUInt = checked((uint)state.ReadRawFixed64());
+                        break;
+                    case (6 << 3) | 0:  // NullableZig, field 6, varint
+                        value.NullableZig = state.ReadRawZigZag32();
+                        break;
+                    case (6 << 3) | 5:  // NullableZig, field 6, fixed32
+                        value.NullableZig = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (6 << 3) | 1:  // NullableZig, field 6, fixed64
+                        value.NullableZig = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (7 << 3) | 0:  // Plain, field 7, varint
+                        value.Plain = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (7 << 3) | 5:  // Plain, field 7, fixed32
+                        value.Plain = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (7 << 3) | 1:  // Plain, field 7, fixed64
+                        value.Plain = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    case (20 << 3) | 5:  // FarFixed, field 20, fixed32
+                        value.FarFixed = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (20 << 3) | 0:  // FarFixed, field 20, varint
+                        value.FarFixed = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (20 << 3) | 1:  // FarFixed, field 20, fixed64
+                        value.FarFixed = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 20;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.SizedHolder>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.Formats.SizedHolder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.SizedHolder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.SizedHolder value)
+            => RawRead_AotFixtures_Formats_SizedHolder(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Formats.SizedHolder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.SizedHolder value)
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Formats_SizedHolder(value, state.RawDepthBudget, slots, state.Context);
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Formats_SizedHolder(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_Formats_SizedHolder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Formats.SizedHolder value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
+            var tmp1 = value.Inner;
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Inner
+                var len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWrite_AotFixtures_Formats_Sized(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Inner");
+            }
+            var tmp2 = value.Tag;
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Tag
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
+        }
+
+        private static long Measure_AotFixtures_Formats_SizedHolder(global::AotFixtures.Formats.SizedHolder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Inner;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_Formats_Sized(tmp1, depth, slots, context);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
+            }
+            var tmp2 = value.Tag;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Tag
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Formats.SizedHolder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Formats.SizedHolder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Formats_SizedHolder(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.Formats.SizedHolder RawRead_AotFixtures_Formats_SizedHolder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Formats.SizedHolder value)
+        {
+            value ??= new global::AotFixtures.Formats.SizedHolder();
+            uint tag = state.ReadRawTag();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    case (1 << 3) | 2:  // Inner, field 1, length-prefixed
+                    case (1 << 3) | 3:  // Inner, field 1, group
+                    {
+                        var scope = state.PushScope(tag);
+                        value.Inner = RawRead_AotFixtures_Formats_Sized(ref state, value.Inner);
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (2 << 3) | 0:  // Tag, field 2, varint
+                        value.Tag = unchecked((int)state.ReadRawVarint32());
+                        break;
+                    case (2 << 3) | 5:  // Tag, field 2, fixed32
+                        value.Tag = unchecked((int)state.ReadRawFixed32());
+                        break;
+                    case (2 << 3) | 1:  // Tag, field 2, fixed64
+                        value.Tag = checked((int)unchecked((long)state.ReadRawFixed64()));
+                        break;
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTag();
+            }
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2;
         }
     }
 }

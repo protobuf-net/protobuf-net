@@ -1674,6 +1674,32 @@ asks `RawScalarMeasure`, which returns null for these and is dereferenced with `
 exposed the tuple one, via an *unrelated* fixture (`Diagnostics/TupleLevels`). Anyone adding the
 level variants should expect a fourth. The goldens catch it; review did not.
 
+
+#### The unary formatted scalars — DONE 2026-08-22
+
+`FixedSize` and `ZigZag` on a unary integer scalar now measure, which is the tail this entry and B30
+both pointed at as "the easiest arms, being constant-width". `FixedSize` folds to a literal;
+`ZigZag` is a varint over the zig-zagged value, using the same shift pair `WriteRawZigZag32/64`
+apply, inline rather than as a call.
+
+Two things had to be right together, and only the second is obvious:
+
+- **the tag's wire bits are not derivable from the KIND.** `ZigZag` is wire type 0 like any varint —
+  `SignedVarint` is a protobuf-net distinction, not a wire one — while `FixedSize` is 5 or 1 by
+  width. The measure sites took `RawScalarWireBits(member.Kind)`, which would have tagged a fixed32
+  as a varint; they take `ScalarWireBits(member)` now;
+- **it is deliberately UNARY only.** A repeated member with a format is either packed (which vets
+  its own format and has its own measure) or blocked; admitting one here would reach
+  `EmitRawRepeatedMeasure`, whose element wire type is still computed from the kind alone. The write
+  is untouched throughout — it stays on `WriteFieldHeader` + `WriteInt32`/`WriteInt64` — which is
+  the usual measure-and-write independence.
+
+All three scalar branches were updated together (nullable, tuple, main switch), the trap `AGENTS.md`
+names by number. `Formats.input.cs` gained a `Sized` contract because the existing `Formatted` one
+carries an unpacked repeated ZigZag member, which is blocked and therefore takes the whole contract
+— it could say nothing about whether a formatted scalar measures. That is the third time in this
+session a new arm was green while never firing; **check the emitted output, not just the gates.**
+
 ### B27. ~~`AotDifferential` loads the generator from **Debug first**, whatever it was built as~~ — **FIXED 2026-08-19**
 
 Found 2026-08-16 while merging main into v4: a `-c Release` run reported *"the generated model does
@@ -3120,7 +3146,8 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | ~~maps — plain scalar/string sides at the default format~~ | **DONE 2026-08-21** | **B6** |
 | ~~null-wrapping — lone, both collection scopes, message elements~~ | **DONE 2026-08-22** | below |
 | ~~null-wrapping — maps~~ | **DONE 2026-08-22** (scalar/string values) | below |
-| non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
+| ~~non-default `DataFormat` on a unary scalar~~ | **DONE 2026-08-22** | **B26** |
+| non-default `DataFormat` on a REPEATED member, unpacked | yes | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
 | ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
 | ~~a **value-type bytes** member~~ | **DONE 2026-08-21** | below |
@@ -3311,8 +3338,9 @@ struck through — so this is a short list now rather than a survey. What remain
    exactly that. The extra condition beyond the surrogate case is that the **category must be
    known**: an undetermined-category member defers its framing to `WriteAny` at run time, so the
    measure cannot tell whether a length prefix is in play;
-5. **the `DataFormat` tail** (B26, B30) — the constant-width formats are the cheap ones, and B30's
-   ambient-default angle is what makes them matter more than their frequency suggests.
+5. ~~**the `DataFormat` tail**~~ (B26, B30) — **unary scalars DONE 2026-08-22**. What is left is an
+   *unpacked repeated* member with a format, where the element wire type is still derived from the
+   kind alone — a smaller and better-understood job than this entry used to describe.
 
 Three that were on this list are settled rather than done: a **surrogate with its own serializer**
 stays out correctly (it delegates, so there are no members to inline), the **cascade** row is not a

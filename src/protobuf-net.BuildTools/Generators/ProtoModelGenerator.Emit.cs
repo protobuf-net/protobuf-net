@@ -2998,6 +2998,60 @@ namespace ProtoBuf.BuildTools.Generators
         };
 
         /// <summary>The wire-type bits for a raw scalar write's constant tag.</summary>
+        /// <summary>
+        /// A UNARY scalar whose non-default <c>DataFormat</c> still has an arithmetic size:
+        /// <c>FixedSize</c> is a constant, and <c>ZigZag</c> is a varint over the zig-zagged value.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Deliberately unary. A repeated member with a format is either PACKED - which vets its own
+        /// format and has its own measure - or blocked, and admitting one here would reach
+        /// <c>EmitRawRepeatedMeasure</c>, whose element wire type is computed from the KIND alone.
+        /// The write is unaffected either way: it stays on <c>WriteFieldHeader</c> +
+        /// <c>WriteInt32</c>/<c>WriteInt64</c>, which is the usual measure-and-write independence.
+        /// </para>
+        /// </remarks>
+        private static bool FormattedScalarMeasurable(ProtoMemberPlan member)
+            => member.Repeated.Factory is null && member.Map.Factory is null
+            && !member.WrappedValue && !member.WrappedCollection
+            && member.DataFormat switch
+            {
+                ProtoDataFormat.FixedSize => member.Kind is ProtoMemberKind.Int32
+                    or ProtoMemberKind.UInt32 or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64,
+                ProtoDataFormat.ZigZag => member.Kind is ProtoMemberKind.Int32 or ProtoMemberKind.Int64,
+                _ => false,
+            };
+
+        /// <summary>The wire-type bits a scalar's tag carries, honouring its format.</summary>
+        /// <remarks>
+        /// <c>ZigZag</c> is wire type 0 like any varint - <c>SignedVarint</c> is a protobuf-net
+        /// distinction, not a wire one - while <c>FixedSize</c> is 5 or 1 by width. Getting this
+        /// from the kind alone would tag a fixed32 as a varint, which the reader then misparses.
+        /// </remarks>
+        private static int ScalarWireBits(ProtoMemberPlan member)
+            => member.DataFormat == ProtoDataFormat.FixedSize
+                && member.Kind is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32
+                    or ProtoMemberKind.Int64 or ProtoMemberKind.UInt64
+                ? (member.Kind is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32 ? 5 : 1)
+                : RawScalarWireBits(member.Kind);
+
+        /// <summary>
+        /// The payload size of a unary scalar, honouring its format; falls back to
+        /// <see cref="RawScalarMeasure"/> at the default format.
+        /// </summary>
+        private static string? ScalarMeasure(ProtoMemberPlan member, string expression)
+            => member.DataFormat switch
+            {
+                ProtoDataFormat.FixedSize when member.Kind is ProtoMemberKind.Int32 or ProtoMemberKind.UInt32 => "4",
+                ProtoDataFormat.FixedSize when member.Kind is ProtoMemberKind.Int64 or ProtoMemberKind.UInt64 => "8",
+                // the same transform WriteRawZigZag32/64 apply, inline: a shift pair, not a call
+                ProtoDataFormat.ZigZag when member.Kind == ProtoMemberKind.Int32
+                    => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32(unchecked((uint)(({expression} << 1) ^ ({expression} >> 31))))",
+                ProtoDataFormat.ZigZag when member.Kind == ProtoMemberKind.Int64
+                    => $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(({expression} << 1) ^ ({expression} >> 63))))",
+                _ => RawScalarMeasure(member, expression),
+            };
+
         private static int RawScalarWireBits(ProtoMemberKind kind) => kind switch
         {
             ProtoMemberKind.Single => 5,
@@ -3618,6 +3672,7 @@ namespace ProtoBuf.BuildTools.Generators
             // so a member that was never even populated took the contract off measure-first.
             if (member.DataFormat != ProtoDataFormat.Default
                 && !BclMeasurable(member)
+                && !FormattedScalarMeasurable(member)
                 && !(member.DataFormat == ProtoDataFormat.Group
                     && member.Kind == ProtoMemberKind.Message
                     && member.Map.Factory is null)) return true;
@@ -4208,17 +4263,17 @@ namespace ProtoBuf.BuildTools.Generators
                         Line(sb, indent, "}");
                         goto measured;
                     }
-                    var measureNullable = RawScalarMeasure(member, ScalarValue(member, $"val{number}"))!;
+                    var measureNullable = ScalarMeasure(member, ScalarValue(member, $"val{number}"))!;
                     if (member.DefaultLiteral is { } nullableDefault)
                     {
                         Line(sb, indent + 1, $"if (val{number} != {nullableDefault})");
                         Line(sb, indent + 1, "{");
-                        Line(sb, indent + 2, MeasureAdd(member, RawScalarWireBits(member.Kind), measureNullable));
+                        Line(sb, indent + 2, MeasureAdd(member, ScalarWireBits(member), measureNullable));
                         Line(sb, indent + 1, "}");
                     }
                     else
                     {
-                        Line(sb, indent + 1, MeasureAdd(member, RawScalarWireBits(member.Kind), measureNullable));
+                        Line(sb, indent + 1, MeasureAdd(member, ScalarWireBits(member), measureNullable));
                     }
                     Line(sb, indent, "}");
                     goto measured;
@@ -4245,8 +4300,8 @@ namespace ProtoBuf.BuildTools.Generators
                             $"global::ProtoBuf.ProtoWriter.State.MeasureRawVarint32((uint){tupleBody}) + {tupleBody}"));
                         goto measured;
                     }
-                    Line(sb, indent, MeasureAdd(member, RawScalarWireBits(member.Kind),
-                        RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
+                    Line(sb, indent, MeasureAdd(member, ScalarWireBits(member),
+                        ScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
                     goto measured;
                 }
 
@@ -4295,8 +4350,8 @@ namespace ProtoBuf.BuildTools.Generators
                     // the length prefix is wrong. Kept as its own arm rather than folded in below,
                     // because the difference is the guard, not the sizing.
                     case ProtoMemberKind.DateOnly or ProtoMemberKind.TimeOnly:
-                        Line(sb, indent, MeasureAdd(member, RawScalarWireBits(member.Kind),
-                            RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
+                        Line(sb, indent, MeasureAdd(member, ScalarWireBits(member),
+                            ScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!));
                         break;
 
                     case ProtoMemberKind.Bool or ProtoMemberKind.Int32 or ProtoMemberKind.SByte
@@ -4305,8 +4360,8 @@ namespace ProtoBuf.BuildTools.Generators
                         or ProtoMemberKind.UInt64 or ProtoMemberKind.Single or ProtoMemberKind.Double
                         // nint/nuint ARE guarded, unlike the date/time pair above
                         or ProtoMemberKind.IntPtr or ProtoMemberKind.UIntPtr:
-                        var add = MeasureAdd(member, RawScalarWireBits(member.Kind),
-                            RawScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!);
+                        var add = MeasureAdd(member, ScalarWireBits(member),
+                            ScalarMeasure(member, ScalarValue(member, $"tmp{number}"))!);
                         // IsRequired means field presence: no guard, as on the write
                         if (member.IsRequired || member.WriteCondition is not null)
                         {
