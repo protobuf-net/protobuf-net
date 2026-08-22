@@ -101,6 +101,46 @@ public class Mixed
     [ProtoAfterDeserialization] public void AfterDes(ISerializationContext context) => Trace += "ad;";
 }
 
+// gap B46: a HIERARCHY fires the ROOT's serialize callbacks and NOTHING ELSE. That was probed
+// against ref-emit rather than reasoned about, and the probe is the only reason to believe it: the
+// obvious guess - one pair per layer, the way members work - is wrong. With a distinct callback on
+// each of three layers, RuntimeTypeModel fires the root's and no other, whatever the runtime type
+// and whatever declared type it is serialized as.
+//
+// Trace is not a serialized member, so none of this moves the wire bytes and the differential still
+// compares cleanly; the sequence itself is asserted by CallbackHierarchyTests.
+[ProtoContract]
+[ProtoInclude(10, typeof(HookedDerived))]
+public class HookedBase
+{
+    [ProtoMember(1)] public int Value { get; set; }
+
+    public string Trace { get; set; } = "";
+
+    [ProtoBeforeSerialization] public void BeforeSer() => Trace += "base-bs;";
+    [ProtoAfterSerialization] public void AfterSer() => Trace += "base-as;";
+}
+
+[ProtoContract]
+public class HookedDerived : HookedBase
+{
+    [ProtoMember(2)] public int Extra { get; set; }
+
+    // these must NEVER fire - see above. They are here precisely so that "the root's callbacks run"
+    // is distinguishable from "every layer's callbacks run", which an empty derived layer would not
+    // have told apart.
+    [ProtoBeforeSerialization] public void DerivedBeforeSer() => Trace += "derived-bs;";
+    [ProtoAfterSerialization] public void DerivedAfterSer() => Trace += "derived-as;";
+}
+
+// ...and nested, so something above needs a length and the measure pass genuinely runs over a
+// hierarchy rather than only over a flat contract
+[ProtoContract]
+public class HookedHolder
+{
+    [ProtoMember(1)] public HookedBase Inner { get; set; }
+}
+
 public static class CallbacksSamples
 {
     public static object[] Values =>
@@ -115,6 +155,9 @@ public static class CallbacksSamples
         new WatchedHolder { Inner = new Watched { Value = 6 } },
         new Mixed { Value = 7 },
         new Holder { Inner = new Hooked { Value = 8 }, Tag = 9 },
+        new HookedBase { Value = 10 },
+        new HookedDerived { Value = 11, Extra = 12 },
+        new HookedHolder { Inner = new HookedDerived { Value = 13, Extra = 14 } },
     ];
 }
 
@@ -126,6 +169,8 @@ public static class CallbacksSamples
 [ProtoSerializable(typeof(Watched))]
 [ProtoSerializable(typeof(WatchedHolder))]
 [ProtoSerializable(typeof(Mixed))]
+[ProtoSerializable(typeof(HookedBase))]
+[ProtoSerializable(typeof(HookedHolder))]
 public partial class CallbacksModel : TypeModel
 {
 }

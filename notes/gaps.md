@@ -4489,7 +4489,7 @@ null coming out — and the generated reader is the odd one out.
 Adding it is the first step of fixing it. Note it is only visible through a *read*: writing is
 byte-identical, which is why the corpus never caught it and why it needed a hand-built payload.
 
-### B46. A serialize callback on a HIERARCHY layer never fires, on either pass — **open, and it predates measure-first**
+### B46. ~~A serialize callback on a HIERARCHY layer never fires~~ — **SERIALIZE half FIXED 2026-08-22; the DESERIALIZE half is still open**
 
 **Found while building B41, and deliberately not fixed there.** `EmitSubTypeContract` has never
 called `EmitCallback`: a hierarchy contract's `ISerializer<T>.Write` is a one-line delegation to the
@@ -4515,12 +4515,45 @@ Three things worth stating before anyone picks this up:
   these - so a callback that *mutates* a serialized member is a byte-level difference today. That
   also means a fixture for it belongs in `Data/` proper once the fix lands, not in `Diagnostics/`.
 
-**What is NOT established is the expected sequence**, and it should be probed rather than reasoned
-about before anything is emitted: ref-emit gives each layer its own `TypeSerializer`, so the
-question is whether a two-layer hierarchy fires the base's callback once, twice, or in a particular
-order relative to the derived layer's. Probe `RuntimeTypeModel` with a trace-appending callback on
-each layer and copy whatever it does - the same method that settled the `[ProtoPartialMember]`
-precedence table.
+#### The rule, probed — and the obvious guess is wrong
+
+`RuntimeTypeModel`, three layers, a **distinct** callback on each:
+
+| serialized as | fires |
+| --- | --- |
+| `Leaf` as `Base`, to a stream | `base.before`, `base.after` |
+| `Leaf` as `Base`, to an `IBufferWriter` | `base.before`, `base.after` |
+| `Holder{Leaf}` to a stream | `base.before`, `base.after` |
+| `Holder{Leaf}` to an `IBufferWriter` | the same pair **twice** (the known backend rule) |
+| `Leaf` as `Middle`, to a stream | `base.before`, `base.after` |
+
+**Only the ROOT's callbacks ever fire**, whatever the runtime type and whatever declared type it is
+serialized as. `Middle`'s and `Leaf`'s never run at all. That is worth stating loudly because
+*members* work per layer - each layer writes its own - so a per-layer rule is what one expects, and
+it is not what happens. (The first probe was inconclusive by accident: naming every layer's callback
+`B4()` made each hide the last, so "only base ran" could have been C# method hiding rather than
+protobuf-net. Re-probed with distinct names, same answer.)
+
+**Fixed for serialize 2026-08-22.** Emitted in three places, all root-only: the classic
+`WriteSubType`, `RawWriteSub_`, and `MeasureSub_`. The measure one is not optional - both passes must
+observe the same object or the measured length will not match the bytes (B42's rule), and
+`ProtoWriter.IsMeasuring` is how a consumer tells them apart. `CallbackHierarchyTests` pins the root
+firing, the derived layer *not* firing, agreement with ref-emit on the **set** (not the count, which
+is a property of the path), and the two passes staying symmetric rather than splitting 2/1 - all four
+confirmed to fail with the emit reverted.
+
+#### The DESERIALIZE half is still open, and here is what the probe found
+
+`base.beforeDeser` fires with the instance **already constructed as `Leaf`** and the root's own field
+still `0`; `base.afterDeser` with it populated. So the hook is positioned *lazily*, at the point the
+instance first exists - which for a sub-typed payload is after the marker field has been read, since
+the marker is written before the layer's own members.
+
+That has no single place in our emit to match: `ReadSubType` hoists `value.Value` **per case**,
+deliberately, because forcing it at the top would construct the ROOT type for a payload that names a
+sub-type. So this needs its own design rather than a guess, and firing it in the wrong place would be
+worse than not firing it - a callback that sees a half-built object is harder to diagnose than one
+that never runs.
 
 **Priority: low on frequency, high on surprise.** A callback that silently never runs is the failure
 mode this file exists to catch, but a hierarchy carrying one is rare enough that the corpus contains

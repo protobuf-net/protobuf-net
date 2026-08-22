@@ -163,6 +163,150 @@ partial class CallbacksModel
 
     /// <summary>Serializes the supplied value.</summary>
     /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Callbacks.HookedBase value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.HookedBase>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Callbacks.HookedBase value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.HookedBase>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Callbacks.HookedDerived value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.HookedDerived>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Callbacks.HookedDerived value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.HookedDerived>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Callbacks.HookedHolder value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.HookedHolder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
+    public long Serialize(global::System.Buffers.IBufferWriter<byte> destination, global::AotFixtures.Callbacks.HookedHolder value, object userState = null)
+    {
+        var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
+        try
+        {
+            if (value is null) return 0;
+            long before = state.Position64;
+            GetSerializer<global::AotFixtures.Callbacks.HookedHolder>().Write(ref state, value);
+            state.Close();
+            return state.Position64 - before;
+        }
+        catch
+        {
+            state.Abandon();
+            throw;
+        }
+        finally
+        {
+            state.Dispose();
+        }
+    }
+
+    /// <summary>Serializes the supplied value.</summary>
+    /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
     public long Serialize(global::System.IO.Stream destination, global::AotFixtures.Callbacks.Mixed value, object userState = null)
     {
         var state = global::ProtoBuf.ProtoWriter.State.Create(destination, this, userState);
@@ -357,12 +501,19 @@ partial class CallbacksModel
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.AfterOnly>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Holder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Hooked>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.HookedBase>
+        , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.HookedDerived>
+        , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedDerived>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.HookedHolder>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Mixed>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Standard>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.Watched>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.WatchedHolder>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
+
+        private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         // DEBUG-only: prove each measured length against the bytes actually written.
         // [Conditional] is resolved against YOUR compilation, so a Release build
@@ -634,6 +785,283 @@ partial class CallbacksModel
             }
             afterRead:
             value.AfterDes();
+            return value;
+
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1;
+        }
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedBase>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.Callbacks.HookedBase global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedBase>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.HookedBase value)
+            => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Callbacks.HookedBase>.Create(state.Context, value));
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedBase>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedBase value)
+            => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>)this).WriteSubType(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedBase value)
+        {
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                var slots = state.RawSlots;
+                if (!slots.Leave(value, out var entry))
+                {
+                    entry = slots.Mark();
+                    MeasureSub_AotFixtures_Callbacks_HookedBase(value, state.RawDepthBudget, slots, slots.AsMeasuring(state.Context));
+                }
+                slots.SeekTo(entry);
+            }
+            RawWriteSub_AotFixtures_Callbacks_HookedBase(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Callbacks_HookedBase(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedBase value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long before = 0;
+            value.BeforeSer();
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.Callbacks.HookedDerived sub10)
+                {
+                    state.WriteRawTag((10 << 3) | 2);  // global::AotFixtures.Callbacks.HookedDerived
+                    var len = state.RawSlots.Next();
+                    state.WriteRawVarint64((ulong)len);
+                    DebugCapturePosition(ref state, ref before);
+                    RawWriteSub_AotFixtures_Callbacks_HookedDerived(ref state, sub10, depth);
+                    DebugAssertPosition(ref state, before + len, "global::AotFixtures.Callbacks.HookedDerived");
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Value;
+            if (tmp1 != 0)
+            {
+                state.WriteRawTag((1 << 3) | 0);  // Value
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
+            }
+            value.AfterSer();
+        }
+
+        private static long Measure_AotFixtures_Callbacks_HookedBase(global::AotFixtures.Callbacks.HookedBase value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Callbacks_HookedBase(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Callbacks_HookedBase(global::AotFixtures.Callbacks.HookedBase value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            value.BeforeSer();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.Callbacks.HookedDerived layer10)
+                {
+                    var slot10 = slots.Reserve();
+                    var sub = MeasureSub_AotFixtures_Callbacks_HookedDerived(layer10, depth, slots, context);
+                    slots.Set(slot10, sub);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Callbacks.HookedDerived
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            value.AfterSer();
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.HookedBase>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Callbacks.HookedBase value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Callbacks_HookedBase(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, global::ProtoBuf.RawLengthBuffer.Discard.AsMeasuring(context));
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        global::AotFixtures.Callbacks.HookedBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Callbacks.HookedBase> value)
+        {
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                    {
+                        var obj = value.Value;
+                        obj.Value = state.ReadInt32();
+                        break;
+                    }
+                    case 10:
+                        value.ReadSubType<global::AotFixtures.Callbacks.HookedDerived>(ref state, this);
+                        break;
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value.Value;
+        }
+
+        // raw read pass: skipped - hierarchy with serialization callbacks
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedDerived>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.Callbacks.HookedDerived global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedDerived>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.HookedDerived value)
+            => (global::AotFixtures.Callbacks.HookedDerived)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Callbacks.HookedBase>.Create(state.Context, value));
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedDerived>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedDerived value)
+            => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>)this).WriteSubType(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedDerived>.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedDerived value)
+        {
+            RawWriteSub_AotFixtures_Callbacks_HookedDerived(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWriteSub_AotFixtures_Callbacks_HookedDerived(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedDerived value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp2 = value.Extra;
+            if (tmp2 != 0)
+            {
+                state.WriteRawTag((2 << 3) | 0);  // Extra
+                state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
+            }
+        }
+
+        private static long Measure_AotFixtures_Callbacks_HookedDerived(global::AotFixtures.Callbacks.HookedDerived value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Callbacks_HookedBase(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Callbacks_HookedDerived(global::AotFixtures.Callbacks.HookedDerived value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp2 = value.Extra;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Extra
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.HookedDerived>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Callbacks.HookedDerived value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Callbacks_HookedDerived(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, global::ProtoBuf.RawLengthBuffer.Discard.AsMeasuring(context));
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        global::AotFixtures.Callbacks.HookedDerived global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedDerived>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Callbacks.HookedDerived> value)
+        {
+            int field;
+            while ((field = state.ReadFieldHeader()) > 0)
+            {
+                switch (field)
+                {
+                    case 2:
+                    {
+                        var obj = value.Value;
+                        obj.Extra = state.ReadInt32();
+                        break;
+                    }
+                    default:
+                        state.SkipField();
+                        break;
+                }
+            }
+            return value.Value;
+        }
+
+        // raw read pass: skipped - hierarchy with serialization callbacks
+
+        global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedHolder>.Features
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
+
+        global::AotFixtures.Callbacks.HookedHolder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedHolder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.HookedHolder value)
+            => RawRead_AotFixtures_Callbacks_HookedHolder(ref state, value);
+
+        void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Callbacks.HookedHolder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedHolder value)
+        {
+            var slots = state.RawSlots;
+            if (!slots.Leave(value, out var entry))
+            {
+                entry = slots.Mark();
+                Measure_AotFixtures_Callbacks_HookedHolder(value, state.RawDepthBudget, slots, slots.AsMeasuring(state.Context));
+            }
+            slots.SeekTo(entry);
+            RawWrite_AotFixtures_Callbacks_HookedHolder(ref state, value, state.RawDepthBudget);
+        }
+
+        public static void RawWrite_AotFixtures_Callbacks_HookedHolder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Callbacks.HookedHolder value, int depth)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            long before = 0;
+            var tmp1 = value.Inner;
+            if (tmp1 != null)
+            {
+                state.WriteRawTag((1 << 3) | 2);  // Inner
+                var len = state.RawSlots.Next();
+                state.WriteRawVarint64((ulong)len);
+                DebugCapturePosition(ref state, ref before);
+                RawWriteSub_AotFixtures_Callbacks_HookedBase(ref state, tmp1, depth);
+                DebugAssertPosition(ref state, before + len, "Inner");
+            }
+        }
+
+        private static long Measure_AotFixtures_Callbacks_HookedHolder(global::AotFixtures.Callbacks.HookedHolder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Inner;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_Callbacks_HookedBase(tmp1, depth, slots, context);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Callbacks.HookedHolder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Callbacks.HookedHolder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Callbacks_HookedHolder(value, depth, slots, slots.AsMeasuring(context));
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
+        }
+
+        private static global::AotFixtures.Callbacks.HookedHolder RawRead_AotFixtures_Callbacks_HookedHolder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Callbacks.HookedHolder value)
+        {
+            value ??= new global::AotFixtures.Callbacks.HookedHolder();
+            uint tag = state.ReadRawTagOrPending();
+            while (tag != 0)
+            {
+                switch (tag)
+                {
+                    // raw read pass: legacy-mode - member Inner: target type not raw-eligible
+                    case (1 << 3) | 0:
+                    case (1 << 3) | 1:
+                    case (1 << 3) | 2:  // Inner, field 1
+                    case (1 << 3) | 3:
+                    case (1 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp1 = value.Inner;
+                        tmp1 = state.ReadMessage<global::AotFixtures.Callbacks.HookedBase>(global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, s_default);
+                        if (tmp1 != null) value.Inner = tmp1;
+                        break;
+                    }
+                    default:
+                        if (state.IsScopeEnd(tag)) return value;
+                        if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
+                        state.SkipTag(tag);
+                        break;
+                }
+                tag = state.ReadRawTagOrPending();
+            }
             return value;
 
             static bool IsKnownField(uint tag) => (tag >> 3) is 1;

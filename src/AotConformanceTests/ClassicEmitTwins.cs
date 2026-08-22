@@ -1,4 +1,4 @@
-﻿// ClassicEmit twins — gap B18.
+// ClassicEmit twins — gap B18.
 //
 // `[ProtoModel(ClassicEmit = true)]` is the escape hatch we point consumers at when the raw writer
 // cannot serve them; it is named in ProtoWriter.State.Raw.cs's own error text for the
@@ -50,6 +50,8 @@ namespace AotFixtures.Callbacks
     [ProtoSerializable(typeof(Watched))]
     [ProtoSerializable(typeof(WatchedHolder))]
     [ProtoSerializable(typeof(Mixed))]
+    [ProtoSerializable(typeof(HookedBase))]
+    [ProtoSerializable(typeof(HookedHolder))]
     public partial class CallbacksClassicModel : TypeModel { }
 }
 

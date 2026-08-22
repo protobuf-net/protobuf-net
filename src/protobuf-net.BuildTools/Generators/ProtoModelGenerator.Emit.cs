@@ -2411,6 +2411,11 @@ namespace ProtoBuf.BuildTools.Generators
             // the process died
             Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
             var body = new StringBuilder();
+            // gap B46, root only - see the classic shape in EmitSubTypeContract for why
+            if (contract.TypeName == root)
+            {
+                EmitCallback(body, indent + 1, contract, "value", ProtoCallbackKind.BeforeSerialize);
+            }
             if (contract.SubTypes.Count != 0)
             {
                 Line(body, indent + 1, "if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))");
@@ -2460,6 +2465,10 @@ namespace ProtoBuf.BuildTools.Generators
             EmitWriteMembers(body, indent + 1, contract, raw: true, listAsSpan: listAsSpan,
                 immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth",
                 self: SelfField, measuresCallbacks: measuresCallbacks);
+            if (contract.TypeName == root)
+            {
+                EmitCallback(body, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
+            }
             // gap B15, exactly as for RawWrite_: where this body can hand back to the stateful
             // engine, the raw budget and the stateful cap must ADD across the boundary
             if (FallsBackToStateful(body))
@@ -2516,8 +2525,15 @@ namespace ProtoBuf.BuildTools.Generators
             }
             else
             {
+            // gap B46: ONLY THE ROOT's serialize callbacks fire, and they fire once around the
+            // whole chain. Probed against ref-emit rather than assumed, because the obvious guess -
+            // one pair per layer, like the members - is wrong: with a distinct callback on each of
+            // three layers, RuntimeTypeModel fires the ROOT's and nothing else, whatever the
+            // runtime type and whatever the declared type it is serialized as.
+            var rootCallbacks = contract.TypeName == root;
             Line(sb, indent, $"void {sub}.WriteSubType(ref global::ProtoBuf.ProtoWriter.State state, {contract.TypeName} value)");
             Line(sb, indent, "{");
+            if (rootCallbacks) EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.BeforeSerialize);
             if (contract.SubTypes.Count != 0)
             {
                 // the runtime type decides which layer to nest; anything else is a type the model
@@ -2560,6 +2576,7 @@ namespace ProtoBuf.BuildTools.Generators
             }
             var subTypeMembers = new StringBuilder();
             EmitWriteMembers(subTypeMembers, indent + 1, contract, raw: rawWrite, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, measuresCallbacks: measuresCallbacks);
+            if (rootCallbacks) EmitCallback(subTypeMembers, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize);
             AppendFoldingLengthTemp(sb, indent + 1, subTypeMembers, "len");
             Line(sb, indent, "}");
             sb.AppendLine();
@@ -2591,6 +2608,13 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, $"private static long MeasureSub_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)");
                 Line(sb, indent, "{");
                 Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
+                // the measure pass fires the root's callbacks exactly as the write pass does, so
+                // both observe the SAME object - which is the whole reason the length can be
+                // trusted. ProtoWriter.IsMeasuring(context) is how a consumer tells them apart.
+                if (contract.TypeName == root)
+                {
+                    EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.BeforeSerialize, "context");
+                }
                 Line(sb, indent + 1, "long len = 0;");
                 var measureBody = new StringBuilder();
                 if (contract.SubTypes.Count != 0)
@@ -2649,6 +2673,10 @@ namespace ProtoBuf.BuildTools.Generators
                 // invariant, and a measure firing a callback the write did not would observe a
                 // different object than the bytes do.
                 EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan);
+                if (contract.TypeName == root)
+                {
+                    EmitCallback(measureBody, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize, "context");
+                }
                 AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");

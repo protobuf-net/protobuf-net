@@ -172,6 +172,7 @@ partial class HierarchyCallbackModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long before = 0;
+            value.BeforeSer();
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Diagnostics.HierarchyCallback.Derived sub10)
@@ -194,6 +195,7 @@ partial class HierarchyCallbackModel
                 state.WriteRawTag((1 << 3) | 0);  // Id
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+            value.AfterSer();
         }
 
         private static long Measure_AotFixtures_Diagnostics_HierarchyCallback_Base(global::AotFixtures.Diagnostics.HierarchyCallback.Base value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -202,6 +204,7 @@ partial class HierarchyCallbackModel
         private static long MeasureSub_AotFixtures_Diagnostics_HierarchyCallback_Base(global::AotFixtures.Diagnostics.HierarchyCallback.Base value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            value.BeforeSer();
             long len = 0;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
@@ -219,6 +222,7 @@ partial class HierarchyCallbackModel
             }
             var tmp1 = value.Id;
             if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Id
+            value.AfterSer();
             return len;
         }
 
