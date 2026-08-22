@@ -547,6 +547,7 @@ namespace ProtoBuf.BuildTools.Generators
             INamedTypeSymbol? externalSerializer = null;
             bool? declaredScalar = null;
             string? surrogateSerializer = null;
+            var surrogateSerializerMeasures = false;
             bool isContract = declaredSurrogate is not null;
             bool isDataContract = false, isXmlType = false, skipConstructor = false;
             bool isGroup = false, ignoreUnknownSubTypes = false, useProtoMembersOnly = false;
@@ -753,7 +754,8 @@ namespace ProtoBuf.BuildTools.Generators
                 // when the surrogate has a serializer of its own there are no members to inline, so
                 // the body converts and then *delegates* to it - which is what lets a well-known
                 // type serve as a surrogate, as protobuf-net.NodaTime does
-                surrogateSerializer = GetSubSerializer(compilation, surrogateType, serializers);
+                surrogateSerializer = GetSubSerializer(compilation, surrogateType, serializers, out var surrogateSerializerType);
+                surrogateSerializerMeasures = SerializerMeasures(compilation, surrogateSerializerType, surrogateType);
                 if (surrogateSerializer == "null")
                 {
                     // inbuilt: obtainable without naming the (internal) provider
@@ -1651,6 +1653,7 @@ namespace ProtoBuf.BuildTools.Generators
                 surrogateTypeName: (surrogateType is null ? null : Qualified(compilation, surrogateType)),
                 toSurrogate: declaredSurrogate?.ToSurrogate, toUnderlying: declaredSurrogate?.ToUnderlying,
                 surrogateSerializer: surrogateSerializer,
+                surrogateSerializerMeasures: surrogateSerializerMeasures,
                 usesConstructorAccessor: usesConstructorAccessor,
                 callbacks: new(callbacks),
                 isAbstract: type.IsAbstract && subTypes.Count == 0,

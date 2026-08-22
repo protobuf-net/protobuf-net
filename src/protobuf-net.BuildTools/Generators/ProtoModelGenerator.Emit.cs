@@ -200,7 +200,10 @@ namespace ProtoBuf.BuildTools.Generators
                     changed = false;
                     foreach (var contract in plan.Contracts)
                     {
-                        if (measurable.ContainsKey(contract.TypeName)
+                        // a delegating surrogate's Members are the UNDERLYING type's, which are
+                        // never serialized - the surrogate's serializer writes the whole body - so
+                        // testing them here would decide measurability on irrelevant shapes
+                        if (measurable.ContainsKey(contract.TypeName) && !DelegatesMeasure(contract)
                             && contract.Members.Any(m => RawMemberMeasureBlocked(m, measurable, plan.ListAsSpan, plan.ImmutableArrayAsSpan)))
                         {
                             measurable.Remove(contract.TypeName);
@@ -1248,6 +1251,38 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
                 Line(sb, indent + 1, $"{surrogateSerializer}.Write(ref state, surrogate);");
                 Line(sb, indent, "}");
+
+                // ...and where that serializer MEASURES, so does this contract (gap B31). There are
+                // no members to walk - the whole body is the delegation above - so the measure is
+                // the same conversion followed by the same hand-over, and a referring member gets
+                // an exact length prefix instead of dropping its whole contract to write-to-count.
+                //
+                // The slot buffer is threaded but never used: nothing below this reserves, because
+                // the write hands the body to that serializer rather than to a RawWrite_. That is
+                // also why DelegatesMeasure keeps this contract out of the message-target
+                // predicates - it is measurable without being raw-writable.
+                if (contract.SurrogateSerializerMeasures)
+                {
+                    var measured = $"({Serializers}.IMeasuringSerializer<{contract.SurrogateTypeName}>)"
+                        + surrogateSerializer;
+                    sb.AppendLine();
+                    Line(sb, indent, $"private static long Measure_{Sanitise(contract.TypeName)}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)");
+                    Line(sb, indent, "{");
+                    Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
+                    Line(sb, indent + 1, $"var surrogate = {ToSurrogate(contract, "value")};");
+                    Line(sb, indent + 1, $"return ({measured}).Measure(context, global::ProtoBuf.WireType.String, surrogate);");
+                    Line(sb, indent, "}");
+                    sb.AppendLine();
+
+                    Line(sb, indent, $"int {Serializers}.IMeasuringSerializer<{contract.TypeName}>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, {contract.TypeName} value)");
+                    Line(sb, indent, "{");
+                    // no slots are claimed here, so there is no boundary to record and nothing to
+                    // seek back to - the depth is the only thing the raw state is consulted for
+                    Line(sb, indent + 1, "if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;");
+                    Line(sb, indent + 1, $"var len = Measure_{Sanitise(contract.TypeName)}(value, depth, null, context);");
+                    Line(sb, indent + 1, "return len <= int.MaxValue ? (int)len : -1;");
+                    Line(sb, indent, "}");
+                }
                 return;
             }
 
@@ -3506,8 +3541,19 @@ namespace ProtoBuf.BuildTools.Generators
             // conversion, and both the raw write and the measure now perform that conversion, so
             // they walk identical members. A surrogate carrying its own SERIALIZER is genuinely
             // different - there are no members to inline, the body is delegated - so it stays out.
-            && contract.SurrogateSerializer is null
+            // ...and a surrogate carrying its OWN serializer is admitted exactly when that
+            // serializer measures (gap B31): the body is delegated, so there is nothing to walk,
+            // but the length can still be obtained without a traversal. Such a contract is
+            // measurable and NOT raw-writable - see DelegatesMeasure's callers.
+            && (contract.SurrogateSerializer is null || contract.SurrogateSerializerMeasures)
             && contract.RootTypeName is null && contract.SubTypes.Count == 0;
+
+        /// <summary>
+        /// A contract whose whole body is a delegation to the surrogate's own serializer, measured
+        /// by asking that serializer. It has no members to walk and no <c>RawWrite_</c>.
+        /// </summary>
+        private static bool DelegatesMeasure(ProtoContractPlan contract)
+            => contract.SurrogateSerializer is not null && contract.SurrogateSerializerMeasures;
             // [ProtoContract(IsGroup = true)] used to be excluded here. It never needed to be
             // (gap B42): a grouped contract carries NO length prefix, which makes it cheaper to
             // measure, not harder. What actually made the exclusion load-bearing is that the
@@ -3661,6 +3707,9 @@ namespace ProtoBuf.BuildTools.Generators
                 && !member.SubSerializerIsScalar && !member.SubSerializerDynamic
                 && member.TypeName is not null
                 && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
+                // measurable does NOT imply raw-writable: a delegating surrogate has a Measure_ and
+                // no RawWrite_, so its member keeps the stateful write (and reserves no slot)
+                && !DelegatesMeasure(target)
                 ? target : null;
 
         /// <summary>
@@ -3680,6 +3729,8 @@ namespace ProtoBuf.BuildTools.Generators
                 && member.ElementTypeName?.EndsWith("?", StringComparison.Ordinal) != true
                 && member.TypeName is not null
                 && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
+                // as for the unary case: measurable does not imply raw-writable
+                && !DelegatesMeasure(target)
                 ? target : null;
 
         /// <summary>

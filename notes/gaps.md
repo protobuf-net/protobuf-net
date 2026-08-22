@@ -1865,6 +1865,34 @@ Four conditions, each for its own reason:
 `DateTime`, `TimeSpan`, `Duration`, `Timestamp` and `Empty` measuring — those are exactly the
 serializers a real consumer meets through an inbuilt type or a `[ProtoSerializer]` declaration.
 
+##### The surrogate half, and a formal DECISION on the rest
+
+**Decided (Marc, 2026-08-22): a custom serializer that does not measure is a FALLBACK scenario, not
+a gap.** It falls to the classic write-to-count path, which is correct and is what protobuf-net did
+before v4; the cost is throughput, and the remedy is entirely in the consumer's hands — implement
+`IMeasuringSerializer<T>` and the member, its contract and every referrer come back onto
+measure-first. Nothing further is owed here, and this line exists so it is not re-argued as an
+absence.
+
+`RawMeasurableShape` now admits a delegating surrogate on the same test, so
+`[ProtoContract(Surrogate = …)]` where the surrogate carries its own measuring serializer is
+measured by converting and asking it. Verified end to end on **`AotNodaTimeSmoke`**, which is the
+shape this exists for: `Instant` → `WellKnownTypes.Timestamp`, whose serializer became measuring in
+the same day's Core audit. All four NodaTime types now emit a `Measure_`, **and so does the
+consumer's own `Appointment` contract** — the cascade arriving, which is the actual payoff.
+
+Two things about it are load-bearing:
+
+- **measurable does NOT imply raw-writable here.** Such a contract has a `Measure_` and no
+  `RawWrite_` — its body is the delegation. So `RawNativeMessageTarget` and
+  `RawRepeatedMessageTarget` both exclude it (`DelegatesMeasure`), leaving a referring member on the
+  stateful write and, critically, reserving **no slot**. Without that the member would call a static
+  that was never emitted, breaking the consumer's build;
+- **the fixed point must skip its members.** For these contracts `memberSource` stays the
+  *underlying* type, so `Members` holds properties that are never serialized — the surrogate's
+  serializer writes the whole body. Testing them would decide measurability on irrelevant shapes,
+  and would have done so silently in either direction.
+
 `ExternalSerializer.input.cs` grew `GaugeSerializer`/`Gauge` (measuring, message category) and a
 `Panel` contract holding one. `Panel` is deliberately separate from `Holder`, which carries the
 NON-measuring `Thing`: a measuring member there would have proven nothing, since one blocked member
@@ -2884,7 +2912,7 @@ model is entirely on the classic write path.**
 | --- | --- | --- |
 | **inheritance** (`RootTypeName`, `SubTypes`) | **yes, and the biggest** | **B41** |
 | ~~surrogate (`SurrogateTypeName`)~~ | **DONE 2026-08-21 — also "never taught"** | below |
-| **surrogate with a NON-MEASURING serializer** | **yes — narrowed 2026-08-22** | below |
+| surrogate with a NON-MEASURING serializer | **fallback, not a gap — DECIDED 2026-08-22** | below |
 | **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
 | ~~`[ProtoContract(IsGroup = true)]`~~ | **DONE 2026-08-21 — it was "never taught"** | below |
 | ~~`[ProtoBeforeSerialization]`~~ | **DONE 2026-08-21 — I was wrong that it was load-bearing** | below |

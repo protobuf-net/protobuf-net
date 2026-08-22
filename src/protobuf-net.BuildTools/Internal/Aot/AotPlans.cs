@@ -705,7 +705,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             string? toSurrogate = null, string? toUnderlying = null,
             string? externalSerializerTypeName = null, bool externalSerializerIsScalar = false,
             bool externalSerializerCategoryKnown = true,
-            string? surrogateSerializer = null,
+            string? surrogateSerializer = null, bool surrogateSerializerMeasures = false,
             bool usesConstructorAccessor = false, EquatableArray<ProtoCallbackPlan> callbacks = default,
             bool isAbstract = false, bool isGroup = false, bool ignoreUnknownSubTypes = false,
             bool declaredIsValueType = false)
@@ -723,6 +723,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
             ExternalSerializerIsScalar = externalSerializerIsScalar;
             ExternalSerializerCategoryKnown = externalSerializerCategoryKnown;
             SurrogateSerializer = surrogateSerializer;
+            SurrogateSerializerMeasures = surrogateSerializerMeasures;
             SurrogateTypeName = surrogateTypeName;
             ToSurrogate = toSurrogate;
             ToUnderlying = toUnderlying;
@@ -886,6 +887,20 @@ namespace ProtoBuf.BuildTools.Internal.Aot
         public string? SurrogateSerializer { get; }
 
         /// <summary>
+        /// The surrogate's own serializer implements <c>IMeasuringSerializer&lt;T&gt;</c>, so this
+        /// contract can be measured by DELEGATING to it - even though its body is delegated too and
+        /// there are no members to walk.
+        /// </summary>
+        /// <remarks>
+        /// This is what keeps a NodaTime-shaped contract, and everything referencing it, on
+        /// measure-first: <c>Instant</c> converts to <c>WellKnownTypes.Timestamp</c>, whose
+        /// serializer measures. Note such a contract is measurable but <b>not</b> raw-WRITABLE -
+        /// there is no <c>RawWrite_</c> for it - so the message-target predicates must exclude it
+        /// or a member would call a static that was never emitted. See notes/gaps.md B31.
+        /// </remarks>
+        public bool SurrogateSerializerMeasures { get; }
+
+        /// <summary>
         /// The fully-qualified static method converting the type to its surrogate, when the pairing
         /// names one; null means a plain cast, which is what an operator-based surrogate uses.
         /// </summary>
@@ -913,6 +928,7 @@ namespace ProtoBuf.BuildTools.Internal.Aot
                 && ExternalSerializerIsScalar == other.ExternalSerializerIsScalar
                 && ExternalSerializerCategoryKnown == other.ExternalSerializerCategoryKnown
                 && SurrogateSerializer == other.SurrogateSerializer
+                && SurrogateSerializerMeasures == other.SurrogateSerializerMeasures
                 && IsGroup == other.IsGroup && IgnoreUnknownSubTypes == other.IgnoreUnknownSubTypes
                 && DeclaredIsValueType == other.DeclaredIsValueType;
 
