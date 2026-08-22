@@ -1871,7 +1871,15 @@ namespace ProtoBuf.BuildTools.Generators
             // nothing has filled the slots, so each site must measure on demand. Under the old
             // dictionary this was dynamic (a TryGetValue miss, "the miss arm serves a root write");
             // positionally it is a compile-time question, and this is it. gap B38.
-            var enclosingMeasured = measurable is not null && measurable.ContainsKey(contract.TypeName);
+            // ...and MEASURABLE is not sufficient: a contract can have a Measure_ while its write is
+            // not the measure-first raw shape at all - a delegating surrogate today, and a hierarchy
+            // layer if gap B41 lands - whose write is entered with no measure prologue. Those must
+            // still measure on demand. Getting this wrong makes the write consume slots nobody
+            // filled, which is a length of ZERO on the wire; the GenericHierarchy fixture caught it
+            // within minutes of hierarchies joining the measurable set, and it is the one piece of
+            // that attempt worth keeping.
+            var enclosingMeasured = measurable is not null && measurable.ContainsKey(contract.TypeName)
+                && !DelegatesMeasure(contract);
             foreach (var member in contract.Members)
             {
                 // a conditional member wraps its whole write, and *replaces* the trivial-value guard

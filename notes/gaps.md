@@ -3270,7 +3270,7 @@ to know *both* types, so it is available only to per-contract typed overloads, n
 
 So: share the implementation. The duplication buys nothing on the path that would need it.
 
-### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
+### B41. A HIERARCHY is off measure-first entirely — **design SETTLED 2026-08-22 (it is just a nested sub-message); first attempt backed out on an unexplained CLR fault in the corpus harness**
 
 Found on the `main` merge of 2026-08-21, by running the "count the methods" diagnostic over the
 fixture that arrived with #1317. `OutOfBandSubType.output.cs` emits **zero** `Measure_` and **zero**
@@ -3368,6 +3368,96 @@ Related: `notes/gaps.md` B13 already measured `ThrowUnexpectedSubtype` in both s
 leave the hierarchy *check* alone; that is about the per-write type test, not about measurability,
 and does not answer this.
 
+
+#### The design is settled (Marc, 2026-08-22), and a first attempt is recorded below
+
+> what is confusing me, however, is that inheritance is actually modelled **exactly** on nested
+> sub-messages that individually can be either grouped or length-prefixed, and optional. We seem to
+> have solved for *that* problem, so my question is: what is different about inheritance?
+
+**Nothing structural, and the exclusion was never principled.** Checked rather than argued:
+`ProtoWriter.State.WriteSubType(fieldNumber, value, serializer)` is literally
+`WriteFieldHeader(fieldNumber, WireType.String)` followed by the engine's sub-item machinery — so a
+marker is a nested sub-message, optionally grouped (`[ProtoInclude(DataFormat = Group)]` writes its
+own start/end tags) and optionally present (the runtime type decides). Every one of those shapes is
+already handled for members.
+
+**The earlier objection recorded here was wrong and is withdrawn.** It said a marker is
+"length-prefixed but *optionally* delimited, so one slot per marker is not a fixed shape". That
+assumed the marker would be raw-written and need a slot. It is not: the engine frames it, so the
+slot count is zero either way, and group-versus-length is two arithmetic branches exactly as
+`GroupFramed` already picks between for a member.
+
+**Three things really are different, all small:**
+
+1. the marker's "members" are chosen by **runtime type**, not declaration — so the measure needs the
+   same `is` chain the write has, *in the same order*, and order is load-bearing where one sub-type
+   derives from another (`Puppy : Dog` in `Inherit.input.cs`). Emit once, use twice, or they drift;
+2. the recursion is **per LAYER**, not per type: a marker's body is the derived layer's
+   `WriteSubType` — its own markers plus its own declared members — which is not "measure a Dog". So
+   it needs a `MeasureSub_` per type mirroring `WriteSubType`, *alongside* `Measure_`;
+3. what a **member** of declared type `Dog` measures is the whole chain from the **root**, because
+   `ISerializer<T>.Write` routes to the root's `WriteSubType` whatever `T` is.
+
+##### Sizing (corpus census, 2026-08-22)
+
+Instrumented the generator to run the measurable fixed point twice, once with the hierarchy clause
+relaxed:
+
+```
+total contracts   2730          measurable now  2417 (88.5%)
+                                if hierarchies  2596 (95.1%)
+hierarchy types    174
+```
+
+**+179 contracts, closing a little over half the remaining gap (313 → 134).** Note a prediction of
+mine that the census contradicted: I expected the cascade to make this "considerably bigger than the
+count of hierarchy types themselves", and it does not — 179 against 174, so the cascade contributes
+about **five**. In this corpus hierarchies are effectively leaves. Half of it is `.proto`-generated
+and protobuf has no inheritance, so every hierarchy here comes from the hand-written half; a
+consumer codebase built around inheritance could cascade harder, but this corpus is no evidence for
+that.
+
+##### First attempt, 2026-08-22 — BACKED OUT, and what it established
+
+The plan was stage 1 only: hierarchies join `measurable`, the **write is untouched** (still
+`ISubTypeSerializer` and the stateful engine), so the contract is measurable-but-not-raw-writable
+exactly as a delegating surrogate is. That gets the whole +179 with no change to what is written.
+
+It got as far as **green fixtures** — conformance 1767/1767 including `Inherit`, `GenericHierarchy`,
+`Interface` and `OutOfBandSubType`, and goldens 652/652 — so the emitted layer measure is *correct*
+on every hand-written shape. It then **killed the corpus differential**:
+
+```
+Fatal error. Internal CLR error. (0x80131506)
+   at System.Delegate.DelegateConstruct(...)
+   ... at ProtoBuf.AotDifferential.Filler.Construct(...)
+   ... at ProtoBuf.AotDifferential.Program.Compare(...)
+```
+
+An `ExecutionEngineException` inside the harness's reflection-based `Filler`, before any comparison
+output — not a wrong-bytes failure. Bisected as far as was productive:
+
+- **not** the `IMeasuringSerializer<T>` hook or the interface-list change — removing both for
+  hierarchies still crashes;
+- **not** tiered compilation (`DOTNET_TieredCompilation=0` unchanged);
+- **not** the schema corpus (`PBN_NO_SCHEMAS=1` unchanged);
+- deterministic, and reverting restores 3134 compared / 0 differ.
+
+Not diagnosed, and deliberately not guessed at. The next attempt should start by getting the
+generated corpus source onto disk and compiling it standalone, rather than by re-deriving the
+design — which is settled.
+
+##### The one thing worth keeping, and it is a real fix
+
+`EmitWriteMembers` decided "have my slots already been reserved?" as
+`measurable.ContainsKey(contract.TypeName)`. That is **not sufficient**: a contract can have a
+`Measure_` while its write is not the measure-first raw shape at all — a delegating surrogate today,
+a hierarchy layer if this lands — and those are entered with no measure prologue, so nothing has
+filled the slots. The write then consumed slots nobody reserved and emitted **a length of zero**;
+`GenericHierarchy` caught it within minutes. The guard is now
+`measurable.ContainsKey(...) && !DelegatesMeasure(contract)`, which is inert today (a delegating
+surrogate emits no members of its own) and correct in advance.
 
 ### B42. **THE MEASURE-FIRST EXCLUSION LIST** — every way a contract loses the raw write path, in one place
 
