@@ -258,10 +258,10 @@ partial class ExtensibleModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.BaseExt>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.BaseExt>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.ByHand>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.DerivedExt>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.DerivedExt>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.DerivedExt>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.FromBase>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.TypedOnly>
@@ -271,7 +271,7 @@ partial class ExtensibleModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.BaseExt>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Extensible.BaseExt global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.BaseExt>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.BaseExt value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt>.Create(state.Context, value));
@@ -299,6 +299,38 @@ partial class ExtensibleModel
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.BaseExt));
+        }
+
+        private static long Measure_AotFixtures_Extensible_BaseExt(global::AotFixtures.Extensible.BaseExt value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Extensible_BaseExt(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Extensible_BaseExt(global::AotFixtures.Extensible.BaseExt value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.Extensible.DerivedExt layer100)
+                {
+                    var sub = MeasureSub_AotFixtures_Extensible_DerivedExt(layer100, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Extensible.DerivedExt
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Shared;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Shared
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.BaseExt));
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.BaseExt>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.BaseExt value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Extensible_BaseExt(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Extensible.BaseExt global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt> value)
@@ -410,7 +442,7 @@ partial class ExtensibleModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.DerivedExt>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Extensible.DerivedExt global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Extensible.DerivedExt>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Extensible.DerivedExt value)
             => (global::AotFixtures.Extensible.DerivedExt)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.BaseExt>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.BaseExt>.Create(state.Context, value));
@@ -428,6 +460,27 @@ partial class ExtensibleModel
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
             state.AppendExtensionData(value, typeof(global::AotFixtures.Extensible.DerivedExt));
+        }
+
+        private static long Measure_AotFixtures_Extensible_DerivedExt(global::AotFixtures.Extensible.DerivedExt value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Extensible_BaseExt(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Extensible_DerivedExt(global::AotFixtures.Extensible.DerivedExt value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Extra;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Extra
+            len += global::ProtoBuf.ProtoWriter.State.MeasureRawExtensionData(value, typeof(global::AotFixtures.Extensible.DerivedExt));
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Extensible.DerivedExt>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Extensible.DerivedExt value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Extensible_DerivedExt(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Extensible.DerivedExt global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Extensible.DerivedExt>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Extensible.DerivedExt> value)

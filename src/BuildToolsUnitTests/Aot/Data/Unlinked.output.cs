@@ -307,11 +307,11 @@ partial class UnlinkedModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Derived>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.ForkedBase>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.ForkedBase>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.ForkedBase>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.FromPlain>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Reuses>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Sibling>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Sibling>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.Sibling>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Unlinked>
     {
@@ -389,7 +389,7 @@ partial class UnlinkedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.ForkedBase>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Unlinked.ForkedBase global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.ForkedBase>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.ForkedBase value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.ForkedBase>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.ForkedBase>.Create(state.Context, value));
@@ -416,6 +416,37 @@ partial class UnlinkedModel
                 state.WriteRawTag((1 << 3) | 0);  // FromBase
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_Unlinked_ForkedBase(global::AotFixtures.Unlinked.ForkedBase value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Unlinked_ForkedBase(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Unlinked_ForkedBase(global::AotFixtures.Unlinked.ForkedBase value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.Unlinked.Sibling layer10)
+                {
+                    var sub = MeasureSub_AotFixtures_Unlinked_Sibling(layer10, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Unlinked.Sibling
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.FromBase;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // FromBase
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.ForkedBase>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.ForkedBase value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Unlinked_ForkedBase(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Unlinked.ForkedBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.ForkedBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.ForkedBase> value)
@@ -594,7 +625,7 @@ partial class UnlinkedModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Sibling>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Unlinked.Sibling global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Unlinked.Sibling>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Unlinked.Sibling value)
             => (global::AotFixtures.Unlinked.Sibling)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.ForkedBase>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.ForkedBase>.Create(state.Context, value));
@@ -611,6 +642,26 @@ partial class UnlinkedModel
                 state.WriteRawTag((2 << 3) | 0);  // Linked
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
+        }
+
+        private static long Measure_AotFixtures_Unlinked_Sibling(global::AotFixtures.Unlinked.Sibling value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Unlinked_ForkedBase(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Unlinked_Sibling(global::AotFixtures.Unlinked.Sibling value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp2 = value.Linked;
+            if (tmp2 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp2));  // Linked
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Unlinked.Sibling>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Unlinked.Sibling value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Unlinked_Sibling(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Unlinked.Sibling global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Unlinked.Sibling>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Unlinked.Sibling> value)

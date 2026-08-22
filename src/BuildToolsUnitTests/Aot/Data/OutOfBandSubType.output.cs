@@ -402,20 +402,20 @@ partial class OutOfBandSubTypeModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Circle>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Circle>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Circle>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Sedan>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Sedan>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Sedan>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Shape>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Shape>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Square>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Square>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Square>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Tractor>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Tractor>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Tractor>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Vehicle>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
@@ -423,7 +423,7 @@ partial class OutOfBandSubTypeModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Circle>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Circle global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Circle>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Circle value)
             => (global::AotFixtures.OutOfBandSubType.Circle)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Shape>.Create(state.Context, value));
@@ -440,6 +440,26 @@ partial class OutOfBandSubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Radius
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Circle(global::AotFixtures.OutOfBandSubType.Circle value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Shape(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Circle(global::AotFixtures.OutOfBandSubType.Circle value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Radius;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Radius
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Circle>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Circle value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Circle(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Circle global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Circle>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Circle> value)
@@ -475,18 +495,53 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Holder value)
             => RawRead_AotFixtures_OutOfBandSubType_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Holder value)
+            => RawWrite_AotFixtures_OutOfBandSubType_Holder(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_OutOfBandSubType_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.OutOfBandSubType.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Shape;
-            state.WriteMessage<global::AotFixtures.OutOfBandSubType.Shape>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            state.WriteMessage<global::AotFixtures.OutOfBandSubType.Shape>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, Self);
             var tmp2 = value.Vehicle;
-            state.WriteMessage<global::AotFixtures.OutOfBandSubType.Vehicle>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, this);
+            state.WriteMessage<global::AotFixtures.OutOfBandSubType.Vehicle>(2, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp2, Self);
+            state.SyncRawDepth(rawDepth);
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Holder(global::AotFixtures.OutOfBandSubType.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            var tmp1 = value.Shape;
+            if (tmp1 != null)
+            {
+                sub = Measure_AotFixtures_OutOfBandSubType_Shape(tmp1, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Shape
+            }
+            var tmp2 = value.Vehicle;
+            if (tmp2 != null)
+            {
+                sub = Measure_AotFixtures_OutOfBandSubType_Vehicle(tmp2, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Vehicle
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Holder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_OutOfBandSubType_Holder(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.OutOfBandSubType.Holder RawRead_AotFixtures_OutOfBandSubType_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Holder value)
@@ -537,7 +592,7 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Sedan>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Sedan global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Sedan>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Sedan value)
             => (global::AotFixtures.OutOfBandSubType.Sedan)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Vehicle>.Create(state.Context, value));
@@ -554,6 +609,26 @@ partial class OutOfBandSubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Doors
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Sedan(global::AotFixtures.OutOfBandSubType.Sedan value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Vehicle(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Sedan(global::AotFixtures.OutOfBandSubType.Sedan value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Doors;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Doors
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Sedan>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Sedan value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Sedan(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Sedan global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Sedan>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Sedan> value)
@@ -589,7 +664,7 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Shape>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Shape global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Shape>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Shape value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Shape>.Create(state.Context, value));
@@ -625,6 +700,51 @@ partial class OutOfBandSubTypeModel
                 state.WriteRawTag((1 << 3) | 2);  // Label
                 state.WriteRawString(tmp1);
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Shape(global::AotFixtures.OutOfBandSubType.Shape value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Shape(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Shape(global::AotFixtures.OutOfBandSubType.Shape value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.OutOfBandSubType.Circle layer100)
+                {
+                    sub = MeasureSub_AotFixtures_OutOfBandSubType_Circle(layer100, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Circle
+                }
+                else if (value is global::AotFixtures.OutOfBandSubType.Tagged<int> layer101)
+                {
+                    sub = MeasureSub_AotFixtures_OutOfBandSubType_Tagged_int_(layer101, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Tagged<int>
+                }
+                else if (value is global::AotFixtures.OutOfBandSubType.Square layer102)
+                {
+                    sub = MeasureSub_AotFixtures_OutOfBandSubType_Square(layer102, depth, slots, context);
+                    len += 4 + sub;  // global::AotFixtures.OutOfBandSubType.Square (group: no length prefix)
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Label;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Label
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Shape>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Shape value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Shape(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Shape global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Shape> value)
@@ -672,7 +792,7 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Square>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Square global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Square>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Square value)
             => (global::AotFixtures.OutOfBandSubType.Square)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Shape>.Create(state.Context, value));
@@ -689,6 +809,26 @@ partial class OutOfBandSubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Side
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Square(global::AotFixtures.OutOfBandSubType.Square value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Shape(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Square(global::AotFixtures.OutOfBandSubType.Square value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Side;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Side
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Square>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Square value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Square(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Square global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Square>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Square> value)
@@ -724,7 +864,7 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Tagged<int> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Tagged<int> value)
             => (global::AotFixtures.OutOfBandSubType.Tagged<int>)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Shape>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Shape>.Create(state.Context, value));
@@ -741,6 +881,26 @@ partial class OutOfBandSubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Value
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Tagged_int_(global::AotFixtures.OutOfBandSubType.Tagged<int> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Shape(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Tagged_int_(global::AotFixtures.OutOfBandSubType.Tagged<int> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Tagged<int> value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Tagged_int_(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Tagged<int> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Tagged<int>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Tagged<int>> value)
@@ -776,7 +936,7 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Tractor>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Tractor global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Tractor>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Tractor value)
             => (global::AotFixtures.OutOfBandSubType.Tractor)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Vehicle>.Create(state.Context, value));
@@ -792,6 +952,26 @@ partial class OutOfBandSubTypeModel
             {
                 state.WriteRawTagBool((1 << 3) | 0, tmp1);  // HasPlough
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Tractor(global::AotFixtures.OutOfBandSubType.Tractor value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Vehicle(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Tractor(global::AotFixtures.OutOfBandSubType.Tractor value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.HasPlough;
+            if (tmp1) len += 2;  // HasPlough
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Tractor>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Tractor value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Tractor(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Tractor global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Tractor>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Tractor> value)
@@ -827,7 +1007,7 @@ partial class OutOfBandSubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Vehicle>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.OutOfBandSubType.Vehicle global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.OutOfBandSubType.Vehicle>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.OutOfBandSubType.Vehicle value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Vehicle>.Create(state.Context, value));
@@ -858,6 +1038,43 @@ partial class OutOfBandSubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Wheels
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_OutOfBandSubType_Vehicle(global::AotFixtures.OutOfBandSubType.Vehicle value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_OutOfBandSubType_Vehicle(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_OutOfBandSubType_Vehicle(global::AotFixtures.OutOfBandSubType.Vehicle value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.OutOfBandSubType.Sedan layer10)
+                {
+                    sub = MeasureSub_AotFixtures_OutOfBandSubType_Sedan(layer10, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Sedan
+                }
+                else if (value is global::AotFixtures.OutOfBandSubType.Tractor layer11)
+                {
+                    sub = MeasureSub_AotFixtures_OutOfBandSubType_Tractor(layer11, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Tractor
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Wheels;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Wheels
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.OutOfBandSubType.Vehicle value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_OutOfBandSubType_Vehicle(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.OutOfBandSubType.Vehicle global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.OutOfBandSubType.Vehicle>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.OutOfBandSubType.Vehicle> value)

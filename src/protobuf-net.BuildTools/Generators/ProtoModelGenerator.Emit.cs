@@ -210,6 +210,39 @@ namespace ProtoBuf.BuildTools.Generators
                             changed = true;
                         }
                     }
+
+                    // A HIERARCHY is ALL-OR-NOTHING here (gap B41), for the same reason it is
+                    // all-or-nothing in the drop cascade: the emitted measures reference each other
+                    // BY NAME across the whole hierarchy. Every layer Measure_ forwards to the
+                    // ROOT MeasureSub_, and each marker arm calls its sub-type MeasureSub_ - so a
+                    // single unmeasurable layer leaves calls to bodies that were never emitted.
+                    //
+                    // The symptom is a pile of CS0103 in the CONSUMER build, not a diagnostic here,
+                    // which is how this was found: the corpus reported five of them, one per
+                    // hierarchy carrying an unmeasurable member somewhere in the chain.
+                    //
+                    // Two passes rather than a nested search, because the corpus has thousands of
+                    // contracts and this sits inside a fixed point: collect the roots that are
+                    // broken, then evict everything under them.
+                    var brokenRoots = new HashSet<string>(StringComparer.Ordinal);
+                    foreach (var contract in plan.Contracts)
+                    {
+                        if (contract.RootTypeName is { } root && !measurable.ContainsKey(contract.TypeName))
+                        {
+                            brokenRoots.Add(root);
+                        }
+                    }
+                    if (brokenRoots.Count != 0)
+                    {
+                        foreach (var contract in plan.Contracts)
+                        {
+                            if (contract.RootTypeName is { } root && brokenRoots.Contains(root)
+                                && measurable.Remove(contract.TypeName))
+                            {
+                                changed = true;
+                            }
+                        }
+                    }
                 } while (changed);
             }
 
@@ -1879,7 +1912,7 @@ namespace ProtoBuf.BuildTools.Generators
             // within minutes of hierarchies joining the measurable set, and it is the one piece of
             // that attempt worth keeping.
             var enclosingMeasured = measurable is not null && measurable.ContainsKey(contract.TypeName)
-                && !DelegatesMeasure(contract);
+                && !MeasureWithoutRawWrite(contract);
             foreach (var member in contract.Members)
             {
                 // a conditional member wraps its whole write, and *replaces* the trivial-value guard
@@ -2261,6 +2294,9 @@ namespace ProtoBuf.BuildTools.Generators
             bool raw = false, bool rawWrite = false, bool listAsSpan = false, bool immutableAsSpan = false,
             Dictionary<string, ProtoContractPlan>? measurable = null, bool measuresCallbacks = false)
         {
+            // see EmitContract: a callback-free model hands the context straight through
+            string Measuring(string owner, string source)
+                => measuresCallbacks ? $"{owner}.AsMeasuring({source})" : source;
             var self = $"{Serializers}.ISerializer<{contract.TypeName}>";
             var sub = $"{Serializers}.ISubTypeSerializer<{contract.TypeName}>";
             var rootSub = $"{Serializers}.ISubTypeSerializer<{root}>";
@@ -2323,6 +2359,97 @@ namespace ProtoBuf.BuildTools.Generators
             AppendFoldingLengthTemp(sb, indent + 1, subTypeMembers, "len");
             Line(sb, indent, "}");
             sb.AppendLine();
+
+            // gap B41: the hierarchy measure. The WRITE above is untouched and stays entirely
+            // stateful - the engine frames every marker - so this is a measure with no RawWrite_ to
+            // pair with, which is what MeasureWithoutRawWrite exists to say. The prize is the
+            // CASCADE: a member of a hierarchy type can now be sized arithmetically, so the
+            // contract holding it keeps its own measure instead of dropping to write-to-count, and
+            // the classic engine measure hook gets arithmetic in place of a null-writer traversal.
+            if (measurable is not null && measurable.ContainsKey(contract.TypeName))
+            {
+                var san = Sanitise(contract.TypeName);
+
+                // Measure_ mirrors ISerializer<T>.Write, which routes to the ROOT WriteSubType
+                // whatever T is - so a member declared as Dog measures the whole chain from the
+                // root, not merely the Dog layer. No depth decrement here: MeasureSub_ carries the
+                // budget, one per layer, matching the one sub-item per layer the write emits.
+                Line(sb, indent, $"private static long Measure_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)");
+                Line(sb, indent + 1, $"=> MeasureSub_{Sanitise(root)}(value, depth, slots, context);");
+                sb.AppendLine();
+
+                // ...and MeasureSub_ mirrors WriteSubType, statement for statement: the same
+                // IsSubType test, the same `is` chain IN THE SAME ORDER, and the same
+                // ThrowUnexpectedSubtype. Order is load-bearing where one sub-type derives from
+                // another (Puppy : Dog), and the two cannot drift because both walk
+                // contract.SubTypes in its own order - the same list, enumerated the same way.
+                Line(sb, indent, $"private static long MeasureSub_{san}({contract.TypeName} value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, "if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();");
+                Line(sb, indent + 1, "long len = 0;");
+                var measureBody = new StringBuilder();
+                if (contract.SubTypes.Count != 0)
+                {
+                    Line(measureBody, indent + 1, "if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))");
+                    Line(measureBody, indent + 1, "{");
+                    var measureKeyword = "if";
+                    foreach (var subType in contract.SubTypes)
+                    {
+                        var tag = subType.FieldNumber.ToString(CultureInfo.InvariantCulture);
+                        var layer = $"layer{tag}";
+                        Line(measureBody, indent + 2, $"{measureKeyword} (value is {subType.TypeName} {layer})");
+                        Line(measureBody, indent + 2, "{");
+                        Line(measureBody, indent + 3, $"sub = MeasureSub_{Sanitise(subType.TypeName)}({layer}, depth, slots, context);");
+                        // a grouped marker writes its own start tag, the body, and an end tag; both
+                        // tags carry the same field number and differ only in the wire type, which
+                        // is the low three bits - so they cannot differ in encoded length and the
+                        // pair folds to one literal. A length-prefixed marker is the ordinary
+                        // header + varint length + body.
+                        var wire = subType.IsGroup ? 3 : 2;
+                        var tagLen = VarintLen((uint)((subType.FieldNumber << 3) | wire));
+                        Line(measureBody, indent + 3, subType.IsGroup
+                            ? $"len += {tagLen * 2} + sub;  // {subType.TypeName} (group: no length prefix)"
+                            : $"len += {tagLen} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // {subType.TypeName}");
+                        Line(measureBody, indent + 2, "}");
+                        measureKeyword = "else if";
+                    }
+                    if (!contract.IgnoreUnknownSubTypes)
+                    {
+                        Line(measureBody, indent + 2, "else");
+                        Line(measureBody, indent + 2, "{");
+                        Line(measureBody, indent + 3, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                        Line(measureBody, indent + 2, "}");
+                    }
+                    Line(measureBody, indent + 1, "}");
+                }
+                else if (!contract.IsSealed && !contract.IgnoreUnknownSubTypes)
+                {
+                    Line(measureBody, indent + 1, "global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);");
+                }
+                // this layer OWN declared members - inherited ones belong to the layer that
+                // declares them, exactly as on the write side. Note no serialize callback is fired
+                // here, because WriteSubType does not fire one either: mirroring the write is the
+                // invariant, and a measure firing a callback the write did not would observe a
+                // different object than the bytes do.
+                EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan);
+                AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
+                Line(sb, indent + 1, "return len;");
+                Line(sb, indent, "}");
+                sb.AppendLine();
+
+                Line(sb, indent, $"int {Serializers}.IMeasuringSerializer<{contract.TypeName}>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, {contract.TypeName} value)");
+                Line(sb, indent, "{");
+                // Discard, and it is MANDATORY rather than tidy: the write above never reads a
+                // slot, so a real buffer here would have this measure reserve entries nobody
+                // consumes - shifting every later length. Same reasoning as the delegating
+                // surrogate, so there is no boundary to Mark or Enter either; depth is the only
+                // thing the raw state is consulted for.
+                Line(sb, indent + 1, "if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;");
+                Line(sb, indent + 1, $"var len = Measure_{san}(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, {Measuring("global::ProtoBuf.RawLengthBuffer.Discard", "context")});");
+                Line(sb, indent + 1, "return len <= int.MaxValue ? (int)len : -1;");
+                Line(sb, indent, "}");
+                sb.AppendLine();
+            }
 
             // the raw pass proxies here exactly as ISerializer.Read proxies to RawRead_: the
             // static is the live body, and this delegation is what the stateful machinery
@@ -3478,6 +3605,11 @@ namespace ProtoBuf.BuildTools.Generators
                 name + " = Measure_",
                 name + " = state.RawSlots.Next()",
                 name + " = ((global::ProtoBuf.Serializers.IMeasuringSerializer",
+                // ...and the fourth: a sub-type MARKER's nested layer (gap B41). Note this does
+                // NOT match the first - "Measure_" and "MeasureSub_" are disjoint prefixes - so a
+                // body full of markers would declare no local at all and break the CONSUMER's
+                // build, exactly as the note above predicts for a missed spelling.
+                name + " = MeasureSub_",
             };
             var sites = 0;
             string single = null;
@@ -3644,8 +3776,16 @@ namespace ProtoBuf.BuildTools.Generators
             // serializer measures (gap B31): the body is delegated, so there is nothing to walk,
             // but the length can still be obtained without a traversal. Such a contract is
             // measurable and NOT raw-writable - see DelegatesMeasure's callers.
-            && (contract.SurrogateSerializer is null || contract.SurrogateSerializerMeasures)
-            && contract.RootTypeName is null && contract.SubTypes.Count == 0;
+            && (contract.SurrogateSerializer is null || contract.SurrogateSerializerMeasures);
+            // a HIERARCHY used to be excluded here, and the exclusion was never principled (gap
+            // B41). A sub-type marker IS a nested sub-message: WriteSubType(n, value, serializer)
+            // is WriteFieldHeader(n, String) plus the engine's sub-item machinery, optionally
+            // grouped ([ProtoInclude(DataFormat = Group)]) and optionally present (the runtime type
+            // decides) - and every one of those shapes is already measured for a MEMBER. What it
+            // needs is a per-LAYER measure mirroring WriteSubType, which is MeasureSub_; see
+            // EmitSubTypeContract. The write is untouched and stays stateful, so a hierarchy is
+            // measurable-but-not-raw-writable exactly as a delegating surrogate is - which is what
+            // MeasureWithoutRawWrite is for.
 
         /// <summary>
         /// A contract whose whole body is a delegation to the surrogate's own serializer, measured
@@ -3653,6 +3793,27 @@ namespace ProtoBuf.BuildTools.Generators
         /// </summary>
         private static bool DelegatesMeasure(ProtoContractPlan contract)
             => contract.SurrogateSerializer is not null && contract.SurrogateSerializerMeasures;
+
+        /// <summary>
+        /// Measurable, but with no <c>RawWrite_</c> to pair with - so its write is entered with no
+        /// measure prologue, and it must neither reserve slots nor be treated as a raw target.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Measure and write eligibility are independent</b>, and this is the predicate that
+        /// says so. Two shapes qualify, for the same reason from opposite directions: a delegating
+        /// surrogate has no members to walk (its serializer writes the whole body), and a HIERARCHY
+        /// layer's write is the stateful <c>WriteSubType</c>, which frames its own markers.
+        /// </para>
+        /// <para>
+        /// Getting this wrong is not a diagnostic, it is a <b>length of zero on the wire</b>: the
+        /// write consumes positional slots that no measure filled, and every later length shifts
+        /// with it. <c>GenericHierarchy</c> catches it within minutes, which is how the first B41
+        /// attempt found it.
+        /// </para>
+        /// </remarks>
+        private static bool MeasureWithoutRawWrite(ProtoContractPlan contract)
+            => DelegatesMeasure(contract) || contract.RootTypeName is not null;
             // [ProtoContract(IsGroup = true)] used to be excluded here. It never needed to be
             // (gap B42): a grouped contract carries NO length prefix, which makes it cheaper to
             // measure, not harder. What actually made the exclusion load-bearing is that the
@@ -3807,9 +3968,10 @@ namespace ProtoBuf.BuildTools.Generators
                 && !member.SubSerializerIsScalar && !member.SubSerializerDynamic
                 && member.TypeName is not null
                 && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
-                // measurable does NOT imply raw-writable: a delegating surrogate has a Measure_ and
-                // no RawWrite_, so its member keeps the stateful write (and reserves no slot)
-                && !DelegatesMeasure(target)
+                // measurable does NOT imply raw-writable: a delegating surrogate and a hierarchy
+                // both have a Measure_ and no RawWrite_, so the member keeps the stateful write
+                // (and reserves no slot)
+                && !MeasureWithoutRawWrite(target)
                 ? target : null;
 
         /// <summary>
@@ -3830,7 +3992,7 @@ namespace ProtoBuf.BuildTools.Generators
                 && member.TypeName is not null
                 && measurable is not null && measurable.TryGetValue(member.TypeName, out var target)
                 // as for the unary case: measurable does not imply raw-writable
-                && !DelegatesMeasure(target)
+                && !MeasureWithoutRawWrite(target)
                 ? target : null;
 
         /// <summary>

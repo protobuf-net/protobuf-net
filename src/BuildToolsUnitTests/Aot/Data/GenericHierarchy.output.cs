@@ -403,18 +403,18 @@ partial class GenericHierarchyModel
 
     private sealed class ProtoBufGeneratedServices
         : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Crate>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.CrateHolder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Node>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Node>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.PlainNode>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.PlainNode>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.PlainNode>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Ship>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
@@ -514,7 +514,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.CrateHolder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.CrateHolder value)
             => (global::AotFixtures.GenericHierarchy.CrateHolder)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node>.Create(state.Context, value));
@@ -538,6 +538,32 @@ partial class GenericHierarchyModel
                 RawWrite_AotFixtures_GenericHierarchy_Crate(ref state, tmp1, state.RawDepthBudget);
                 DebugAssertPosition(ref state, before + len, "Value");
             }
+        }
+
+        private static long Measure_AotFixtures_GenericHierarchy_CrateHolder(global::AotFixtures.GenericHierarchy.CrateHolder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_GenericHierarchy_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_GenericHierarchy_CrateHolder(global::AotFixtures.GenericHierarchy.CrateHolder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_GenericHierarchy_Crate(tmp1, depth, slots, context);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.CrateHolder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_GenericHierarchy_CrateHolder(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.GenericHierarchy.CrateHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.CrateHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.CrateHolder> value)
@@ -572,7 +598,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> value)
             => (global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node>.Create(state.Context, value));
@@ -593,6 +619,35 @@ partial class GenericHierarchyModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
+        }
+
+        private static long Measure_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_GenericHierarchy_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.GenericHierarchy.CrateHolder layer1)
+                {
+                    var sub = MeasureSub_AotFixtures_GenericHierarchy_CrateHolder(layer1, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.GenericHierarchy.CrateHolder
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>> value)
@@ -624,7 +679,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> value)
             => (global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node>.Create(state.Context, value));
@@ -645,6 +700,35 @@ partial class GenericHierarchyModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
+        }
+
+        private static long Measure_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_GenericHierarchy_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.GenericHierarchy.ShipHolder layer1)
+                {
+                    var sub = MeasureSub_AotFixtures_GenericHierarchy_ShipHolder(layer1, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.GenericHierarchy.ShipHolder
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>> value)
@@ -676,7 +760,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Node>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.Node global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.Node>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.Node value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node>.Create(state.Context, value));
@@ -705,6 +789,46 @@ partial class GenericHierarchyModel
                     global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
                 }
             }
+        }
+
+        private static long Measure_AotFixtures_GenericHierarchy_Node(global::AotFixtures.GenericHierarchy.Node value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_GenericHierarchy_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_GenericHierarchy_Node(global::AotFixtures.GenericHierarchy.Node value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.GenericHierarchy.PlainNode layer1)
+                {
+                    sub = MeasureSub_AotFixtures_GenericHierarchy_PlainNode(layer1, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.GenericHierarchy.PlainNode
+                }
+                else if (value is global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship> layer3)
+                {
+                    sub = MeasureSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Ship_(layer3, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Ship>
+                }
+                else if (value is global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate> layer4)
+                {
+                    sub = MeasureSub_AotFixtures_GenericHierarchy_Holder_global__AotFixtures_GenericHierarchy_Crate_(layer4, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.GenericHierarchy.Holder<global::AotFixtures.GenericHierarchy.Crate>
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.Node>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.Node value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_GenericHierarchy_Node(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.GenericHierarchy.Node global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node> value)
@@ -746,7 +870,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.PlainNode>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.PlainNode global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.PlainNode>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.PlainNode value)
             => (global::AotFixtures.GenericHierarchy.PlainNode)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node>.Create(state.Context, value));
@@ -763,6 +887,26 @@ partial class GenericHierarchyModel
                 state.WriteRawTag((1 << 3) | 0);  // N
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_GenericHierarchy_PlainNode(global::AotFixtures.GenericHierarchy.PlainNode value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_GenericHierarchy_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_GenericHierarchy_PlainNode(global::AotFixtures.GenericHierarchy.PlainNode value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.N;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // N
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.PlainNode>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.PlainNode value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_GenericHierarchy_PlainNode(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.GenericHierarchy.PlainNode global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.PlainNode>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.PlainNode> value)
@@ -867,7 +1011,7 @@ partial class GenericHierarchyModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.GenericHierarchy.ShipHolder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.GenericHierarchy.ShipHolder value)
             => (global::AotFixtures.GenericHierarchy.ShipHolder)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.Node>.Create(state.Context, value));
@@ -891,6 +1035,32 @@ partial class GenericHierarchyModel
                 RawWrite_AotFixtures_GenericHierarchy_Ship(ref state, tmp1, state.RawDepthBudget);
                 DebugAssertPosition(ref state, before + len, "Value");
             }
+        }
+
+        private static long Measure_AotFixtures_GenericHierarchy_ShipHolder(global::AotFixtures.GenericHierarchy.ShipHolder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_GenericHierarchy_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_GenericHierarchy_ShipHolder(global::AotFixtures.GenericHierarchy.ShipHolder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != null)
+            {
+                var slot1 = slots.Reserve();
+                var sub = Measure_AotFixtures_GenericHierarchy_Ship(tmp1, depth, slots, context);
+                slots.Set(slot1, sub);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.GenericHierarchy.ShipHolder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_GenericHierarchy_ShipHolder(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.GenericHierarchy.ShipHolder global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.GenericHierarchy.ShipHolder>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.GenericHierarchy.ShipHolder> value)

@@ -160,9 +160,9 @@ partial class InheritAccessorModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Base>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Base>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Base>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Derived>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Derived>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Derived>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Holder>
     {
@@ -171,7 +171,7 @@ partial class InheritAccessorModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Base>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritAccessor.Base global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Base>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritAccessor.Base value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Base>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Base>.Create(state.Context, value));
@@ -219,6 +219,52 @@ partial class InheritAccessorModel
                     state.WriteRawVarint64(unchecked((ulong)(long)item4));
                 }
             }
+        }
+
+        private static long Measure_AotFixtures_InheritAccessor_Base(global::AotFixtures.InheritAccessor.Base value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_InheritAccessor_Base(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_InheritAccessor_Base(global::AotFixtures.InheritAccessor.Base value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.InheritAccessor.Derived layer10)
+                {
+                    var sub = MeasureSub_AotFixtures_InheritAccessor_Derived(layer10, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.InheritAccessor.Derived
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = Field_AotFixtures_InheritAccessor_Base__count(value);
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // _count
+            var tmp2 = value.Label;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Label
+            }
+            var tmp3 = value.Ordinal;
+            if (tmp3 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp3));  // Ordinal
+            var tmp4 = Field_AotFixtures_InheritAccessor_Base__values(value);
+            if (tmp4 != null)
+            {
+                foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp4))
+                {
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)item4));
+                }
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Base>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritAccessor.Base value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_InheritAccessor_Base(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.InheritAccessor.Base global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Base>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Base> value)
@@ -297,7 +343,7 @@ partial class InheritAccessorModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Derived>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.InheritAccessor.Derived global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.InheritAccessor.Derived>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.InheritAccessor.Derived value)
             => (global::AotFixtures.InheritAccessor.Derived)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Base>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Base>.Create(state.Context, value));
@@ -314,6 +360,29 @@ partial class InheritAccessorModel
                 state.WriteRawTag((5 << 3) | 2);  // _extra
                 state.WriteRawString(tmp5);
             }
+        }
+
+        private static long Measure_AotFixtures_InheritAccessor_Derived(global::AotFixtures.InheritAccessor.Derived value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_InheritAccessor_Base(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_InheritAccessor_Derived(global::AotFixtures.InheritAccessor.Derived value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp5 = Field_AotFixtures_InheritAccessor_Derived__extra(value);
+            if (tmp5 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp5);  // _extra
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.InheritAccessor.Derived>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.InheritAccessor.Derived value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_InheritAccessor_Derived(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.InheritAccessor.Derived global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.InheritAccessor.Derived>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.InheritAccessor.Derived> value)

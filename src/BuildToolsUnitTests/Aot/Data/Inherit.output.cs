@@ -306,14 +306,14 @@ partial class InheritModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Animal>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Animal>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Cat>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Cat>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Cat>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Dog>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Dog>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Dog>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Puppy>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Holder>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Puppy>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>
         , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Standalone>
     {
@@ -322,7 +322,7 @@ partial class InheritModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Animal>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Inherit.Animal global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Animal>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Animal value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal>.Create(state.Context, value));
@@ -353,6 +353,46 @@ partial class InheritModel
                 state.WriteRawTag((1 << 3) | 2);  // Name
                 state.WriteRawString(tmp1);
             }
+        }
+
+        private static long Measure_AotFixtures_Inherit_Animal(global::AotFixtures.Inherit.Animal value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Inherit_Animal(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Inherit_Animal(global::AotFixtures.Inherit.Animal value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.Inherit.Dog layer100)
+                {
+                    sub = MeasureSub_AotFixtures_Inherit_Dog(layer100, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Dog
+                }
+                else if (value is global::AotFixtures.Inherit.Cat layer101)
+                {
+                    sub = MeasureSub_AotFixtures_Inherit_Cat(layer101, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Cat
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Name;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Animal>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Inherit.Animal value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Inherit_Animal(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Inherit.Animal global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal> value)
@@ -395,7 +435,7 @@ partial class InheritModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Cat>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Inherit.Cat global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Cat>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Cat value)
             => (global::AotFixtures.Inherit.Cat)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal>.Create(state.Context, value));
@@ -410,6 +450,25 @@ partial class InheritModel
             {
                 state.WriteRawTagBool((1 << 3) | 0, tmp1);  // Purrs
             }
+        }
+
+        private static long Measure_AotFixtures_Inherit_Cat(global::AotFixtures.Inherit.Cat value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Inherit_Animal(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Inherit_Cat(global::AotFixtures.Inherit.Cat value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Purrs;
+            if (tmp1) len += 2;  // Purrs
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Cat>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Inherit.Cat value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Inherit_Cat(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Inherit.Cat global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Cat>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Cat> value)
@@ -445,7 +504,7 @@ partial class InheritModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Dog>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Inherit.Dog global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Dog>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Dog value)
             => (global::AotFixtures.Inherit.Dog)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal>.Create(state.Context, value));
@@ -472,6 +531,37 @@ partial class InheritModel
                 state.WriteRawTag((1 << 3) | 0);  // Bark
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_Inherit_Dog(global::AotFixtures.Inherit.Dog value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Inherit_Animal(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Inherit_Dog(global::AotFixtures.Inherit.Dog value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.Inherit.Puppy layer200)
+                {
+                    var sub = MeasureSub_AotFixtures_Inherit_Puppy(layer200, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Puppy
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Bark;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Bark
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Dog>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Inherit.Dog value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Inherit_Dog(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Inherit.Dog global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Dog>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Dog> value)
@@ -512,16 +602,44 @@ partial class InheritModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Inherit.Holder global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Holder value)
             => RawRead_AotFixtures_Inherit_Holder(ref state, value);
 
         void global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Holder>.Write(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Holder value)
+            => RawWrite_AotFixtures_Inherit_Holder(ref state, value, state.RawDepthBudget);
+
+        public static void RawWrite_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoWriter.State state, global::AotFixtures.Inherit.Holder value, int depth)
         {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Animal;
-            state.WriteMessage<global::AotFixtures.Inherit.Animal>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, this);
+            state.WriteMessage<global::AotFixtures.Inherit.Animal>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, Self);
+            state.SyncRawDepth(rawDepth);
+        }
+
+        private static long Measure_AotFixtures_Inherit_Holder(global::AotFixtures.Inherit.Holder value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            var tmp1 = value.Animal;
+            if (tmp1 != null)
+            {
+                var sub = Measure_AotFixtures_Inherit_Animal(tmp1, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Animal
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Holder>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Inherit.Holder value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out var slots)) return -1;
+            var entry = slots.Mark();
+            var len = Measure_AotFixtures_Inherit_Holder(value, depth, slots, context);
+            slots.Enter(value, entry);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         private static global::AotFixtures.Inherit.Holder RawRead_AotFixtures_Inherit_Holder(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Holder value)
@@ -559,7 +677,7 @@ partial class InheritModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Puppy>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.Inherit.Puppy global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.Inherit.Puppy>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Inherit.Puppy value)
             => (global::AotFixtures.Inherit.Puppy)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Animal>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Animal>.Create(state.Context, value));
@@ -576,6 +694,26 @@ partial class InheritModel
                 state.WriteRawTag((1 << 3) | 0);  // Age
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_Inherit_Puppy(global::AotFixtures.Inherit.Puppy value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_Inherit_Animal(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_Inherit_Puppy(global::AotFixtures.Inherit.Puppy value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Age;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Age
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.Inherit.Puppy>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.Inherit.Puppy value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_Inherit_Puppy(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.Inherit.Puppy global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Inherit.Puppy>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Inherit.Puppy> value)

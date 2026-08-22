@@ -162,11 +162,11 @@ partial class AssemblySubTypeModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Branch>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySubType.Branch>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Branch>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Leaf>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySubType.Leaf>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Leaf>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Node>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySubType.Node>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
@@ -174,7 +174,7 @@ partial class AssemblySubTypeModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Branch>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.AssemblySubType.Branch global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Branch>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySubType.Branch value)
             => (global::AotFixtures.AssemblySubType.Branch)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.AssemblySubType.Node>.Create(state.Context, value));
@@ -191,6 +191,26 @@ partial class AssemblySubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Count
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_AssemblySubType_Branch(global::AotFixtures.AssemblySubType.Branch value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_AssemblySubType_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_AssemblySubType_Branch(global::AotFixtures.AssemblySubType.Branch value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Count;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Count
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySubType.Branch>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AssemblySubType.Branch value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_AssemblySubType_Branch(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.AssemblySubType.Branch global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Branch>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.AssemblySubType.Branch> value)
@@ -226,7 +246,7 @@ partial class AssemblySubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Leaf>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.AssemblySubType.Leaf global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Leaf>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySubType.Leaf value)
             => (global::AotFixtures.AssemblySubType.Leaf)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.AssemblySubType.Node>.Create(state.Context, value));
@@ -243,6 +263,26 @@ partial class AssemblySubTypeModel
                 state.WriteRawTag((1 << 3) | 0);  // Value
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_AssemblySubType_Leaf(global::AotFixtures.AssemblySubType.Leaf value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_AssemblySubType_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_AssemblySubType_Leaf(global::AotFixtures.AssemblySubType.Leaf value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Value;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Value
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySubType.Leaf>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AssemblySubType.Leaf value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_AssemblySubType_Leaf(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.AssemblySubType.Leaf global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Leaf>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.AssemblySubType.Leaf> value)
@@ -278,7 +318,7 @@ partial class AssemblySubTypeModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Node>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.AssemblySubType.Node global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.AssemblySubType.Node>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.AssemblySubType.Node value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.AssemblySubType.Node>.Create(state.Context, value));
@@ -309,6 +349,46 @@ partial class AssemblySubTypeModel
                 state.WriteRawTag((1 << 3) | 2);  // Name
                 state.WriteRawString(tmp1);
             }
+        }
+
+        private static long Measure_AotFixtures_AssemblySubType_Node(global::AotFixtures.AssemblySubType.Node value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_AssemblySubType_Node(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_AssemblySubType_Node(global::AotFixtures.AssemblySubType.Node value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.AssemblySubType.Leaf layer50)
+                {
+                    sub = MeasureSub_AotFixtures_AssemblySubType_Leaf(layer50, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.AssemblySubType.Leaf
+                }
+                else if (value is global::AotFixtures.AssemblySubType.Branch layer51)
+                {
+                    sub = MeasureSub_AotFixtures_AssemblySubType_Branch(layer51, depth, slots, context);
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.AssemblySubType.Branch
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Name;
+            if (tmp1 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp1);  // Name
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.AssemblySubType.Node>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.AssemblySubType.Node value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_AssemblySubType_Node(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.AssemblySubType.Node global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.AssemblySubType.Node>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.AssemblySubType.Node> value)

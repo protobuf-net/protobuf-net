@@ -162,11 +162,11 @@ partial class IncludeGroupModel
     }
 
     private sealed class ProtoBufGeneratedServices
-        : global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Base>
+        : global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.IncludeGroup.Base>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Grouped>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.IncludeGroup.Grouped>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Grouped>
-        , global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>
+        , global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.IncludeGroup.Plain>
         , global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>
     {
         private static readonly ProtoBufGeneratedServices Self = new();
@@ -174,7 +174,7 @@ partial class IncludeGroupModel
         private static readonly ProtoBufGeneratedServices s_default = new ProtoBufGeneratedServices();
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Base>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.IncludeGroup.Base global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Base>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.IncludeGroup.Base value)
             => ((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base>.Create(state.Context, value));
@@ -211,6 +211,48 @@ partial class IncludeGroupModel
                 state.WriteRawTag((2 << 3) | 2);  // Error
                 state.WriteRawString(tmp2);
             }
+        }
+
+        private static long Measure_AotFixtures_IncludeGroup_Base(global::AotFixtures.IncludeGroup.Base value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_IncludeGroup_Base(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_IncludeGroup_Base(global::AotFixtures.IncludeGroup.Base value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            long sub;
+            if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
+            {
+                if (value is global::AotFixtures.IncludeGroup.Grouped layer3)
+                {
+                    sub = MeasureSub_AotFixtures_IncludeGroup_Grouped(layer3, depth, slots, context);
+                    len += 2 + sub;  // global::AotFixtures.IncludeGroup.Grouped (group: no length prefix)
+                }
+                else if (value is global::AotFixtures.IncludeGroup.Plain layer4)
+                {
+                    sub = MeasureSub_AotFixtures_IncludeGroup_Plain(layer4, depth, slots, context);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.IncludeGroup.Plain
+                }
+                else
+                {
+                    global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+                }
+            }
+            var tmp1 = value.Success;
+            if (tmp1) len += 2;  // Success
+            var tmp2 = value.Error;
+            if (tmp2 != null)
+            {
+                len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(tmp2);  // Error
+            }
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.IncludeGroup.Base>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.IncludeGroup.Base value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_IncludeGroup_Base(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.IncludeGroup.Base global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base> value)
@@ -262,7 +304,7 @@ partial class IncludeGroupModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Grouped>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.IncludeGroup.Grouped global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Grouped>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.IncludeGroup.Grouped value)
             => (global::AotFixtures.IncludeGroup.Grouped)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base>.Create(state.Context, value));
@@ -279,6 +321,26 @@ partial class IncludeGroupModel
                 state.WriteRawTag((1 << 3) | 0);  // Extra
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_IncludeGroup_Grouped(global::AotFixtures.IncludeGroup.Grouped value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_IncludeGroup_Base(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_IncludeGroup_Grouped(global::AotFixtures.IncludeGroup.Grouped value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Extra;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Extra
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.IncludeGroup.Grouped>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.IncludeGroup.Grouped value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_IncludeGroup_Grouped(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.IncludeGroup.Grouped global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Grouped>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Grouped> value)
@@ -314,7 +376,7 @@ partial class IncludeGroupModel
         }
 
         global::ProtoBuf.Serializers.SerializerFeatures global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>.Features
-            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString;
+            => global::ProtoBuf.Serializers.SerializerFeatures.CategoryMessage | global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionTrySkipWritingWhenMeasuring;
 
         global::AotFixtures.IncludeGroup.Plain global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.IncludeGroup.Plain>.Read(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.IncludeGroup.Plain value)
             => (global::AotFixtures.IncludeGroup.Plain)((global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Base>)this).ReadSubType(ref state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Base>.Create(state.Context, value));
@@ -331,6 +393,26 @@ partial class IncludeGroupModel
                 state.WriteRawTag((1 << 3) | 0);  // Extra
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp1));
             }
+        }
+
+        private static long Measure_AotFixtures_IncludeGroup_Plain(global::AotFixtures.IncludeGroup.Plain value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+            => MeasureSub_AotFixtures_IncludeGroup_Base(value, depth, slots, context);
+
+        private static long MeasureSub_AotFixtures_IncludeGroup_Plain(global::AotFixtures.IncludeGroup.Plain value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
+        {
+            if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
+            long len = 0;
+            global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var tmp1 = value.Extra;
+            if (tmp1 != 0) len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp1));  // Extra
+            return len;
+        }
+
+        int global::ProtoBuf.Serializers.IMeasuringSerializer<global::AotFixtures.IncludeGroup.Plain>.Measure(global::ProtoBuf.ISerializationContext context, global::ProtoBuf.WireType wireType, global::AotFixtures.IncludeGroup.Plain value)
+        {
+            if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;
+            var len = Measure_AotFixtures_IncludeGroup_Plain(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
+            return len <= int.MaxValue ? (int)len : -1;
         }
 
         global::AotFixtures.IncludeGroup.Plain global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.IncludeGroup.Plain>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.IncludeGroup.Plain> value)
