@@ -189,6 +189,18 @@ internal sealed class Filler
     {
         if (type.IsValueType) return Activator.CreateInstance(type);
 
+        // A DELEGATE must never reach the constructor loop below, and this is a process-kill rather
+        // than a failed instance: a delegate's only constructor is the runtime's (object, IntPtr),
+        // which the loop happily calls with a scalar-supplied function pointer - always NON-ZERO,
+        // since Scalar hands back (IntPtr)(n + 1). Delegate.DelegateConstruct then validates that
+        // pointer, fails, and FailFasts with "Internal CLR error. (0x80131506)". The try/catch around
+        // the invoke cannot see it, because it is an engine failure and not an exception; a zero
+        // pointer WOULD have been caught, which is why this stayed latent.
+        //
+        // Nothing here can build a delegate anyway, so this is only ever refusing something already
+        // impossible - it just refuses it survivably, and the caller reports it like any other.
+        if (typeof(Delegate).IsAssignableFrom(type)) return null;
+
         var parameterless = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic
             | BindingFlags.Instance, binder: null, Type.EmptyTypes, modifiers: null);
         if (parameterless is not null)
