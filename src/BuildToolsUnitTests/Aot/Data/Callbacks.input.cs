@@ -119,6 +119,11 @@ public class HookedBase
 
     [ProtoBeforeSerialization] public void BeforeSer() => Trace += "base-bs;";
     [ProtoAfterSerialization] public void AfterSer() => Trace += "base-as;";
+    // the DESERIALIZE pair too: ref-emit fires the root's through
+    // SubTypeState<T>.OnBeforeDeserialize, which runs at MATERIALISATION rather than at a fixed
+    // point in the field loop - probed, and the reason this needed its own mechanism
+    [ProtoBeforeDeserialization] public void BeforeDes() => Trace += "base-bd;";
+    [ProtoAfterDeserialization] public void AfterDes() => Trace += "base-ad;";
 }
 
 [ProtoContract]
@@ -131,6 +136,8 @@ public class HookedDerived : HookedBase
     // have told apart.
     [ProtoBeforeSerialization] public void DerivedBeforeSer() => Trace += "derived-bs;";
     [ProtoAfterSerialization] public void DerivedAfterSer() => Trace += "derived-as;";
+    [ProtoBeforeDeserialization] public void DerivedBeforeDes() => Trace += "derived-bd;";
+    [ProtoAfterDeserialization] public void DerivedAfterDes() => Trace += "derived-ad;";
 }
 
 // ...and nested, so something above needs a length and the measure pass genuinely runs over a

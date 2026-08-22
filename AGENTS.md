@@ -1014,10 +1014,13 @@ measured for a member. Two statics per layer, mirroring the two interface method
   sub-typed writes no marker, so the prologue would walk for a length nobody reads; the measure takes
   the same branch on the same object, so the two stay paired. Left unconditional this cost **18% at
   depth 1** — enough to put the generated model behind the classic engine on that shape.
-- **A serialize callback on a hierarchy layer is NOT fired**, by either the write or the measure.
-  That is a pre-existing divergence from ref-emit rather than anything measure-first introduced, and
-  `MeasureSub_` mirrors the write deliberately so the two cannot disagree about it. See
-  `notes/gaps.md` B46; `Diagnostics/HierarchyCallback` pins today's behaviour.
+- **Only the ROOT's callbacks fire, in BOTH directions** - probed against ref-emit, and the obvious
+  guess is wrong: *members* work per layer, callbacks do not. Serialize fires in `WriteSubType`,
+  `RawWriteSub_` and `MeasureSub_` (the measure one is not optional - both passes must observe the
+  same object). Deserialize goes through `SubTypeState<T>.OnBeforeDeserialize`, which runs at
+  *materialisation* rather than at a fixed point in the field loop, because the hook must see the
+  instance already constructed as the sub-type; that is the same API `TypeSerializer` uses. See
+  `notes/gaps.md` B46.
 
 The prize was the **cascade** as much as the hierarchy itself: +158 contracts measurable in the
 corpus (2499 → 2657), and 2.99× on a depth-16 length-prefixed hierarchy, with the per-layer curve

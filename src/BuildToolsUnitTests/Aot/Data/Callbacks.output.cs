@@ -884,6 +884,7 @@ partial class CallbacksModel
 
         global::AotFixtures.Callbacks.HookedBase global::ProtoBuf.Serializers.ISubTypeSerializer<global::AotFixtures.Callbacks.HookedBase>.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, global::ProtoBuf.Serializers.SubTypeState<global::AotFixtures.Callbacks.HookedBase> value)
         {
+            value.OnBeforeDeserialize(static (obj, ctx) => obj.BeforeDes());
             int field;
             while ((field = state.ReadFieldHeader()) > 0)
             {
@@ -903,7 +904,9 @@ partial class CallbacksModel
                         break;
                 }
             }
-            return value.Value;
+            var done = value.Value;
+            done.AfterDes();
+            return done;
         }
 
         // raw read pass: skipped - hierarchy with serialization callbacks

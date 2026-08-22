@@ -4554,7 +4554,7 @@ Two things worth keeping:
 - **`MapMissingValueTests` asserts the reference first**, so a change in protobuf-net's own behaviour
   surfaces as the premise failing rather than as a mysterious failure of ours.
 
-### B46. ~~A serialize callback on a HIERARCHY layer never fires~~ — **SERIALIZE half FIXED 2026-08-22; the DESERIALIZE half is still open**
+### B46. ~~Callbacks on a HIERARCHY layer never fire~~ — **CLOSED 2026-08-23: both directions, root-only**
 
 **Found while building B41, and deliberately not fixed there.** `EmitSubTypeContract` has never
 called `EmitCallback`: a hierarchy contract's `ISerializer<T>.Write` is a one-line delegation to the
@@ -4607,7 +4607,7 @@ firing, the derived layer *not* firing, agreement with ref-emit on the **set** (
 is a property of the path), and the two passes staying symmetric rather than splitting 2/1 - all four
 confirmed to fail with the emit reverted.
 
-#### The DESERIALIZE half is still open, and here is what the probe found
+#### The DESERIALIZE half — CLOSED 2026-08-23, and the probe named the mechanism
 
 `base.beforeDeser` fires with the instance **already constructed as `Leaf`** and the root's own field
 still `0`; `base.afterDeser` with it populated. So the hook is positioned *lazily*, at the point the
@@ -4616,9 +4616,24 @@ the marker is written before the layer's own members.
 
 That has no single place in our emit to match: `ReadSubType` hoists `value.Value` **per case**,
 deliberately, because forcing it at the top would construct the ROOT type for a payload that names a
-sub-type. So this needs its own design rather than a guess, and firing it in the wrong place would be
-worse than not firing it - a callback that sees a half-built object is harder to diagnose than one
-that never runs.
+sub-type.
+
+**The answer was already in protobuf-net, and reading `TypeSerializer` beat designing something.**
+`SubTypeState<T>.OnBeforeDeserialize(Action<T, ISerializationContext>)` is public, and registers a
+callback that runs *when the instance is constructed* - "if the item already exists, the callback is
+executed immediately". That is exactly the lazy positioning the probe measured, and it is precisely
+what ref-emit uses (`_subTypeOnBeforeDeserialize`, registered at the top of its own `ReadSubType`).
+So the generated root registers the same hook, and the after-hook fires on `value.Value` at the end.
+
+**Two things had to become root-only, and the second was a pre-existing divergence of its own:** the
+new before-hook, and the *existing* after-deserialize emission, which was firing on **every layer**.
+That surfaced only once the before-half worked - the test went from "base's never fire" to "derived's
+fire too" - and it had to be gated in **both** read shapes, the raw `RawReadSub_` and the classic
+`ISubTypeSerializer.ReadSubType`. Fixing one and not the other looks green on whichever path the
+fixture happens to take.
+
+**The whole family now reads: on a hierarchy, only the ROOT's callbacks fire, in both directions.**
+Members are the opposite - each layer writes its own - and that asymmetry is the thing to remember.
 
 **Priority: low on frequency, high on surprise.** A callback that silently never runs is the failure
 mode this file exists to catch, but a hierarchy carrying one is rare enough that the corpus contains

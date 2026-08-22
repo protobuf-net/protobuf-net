@@ -130,6 +130,42 @@ namespace ProtoBuf.AotConformance
             Assert.InRange(before, 1, 2); // "at most twice", however deep - never more
         }
 
+        [Fact]
+        public void TheRootsDESERIALIZECallbacksFireAndTheDerivedLayersDoNot()
+        {
+            // ref-emit routes these through SubTypeState<T>.OnBeforeDeserialize, which fires at
+            // MATERIALISATION - probed: the hook sees the instance already constructed as the
+            // SUB-TYPE, with the root's own fields not yet read. There is no fixed point in the
+            // field loop that matches, which is why it needs that mechanism rather than a
+            // statement in the emitted loop.
+            var payload = new MemoryStream();
+            Generated().Serialize(payload, Derived(11, 12));
+            payload.Position = 0;
+
+            var baseType = Fixtures.GetType("AotFixtures.Callbacks.HookedBase")!;
+            var read = Generated().Deserialize(payload, null, baseType)!;
+
+            var trace = TraceOf(read);
+            Assert.Contains("base-bd;", trace);
+            Assert.Contains("base-ad;", trace);
+            Assert.DoesNotContain("derived-", trace);
+        }
+
+        [Fact]
+        public void TheDeserializeCallbackSeesTheSubTypeAlreadyConstructed()
+        {
+            // the positioning, not merely the firing: the reference fires the root's before-hook
+            // once the payload has named the layer to build, so the callback observes a Derived
+            var payload = new MemoryStream();
+            Reference().Serialize(payload, Derived(11, 12));
+            payload.Position = 0;
+
+            var baseType = Fixtures.GetType("AotFixtures.Callbacks.HookedBase")!;
+            var theirs = Reference().Deserialize(payload, null, baseType)!;
+            Assert.Equal("AotFixtures.Callbacks.HookedDerived", theirs.GetType().FullName);
+            Assert.Contains("base-bd;", TraceOf(theirs));
+        }
+
         private sealed class Discard : IBufferWriter<byte>
         {
             private readonly byte[] _array = new byte[64 * 1024];

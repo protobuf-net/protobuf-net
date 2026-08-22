@@ -547,7 +547,11 @@ namespace ProtoBuf.BuildTools.Generators
             // the after-deserialize hook must fire on EVERY exit, and the raw body has two -
             // the tag==0 loop exit and the scope-end early return - so its presence swaps the
             // early return for a goto to a shared exit label
-            var hasAfter = HasCallback(contract, ProtoCallbackKind.AfterDeserialize);
+            // ...and on a HIERARCHY only the ROOT's fires (gap B46), matching ref-emit: a derived
+            // layer's callbacks never run, which is the opposite of how its MEMBERS work. This test
+            // is what stops RawReadSub_ of every layer firing its own.
+            var hasAfter = HasCallback(contract, ProtoCallbackKind.AfterDeserialize)
+                && (contract.RootTypeName is null || contract.RootTypeName == contract.TypeName);
 
             // a hierarchy layer reads through SubTypeState (deferred construction: the payload
             // names the layer to build, so nothing can be constructed up front) - the static is
@@ -562,7 +566,9 @@ namespace ProtoBuf.BuildTools.Generators
                 Line(sb, indent, $"private static {contract.TypeName} RawReadSub_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, "
                     + $"global::ProtoBuf.Serializers.SubTypeState<{contract.TypeName}> value)");
                 Line(sb, indent, "{");
+                EmitSubTypeBeforeDeserialize(sb, indent + 1, contract);
             }
+            // the raw body addresses value.Value for a sub-type, so the after-hook has to as well
             else
             {
                 Line(sb, indent, $"private static {contract.TypeName} RawRead_{Sanitise(contract.TypeName)}(ref global::ProtoBuf.ProtoReader.State state, {contract.TypeName} value)");
@@ -971,7 +977,7 @@ namespace ProtoBuf.BuildTools.Generators
             if (hasAfter)
             {
                 Line(sb, indent + 1, "afterRead:");
-                EmitCallback(sb, indent + 1, contract, "value", ProtoCallbackKind.AfterDeserialize);
+                EmitCallback(sb, indent + 1, contract, subType ? "value.Value" : "value", ProtoCallbackKind.AfterDeserialize);
             }
             Line(sb, indent + 1, exit);
             if (knownFields.Length != 0)
@@ -1700,6 +1706,27 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool HasCallback(ProtoContractPlan contract, ProtoCallbackKind kind)
             => contract.Callbacks.Count > (int)kind && contract.Callbacks[(int)kind].MethodName is not null;
 
+        /// <summary>
+        /// A callback invocation against an arbitrary receiver and context, for the one site that
+        /// cannot use <see cref="EmitCallback"/> - the <c>OnBeforeDeserialize</c> lambda, whose
+        /// parameters are named by the delegate rather than in scope.
+        /// </summary>
+        private static string? CallbackCall(ProtoContractPlan contract, ProtoCallbackKind kind,
+            string receiver, string context)
+        {
+            var callbacks = contract.Callbacks;
+            if (callbacks.Count <= (int)kind) return null;
+            if (callbacks[(int)kind].MethodName is not { } method) return null;
+            var argument = callbacks[(int)kind].Argument switch
+            {
+                ProtoCallbackArgument.StreamingContext
+                    => $"global::ProtoBuf.SerializationContext.AsStreamingContext({context})",
+                ProtoCallbackArgument.SerializationContext => context,
+                _ => "",
+            };
+            return $"{receiver}.{method}({argument})";
+        }
+
         private static void EmitCallback(StringBuilder sb, int indent, ProtoContractPlan contract,
             string instance, ProtoCallbackKind kind, string context = "state.Context")
         {
@@ -1717,6 +1744,33 @@ namespace ProtoBuf.BuildTools.Generators
                 _ => "",
             };
             Line(sb, indent, $"{instance}.{method}({argument});");
+        }
+
+        /// <summary>
+        /// The root's before-deserialize hook on a hierarchy (gap B46), registered through
+        /// <c>SubTypeState&lt;T&gt;.OnBeforeDeserialize</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>It cannot be a statement in the read loop</b>, which is what makes this its own
+        /// mechanism rather than a call like every other callback. Probed against ref-emit: the
+        /// hook fires with the instance <i>already constructed as the sub-type</i> and the root's
+        /// own fields not yet read - i.e. at MATERIALISATION, which for a sub-typed payload is
+        /// after the marker field has been seen. Our read hoists <c>value.Value</c> per case
+        /// deliberately (forcing it up front would construct the ROOT for a payload naming a
+        /// sub-type), so there is no single point in the loop that corresponds. protobuf-net's own
+        /// <c>TypeSerializer</c> uses exactly this API for exactly this reason.
+        /// </para>
+        /// <para>
+        /// <b>Root only</b>, matching ref-emit - probed, and the obvious guess is wrong: members
+        /// work per layer, callbacks do not.
+        /// </para>
+        /// </remarks>
+        private static void EmitSubTypeBeforeDeserialize(StringBuilder sb, int indent, ProtoContractPlan contract)
+        {
+            if (contract.RootTypeName != contract.TypeName) return;
+            if (CallbackCall(contract, ProtoCallbackKind.BeforeDeserialize, "obj", "ctx") is not { } call) return;
+            Line(sb, indent, $"value.OnBeforeDeserialize(static (obj, ctx) => {call});");
         }
 
         /// <summary>
@@ -2809,8 +2863,21 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent, $"{contract.TypeName} {sub}.ReadSubType(ref global::ProtoBuf.ProtoReader.State state, "
                 + $"global::ProtoBuf.Serializers.SubTypeState<{contract.TypeName}> value)");
             Line(sb, indent, "{");
+            EmitSubTypeBeforeDeserialize(sb, indent + 1, contract);
             EmitReadLoop(sb, indent + 1, contract, "obj", contract.SubTypes, fromSubTypeState: true);
-            Line(sb, indent + 1, "return value.Value;");
+            // root only, exactly as the raw body's hasAfter is - a derived layer's callbacks never
+            // run on a hierarchy, which is the opposite of how its MEMBERS work (gap B46)
+            if (contract.TypeName == root
+                && CallbackCall(contract, ProtoCallbackKind.AfterDeserialize, "done", "state.Context") is { } after)
+            {
+                Line(sb, indent + 1, "var done = value.Value;");
+                Line(sb, indent + 1, after + ";");
+                Line(sb, indent + 1, "return done;");
+            }
+            else
+            {
+                Line(sb, indent + 1, "return value.Value;");
+            }
             Line(sb, indent, "}");
         }
 
