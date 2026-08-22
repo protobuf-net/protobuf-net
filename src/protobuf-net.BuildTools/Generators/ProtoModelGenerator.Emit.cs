@@ -3786,7 +3786,12 @@ namespace ProtoBuf.BuildTools.Generators
         private static bool RawMapMeasurable(ProtoMemberPlan member,
             Dictionary<string, ProtoContractPlan> measurable)
             => member.Map.Factory is not null
-            && !member.WrappedValue && !member.WrappedCollection
+            // wrapping is measurable in both scopes (gap B42), but only over the sides this
+            // already handles: a wrapped ENUM value is written even when zero, which is the
+            // opposite of the guard the wrapper sits behind, and message values are out anyway
+            && (!(member.WrappedValue || member.WrappedCollection)
+                || (member.Map.ValueEnumTypeName is null
+                    && member.Map.ValueKind != ProtoMemberKind.Message))
             && member.DataFormat == ProtoDataFormat.Default
             && member.MapKeyFormat == ProtoDataFormat.Default
             && member.MapValueFormat == ProtoDataFormat.Default
@@ -3841,6 +3846,24 @@ namespace ProtoBuf.BuildTools.Generators
             // carries NO trivial-value guard, which is the whole reason this is not one line
             var enumSide = MapSideIsEnum(member.Map, key);
             var value = enumSide ? $"({UnderlyingKeyword(kind)}){expression}" : expression;
+
+            // A [NullWrappedValue] map wraps the VALUE only - a key cannot be null. The guard is
+            // unchanged, and still asks HasNonTrivialValue of the UNWRAPPED value: probed, a
+            // wrapped int? of 0 and one of null are both omitted, so the wrapper never gets to
+            // tell them apart. Inside it, the value sits at field 1 of a little message.
+            if (!key && member.WrappedValue)
+            {
+                var inner = $"wrap{number}";
+                Line(sb, indent, $"if ({MapSideGuard(kind, expression)})");
+                Line(sb, indent, "{");
+                Line(sb, indent + 1, $"long {inner} = 1 + {MapSideBody(kind, value)};");
+                Line(sb, indent + 1, member.WrappedValueGroup
+                    ? $"{entry} += 2 + {inner};"
+                    : $"{entry} += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong){inner}) + {inner};");
+                Line(sb, indent, "}");
+                return;
+            }
+
             var add = $"{entry} += 1 + {MapSideBody(kind, value)};";
             Line(sb, indent, enumSide ? add : $"if ({MapSideGuard(kind, expression)}) {add}");
         }
@@ -4038,19 +4061,26 @@ namespace ProtoBuf.BuildTools.Generators
                     // HasNonTrivialValue on each side independently, so a default key or value is
                     // simply absent from the entry - which is why the measure guards each side
                     // separately rather than measuring both unconditionally. gap B6.
-                    var mapTag = VarintLen((uint)((member.FieldNumber << 3) | 2));
+                    // a map wraps exactly as a collection does: [NullWrappedCollection] renumbers
+                    // the entries to field 1 and length-prefixes the lot, so null and empty become
+                    // distinguishable (nothing vs 0A-00). gap B42
+                    var entryField = member.WrappedCollection ? 1 : member.FieldNumber;
+                    var mapTag = VarintLen((uint)((entryField << 3) | 2));
                     var pair = $"pair{number}";
                     var entry = $"entry{number}";
+                    var total = member.WrappedCollection ? $"col{number}" : "len";
                     Line(sb, indent, $"if (tmp{number} != null)");
                     Line(sb, indent, "{");
+                    if (member.WrappedCollection) Line(sb, indent + 1, $"long {total} = 0;");
                     Line(sb, indent + 1, $"foreach (var {pair} in tmp{number})");
                     Line(sb, indent + 1, "{");
                     Line(sb, indent + 2, $"long {entry} = 0;");
                     EmitMapSide(sb, indent + 2, member, key: true, $"{pair}.Key", entry, number);
                     EmitMapSide(sb, indent + 2, member, key: false, $"{pair}.Value", entry, number);
-                    Line(sb, indent + 2, $"len += {mapTag} + global::ProtoBuf.ProtoWriter.State"
+                    Line(sb, indent + 2, $"{total} += {mapTag} + global::ProtoBuf.ProtoWriter.State"
                         + $".MeasureRawVarint64((ulong){entry}) + {entry};  // {member.Name}");
                     Line(sb, indent + 1, "}");
+                    if (member.WrappedCollection) EmitWrappedCollectionTotal(sb, indent + 1, member, total);
                     Line(sb, indent, "}");
                     if (condition is not null) Line(sb, baseIndent, "}");
                     continue;

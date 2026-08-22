@@ -77,6 +77,22 @@ public class Crate
     [ProtoMember(9)] public int Trailer { get; set; }
 }
 
+// A map wraps exactly as a collection does, in both scopes - but its VALUE guard is unchanged and
+// still asks HasNonTrivialValue of the UNWRAPPED value, so a wrapped int? of 0 and one of null are
+// BOTH omitted: the wrapper never gets to tell them apart. That is protobuf-net's behaviour, not
+// ours, and the samples pin it rather than wish otherwise.
+[ProtoContract]
+public class Ledger
+{
+    [ProtoMember(1), NullWrappedValue] public Dictionary<int, int?> Counts { get; set; }
+    [ProtoMember(2), NullWrappedValue] public Dictionary<int, string> Notes { get; set; }
+    [ProtoMember(3), NullWrappedValue(AsGroup = true)] public Dictionary<int, int?> Grouped { get; set; }
+    [ProtoMember(4), NullWrappedCollection] public Dictionary<int, int> Whole { get; set; }
+    [ProtoMember(5), NullWrappedCollection, NullWrappedValue] public Dictionary<int, int?> Both { get; set; }
+    [ProtoMember(20), NullWrappedValue] public Dictionary<string, string> Far { get; set; }
+    [ProtoMember(6)] public int Trailer { get; set; }
+}
+
 // nests it, so something above needs a length and the measure actually runs
 [ProtoContract]
 public class Carton
@@ -84,6 +100,7 @@ public class Carton
     [ProtoMember(1)] public Boxed Inner { get; set; }
     [ProtoMember(2)] public int Tag { get; set; }
     [ProtoMember(3)] public Crate Packed { get; set; }
+    [ProtoMember(4)] public Ledger Book { get; set; }
 }
 
 public static class WrapMeasureSamples
@@ -114,12 +131,26 @@ public static class WrapMeasureSamples
         new Crate { Bundle = [new Leaf { Id = 9 }, new Leaf()], BundledParts = [null, new Leaf { Id = 10 }] },
         new Crate { Bundle = [], BundledParts = [] },
         new Carton { Packed = new Crate { Counts = [null], Sizes = [] }, Tag = 5 },
+
+        new Ledger(),
+        // a zero and a null value are byte-identical here - both omitted from the entry
+        new Ledger { Counts = new() { [1] = 2, [2] = 0, [3] = null } },
+        // an EMPTY string value is written, where a null one is not
+        new Ledger { Notes = new() { [1] = "a", [2] = "", [3] = null } },
+        new Ledger { Grouped = new() { [1] = 5, [2] = null } },
+        // null vs empty is the whole point of the collection scope
+        new Ledger { Whole = new() },
+        new Ledger { Whole = new() { [1] = 2, [0] = 0 } },
+        new Ledger { Both = new() { [1] = 2, [2] = null }, Trailer = 8 },
+        new Ledger { Far = new() { ["k"] = "v", ["e"] = "" } },
+        new Carton { Book = new Ledger { Counts = new() { [1] = 0 } }, Tag = 6 },
     ];
 }
 
 [ProtoModel]
 [ProtoSerializable(typeof(Boxed))]
 [ProtoSerializable(typeof(Crate))]
+[ProtoSerializable(typeof(Ledger))]
 [ProtoSerializable(typeof(Leaf))]
 [ProtoSerializable(typeof(Carton))]
 public partial class WrapMeasureModel : TypeModel { }

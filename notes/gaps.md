@@ -3119,7 +3119,7 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 | **maps** — enum or message on either side, a repeated value, or any non-default format | **yes** | **B6** |
 | ~~maps — plain scalar/string sides at the default format~~ | **DONE 2026-08-21** | **B6** |
 | ~~null-wrapping — lone, both collection scopes, message elements~~ | **DONE 2026-08-22** | below |
-| **null-wrapping** — MAPS only | **yes, still** | below |
+| ~~null-wrapping — maps~~ | **DONE 2026-08-22** (scalar/string values) | below |
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
 | ~~a **nullable struct** message member~~ | **DONE 2026-08-21** — and the park reason was wrong | below |
@@ -3253,6 +3253,18 @@ Wrapping a map is a third arm rather than a variation, and the probe says so pla
 | collection-wrapped `null` / `{}` / `{1:2}` | *nothing* / `0A-00` / `0A-06-0A-04-08-01-10-02` |
 | both, `{1:null}` | `0A-04-0A-02-08-01` |
 
+**Wrapped maps — BUILT 2026-08-22, and the probe above is what made it cheap.** Both scopes, for
+scalar and string values. The collection scope is a straight reuse of the collection rule (entries
+renumbered to field 1, then length-prefixed, so null and empty differ); the value scope is the new
+part, and it is *smaller* than the collection element form because the guard does not change: it
+still asks `HasNonTrivialValue` of the **unwrapped** value, which is why a wrapped `int?` of 0 and
+one of null are byte-identical. The measure mirrors that rather than wishing otherwise, and
+`WrapMeasure.input.cs`'s `Ledger` pins it with a sample carrying both.
+
+Excluded, matching the neighbouring decisions rather than by separate argument: an **enum** value
+(written even when zero, which is the opposite of the guard the wrapper sits behind) and a
+**message** value (out for maps generally until B43).
+
 Two findings worth keeping:
 
 - **a wrapped map value of zero and one of null are BYTE-IDENTICAL** (`0A-02-08-01` for both), which
@@ -3283,8 +3295,8 @@ struck through — so this is a short list now rather than a survey. What remain
    rather than never-taught, which is the question to settle first — a sub-type marker is a
    length-prefixed sub-message, but **optionally** delimited, so "one slot per marker" is not a
    fixed shape. Needs a decision before code;
-2. **null-wrapped maps** — the last null-wrapping shape, probed and recorded below but not built.
-   Its *value* scope is genuinely new; its collection scope is a reuse of what already works;
+2. ~~**null-wrapped maps**~~ — **DONE 2026-08-22** for scalar and string values; an enum or message
+   value follows the same exclusions maps have generally;
 3. **map MESSAGE values** (B6) — enum sides landed 2026-08-22; message values were built and
    **backed out**, because measuring them turns B43's latent null-map-value disagreement into a
    wrong length prefix (corpus 0 → 13). Blocked on B43, not on the measure;
