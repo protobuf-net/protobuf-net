@@ -8,8 +8,34 @@ namespace ProtoBuf.Internal
     partial class PrimaryTypeProvider :
         ISerializer<PrimaryTypeProvider.ScaledTicks>,
         ISerializer<TimeSpan>, ISerializer<TimeSpan?>,
-        ISerializer<DateTime>, ISerializer<DateTime?>
+        ISerializer<DateTime>, ISerializer<DateTime?>,
+        IMeasuringSerializer<PrimaryTypeProvider.ScaledTicks>,
+        IMeasuringSerializer<TimeSpan>, IMeasuringSerializer<TimeSpan?>,
+        IMeasuringSerializer<DateTime>, IMeasuringSerializer<DateTime?>
     {
+        // see the note on the Guid pair. The DateTime measure is the one that EARNS the context
+        // parameter: ISerializer<DateTime>.Write asks the model whether to include the Kind, so a
+        // measure that did not would disagree with it whenever that option is on. Note this is why
+        // BclHelpers.MeasureDateTime is NOT reused here - it hard-codes the kind-less form, which
+        // is right for a generated writer (which never takes the option) and wrong here.
+        int IMeasuringSerializer<ScaledTicks>.Measure(ISerializationContext context, WireType wireType, ScaledTicks value)
+            => MeasureScaledTicks(value);
+
+        int IMeasuringSerializer<TimeSpan>.Measure(ISerializationContext context, WireType wireType, TimeSpan value)
+            => MeasureScaledTicks(new ScaledTicks(value, DateTimeKind.Unspecified));
+
+        int IMeasuringSerializer<TimeSpan?>.Measure(ISerializationContext context, WireType wireType, TimeSpan? value)
+            => MeasureScaledTicks(new ScaledTicks(value.GetValueOrDefault(), DateTimeKind.Unspecified));
+
+        int IMeasuringSerializer<DateTime>.Measure(ISerializationContext context, WireType wireType, DateTime value)
+            => MeasureScaledTicks(ScaledTicks.Create(value, IncludesKind(context)));
+
+        int IMeasuringSerializer<DateTime?>.Measure(ISerializationContext context, WireType wireType, DateTime? value)
+            => MeasureScaledTicks(ScaledTicks.Create(value.GetValueOrDefault(), IncludesKind(context)));
+
+        private static bool IncludesKind(ISerializationContext context)
+            => context?.Model?.HasOption(TypeModel.TypeModelOptions.IncludeDateTimeKind) ?? false;
+
         SerializerFeatures ISerializer<DateTime>.Features=> SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         SerializerFeatures ISerializer<DateTime?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
 

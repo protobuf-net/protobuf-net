@@ -2831,7 +2831,7 @@ model is entirely on the classic write path.**
 | --- | --- | --- |
 | **inheritance** (`RootTypeName`, `SubTypes`) | **yes, and the biggest** | **B41** |
 | ~~surrogate (`SurrogateTypeName`)~~ | **DONE 2026-08-21 — also "never taught"** | below |
-| **surrogate with its own serializer** | **stays out, and correctly** | below |
+| **surrogate with a NON-MEASURING serializer** | **yes — narrowed 2026-08-22** | below |
 | **external serializer** (`[ProtoContract(Serializer=)]`, `[ProtoSerializer]`) | yes | **B31** |
 | ~~`[ProtoContract(IsGroup = true)]`~~ | **DONE 2026-08-21 — it was "never taught"** | below |
 | ~~`[ProtoBeforeSerialization]`~~ | **DONE 2026-08-21 — I was wrong that it was load-bearing** | below |
@@ -2918,6 +2918,46 @@ unchanged, it being an exercise of the classic backend.
 **Note the twin had to be seeded too.** `ClassicEmitTwins.cs` declares a `ClassicEmit` model per
 fixture, and a seed added to the fixture model but not to its twin fails as *"Type is not expected"*
 from six different test classes at once — which reads like a generator fault and is bookkeeping.
+
+##### The `IMeasuringSerializer` audit, 2026-08-22 (Marc: *"a quick audit that our existing custom serializers aren't unnecessarily omitting it"*)
+
+The suspicion was right and broader than `Duration`. The recent BCL measure work (B26) added the
+**arithmetic** for five families so the *generator* could call it, and never exposed any of it
+through `IMeasuringSerializer<T>` — so nothing else could ask. Swept and closed:
+
+| serializer | arithmetic | interface, before | now |
+| --- | --- | --- | --- |
+| primitives, `DateOnly`/`TimeOnly` | yes | **yes** | unchanged |
+| `Duration`, `Timestamp` (+nullable) | `MeasureSecondsNanos` | no | **added** |
+| `Guid` (+nullable) | `MeasureGuidBody` | no | **added** |
+| `decimal` (+nullable) | `MeasureDecimalBody` | no | **added** |
+| `ScaledTicks`, `TimeSpan`, `DateTime` (+nullable) | `MeasureScaledTicks` | no | **added** |
+| `Empty` (+nullable) | trivially `0` | no | **added** |
+| `EnumSerializer<TEnum>` | trivial | no | **deliberately NOT — see below** |
+
+**Adding the interface changes no bytes on any path**, which is what makes this safe rather than a
+judgement call, and both halves of that were checked rather than assumed:
+
+- the **classic** engine consults a measure only when the serializer *also* declares
+  `OptionTrySkipWritingWhenMeasuring` (`ProtoWriter.Measure`, and the stream writer's equivalent).
+  **No library serializer sets that flag** — only generated models do. So the classic path cannot
+  reach any of these, and the control stays a control;
+- `RepeatedSerializer`'s **packed** branch tests `serializer is IMeasuringSerializer<TItem>` with
+  *no* flag gate — but it is guarded by `TypeHelper<T>.CanBePacked`, which is **false** for every
+  type above (it admits enums and the numeric/bool/char type codes only).
+
+**`EnumSerializer` is the exception, and it is exactly gap B1's cause.** `CanBePacked` is **true**
+for an enum, so giving `EnumSerializer<TEnum>` a measure would immediately flip every repeated enum
+member to the packed encoding — different bytes for existing consumers on both paths. That is a
+deliberate wire-format decision, not a drive-by, and it is why AGENTS.md's "a repeated enum is never
+actually packed" has been true all along. Doing it is a *feature*; this audit only removed the
+accidental omissions.
+
+One detail worth keeping, because it is the reason the interface takes a context at all:
+**`DateTime`'s measure must ask the model** whether to include the `Kind`
+(`TypeModelOptions.IncludeDateTimeKind`), because `ISerializer<DateTime>.Write` does. So it does
+**not** reuse `BclHelpers.MeasureDateTime`, which hard-codes the kind-less form — correct for a
+generated writer, which never takes that option, and wrong here.
 
 **`IsGroup` at contract level — established and fixed, 2026-08-21.** The suspicion was right: a
 grouped contract carries no length prefix of its own, so measuring it is *easier*, not harder, and

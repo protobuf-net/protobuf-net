@@ -4,8 +4,21 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Guid>, ISerializer<Guid?>
+    partial class PrimaryTypeProvider : ISerializer<Guid>, ISerializer<Guid?>,
+        IMeasuringSerializer<Guid>, IMeasuringSerializer<Guid?>
     {
+        // MeasureGuidBody already existed for the generated path; exposing it through the interface
+        // is what lets a CALLER ask. Safe to add without changing any wire output: the classic
+        // engine only consults a measure when the serializer also declares
+        // OptionTrySkipWritingWhenMeasuring (ProtoWriter.Measure), which nothing here does, and
+        // RepeatedSerializer's packed branch is gated on TypeHelper<T>.CanBePacked, which is false
+        // for Guid. See notes/gaps.md B42.
+        int IMeasuringSerializer<Guid>.Measure(ISerializationContext context, WireType wireType, Guid value)
+            => MeasureGuidBody(value);
+
+        int IMeasuringSerializer<Guid?>.Measure(ISerializationContext context, WireType wireType, Guid? value)
+            => MeasureGuidBody(value.GetValueOrDefault());
+
         SerializerFeatures ISerializer<Guid>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         SerializerFeatures ISerializer<Guid?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         private static

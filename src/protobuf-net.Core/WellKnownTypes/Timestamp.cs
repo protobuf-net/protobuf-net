@@ -6,8 +6,20 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Timestamp>, ISerializer<Timestamp?>
+    partial class PrimaryTypeProvider : ISerializer<Timestamp>, ISerializer<Timestamp?>,
+        IMeasuringSerializer<Timestamp>, IMeasuringSerializer<Timestamp?>
     {
+        // see the matching pair on Duration: the isTimestamp flag changes normalisation, and
+        // measuring the un-normalised values would disagree at every boundary
+        int IMeasuringSerializer<Timestamp>.Measure(ISerializationContext context, WireType wireType, Timestamp value)
+            => MeasureSecondsNanos(value.Seconds, value.Nanoseconds, true);
+
+        int IMeasuringSerializer<Timestamp?>.Measure(ISerializationContext context, WireType wireType, Timestamp? value)
+        {
+            var timestamp = value.GetValueOrDefault();
+            return MeasureSecondsNanos(timestamp.Seconds, timestamp.Nanoseconds, true);
+        }
+
         SerializerFeatures ISerializer<Timestamp>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         SerializerFeatures ISerializer<Timestamp?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         Timestamp ISerializer<Timestamp>.Read(ref ProtoReader.State state, Timestamp value)

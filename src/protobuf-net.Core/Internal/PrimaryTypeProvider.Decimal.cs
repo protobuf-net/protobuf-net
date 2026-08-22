@@ -3,8 +3,17 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<decimal>, ISerializer<decimal?>
+    partial class PrimaryTypeProvider : ISerializer<decimal>, ISerializer<decimal?>,
+        IMeasuringSerializer<decimal>, IMeasuringSerializer<decimal?>
     {
+        // see the note on the Guid pair: MeasureDecimalBody already existed, and exposing it
+        // changes no bytes on any path
+        int IMeasuringSerializer<decimal>.Measure(ISerializationContext context, WireType wireType, decimal value)
+            => MeasureDecimalBody(value);
+
+        int IMeasuringSerializer<decimal?>.Measure(ISerializationContext context, WireType wireType, decimal? value)
+            => MeasureDecimalBody(value.GetValueOrDefault());
+
         SerializerFeatures ISerializer<decimal>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         SerializerFeatures ISerializer<decimal?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessageWrappedAtRoot;
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;

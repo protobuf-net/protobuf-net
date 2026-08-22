@@ -6,8 +6,28 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Duration>, ISerializer<Duration?>
+    partial class PrimaryTypeProvider : ISerializer<Duration>, ISerializer<Duration?>,
+        IMeasuringSerializer<Duration>, IMeasuringSerializer<Duration?>
     {
+        // Arithmetic sizing for the well-known pair, which MeasureSecondsNanos already had; what
+        // is new is exposing it through the interface, so a CALLER can ask instead of writing to a
+        // counting writer. The generated AOT path is that caller: a surrogate whose serializer is
+        // this one can now be measured, which is what keeps a NodaTime-style contract - and every
+        // contract referencing it - on measure-first. See notes/gaps.md B42.
+        //
+        // Deliberately NOT accompanied by OptionTrySkipWritingWhenMeasuring: that flag is what
+        // makes the CLASSIC engine use this (ProtoWriter.Measure tests both), and turning it on
+        // here would speed up the control that classic-vs-raw comparisons are measured against.
+        // Adding it is a separate decision on its own merits, not a side-effect of this.
+        int IMeasuringSerializer<Duration>.Measure(ISerializationContext context, WireType wireType, Duration value)
+            => MeasureSecondsNanos(value.Seconds, value.Nanoseconds, false);
+
+        int IMeasuringSerializer<Duration?>.Measure(ISerializationContext context, WireType wireType, Duration? value)
+        {
+            var duration = value.GetValueOrDefault();
+            return MeasureSecondsNanos(duration.Seconds, duration.Nanoseconds, false);
+        }
+
         SerializerFeatures ISerializer<Duration>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         SerializerFeatures ISerializer<Duration?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
 

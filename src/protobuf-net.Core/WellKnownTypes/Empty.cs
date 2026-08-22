@@ -5,8 +5,17 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.Internal
 {
-    partial class PrimaryTypeProvider : ISerializer<Empty>, ISerializer<Empty?>
+    partial class PrimaryTypeProvider : ISerializer<Empty>, ISerializer<Empty?>,
+        IMeasuringSerializer<Empty>, IMeasuringSerializer<Empty?>
     {
+        // an empty message writes no body, ever. Worth stating rather than omitting: the classic
+        // engine ignores a zero (ProtoWriter.Measure only takes a length > 0, falling back to
+        // write-to-count), but a caller that asks directly - the generated measure - gets a
+        // constant instead of a traversal
+        int IMeasuringSerializer<Empty>.Measure(ISerializationContext context, WireType wireType, Empty value) => 0;
+
+        int IMeasuringSerializer<Empty?>.Measure(ISerializationContext context, WireType wireType, Empty? value) => 0;
+
         SerializerFeatures ISerializer<Empty>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         SerializerFeatures ISerializer<Empty?>.Features => SerializerFeatures.WireTypeString | SerializerFeatures.CategoryMessage;
         Empty ISerializer<Empty>.Read(ref ProtoReader.State state, Empty value)
