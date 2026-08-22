@@ -714,9 +714,13 @@ back only when non-null). Facts confirmed against ref-emit rather than assumed:
   the writer's free choice** — protobuf requires a *reader* to accept both forms, so declining to
   pack is never a wire bug. And **protobuf-net packs only when it can cheaply size the elements**:
   `RepeatedSerializer.Write` takes the packed branch only when the element serializer is an
-  `IMeasuringSerializer<T>`. `EnumSerializer<TEnum>` is not one, so **a repeated enum is never
-  actually packed**, on either path, even though `TypeHelper.CanBePacked` returns true for enums.
-  See `notes/gaps.md` B1.
+  `IMeasuringSerializer<T>`. **A repeated enum IS packed** — this file claimed the opposite for a
+  long time, on the grounds that `EnumSerializer<TEnum>` is not an `IMeasuringSerializer`. That is
+  true only of the *public abstract* base: the concrete `EnumSerializer<TEnum, TRaw>` implements
+  `IMeasuringSerializer<TEnum>`, and the branch tests the instance. `PackedBlockCopyTests`
+  `.PackedEnumsAreActuallyPacked` pins the bytes. `notes/gaps.md` B1 retracted this on 2026-08-15
+  and this file did not catch up until 2026-08-22, by which point the stale claim had been repeated
+  in a fresh piece of work — so treat a "never" here as worth re-checking against B1.
 - The features wire type is the **element's**, not the member's.
 - A message element passes `this` as the sub-serializer; a scalar element passes nothing.
 - **A repeated enum needs a serializer proxy.** Unlike an inline scalar, `RepeatedSerializer`

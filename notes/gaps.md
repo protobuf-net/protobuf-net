@@ -43,7 +43,7 @@ emitted" while *raising* correctness.
 The reasoning is here rather than in `notes/nano-writer.md`, which keeps the *findings* (what was
 tried, measured and reverted) but no longer carries a to-do list.
 
-### B1. Packed writes — **LANDED on the raw path (3.4×–32×); two DataFormat arms remain**
+### B1. Packed writes — **LANDED on the raw path (3.4×–32×); both `DataFormat` arms landed too. What remains: a zigzag write blit, B21 tier 2, and the narrow kinds**
 
 **2026-08-15, second update.** The work moved to where it belongs and the numbers changed
 completely. `RepeatedSerializer`'s fast paths were **backed out** (classic is the control - see
@@ -3093,7 +3093,7 @@ through `IMeasuringSerializer<T>` — so nothing else could ask. Swept and close
 | `decimal` (+nullable) | `MeasureDecimalBody` | no | **added** |
 | `ScaledTicks`, `TimeSpan`, `DateTime` (+nullable) | `MeasureScaledTicks` | no | **added** |
 | `Empty` (+nullable) | trivially `0` | no | **added** |
-| `EnumSerializer<TEnum>` | trivial | no | **deliberately NOT — see below** |
+| `EnumSerializer<TEnum, TRaw>` | yes | **yes, already** — see below | unchanged |
 
 **Adding the interface changes no bytes on any path**, which is what makes this safe rather than a
 judgement call, and both halves of that were checked rather than assumed:
@@ -3106,12 +3106,23 @@ judgement call, and both halves of that were checked rather than assumed:
   *no* flag gate — but it is guarded by `TypeHelper<T>.CanBePacked`, which is **false** for every
   type above (it admits enums and the numeric/bool/char type codes only).
 
-**`EnumSerializer` is the exception, and it is exactly gap B1's cause.** `CanBePacked` is **true**
-for an enum, so giving `EnumSerializer<TEnum>` a measure would immediately flip every repeated enum
-member to the packed encoding — different bytes for existing consumers on both paths. That is a
-deliberate wire-format decision, not a drive-by, and it is why AGENTS.md's "a repeated enum is never
-actually packed" has been true all along. Doing it is a *feature*; this audit only removed the
-accidental omissions.
+**`EnumSerializer` was never an omission, and the first draft of this audit said it was — wrongly,
+from a source that had already been corrected.** The concrete `EnumSerializer<TEnum, TRaw>`
+implements `IMeasuringSerializer<TEnum>` and `<TEnum?>` (line 110); only the *public abstract*
+`EnumSerializer<TEnum>` does not, which is what a casual grep sees. Enums therefore already measure
+and **already pack** — `PackedBlockCopyTests.PackedEnumsAreActuallyPacked` pins the bytes.
+
+That claim came from `AGENTS.md`'s "a repeated enum is never actually packed", which **B1 above had
+already retracted on 2026-08-15** and `AGENTS.md` had not caught up with. Repeating a retracted
+claim from the other document is exactly the failure mode this file exists to prevent, so: the
+retraction is now in `AGENTS.md` too, and the real remaining enum item is B1's much smaller one — a
+packed enum does not reach the fast varint arms (they match `typeof(T) == typeof(uint)`), so it pays
+an enumerator step and a virtual write per element, 2.54 ns against 1.74.
+
+The general caution the wrong reasoning produced is still worth keeping, because it applies to
+anything else added here: **`RepeatedSerializer`'s packed branch tests for `IMeasuringSerializer`
+with no feature-flag gate**, so giving a measure to a type with `CanBePacked == true` changes bytes.
+It just does not apply to enums, which already had one.
 
 One detail worth keeping, because it is the reason the interface takes a context at all:
 **`DateTime`'s measure must ask the model** whether to include the `Kind`
