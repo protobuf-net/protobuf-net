@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using Microsoft.CodeAnalysis.CSharp;
 using ProtoBuf.BuildTools.Internal.Aot;
 using System;
@@ -4499,8 +4499,10 @@ namespace ProtoBuf.BuildTools.Generators
                         //   - length-prefixed raw write -> reserve here, fill after the recursion;
                         //   - GROUPED raw write -> no length on the wire, so no slot, but the body
                         //     is still walked by RawWrite_ so its own sites still reserve;
-                        //   - classic write -> a null buffer, which suppresses reservation all the
-                        //     way down: that sub-tree is re-measured by its own Write entry.
+                        //   - classic write -> RawLengthBuffer.Discard, whose Reserve/Set are
+                        //     no-ops: that sub-tree is re-measured by its own Write entry. NOT a
+                        //     null buffer - the callee's Reserve() sites are unconditional, so a
+                        //     null is dereferenced by the first nested length-prefixed member.
                         // Measure-eligibility is WIDER than write-eligibility (the measure arm takes
                         // anything in `measurable`; the write arm additionally refuses a nullable
                         // member, a non-default format, ...), which under the old dictionary was
@@ -4515,7 +4517,11 @@ namespace ProtoBuf.BuildTools.Generators
                         }
                         else
                         {
-                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, {(unaryTarget is null ? "null" : "slots")}, context);");
+                            // Discard, NOT null: the callee's own Reserve() sites are
+                            // unconditional, so a literal null is dereferenced by the first nested
+                            // length-prefixed member below this sub-tree. Every other site here was
+                            // converted when Discard was introduced; this one was missed.
+                            Line(sb, inner, $"sub = Measure_{targetName}(tmp{number}, depth, {(unaryTarget is null ? "global::ProtoBuf.RawLengthBuffer.Discard" : "slots")}, context);");
                         }
                         if (GroupFramed(member, target))
                         {
