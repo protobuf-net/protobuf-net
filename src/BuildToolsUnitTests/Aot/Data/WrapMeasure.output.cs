@@ -306,6 +306,7 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Count;
             state.WriteAny<int?>(1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp1);
             var tmp2 = value.Grouped;
@@ -330,6 +331,7 @@ partial class WrapMeasureModel
             }
             var tmp20 = value.Big;
             state.WriteAny<long?>(20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue, tmp20);
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_WrapMeasure_Boxed(global::AotFixtures.WrapMeasure.Boxed value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -738,6 +740,7 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Counts;
             if (tmp1 != null)
             {
@@ -809,6 +812,7 @@ partial class WrapMeasureModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<int?>().WriteRepeated(ref state, 21, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp21);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_WrapMeasure_Crate(global::AotFixtures.WrapMeasure.Crate value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -904,7 +908,7 @@ partial class WrapMeasureModel
                     long wrap10 = 0;
                     if (item10 is not null)
                     {
-                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item10, depth, null, context);
+                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item10, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                         wrap10 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                     }
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap10) + wrap10;
@@ -918,7 +922,7 @@ partial class WrapMeasureModel
                     long wrap11 = 0;
                     if (item11 is not null)
                     {
-                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item11, depth, null, context);
+                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item11, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                         wrap11 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                     }
                     len += 2 + wrap11;
@@ -931,7 +935,7 @@ partial class WrapMeasureModel
                 foreach (var item12 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp12))
                 {
                     if (item12 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.WrapMeasure.Leaf>();
-                    sub = Measure_AotFixtures_WrapMeasure_Leaf(item12, depth, null, context);
+                    sub = Measure_AotFixtures_WrapMeasure_Leaf(item12, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                     col12 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col12) + col12;  // Bundle (wrapped collection)
@@ -945,7 +949,7 @@ partial class WrapMeasureModel
                     long wrap13 = 0;
                     if (item13 is not null)
                     {
-                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item13, depth, null, context);
+                        sub = Measure_AotFixtures_WrapMeasure_Leaf(item13, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                         wrap13 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                     }
                     col13 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap13) + wrap13;
@@ -1254,6 +1258,7 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Counts;
             if (tmp1 != null)
             {
@@ -1290,6 +1295,7 @@ partial class WrapMeasureModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<string, string>().WriteMap(ref state, 20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValueFieldPresence, tmp20, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionWrappedValue);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_WrapMeasure_Ledger(global::AotFixtures.WrapMeasure.Ledger value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)

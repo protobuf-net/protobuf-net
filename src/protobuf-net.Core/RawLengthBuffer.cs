@@ -48,6 +48,35 @@ namespace ProtoBuf
     [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
     public sealed class RawLengthBuffer
     {
+        /// <summary>
+        /// A buffer that accepts reservations and throws them away, for measuring a sub-tree the
+        /// raw write will NOT walk.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Such a sub-tree must reserve <b>nothing</b> - the write hands it to the stateful engine,
+        /// which computes its own lengths, so a reservation here would shift every later slot. The
+        /// rule was "measure it with a null buffer, which suppresses reservation all the way down",
+        /// and the second half of that sentence was <b>not true</b>: the callee's own
+        /// <c>Reserve()</c> sites are unconditional, so a null buffer reached one and threw. That is
+        /// what this exists to fix, and it fixes it without a branch at every call site.
+        /// </para>
+        /// <para>
+        /// Only <see cref="Reserve"/> and <see cref="Set"/> are meaningful on it. Nothing reads
+        /// from a discarded sub-tree by construction, so <see cref="Next"/> and the boundary
+        /// members are never reached; they are left as they are rather than made to throw, since a
+        /// throw here would be a worse failure than the wrong answer it replaces.
+        /// </para>
+        /// </remarks>
+        public static readonly RawLengthBuffer Discard = new RawLengthBuffer(discard: true);
+
+        private readonly bool _discard;
+
+        /// <summary>Creates a buffer.</summary>
+        public RawLengthBuffer() { }
+
+        private RawLengthBuffer(bool discard) => _discard = discard;
+
         private long[] _slots = new long[64];
         private int _count;     // append high-water: the next slot Reserve() will hand out
         private int _read;      // consume cursor: the next slot Next() will return
@@ -59,6 +88,7 @@ namespace ProtoBuf
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Reserve()
         {
+            if (_discard) return 0;
             var index = _count++;
             if (index >= _slots.Length) Grow();
             return index;
@@ -69,7 +99,10 @@ namespace ProtoBuf
 
         /// <summary>Stores a measured length into a slot claimed by <see cref="Reserve"/>.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set(int index, long length) => _slots[index] = length;
+        public void Set(int index, long length)
+        {
+            if (!_discard) _slots[index] = length;
+        }
 
         /// <summary>Reads the next measured length, in the order the measure pass produced them.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

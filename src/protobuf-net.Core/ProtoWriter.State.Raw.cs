@@ -400,6 +400,30 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Hands the stateful engine the raw path's current depth, returning the previous
+            /// budget so the caller can restore it (gap B15).
+            /// </summary>
+            /// <remarks>
+            /// <para>
+            /// Emitted only into a generated <c>RawWrite_</c> whose body can actually fall back to
+            /// the stateful engine - a sub-message, map or repeated member the raw path does not
+            /// handle. A fully-raw body pays nothing, which is why this is a call the generator
+            /// makes rather than something the raw writes maintain.
+            /// </para>
+            /// <para>
+            /// No <c>try</c>/<c>finally</c> around it: an exception mid-write abandons the writer
+            /// entirely, so the only path that needs the restore is the normal one.
+            /// </para>
+            /// </remarks>
+            [System.Diagnostics.CodeAnalysis.Experimental("PBN9002")]
+            public int SyncRawDepth(int budget)
+            {
+                var writer = _writer;
+                var max = writer.Model is null ? Meta.TypeModel.DefaultMaxDepth : writer.Model.MaxDepth;
+                return max - writer.SetDepth(max - budget);
+            }
+
+            /// <summary>
             /// Recovers the raw measure inputs - the depth budget and the length cache - from a
             /// serialization context, where that context is a writer. The generated
             /// <c>IMeasuringSerializer</c> implementations call this so the classic engine's

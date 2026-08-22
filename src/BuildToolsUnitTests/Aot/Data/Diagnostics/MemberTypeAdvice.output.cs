@@ -85,11 +85,13 @@ partial class MemberTypeAdviceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.ByShade;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MemberTypeAdvice.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_MemberTypeAdvice_MapWithEnumKey(global::AotFixtures.MemberTypeAdvice.MapWithEnumKey value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)

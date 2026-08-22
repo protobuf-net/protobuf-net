@@ -165,6 +165,7 @@ partial class StructsModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long before = 0;
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Location;
             state.WriteRawTag((1 << 3) | 2);  // Location
             var len = state.RawSlots.Next();
@@ -183,6 +184,7 @@ partial class StructsModel
                 state.WriteRawTag((3 << 3) | 0);  // Other
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp3));
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_Structs_HasStructs(global::AotFixtures.Structs.HasStructs value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -199,7 +201,7 @@ partial class StructsModel
             if (tmp2.HasValue)
             {
                 var val2 = tmp2.GetValueOrDefault();
-                sub = Measure_AotFixtures_Structs_Point(val2, depth, null, context);
+                sub = Measure_AotFixtures_Structs_Point(val2, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybeLocation
             }
             var tmp3 = value.Other;

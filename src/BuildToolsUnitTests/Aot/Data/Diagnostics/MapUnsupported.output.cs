@@ -235,11 +235,13 @@ partial class MapUnsupportedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapUnsupported.Shade, int>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_MapUnsupported_EnumKey(global::AotFixtures.MapUnsupported.EnumKey value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -349,11 +351,13 @@ partial class MapUnsupportedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Value;
             if (tmp1 != null)
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<int, global::AotFixtures.MapUnsupported.Shade>().WriteMap(ref state, 1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp1, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_MapUnsupported_EnumValue(global::AotFixtures.MapUnsupported.EnumValue value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)

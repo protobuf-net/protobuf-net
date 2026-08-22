@@ -418,6 +418,7 @@ partial class TupleMembersModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Named;
             state.WriteRawTag((1 << 3) | 2);  // Named
             len = state.RawSlots.Next();
@@ -457,6 +458,7 @@ partial class TupleMembersModel
                 state.WriteRawTag((6 << 3) | 0);  // Other
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp6));
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_TupleMembers_HasTuples(global::AotFixtures.TupleMembers.HasTuples value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -488,7 +490,7 @@ partial class TupleMembersModel
             if (tmp5.HasValue)
             {
                 var val5 = tmp5.GetValueOrDefault();
-                sub = Measure__int__string_(val5, depth, null, context);
+                sub = Measure__int__string_(val5, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // MaybePair
             }
             var tmp6 = value.Other;

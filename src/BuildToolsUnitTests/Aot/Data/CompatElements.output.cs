@@ -390,6 +390,7 @@ partial class CompatElementsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Guids;
             if (tmp1 != null)
             {
@@ -415,6 +416,7 @@ partial class CompatElementsModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateList<global::System.Guid>().WriteRepeated(ref state, 5, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp5, global::ProtoBuf.Meta.TypeModel.GetInbuiltSerializer<global::System.Guid>(global::ProtoBuf.CompatibilityLevel.Level300, global::ProtoBuf.DataFormat.FixedSize));
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_CompatElements_Level300Lists(global::AotFixtures.CompatElements.Level300Lists value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)

@@ -522,6 +522,24 @@ namespace ProtoBuf
 
         internal int Depth => _depth;
 
+        /// <summary>
+        /// Positions the stateful nesting counter, for the RAW writer's hand-back (gap B15).
+        /// </summary>
+        /// <remarks>
+        /// The raw write path deliberately does not maintain writer state, so it carries its own
+        /// remaining-depth budget and never touches <see cref="Depth"/>. That is fine until a raw
+        /// body falls BACK to the stateful engine mid-way: the engine counts from whatever
+        /// <c>_depth</c> was at the outer boundary, so the two caps do not add and the effective
+        /// limit is larger than <c>MaxDepth</c>. A generated body that can fall back sets this on
+        /// entry and restores it on exit, which is the one place the two worlds have to agree.
+        /// </remarks>
+        internal int SetDepth(int value)
+        {
+            var previous = _depth;
+            _depth = value;
+            return previous;
+        }
+
         [MethodImpl(HotPath)]
         internal void CheckClear(ref State state)
         {

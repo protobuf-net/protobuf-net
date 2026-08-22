@@ -85,6 +85,7 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.ByNumber;
             if (tmp1 != null)
             {
@@ -126,6 +127,7 @@ partial class MapMeasureModel
             {
                 global::ProtoBuf.Serializers.MapSerializer.CreateDictionary<global::AotFixtures.MapMeasure.Hue, int>().WriteMap(ref state, 8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeString | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp8, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_MapMeasure_Lookup(global::AotFixtures.MapMeasure.Lookup value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)

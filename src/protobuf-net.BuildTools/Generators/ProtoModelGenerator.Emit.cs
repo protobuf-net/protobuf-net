@@ -1279,7 +1279,7 @@ namespace ProtoBuf.BuildTools.Generators
                     // no slots are claimed here, so there is no boundary to record and nothing to
                     // seek back to - the depth is the only thing the raw state is consulted for
                     Line(sb, indent + 1, "if (!global::ProtoBuf.ProtoWriter.State.TryMeasureRawSlots(context, out var depth, out _)) return -1;");
-                    Line(sb, indent + 1, $"var len = Measure_{Sanitise(contract.TypeName)}(value, depth, null, context);");
+                    Line(sb, indent + 1, $"var len = Measure_{Sanitise(contract.TypeName)}(value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);");
                     Line(sb, indent + 1, "return len <= int.MaxValue ? (int)len : -1;");
                     Line(sb, indent, "}");
                 }
@@ -1443,6 +1443,19 @@ namespace ProtoBuf.BuildTools.Generators
                 var writeBody = new StringBuilder();
                 EmitWriteMembers(writeBody, indent + 1, contract, writeInstance, raw: true, listAsSpan: listAsSpan, immutableAsSpan: immutableAsSpan, measurable: measurable, depth: "depth", self: SelfField, measuresCallbacks: measuresCallbacks);
                 EmitCallback(writeBody, indent + 1, contract, writeInstance, ProtoCallbackKind.AfterSerialize);
+                // gap B15: where this body can hand BACK to the stateful engine, the engine would
+                // otherwise count nesting from whatever writer.Depth was at the outer boundary -
+                // so the raw budget and the stateful cap do not add, and the effective limit is
+                // larger than MaxDepth. Sync on the way in, restore on the way out. Emitted only
+                // where a fall-back actually exists, so a fully-raw body pays nothing.
+                if (FallsBackToStateful(writeBody))
+                {
+                    var restore = new StringBuilder();
+                    Line(restore, indent + 1, "var rawDepth = state.SyncRawDepth(depth);");
+                    restore.Append(writeBody);
+                    Line(restore, indent + 1, "state.SyncRawDepth(rawDepth);");
+                    writeBody = restore;
+                }
                 AppendFoldingLengthTemp(sb, indent + 1, writeBody, "len");
                 Line(sb, indent, "}");
                 sb.AppendLine();
@@ -3490,6 +3503,30 @@ namespace ProtoBuf.BuildTools.Generators
             sb.Append(body);
         }
 
+        /// <summary>
+        /// Whether an emitted <c>RawWrite_</c> body contains a call that hands back to the stateful
+        /// engine and can nest - a sub-message, group, map or repeated-message write.
+        /// </summary>
+        /// <remarks>
+        /// Read off the emitted text rather than re-derived from the plan, deliberately: the
+        /// question is "does the code we just produced call into the engine", and every predicate
+        /// that decides that is already spent by this point. A conservative extra match costs two
+        /// field writes; a missed one leaves gap B15 open for that contract.
+        /// </remarks>
+        private static bool FallsBackToStateful(StringBuilder body)
+        {
+            var text = body.ToString();
+            foreach (var call in new[]
+            {
+                "state.WriteMessage", "state.WriteGroup", "state.WriteAny",
+                ".WriteMap(", ".WriteRepeated(",
+            })
+            {
+                if (text.IndexOf(call, StringComparison.Ordinal) >= 0) return true;
+            }
+            return false;
+        }
+
         /// <summary>The write mirror: the same span, the same framing decision, one call.</summary>
         private static void EmitRawPackedWrite(StringBuilder sb, int indent, ProtoMemberPlan member,
             string number, bool listAsSpan, bool immutableAsSpan)
@@ -3892,7 +3929,7 @@ namespace ProtoBuf.BuildTools.Generators
                 var target = Sanitise((key ? null : member.Map.ValueTypeName)!);
                 Line(sb, indent, $"if ({expression} != null)");
                 Line(sb, indent, "{");
-                Line(sb, indent + 1, $"sub = Measure_{target}({expression}, depth, null, context);");
+                Line(sb, indent + 1, $"sub = Measure_{target}({expression}, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);");
                 Line(sb, indent + 1, $"{entry} += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
                 Line(sb, indent, "}");
                 return;
@@ -4237,7 +4274,7 @@ namespace ProtoBuf.BuildTools.Generators
                         // BCL arm below had to be added for, and the same `len += 1 + ;` if it is
                         // missed. The WRITE stays stateful (RawNativeMessageTarget refuses
                         // IsNullable), so this reserves NO slot and passes a null buffer down.
-                        Line(sb, indent + 1, $"sub = Measure_{Sanitise(member.TypeName!)}(val{number}, depth, null, context);");
+                        Line(sb, indent + 1, $"sub = Measure_{Sanitise(member.TypeName!)}(val{number}, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);");
                         Line(sb, indent + 1, MeasureAdd(member, 2,
                             "global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub"));
                         Line(sb, indent, "}");
@@ -4752,7 +4789,7 @@ namespace ProtoBuf.BuildTools.Generators
                     Line(sb, indent + 1, "{");
                 }
                 var body = canBeNull ? indent + 2 : indent + 1;
-                Line(sb, body, $"sub = Measure_{targetName}({item}, depth, null, context);");
+                Line(sb, body, $"sub = Measure_{targetName}({item}, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);");
                 Line(sb, body, $"{inner} = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
                 if (canBeNull) Line(sb, indent + 1, "}");
                 Line(sb, indent + 1, member.WrappedValueGroup
@@ -4765,7 +4802,7 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     Line(sb, indent + 1, $"if ({item} is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<{member.ElementTypeName}>();");
                 }
-                Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, null, context);");
+                Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);");
                 Line(sb, indent + 1, $"{accumulator} += {elementTag} + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;");
             }
             Line(sb, indent, "}");

@@ -597,22 +597,42 @@ do, and the first is much smaller than the second:
 Worth measuring rather than assuming, as ever — but unlike the seven flat micro-experiments this
 one is a *structural* removal of work, not a cheaper way of doing it.
 
-### B15. Depth is not synced on the raw → stateful transition — **open, narrow**
+### B15. ~~Depth is not synced on the raw → stateful transition~~ — **FIXED 2026-08-22, and two other things fell out**
 
-`RawWrite_` now carries a **remaining depth budget**, seeded from `state.RawDepthBudget` where the
+`RawWrite_` carries a **remaining depth budget**, seeded from `state.RawDepthBudget` where the
 stateful world hands off to the raw one, and never touches `writer.Depth` — the "raw API does not
-maintain all the members" convention, and Marc's read of how the two worlds should meet.
+maintain all the members" convention.
 
-The gap is the **reverse** transition. Where a raw body falls back to the stateful engine mid-way
-(`state.WriteMessage(...)` for a member the raw path does not handle), the engine measures depth
-from `writer.Depth`, which was last set at the *outer* boundary — so a deep raw chain that then
-goes stateful under-counts, and the effective cap is larger than `MaxDepth`.
+The gap was the **reverse** transition: where a raw body falls back to the stateful engine mid-way,
+the engine measured depth from `writer.Depth`, last set at the *outer* boundary, so the two caps did
+not add. Fixed with `ProtoWriter.State.SyncRawDepth(budget)` — set on entry, restore on exit —
+emitted **only** into a `RawWrite_` whose body actually contains a hand-back
+(`FallsBackToStateful` reads that off the emitted text), so a fully-raw body pays nothing. No
+`try`/`finally`: an exception mid-write abandons the writer, so only the normal path needs restoring.
 
-Narrow, and not a correctness hole in the sense B14 was: the cap still exists at both ends, it is
-just not additive across a boundary. The fix is to push `writer.Depth` at the point of transition
-rather than to thread anything further. Recorded rather than done because it wants a fixture that
-actually crosses the boundary deeply, and no existing one does.
+**Most contracts were never exposed to this, and working out why is the useful part.** A *measure*
+recursion crosses a stateful boundary **without re-seeding** — `Measure_Foo` calls `Measure_Bar`
+directly whatever the write will do — so any contract with a measured site is already guarded
+additively by the measure pass. Only a **fully unmeasured** chain leaves the raw budget as the sole
+guard, and after gap B35 that means a chain whose every nesting site is a **group**: no length
+prefix, no slot consumer, no measure pass at all.
 
+`RawDepthBoundaryTests` therefore ladders through grouped members exclusively (`Step.Deep`,
+`Hop.Target`), and **was rewritten twice because the first two versions passed with the fix
+removed** — once because the stateful hops alone exceeded `MaxDepth`, once because a length-prefixed
+sibling brought a measure pass back. It is proven to fail without the sync, which is the only reason
+to believe it.
+
+#### Two bugs it surfaced on the way
+
+- **a null slot buffer did not suppress reservation "all the way down"**, which is what
+  `RawLengthBuffer`'s own remarks claimed. A sub-tree the raw write will not walk was measured with
+  `null`, but the callee's own `Reserve()` sites are unconditional, so the first nested
+  length-prefixed member dereferenced it. Reachable since nullable-struct message members became
+  measurable on 2026-08-21, and never fixtured. Fixed with `RawLengthBuffer.Discard` — a shared
+  instance whose `Reserve`/`Set` are no-ops — rather than a null test at every call site.
+- **gap B44**, below: a stateful hand-back inside a **grouped** raw body writes a stream the reader
+  rejects. Left as its own entry, since it is a wire bug rather than a depth one.
 ### B16. Locals in the emitted bodies — **`lengths` and `len` done (2026-08-14, corrected 2026-08-16); `tmpN` folding still open**
 
 > **Superseded in part by B38 (2026-08-21).** Everything below about `state.RawLengths` is a
@@ -3759,3 +3779,32 @@ ordering constraint between these two items.
 | ~~do the two external PRs land before or after #1277?~~ | **Answered by events, 2026-08-17: both landed first.** #1276 and #1275 are merged into `v4` and forward-merged here. #1282 (build-time gRPC proxies) then landed too, and merged into `v4` on 2026-08-20 — see **B34**, where the measured overlap held. Nothing is now waiting on an external PR |
 | ~~the tag ladder: keep or revert?~~ | **Settled 2026-08-14: narrowed, not reverted.** Split by *dynamic population* rather than kept or dropped wholesale — the one- and two-byte arms and the bool fold stay, the folded 3/4/5-byte arms go back to the shipped encoder. Two follow-on micro-ideas (`&` for `&&`, hoisting `RemainingInCurrent`) were answered by inspection and need no measurement; the reasoning is in the comment block |
 | ~~when to rewrite `docs/aot.md`'s "needs its own project" advice~~ | **Done**, pre-emptively on `aot-schema-model`, so it arrives with the merge |
+
+### B44. A stateful hand-back inside a GROUPED raw body corrupts the stream — **open, and it is a wire bug**
+
+Found 2026-08-22 while building B15's fixture, not looked for.
+
+**Repro.** A contract with a grouped self-recursive member and a nullable-struct message member —
+`Rung { [ProtoMember(1, DataFormat = Group)] Rung Next; [ProtoMember(2)] Link? Side; }`, where
+`Link` is a `[ProtoContract] struct` holding a `Rung`. Serializing
+`Rung { Next = Rung { Side = Link { Target = Rung { } } } }` and reading it back throws
+`ProtoException: Sub-message not read entirely; expected -1, was 7`.
+
+**What is and is not implicated**, established by bisecting the samples rather than by reading:
+
+- the same shape with `Next` **length-prefixed** round-trips (the differential covers it);
+- a grouped chain **without** `Side` round-trips at depth 2;
+- `Side` at the **root**, outside any group, round-trips.
+
+So it is specifically a stateful call (`state.WriteMessage`, here for a nullable-struct member the
+raw path refuses) made from inside a raw body that is itself framed by group tags.
+
+**The likely cause, unconfirmed:** the raw path deliberately does not maintain writer state, and the
+stateful `WriteMessage` consults state the raw group framing has not set — the same class of problem
+as B15, one field along. B15 was about `Depth`; this is about whatever `WriteMessage` reads to close
+its sub-item. That is a hypothesis, not a diagnosis; it wants the emitted bytes decoded by hand
+before anything is changed.
+
+**Why it has not bitten before:** it needs a grouped member *and* a stateful fallback in the same
+body, and no fixture had both. `DepthBoundary.input.cs` now keeps them deliberately apart, with a
+comment saying why, so the fixture stays green while this is open.

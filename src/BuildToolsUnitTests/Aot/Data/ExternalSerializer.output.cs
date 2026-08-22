@@ -248,6 +248,7 @@ partial class ExternalSerializerModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Gauge;
             state.WriteMessage<global::AotFixtures.ExternalSerializer.Gauge>(1, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp1, global::ProtoBuf.Serializers.SerializerCache.Get<global::AotFixtures.ExternalSerializer.GaugeSerializer, global::AotFixtures.ExternalSerializer.Gauge>());
             var tmp2 = value.Label;
@@ -256,6 +257,7 @@ partial class ExternalSerializerModel
                 state.WriteRawTag((2 << 3) | 0);  // Label
                 state.WriteRawVarint64(unchecked((ulong)(long)tmp2));
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_ExternalSerializer_Panel(global::AotFixtures.ExternalSerializer.Panel value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)

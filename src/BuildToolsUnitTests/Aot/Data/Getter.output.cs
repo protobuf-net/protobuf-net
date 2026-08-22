@@ -215,6 +215,7 @@ partial class GetterModel
             global::ProtoBuf.Meta.TypeModel.ThrowUnexpectedSubtype(value);
             long len;
             long before = 0;
+            var rawDepth = state.SyncRawDepth(depth);
             var tmp1 = value.Numbers;
             if (tmp1 != null)
             {
@@ -294,6 +295,7 @@ partial class GetterModel
             {
                 state.WriteMessage<global::AotFixtures.Getter.Point>(12, global::ProtoBuf.Serializers.SerializerFeatures.CategoryRepeated, tmp12.GetValueOrDefault(), Self);
             }
+            state.SyncRawDepth(rawDepth);
         }
 
         private static long Measure_AotFixtures_Getter_Getters(global::AotFixtures.Getter.Getters value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -368,7 +370,7 @@ partial class GetterModel
             if (tmp12.HasValue)
             {
                 var val12 = tmp12.GetValueOrDefault();
-                sub = Measure_AotFixtures_Getter_Point(val12, depth, null, context);
+                sub = Measure_AotFixtures_Getter_Point(val12, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Maybe2
             }
             return len;
