@@ -3223,6 +3223,53 @@ delegate-tuple can be prepared statically by the generator; a handler object cos
 per contract but can carry state; the `int`-plus-`switch` form is the only one whose *generated
 source* scales with the model, and it buys nothing for that.
 
+##### Can the helper be passed IN to one shared implementation? (Marc) — yes, and the duplication was not buying anything
+
+The shape asked about is that the generated override collapses to one expression, with the writer
+setup living once in the base:
+
+```csharp
+public override long Serialize<T>(Stream dest, T value, object userState)
+    => SerializeCore(dest, value, Helper<T>.Instance, userState);
+```
+
+Measured (`SharedImplementationBenchmarks`; every core is `[MethodImpl(NoInlining)]`, so all arms
+pay exactly one real call and only what the callee *knows* about its argument differs):
+
+| | ns | vs baked |
+| --- | ---: | ---: |
+| generic: baked into the caller | 0.18 | — |
+| generic: passed in as `IThing<T>` | 1.34 | +1.16 |
+| generic: passed in as `TThing : IThing<T>` | 1.10 | +0.92 |
+| non-generic: baked into the caller | 0.27 | — |
+| non-generic: passed in as `Handler` | 0.30 | **+0.03** |
+
+**Non-generic: passing it in is free** (+0.03 ns, inside noise). The call is virtual either way, so
+there is nothing for the baked form to win.
+
+**Generic: passing it in costs ~1 ns — and the baked figure is not reachable anyway.** That is the
+part that answers the question rather than the timing does. The baked arm is fast because the JIT
+sees the concrete services type and devirtualises `Do`; **a generic override cannot be written that
+way**, because inside `Serialize<T>` the `T` is open and the services type implements
+`ISerializer<T>` only for its own contracts — which the compiler cannot prove for an open `T`. So
+duplicating the body per model would *not* recover the 0.18 ns; an open `T` can only carry an
+interface. There is no trade being made.
+
+The constrained form (`TThing : IThing<T>`) is marginally better (1.10) and still not free, for the
+same reason the if-chain was not free on the generic path: for **reference** type arguments the
+generic is shared code (`__Canon`), so the constraint specialises nothing. It also needs the caller
+to know *both* types, so it is available only to per-contract typed overloads, not to the override.
+
+**Which makes the two mechanisms complementary rather than competing:**
+
+- **typed per-contract overloads** — what the generator already emits, and what `PBN3010`'s fixer
+  steers call sites onto — are the ones that *can* bake, and they get the 0.18 ns;
+- **a shared virtual core taking the helper** catches everything the analyzer cannot reach (a
+  `TypeModel`-typed receiver, an open type parameter at the call site) for about a nanosecond,
+  **once per top-level operation — not per member**, against the ~28 ns entry path B39 measured.
+
+So: share the implementation. The duplication buys nothing on the path that would need it.
+
 ### B41. A HIERARCHY is off measure-first entirely, and `[ProtoSubType]` makes that far easier to hit
 
 Found on the `main` merge of 2026-08-21, by running the "count the methods" diagnostic over the
