@@ -289,9 +289,9 @@ Three things about it are load-bearing:
 
 ### Repeated members on the raw path: four predicates, and one trap that has bitten three times
 
-The generator decides per member whether a repeated or BCL member takes the raw path. The decision
-is spread over four small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy to widen
-one at a time without noticing the others:
+The generator decides per member whether a repeated, BCL or null-wrapped member takes the raw path.
+The decision is spread over six small predicates in `ProtoModelGenerator.Emit.cs`, and they are easy
+to widen one at a time without noticing the others:
 
 | predicate | decides |
 | --- | --- |
@@ -299,6 +299,8 @@ one at a time without noticing the others:
 | `RawPackedWritable` | a **packed** one — a different engine, not a variation, since packing needs the payload measured before the prefix goes down |
 | `RepeatedSpan` | how the collection becomes a span: `T[]` directly, `List<T>` via `CollectionsMarshal` (probed), `ImmutableArray<T>` via `AsSpan()` (probed separately — it rides on a *package*, not the framework) |
 | `BclMeasurable` | whether a compatibility-level BCL member has arithmetic sizing (currently: default format, `DateTime`/`TimeSpan` below level 240, `Guid`/`decimal` below 300) |
+| `WrappedValueMeasurable` | a **lone** `[NullWrappedValue]`, whose inner field is *omitted* when trivial |
+| `WrappedRepeatedMeasurable` | a wrapped **collection**, in either scope, whose element wrapper *always* carries its inner field — the opposite rule, hence a second predicate rather than a widening of the first |
 
 **Widening any of them without a matching measure arm makes the generator THROW**, and the symptom
 does not name the cause: every model in the compilation loses its generated `Instance`, producing a
@@ -309,9 +311,13 @@ load-bearing; without it the first symptom would be wrong bytes.
 **The measure emitter reaches scalar kinds from THREE branches** — the nullable path, the tuple
 path, and the main switch — and each calls `RawScalarMeasure(...)!`. For a kind that helper has
 nothing for, the `!` turns null into an empty string and emits `len += 1 + ;`, which compiles
-nowhere. Adding a kind means visiting all three. This has bitten **three times**: `DateOnly`
-(main switch), the level-200 BCL pair (nullable), and `Guid`/`decimal` (tuple — surfaced by an
-*unrelated* fixture, `Diagnostics/TupleLevels`). The goldens caught every one; review caught none.
+nowhere. Adding a kind means visiting all three — **four** since the lone null-wrapped arm, which
+has its own call and needed a `MeasureRawString` special case because `String` is not in
+`RawScalarMeasure` at all. This has bitten **four times**: `DateOnly`
+(main switch), the level-200 BCL pair (nullable), `Guid`/`decimal` (tuple — surfaced by an
+*unrelated* fixture, `Diagnostics/TupleLevels`), and `string` (the lone null-wrapped arm, where the
+corpus segfaulted rather than the goldens catching it). The goldens caught three of the four; review
+caught none.
 
 **`NeedsNullGuard` exists because a value-type collection must NOT get one.** `ImmutableArray<T>`
 declares lifted equality over `ImmutableArray<T>?`, so `tmp != null` compiles for it and evaluates

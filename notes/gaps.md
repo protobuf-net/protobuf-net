@@ -811,7 +811,34 @@ So the right instrument is **the local count on a large contract**, not a nanose
 and the honest status is that the idea is agreed and unimplemented, not that it was tried and
 failed. The same applies to the `lenN` temporaries.
 
-### B17. Callbacks and measure-first — **answered; a `BeforeSerialize` contract silently loses measure-first**
+### B17. Callbacks and measure-first — **the GENERATED half is BUILT (2026-08-21/22); the classic STREAM path is what remains**
+
+> **Resolution, read this first — the analysis below is the design argument and several of its
+> statements are now history.** A `[ProtoBeforeSerialization]` contract is measurable, and the
+> callback fires in **both** passes with `ProtoWriter.IsMeasuring` telling them apart. Three
+> sentences below are therefore no longer true and are left in place only as the record:
+> "`RawMeasurableShape` requires `!HasCallback(...)`", "the measure pass invokes no callbacks at all,
+> and cannot", and "this also makes the current refusal load-bearing rather than conservative".
+>
+> Two things about how it was actually done differ from the proposal below, and both are
+> improvements:
+>
+> - **`Measure_` takes an `ISerializationContext`, not `ref state`.** That answers point 2's
+>   coupling objection outright rather than accepting it: the measure stays a pure arithmetic walk,
+>   independently callable, and gains one reference argument. `ref state` was never needed.
+> - **the context it hands the callback is a MEASURING one** — a wrapper for which `IsMeasuring`
+>   answers `true` (`RawLengthBuffer.AsMeasuring`). The classic backend answers that question by
+>   *being* a counting writer; the raw measure has no writer to be. Firing twice while answering
+>   `false` both times would have been worse than the old refusal.
+>
+> Also note "**the length cache already buys it**" below describes the **classic** path only. The
+> generated raw path measures arithmetically and visits each node once by construction; what it
+> needs is *transport*, which is `RawLengthBuffer` — see B38, and the same correction in `AGENTS.md`.
+>
+> **What is still open is the other half of Marc's 2026-08-14 decision**: on the *classic* engine, a
+> nested contract's callback still fires **once** to a stream and **twice** to an `IBufferWriter`.
+> Making the stream path twice is the remaining work, and B14 is still coupled to it. See
+> `notes/gaps.md` B42 for the generated side.
 
 Marc asked how we stand. Checked rather than assumed, and the answer is a real limitation that was
 not written down anywhere:
@@ -2935,9 +2962,9 @@ Effect: `Surrogate` went from 6 `Measure_` occurrences to 16, `ModelSurrogate` 6
 
 | what | gap? | tracked |
 | --- | --- | --- |
-| **maps** (any `Map.Factory`) | **yes, and common** | **B6** |
-| **null-wrapping** — lone `[NullWrappedValue]` | **DONE 2026-08-22** | below |
-| **null-wrapping** — lone, and both collection scopes | **DONE 2026-08-22** | below |
+| **maps** — enum or message on either side, a repeated value, or any non-default format | **yes** | **B6** |
+| ~~maps — plain scalar/string sides at the default format~~ | **DONE 2026-08-21** | **B6** |
+| ~~null-wrapping — lone, both collection scopes, message elements~~ | **DONE 2026-08-22** | below |
 | **null-wrapping** — MAPS only | **yes, still** | below |
 | non-default `DataFormat`, minus the carve-outs | mostly closed | **B26**, and **B30** for the ambient-default angle |
 | a repeated member that is neither raw-writable, packed, BCL-measurable, nor a measurable message | yes | partly B26 |
@@ -3093,15 +3120,28 @@ simply untested rather than broken.
 
 #### Ranked, for "what next"
 
-1. **inheritance** (B41) — worst blast radius, and `[ProtoSubType]` just made it reachable from
-   outside the contract entirely. Unknown whether the exclusion is necessary at all;
-2. **maps** (B6) — the most *common* shape on this list by some distance;
-3. **surrogates** — untracked until now, and a surrogated contract is ordinary enough in real
-   models (`DateTimeOffset`, NodaTime) that this is likely hit more than its absence here suggests;
-4. ~~**null-wrapping**~~ — done bar wrapped MAPS;
-5. **contract-level `IsGroup`** — cheap to establish, possibly free to fix, possibly backwards in
-   the same way B35 was;
-6. the two narrow ones (nullable-struct message, value-type bytes) — fixture-sized, not features.
+Most of what those two tables listed went in over 2026-08-21/22 — seven of their fifteen rows are
+struck through — so this is a short list now rather than a survey. What remains, in order:
+
+1. **inheritance** (B41) — still the worst blast radius of anything here: a whole
+   hierarchy leaves the measurable set together, and `[ProtoSubType]` made that reachable from
+   outside the contract entirely. It is also the only one where the exclusion may be *necessary*
+   rather than never-taught, which is the question to settle first — a sub-type marker is a
+   length-prefixed sub-message, but **optionally** delimited, so "one slot per marker" is not a
+   fixed shape. Needs a decision before code;
+2. **null-wrapped maps** — the last null-wrapping shape, probed and recorded below but not built.
+   Its *value* scope is genuinely new; its collection scope is a reuse of what already works;
+3. **map sides that are enums or messages** (B6) — an enum side is the underlying scalar plus a
+   cast, a message side is a nested `Measure_` with a null slot buffer. Both shapes now exist
+   elsewhere, so this is assembly rather than design;
+4. **external serializers** (B31) — a hand-written serializer's size is unknowable at compile time
+   by definition, so this one is probably *correctly* out; worth confirming rather than assuming;
+5. **the `DataFormat` tail** (B26, B30) — the constant-width formats are the cheap ones, and B30's
+   ambient-default angle is what makes them matter more than their frequency suggests.
+
+Three that were on this list are settled rather than done: a **surrogate with its own serializer**
+stays out correctly (it delegates, so there are no members to inline), the **cascade** row is not a
+gap at all, and **contract-level `IsGroup`** turned out to be backwards in the same way B35 was.
 
 **None of these is a correctness problem.** Every one of them falls back to the classic
 write-to-count path, which is what protobuf-net did before v4 and is still correct — the cost is
