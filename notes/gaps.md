@@ -3828,11 +3828,34 @@ reader encodes a group as `-fieldNumber` and deliberately leaves position unboun
 (`PushGroup`). So the saved value is negative, the comparison reads it as a position far behind the
 cursor, and a perfectly good stream is rejected.
 
-The fix is one condition — `value64 >= 0 &&` — restoring the check to the case it was written for.
-A negative saved scope is a group sentinel and is restored verbatim, which is what
-`_scope = value64` already did correctly on the next line.
+The fix biases the saved value clear of the group-token range so the two can be told apart; see the
+correction below, which is where the interesting part is.
 
 **Why it had not bitten:** it needs a grouped member *and* a stateful hand-back in the same body.
 The raw reader's hand-back (`StashTag` + `ReadMessage`) is used for maps, repeated engines and BCL
 kinds, and the raw group scope arrived with gap B35 — but no fixture had both at once until
 `DepthBoundary.input.cs`, which now carries one deliberately.
+
+#### Correction, same day: the first fix was too broad
+
+The first fix relaxed the overrun check to `value64 >= 0 && value64 < position`, on the reasoning
+that a negative saved scope is never a position. That is true but incomplete, because **a negative
+`value64` has two meanings**, and the relaxation conflated them:
+
+- `StartSubItem`'s **group** arm returns `-fieldNumber` and does *not* touch `_scope`. Reaching
+  `EndSubItem`'s `default` branch with such a token means the end-group never arrived — and that
+  used to throw only *because* a negative "expected" accidentally failed the overrun comparison;
+- the **length** arm saves the enclosing `_scope`, which is `-fieldNumber` when a raw group scope is
+  active. That is the valid case this gap is about.
+
+Relaxing the comparison therefore stopped an unterminated group being reported: `Examples`'
+`TestUnterminatedGroup` went from a clean `ProtoException` to an `EndOfStreamException` from further
+down the stream. **The full traversal caught it; the AOT battery did not**, because the shape is a
+hand-built corrupt payload in the legacy suite and nothing on the generated path produces one.
+
+The real fix biases the *saved* value clear of the group-token range —
+`RawGroupScopeBias = 1L << 40`, against field numbers that stop at 536,870,911 — so `EndSubItem`
+can branch on which negative it is holding, and every existing path is left byte-identical. Two
+weaker discriminators were tried and rejected first: the token alone cannot say (both are
+`-fieldNumber`), and `_scope == position` does not separate them either, because a length-bounded
+root leaves `_scope` equal to the position at the end of an unterminated group too.

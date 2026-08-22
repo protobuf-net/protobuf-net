@@ -759,6 +759,11 @@ namespace ProtoBuf
                         // existing end-group/sub-message checks instead (see issue 697). The
                         // allocating paths still bound themselves via the block end.
                         long lastEnd = _scope;
+                        // gap B44: a RAW group scope encodes as -fieldNumber in _scope, which is
+                        // exactly how the group arm above encodes a TOKEN - so saving it verbatim
+                        // makes a perfectly ordinary length sub-item look, on the way out, like an
+                        // unterminated group. Bias it clear of that range; EndSubItem undoes this.
+                        if (lastEnd < 0) lastEnd -= RawGroupScopeBias;
                         _scope = Position + len;
                         RecomputeEffectiveEnd();
                         if (IncrDepthExceeded()) ThrowTooDeep();
@@ -770,6 +775,13 @@ namespace ProtoBuf
             }
 
             /// <summary>
+            /// Separates a suspended RAW group scope from a group TOKEN, both of which are
+            /// <c>-fieldNumber</c>. Field numbers stop at 536,870,911, so a bias of 2^40 puts the
+            /// suspended form far outside anything the group encoding can produce. See gap B44.
+            /// </summary>
+            private const long RawGroupScopeBias = 1L << 40;
+
+            /// <summary>
             /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup
             /// marker, or all fields of the sub-message must have been consumed (in either case, this means ReadFieldHeader
             /// should return zero)
@@ -778,6 +790,24 @@ namespace ProtoBuf
             public void EndSubItem(SubItemToken token)
             {
                 long value64 = token.value64;
+                if (value64 < -RawGroupScopeBias)
+                {
+                    // a LENGTH sub-item that suspended a raw group scope. The saved value is a
+                    // sentinel rather than a position, so the "did we overrun the enclosing scope"
+                    // check below does not apply - a raw group is deliberately unbounded
+                    // positionally. Everything else still holds, including this sub-item having
+                    // consumed exactly its own declared length.
+                    if (_wireType == WireType.EndGroup) ThrowProtoException("A length-based message was terminated via end-group; this indicates data corruption");
+                    long rawPosition = Position;
+                    if (_scope != rawPosition && _scope != long.MaxValue)
+                    {
+                        ThrowProtoException($"Sub-message not read correctly (end {_scope} vs {rawPosition})");
+                    }
+                    _scope = value64 + RawGroupScopeBias;
+                    RecomputeEffectiveEnd();
+                    _depth--;
+                    return;
+                }
                 switch (_wireType)
                 {
                     case WireType.EndGroup:
@@ -788,14 +818,12 @@ namespace ProtoBuf
                         break;
                     default:
                         long position = Position;
-                        // value64 is the ENCLOSING scope this sub-item suspended, and the check is
-                        // "did we overrun it". A NEGATIVE one is not a position at all: it is the
-                        // raw reader's group sentinel (see ProtoReader.State.Raw's _scope, where a
-                        // group encodes as -fieldNumber and position is deliberately unbounded), so
-                        // comparing it as a position rejects a perfectly good stream. Reached
-                        // whenever a generated raw read hands ONE member back to the stateful
-                        // machinery from inside a raw GROUP scope - gap B44.
-                        if (value64 >= 0 && value64 < position) ThrowProtoException($"Sub-message not read entirely; expected {value64}, was {position}");
+                        // a negative value64 reaching HERE is an unterminated group - the suspended
+                        // raw-group-scope case is biased out of this range and handled above, which
+                        // is the whole of gap B44. A first attempt relaxed this comparison instead,
+                        // and turned Examples' TestUnterminatedGroup from a clean ProtoException
+                        // into an EndOfStreamException: the two negatives really are different.
+                        if (value64 < position) ThrowProtoException($"Sub-message not read entirely; expected {value64}, was {position}");
                         if (_scope != position && _scope != long.MaxValue)
                         {
                             ThrowProtoException($"Sub-message not read correctly (end {_scope} vs {position})");
