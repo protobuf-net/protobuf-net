@@ -971,6 +971,32 @@ internal static class Program
         var note = new Note { Text = "hi" };
         Extensible.AppendValue(note, 42, 123);
         Check(ref failures, "AppendValue round-trips", 123, Extensible.GetValue<int>(note, 42));
+
+        // A MESSAGE-typed extension value, which is what a `.proto` `extend` block produces for a
+        // non-scalar field. The scalar case above takes ExtensibleUtil's TYPED path, which resolves
+        // an inbuilt ISerializer<int> and never reflects; a message has no inbuilt serializer, so
+        // resolution falls to TypeModel.DefaultModel - the reflective RuntimeTypeModel - because
+        // Extensible's model-less overloads are what protogen emits and there is nowhere in that
+        // signature to name the generated model. Whether that survives ILC is the open question
+        // this answers; see notes/gaps.md B49.
+        // PINS TODAY'S BEHAVIOUR, WHICH IS A KNOWN GAP - it throws, and this asserts that it does,
+        // so the day it starts working this test fails and someone updates it along with B49.
+        // Verified identical on JIT and on a native publish, which is the point: this is NOT an
+        // AOT-only problem. TypeModel.DefaultModel is a NullModel until something touches
+        // RuntimeTypeModel.Default, and a generated-model app never does - so a message-typed
+        // extension finds no serializer either way. (Probed: inserting a bare
+        // `_ = RuntimeTypeModel.Default;` makes the JIT run pass, and that is the whole difference.)
+        try
+        {
+            var customer = new Customer { Id = 7, Name = "ext" };
+            Extensible.AppendValue<Customer>(note, 43, customer);
+            Console.WriteLine("message-typed extension now WORKS - update AotSmoke and notes/gaps.md B49");
+            failures++;
+        }
+        catch (InvalidOperationException)
+        {
+            // expected today: "no serializer could be resolved for it"
+        }
         return failures;
     }
 

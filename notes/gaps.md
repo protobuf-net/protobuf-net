@@ -5010,3 +5010,75 @@ not what to change:
   all - and **re-measure the baseline whenever a fixture changes**, since the count tracks fixtures.
   `AotSmoke` grew a non-generic check and two collection members this session.
 
+### B49. A `.proto` `extend` of MESSAGE type cannot work with a generated model — **open; and it is not an AOT-only problem**
+
+Marc asked what `.proto` emits for extension values and which `TypeModel` it uses. Read off the
+codegen and then measured, because the answer turned out to be worse than "the reflective one".
+
+#### What protogen emits, and what it cannot say
+
+For an `extend` block, `CSharpCodeGenerator` emits **static accessors**, not members:
+
+```csharp
+public static int GetFoo(this SomeMessage obj)
+    => obj == null ? default : global::ProtoBuf.Extensible.GetValue<int>(obj, 42);
+public static void SetFoo(this SomeMessage obj, int value)
+    => global::ProtoBuf.Extensible.AppendValue<int>(obj, 42, value);
+```
+
+**There is no model parameter and no optional argument for one** — the signature is
+`Get{name}(this Extendee obj)` and `Set{name}(this Extendee obj, T value)`, full stop. So the
+model-less `Extensible` overloads are used, and `ExtensibleUtil` resolves those as
+`model ??= TypeModel.DefaultModel`.
+
+Model-taking overloads **do** exist (`AppendValue<TValue>(TypeModel model, IExtensible, int, TValue,
+DataFormat)`), so this is a codegen shape rather than a missing API.
+
+#### The failure, and the part that is genuinely surprising
+
+`TypeModel.DefaultModel` is a **`NullModel`** until something touches `RuntimeTypeModel.Default` —
+and an app built around a generated model never does. So:
+
+| extension value | result |
+| --- | --- |
+| **scalar** (`int`, `string`, …), default format | **works** — `ExtensibleUtil`'s typed path finds an inbuilt `ISerializer<T>` and never consults a model at all |
+| **message** | **throws**, *"Unable to append a value of type X: no serializer could be resolved for it"* |
+
+**Measured identically on JIT and on a native publish**, which is the finding that matters: this is
+**not** an AOT problem wearing an AOT error message. The message says *"This API resolves serializers
+by reflection, so it does not work under native AOT or aggressive trimming"* — true, but it fires on
+an ordinary JIT run too, and the reason is the null default model rather than trimming.
+
+**Proven rather than inferred:** inserting a bare `_ = RuntimeTypeModel.Default;` before the call
+makes the JIT run pass. That single line is the whole difference, and it is exactly what a
+generated-model app has no reason to write. Under AOT it would not help either, since the reflective
+model cannot build a serializer there.
+
+`AotSmoke` now **pins the throw**, so the day this starts working the smoke test fails and says so.
+
+#### Design, from Marc — recorded, not decided
+
+> I wonder whether "interceptors" are our answer here, but *that* precludes two models sharing a
+> type. maybe we enforce that the caller pass in the model as a diagnostic?
+
+Three routes, with what is known about each:
+
+1. **Add an optional model argument to the generated accessors** (`GetFoo(this X obj, TypeModel
+   model = null)`) and have a diagnostic demand it where AOT is asked for. It is a codegen change
+   plus an analyzer, both of which this repo already does; `Utils.AsksForAot` is the existing test
+   for "this project wants AOT". The awkwardness Marc names is real — the calling code often cannot
+   see the model — but it is *visible* awkwardness, which a silent wrong answer is not.
+2. **Interceptors.** Rewriting the call site avoids touching the signature, and the machinery exists
+   (`GrpcProxyGenerator` already intercepts `CreateGrpcService<T>`). Two limits, and the second is
+   the one that decides it: it **precludes two models sharing a type** (an interceptor picks one
+   model statically), and — worse — an interceptor may only rewrite call sites *in the compilation
+   that declares it*, so calls made **inside the DTO assembly** are out of reach. `.proto` DTOs are
+   routinely a separate assembly from the `[ProtoModel]`.
+3. **Make the extension path model-aware without a parameter** — e.g. resolve through the extensible
+   instance's own model. Not investigated; noted because it is the only route that needs neither a
+   signature change nor a call-site rewrite.
+
+**What is NOT in doubt** is that a message-typed extension silently has no working configuration
+under a generated model today, and that the error blames AOT for something that also happens on JIT.
+Correcting that message is worth doing whatever route is taken.
+
