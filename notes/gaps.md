@@ -4836,7 +4836,7 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
-### B48. Drive the native trim/AOT warnings to ZERO — **23 → 7 unique on 2026-08-23; A, B and the aux half of C cleared**
+### B48. Drive the native trim/AOT warnings to ZERO — **23 → 5 unique on 2026-08-23; and the 5 left are really 3 problems**
 
 **Progress, each step measured on a clean publish** (the publish is incremental, and a second run
 reports *nothing at all*, which reads exactly like success):
@@ -4849,7 +4849,9 @@ reports *nothing at all*, which reads exactly like success):
 | step 3 — suppress the unreachable root demand | 14 | 15 | 3,886,592 |
 | step 4 — gate `TryDeserializeList` | 13 | 14 | 3,848,704 |
 | step 5 — gate the aux list branch | 8 | 8 | 3,839,488 |
-| step 6 — gate aux auto-construction | **7** | **7** | 3,840,000 |
+| step 6 — gate aux auto-construction | 7 | 7 | 3,840,000 |
+| step 7 — gate type-by-name resolution | 6 | 6 | 3,810,816 |
+| step 8 — annotate `GetUninitializedObject` | **5** | **5** | 3,810,816 |
 
 **Step 1 pays back exactly what B40 (entry-point dispatch) borrowed**, and could not have been done
 before it: `SlowGet` is entirely the reflective route to a stub, and it is only safe to delete under
@@ -4928,17 +4930,41 @@ through it. So aux splits cleanly in two, and only one half is nightclub-exclude
 | **scalar** aux (`Extensible` values, bare primitives) | works, and is still needed |
 | **list / construction** aux (bare `List<T>` roots, `Activator` on an arbitrary type) | gated, throws |
 
-**Remaining: 7**, all needing restructuring or an API change:
+**Step 7** gates `Type.GetType(string)` — the one demand nothing can annotate, since the trimmer
+sees a string. Note what is *not* gated: the `DynamicTypeFormatting` handler above it is
+consumer-supplied and needs no reflection, so anyone who wires one up keeps working; only the
+reflective fallback throws. Worth 29,696 bytes on its own, because that fallback drags type-name
+resolution in with it.
 
-| id | member | why it is hard |
+**Step 8 is the counter-example to "annotation only relocates"**, and the difference is the useful
+part. `GetUninitializedObject` is **on the generated path** (`SkipConstructor` emits a call), so
+there was never a gate available — but its callers pass `typeof(T)` **concretely**, so the demand is
+satisfied at the site instead of propagating. Nothing new appeared and the bytes did not move. The
+flags matter: `DynamicAccess.Activated` is *not* the right constant, it lacks `PublicConstructors`,
+and using it left the warning in place with a shorter message — which is how the earlier batch
+attempt hid the fact that this one was fixable at all.
+
+**So the rule refines to: annotate where the callers already name the type concretely; gate where
+they cannot.**
+
+**Remaining: 5**, which are really **three** problems:
+
+| id | member | cause |
 | --- | --- | --- |
-| `IL2057` | `DeserializeType` | `Type.GetType(string)` — what `[ProtoInclude(tag, "name")]` needs |
-| `IL2067` | `GetUninitializedObject` | `SkipConstructor`, and **on the generated path** |
-| `IL2067` | `CreateNonTrivialDefault` | relocates onto `TypeHelper<T>`'s cctor if annotated |
+| `IL2091` | `KeyValuePairSerializer.CreateDefault<T>` | **`TypeModel.CreateInstance<T>`** |
+| `IL2091` | `TypeHelper<T>` cctor lambda | **`TypeModel.CreateInstance<T>`** — same call |
+| `IL2067` | `CreateNonTrivialDefault` | same `TypeHelper<T>` cctor; relocates onto it if annotated |
 | `IL2067` | `DeserializeRootFallback` | blocked by `ref Type` erasing the annotation |
-| `IL2091` | `KeyValuePairSerializer.CreateDefault<T>` | |
-| `IL2091` | `TypeHelper<T>` cctor lambda | |
 | `IL2091` | `SubTypeState<T>.Cast`'s `Merge` | needs the annotation on every consumer |
+
+1. **`TypeModel.CreateInstance<T>` — three of the five.** Both `IL2091`s are the same call, and
+   `CreateNonTrivialDefault` lives in the same `TypeHelper<T>` cctor. A gated split on
+   `CreateInstance<T>`, mirroring `ResolveSerializer<T>`/`TryResolveSerializer<T>`, is the obvious
+   next attempt and plausibly takes all three.
+2. **`DeserializeRootFallback` — one.** Needs `PrepareDeserialize` restructured rather than
+   annotated, since `ref Type` erases what the caller knew.
+3. **`SubTypeState<T>.Cast` — one.** Needs the annotation on the class's `T`, i.e. on every consumer
+   including the generated path; `AGENTS.md` records it as deliberately left.
 
 Marc: *"I'm concerned it is growing rather than shrinking; ideally we want to achieve zero."*
 
