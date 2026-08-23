@@ -338,6 +338,33 @@ sittings reasoned about it instead:
   alone the fixture stays green, which is exactly why the first two attempts at a fixture said
   nothing at all.
 
+#### Measured 2026-08-23, because B41 stage 1 earned the suspicion
+
+The worry was explicit and worth stating before the numbers: a map's **write stays on the stateful
+`MapSerializer` whatever we do**, so a contract holding a message-valued map now walks each value
+arithmetically for its own length prefix and the engine asks `IMeasuringSerializer` again per value
+when writing it. That is the exact shape that made B41 stage 1 a regression while passing every gate.
+
+`MapValueMeasureBenchmarks` (new), like-for-like against the same generator with only the
+message-value clause removed:
+
+| shape (generated, 1 entry) | arm off | arm on | |
+| --- | ---: | ---: | --- |
+| carrier at the ROOT, 2 other members | 1.133 µs | 1.145 µs | flat |
+| carrier at the ROOT, 26 other members | 1.631 µs | 1.690 µs | −3.6% (0.9% on a second run: noise) |
+| **carrier NESTED one level** | 1.632 µs, **129 B** | **1.368 µs, 89 B** | **−16%, −40 B** |
+
+**Keep it.** The nested case is the one that occurs — every corpus contract this arm touches is a
+`.proto` DTO nested inside another — and the allocation drop is the clean signal, since 129 B → 89 B
+is a path change rather than run-to-run variance.
+
+**Why the root is flat, which is worth understanding rather than shrugging at:** at the root nothing
+needs a length, and a contract can be raw-**writing** without being **measurable** (its scalars were
+already going raw before this). So making the carrier measurable buys its own members nothing there;
+the cascade is for **referrers**, which is what the nested row measures. Two earlier attempts at this
+benchmark measured only root shapes and reported "flat" - the same mistake B41 stage 1 made, caught
+here by asking why rather than accepting the number.
+
 #### A second, independent bug fell out of the same fixture
 
 A nullable map side measured as `pair.Value != 0` — a **lifted** comparison, where `null != 0` is
