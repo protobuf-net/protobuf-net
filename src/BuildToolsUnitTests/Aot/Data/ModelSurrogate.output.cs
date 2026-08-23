@@ -17,6 +17,22 @@ partial class ModelSurrogateModel
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<[global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicConstructors | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicParameterlessConstructor | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicProperties | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicFields | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicMethods | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicNestedTypes | global::System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.NonPublicNestedTypes)] T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Declares this model's roots to the non-generic entry points.</summary>
+    /// <remarks>
+    /// Called from the <c>TypeModel</c> constructor, so it touches no instance state -
+    /// every call below is static. See gap B40.
+    /// </remarks>
+    protected sealed override void RegisterRootTypes()
+    {
+        RegisterRootType<global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate>();
+        RegisterRootType<global::AotFixtures.ModelSurrogate.Holder>();
+        RegisterRootType<global::AotFixtures.ModelSurrogate.Ticks>();
+        RegisterRootType<global::AotFixtures.ModelSurrogate.TicksSurrogate>();
+        RegisterRootType<global::AotFixtures.ModelSurrogate.VersionSurrogate>();
+        RegisterRootType<global::System.DateTimeOffset>();
+        RegisterRootType<global::System.Version>();
+    }
+
     /// <summary>Serializes the supplied value.</summary>
     /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
     public long Serialize(global::System.IO.Stream destination, global::AotFixtures.ModelSurrogate.DateTimeOffsetSurrogate value, object userState = null)

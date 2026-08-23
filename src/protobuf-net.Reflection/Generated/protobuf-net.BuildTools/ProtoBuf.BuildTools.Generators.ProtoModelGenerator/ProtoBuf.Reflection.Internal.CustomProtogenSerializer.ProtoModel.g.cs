@@ -16,6 +16,52 @@ partial class CustomProtogenSerializer
     protected sealed override global::ProtoBuf.Serializers.ISerializer<T> GetSerializer<T>()
         => global::ProtoBuf.Serializers.SerializerCache.Get<ProtoBufGeneratedServices, T>();
 
+    /// <summary>Declares this model's roots to the non-generic entry points.</summary>
+    /// <remarks>
+    /// Called from the <c>TypeModel</c> constructor, so it touches no instance state -
+    /// every call below is static. See gap B40.
+    /// </remarks>
+    protected sealed override void RegisterRootTypes()
+    {
+        RegisterRootType<global::Google.Protobuf.Reflection.DescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.DescriptorProto.ExtensionRange>();
+        RegisterRootType<global::Google.Protobuf.Reflection.DescriptorProto.ReservedRange>();
+        RegisterRootType<global::Google.Protobuf.Reflection.EnumDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.EnumDescriptorProto.EnumReservedRange>();
+        RegisterRootType<global::Google.Protobuf.Reflection.EnumOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.EnumValueDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.EnumValueOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.ExtensionRangeOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.ExtensionRangeOptions.Declaration>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FeatureSet>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FieldDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FieldOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FieldOptions.EditionDefault>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FieldOptions.FeatureSupport>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FileDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FileDescriptorSet>();
+        RegisterRootType<global::Google.Protobuf.Reflection.FileOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.MessageOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.MethodDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.MethodOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.OneofDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.OneofOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.ServiceDescriptorProto>();
+        RegisterRootType<global::Google.Protobuf.Reflection.ServiceOptions>();
+        RegisterRootType<global::Google.Protobuf.Reflection.SourceCodeInfo>();
+        RegisterRootType<global::Google.Protobuf.Reflection.SourceCodeInfo.Location>();
+        RegisterRootType<global::Google.Protobuf.Reflection.UninterpretedOption>();
+        RegisterRootType<global::Google.Protobuf.Reflection.UninterpretedOption.NamePart>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenEnumOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenEnumValueOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenFieldOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenFileOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenMessageOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenMethodOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenOneofOptions>();
+        RegisterRootType<global::ProtoBuf.Reflection.ProtogenServiceOptions>();
+    }
+
     /// <summary>Serializes the supplied value.</summary>
     /// <remarks>Prefer this to the generic <c>Serialize&lt;T&gt;</c>: it resolves the serializer at compile time rather than per call.</remarks>
     public long Serialize(global::System.IO.Stream destination, global::Google.Protobuf.Reflection.DescriptorProto value, object userState = null)

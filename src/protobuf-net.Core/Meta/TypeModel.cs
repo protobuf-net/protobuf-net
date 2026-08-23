@@ -1555,6 +1555,52 @@ namespace ProtoBuf.Meta
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        /// <summary>
+        /// Creates a new instance.
+        /// </summary>
+        /// <remarks>
+        /// The <see cref="RegisterRootTypes"/> call is the choke point for the non-generic entry
+        /// points: any model that exists has registered its roots, which is the semantic wanted and
+        /// is not obtainable from a static initializer (a <c>beforefieldinit</c> type's initializer
+        /// is only guaranteed before a <b>static field access</b>, and nothing on the non-generic
+        /// path makes one).
+        /// </remarks>
+        protected TypeModel()
+        {
+            // a virtual call from a constructor, deliberately and safely: the override exists only
+            // to call static registration helpers and must not touch instance state. That is
+            // documented on RegisterRootTypes, and the generated override honours it.
+            RegisterRootTypes();
+        }
+
+        /// <summary>
+        /// Registers the root types this model can serialize, so that the non-generic,
+        /// <see cref="Type"/>-based entry points can reach them without reflection.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Called from the <see cref="TypeModel"/> constructor</b>, so an override must not touch
+        /// instance state - it runs before the derived type's own field initializers. It exists to
+        /// call <see cref="RegisterRootType{T}"/>, which is static, and nothing else.
+        /// </para>
+        /// <para>
+        /// The default does nothing: a reflection-based model resolves types dynamically anyway, so
+        /// it has nothing to declare.
+        /// </para>
+        /// </remarks>
+        protected virtual void RegisterRootTypes() { }
+
+        /// <summary>
+        /// Declares that this model can serialize <typeparamref name="T"/> as a root, so the
+        /// non-generic entry points can reach it without <c>MakeGenericType</c>.
+        /// </summary>
+        /// <remarks>
+        /// Only useful under AOT, where the reflective route silently degrades - see the remarks on
+        /// the internal registration this forwards to. Harmless and idempotent elsewhere.
+        /// </remarks>
+        protected static void RegisterRootType<T>()
+            => DynamicStub.Register<T>();
+
         internal static ISerializer<T> TryGetSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model)
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>();

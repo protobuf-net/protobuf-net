@@ -103,6 +103,35 @@ namespace ProtoBuf.BuildTools.Generators
             Line(sb, indent + 2, $"=> {Serializers}.SerializerCache.Get<{ServicesTypeName}, T>();");
             sb.AppendLine();
 
+            // gap B40: the NON-GENERIC, Type-based entry points. The generic API resolves through
+            // SerializerCache<TProvider, T> above and never reflects; the non-generic one goes
+            // TypeModel -> DynamicStub -> MakeGenericType, which under ILC has no instantiation to
+            // find. DynamicStub CATCHES that and hands back a NilStub, so the failure is silent:
+            // "Type is not expected, and no contract can be inferred" from a model that plainly
+            // does know the type. Proven by native publish, not inferred - src/AotSmoke asserts it
+            // now, and failed before this.
+            //
+            // Naming each contract concretely here is the entire fix: the instantiation becomes
+            // statically reachable, so ILC generates it and the reflective route is never taken.
+            if (plan.Contracts.Count != 0)
+            {
+                Line(sb, indent + 1, "/// <summary>Declares this model's roots to the non-generic entry points.</summary>");
+                Line(sb, indent + 1, "/// <remarks>");
+                Line(sb, indent + 1, "/// Called from the <c>TypeModel</c> constructor, so it touches no instance state -");
+                Line(sb, indent + 1, "/// every call below is static. See gap B40.");
+                Line(sb, indent + 1, "/// </remarks>");
+                Line(sb, indent + 1, "protected sealed override void RegisterRootTypes()");
+                Line(sb, indent + 1, "{");
+                foreach (var contract in plan.Contracts)
+                {
+                    // a contract with a hand-written serializer is proxied rather than implemented,
+                    // but it is still a root this model can serialize, so it registers like any other
+                    Line(sb, indent + 2, $"RegisterRootType<{contract.TypeName}>();");
+                }
+                Line(sb, indent + 1, "}");
+                sb.AppendLine();
+            }
+
             // PER-CONTRACT TYPED ENTRY POINTS (gap B39). A non-generic overload beats
             // TypeModel.Serialize<T> at any call site naming a concrete type, and skips what that
             // path re-decides per call: a TypeHelper<T>.ValueChecker indirection for the null test,

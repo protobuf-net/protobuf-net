@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -23,6 +23,9 @@
          baseline package has no notion of. The generated companion goes with it. -->
     <Compile Remove="..\Benchmark\InheritanceDepthBenchmarks.cs" />
     <Compile Remove="..\Benchmark\InheritanceDepth.generated.cs" />
+    <!-- uses [ProtoModel], which 2.4.x has no concept of; also depends on the writer nested in
+         InheritanceDepthBenchmarks, which is excluded above -->
+    <Compile Remove="..\Benchmark\EntryPointDispatchBenchmarks.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

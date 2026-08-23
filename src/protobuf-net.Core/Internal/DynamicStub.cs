@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Meta;
+using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections;
@@ -86,6 +86,39 @@ namespace ProtoBuf.Internal
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DynamicStub Get(Type type) => (DynamicStub)s_byType[type] ?? SlowGet(type);
+
+        /// <summary>
+        /// Pre-seed the stub for a known type, from a call site that names it concretely.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>This is the AOT fix, and the whole point is the CALL SITE.</b> <see cref="SlowGet"/>
+        /// reaches <c>ConcreteStub&lt;T&gt;</c> through <c>MakeGenericType</c>, which ILC cannot
+        /// generate for an instantiation nothing names statically - and <c>TryCreateConcrete</c>
+        /// <i>catches</i> that failure and hands back a <c>NilStub</c>, so the non-generic,
+        /// <see cref="Type"/>-based entry points degrade to "Type is not expected, and no contract
+        /// can be inferred" rather than failing loudly. Calling this with a concrete
+        /// <typeparamref name="T"/> makes the instantiation statically reachable, so ILC generates
+        /// it and <c>MakeGenericType</c> is never needed.
+        /// </para>
+        /// <para>
+        /// Idempotent, and locked on the same object the miss path writes under -
+        /// <see cref="Hashtable"/> tolerates concurrent readers against a single writer, which is
+        /// what the lock-on-write-only pattern here relies on.
+        /// </para>
+        /// </remarks>
+        // NOTE no [DynamicallyAccessedMembers] here, deliberately: ConcreteStub<T> declares none
+        // either, so demanding one would keep every registered contract fully reflectable for no
+        // reason - which is precisely the mistake that cost 808 KB when it was made on the
+        // transport type parameters (see AGENTS.md, "which axis they belong on")
+        internal static void Register<T>()
+        {
+            var stub = new ConcreteStub<T>();
+            lock (s_byType)
+            {
+                s_byType[typeof(T)] = stub;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static DynamicStub SlowGet(Type type)

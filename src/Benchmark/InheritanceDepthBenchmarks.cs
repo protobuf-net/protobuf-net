@@ -135,6 +135,8 @@ namespace Benchmark
             public void Advance(int count) => _index += count;
             public Memory<byte> GetMemory(int sizeHint = 0) => _array.AsMemory(_index);
             public Span<byte> GetSpan(int sizeHint = 0) => _array.AsSpan(_index);
+            /// <summary>What has been written since the last Reset - for setup-time assertions.</summary>
+            public ReadOnlySpan<byte> Written => _array.AsSpan(0, _index);
         }
 
         private long ToBuffer(TypeModel model, object value)

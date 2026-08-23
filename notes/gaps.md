@@ -2982,7 +2982,73 @@ entire typed call at n=8 and untouched by anything here.
 - **a typed `Deserialize`**, which cannot use overload resolution at all (there is no instance to
   bind on) and is therefore B40's problem rather than this one's.
 
-### B40. Steering call sites, and making the core APIs VIRTUAL — **dispatch benchmarked 2026-08-22; the design decision is open**
+### B40. Steering call sites, and making the core APIs VIRTUAL — **the non-generic API was BROKEN under AOT; fixed 2026-08-23. The steering/analyzer half is still a design call**
+
+> **Read this first: the framing changed.** This was logged as a *dispatch cost* question. Built
+> out, the non-generic entry points turned out to be **silently broken under native AOT** on a
+> generated model, which makes the first half of this entry a correctness item rather than a perf
+> one. The measured in-situ dispatch gap is small (below); the AOT break was not.
+
+#### The break, and it was unmeasured rather than fine
+
+`Serialize(Stream, object)` and `Deserialize(Stream, object, Type)` go `TypeModel` → `DynamicStub`
+→ `MakeGenericType`, where the *generic* API resolves through `SerializerCache<TProvider, T>` and
+never reflects. Under ILC that `MakeGenericType` has no instantiation to find, and
+`DynamicStub.TryCreateConcrete` **catches** the failure and returns a `NilStub` — so it degrades to
+*"Type is not expected, and no contract can be inferred"* from a model that plainly knows the type.
+
+`AotSmoke` used only the generic API, so nothing measured this. Proven by native publish in **both**
+directions: the new check fails on the binary built without the fix and passes with it.
+
+**The fix is to name each contract concretely at a call site**, making the instantiation statically
+reachable: `TypeModel.RegisterRootTypes()` (virtual) and `RegisterRootType<T>()` (static), with the
+generator overriding the former with one call per contract.
+
+**On `beforefieldinit`** — Marc's question, and the answer goes the other way: a static create
+method on a static field cannot carry this, because a `beforefieldinit` type's initializer is only
+guaranteed before a **static field access**, and nothing on the non-generic path makes one (the call
+is an instance method on a model the consumer already holds). So the hook is the **`TypeModel`
+constructor**, which gives the semantic wanted: *any model that exists has registered its roots*. A
+virtual call from a constructor, deliberately — the override is documented and generated to touch no
+instance state.
+
+#### The cost, measured on both sides rather than estimated
+
+win-x64, `AotSmoke`, clean publishes:
+
+| | bytes | warnings | non-generic API |
+| --- | ---: | ---: | --- |
+| without registration | 3,673,088 | 19 | **broken** |
+| with registration | 3,885,056 | 28 | works |
+| | **+211,968 (+5.8%)** | +9 | |
+
+All five new *unique* warnings are `IL2091` on `ConcreteStub<T>`'s members, which names the cause:
+`ConcreteStub<T>` declares no annotation on `T` while its members call
+`TypeModel.TryGetSerializer<T>`, which demands `ContractType`. So the 212 KB is **real generic code
+for the non-generic path** — about 4 KB across the 53 contracts `AotSmoke` registers — rather than
+accidental metadata. It is the code that used to be reflected into existence.
+
+**The lever not taken:** registering only the *seeded* roots would be 3 calls rather than 53 here.
+Not free correctness — `TrySerializeRoot` walks up base types so a hierarchy is covered by its base,
+but a non-seeded contract serialized directly as a root would break, and that is a fair thing to do.
+On-by-default is safer given the failure mode is silent; making it selectable is a design call.
+
+#### The in-situ dispatch numbers, which are the modest half
+
+`EntryPointDispatchBenchmarks` (new) measures the three routes on one payload, where the earlier
+benchmarks measured the *mechanisms* in isolation:
+
+| route | ns | vs typed |
+| --- | ---: | ---: |
+| typed overload (model-typed receiver) | 261 | 1.00 |
+| generic `TypeModel.Serialize<T>` | 267 | 1.02 |
+| non-generic `TypeModel.Serialize(object)` | 300 | 1.15 |
+
+So the generic path is **already** essentially the `Helper<T>` shape (`SerializerCache<TProvider, T>`),
+and there is ~6 ns in it — the `Helper<T>` idea has nothing left to win there. The non-generic path
+costs ~39 ns, unchanged by this commit, since registration only changes what ILC generates.
+
+**Still open:** the analyzer/steering half below, and whether registration should be selectable.
 
 B39 shows a typed non-generic `Serialize` recovers ~28 ns a call. This entry is the follow-on
 question Marc raised with it: *how do consumers actually end up on it*, and what the equivalent is

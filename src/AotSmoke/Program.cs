@@ -1,4 +1,4 @@
-﻿using ProtoBuf;
+using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
@@ -856,6 +856,14 @@ internal static class Program
         // behaviour differs by runtime, and only a native publish exercises the half that was broken.
         failures += CheckAppendValue();
 
+        // THE NON-GENERIC TypeModel API, which nothing here exercised until now (gap B40). It is a
+        // different route entirely: SerializeRootFallback -> DynamicStub -> MakeGenericType, where
+        // the generic API resolves through SerializerCache<TProvider, T> and never reflects. Under
+        // ILC that MakeGenericType is not guaranteed to have an instantiation, and DynamicStub
+        // CATCHES the failure and hands back a NilStub - so the failure mode is a silent "unexpected
+        // type" rather than anything loud. Only a native publish can tell us which we get.
+        failures += CheckNonGenericApi(model, original, bytes);
+
         // and the bytes must be stable across a second pass
         using var second = new MemoryStream();
         model.Serialize(second, clone);
@@ -963,6 +971,33 @@ internal static class Program
         var note = new Note { Text = "hi" };
         Extensible.AppendValue(note, 42, 123);
         Check(ref failures, "AppendValue round-trips", 123, Extensible.GetValue<int>(note, 42));
+        return failures;
+    }
+
+    /// <summary>
+    /// The non-generic <c>TypeModel</c> entry points, on a model-typed-as-<c>TypeModel</c> receiver -
+    /// i.e. exactly the call sites no analyzer can steer and no typed overload can bind to.
+    /// </summary>
+    private static int CheckNonGenericApi(TypeModel model, Order original, byte[] expected)
+    {
+        var failures = 0;
+        try
+        {
+            using var ms = new MemoryStream();
+            model.Serialize(ms, (object)original);
+            Check(ref failures, "non-generic Serialize bytes",
+                BitConverter.ToString(expected), BitConverter.ToString(ms.ToArray()));
+
+            ms.Position = 0;
+            var clone = model.Deserialize(ms, null, typeof(Order)) as Order;
+            Check(ref failures, "non-generic Deserialize type", typeof(Order), clone?.GetType());
+            Check(ref failures, "non-generic Deserialize Number", original.Number, clone?.Number);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("non-generic TypeModel API THREW: " + ex.GetType().Name + ": " + ex.Message);
+            failures++;
+        }
         return failures;
     }
 
