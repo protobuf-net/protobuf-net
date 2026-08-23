@@ -36,7 +36,15 @@ namespace ProtoBuf
         /// <param name="type">The type to create</param>
         /// <returns>The new instance</returns>
         [MethodImpl(ProtoReader.HotPath)]
-        public static object GetUninitializedObject(Type type)
+        public static object GetUninitializedObject(
+            // gap B48: annotation rather than a gate, because this is ON THE GENERATED PATH -
+            // [ProtoContract(SkipConstructor = true)] emits a call to it - so there is nothing to
+            // refuse. The flags are exactly what FormatterServices.GetUninitializedObject demands;
+            // DynamicAccess.Activated is NOT the right constant here, it lacks PublicConstructors.
+            // Generated callers pass typeof(T) concretely, so the demand is satisfied at the site
+            // rather than propagating.
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors
+                | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type)
         {
 #pragma warning disable SYSLIB0050 // this is fine
             return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);

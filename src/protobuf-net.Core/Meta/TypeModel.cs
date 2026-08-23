@@ -1944,8 +1944,27 @@ namespace ProtoBuf.Meta
                     if (args.Type is not null) return args.Type;
                 }
             }
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            // gap B48: resolving a type BY NAME is the one demand nothing can annotate - the
+            // trimmer sees a string. Note what is NOT gated: the DynamicTypeFormatting handler
+            // above, which is consumer-supplied and needs no reflection, so a consumer who wires
+            // one up keeps working. This gates only the reflective fallback, which under AOT can
+            // only find a type ILC happened to keep for some other reason - i.e. it is unreliable
+            // rather than merely unsupported, which is the worse failure of the two.
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                ThrowTypeByNameNotSupported(value);
+                return default;
+            }
+#endif
             return Type.GetType(value);
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowTypeByNameNotSupported(string value)
+            => throw new NotSupportedException(
+                $"Resolving the type '{value}' by name requires dynamic code, which is not available in this runtime; "
+                + $"supply a {nameof(DynamicTypeFormatting)} handler on the model to map names to types explicitly.");
 
         /// <summary>
         /// Returns true if the type supplied is either a recognised contract type,
