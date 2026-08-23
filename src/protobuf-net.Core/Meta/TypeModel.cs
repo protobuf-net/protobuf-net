@@ -1178,6 +1178,11 @@ namespace ProtoBuf.Meta
             return found;
         }
 
+        // NOTE: this deliberately RETURNS the exception for the caller to throw, rather than being
+        // a void throw-helper. [DoesNotReturn] was tried and does NOT substitute: it is a C#
+        // flow-analysis attribute, and ILC's IL-level reachability does not consume it, so the body
+        // below the call survives along with every demand in it. Measured on AotSmoke win-x64:
+        // site-throw 8 warnings / 3,839,488 bytes, [DoesNotReturn] helper 12 / 3,887,104. See B48.
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static NotSupportedException AuxiliaryListNotSupported(Type listType)
             => new NotSupportedException(
