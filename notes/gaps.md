@@ -4808,7 +4808,7 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
-### B48. Drive the native trim/AOT warnings to ZERO — **23 → 14 unique on 2026-08-23; clusters A and B cleared**
+### B48. Drive the native trim/AOT warnings to ZERO — **23 → 8 unique on 2026-08-23; A, B and the aux LIST half of C cleared**
 
 **Progress, each step measured on a clean publish** (the publish is incremental, and a second run
 reports *nothing at all*, which reads exactly like success):
@@ -4818,7 +4818,9 @@ reports *nothing at all*, which reads exactly like success):
 | baseline | 23 | 28 | 3,885,056 |
 | step 1 — gate `DynamicStub.SlowGet` | 19 | 24 | 3,882,496 |
 | step 2 — `TryResolveSerializer<T>` | 18 | 19 | 3,886,592 |
-| step 3 — suppress the unreachable root demand | **14** | **15** | 3,886,592 |
+| step 3 — suppress the unreachable root demand | 14 | 15 | 3,886,592 |
+| step 4 — gate `TryDeserializeList` | 13 | 14 | 3,848,704 |
+| step 5 — gate the aux list branch | **8** | **8** | **3,839,488** |
 
 **Step 1 pays back exactly what B40 (entry-point dispatch) borrowed**, and could not have been done
 before it: `SlowGet` is entirely the reflective route to a stub, and it is only safe to delete under
@@ -4840,7 +4842,40 @@ one and returned false if it could not.
 3,673,088 — the `ConcreteStub<T>` instantiations that make the non-generic API work are what
 registration is *for*.
 
-**Remaining: 14**, in the two groups below (C and D). C is restructuring, not annotation.
+**The mechanism matters more than the gate, and cost a wasted publish to learn: throwing through a
+void helper removed NOTHING.** ILC substitutes the condition with a constant, but only deletes the
+rest of the method if it can see control does not continue — which a `void` throw-helper does not
+tell it. `throw AuxiliaryListNotSupported(type)` **at the site** dropped 38 KB immediately. Any
+future gating here must throw at the site or it is decoration.
+
+**Tried and reverted: annotating the four `IL2067` parameters.** It *relocated* rather than removed —
+three cleared and three appeared (`ExtensibleUtil.GetExtendedValues`, `TrySerializeAuxiliaryType`,
+`PrepareDeserialize`), taking the total from 8 to 10. Two specifics worth keeping: **`ref Type`
+erases what the caller knew**, so `DeserializeRootFallback`'s own annotation was discarded the moment
+it passed through `PrepareDeserialize`; and annotating `CreateNonTrivialDefault` merely moved its
+warning onto `TypeHelper<T>`'s cctor as `IL2087`, where fixing it would mean a class-wide demand on
+every `T`. This entry already said the cluster needs restructuring rather than annotation — that is
+now evidence rather than expectation.
+
+**Not gated, and the reason is a correction:** the aux path is **not** wholesale broken under AOT.
+`AotSmoke` asserts `Extensible.AppendValue` round-trips and it passes natively, so the **scalar** aux
+path works; only the list/construction half needs dynamic code. **The `AGENTS.md` note saying
+`AppendValue` "does not work under AOT, and fails silently" is stale** and should be re-checked when
+that section is next touched. A blanket gate would have broken a working path and the smoke test
+would have caught it — which is the argument for having the check at all.
+
+**Remaining: 8**, all needing restructuring or an API change:
+
+| id | member | why it is hard |
+| --- | --- | --- |
+| `IL2057` | `DeserializeType` | `Type.GetType(string)` — what `[ProtoInclude(tag, "name")]` needs |
+| `IL2067` | `GetUninitializedObject` | `SkipConstructor`, and **on the generated path** |
+| `IL2067` | `CreateNonTrivialDefault` | relocates onto `TypeHelper<T>`'s cctor if annotated |
+| `IL2067` | `TryDeserializeAuxiliaryType` | relocates to its callers if annotated |
+| `IL2067` | `DeserializeRootFallback` | blocked by `ref Type` erasing the annotation |
+| `IL2091` | `KeyValuePairSerializer.CreateDefault<T>` | |
+| `IL2091` | `TypeHelper<T>` cctor lambda | |
+| `IL2091` | `SubTypeState<T>.Cast`'s `Merge` | needs the annotation on every consumer |
 
 Marc: *"I'm concerned it is growing rather than shrinking; ideally we want to achieve zero."*
 

@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+using System.Diagnostics.CodeAnalysis;
+using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
@@ -108,6 +109,19 @@ namespace ProtoBuf.Internal
                 t = null; // don't need that kind of confusion
                 return false;
             }
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            // gap B48: this is the OLD list heuristic, kept only for the auxiliary flow and
+            // TypeModel.CanSerialize - and everything it enables (TryDeserializeList,
+            // CreateListInstance) needs dynamic code. Answering "not an enumerable" under AOT is
+            // the honest reply there: what follows a `true` cannot run. It leaves the caller on the
+            // path it already takes for anything unrecognised, which throws a type-specific error
+            // rather than a misleading one.
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                t = null;
+                return false;
+            }
+#endif
 
             if (type.IsArray)
             {

@@ -1108,6 +1108,25 @@ namespace ProtoBuf.Meta
 
         private bool TryDeserializeList(ref ProtoReader.State state, DataFormat format, int tag, Type listType, Type itemType, ref object value, bool isRoot)
         {
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            // gap B48: this is the AUXILIARY list path - a bare list or array reached as a root or
+            // as an aux item, with no contract behind it - and it cannot function without dynamic
+            // code: the array surrogate below is Activator.CreateInstance over a MakeGenericType,
+            // and CreateListInstance is more of the same. Under ILC that throws for any
+            // instantiation nothing named statically, so the choice is not "works or throws" but
+            // "throws clearly or throws obscurely".
+            //
+            // Throwing here is what Marc licensed for paths not expected under AOT, and unlike
+            // DynamicStub.SlowGet there is no legitimate miss to preserve - reaching this method at
+            // all means the aux path has already decided this IS a list. Gating also lets ILC
+            // delete the body before trim analysis, which is what removes the demands rather than
+            // relocating them.
+            // thrown AT THE SITE rather than through a void helper: ILC substitutes the condition
+            // with a constant, but it only deletes the rest of the method if it can see that control
+            // does not continue - a void throw-helper it cannot, and the demands survive. Measured:
+            // via a helper this removed nothing at all.
+            if (!RuntimeFeature.IsDynamicCodeSupported) throw AuxiliaryListNotSupported(listType);
+#endif
             bool found = false;
             object nextItem = null;
             IList list = value as IList;
@@ -1158,6 +1177,11 @@ namespace ProtoBuf.Meta
             }
             return found;
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static NotSupportedException AuxiliaryListNotSupported(Type listType)
+            => new NotSupportedException(
+                $"Deserializing '{listType?.NormalizeName()}' through the auxiliary list path requires dynamic code, which is not available in this runtime; declare it as a member of a contract the model knows, or serialize a contract that contains it.");
 
         private static object CreateListInstance(Type listType, Type itemType)
         {
@@ -1248,6 +1272,14 @@ namespace ProtoBuf.Meta
                 if (itemType is not null)
                 {
                     if (insideList) TypeModel.ThrowNestedListsNotSupported((parentListOrType as Type) ?? (parentListOrType?.GetType()));
+#if PLAT_DYNAMIC_ACCESS_ATTR
+                    // gap B48: the aux LIST flow, which needs dynamic code from here down. Gating at
+                    // this point rather than at the top of the branch is deliberate - by here we
+                    // know it really is a list, so the message is accurate; higher up, a
+                    // non-list-non-scalar would get "requires dynamic code" when the truth is
+                    // "no contract for this type", which ThrowUnexpectedType already says well.
+                    if (!RuntimeFeature.IsDynamicCodeSupported) throw AuxiliaryListNotSupported(type);
+#endif
                     found = TryDeserializeList(ref state, format, tag, type, itemType, ref value, isRoot);
                     if (!found && autoCreate)
                     {

@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Internal;
+using System.Diagnostics.CodeAnalysis;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using ProtoBuf.WellKnownTypes;
