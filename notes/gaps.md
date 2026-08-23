@@ -5082,3 +5082,38 @@ Three routes, with what is known about each:
 under a generated model today, and that the error blames AOT for something that also happens on JIT.
 Correcting that message is worth doing whatever route is taken.
 
+#### Pencilled in (Marc, 2026-08-23) — a migration that breaks neither binary nor build compat
+
+> remove the `this` from the old generated extension API, add an overload with the `this` that
+> optionally takes the type-model; this moves new compiled code to the new route without breaking
+> binary or build compat
+
+*"Just an idea at this stage"*, recorded as such — but the mechanism was **probed and it works**:
+
+```csharp
+public static int GetFoo(Msg obj) { ... }                              // was `this Msg obj`
+public static int GetFoo(this Msg obj, TypeModel model = null) { ... } // new
+```
+
+| call form | binds to | |
+| --- | --- | --- |
+| `obj.GetFoo()` — extension syntax | **new** | extension invocation only considers `this` methods |
+| `obj.GetFoo(model)` | **new** | |
+| `Ext.GetFoo(obj)` — static syntax | **old** | a method applicable without optional arguments wins |
+
+So **recompiling moves extension-syntax callers to the model-aware route silently and for free**,
+which is the whole point of the shape. Binary compat holds because the old method still exists with
+the same signature — `[Extension]` affects *source* binding only, so an already-compiled
+`call Ext::GetFoo(Msg)` still resolves. Build compat holds because `obj.GetFoo()` still compiles,
+now against the new overload.
+
+**The one caveat, from the same probe:** an explicit **static** call keeps the old route, because
+overload resolution prefers the candidate that needs no optional argument. That is the minority form
+(protogen emits `this` precisely so people use extension syntax), but a diagnostic aimed at AOT would
+need to recognise it, or those call sites would migrate silently *nowhere*.
+
+Two open questions this does not answer, both worth settling before building it: whether `model = null`
+keeps today's semantics exactly (it should — `null` is what the model-less overloads already pass),
+and what the diagnostic demands when the calling code genuinely cannot see the model, which is the
+awkwardness Marc already named.
+
