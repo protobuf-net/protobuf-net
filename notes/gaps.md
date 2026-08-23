@@ -436,7 +436,35 @@ The remaining native-AOT warnings need the reflective paths not to exist on the 
 reflect. The real arguments are one less layer of indirection on the generated path, and possibly
 size — get a size estimate first.
 
-### B12. An intermittent `Examples` failure on net472 — **harness made self-diagnosing 2026-08-22; still unproven either way**
+### B12. An intermittent net472 test failure — **harness made self-diagnosing 2026-08-22; two fresh sightings 2026-08-23 point somewhere else entirely**
+
+#### 2026-08-23: it is not only `Examples`, and the conditions are now much sharper
+
+Two sightings in one session, and **both were in `protobuf-net.Test`, not `Examples`** — which the
+entry below does not consider at all, since it was written around `PEVerify` and
+`Compile(name, path)`. What was observed, and it is consistent across both:
+
+- **only in the full two-TFM run.** `dotnet test` (net8.0 + net472 together) reported
+  `Failed: 1` on the net472 leg twice; the net8.0 leg passed both times, and **net472 run alone
+  passed** (1579/1584), as did a repeat of the two-TFM run;
+- **never named.** The default console verbosity prints no test name for it, and by the time
+  `--logger "console;verbosity=detailed"` was attached it had stopped reproducing. That is the one
+  thing to fix on the next sighting: **run with `--logger trx` and read the result file**, which
+  names failures whether or not the console does.
+
+**The suspicion, recorded as a suspicion:** this suite contains timing-sensitive concurrency tests —
+`ProtoBuf.unittest.Meta.LockContention.MultipleDeserializeCallsShouldNotContend` took **13 seconds**
+in the run above, and `ThreadRace.TestDeserializeModelFromRoot` 800ms — and it carries known
+global-state hazards, `Issue588.CanSwapDefaultModel` being skipped with the reason *"concurrency
+means that this is really harmful to the other tests"*. A "should not contend" assertion is exactly
+what a loaded machine breaks, and both sightings happened on a machine that was also running native
+publishes and benchmarks. That would also explain why the net472 leg is the one that suffers: it is
+the slower host, and it runs concurrently with net8.0.
+
+**Not proven, and deliberately not fixed on a guess** - relaxing a contention assertion to quiet a
+flake is how a real regression gets hidden. The next sighting needs the trx.
+
+#### The original entry: an intermittent `Examples` failure on net472
 
 Seen twice in full-traversal runs, never reproducible standalone, never captured by name.
 Everything points at `PEVerify.AssertValid`: it shells out to `PEVerify.exe` with a **20-second
