@@ -204,10 +204,23 @@ namespace ProtoBuf.Internal
         /// non-nullable value type never reaches it (its <c>Default</c> is already non-null),
         /// <c>string</c> and <c>byte[]</c> are constants, and any other reference type yields null.
         /// </summary>
+        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
+    }
+
+    /// <summary>
+    /// The "we saw the wrapper, so do not hand back null" default, on its own so that reaching it
+    /// is not a side-effect of wanting a factory.
+    /// </summary>
+    /// <remarks>
+    /// gap B48, and Marc's observation: a hierarchy read wants <c>Factory</c> and has no interest
+    /// in this - they were coupled only by sharing a static constructor, so
+    /// <c>SubTypeState&lt;T&gt;.Create</c> was constructing a wrapper default for every contract in
+    /// every hierarchy. Separating them means only the null-wrapped read pays.
+    /// </remarks>
+    internal static class TypeHelperWrappedDefault<T>
+    {
         public static readonly T NonTrivialDefault
             = TypeHelper<T>.Default ?? (T)TypeHelper.CreateNonTrivialDefault(typeof(T));
-
-        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
     }
 
     // gap B48: do NOT annotate this class's T. It was tried with the narrowest useful demand

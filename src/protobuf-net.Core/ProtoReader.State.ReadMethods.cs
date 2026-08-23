@@ -1175,7 +1175,7 @@ namespace ProtoBuf
                 {
                     // even if the field isn't found, the fact that we had the wrapper at all means that
                     // we shouldn't return null
-                    value = TypeHelperConstruct<T>.NonTrivialDefault;
+                    value = TypeHelperWrappedDefault<T>.NonTrivialDefault;
                 }
 
                 return value;

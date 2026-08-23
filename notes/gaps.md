@@ -4852,7 +4852,8 @@ reports *nothing at all*, which reads exactly like success):
 | step 6 — gate aux auto-construction | 7 | 7 | 3,840,000 |
 | step 7 — gate type-by-name resolution | 6 | 6 | 3,810,816 |
 | step 8 — annotate `GetUninitializedObject` | **5** | **5** | 3,810,816 |
-| step 9 — split `TypeHelperConstruct<T>` out | **5** | **5** | **3,800,576** |
+| step 9 — split `TypeHelperConstruct<T>` out | 5 | 5 | 3,800,576 |
+| step 10 — separate the wrapper default from the factory | **5** | **5** | **3,768,832** |
 
 **Step 1 pays back exactly what B40 (entry-point dispatch) borrowed**, and could not have been done
 before it: `SlowGet` is entirely the reflective route to a stub, and it is only safe to delete under
@@ -5019,6 +5020,22 @@ code) but the binary lost **10,752 bytes**, which is the honest reason to keep i
 the demand onto its three consumers (`ReadWrapped<T>`, `SubTypeState<T>.Create`,
 `SubTypeState<T>.Cast`) and the count goes **5 → 7**. Same lesson as `TypeHelper<T>` itself, one
 level down.
+
+#### Step 10: the wrapper default is not the factory's business — **−31,744 bytes**
+
+Marc: *"something that forces that path not to trigger for inheritance chains, which seems unrelated
+to what it is doing"*. Exactly right, and it was worth 31,744 bytes.
+
+`NonTrivialDefault` and `Factory` shared a static constructor, so
+`SubTypeState<T>.Create` — reached by **every** hierarchy read, see the trace above — was
+constructing a *wrapper default* for every contract in every hierarchy, which it has no interest in.
+Separated into `TypeHelperWrappedDefault<T>`, so only the null-wrapped read pays.
+
+**The warning count did not move, and cannot by this route** — worth stating because it is the third
+time today a promising split has not touched the count. `IL2067` is reported against
+`CreateNonTrivialDefault`'s **own body** (a non-generic method taking `Type`), so it is emitted
+wherever that method is compiled, whoever calls it. Only making the *method* non-reflective, or
+unreachable, removes it.
 
 **Worth knowing for whoever finishes this:** `CreateNonTrivialDefault`'s reflection is reached
 **only for `Nullable<TStruct>`** — a non-nullable value type never gets there (its `Default` is
