@@ -1191,6 +1191,11 @@ namespace ProtoBuf.Meta
         // attribute is C# flow analysis and does not change the emitted IL, so ILC sees the body
         // below the call as reachable and keeps every demand in it - 12 warnings / 3,887,104 bytes.
         [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowAuxiliaryConstructionNotSupported(Type type)
+            => throw new NotSupportedException(
+                $"Constructing '{type?.NormalizeName()}' through the auxiliary path requires dynamic code, which is not available in this runtime; add it to the model so it is known ahead of time.");
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowAuxiliaryListNotSupported(Type listType)
             => throw new NotSupportedException(
                 $"Deserializing '{listType?.NormalizeName()}' through the auxiliary list path requires dynamic code, which is not available in this runtime; declare it as a member of a contract the model knows, or serialize a contract that contains it.");
@@ -1342,6 +1347,16 @@ namespace ProtoBuf.Meta
             {
                 if (type != typeof(string))
                 {
+#if PLAT_DYNAMIC_ACCESS_ATTR
+                    // gap B48, "nightclub rules" (Marc): this constructs an arbitrary UNREGISTERED
+                    // type by reflection, which is exactly what a name-on-the-list model excludes.
+                    // ILC keeps no constructor for a type nothing named, so this cannot work there.
+                    if (!RuntimeFeature.IsDynamicCodeSupported)
+                    {
+                        ThrowAuxiliaryConstructionNotSupported(type);
+                        return found;
+                    }
+#endif
                     value = Activator.CreateInstance(type, nonPublic: true);
                 }
             }

@@ -4848,7 +4848,8 @@ reports *nothing at all*, which reads exactly like success):
 | step 2 — `TryResolveSerializer<T>` | 18 | 19 | 3,886,592 |
 | step 3 — suppress the unreachable root demand | 14 | 15 | 3,886,592 |
 | step 4 — gate `TryDeserializeList` | 13 | 14 | 3,848,704 |
-| step 5 — gate the aux list branch | **8** | **8** | **3,839,488** |
+| step 5 — gate the aux list branch | 8 | 8 | 3,839,488 |
+| step 6 — gate aux auto-construction | **7** | **7** | 3,840,000 |
 
 **Step 1 pays back exactly what B40 (entry-point dispatch) borrowed**, and could not have been done
 before it: `SlowGet` is entirely the reflective route to a stub, and it is only safe to delete under
@@ -4912,14 +4913,28 @@ path works; only the list/construction half needs dynamic code. **The `AGENTS.md
 that section is next touched. A blanket gate would have broken a working path and the smoke test
 would have caught it — which is the argument for having the check at all.
 
-**Remaining: 8**, all needing restructuring or an API change:
+**Step 6 applies Marc's "nightclub rules" — *if your name's not down, you're not coming in*.** The
+aux path's `Activator.CreateInstance(type, nonPublic: true)` constructs an arbitrary **unregistered**
+type by reflection, which is precisely what a name-on-the-list model excludes, and ILC keeps no
+constructor for a type nothing named. Gated to throw.
+
+**It did NOT remove the need for aux, and that is the useful finding.** `AotSmoke` asserts
+`Extensible.AppendValue`/`GetValue` round-trip and still passes: the **scalar** aux path needs no
+reflection at all — `DynamicStub.CanSerialize` finds an inbuilt serializer and the read/write go
+through it. So aux splits cleanly in two, and only one half is nightclub-excluded:
+
+| half | under AOT |
+| --- | --- |
+| **scalar** aux (`Extensible` values, bare primitives) | works, and is still needed |
+| **list / construction** aux (bare `List<T>` roots, `Activator` on an arbitrary type) | gated, throws |
+
+**Remaining: 7**, all needing restructuring or an API change:
 
 | id | member | why it is hard |
 | --- | --- | --- |
 | `IL2057` | `DeserializeType` | `Type.GetType(string)` — what `[ProtoInclude(tag, "name")]` needs |
 | `IL2067` | `GetUninitializedObject` | `SkipConstructor`, and **on the generated path** |
 | `IL2067` | `CreateNonTrivialDefault` | relocates onto `TypeHelper<T>`'s cctor if annotated |
-| `IL2067` | `TryDeserializeAuxiliaryType` | relocates to its callers if annotated |
 | `IL2067` | `DeserializeRootFallback` | blocked by `ref Type` erasing the annotation |
 | `IL2091` | `KeyValuePairSerializer.CreateDefault<T>` | |
 | `IL2091` | `TypeHelper<T>` cctor lambda | |
