@@ -4808,7 +4808,39 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
-### B48. Drive the native trim/AOT warnings to ZERO — **planned 2026-08-23, not started**
+### B48. Drive the native trim/AOT warnings to ZERO — **23 → 14 unique on 2026-08-23; clusters A and B cleared**
+
+**Progress, each step measured on a clean publish** (the publish is incremental, and a second run
+reports *nothing at all*, which reads exactly like success):
+
+| | unique | total | bytes |
+| --- | ---: | ---: | ---: |
+| baseline | 23 | 28 | 3,885,056 |
+| step 1 — gate `DynamicStub.SlowGet` | 19 | 24 | 3,882,496 |
+| step 2 — `TryResolveSerializer<T>` | 18 | 19 | 3,886,592 |
+| step 3 — suppress the unreachable root demand | **14** | **15** | 3,886,592 |
+
+**Step 1 pays back exactly what B40 (entry-point dispatch) borrowed**, and could not have been done
+before it: `SlowGet` is entirely the reflective route to a stub, and it is only safe to delete under
+AOT because registration now supplies one for every generated contract. Behaviourally inert —
+`TryCreateConcrete` already caught and yielded `NilStub`. **Returning `NilStub` rather than throwing
+is deliberate despite the licence to throw**: `Get(type)` legitimately answers `NilStub` in normal
+control flow (`typeof(object)` is seeded to it, and `TrySerializeRoot` walks up base types expecting
+misses), so a throw would break working code.
+
+**Step 2** is the same gated split `ResolveSerializer<T>` already uses. Note the alternative —
+annotating `ConcreteStub<T>`'s `T` — would have **satisfied** the warnings while *keeping* the
+metadata, i.e. grown the binary rather than shrunk it.
+
+**Step 3** suppresses where the demand is provably not ours: `SerializeRoot<T>`/`DeserializeRoot<T>`
+annotate `T` for an **optional** serializer argument, and every call site there has already resolved
+one and returned false if it could not.
+
+**Bytes are flat throughout** (+1,536 from baseline) and deliberately do *not* return to the pre-B40
+3,673,088 — the `ConcreteStub<T>` instantiations that make the non-generic API work are what
+registration is *for*.
+
+**Remaining: 14**, in the two groups below (C and D). C is restructuring, not annotation.
 
 Marc: *"I'm concerned it is growing rather than shrinking; ideally we want to achieve zero."*
 

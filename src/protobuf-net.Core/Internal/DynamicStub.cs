@@ -2,6 +2,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Internal
@@ -111,13 +112,20 @@ namespace ProtoBuf.Internal
         // either, so demanding one would keep every registered contract fully reflectable for no
         // reason - which is precisely the mistake that cost 808 KB when it was made on the
         // transport type parameters (see AGENTS.md, "which axis they belong on")
-        internal static void Register<T>()
+        internal static void Register<T>() => Seed(typeof(T), new ConcreteStub<T>());
+
+        /// <summary>Caches a stub against its type and hands it back.</summary>
+        /// <remarks>
+        /// Locked on write only: <see cref="Hashtable"/> tolerates concurrent readers against a
+        /// single writer, which is what the lock-free <c>Get</c> relies on.
+        /// </remarks>
+        private static DynamicStub Seed(Type type, DynamicStub stub)
         {
-            var stub = new ConcreteStub<T>();
             lock (s_byType)
             {
-                s_byType[typeof(T)] = stub;
+                s_byType[type] = stub;
             }
+            return stub;
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -125,6 +133,25 @@ namespace ProtoBuf.Internal
         {
             
             if (type is null) return NilStub.Instance;
+
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            // gap B48: the rest of this method is the REFLECTIVE route to a stub, and under native
+            // AOT it cannot work - MakeGenericType has no instantiation to find, ILC cannot see one
+            // coming, and TryCreateConcrete quietly catches the failure and yields NilStub anyway.
+            // So the arm is not merely unhelpful there, it is unreachable-in-effect; gating it lets
+            // ILC substitute a constant and delete it BEFORE trim analysis, which is what removes
+            // the demand rather than relocating it (see TypeModel.ResolveSerializer).
+            //
+            // Returning NilStub is EXACTLY today's AOT behaviour, and deliberately not a throw:
+            // Get(type) legitimately answers NilStub in normal control flow - typeof(object) is
+            // seeded to it, and TrySerializeRoot walks up base types expecting misses - so throwing
+            // here would break working code. The caller's "Type is not expected, and no contract
+            // can be inferred" is the error, and it is already reached.
+            //
+            // What a generated model needs instead is TypeModel.RegisterRootType<T>(), which seeds
+            // the stub from a call site naming T concretely (gap B40).
+            if (!RuntimeFeature.IsDynamicCodeSupported) return Seed(type, NilStub.Instance);
+#endif
             
             DynamicStub obj = null;
             Type alt = null;
@@ -147,12 +174,7 @@ namespace ProtoBuf.Internal
                 if (alt is not null && alt != type) obj = Get(alt);
                 obj ??= TryCreateConcrete(typeof(ConcreteStub<>), type);
             }
-            lock (s_byType)
-            {
-                s_byType[type] = obj;
-            }
-
-            return obj;
+            return Seed(type, obj);
 
             static DynamicStub TryCreateConcrete(Type typeDef, params Type[] args)
             {
@@ -239,9 +261,15 @@ namespace ProtoBuf.Internal
         private sealed class ConcreteStub<T> : DynamicStub
         {
             protected override Type GetEffectiveType() => typeof(T);
+            // gap B48: SerializeRoot<T>/DeserializeRoot<T> annotate T because their serializer
+            // argument is OPTIONAL - they resolve one when it is omitted. Every call below has
+            // already resolved it and returned false if it could not, so that fallback is
+            // unreachable from here, and the demand it carries is not ours to satisfy.
+            [UnconditionalSuppressMessage("Trimming", "IL2091",
+                Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
             protected override bool TryDeserializeRoot(TypeModel model, ref ProtoReader.State state, ref object value, bool autoCreate)
             {
-                var serializer = TypeModel.TryGetSerializer<T>(model);
+                var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
                 // note FromObject is non-trivial; for value-type T it promotes the null to a default; we might not want that,
                 // depending on the value of autoCreate
@@ -252,9 +280,15 @@ namespace ProtoBuf.Internal
                 if (resetToNullIfNotMoved && oldPos == state.GetPosition()) value = null;
                 return true;
             }
+            // gap B48: SerializeRoot<T>/DeserializeRoot<T> annotate T because their serializer
+            // argument is OPTIONAL - they resolve one when it is omitted. Every call below has
+            // already resolved it and returned false if it could not, so that fallback is
+            // unreachable from here, and the demand it carries is not ours to satisfy.
+            [UnconditionalSuppressMessage("Trimming", "IL2091",
+                Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
             protected override bool TryDeserialize(ObjectScope scope, TypeModel model, ref ProtoReader.State state, ref object value)
             {
-                var serializer = TypeModel.TryGetSerializer<T>(model);
+                var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
                 T typed = TypeHelper<T>.FromObject(value);
@@ -286,7 +320,7 @@ namespace ProtoBuf.Internal
                 ISerializer<T> ser;
                 try
                 {
-                    ser = TypeModel.TryGetSerializer<T>(model);
+                    ser = TypeModel.TryResolveSerializer<T>(model);
                 }
                 catch // then definitely no!
                 {
@@ -302,18 +336,30 @@ namespace ProtoBuf.Internal
                 return true;
             }
 
+            // gap B48: SerializeRoot<T>/DeserializeRoot<T> annotate T because their serializer
+            // argument is OPTIONAL - they resolve one when it is omitted. Every call below has
+            // already resolved it and returned false if it could not, so that fallback is
+            // unreachable from here, and the demand it carries is not ours to satisfy.
+            [UnconditionalSuppressMessage("Trimming", "IL2091",
+                Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
             protected override bool TrySerializeRoot(TypeModel model, ref ProtoWriter.State state, object value)
             {
-                var serializer = TypeModel.TryGetSerializer<T>(model);
+                var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
                 state.SerializeRoot<T>(TypeHelper<T>.FromObject(value), serializer);
                 return true;
             }
 
+            // gap B48: SerializeRoot<T>/DeserializeRoot<T> annotate T because their serializer
+            // argument is OPTIONAL - they resolve one when it is omitted. Every call below has
+            // already resolved it and returned false if it could not, so that fallback is
+            // unreachable from here, and the demand it carries is not ours to satisfy.
+            [UnconditionalSuppressMessage("Trimming", "IL2091",
+                Justification = "The serializer is always supplied, so the annotated resolution inside SerializeRoot/DeserializeRoot is not reached; see gap B48.")]
             protected override bool TrySerializeAny(int fieldNumber, SerializerFeatures features, TypeModel model, ref ProtoWriter.State state, object value)
             {
-                var serializer = TypeModel.TryGetSerializer<T>(model);
+                var serializer = TypeModel.TryResolveSerializer<T>(model);
                 if (serializer is null) return false;
                 // note this null-check is non-trivial; for value-type T it promotes the null to a default
                 T typed = TypeHelper<T>.FromObject(value);
@@ -341,7 +387,7 @@ namespace ProtoBuf.Internal
             protected override bool TryDeepClone(TypeModel model, ref object value)
             {
                 // check feasability first (required because of sub-type skipping)
-                if (TypeModel.TryGetSerializer<T>(model) is null) return false;
+                if (TypeModel.TryResolveSerializer<T>(model) is null) return false;
 
                 value = model.DeepClone<T>(TypeHelper<T>.FromObject(value));
                 return true;

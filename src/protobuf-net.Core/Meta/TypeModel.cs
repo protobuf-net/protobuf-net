@@ -1605,6 +1605,41 @@ namespace ProtoBuf.Meta
           => SerializerCache<PrimaryTypeProvider, T>.InstanceField
             ?? model?.GetSerializer<T>();
 
+        /// <summary>
+        /// <see cref="TryGetSerializer{T}(TypeModel)"/> without inflicting its annotation on the
+        /// caller - the same split, and for the same reason, as
+        /// <see cref="ResolveSerializer{T}(TypeModel, CompatibilityLevel)"/>.
+        /// </summary>
+        /// <remarks>
+        /// <c>DynamicStub.ConcreteStub&lt;T&gt;</c> is the caller that matters (gap B48): it holds
+        /// no annotation of its own, so every one of its members inherited an <c>IL2091</c> the
+        /// moment the stub became statically reachable through <c>RegisterRootType&lt;T&gt;</c> -
+        /// five warnings, and a demand that would have kept every registered contract fully
+        /// reflectable had it been satisfied by annotation instead.
+        /// </remarks>
+        internal static ISerializer<T> TryResolveSerializer<T>(TypeModel model)
+        {
+#if PLAT_DYNAMIC_ACCESS_ATTR
+            if (!RuntimeFeature.IsDynamicCodeSupported) return TryGetSerializerWithoutReflection<T>(model);
+#endif
+            return TryGetSerializerAllowingReflection<T>(model);
+        }
+
+        // as with ResolveSerializer, the two arms are separate methods purely so that the
+        // suppression on one cannot accidentally cover the other
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091",
+            Justification = "The annotation is genuinely required here, and this arm only survives trim analysis when dynamic code does too - see TryResolveSerializer.")]
+        private static ISerializer<T> TryGetSerializerAllowingReflection<T>(TypeModel model)
+            => TryGetSerializer<T>(model);
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [UnconditionalSuppressMessage("Trimming", "IL2091",
+            Justification = "Reached only where RuntimeTypeModel - the one override that reflects over T - cannot function; see GetSerializerWithoutReflection.")]
+        private static ISerializer<T> TryGetSerializerWithoutReflection<T>(TypeModel model)
+            => SerializerCache<PrimaryTypeProvider, T>.InstanceField
+            ?? model?.GetSerializer<T>();
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static ISubTypeSerializer<T> GetSubTypeSerializer<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(TypeModel model) where T : class
            => model?.GetSerializer<T>() as ISubTypeSerializer<T>
