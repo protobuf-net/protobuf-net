@@ -4808,3 +4808,75 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
+### B48. Drive the native trim/AOT warnings to ZERO — **planned 2026-08-23, not started**
+
+Marc: *"I'm concerned it is growing rather than shrinking; ideally we want to achieve zero."*
+
+**The concern is fair and the growth is attributable.** The arc had been shrinking hard - 200 → 33
+when `DynamicAccess.ContractType` came off the serializer interfaces, then 34 → 20 (the transport
+type parameters, and −808 KB), 39 → 25 (the element annotations, −385 KB), 25 → 19
+(`ThrowUnexpectedSubtype`, −277 KB). B40 then put **9 back** (19 → 28), and every one of them is the
+same new cause. So the trend is not drifting: it took one deliberate step backwards for a
+correctness fix, and that step is the first thing to pay off below.
+
+#### The inventory, `AotSmoke` win-x64, 23 unique / 28 total
+
+| id | n | what it means |
+| --- | ---: | --- |
+| `IL2091` | 8 | a generic argument does not satisfy the target's annotation |
+| `IL2067` | 6 | a parameter's value cannot be statically guaranteed |
+| `IL3050` | 4 | `RequiresDynamicCode` - `MakeGenericType`/`MakeArrayType` |
+| `IL2070` | 3 | `this` argument to a reflection API |
+| `IL2057` | 1 | `Type.GetType(string)` |
+| `IL2055` | 1 | `MakeGenericType` |
+
+Grouped by **cause**, which is how they have to be attacked - the id says what the analyser noticed,
+not what to change:
+
+- **A. `DynamicStub.SlowGet` — 4** (`TryCreateConcrete` ×3 as IL2055/IL2067/IL3050, `ResolveProxies`
+  as IL2070). The reflective route to `ConcreteStub<T>`;
+- **B. `ConcreteStub<T>`'s five members — 5** (all `IL2091`). **These are the ones B40 added**:
+  the class declares no annotation on `T` while its members call `TypeModel.TryGetSerializer<T>`,
+  which demands `ContractType`;
+- **C. the auxiliary / list / construction cluster — 9** (`CreateListInstance`, `TryDeserializeList`,
+  `TryDeserializeAuxiliaryType`, `ResolveUniqueEnumerableT`, `GetConstructor`,
+  `CreateNonTrivialDefault`, `GetUninitializedObject`, `DeserializeRootFallback`). The legacy
+  auxiliary paths a generated model never takes;
+- **D. the residue — 5** (`SubTypeState<T>.Cast`'s `Merge`, `TypeHelper<T>`'s cctor lambda,
+  `KeyValuePairSerializer.CreateDefault<T>`, `TypeModel.DeserializeType`, and one more IL2067).
+
+#### The ladder, in the order worth taking it
+
+1. **Gate `DynamicStub.SlowGet`'s reflective creation on `RuntimeFeature.IsDynamicCodeSupported`.**
+   Highest value, lowest risk, and it **closes the loop on B40**: registration now supplies the stub
+   for every generated contract, so the reflective route exists only for the *runtime* model. ILC
+   substitutes the gate as a constant and eliminates the arm **before trim analysis**, so the demand
+   disappears rather than relocating - the technique AGENTS.md already records for
+   `TypeModel.ResolveSerializer<T>`. **Behaviourally inert under AOT**: an unregistered type already
+   gets a `NilStub` today, because `TryCreateConcrete` catches. Expect cluster A (−4), and watch for
+   cluster B going with it, since an eliminated arm may take `ConcreteStub<T>`'s demands too.
+2. **Cluster B on its own, if step 1 does not carry it.** Two routes, and they are not equivalent:
+   annotating `ConcreteStub<T>`'s `T` **satisfies** the warning while *keeping* the metadata (it
+   would likely grow the 212 KB, not shrink it); gating the fallback inside `TryGetSerializer<T>`
+   **removes** the demand. Prefer the second and measure bytes, per the standing rule that the count
+   and the size do not move together.
+3. **Cluster C — restructuring, not annotation**, and AGENTS.md already says so: *"the generic path
+   must not reference the fallback at all"*. The largest piece of work here and the one to scope
+   separately.
+4. **Cluster D — assume irreducible until proven otherwise.** `SubTypeState<T>.Cast` needs the
+   annotation on the **class**'s `T`, i.e. on every consumer including the generated path;
+   `DeserializeType` is `Type.GetType(string)`, which is what `[ProtoInclude(tag, "name")]` needs and
+   the generator refuses outright. These may need an API change or a feature switch rather than an
+   annotation.
+
+#### Two rules for whoever does it
+
+- **Measure bytes as well as the count.** They do not move together: removing the transport
+  annotations was −14 warnings and −808 KB; removing `MapSerializer`'s was −8 warnings and
+  **exactly zero bytes**. A warning with a `file:line` is a reflective call in our source; one
+  attributed to a bare type name is metadata kept alive by a demand, which is a size problem wearing
+  a warning's clothes.
+- **Clean `obj`/`bin` before each publish** - it is incremental, and a second run reports nothing at
+  all - and **re-measure the baseline whenever a fixture changes**, since the count tracks fixtures.
+  `AotSmoke` grew a non-generic check and two collection members this session.
+
