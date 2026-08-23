@@ -4848,21 +4848,25 @@ rest of the method if it can see control does not continue — which a `void` th
 tell it. `throw AuxiliaryListNotSupported(type)` **at the site** dropped 38 KB immediately. Any
 future gating here must throw at the site or it is decoration.
 
-**`[DoesNotReturn]` does NOT substitute for that** — Marc asked, and it was measured rather than
-argued:
+**THE RULE, after two measured questions from Marc:** a gated arm that wants ILC to delete the rest
+of the method must **terminate in IL**. Two forms do, identically; one does not.
 
 | form | unique | total | bytes |
 | --- | ---: | ---: | ---: |
-| `throw Create…(x)` **at the site** | **8** | **8** | **3,839,488** |
-| `[DoesNotReturn]` void helper | 12 | 13 | 3,887,104 |
+| `throw Create…(x)` at the site | **8** | **8** | **3,839,488** |
+| `ThrowHelper(x); return default;` | **8** | **8** | **3,839,488** |
+| `ThrowHelper(x);` marked `[DoesNotReturn]`, no return | 12 | 13 | 3,887,104 |
 
-Four warnings and 47,616 bytes worse. The attribute is a **C# flow-analysis** annotation — it makes
-the *compiler* treat following code as unreachable for definite-assignment and nullability purposes,
-and it does not change the emitted IL. ILC's reachability is over IL, so the body below the call
-survives and every demand in it survives with it. The convention for this codebase is therefore:
-**a gate that wants ILC to delete a body must `throw` an exception the helper RETURNS**, not call a
-void helper, however it is attributed. Noted at the helper itself so the next person does not retry
-it.
+**`[DoesNotReturn]` does not substitute for the `return`.** It is a **C# flow-analysis** annotation —
+it makes the *compiler* treat following code as unreachable for definite-assignment and nullability
+purposes, and it does not change the emitted IL. ILC's reachability is over IL, so the body below a
+bare `call` survives and every demand in it survives with it: four warnings and 47,616 bytes worse.
+(It is also not used anywhere in Core and has no netstandard2.0 polyfill, so adopting it would have
+cost one for no gain.)
+
+**The helper-plus-`return` form is what the codebase uses**, since it keeps the existing
+`ThrowHelper` convention and measures the same. Noted at the helper itself so the next person does
+not retry the bare call.
 
 **Tried and reverted: annotating the four `IL2067` parameters.** It *relocated* rather than removed —
 three cleared and three appeared (`ExtensibleUtil.GetExtendedValues`, `TrySerializeAuxiliaryType`,

@@ -1125,7 +1125,11 @@ namespace ProtoBuf.Meta
             // with a constant, but it only deletes the rest of the method if it can see that control
             // does not continue - a void throw-helper it cannot, and the demands survive. Measured:
             // via a helper this removed nothing at all.
-            if (!RuntimeFeature.IsDynamicCodeSupported) throw AuxiliaryListNotSupported(listType);
+            if (!RuntimeFeature.IsDynamicCodeSupported)
+            {
+                ThrowAuxiliaryListNotSupported(listType);
+                return default;
+            }
 #endif
             bool found = false;
             object nextItem = null;
@@ -1178,14 +1182,17 @@ namespace ProtoBuf.Meta
             return found;
         }
 
-        // NOTE: this deliberately RETURNS the exception for the caller to throw, rather than being
-        // a void throw-helper. [DoesNotReturn] was tried and does NOT substitute: it is a C#
-        // flow-analysis attribute, and ILC's IL-level reachability does not consume it, so the body
-        // below the call survives along with every demand in it. Measured on AotSmoke win-x64:
-        // site-throw 8 warnings / 3,839,488 bytes, [DoesNotReturn] helper 12 / 3,887,104. See B48.
+        // THE RULE, measured rather than assumed (gap B48): a gated arm that wants ILC to delete
+        // the rest of the method must TERMINATE IN IL - either `throw` at the site, or this shape,
+        // a void helper followed by an explicit `return`. Both measure identically (8 warnings /
+        // 3,839,488 bytes on AotSmoke win-x64).
+        //
+        // What does NOT work is the helper call on its own, even marked [DoesNotReturn]: that
+        // attribute is C# flow analysis and does not change the emitted IL, so ILC sees the body
+        // below the call as reachable and keeps every demand in it - 12 warnings / 3,887,104 bytes.
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static NotSupportedException AuxiliaryListNotSupported(Type listType)
-            => new NotSupportedException(
+        private static void ThrowAuxiliaryListNotSupported(Type listType)
+            => throw new NotSupportedException(
                 $"Deserializing '{listType?.NormalizeName()}' through the auxiliary list path requires dynamic code, which is not available in this runtime; declare it as a member of a contract the model knows, or serialize a contract that contains it.");
 
         private static object CreateListInstance(Type listType, Type itemType)
@@ -1283,7 +1290,11 @@ namespace ProtoBuf.Meta
                     // know it really is a list, so the message is accurate; higher up, a
                     // non-list-non-scalar would get "requires dynamic code" when the truth is
                     // "no contract for this type", which ThrowUnexpectedType already says well.
-                    if (!RuntimeFeature.IsDynamicCodeSupported) throw AuxiliaryListNotSupported(type);
+                    if (!RuntimeFeature.IsDynamicCodeSupported)
+                    {
+                        ThrowAuxiliaryListNotSupported(type);
+                        return default;
+                    }
 #endif
                     found = TryDeserializeList(ref state, format, tag, type, itemType, ref value, isRoot);
                     if (!found && autoCreate)
