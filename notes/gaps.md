@@ -4836,7 +4836,7 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
-### B48. Drive the native trim/AOT warnings to ZERO — **23 → 8 unique on 2026-08-23; A, B and the aux LIST half of C cleared**
+### B48. Drive the native trim/AOT warnings to ZERO — **23 → 7 unique on 2026-08-23; A, B and the aux half of C cleared**
 
 **Progress, each step measured on a clean publish** (the publish is incremental, and a second run
 reports *nothing at all*, which reads exactly like success):
