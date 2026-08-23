@@ -1483,11 +1483,19 @@ namespace ProtoBuf.Meta
             return default;
         }
 
-        internal static T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.ContractType)] T>(ISerializationContext context, ISerializer<T> serializer = null)
+        /// <remarks>
+        /// gap B48: this used to demand <see cref="DynamicAccess.ContractType"/>, and it never
+        /// needed it - the wide demand came from the <c>TryGetSerializer&lt;T&gt;</c> fallback
+        /// below, which is now routed through the gated <c>TryResolveSerializer&lt;T&gt;</c>. What
+        /// genuinely remains is <see cref="DynamicAccess.Activated"/>, because
+        /// <see cref="ActivatorCreate{T}"/> really does construct - and that one is load-bearing
+        /// under AOT rather than removable (see item 4b in notes/aot/findings.md).
+        /// </remarks>
+        internal static T CreateInstance<[DynamicallyAccessedMembers(DynamicAccess.Activated)] T>(ISerializationContext context, ISerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsReferenceType)
             {
-                serializer ??= TypeModel.TryGetSerializer<T>(context?.Model);
+                serializer ??= TypeModel.TryResolveSerializer<T>(context?.Model);
                 T obj = default;
                 if (serializer is IFactory<T> factory) obj = factory.Create(context);
 

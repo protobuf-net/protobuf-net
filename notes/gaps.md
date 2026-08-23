@@ -4836,7 +4836,7 @@ a drop rather than a fallback. Testing it needs a harness referencing a 3.x pack
 here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
 it is not zero and it is not covered.
 
-### B48. Drive the native trim/AOT warnings to ZERO — **23 → 5 unique on 2026-08-23; and the 5 left are really 3 problems**
+### B48. Drive the native trim/AOT warnings to ZERO — **23 → 5 unique on 2026-08-23; the last 5 are one problem, and need restructuring**
 
 **Progress, each step measured on a clean publish** (the publish is incremental, and a second run
 reports *nothing at all*, which reads exactly like success):
@@ -4957,10 +4957,31 @@ they cannot.**
 | `IL2067` | `DeserializeRootFallback` | blocked by `ref Type` erasing the annotation |
 | `IL2091` | `SubTypeState<T>.Cast`'s `Merge` | needs the annotation on every consumer |
 
-1. **`TypeModel.CreateInstance<T>` — three of the five.** Both `IL2091`s are the same call, and
-   `CreateNonTrivialDefault` lives in the same `TypeHelper<T>` cctor. A gated split on
-   `CreateInstance<T>`, mirroring `ResolveSerializer<T>`/`TryResolveSerializer<T>`, is the obvious
-   next attempt and plausibly takes all three.
+1. **`TypeModel.CreateInstance<T>` — three of the five. ATTEMPTED 2026-08-23, and the prediction
+   FAILED.** It cleared none of them, and the reason is worth more than the attempt was.
+
+   The demand is **not** in `CreateInstance<T>`. Narrowing it is still right and was kept — its
+   `ContractType` came from the `TryGetSerializer<T>` fallback, which now routes through the gated
+   `TryResolveSerializer<T>`, leaving only `ActivatorCreate`'s `Activated`, which is load-bearing
+   under AOT. But warning-neutral and +512 bytes, i.e. noise.
+
+   The demand is in the **callers' own unannotated `T`**, and satisfying it there means going up to
+   *class* level, which is where it explodes:
+
+   | attempt | result |
+   | --- | --- |
+   | annotate `TypeHelper<T>`'s class `T` with the **narrowest** useful demand (`Activated`) | **5 → 25 unique, 40 total** |
+   | annotate `KeyValuePairSerializer.CreateDefault<T>` | 5/5 → 5/6 — moved to `Read`/`Write`, which would need it on the class |
+
+   `TypeHelper<T>` is consumed by nearly every generic path, so a class-level demand propagates to
+   all of them — a fivefold increase from the *narrowest* annotation available. Both were reverted;
+   the reasons are recorded at both sites so neither is retried.
+
+   **What this says about the remaining five:** they are not three problems after all, they are
+   **five instances of one problem** — a generic utility whose `T` is unannotated calling something
+   that demands. Annotation propagates it to a class, gating cannot remove it (these paths are
+   genuinely reachable under AOT), so the only route left is **restructuring** so the demanding call
+   is not on the generic path at all. That is a real piece of design work, not a tidy-up.
 2. **`DeserializeRootFallback` — one.** Needs `PrepareDeserialize` restructured rather than
    annotated, since `ref Type` erases what the caller knew.
 3. **`SubTypeState<T>.Cast` — one.** Needs the annotation on the class's `T`, i.e. on every consumer

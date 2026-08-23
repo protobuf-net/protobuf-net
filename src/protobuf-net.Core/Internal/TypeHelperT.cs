@@ -171,6 +171,10 @@ namespace ProtoBuf.Internal
         }
     }
 
+    // gap B48: do NOT annotate this class's T. It was tried with the narrowest useful demand
+    // (Activated) to satisfy the Factory lambda below, and it went 5 warnings -> 25: TypeHelper<T>
+    // is consumed by nearly every generic path, so a class-level demand propagates to all of them.
+    // The lambda's own IL2091 is the cheaper thing to live with.
     internal static class TypeHelper<T>
     {
         public static readonly bool IsReferenceType = !typeof(T).IsValueType;

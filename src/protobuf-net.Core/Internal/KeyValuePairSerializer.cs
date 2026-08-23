@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+using System.Diagnostics.CodeAnalysis;
+using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System;
 using System.Collections.Generic;
@@ -64,6 +65,9 @@ namespace ProtoBuf.Internal
 
             return new KeyValuePair<TKey, TValue>(key, value);
         }
+        // gap B48: annotating this T (even narrowly) only moves the warning up to Read/Write, which
+        // are instance members of KeyValuePairSerializer<TKey, TValue> and would need the demand on
+        // the CLASS. Measured: 5 unique / 5 total -> 5 / 6. Left where it is.
         static T CreateDefault<T>(ISerializationContext context, ISerializer<T> serializer, SerializerFeatures features)
         {
             if (features.HasAny(SerializerFeatures.OptionWrappedValue))
