@@ -46,6 +46,12 @@ public class Exotics
     [ProtoMember(23)] public ImmutableHashSet<int> ImmutableHashSet { get; set; }
     [ProtoMember(24)] public ImmutableSortedSet<int> ImmutableSortedSet { get; set; }
     [ProtoMember(25)] public IImmutableSet<int> ImmutableISet { get; set; }
+
+    // LinkedList<T> resolves and round-trips on RuntimeTypeModel (probed) and had no coverage
+    // anywhere - fixtures, corpus or AotSmoke. Found by asking what the non-seedable slice of the
+    // differential corpus contains that nothing else does; the only LinkedList contract there is
+    // Examples.ListTests.WithLinkedList, which is non-public and so unseedable.
+    [ProtoMember(26)] public LinkedList<int> Linked { get; set; }
 }
 
 public static class ExoticSamples
@@ -56,6 +62,8 @@ public static class ExoticSamples
         new Exotics { Interface = [1, 2], Collection = [3], Enumerable = [4, 5] },
         new Exotics { ReadOnlyList = [6], Set = [7, 8] },
         new Exotics { Queue = new Queue<int>([9, 10]) },
+        new Exotics { Linked = new LinkedList<int>(new[] { 11, 12, 13 }) },
+        new Exotics { Linked = new LinkedList<int>() },
         new Exotics { Stack = new Stack<int>([11, 12]) },
         new Exotics { ImmutableArray = [13, 14], ImmutableList = ImmutableList.Create(15) },
         new Exotics { ImmutableInterface = ImmutableList.Create(16, 17) },

@@ -1,0 +1,5 @@
+Generator produced 2 diagnostics:
+Warning PBN3001 Aot/Data/ReadOnlySet.input.cs L27 C47
+Contract 'AotFixtures.ReadOnlySets.Sets' is omitted from the AOT model: member 'Numbers' has unsupported type 'System.Collections.Generic.IReadOnlySet<int>'.
+Warning PBN3001 Aot/Data/ReadOnlySet.input.cs L47 C48
+Contract 'AotFixtures.ReadOnlySets.MessageSets' is omitted from the AOT model: member 'Items' has unsupported type 'System.Collections.Generic.IReadOnlySet<AotFixtures.ReadOnlySets.Item>'.

@@ -202,6 +202,11 @@ partial class ExoticModel
             {
                 global::ProtoBuf.Serializers.RepeatedSerializer.CreateImmutableISet<int>().WriteRepeated(ref state, 25, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp25);
             }
+            var tmp26 = value.Linked;
+            if (tmp26 != null)
+            {
+                global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.LinkedList<int>, int>().WriteRepeated(ref state, 26, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp26);
+            }
         }
 
         private static global::AotFixtures.Exotic.Exotics RawRead_AotFixtures_Exotic_Exotics(ref global::ProtoBuf.ProtoReader.State state, global::AotFixtures.Exotic.Exotics value)
@@ -524,6 +529,19 @@ partial class ExoticModel
                         if (tmp25 != null) value.ImmutableISet = tmp25;
                         break;
                     }
+                    // raw read pass: legacy-mode - member Linked: collection shape CreateEnumerable
+                    case (26 << 3) | 0:
+                    case (26 << 3) | 1:
+                    case (26 << 3) | 2:  // Linked, field 26
+                    case (26 << 3) | 3:
+                    case (26 << 3) | 5:
+                    {
+                        state.StashTag(tag);
+                        var tmp26 = value.Linked;
+                        tmp26 = global::ProtoBuf.Serializers.RepeatedSerializer.CreateEnumerable<global::System.Collections.Generic.LinkedList<int>, int>().ReadRepeated(ref state, global::ProtoBuf.Serializers.SerializerFeatures.WireTypeVarint | global::ProtoBuf.Serializers.SerializerFeatures.OptionPackedDisabled, tmp26);
+                        if (tmp26 != null) value.Linked = tmp26;
+                        break;
+                    }
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -534,7 +552,7 @@ partial class ExoticModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 or 15 or 16 or 17 or 19 or 20 or 21 or 22 or 23 or 24 or 25;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 or 15 or 16 or 17 or 19 or 20 or 21 or 22 or 23 or 24 or 25 or 26;
         }
     }
 }

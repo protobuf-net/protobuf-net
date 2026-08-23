@@ -27,5 +27,8 @@
     <!-- ...except the ones net472 cannot express. DateOnly/TimeOnly do not exist here, so there is
          no reference output to generate; the differential suite (net8.0) covers them instead -->
     <Compile Remove="../BuildToolsUnitTests/Aot/Data/DateOnly.input.cs" />
+    <!-- net472 has no IReadOnlySet<T> at all, so this one cannot even compile here; same
+         reason and same treatment as DateOnly, and it therefore has no .reference.cs -->
+    <Compile Remove="../BuildToolsUnitTests/Aot/Data/ReadOnlySet.input.cs" />
   </ItemGroup>
 </Project>

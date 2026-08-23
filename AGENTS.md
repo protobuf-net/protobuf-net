@@ -1390,6 +1390,8 @@ no behaviour to reproduce and nothing outstanding. These were established by pro
 | `[ProtoInclude(tag, "TypeName")]` | resolves at runtime; throws *"Unable to resolve sub-type"* even for a live type |
 | a member or sub-type on a `[ProtoReserved]` number or name | throws *"Field 31 is reserved and cannot be used for…"* |
 | a **value-type** `[ProtoInclude]` sub-type | throws *"Unexpected sub-type"* |
+| a **multi-dimensional array** (`int[,]`) | throws *"Repeated data of type System.Int32[,] is not supported"* |
+| a **jagged or nested** collection (`string[][]`, `List<int>[]`, `List<List<int>>`) | throws *"Nested or jagged lists, arrays and maps are not supported"* |
 | one type named by **two** `[ProtoInclude]` hierarchies | throws *"can only participate in one inheritance hierarchy"* |
 | `DataFormat.Group` on a collection of **scalars** | throws *"Operation is not valid due to the current state of the object"* |
 | an **auto-tuple** reached at two compatibility levels | throws *"must use a single compatibility level"* |

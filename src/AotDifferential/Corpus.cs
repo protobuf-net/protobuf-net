@@ -394,10 +394,12 @@ internal sealed class Corpus
                     if (type.DeclaredAccessibility != Accessibility.Public || !IsPubliclyNested(type))
                     {
                         Bump(Skipped, "not public");
+                        Shape(type, "not-public");
                     }
                     else if (type.IsGenericType)
                     {
                         Bump(Skipped, "generic");
+                        Shape(type, "generic");
                     }
                     // a name two scanned assemblies both declare is ambiguous *here* and would not be
                     // in a real consumer - GetTypeByMetadataName returns null for exactly that. It is
@@ -410,10 +412,53 @@ internal sealed class Corpus
                     else
                     {
                         found.Add(type);
+                        Shape(type, "seeded");
                     }
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// triage aid: PBN_SHAPES=1 prints one line per contract - bucket, name, and a coarse signature
+    /// of each member - so the NON-SEEDABLE ones can be diffed against the seeded ones to ask
+    /// whether they contain any shape the corpus does not already cover. They are skipped because a
+    /// `typeof(...)` in another assembly cannot NAME them, which is a harness limit rather than a
+    /// generator refusal, so "what would we gain by naming them" is a fair question to be able to
+    /// answer with data.
+    /// </summary>
+    private static void Shape(INamedTypeSymbol type, string bucket)
+    {
+        if (Environment.GetEnvironmentVariable("PBN_SHAPES") is not { Length: > 0 }) return;
+        var parts = new List<string>();
+        foreach (var attribute in type.GetAttributes())
+        {
+            if (attribute.AttributeClass?.Name is { } a && a.StartsWith("Proto", StringComparison.Ordinal))
+            {
+                parts.Add("T:" + a);
+            }
+        }
+        if (type.BaseType is { SpecialType: SpecialType.None } b) parts.Add("base:" + b.Name);
+        if (type.IsValueType) parts.Add("struct");
+        if (type.IsRecord) parts.Add("record");
+        foreach (var member in type.GetMembers())
+        {
+            var memberType = member switch
+            {
+                IPropertySymbol prop => prop.Type,
+                IFieldSymbol field when !field.IsImplicitlyDeclared => field.Type,
+                _ => null,
+            };
+            if (memberType is null) continue;
+            var attrs = member.GetAttributes()
+                .Select(static x => x.AttributeClass?.Name)
+                .Where(static x => x is not null && (x.StartsWith("Proto", StringComparison.Ordinal)
+                    || x.StartsWith("Data", StringComparison.Ordinal) || x.StartsWith("Xml", StringComparison.Ordinal)))
+                .Distinct().OrderBy(static x => x, StringComparer.Ordinal);
+            parts.Add("M:" + memberType.ToDisplayString() + string.Concat(attrs.Select(x => "+" + x)));
+        }
+        Console.Error.WriteLine("SHAPE\t" + bucket + "\t" + type.ToDisplayString() + "\t"
+            + string.Join(" | ", parts));
     }
 
     private static string MetadataName(INamedTypeSymbol type)

@@ -4642,3 +4642,76 @@ mode this file exists to catch, but a hierarchy carrying one is rare enough that
 none - the 3134-contract differential is byte-identical today, which is evidence that nothing in it
 has this shape rather than evidence that the shape works.
 
+### B47. ~~What does the NON-SEEDABLE slice of the corpus contain that nothing else covers?~~ — **surveyed and CLOSED 2026-08-23: two real holes, both now fixtured**
+
+Marc asked it directly, and it is a fair question to be able to answer with data rather than a
+shrug: the differential corpus skips **176** contracts as *not seedable* — 157 non-public, 19
+open-generic — because a `typeof(...)` in another assembly cannot **name** them. That is a harness
+limit, not a generator refusal, so "what would we gain by naming them" is worth knowing.
+
+#### Method
+
+`PBN_SHAPES=1` (new, in `Corpus.cs`) prints one line per contract: bucket, name, and a coarse
+signature of every member — type plus any ProtoBuf/DataContract/Xml attribute. Diff the non-seedable
+buckets' feature sets against the union of the seeded ones, then **probe `RuntimeTypeModel` on each
+structurally distinct survivor**, because a shape protobuf-net itself refuses is a *parity match*
+and not a hole.
+
+**Most apparent novelty was an artefact of the signature vocabulary** and had to be discounted by
+hand: a distinct user enum (`NegEnum`) or `base:SomeBase` is a *name* not seen before, not a
+*shape*. 36 "novel" features reduced to nine structurally distinct ones.
+
+#### Three are refusals — naming them would buy nothing
+
+Probed, and now in the `AGENTS.md` parity table:
+
+| shape | `RuntimeTypeModel` |
+| --- | --- |
+| `int[,]` (`Examples.MultiDim`) | throws *"Repeated data of type System.Int32[,] is not supported"* |
+| `string[][]` (`Examples.ArrayArray`) | throws *"Nested or jagged lists, arrays and maps are not supported"* |
+| `List<int>[]` (`Examples.ArrayList`) | throws, same |
+
+Seeding these would move them into the *"both threw"* bucket, which is already non-zero and
+deliberately not gated on.
+
+#### The open generics are a non-question
+
+19 contracts whose only novel feature is `member:T`. Open generics are **refused by design** — the
+services type is one non-generic class, so there is nowhere to put the parameter. Naming them yields
+19 `PBN3002` drops and no coverage.
+
+#### Two were real holes, and are now fixtured
+
+Both build and round-trip on `RuntimeTypeModel` (probed first), and appeared in **no** fixture, **no**
+seeded contract and **not** `AotSmoke`:
+
+- **`IReadOnlySet<T>`** — the standout, because it is not merely uncovered but a path written *on
+  purpose and never run*: `ProtoModelGenerator.Parse.cs` probes for `CreateReadOnlySet` and falls
+  back to the 3.x misspelling `CreateReadOnySet` when only an older Core is referenced. The only
+  `IReadOnlySet` contract in the corpus is `Examples.ReadOnlySetSerializerTests.ReadOnlySetData<T>`,
+  which is non-public **and** open-generic — so relocating it would not have helped, since making it
+  public leaves it generic. New `ReadOnlySet.input.cs` instead, with scalar, string and **message**
+  elements;
+- **`LinkedList<T>`** — resolves to `CreateEnumerable` and round-trips; added to `Exotic.input.cs`,
+  which needed no special treatment since `LinkedList` exists on every TFM.
+
+`ReadOnlySet.input.cs` is treated exactly like `DateOnly.input.cs`, and confirmed rather than
+assumed: its golden **is a drop** (the golden tests compile against the netstandard2.0 BuildTools
+assembly, which has the language type but not the factory), and it is `<Compile Remove>`d from
+`AotRefGen`, which is net472 and has no `IReadOnlySet` at all — so it has no `.reference.cs`,
+deliberately. The net8.0 differential is where it is really exercised, and the emitted factory was
+checked to be `CreateReadOnlySet` rather than anything else.
+
+**Delta: conformance 1811 → 1840, all green; no bug found.** Adding coverage that finds nothing is
+still worth having — it moves both shapes from *unmeasured* to *measured*, which is the standing
+rule about `AotSmoke` applied to the fixture suite.
+
+#### One residual, stated rather than glossed
+
+**The `CreateReadOnySet` fallback branch is still unreachable by any gate.** It fires only when the
+consumer references a Core old enough to lack `CreateReadOnlySet` but new enough to have the
+misspelling — and the netstandard2.0 Core the goldens use has *neither*, which is why that golden is
+a drop rather than a fallback. Testing it needs a harness referencing a 3.x package, which nothing
+here does. The forwarder exists so previously-generated code keeps binding, so the risk is low, but
+it is not zero and it is not covered.
+
