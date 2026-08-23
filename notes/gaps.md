@@ -4852,6 +4852,7 @@ reports *nothing at all*, which reads exactly like success):
 | step 6 — gate aux auto-construction | 7 | 7 | 3,840,000 |
 | step 7 — gate type-by-name resolution | 6 | 6 | 3,810,816 |
 | step 8 — annotate `GetUninitializedObject` | **5** | **5** | 3,810,816 |
+| step 9 — split `TypeHelperConstruct<T>` out | **5** | **5** | **3,800,576** |
 
 **Step 1 pays back exactly what B40 (entry-point dispatch) borrowed**, and could not have been done
 before it: `SlowGet` is entirely the reflective route to a stub, and it is only safe to delete under
@@ -4982,6 +4983,48 @@ they cannot.**
    that demands. Annotation propagates it to a class, gating cannot remove it (these paths are
    genuinely reachable under AOT), so the only route left is **restructuring** so the demanding call
    is not on the generic path at all. That is a real piece of design work, not a tidy-up.
+
+#### Which of the five a RAW emit path actually reaches (Marc asked; traced from the emitted code)
+
+| warning | reachable on the raw path? |
+| --- | --- |
+| `TypeHelper.CreateNonTrivialDefault` | **yes, unavoidably** |
+| the `TypeHelper<T>` cctor lambda (`Factory`) | **yes, unavoidably** |
+| `SubTypeState<T>.Cast`'s `Merge` | **yes** |
+| `KeyValuePairSerializer.CreateDefault<T>` | **no**, for a native map |
+| `DeserializeRootFallback` | yes, but it is not emit at all |
+
+**Assuming raw retires exactly one**, which is the useful answer: the rest live in the shared library
+machinery that raw and classic both use, so `ClassicEmit` being doomed would not help.
+
+- the two `TypeHelper<T>` ones are **static field initialisers**, and that cctor is triggered by
+  `ValueChecker` (9 sites), `CanBeNull` (9) and `IsReferenceType` (6) — i.e. for essentially every
+  `T`, whatever the emit mode. They were never reached "via the wrapped read" as first assumed;
+- `SubTypeState<T>` is on the raw path — confirmed in `Inherit.output.cs`, which has
+  `SubTypeState<Animal>.Create` ×4 and `ReadSubType<Dog>`/`<Cat>`/`<Puppy>`;
+- the map one is genuinely retired by B45's inlined entry loop, and is reached only when a map falls
+  back to `MapSerializer` (the non-native shapes in the member census).
+
+#### Step 9: split `TypeHelperConstruct<T>` out — **no warnings, −10,752 bytes**
+
+Marc offered two shapes; the other (short-circuiting the cctor on `IsDynamicCodeSupported`) is
+**unsafe for `Factory`**, which feeds `SubTypeState<T>` on the raw hierarchy read — gating it to
+null would break B41.
+
+`NonTrivialDefault` and `Factory` moved to their own class, so the demanding initialisers no longer
+ride in the cctor every generic path triggers. **The warning count did not move** (they follow the
+code) but the binary lost **10,752 bytes**, which is the honest reason to keep it.
+
+**Annotating the new class was tried and reverted**: `Activated` on `TypeHelperConstruct<T>` pushes
+the demand onto its three consumers (`ReadWrapped<T>`, `SubTypeState<T>.Create`,
+`SubTypeState<T>.Cast`) and the count goes **5 → 7**. Same lesson as `TypeHelper<T>` itself, one
+level down.
+
+**Worth knowing for whoever finishes this:** `CreateNonTrivialDefault`'s reflection is reached
+**only for `Nullable<TStruct>`** — a non-nullable value type never gets there (its `Default` is
+already non-null), `string` and `byte[]` are constants, and any other reference type returns `null`.
+That is the same residue `TypeHelper<T>.ValueChecker` was left with, and it suggests the fix is the
+same shape: a generic construction that does not go through `typeof(T)` at all.
 2. **`DeserializeRootFallback` — one.** Needs `PrepareDeserialize` restructured rather than
    annotated, since `ref Type` erases what the caller knew.
 3. **`SubTypeState<T>.Cast` — one.** Needs the annotation on the class's `T`, i.e. on every consumer

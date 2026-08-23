@@ -346,7 +346,7 @@ namespace ProtoBuf.Serializers
         /// </summary>
         public static SubTypeState<T> Create<TValue>(ISerializationContext context, TValue value)
             where TValue : class, T
-            => new SubTypeState<T>(context, TypeHelper<T>.Factory, value, null);
+            => new SubTypeState<T>(context, TypeHelperConstruct<T>.Factory, value, null);
 
         private SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
             object value, Action<T, ISerializationContext> onBeforeDeserialize)
@@ -389,7 +389,7 @@ namespace ProtoBuf.Serializers
             // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
             // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
             // what they asked for)
-            var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
+            var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelperConstruct<T>.Factory)(_context);
 
             if (_value is not null)
             {

@@ -171,6 +171,45 @@ namespace ProtoBuf.Internal
         }
     }
 
+    /// <summary>
+    /// The parts of <see cref="TypeHelper{T}"/> that demand CONSTRUCTION of <typeparamref name="T"/>,
+    /// split out so the demand does not ride on the ubiquitous half.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// gap B48. <c>TypeHelper&lt;T&gt;</c> is touched by nearly every generic path -
+    /// <c>ValueChecker</c>, <c>CanBeNull</c> and <c>IsReferenceType</c> alone account for two dozen
+    /// call sites in the writer and reader - so its static constructor runs for essentially every
+    /// <c>T</c>, whatever the emit mode. Two of its initialisers construct, and annotating the class
+    /// to satisfy them took the native warning count from 5 to 25 because the demand propagated to
+    /// every one of those consumers.
+    /// </para>
+    /// <para>
+    /// Splitting them out means only the paths that actually construct - the null-wrapped read, and
+    /// <c>SubTypeState&lt;T&gt;</c> - trigger the demanding initialiser.
+    /// </para>
+    /// </remarks>
+    /// <remarks>
+    /// NOT annotated, and that was measured: adding <see cref="DynamicAccess.Activated"/> here
+    /// pushes the demand onto the three consumers instead (<c>ReadWrapped&lt;T&gt;</c>,
+    /// <c>SubTypeState&lt;T&gt;.Create</c>, <c>SubTypeState&lt;T&gt;.Cast</c>) and the count goes
+    /// 5 → 7. The split is still worth having on its own: it took 10,752 bytes off the native
+    /// binary by keeping the construction machinery out of the cctor that every generic path runs.
+    /// </remarks>
+    internal static class TypeHelperConstruct<T>
+    {
+        /// <summary>
+        /// A default that is not null where one can be had - "we saw the wrapper, so do not hand
+        /// back null". Note the only REFLECTIVE case is <c>Nullable&lt;TStruct&gt;</c>: a
+        /// non-nullable value type never reaches it (its <c>Default</c> is already non-null),
+        /// <c>string</c> and <c>byte[]</c> are constants, and any other reference type yields null.
+        /// </summary>
+        public static readonly T NonTrivialDefault
+            = TypeHelper<T>.Default ?? (T)TypeHelper.CreateNonTrivialDefault(typeof(T));
+
+        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
+    }
+
     // gap B48: do NOT annotate this class's T. It was tried with the narrowest useful demand
     // (Activated) to satisfy the Factory lambda below, and it went 5 warnings -> 25: TypeHelper<T>
     // is consumed by nearly every generic path, so a class-level demand propagates to all of them.
@@ -198,13 +237,13 @@ namespace ProtoBuf.Internal
 
         public static readonly T Default = typeof(T) == typeof(string) ? (T)(object)"" : default;
 
-        public static readonly T NonTrivialDefault = Default ?? (T)TypeHelper.CreateNonTrivialDefault(typeof(T));
+        // NonTrivialDefault and Factory moved to TypeHelperConstruct<T> - see the note there.
 
         // make sure we don't cast null value-types to NREs
         [MethodImpl(ProtoReader.HotPath)]
         public static T FromObject(object value) => value is null ? default : (T)value;
 
-        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx, null);
+
     }
 
     internal interface IValueChecker<in T>
