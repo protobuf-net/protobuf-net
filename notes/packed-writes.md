@@ -1,4 +1,4 @@
-﻿# Packed repeated writes: the scenario matrix
+# Packed repeated writes: the scenario matrix
 
 **The question this answers** (Marc, 2026-08-14): *what packed scenarios exist, and have we
 considered how to optimise each — where it isn't a simple block copy?*
@@ -10,6 +10,14 @@ they are all downstream of it.
 ---
 
 ## The finding: there was no block copy at all — **now fixed for the matching fixed-width cells**
+
+> **Read this before the section below, which is written in the present tense about a state that no
+> longer holds for the GENERATED path.** `RepeatedSerializer.WritePacked` is still exactly as
+> described — it is the *classic* engine, kept deliberately boring as the control, the fallback and
+> the perf baseline. What changed is that the generated path no longer goes through it: it emits
+> `WriteRawPackedFixed32/64`, which blits via `MemoryMarshal.AsBytes` behind an `IsLittleEndian`
+> guard. `notes/gaps.md` B18b went on asking for this work for ten days after it landed, because the
+> retraction was applied here and not to the ranked list; re-checked and retired 2026-08-25.
 
 `RepeatedSerializer.WritePacked` writes **every** packed element through an enumerator and a
 virtual serializer call, whatever the type:

@@ -1320,7 +1320,51 @@ two models diverging the same way would both pass.
 **Verified to be a real second path, not a silently-ignored flag**: `GroupedElementsModel` emits 3
 `RawWrite_` and 3 `Measure_` bodies; its classic twin emits none of either.
 
-### B18b. Packed writes are per-element even where a block copy would do — **the biggest packed win, and it needs no SIMD**
+### B18b. ~~Packed writes are per-element even where a block copy would do~~ — **RETRACTED 2026-08-25: the generated path has done this since the raw packed surface landed**
+
+> **Marc, 2026-08-25, on being offered this as the next packed item:** *"I'm genuinely surprised this
+> impacts `RepeatedSerializer`, though - I thought the paths had already diverged by that point."*
+> They had. Checked before writing anything, and the entry below was simply stale.
+>
+> **The generated path block-copies a fixed-width packed column already**, and the whole chain was
+> read rather than assumed:
+>
+> | step | |
+> | --- | --- |
+> | the generator emits | `state.WriteRawPackedFixed32(11, MemoryMarshal.Cast<float, uint>(tmp))` |
+> | the API blits | `WriteRawBytesBody(MemoryMarshal.AsBytes(values))`, guarded by `BitConverter.IsLittleEndian` |
+> | which copies | `WriteRawBytesBody` → `LocalWriteBytes` → `span.CopyTo(Remaining)` |
+> | big-endian | falls back to `foreach (var value in values) WriteRawFixed32(value)` |
+> | sizing | already O(1) — `MeasureRawPackedFixed32 => count * 4L` |
+>
+> `PackedAll.output.cs` is the golden that shows every packed emission, and its `Singles`,
+> `Doubles`, `F32Array` and `F64Array` members all land on the blit. `PackedApi` maps `Single` →
+> `Fixed32` and `Double` → `Fixed64`, so floats and doubles get there by the same route as the
+> `FixedSize` integer columns.
+>
+> **Why the entry read as it did.** It describes `RepeatedSerializer.WritePacked` — which *is* still
+> per-element, with zero occurrences of `MemoryMarshal` in that file — and that is the **classic**
+> engine: the control, the fallback and the perf baseline, which `AGENTS.md` says at length not to
+> improve. This entry was written mid-arc, days after ~130 lines of exactly this work had been
+> reverted out of that file (`a73d6fc0`) and while the replacement raw surface was still being
+> built. The replacement landed; nobody came back and retired the entry, so it went on claiming to be
+> "the biggest packed win" for ten days.
+>
+> That is the failure mode `notes/nano-writer.md` already records under "Three corrections to this
+> handover": **a retraction applied where the reasoning lived and not where the claim was repeated.**
+> Worth re-reading whenever a ranked list survives the work that reorders it.
+>
+> **What genuinely remains is NOT this, and belongs to [B23]**: a packed fixed-width column reaches
+> the blit only when the collection yields a span — `T[]`, `List<T>` (via `CollectionsMarshal`, so
+> net5+ only) and `ImmutableArray<T>`. A `HashSet<float>`, `Queue<double>`, `IList<int>` or a
+> **derived** `List<T>` still falls to the classic per-element path, as does any `List<T>` on net472
+> or netstandard2.0. Widening that is span coverage, which is B23's deliberate hold — and the fix
+> would be a new raw arm (copy into a pooled buffer, then blit), never a fast path inside
+> `RepeatedSerializer`.
+>
+> The original entry follows, unchanged.
+
+### B18b (original entry). Packed writes are per-element even where a block copy would do
 
 `RepeatedSerializer.WritePacked` writes **every** packed element through an enumerator and a
 virtual serializer call, whatever the type — there is no `MemoryMarshal`, no `AsBytes`, no bulk
