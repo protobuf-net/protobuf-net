@@ -1,4 +1,4 @@
-﻿using Google.Protobuf.Reflection;
+using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -766,8 +766,14 @@ namespace ProtoBuf.Reflection
                 bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
                 var getMethodName = isRepeated ? nameof(Extensible.GetValues) : nameof(Extensible.GetValue);
-                if(isRepeated) ctx.WriteLine($"{GetAccess(GetAccess(field))} static global::System.Collections.Generic.IEnumerable<{nonNullableType}> Get{name}({@this}{extendee} obj)");
-                else ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
+                // gap B49: the LEGACY accessor, and note it no longer carries `this`. That is the
+                // whole migration: extension-syntax callers (obj.GetFoo()) bind to the model-aware
+                // overload emitted below, because extension invocation only considers `this`
+                // methods - so recompiling moves them across for free. This one still exists with
+                // its original signature, so already-compiled callers keep resolving; [Extension]
+                // affects source binding only.
+                if(isRepeated) ctx.WriteLine($"{GetAccess(GetAccess(field))} static global::System.Collections.Generic.IEnumerable<{nonNullableType}> Get{name}({extendee} obj)");
+                else ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({extendee} obj)");
                 if (ctx.Supports(CSharp6))
                 {
                     tw = ctx.Indent().Write($"=> ");
@@ -788,7 +794,7 @@ namespace ProtoBuf.Reflection
                 else ctx.Outdent().WriteLine("}").WriteLine();
 
                 var setAccessorName = isRepeated ? "Add" : "Set";
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} static void {setAccessorName}{name}({@this}{extendee} obj, {nonNullableType} value)");
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} static void {setAccessorName}{name}({extendee} obj, {nonNullableType} value)");
                 if (ctx.Supports(CSharp6))
                 {
                     tw = ctx.Indent().Write($"=> ");
@@ -804,6 +810,58 @@ namespace ProtoBuf.Reflection
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
                 }
                 tw.WriteLine(", value);");
+                if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
+                else ctx.Outdent().WriteLine("}").WriteLine();
+
+                // gap B49: THE MODEL-AWARE OVERLOADS. Without a model, Extensible resolves through
+                // TypeModel.DefaultModel, which is a NullModel until something touches
+                // RuntimeTypeModel.Default - and an app built around a generated model never does.
+                // A scalar extension survives that (the typed path finds an inbuilt serializer and
+                // consults no model), but a MESSAGE-typed one throws "no serializer could be
+                // resolved", on JIT as well as AOT. There was nowhere in the old signature to name
+                // a model, which is what these add.
+                //
+                // The model is optional so that obj.GetFoo() still compiles; overload resolution
+                // sends extension-syntax calls here and explicit static calls to the legacy method.
+                var modelType = "global::ProtoBuf.Meta.TypeModel";
+                if (isRepeated) ctx.WriteLine($"{GetAccess(GetAccess(field))} static global::System.Collections.Generic.IEnumerable<{nonNullableType}> Get{name}({@this}{extendee} obj, {modelType} model = null)");
+                else ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj, {modelType} model = null)");
+                if (ctx.Supports(CSharp6))
+                {
+                    tw = ctx.Indent().Write($"=> ");
+                }
+                else
+                {
+                    ctx.WriteLine("{").Indent();
+                    tw = ctx.Write("return ");
+                }
+                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.{getMethodName}<{(isRepeated ? nonNullableType : type)}>(model, obj, {field.Number}");
+                if (!string.IsNullOrEmpty(dataFormat))
+                {
+                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                }
+                tw.WriteLine(");");
+                if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
+                else ctx.Outdent().WriteLine("}").WriteLine();
+
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} static void {setAccessorName}{name}({@this}{extendee} obj, {nonNullableType} value, {modelType} model = null)");
+                if (ctx.Supports(CSharp6))
+                {
+                    tw = ctx.Indent().Write($"=> ");
+                }
+                else
+                {
+                    ctx.WriteLine("{").Indent();
+                    tw = ctx.Write("");
+                }
+                // NOTE the argument order differs from the model-less overload: there, the format
+                // precedes the value; here it follows it, and is optional.
+                tw.Write($"global::ProtoBuf.Extensible.AppendValue<{nonNullableType}>(model, obj, {field.Number}, value");
+                if (!string.IsNullOrEmpty(dataFormat))
+                {
+                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                }
+                tw.WriteLine(");");
                 if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
                 else ctx.Outdent().WriteLine("}").WriteLine();
             }
