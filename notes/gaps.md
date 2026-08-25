@@ -1712,7 +1712,41 @@ raw packed surface is pure span work — no `Activator`, no `MakeGenericType`, n
 from the model — so it demands no metadata at all. `Vector<T>` under ILC and a `MemoryMarshal.Cast`
 over an enum span were the two genuinely unknown pieces, and both are free.
 
-### B23. ~~Packed columns are limited to `T[]` and `List<T>`~~ — **`ImmutableArray<T>` DONE 2026-08-15; derived lists still a hold**
+### B23. ~~Packed columns are limited to `T[]` and `List<T>`~~ — **CLOSED 2026-08-25: derived lists admitted, and the rest is a floor rather than a hold**
+
+> **The hold is lifted.** A derived `List<T>` now takes the raw packed path, which makes the packed
+> path deliberately **wider than the unpacked one** — and that asymmetry is the finding, not an
+> inconsistency. The unpacked path refuses a derived list because `foreach` binds to the DECLARED
+> type's `GetEnumerator`, which a derived type may hide with a redeclaration;
+> `CollectionsMarshal.AsSpan` takes the `List<T>` and cannot be hidden.
+>
+> **The fixture makes that testable rather than assumed.** `PackedAll`'s `Readings : List<uint>`
+> declares exactly such a hiding `GetEnumerator`, and it **throws** if anything calls it — so the
+> gates fail loudly if the emit ever binds the wrong way, instead of agreeing by luck. One wrinkle
+> the fixture had to work around: `[.. ]` collection-expression syntax binds to that hiding member
+> too, so the sample is built with `Add` through a `List<uint>` cast, or it would throw while
+> *constructing* the sample and say nothing about the generator.
+>
+> The predicate keeps a narrower guard in place of the blanket one: `TakesCollectionType` is still
+> refused for anything that is not `CreateList`, because among the three span-yielding factories only
+> `List<T>` *has* a derived form — an array has none, and `ImmutableArray<T>` is a sealed struct.
+>
+> **What is left is a floor, and this entry should not be reopened for it:**
+>
+> - **sets, queues, stacks, the concurrent family, and the immutable families other than
+>   `ImmutableArray<T>` have no span at all**, so there is nothing to widen. Reaching them would mean
+>   a *new* mechanism — copy into a pooled buffer, then blit — trading a rent-plus-copy against
+>   per-element virtual writes. Worth measuring only against evidence of a real packed
+>   `HashSet`/`Queue` workload, which nobody has produced;
+> - **`List<T>` down-level** (net472, netstandard2.0) has no `CollectionsMarshal`, so it stays on the
+>   stateful path and its contract stays measure-blocked there. Not fixable, and already recorded at
+>   the predicate as a smaller optimisation rather than a broken build.
+>
+> Gates: goldens regenerated, `AotRefGen` re-run (the reference confirms ref-emit honours packing for
+> this shape — `WriteRepeated` with `WireTypeVarint` and no `OptionPackedDisabled`), conformance 1842,
+> corpus 3134 at 100%.
+
+### B23 (original entry). Packed columns are limited to `T[]` and `List<T>` — `ImmutableArray<T>` done 2026-08-15; derived lists a hold
 
 **`ImmutableArray<T>` now takes the span path**, for packed *and* unpacked, write *and* measure —
 so it also stopped blocking measure-first for its contract. Three findings, in the order they

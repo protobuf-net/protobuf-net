@@ -17,6 +17,20 @@ namespace AotFixtures.PackedAll;
 
 public enum Level { None = 0, Low = 1, Mid = 2, High = 3 }
 
+// A DERIVED list, which resolves to CreateList<TRoot, T>() rather than CreateList<T>() and so
+// carries TakesCollectionType. It is packed-eligible where the UNPACKED path still refuses it:
+// there, `foreach` binds to the DECLARED type's GetEnumerator, which a derived type may hide with
+// a redeclaration; CollectionsMarshal.AsSpan takes the List<T> and has no such hazard. gap B23.
+//
+// The hiding member is deliberate rather than decoration - it is the exact shape the unpacked
+// exclusion exists for, so without it this fixture would not distinguish "the hazard does not
+// apply to AsSpan" from "there was no hazard here to begin with".
+public class Readings : List<uint>
+{
+    public new List<uint>.Enumerator GetEnumerator() => throw new System.NotSupportedException(
+        "if this runs, the packed write bound to the DECLARED type's enumerator rather than AsSpan");
+}
+
 [ProtoContract]
 public class EveryPackedShape
 {
@@ -50,6 +64,9 @@ public class EveryPackedShape
     // library has no enum-specific code and the column IS the int32 column from here on
     [ProtoMember(15, IsPacked = true)] public Level[] Levels { get; set; }
     [ProtoMember(16, IsPacked = true)] public List<Level> LevelList { get; set; }
+
+    // --- a derived list: same CollectionsMarshal.AsSpan as List<uint>, despite TakesCollectionType
+    [ProtoMember(17, IsPacked = true)] public Readings Derived { get; set; }
 }
 
 [ProtoModel]
@@ -82,6 +99,7 @@ public static class PackedAllSamples
             FlagList = [.. Range40(i => (i % 2) == 0)],
             Levels = [.. Range40(i => (Level)(i & 3))],
             LevelList = [.. Range40(i => (Level)(i % 3))],
+            Derived = Reading40(),
         },
         // a single element each: the framing rule that a lone value is written UNPACKED, with its
         // own per-element header, rather than as a one-element packed block
@@ -104,5 +122,15 @@ public static class PackedAllSamples
     private static IEnumerable<T> Range40<T>(System.Func<int, T> gen)
     {
         for (int i = 0; i < 40; i++) yield return gen(i);
+    }
+
+    // built with Add rather than a collection expression: the hiding GetEnumerator above makes
+    // `[.. ]` bind to it, which would throw while BUILDING the sample and say nothing about the
+    // generator
+    private static Readings Reading40()
+    {
+        var value = new Readings();
+        for (int i = 0; i < 40; i++) ((List<uint>)value).Add((uint)(i % 200));
+        return value;
     }
 }

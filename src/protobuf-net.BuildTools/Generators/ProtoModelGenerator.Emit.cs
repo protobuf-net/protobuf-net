@@ -3807,19 +3807,25 @@ namespace ProtoBuf.BuildTools.Generators
         /// uses. <c>char</c> is the odd one out: it hard-codes varint and ignores the format.
         /// </para>
         /// <para>
-        /// <c>TakesCollectionType</c> is excluded, matching the unpacked path - though NOT for the
-        /// same reason, and the difference is recorded because it is a live widening opportunity:
-        /// there, a derived list is out because <c>foreach</c> binds to the DECLARED type's
-        /// <c>GetEnumerator</c>, which could be a hiding redeclaration. <c>AsSpan</c> has no such
-        /// hazard. It stays out here only because nothing yet fixtures a derived packed list, and
-        /// a widening nobody has a test for is not a widening.
+        /// <b>A DERIVED list IS admitted here, and is refused on the unpacked path</b> - deliberately,
+        /// and the asymmetry is the point rather than an oversight. There, a derived list is out
+        /// because <c>foreach</c> binds to the DECLARED type's <c>GetEnumerator</c>, which a derived
+        /// type may hide with a redeclaration; here the span comes from
+        /// <c>CollectionsMarshal.AsSpan</c>, which takes the <c>List&lt;T&gt;</c> and cannot be
+        /// hidden. <c>PackedAll</c>'s <c>Readings</c> fixture declares exactly such a hiding
+        /// <c>GetEnumerator</c>, and it <b>throws</b> if it is ever called - so the test fails loudly
+        /// if the emit ever binds the wrong way, rather than silently agreeing by luck. gap B23.
         /// </para>
         /// </remarks>
         private static bool RawPackedWritable(ProtoMemberPlan member, bool listAsSpan, bool immutableAsSpan)
         {
             if (!member.IsPacked) return false;
-            if (member.Repeated.Factory is not ("CreateList" or "CreateVector" or "CreateImmutableArray")
-                || member.Repeated.TakesCollectionType) return false;
+            if (member.Repeated.Factory is not ("CreateList" or "CreateVector" or "CreateImmutableArray")) return false;
+            // a DERIVED list is admitted here and refused on the unpacked path, which is not an
+            // inconsistency - see the remarks above. Only List<T> can be derived from among these
+            // three: an array has no derived form and ImmutableArray<T> is a sealed struct, so
+            // TakesCollectionType with any other factory is a shape this surface cannot span.
+            if (member.Repeated.TakesCollectionType && member.Repeated.Factory != "CreateList") return false;
             // ImmutableArray<T> reaches the surface only as a span too, and its AsSpan is
             // package-dependent rather than framework-versioned, so it gets its own probe
             if (member.Repeated.Factory == "CreateImmutableArray" && !immutableAsSpan) return false;

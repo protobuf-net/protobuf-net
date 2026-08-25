@@ -31,7 +31,7 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			case 1:
 			{
 				List<Guid> values = value.Guids;
-				values = RepeatedSerializer.CreateList<Guid>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
+				values = RepeatedSerializer.CreateList<Guid>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
 				if (values != null)
 				{
 					value.Guids = values;
@@ -41,7 +41,7 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			case 2:
 			{
 				List<decimal> decimals = value.Decimals;
-				decimals = RepeatedSerializer.CreateList<decimal>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, decimals, TypeModel.GetInbuiltSerializer<decimal>(CompatibilityLevel.Level300));
+				decimals = RepeatedSerializer.CreateList<decimal>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, decimals, TypeModel.GetInbuiltSerializer<decimal>(CompatibilityLevel.Level300, DataFormat.Default));
 				if (decimals != null)
 				{
 					value.Decimals = decimals;
@@ -51,7 +51,7 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			case 3:
 			{
 				List<DateTime> dates = value.Dates;
-				dates = RepeatedSerializer.CreateList<DateTime>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, dates, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level300));
+				dates = RepeatedSerializer.CreateList<DateTime>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, dates, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level300, DataFormat.Default));
 				if (dates != null)
 				{
 					value.Dates = dates;
@@ -61,7 +61,7 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			case 4:
 			{
 				List<TimeSpan> spans = value.Spans;
-				spans = RepeatedSerializer.CreateList<TimeSpan>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, spans, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level300));
+				spans = RepeatedSerializer.CreateList<TimeSpan>().ReadRepeated(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, spans, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level300, DataFormat.Default));
 				if (spans != null)
 				{
 					value.Spans = spans;
@@ -93,25 +93,25 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 		if (guids != null)
 		{
 			List<Guid> values = guids;
-			RepeatedSerializer.CreateList<Guid>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
+			RepeatedSerializer.CreateList<Guid>().WriteRepeated(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
 		}
 		List<decimal> decimals = value.Decimals;
 		if (decimals != null)
 		{
 			List<decimal> values2 = decimals;
-			RepeatedSerializer.CreateList<decimal>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, TypeModel.GetInbuiltSerializer<decimal>(CompatibilityLevel.Level300));
+			RepeatedSerializer.CreateList<decimal>().WriteRepeated(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, TypeModel.GetInbuiltSerializer<decimal>(CompatibilityLevel.Level300, DataFormat.Default));
 		}
 		List<DateTime> dates = value.Dates;
 		if (dates != null)
 		{
 			List<DateTime> values3 = dates;
-			RepeatedSerializer.CreateList<DateTime>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values3, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level300));
+			RepeatedSerializer.CreateList<DateTime>().WriteRepeated(ref state, 3, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values3, TypeModel.GetInbuiltSerializer<DateTime>(CompatibilityLevel.Level300, DataFormat.Default));
 		}
 		List<TimeSpan> spans = value.Spans;
 		if (spans != null)
 		{
 			List<TimeSpan> values4 = spans;
-			RepeatedSerializer.CreateList<TimeSpan>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values4, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level300));
+			RepeatedSerializer.CreateList<TimeSpan>().WriteRepeated(ref state, 4, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values4, TypeModel.GetInbuiltSerializer<TimeSpan>(CompatibilityLevel.Level300, DataFormat.Default));
 		}
 		List<Guid> list = value.Fixed;
 		if (list != null)
@@ -376,7 +376,7 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			case 1:
 			{
 				Dictionary<int, Guid> byIndex = value.ByIndex;
-				byIndex = MapSerializer.CreateDictionary<int, Guid>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byIndex, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
+				byIndex = MapSerializer.CreateDictionary<int, Guid>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byIndex, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
 				if (byIndex != null)
 				{
 					value.ByIndex = byIndex;
@@ -386,7 +386,7 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 			case 2:
 			{
 				Dictionary<Guid, int> byGuid = value.ByGuid;
-				byGuid = MapSerializer.CreateDictionary<Guid, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byGuid, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
+				byGuid = MapSerializer.CreateDictionary<Guid, int>().ReadMap(ref state, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, byGuid, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
 				if (byGuid != null)
 				{
 					value.ByGuid = byGuid;
@@ -408,13 +408,13 @@ internal sealed class ___PBN_Services___CompatElementsModel : ISerializer<Level3
 		if (byIndex != null)
 		{
 			Dictionary<int, Guid> values = byIndex;
-			MapSerializer.CreateDictionary<int, Guid>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
+			MapSerializer.CreateDictionary<int, Guid>().WriteMap(ref state, 1, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values, SerializerFeatures.WireTypeVarint, SerializerFeatures.WireTypeString, null, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
 		}
 		Dictionary<Guid, int> byGuid = value.ByGuid;
 		if (byGuid != null)
 		{
 			Dictionary<Guid, int> values2 = byGuid;
-			MapSerializer.CreateDictionary<Guid, int>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300));
+			MapSerializer.CreateDictionary<Guid, int>().WriteMap(ref state, 2, SerializerFeatures.WireTypeString | SerializerFeatures.OptionPackedDisabled, values2, SerializerFeatures.WireTypeString, SerializerFeatures.WireTypeVarint, TypeModel.GetInbuiltSerializer<Guid>(CompatibilityLevel.Level300, DataFormat.Default));
 		}
 	}
 }

@@ -127,6 +127,7 @@ partial class PackedAllModel
             global::System.Collections.Generic.List<bool> tmp_System_Collections_Generic_List_bool_;
             global::AotFixtures.PackedAll.Level[] tmp_AotFixtures_PackedAll_Level__;
             global::System.Collections.Generic.List<global::AotFixtures.PackedAll.Level> tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_;
+            global::AotFixtures.PackedAll.Readings tmp_AotFixtures_PackedAll_Readings;
             tmp_uint__ = value.U32Array;
             if (tmp_uint__ != null)
             {
@@ -204,6 +205,11 @@ partial class PackedAllModel
             {
                 state.WriteRawPackedVarint(16, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_)));  // LevelList
             }
+            tmp_AotFixtures_PackedAll_Readings = value.Derived;
+            if (tmp_AotFixtures_PackedAll_Readings != null)
+            {
+                state.WriteRawPackedVarint(17, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_AotFixtures_PackedAll_Readings));  // Derived
+            }
         }
 
         private static long Measure_AotFixtures_PackedAll_EveryPackedShape(global::AotFixtures.PackedAll.EveryPackedShape value, int depth, global::ProtoBuf.RawLengthBuffer slots, global::ProtoBuf.ISerializationContext context)
@@ -222,6 +228,7 @@ partial class PackedAllModel
             global::System.Collections.Generic.List<bool> tmp_System_Collections_Generic_List_bool_;
             global::AotFixtures.PackedAll.Level[] tmp_AotFixtures_PackedAll_Level__;
             global::System.Collections.Generic.List<global::AotFixtures.PackedAll.Level> tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_;
+            global::AotFixtures.PackedAll.Readings tmp_AotFixtures_PackedAll_Readings;
             tmp_uint__ = value.U32Array;
             if (tmp_uint__ != null)
             {
@@ -298,6 +305,11 @@ partial class PackedAllModel
             if (tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_ != null)
             {
                 len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(16, global::System.Runtime.InteropServices.MemoryMarshal.Cast<global::AotFixtures.PackedAll.Level, int>(global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_PackedAll_Level_)));  // LevelList
+            }
+            tmp_AotFixtures_PackedAll_Readings = value.Derived;
+            if (tmp_AotFixtures_PackedAll_Readings != null)
+            {
+                len += global::ProtoBuf.ProtoWriter.State.MeasureRawPackedVarint(17, global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_AotFixtures_PackedAll_Readings));  // Derived
             }
             return len;
         }
@@ -651,6 +663,27 @@ partial class PackedAllModel
                         value.LevelList ??= new global::System.Collections.Generic.List<global::AotFixtures.PackedAll.Level>();
                         value.LevelList.Add((global::AotFixtures.PackedAll.Level)(checked((int)unchecked((long)state.ReadRawFixed64()))));
                         break;
+                    case (17 << 3) | 0:  // Derived, field 17, unpacked run (varint)
+                        value.Derived ??= new global::AotFixtures.PackedAll.Readings();
+                        do { value.Derived.Add(state.ReadRawVarint32()); }
+                        while ((tag = state.ReadRawTag()) == ((17 << 3) | 0));
+                        continue;
+                    case (17 << 3) | 2:  // Derived, field 17, packed
+                    {
+                        value.Derived ??= new global::AotFixtures.PackedAll.Readings();
+                        var scope = state.PushLengthPrefix();
+                        while (!state.AtScopeEnd) value.Derived.Add(state.ReadRawVarint32());
+                        state.PopScope(scope);
+                        break;
+                    }
+                    case (17 << 3) | 5:  // Derived, field 17, fixed32
+                        value.Derived ??= new global::AotFixtures.PackedAll.Readings();
+                        value.Derived.Add(state.ReadRawFixed32());
+                        break;
+                    case (17 << 3) | 1:  // Derived, field 17, fixed64
+                        value.Derived ??= new global::AotFixtures.PackedAll.Readings();
+                        value.Derived.Add(checked((uint)state.ReadRawFixed64()));
+                        break;
                     default:
                         if (state.IsScopeEnd(tag)) return value;
                         if (IsKnownField(tag)) state.ThrowUnexpectedWireType(tag);
@@ -661,7 +694,7 @@ partial class PackedAllModel
             }
             return value;
 
-            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 or 15 or 16;
+            static bool IsKnownField(uint tag) => (tag >> 3) is 1 or 2 or 3 or 4 or 5 or 6 or 7 or 8 or 9 or 10 or 11 or 12 or 13 or 14 or 15 or 16 or 17;
         }
 
         global::ProtoBuf.Serializers.ISerializer<global::AotFixtures.PackedAll.Level> global::ProtoBuf.Serializers.ISerializerProxy<global::AotFixtures.PackedAll.Level>.Serializer
