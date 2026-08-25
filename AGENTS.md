@@ -293,10 +293,32 @@ a *measure* recursion crosses a stateful boundary without re-seeding and is ther
 additive. `RawDepthBoundaryTests` ladders through grouped members for exactly that reason, and was
 rewritten twice because the first two versions passed with the fix removed.
 
-Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract emits a local
-per member — 1000 in the corpus's worst case — and at roughly 8 KB a frame the stack is exhausted
-around 128 levels, long before the depth guard fires. See `notes/gaps.md` B16, where the
-length-temporary families have since been folded and `tmpN` remains.
+Note **`MaxDepth` (512) only bounds recursion if frames are small.** A large contract used to emit a
+local per member — measured at 1004 in a 400-member `Measure_` — and at roughly 8 KB a frame the
+stack is exhausted around 128 levels, long before the depth guard fires.
+
+**So the write and measure bodies now share ONE local per distinct member TYPE** (`TempPool`, gap
+B16): 400 scalar members over 5 types went 400 → **5** locals, and the 1004 above → 310. Three
+things about that are easy to break:
+
+- **the compiler will not do this for you.** Twenty same-typed locals in twenty *sibling* `{ }`
+  scopes still compile to twenty IL slots, in Release as in Debug — Roslyn's slot allocator does not
+  reuse by scope. Only emitting genuinely fewer declarations helps, which is why this lives in the
+  generator. (Release *does* halve the corpus's local count against Debug, which makes "Roslyn
+  already folds" look plausible; that is single-use values staying on the evaluation stack.)
+- **a new per-member local family must be pooled too, or the body goes back to being linear in
+  members.** `slot` and the map measure's `mapEntry` are folded on the same argument as the
+  long-standing `sub`: reserve, call *another* method, consume — never two live at once. Note
+  `mapEntry` is not spelled `entry` because **a shared `entry` already exists** in these bodies for
+  a `slots.Mark()`, and aliasing two unrelated locals of different types is the failure mode here.
+- **`AppendFoldingLengthTemp` appends the BODY as well as declaring it**, so anything that must
+  precede the body is emitted *before* that call. Getting it backwards put declarations after their
+  uses and broke 52 goldens — caught only because the goldens compile.
+
+The measured instrument is `MethodBody.LocalVariables.Count` on a deliberately wide contract, not a
+benchmark: the argument is frame size, which is arithmetic. `notes/gaps.md` B16 has the numbers, and
+what is left — the `RawRead_` body, and the `foreach` variables, which C# requires one of per loop
+and so cannot be shared at all.
 
 **4. A measured length that disagrees with the body is caught in DEBUG, and only in DEBUG.** Every
 length-prefixed raw write is followed by `DebugAssertPosition`, comparing `state.Position64` against

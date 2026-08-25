@@ -303,6 +303,8 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
+            long mapEntry;
             long sub;
             global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
             global::System.Collections.Generic.Dictionary<string, int> tmp_System_Collections_Generic_Dictionary_string__int_;
@@ -319,10 +321,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
-                    long entry1 = 0;
-                    if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
-                    if (pair1.Value != null) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair1.Value);
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // ByNumber
+                    mapEntry = 0;
+                    if (pair1.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    if (pair1.Value != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair1.Value);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // ByNumber
                 }
             }
             tmp_System_Collections_Generic_Dictionary_string__int_ = value.ByName;
@@ -330,10 +332,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair2 in tmp_System_Collections_Generic_Dictionary_string__int_)
                 {
-                    long entry2 = 0;
-                    if (pair2.Key != null) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Key);
-                    if (pair2.Value != 0) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // ByName
+                    mapEntry = 0;
+                    if (pair2.Key != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Key);
+                    if (pair2.Value != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // ByName
                 }
             }
             tmp_System_Collections_Generic_Dictionary_int__int_ = value.Counts;
@@ -341,10 +343,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair3 in tmp_System_Collections_Generic_Dictionary_int__int_)
                 {
-                    long entry3 = 0;
-                    if (pair3.Key != 0) entry3 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
-                    if (pair3.Value != 0) entry3 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry3) + entry3;  // Counts
+                    mapEntry = 0;
+                    if (pair3.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
+                    if (pair3.Value != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Counts
                 }
             }
             tmp_System_Collections_Generic_Dictionary_string__string_ = value.Labels;
@@ -352,10 +354,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair4 in tmp_System_Collections_Generic_Dictionary_string__string_)
                 {
-                    long entry4 = 0;
-                    if (pair4.Key != null) entry4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair4.Key);
-                    if (pair4.Value != null) entry4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair4.Value);
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry4) + entry4;  // Labels
+                    mapEntry = 0;
+                    if (pair4.Key != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair4.Key);
+                    if (pair4.Value != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair4.Value);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Labels
                 }
             }
             tmp_int = value.Trailer;
@@ -365,10 +367,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair6 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
-                    long entry6 = 0;
-                    if (pair6.Key != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Key));
-                    if (pair6.Value.GetValueOrDefault() != 0) entry6 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Value.GetValueOrDefault()));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry6) + entry6;  // Maybe
+                    mapEntry = 0;
+                    if (pair6.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Key));
+                    if (pair6.Value.GetValueOrDefault() != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair6.Value.GetValueOrDefault()));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Maybe
                 }
             }
             tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_ = value.Shades;
@@ -376,10 +378,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair7 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Hue_)
                 {
-                    long entry7 = 0;
-                    if (pair7.Key != 0) entry7 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair7.Key));
-                    entry7 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair7.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry7) + entry7;  // Shades
+                    mapEntry = 0;
+                    if (pair7.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair7.Key));
+                    mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair7.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Shades
                 }
             }
             tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_ = value.ByShade;
@@ -387,10 +389,10 @@ partial class MapMeasureModel
             {
                 foreach (var pair8 in tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapMeasure_Hue__int_)
                 {
-                    long entry8 = 0;
-                    entry8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair8.Key));
-                    if (pair8.Value != 0) entry8 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair8.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry8) + entry8;  // ByShade
+                    mapEntry = 0;
+                    mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair8.Key));
+                    if (pair8.Value != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair8.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // ByShade
                 }
             }
             tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_ = value.Notes;
@@ -398,22 +400,22 @@ partial class MapMeasureModel
             {
                 foreach (var pair9 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapMeasure_Note_)
                 {
-                    long entry9 = 0;
-                    if (pair9.Key != 0) entry9 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair9.Key));
+                    mapEntry = 0;
+                    if (pair9.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair9.Key));
                     if (pair9.Value != null)
                     {
                         sub = Measure_AotFixtures_MapMeasure_Note(pair9.Value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
-                        entry9 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                        mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry9) + entry9;  // Notes
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Notes
                 }
             }
             tmp_AotFixtures_MapMeasure_Note = value.Tail;
             if (tmp_AotFixtures_MapMeasure_Note != null)
             {
-                var slot10 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_MapMeasure_Note(tmp_AotFixtures_MapMeasure_Note, depth, slots, context);
-                slots.Set(slot10, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Tail
             }
             return len;
@@ -869,6 +871,7 @@ partial class MapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             string tmp_string;
             int tmp_int;
             global::System.Collections.Generic.List<global::AotFixtures.MapMeasure.Tag> tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_;
@@ -885,9 +888,9 @@ partial class MapMeasureModel
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_MapMeasure_Tag_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.MapMeasure.Tag>();
-                    var slot3 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = Measure_AotFixtures_MapMeasure_Tag(item3, depth, slots, context);
-                    slots.Set(slot3, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }

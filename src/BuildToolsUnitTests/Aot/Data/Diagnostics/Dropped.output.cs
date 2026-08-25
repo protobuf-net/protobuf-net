@@ -514,13 +514,14 @@ partial class DroppedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Dropped.HasUnsupportedMember tmp_AotFixtures_Dropped_HasUnsupportedMember;
             tmp_AotFixtures_Dropped_HasUnsupportedMember = value.Child;
             if (tmp_AotFixtures_Dropped_HasUnsupportedMember != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Dropped_HasUnsupportedMember(tmp_AotFixtures_Dropped_HasUnsupportedMember, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
             return len;

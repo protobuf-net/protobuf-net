@@ -370,13 +370,14 @@ partial class ExtensibleModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Extensible.DerivedExt layer100)
                 {
-                    var slot100 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Extensible_DerivedExt(layer100, depth, slots, context);
-                    slots.Set(slot100, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Extensible.DerivedExt
                 }
                 else

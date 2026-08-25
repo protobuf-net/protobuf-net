@@ -431,21 +431,22 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Inherit.Dog layer100)
                 {
-                    var slot100 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Inherit_Dog(layer100, depth, slots, context);
-                    slots.Set(slot100, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Dog
                 }
                 else if (value is global::AotFixtures.Inherit.Cat layer101)
                 {
-                    var slot101 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Inherit_Cat(layer101, depth, slots, context);
-                    slots.Set(slot101, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Cat
                 }
                 else
@@ -644,13 +645,14 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Inherit.Puppy layer200)
                 {
-                    var slot200 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Inherit_Puppy(layer200, depth, slots, context);
-                    slots.Set(slot200, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Inherit.Puppy
                 }
                 else
@@ -749,13 +751,14 @@ partial class InheritModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Inherit.Animal tmp_AotFixtures_Inherit_Animal;
             tmp_AotFixtures_Inherit_Animal = value.Animal;
             if (tmp_AotFixtures_Inherit_Animal != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Inherit_Animal(tmp_AotFixtures_Inherit_Animal, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Animal
             }
             return len;

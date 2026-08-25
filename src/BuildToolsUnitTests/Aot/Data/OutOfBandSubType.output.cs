@@ -595,23 +595,24 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.OutOfBandSubType.Shape tmp_AotFixtures_OutOfBandSubType_Shape;
             global::AotFixtures.OutOfBandSubType.Vehicle tmp_AotFixtures_OutOfBandSubType_Vehicle;
             tmp_AotFixtures_OutOfBandSubType_Shape = value.Shape;
             if (tmp_AotFixtures_OutOfBandSubType_Shape != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_OutOfBandSubType_Shape(tmp_AotFixtures_OutOfBandSubType_Shape, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Shape
             }
             tmp_AotFixtures_OutOfBandSubType_Vehicle = value.Vehicle;
             if (tmp_AotFixtures_OutOfBandSubType_Vehicle != null)
             {
-                var slot2 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_OutOfBandSubType_Vehicle(tmp_AotFixtures_OutOfBandSubType_Vehicle, depth, slots, context);
-                slots.Set(slot2, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Vehicle
             }
             return len;
@@ -831,21 +832,22 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.OutOfBandSubType.Circle layer100)
                 {
-                    var slot100 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_OutOfBandSubType_Circle(layer100, depth, slots, context);
-                    slots.Set(slot100, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Circle
                 }
                 else if (value is global::AotFixtures.OutOfBandSubType.Tagged<int> layer101)
                 {
-                    var slot101 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_OutOfBandSubType_Tagged_int_(layer101, depth, slots, context);
-                    slots.Set(slot101, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Tagged<int>
                 }
                 else if (value is global::AotFixtures.OutOfBandSubType.Square layer102)
@@ -1229,21 +1231,22 @@ partial class OutOfBandSubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.OutOfBandSubType.Sedan layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_OutOfBandSubType_Sedan(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Sedan
                 }
                 else if (value is global::AotFixtures.OutOfBandSubType.Tractor layer11)
                 {
-                    var slot11 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_OutOfBandSubType_Tractor(layer11, depth, slots, context);
-                    slots.Set(slot11, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.OutOfBandSubType.Tractor
                 }
                 else

@@ -206,14 +206,15 @@ partial class StructsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.Structs.Point tmp_AotFixtures_Structs_Point;
             global::AotFixtures.Structs.Point? tmp_AotFixtures_Structs_Point_;
             int tmp_int;
             tmp_AotFixtures_Structs_Point = value.Location;
-            var slot1 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_AotFixtures_Structs_Point(tmp_AotFixtures_Structs_Point, depth, slots, context);
-            slots.Set(slot1, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Location
             tmp_AotFixtures_Structs_Point_ = value.MaybeLocation;
             if (tmp_AotFixtures_Structs_Point_.HasValue)

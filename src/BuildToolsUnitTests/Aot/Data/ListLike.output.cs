@@ -201,14 +201,15 @@ partial class ListLikeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.ListLike.NotAList tmp_AotFixtures_ListLike_NotAList;
             int tmp_int;
             tmp_AotFixtures_ListLike_NotAList = value.NotAList;
             if (tmp_AotFixtures_ListLike_NotAList != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_ListLike_NotAList(tmp_AotFixtures_ListLike_NotAList, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // NotAList
             }
             tmp_int = value.Other;

@@ -315,14 +315,15 @@ partial class TupleMembersModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             int tmp_int;
             (int, string) tmp__int__string_;
             tmp_int = value.Item1;
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)tmp_int));  // Item1
             tmp__int__string_ = value.Item2;
-            var slot2 = slots.Reserve();
+            slot = slots.Reserve();
             var sub = Measure__int__string_(tmp__int__string_, depth, slots, context);
-            slots.Set(slot2, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Item2
             return len;
         }
@@ -494,6 +495,7 @@ partial class TupleMembersModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             (int Id, string Name) tmp__int_Id__string_Name_;
             (int, string) tmp__int__string_;
@@ -502,24 +504,24 @@ partial class TupleMembersModel
             (int, string)? tmp__int__string__;
             int tmp_int;
             tmp__int_Id__string_Name_ = value.Named;
-            var slot1 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure__int__string_(tmp__int_Id__string_Name_, depth, slots, context);
-            slots.Set(slot1, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Named
             tmp__int__string_ = value.Anonymous;
-            var slot2 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure__int__string_(tmp__int__string_, depth, slots, context);
-            slots.Set(slot2, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Anonymous
             tmp__int_Outer___int_Inner__string_Label__Nested_ = value.Deep;
-            var slot3 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure__int___int__string__(tmp__int_Outer___int_Inner__string_Label__Nested_, depth, slots, context);
-            slots.Set(slot3, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Deep
             tmp_System_Collections_Generic_KeyValuePair_int__string_ = value.Pair;
-            var slot4 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_System_Collections_Generic_KeyValuePair_int__string_(tmp_System_Collections_Generic_KeyValuePair_int__string_, depth, slots, context);
-            slots.Set(slot4, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Pair
             tmp__int__string__ = value.MaybePair;
             if (tmp__int__string__.HasValue)

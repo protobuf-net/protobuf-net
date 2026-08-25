@@ -282,6 +282,7 @@ partial class IncludeGroupModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
@@ -292,9 +293,9 @@ partial class IncludeGroupModel
                 }
                 else if (value is global::AotFixtures.IncludeGroup.Plain layer4)
                 {
-                    var slot4 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_IncludeGroup_Plain(layer4, depth, slots, context);
-                    slots.Set(slot4, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.IncludeGroup.Plain
                 }
                 else

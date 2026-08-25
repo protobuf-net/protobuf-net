@@ -322,6 +322,7 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             int tmp_int;
             global::AotFixtures.Nested.Address tmp_AotFixtures_Nested_Address;
             tmp_int = value.Id;
@@ -329,9 +330,9 @@ partial class NestedModel
             tmp_AotFixtures_Nested_Address = value.Address;
             if (tmp_AotFixtures_Nested_Address != null)
             {
-                var slot2 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Nested_Address(tmp_AotFixtures_Nested_Address, depth, slots, context);
-                slots.Set(slot2, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Address
             }
             return len;
@@ -444,6 +445,7 @@ partial class NestedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             int tmp_int;
             global::AotFixtures.Nested.Customer tmp_AotFixtures_Nested_Customer;
@@ -453,17 +455,17 @@ partial class NestedModel
             tmp_AotFixtures_Nested_Customer = value.Customer;
             if (tmp_AotFixtures_Nested_Customer != null)
             {
-                var slot2 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Nested_Customer(tmp_AotFixtures_Nested_Customer, depth, slots, context);
-                slots.Set(slot2, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Customer
             }
             tmp_AotFixtures_Nested_Address = value.ShipTo;
             if (tmp_AotFixtures_Nested_Address != null)
             {
-                var slot3 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Nested_Address(tmp_AotFixtures_Nested_Address, depth, slots, context);
-                slots.Set(slot3, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // ShipTo
             }
             return len;

@@ -359,6 +359,7 @@ partial class KeywordsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             int tmp_int;
             string tmp_string;
@@ -383,17 +384,17 @@ partial class KeywordsModel
             tmp_AotFixtures_Keywords_Inner = value.@class;
             if (tmp_AotFixtures_Keywords_Inner != null)
             {
-                var slot4 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Keywords_Inner(tmp_AotFixtures_Keywords_Inner, depth, slots, context);
-                slots.Set(slot4, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // class
             }
             tmp_AotFixtures_Keywords_Pair = value.@lock;
             if (tmp_AotFixtures_Keywords_Pair != null)
             {
-                var slot5 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Keywords_Pair(tmp_AotFixtures_Keywords_Pair, depth, slots, context);
-                slots.Set(slot5, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // lock
             }
             tmp_int = value.value;

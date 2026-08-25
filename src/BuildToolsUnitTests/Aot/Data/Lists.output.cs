@@ -434,6 +434,7 @@ partial class ListsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             int[] tmp_int__;
             global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
@@ -503,9 +504,9 @@ partial class ListsModel
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Lists_Inner_))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
-                    var slot9 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_Lists_Inner(item9, depth, slots, context);
-                    slots.Set(slot9, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -515,9 +516,9 @@ partial class ListsModel
                 foreach (var item10 in tmp_AotFixtures_Lists_Inner__)
                 {
                     if (item10 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Lists.Inner>();
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_Lists_Inner(item10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }

@@ -296,13 +296,14 @@ partial class NonPublicCtorModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.NonPublicCtor.PrivateCtor tmp_AotFixtures_NonPublicCtor_PrivateCtor;
             tmp_AotFixtures_NonPublicCtor_PrivateCtor = value.Child;
             if (tmp_AotFixtures_NonPublicCtor_PrivateCtor != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_NonPublicCtor_PrivateCtor(tmp_AotFixtures_NonPublicCtor_PrivateCtor, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
             return len;

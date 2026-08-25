@@ -749,7 +749,83 @@ to believe it.
 - **gap B44**, below: a stateful hand-back inside a **grouped** raw body wrote a stream the reader
   rejected. Its own entry, since it was a reader bug rather than a depth one — and fixed the same
   day.
-### B16. Locals in the emitted bodies — **`lengths` and `len` done; `tmpN` folding DEFERRED 2026-08-22, blocker recorded**
+### B16. Locals in the emitted bodies — **DONE for the write and measure bodies, 2026-08-25 (up to 80x fewer locals); the READ body remains**
+
+> **Resolution, 2026-08-25.** The deferral below was lifted after its two blockers were re-examined,
+> and both turned out to be smaller than recorded — one dissolved outright, the other was a
+> measurement problem with a deterministic instrument available.
+>
+> **The pathological body was reproduced, which nothing had done before.** A contract of 400 members
+> over 5 distinct types, and a second of 400 message/collection members:
+>
+> | body | before | after | |
+> | --- | ---: | ---: | ---: |
+> | `RawWrite_` (400 scalars, 5 types) | 400 | **5** | 80.0x |
+> | `Measure_` (400 scalars, 5 types) | 241 | **4** | 60.3x |
+> | `Measure_` (400 message/collection) | 1004 | **310** | 3.2x |
+> | `RawWrite_` (400 message/collection) | 603 | **207** | 2.9x |
+> | `RawRead_` (both) | 706 / 81 | unchanged | — |
+>
+> There is the 1000-local body this entry predicted from arithmetic, and 5 is exactly the number of
+> distinct member types — the floor.
+>
+> **The "cannot be measured on this machine" blocker does not apply**, and that was the key
+> realisation: the argument for doing this is **frame size**, which is arithmetic, and the instrument
+> is `MethodBody.LocalVariables.Count` — deterministic, and needing no benchmark at all. The
+> throughput claims (RyuJIT tracked locals, `.locals init` in the consumer's assembly) ride along
+> unmeasured and are not what justifies it.
+>
+> **Scoping is dead for good, and now for the right reason.** The earlier null result was correct but
+> its explanation was not. Probed directly: twenty same-typed locals in twenty *sibling* `{ }` scopes
+> compile to **twenty** IL slots, in Release as in Debug — Roslyn's slot allocator does not reuse by
+> scope at all. So the shape that was measured could never have helped, whatever body it ran on. (The
+> body it did run on, `RawWrite_Lists_Repeated`, additionally has no two members of one type, so
+> nothing could have folded there even in principle.)
+>
+> A related trap worth recording, because it made "Roslyn already folds" look plausible: the whole
+> fixture corpus reports **7249** IL locals in Debug and **3404** in Release. That is not slot reuse —
+> it is single-use values staying on the evaluation stack instead of becoming locals.
+>
+> **The fifty-site rename was real but tractable**, and was done as a mechanical no-op first (thread
+> the name instead of composing it from the field number, at 144 sites and through eight helpers),
+> with the pooling as a separate step on top. Splitting it that way meant the wide diff could be
+> verified as producing byte-identical output before any behaviour changed.
+>
+> Three things fell out that the deferral had not predicted:
+>
+> - **`DeclaredTypeName` was populated only where a specific emit needed it**, so the generator could
+>   not name an ordinary member's type at all and could only say `var` — and a shared local cannot be
+>   declared without naming its type. Widening it is inert on its own (verified as byte-identical
+>   goldens), and it is the change that made the rest possible.
+> - **`SchemaPlanBuilder` still does not supply one**, so a `.proto`-built plan keeps its per-member
+>   `var tmpN` rather than have the pool guess a type. That is the wrong way round — a generated DTO
+>   tree is *exactly* the wide-contract case — so supplying it there is the highest-value follow-up.
+> - **`AppendFoldingLengthTemp` appends the BODY as well as declaring**, so anything that must precede
+>   the body has to be emitted before it. Getting that wrong put the declaration after its uses and
+>   broke 52 goldens — caught because the goldens *compile*, which is the only reason that assertion
+>   earns its cost.
+>
+> **Two further families were folded**: the `slot` index (`slots.Reserve()` → `Measure_` → `slots.Set`,
+> three consecutive lines with the call into another method, so never two live at once — the same
+> argument that already lets `sub` be shared over the identical span), and the map measure's per-pair
+> accumulator. The second needed a **different name**, `mapEntry`: these bodies already carry a shared
+> `entry` for a `slots.Mark()`, and reusing that spelling would have aliased two unrelated locals of
+> different types.
+>
+> **What remains, and why it is a floor rather than an omission:**
+>
+> - the **`RawRead_` body** is untouched (706 for 400 message members). It is emitted one member at a
+>   time from `EmitReadLoop`, so there is no body-wide pool to draw on, and its temporaries take
+>   several types per member kind rather than one. Its `switch` cases also share a declaration space,
+>   so a shared local is the *natural* fix there rather than an awkward one. This is the next step;
+> - the **`foreach` variables** (`item{n}`, `pair{n}`) cannot be shared: C# requires a declaration per
+>   `foreach`, and a body with 400 loops has 400 loop variables however they are named. That is what
+>   the remaining 310 in the message case mostly is, and it is why a collection-heavy contract stays
+>   roughly linear in members. Fixing it means emitting fewer loops, which is not on the table.
+>
+> The original entry follows, unchanged.
+
+### B16 (original entry). Locals in the emitted bodies — `lengths` and `len` done; `tmpN` folding deferred 2026-08-22
 
 > **Superseded in part by B38 (2026-08-21).** Everything below about `state.RawLengths` is a
 > record of what was true then: the dictionary it describes is gone from the generated path,

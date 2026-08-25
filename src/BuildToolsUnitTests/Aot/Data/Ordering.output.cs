@@ -580,6 +580,7 @@ partial class OrderingModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.Ordering.ViaDataMember tmp_AotFixtures_Ordering_ViaDataMember;
             global::AotFixtures.Ordering.ViaXmlElement tmp_AotFixtures_Ordering_ViaXmlElement;
@@ -587,17 +588,17 @@ partial class OrderingModel
             tmp_AotFixtures_Ordering_ViaDataMember = value.FromDataContract;
             if (tmp_AotFixtures_Ordering_ViaDataMember != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Ordering_ViaDataMember(tmp_AotFixtures_Ordering_ViaDataMember, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromDataContract
             }
             tmp_AotFixtures_Ordering_ViaXmlElement = value.FromXmlType;
             if (tmp_AotFixtures_Ordering_ViaXmlElement != null)
             {
-                var slot2 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Ordering_ViaXmlElement(tmp_AotFixtures_Ordering_ViaXmlElement, depth, slots, context);
-                slots.Set(slot2, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // FromXmlType
             }
             tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_ = value.Several;
@@ -606,9 +607,9 @@ partial class OrderingModel
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Ordering_ViaDataMember_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Ordering.ViaDataMember>();
-                    var slot3 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_Ordering_ViaDataMember(item3, depth, slots, context);
-                    slots.Set(slot3, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }

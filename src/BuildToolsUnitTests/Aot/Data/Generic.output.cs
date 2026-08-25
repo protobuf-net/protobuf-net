@@ -662,6 +662,7 @@ partial class GenericModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.Generic.Wrapper<int> tmp_AotFixtures_Generic_Wrapper_int_;
             global::AotFixtures.Generic.Wrapper<string> tmp_AotFixtures_Generic_Wrapper_string_;
@@ -673,47 +674,47 @@ partial class GenericModel
             tmp_AotFixtures_Generic_Wrapper_int_ = value.Number;
             if (tmp_AotFixtures_Generic_Wrapper_int_ != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Generic_Wrapper_int_(tmp_AotFixtures_Generic_Wrapper_int_, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Number
             }
             tmp_AotFixtures_Generic_Wrapper_string_ = value.Text;
             if (tmp_AotFixtures_Generic_Wrapper_string_ != null)
             {
-                var slot2 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Generic_Wrapper_string_(tmp_AotFixtures_Generic_Wrapper_string_, depth, slots, context);
-                slots.Set(slot2, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Text
             }
             tmp_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_ = value.Message;
             if (tmp_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_ != null)
             {
-                var slot3 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_(tmp_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Nested_, depth, slots, context);
-                slots.Set(slot3, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Message
             }
             tmp_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__ = value.Deep;
             if (tmp_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__ != null)
             {
-                var slot4 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__(tmp_AotFixtures_Generic_Wrapper_global__AotFixtures_Generic_Wrapper_int__, depth, slots, context);
-                slots.Set(slot4, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Deep
             }
             tmp_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__ = value.Many;
             if (tmp_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__ != null)
             {
-                var slot5 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__(tmp_AotFixtures_Generic_Wrapper_global__System_Collections_Generic_List_int__, depth, slots, context);
-                slots.Set(slot5, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Many
             }
             tmp_AotFixtures_Generic_Pair_int__string_ = value.Pair;
-            var slot6 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_AotFixtures_Generic_Pair_int__string_(tmp_AotFixtures_Generic_Pair_int__string_, depth, slots, context);
-            slots.Set(slot6, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Pair
             tmp_System_Collections_Generic_List_global__AotFixtures_Generic_Wrapper_int__ = value.Wrappers;
             if (tmp_System_Collections_Generic_List_global__AotFixtures_Generic_Wrapper_int__ != null)
@@ -721,9 +722,9 @@ partial class GenericModel
                 foreach (var item7 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Generic_Wrapper_int__))
                 {
                     if (item7 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Generic.Wrapper<int>>();
-                    var slot7 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_Generic_Wrapper_int_(item7, depth, slots, context);
-                    slots.Set(slot7, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -1163,14 +1164,15 @@ partial class GenericModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Generic.Nested tmp_AotFixtures_Generic_Nested;
             string tmp_string;
             tmp_AotFixtures_Generic_Nested = value.Value;
             if (tmp_AotFixtures_Generic_Nested != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Generic_Nested(tmp_AotFixtures_Generic_Nested, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }
             tmp_string = value.Label;
@@ -1273,14 +1275,15 @@ partial class GenericModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Generic.Wrapper<int> tmp_AotFixtures_Generic_Wrapper_int_;
             string tmp_string;
             tmp_AotFixtures_Generic_Wrapper_int_ = value.Value;
             if (tmp_AotFixtures_Generic_Wrapper_int_ != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Generic_Wrapper_int_(tmp_AotFixtures_Generic_Wrapper_int_, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }
             tmp_string = value.Label;

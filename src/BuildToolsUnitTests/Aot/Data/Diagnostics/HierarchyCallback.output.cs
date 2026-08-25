@@ -220,13 +220,14 @@ partial class HierarchyCallbackModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             value.BeforeSer();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Diagnostics.HierarchyCallback.Derived layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Diagnostics_HierarchyCallback_Derived(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Diagnostics.HierarchyCallback.Derived
                 }
                 else

@@ -622,21 +622,22 @@ partial class InterfaceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Interface.Dog layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Interface_Dog(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Interface.Dog
                 }
                 else if (value is global::AotFixtures.Interface.Cat layer11)
                 {
-                    var slot11 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_Interface_Cat(layer11, depth, slots, context);
-                    slots.Set(slot11, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Interface.Cat
                 }
                 else
@@ -749,13 +750,14 @@ partial class InterfaceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Interface.Tagged layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Interface_Tagged(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Interface.Tagged
                 }
                 else
@@ -990,6 +992,7 @@ partial class InterfaceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.Interface.IAnimal tmp_AotFixtures_Interface_IAnimal;
             global::System.Collections.Generic.List<global::AotFixtures.Interface.IAnimal> tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_;
@@ -997,9 +1000,9 @@ partial class InterfaceModel
             tmp_AotFixtures_Interface_IAnimal = value.Star;
             if (tmp_AotFixtures_Interface_IAnimal != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Interface_IAnimal(tmp_AotFixtures_Interface_IAnimal, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Star
             }
             tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_ = value.All;
@@ -1008,26 +1011,26 @@ partial class InterfaceModel
                 foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Interface_IAnimal_))
                 {
                     if (item2 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.Interface.IAnimal>();
-                    var slot2 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_Interface_IAnimal(item2, depth, slots, context);
-                    slots.Set(slot2, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             tmp_AotFixtures_Interface_INamed = value.Tag;
             if (tmp_AotFixtures_Interface_INamed != null)
             {
-                var slot3 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Interface_INamed(tmp_AotFixtures_Interface_INamed, depth, slots, context);
-                slots.Set(slot3, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Tag
             }
             tmp_AotFixtures_Interface_IAnimal = value.Backup;
             if (tmp_AotFixtures_Interface_IAnimal != null)
             {
-                var slot4 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Interface_IAnimal(tmp_AotFixtures_Interface_IAnimal, depth, slots, context);
-                slots.Set(slot4, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Backup
             }
             return len;

@@ -399,6 +399,7 @@ partial class GroupedElementsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::System.Collections.Generic.List<global::AotFixtures.GroupedElements.Item> tmp_System_Collections_Generic_List_global__AotFixtures_GroupedElements_Item_;
             global::AotFixtures.GroupedElements.Item[] tmp_AotFixtures_GroupedElements_Item__;
@@ -429,9 +430,9 @@ partial class GroupedElementsModel
                 foreach (var item3 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_GroupedElements_Item_))
                 {
                     if (item3 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedElements.Item>();
-                    var slot3 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_GroupedElements_Item(item3, depth, slots, context);
-                    slots.Set(slot3, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }

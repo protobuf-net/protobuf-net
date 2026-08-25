@@ -440,21 +440,22 @@ partial class AssemblySubTypeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.AssemblySubType.Leaf layer50)
                 {
-                    var slot50 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_AssemblySubType_Leaf(layer50, depth, slots, context);
-                    slots.Set(slot50, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.AssemblySubType.Leaf
                 }
                 else if (value is global::AotFixtures.AssemblySubType.Branch layer51)
                 {
-                    var slot51 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = MeasureSub_AotFixtures_AssemblySubType_Branch(layer51, depth, slots, context);
-                    slots.Set(slot51, sub);
+                    slots.Set(slot, sub);
                     len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.AssemblySubType.Branch
                 }
                 else

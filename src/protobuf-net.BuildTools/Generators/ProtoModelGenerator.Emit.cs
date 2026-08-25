@@ -1669,6 +1669,9 @@ namespace ProtoBuf.BuildTools.Generators
                 // `len` is the accumulator here, so the sub-message temp needs its own name
                 var measureBody = new StringBuilder();
                 EmitMeasureMembers(measureBody, indent + 1, contract, measurable, listAsSpan, immutableAsSpan, measureInstance);
+                // NOTE the order: AppendFoldingLengthTemp appends the BODY as well as declaring,
+                // so anything else that must precede the body has to be emitted before it
+                AppendSharedSlotTemp(sb, indent + 1, measureBody);
                 AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
                 // ...and after-serialize likewise. The classic engine fires BOTH unconditionally in
                 // TypeSerializer.Write, so its null-writer measure pass has always run the pair; a
@@ -2909,12 +2912,12 @@ namespace ProtoBuf.BuildTools.Generators
                         // agree, which is why both branch on the same subType.IsGroup.
                         if (!subType.IsGroup)
                         {
-                            Line(measureBody, indent + 3, $"var slot{tag} = slots.Reserve();");
+                            Line(measureBody, indent + 3, "slot = slots.Reserve();");
                         }
                         Line(measureBody, indent + 3, $"sub = MeasureSub_{Sanitise(subType.TypeName)}({layer}, depth, slots, context);");
                         if (!subType.IsGroup)
                         {
-                            Line(measureBody, indent + 3, $"slots.Set(slot{tag}, sub);");
+                            Line(measureBody, indent + 3, "slots.Set(slot, sub);");
                         }
                         // a grouped marker writes its own start tag, the body, and an end tag; both
                         // tags carry the same field number and differ only in the wire type, which
@@ -2952,6 +2955,9 @@ namespace ProtoBuf.BuildTools.Generators
                 {
                     EmitCallback(measureBody, indent + 1, contract, "value", ProtoCallbackKind.AfterSerialize, "context");
                 }
+                // NOTE the order: AppendFoldingLengthTemp appends the BODY as well as declaring,
+                // so anything else that must precede the body has to be emitted before it
+                AppendSharedSlotTemp(sb, indent + 1, measureBody);
                 AppendFoldingLengthTemp(sb, indent + 1, measureBody, "sub");
                 Line(sb, indent + 1, "return len;");
                 Line(sb, indent, "}");
@@ -4097,6 +4103,34 @@ namespace ProtoBuf.BuildTools.Generators
         }
 
         /// <summary>
+        /// Declares the shared <c>slot</c> index if the body reserves one. Gap B16.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Every reservation is the same three consecutive lines - <c>slot = slots.Reserve()</c>,
+        /// a <c>Measure_</c> call into ANOTHER method, then <c>slots.Set(slot, sub)</c> - so no two
+        /// are ever live at once and one local serves the whole body. A member is unary or repeated,
+        /// never both, and the sub-type markers sit in their own method; that is the argument, and
+        /// it is the same one that already lets <c>sub</c> be shared across the identical span.
+        /// </para>
+        /// <para>
+        /// Unlike <see cref="AppendFoldingLengthTemp"/> there is exactly ONE spelling to match, which
+        /// is why this does not carry that method's list of them - and its warning, that a missed
+        /// spelling is an undeclared-variable break in the CONSUMER's build, is worth re-reading
+        /// before adding a second way to reserve.
+        /// </para>
+        /// </remarks>
+        private static void AppendSharedSlotTemp(StringBuilder sb, int indent, StringBuilder bodyBuilder)
+        {
+            var body = bodyBuilder.ToString();
+            if (body.Contains("slot = slots.Reserve()")) Line(sb, indent, "int slot;");
+            // the per-PAIR accumulator of a map measure, one live at a time for the same reason.
+            // Note the name: a shared `entry` already exists in these bodies for a slots.Mark(),
+            // and reusing that spelling would have aliased two unrelated locals of different types.
+            if (body.Contains("mapEntry = 0;")) Line(sb, indent, "long mapEntry;");
+        }
+
+        /// <summary>
         /// Append an emitted body, folding its sub-message length temporaries onto ONE local
         /// where there is more than one of them (gap B16).
         /// </summary>
@@ -4902,14 +4936,14 @@ namespace ProtoBuf.BuildTools.Generators
                     var entryField = member.WrappedCollection ? 1 : member.FieldNumber;
                     var mapTag = VarintLen((uint)((entryField << 3) | 2));
                     var pair = $"pair{number}";
-                    var entry = $"entry{number}";
+                    var entry = "mapEntry";
                     var total = member.WrappedCollection ? $"col{number}" : "len";
                     Line(sb, indent, $"if ({tmp} != null)");
                     Line(sb, indent, "{");
                     if (member.WrappedCollection) Line(sb, indent + 1, $"long {total} = 0;");
                     Line(sb, indent + 1, $"foreach (var {pair} in {tmp})");
                     Line(sb, indent + 1, "{");
-                    Line(sb, indent + 2, $"long {entry} = 0;");
+                    Line(sb, indent + 2, $"{entry} = 0;");
                     EmitMapSide(sb, indent + 2, member, key: true, $"{pair}.Key", entry, number);
                     EmitMapSide(sb, indent + 2, member, key: false, $"{pair}.Value", entry, number);
                     Line(sb, indent + 2, $"{total} += {mapTag} + global::ProtoBuf.ProtoWriter.State"
@@ -5246,9 +5280,9 @@ namespace ProtoBuf.BuildTools.Generators
                         var unaryGrouped = member.DataFormat == ProtoDataFormat.Group;
                         if (unaryTarget is not null && !unaryGrouped)
                         {
-                            Line(sb, inner, $"var slot{number} = slots.Reserve();");
+                            Line(sb, inner, "slot = slots.Reserve();");
                             Line(sb, inner, $"sub = Measure_{targetName}({tmp}, depth, slots, context);");
-                            Line(sb, inner, $"slots.Set(slot{number}, sub);");
+                            Line(sb, inner, "slots.Set(slot, sub);");
                         }
                         else
                         {
@@ -5355,9 +5389,9 @@ namespace ProtoBuf.BuildTools.Generators
                 }
                 else
                 {
-                    Line(sb, indent + 1, $"var slot{number} = slots.Reserve();");
+                    Line(sb, indent + 1, "slot = slots.Reserve();");
                     Line(sb, indent + 1, $"sub = Measure_{targetName}({item}, depth, slots, context);");
-                    Line(sb, indent + 1, $"slots.Set(slot{number}, sub);");
+                    Line(sb, indent + 1, "slots.Set(slot, sub);");
                 }
                 // a grouped element carries no length prefix: start tag + body + end tag, and both
                 // tags encode to the same width (same field number, wire type differs only in the

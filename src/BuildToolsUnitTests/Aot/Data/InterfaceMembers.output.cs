@@ -747,13 +747,14 @@ partial class InterfaceMembersModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.InterfaceMembers.Box layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_InterfaceMembers_Box(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.InterfaceMembers.Box
                 }
                 else
@@ -851,13 +852,14 @@ partial class InterfaceMembersModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.InterfaceMembers.Leaf layer11)
                 {
-                    var slot11 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_InterfaceMembers_Leaf(layer11, depth, slots, context);
-                    slots.Set(slot11, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.InterfaceMembers.Leaf
                 }
                 else
@@ -958,13 +960,14 @@ partial class InterfaceMembersModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.InterfaceMembers.Named layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_InterfaceMembers_Named(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.InterfaceMembers.Named
                 }
                 else
@@ -1065,13 +1068,14 @@ partial class InterfaceMembersModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.InterfaceMembers.IMiddle layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_InterfaceMembers_IMiddle(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.InterfaceMembers.IMiddle
                 }
                 else

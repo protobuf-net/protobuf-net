@@ -280,22 +280,23 @@ partial class TupleLevelsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             (global::System.Guid, decimal) tmp__global__System_Guid__decimal_;
             global::System.Collections.Generic.List<(global::System.Guid, decimal)> tmp_System_Collections_Generic_List__global__System_Guid__decimal__;
             tmp__global__System_Guid__decimal_ = value.One;
-            var slot1 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure__global__System_Guid__decimal_(tmp__global__System_Guid__decimal_, depth, slots, context);
-            slots.Set(slot1, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // One
             tmp_System_Collections_Generic_List__global__System_Guid__decimal__ = value.Two;
             if (tmp_System_Collections_Generic_List__global__System_Guid__decimal__ != null)
             {
                 foreach (var item2 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List__global__System_Guid__decimal__))
                 {
-                    var slot2 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure__global__System_Guid__decimal_(item2, depth, slots, context);
-                    slots.Set(slot2, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }

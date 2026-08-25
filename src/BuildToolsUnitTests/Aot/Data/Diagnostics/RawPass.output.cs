@@ -419,13 +419,14 @@ partial class RawPassModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.RawPass.Holder tmp_AotFixtures_RawPass_Holder;
             tmp_AotFixtures_RawPass_Holder = value.Inner;
             if (tmp_AotFixtures_RawPass_Holder != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_RawPass_Holder(tmp_AotFixtures_RawPass_Holder, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
             return len;
@@ -567,16 +568,17 @@ partial class RawPassModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long mapEntry;
             global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
             tmp_System_Collections_Generic_Dictionary_int__string_ = value.Lookup;
             if (tmp_System_Collections_Generic_Dictionary_int__string_ != null)
             {
                 foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
-                    long entry1 = 0;
-                    if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
-                    if (pair1.Value != null) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair1.Value);
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Lookup
+                    mapEntry = 0;
+                    if (pair1.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    if (pair1.Value != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair1.Value);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Lookup
                 }
             }
             return len;
@@ -759,6 +761,7 @@ partial class RawPassModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             int tmp_int;
             string tmp_string;
@@ -814,18 +817,18 @@ partial class RawPassModel
                 foreach (var item9 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_RawPass_Child_))
                 {
                     if (item9 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.RawPass.Child>();
-                    var slot9 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_RawPass_Child(item9, depth, slots, context);
-                    slots.Set(slot9, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
             tmp_AotFixtures_RawPass_Child = value.Favourite;
             if (tmp_AotFixtures_RawPass_Child != null)
             {
-                var slot10 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_RawPass_Child(tmp_AotFixtures_RawPass_Child, depth, slots, context);
-                slots.Set(slot10, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Favourite
             }
             tmp_double = value.Score;

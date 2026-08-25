@@ -617,6 +617,8 @@ partial class SurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
+            long mapEntry;
             long sub;
             global::AotFixtures.Surrogate.Money tmp_AotFixtures_Surrogate_Money;
             global::AotFixtures.Surrogate.Tag tmp_AotFixtures_Surrogate_Tag;
@@ -624,31 +626,31 @@ partial class SurrogateModel
             global::System.Collections.Generic.List<global::AotFixtures.Surrogate.Money> tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_;
             global::System.Collections.Generic.Dictionary<int, global::AotFixtures.Surrogate.Tag> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_;
             tmp_AotFixtures_Surrogate_Money = value.Amount;
-            var slot1 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_AotFixtures_Surrogate_Money(tmp_AotFixtures_Surrogate_Money, depth, slots, context);
-            slots.Set(slot1, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Amount
             tmp_AotFixtures_Surrogate_Tag = value.Label;
             if (tmp_AotFixtures_Surrogate_Tag != null)
             {
-                var slot2 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Surrogate_Tag(tmp_AotFixtures_Surrogate_Tag, depth, slots, context);
-                slots.Set(slot2, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Label
             }
             tmp_AotFixtures_Surrogate_Code = value.Code;
-            var slot3 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_AotFixtures_Surrogate_Code(tmp_AotFixtures_Surrogate_Code, depth, slots, context);
-            slots.Set(slot3, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Code
             tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_ = value.Amounts;
             if (tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_ != null)
             {
                 foreach (var item4 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_Surrogate_Money_))
                 {
-                    var slot4 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_Surrogate_Money(item4, depth, slots, context);
-                    slots.Set(slot4, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }
@@ -657,14 +659,14 @@ partial class SurrogateModel
             {
                 foreach (var pair5 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_Surrogate_Tag_)
                 {
-                    long entry5 = 0;
-                    if (pair5.Key != 0) entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
+                    mapEntry = 0;
+                    if (pair5.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
                     if (pair5.Value != null)
                     {
                         sub = Measure_AotFixtures_Surrogate_Tag(pair5.Value, depth, global::ProtoBuf.RawLengthBuffer.Discard, context);
-                        entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
+                        mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry5) + entry5;  // Tags
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Tags
                 }
             }
             return len;

@@ -820,14 +820,15 @@ partial class FormatsModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Formats.Sized tmp_AotFixtures_Formats_Sized;
             int tmp_int;
             tmp_AotFixtures_Formats_Sized = value.Inner;
             if (tmp_AotFixtures_Formats_Sized != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Formats_Sized(tmp_AotFixtures_Formats_Sized, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
             tmp_int = value.Tag;

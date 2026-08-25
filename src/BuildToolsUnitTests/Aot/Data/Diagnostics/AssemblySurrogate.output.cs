@@ -246,13 +246,14 @@ partial class AssemblySurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::System.Version tmp_System_Version;
             tmp_System_Version = value.Version;
             if (tmp_System_Version != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_System_Version(tmp_System_Version, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Version
             }
             return len;

@@ -204,6 +204,7 @@ partial class GroupedRepeatedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             int tmp_int;
             global::AotFixtures.GroupedRepeated.Node tmp_AotFixtures_GroupedRepeated_Node;
@@ -243,9 +244,9 @@ partial class GroupedRepeatedModel
                 foreach (var item5 in global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(tmp_System_Collections_Generic_List_global__AotFixtures_GroupedRepeated_Node_))
                 {
                     if (item5 is null) global::ProtoBuf.ProtoWriter.State.ThrowNullRepeatedContents<global::AotFixtures.GroupedRepeated.Node>();
-                    var slot5 = slots.Reserve();
+                    slot = slots.Reserve();
                     sub = Measure_AotFixtures_GroupedRepeated_Node(item5, depth, slots, context);
-                    slots.Set(slot5, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;
                 }
             }

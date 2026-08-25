@@ -551,6 +551,7 @@ partial class ModelSurrogateModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::System.Version tmp_System_Version;
             global::AotFixtures.ModelSurrogate.Ticks tmp_AotFixtures_ModelSurrogate_Ticks;
@@ -558,20 +559,20 @@ partial class ModelSurrogateModel
             tmp_System_Version = value.Release;
             if (tmp_System_Version != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_System_Version(tmp_System_Version, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Release
             }
             tmp_AotFixtures_ModelSurrogate_Ticks = value.Elapsed;
-            var slot2 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_AotFixtures_ModelSurrogate_Ticks(tmp_AotFixtures_ModelSurrogate_Ticks, depth, slots, context);
-            slots.Set(slot2, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Elapsed
             tmp_System_DateTimeOffset = value.When;
-            var slot3 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_System_DateTimeOffset(tmp_System_DateTimeOffset, depth, slots, context);
-            slots.Set(slot3, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // When
             return len;
         }

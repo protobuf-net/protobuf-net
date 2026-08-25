@@ -678,14 +678,15 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Callbacks.Hooked tmp_AotFixtures_Callbacks_Hooked;
             int tmp_int;
             tmp_AotFixtures_Callbacks_Hooked = value.Inner;
             if (tmp_AotFixtures_Callbacks_Hooked != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Callbacks_Hooked(tmp_AotFixtures_Callbacks_Hooked, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
             tmp_int = value.Tag;
@@ -883,13 +884,14 @@ partial class CallbacksModel
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             value.BeforeSer();
             long len = 0;
+            int slot;
             if (global::ProtoBuf.Meta.TypeModel.IsSubType(value))
             {
                 if (value is global::AotFixtures.Callbacks.HookedDerived layer10)
                 {
-                    var slot10 = slots.Reserve();
+                    slot = slots.Reserve();
                     var sub = MeasureSub_AotFixtures_Callbacks_HookedDerived(layer10, depth, slots, context);
-                    slots.Set(slot10, sub);
+                    slots.Set(slot, sub);
                     len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // global::AotFixtures.Callbacks.HookedDerived
                 }
                 else
@@ -1052,13 +1054,14 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Callbacks.HookedBase tmp_AotFixtures_Callbacks_HookedBase;
             tmp_AotFixtures_Callbacks_HookedBase = value.Inner;
             if (tmp_AotFixtures_Callbacks_HookedBase != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Callbacks_HookedBase(tmp_AotFixtures_Callbacks_HookedBase, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
             return len;
@@ -1379,13 +1382,14 @@ partial class CallbacksModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.Callbacks.Watched tmp_AotFixtures_Callbacks_Watched;
             tmp_AotFixtures_Callbacks_Watched = value.Inner;
             if (tmp_AotFixtures_Callbacks_Watched != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Callbacks_Watched(tmp_AotFixtures_Callbacks_Watched, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
             return len;

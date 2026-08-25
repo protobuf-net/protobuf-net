@@ -262,16 +262,17 @@ partial class MapUnsupportedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long mapEntry;
             global::System.Collections.Generic.Dictionary<global::AotFixtures.MapUnsupported.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_;
             tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ = value.Value;
             if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_ != null)
             {
                 foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MapUnsupported_Shade__int_)
                 {
-                    long entry1 = 0;
-                    entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
-                    if (pair1.Value != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Value
+                    mapEntry = 0;
+                    mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
+                    if (pair1.Value != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Value
                 }
             }
             return len;
@@ -380,16 +381,17 @@ partial class MapUnsupportedModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long mapEntry;
             global::System.Collections.Generic.Dictionary<int, global::AotFixtures.MapUnsupported.Shade> tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_;
             tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_ = value.Value;
             if (tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_ != null)
             {
                 foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__global__AotFixtures_MapUnsupported_Shade_)
                 {
-                    long entry1 = 0;
-                    if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
-                    entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Value
+                    mapEntry = 0;
+                    if (pair1.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Value
                 }
             }
             return len;

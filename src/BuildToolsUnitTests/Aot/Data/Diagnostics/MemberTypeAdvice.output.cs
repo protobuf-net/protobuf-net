@@ -109,16 +109,17 @@ partial class MemberTypeAdviceModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long mapEntry;
             global::System.Collections.Generic.Dictionary<global::AotFixtures.MemberTypeAdvice.Shade, int> tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_;
             tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_ = value.ByShade;
             if (tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_ != null)
             {
                 foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_global__AotFixtures_MemberTypeAdvice_Shade__int_)
                 {
-                    long entry1 = 0;
-                    entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
-                    if (pair1.Value != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // ByShade
+                    mapEntry = 0;
+                    mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)(int)pair1.Key));
+                    if (pair1.Value != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value));
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // ByShade
                 }
             }
             return len;

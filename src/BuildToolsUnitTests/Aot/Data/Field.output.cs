@@ -480,6 +480,7 @@ partial class FieldModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             int tmp_int;
             string tmp_string;
             global::AotFixtures.Field.Nested tmp_AotFixtures_Field_Nested;
@@ -494,9 +495,9 @@ partial class FieldModel
             tmp_AotFixtures_Field_Nested = value.Message;
             if (tmp_AotFixtures_Field_Nested != null)
             {
-                var slot3 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_Field_Nested(tmp_AotFixtures_Field_Nested, depth, slots, context);
-                slots.Set(slot3, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Message
             }
             tmp_int = value.Zig;

@@ -372,13 +372,14 @@ partial class DepthBoundaryModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.DepthBoundary.Rung tmp_AotFixtures_DepthBoundary_Rung;
             tmp_AotFixtures_DepthBoundary_Rung = value.Target;
             if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_DepthBoundary_Rung(tmp_AotFixtures_DepthBoundary_Rung, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Target
             }
             return len;
@@ -457,6 +458,7 @@ partial class DepthBoundaryModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.DepthBoundary.Rung tmp_AotFixtures_DepthBoundary_Rung;
             global::AotFixtures.DepthBoundary.Link? tmp_AotFixtures_DepthBoundary_Link_;
@@ -464,9 +466,9 @@ partial class DepthBoundaryModel
             tmp_AotFixtures_DepthBoundary_Rung = value.Next;
             if (tmp_AotFixtures_DepthBoundary_Rung != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_DepthBoundary_Rung(tmp_AotFixtures_DepthBoundary_Rung, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Next
             }
             tmp_AotFixtures_DepthBoundary_Link_ = value.Side;

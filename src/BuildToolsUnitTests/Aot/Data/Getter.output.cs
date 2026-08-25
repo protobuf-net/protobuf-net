@@ -327,6 +327,8 @@ partial class GetterModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
+            long mapEntry;
             long sub;
             global::System.Collections.Generic.List<int> tmp_System_Collections_Generic_List_int_;
             global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
@@ -353,18 +355,18 @@ partial class GetterModel
             {
                 foreach (var pair2 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
-                    long entry2 = 0;
-                    if (pair2.Key != 0) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
-                    if (pair2.Value != null) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Value);
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // Map
+                    mapEntry = 0;
+                    if (pair2.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
+                    if (pair2.Value != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Value);
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Map
                 }
             }
             tmp_AotFixtures_Getter_Nested = value.Child;
             if (tmp_AotFixtures_Getter_Nested != null)
             {
-                var slot3 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_Getter_Nested(tmp_AotFixtures_Getter_Nested, depth, slots, context);
-                slots.Set(slot3, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Child
             }
             tmp_int = value.Value;
@@ -399,9 +401,9 @@ partial class GetterModel
                 }
             }
             tmp_AotFixtures_Getter_Point = value.Where;
-            var slot11 = slots.Reserve();
+            slot = slots.Reserve();
             sub = Measure_AotFixtures_Getter_Point(tmp_AotFixtures_Getter_Point, depth, slots, context);
-            slots.Set(slot11, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Where
             tmp_AotFixtures_Getter_Point_ = value.Maybe2;
             if (tmp_AotFixtures_Getter_Point_.HasValue)

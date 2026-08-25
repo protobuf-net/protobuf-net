@@ -301,6 +301,7 @@ partial class BclFixedSizeModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::System.DateTime tmp_System_DateTime;
             global::System.TimeSpan tmp_System_TimeSpan;
             global::System.DateTime? tmp_System_DateTime_;
@@ -326,9 +327,9 @@ partial class BclFixedSizeModel
                 len += 9;  // MaybeTook
             }
             tmp__global__System_DateTime__global__System_TimeSpan_ = value.Pair;
-            var slot5 = slots.Reserve();
+            slot = slots.Reserve();
             var sub = Measure__global__System_DateTime__global__System_TimeSpan_(tmp__global__System_DateTime__global__System_TimeSpan_, depth, slots, context);
-            slots.Set(slot5, sub);
+            slots.Set(slot, sub);
             len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Pair
             tmp_System_DateTime = value.PlainWhen;
             var bcl6 = global::ProtoBuf.BclHelpers.MeasureDateTime(tmp_System_DateTime);

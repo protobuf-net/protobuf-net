@@ -203,14 +203,15 @@ partial class AbstractLeafModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             global::AotFixtures.AbstractLeaf.Shape tmp_AotFixtures_AbstractLeaf_Shape;
             string tmp_string;
             tmp_AotFixtures_AbstractLeaf_Shape = value.Value;
             if (tmp_AotFixtures_AbstractLeaf_Shape != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 var sub = Measure_AotFixtures_AbstractLeaf_Shape(tmp_AotFixtures_AbstractLeaf_Shape, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Value
             }
             tmp_string = value.Name;

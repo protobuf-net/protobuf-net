@@ -660,6 +660,7 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            int slot;
             long sub;
             global::AotFixtures.WrapMeasure.Boxed tmp_AotFixtures_WrapMeasure_Boxed;
             int tmp_int;
@@ -668,9 +669,9 @@ partial class WrapMeasureModel
             tmp_AotFixtures_WrapMeasure_Boxed = value.Inner;
             if (tmp_AotFixtures_WrapMeasure_Boxed != null)
             {
-                var slot1 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_WrapMeasure_Boxed(tmp_AotFixtures_WrapMeasure_Boxed, depth, slots, context);
-                slots.Set(slot1, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Inner
             }
             tmp_int = value.Tag;
@@ -678,17 +679,17 @@ partial class WrapMeasureModel
             tmp_AotFixtures_WrapMeasure_Crate = value.Packed;
             if (tmp_AotFixtures_WrapMeasure_Crate != null)
             {
-                var slot3 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_WrapMeasure_Crate(tmp_AotFixtures_WrapMeasure_Crate, depth, slots, context);
-                slots.Set(slot3, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Packed
             }
             tmp_AotFixtures_WrapMeasure_Ledger = value.Book;
             if (tmp_AotFixtures_WrapMeasure_Ledger != null)
             {
-                var slot4 = slots.Reserve();
+                slot = slots.Reserve();
                 sub = Measure_AotFixtures_WrapMeasure_Ledger(tmp_AotFixtures_WrapMeasure_Ledger, depth, slots, context);
-                slots.Set(slot4, sub);
+                slots.Set(slot, sub);
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)sub) + sub;  // Book
             }
             return len;
@@ -1361,6 +1362,7 @@ partial class WrapMeasureModel
         {
             if (--depth < 0) global::ProtoBuf.ProtoWriter.State.ThrowRawTooDeep();
             long len = 0;
+            long mapEntry;
             global::System.Collections.Generic.Dictionary<int, int?> tmp_System_Collections_Generic_Dictionary_int__int__;
             global::System.Collections.Generic.Dictionary<int, string> tmp_System_Collections_Generic_Dictionary_int__string_;
             global::System.Collections.Generic.Dictionary<int, int> tmp_System_Collections_Generic_Dictionary_int__int_;
@@ -1371,14 +1373,14 @@ partial class WrapMeasureModel
             {
                 foreach (var pair1 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
-                    long entry1 = 0;
-                    if (pair1.Key != 0) entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
+                    mapEntry = 0;
+                    if (pair1.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Key));
                     if (pair1.Value.GetValueOrDefault() != 0)
                     {
                         long wrap1 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair1.Value.GetValueOrDefault()));
-                        entry1 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap1) + wrap1;
+                        mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap1) + wrap1;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry1) + entry1;  // Counts
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Counts
                 }
             }
             tmp_System_Collections_Generic_Dictionary_int__string_ = value.Notes;
@@ -1386,14 +1388,14 @@ partial class WrapMeasureModel
             {
                 foreach (var pair2 in tmp_System_Collections_Generic_Dictionary_int__string_)
                 {
-                    long entry2 = 0;
-                    if (pair2.Key != 0) entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
+                    mapEntry = 0;
+                    if (pair2.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair2.Key));
                     if (pair2.Value != null)
                     {
                         long wrap2 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair2.Value);
-                        entry2 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap2) + wrap2;
+                        mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap2) + wrap2;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry2) + entry2;  // Notes
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Notes
                 }
             }
             tmp_System_Collections_Generic_Dictionary_int__int__ = value.Grouped;
@@ -1401,14 +1403,14 @@ partial class WrapMeasureModel
             {
                 foreach (var pair3 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
-                    long entry3 = 0;
-                    if (pair3.Key != 0) entry3 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
+                    mapEntry = 0;
+                    if (pair3.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Key));
                     if (pair3.Value.GetValueOrDefault() != 0)
                     {
                         long wrap3 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair3.Value.GetValueOrDefault()));
-                        entry3 += 2 + wrap3;
+                        mapEntry += 2 + wrap3;
                     }
-                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry3) + entry3;  // Grouped
+                    len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Grouped
                 }
             }
             tmp_System_Collections_Generic_Dictionary_int__int_ = value.Whole;
@@ -1417,10 +1419,10 @@ partial class WrapMeasureModel
                 long col4 = 0;
                 foreach (var pair4 in tmp_System_Collections_Generic_Dictionary_int__int_)
                 {
-                    long entry4 = 0;
-                    if (pair4.Key != 0) entry4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair4.Key));
-                    if (pair4.Value != 0) entry4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair4.Value));
-                    col4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry4) + entry4;  // Whole
+                    mapEntry = 0;
+                    if (pair4.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair4.Key));
+                    if (pair4.Value != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair4.Value));
+                    col4 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Whole
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col4) + col4;  // Whole (wrapped collection)
             }
@@ -1430,14 +1432,14 @@ partial class WrapMeasureModel
                 long col5 = 0;
                 foreach (var pair5 in tmp_System_Collections_Generic_Dictionary_int__int__)
                 {
-                    long entry5 = 0;
-                    if (pair5.Key != 0) entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
+                    mapEntry = 0;
+                    if (pair5.Key != 0) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Key));
                     if (pair5.Value.GetValueOrDefault() != 0)
                     {
                         long wrap5 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64(unchecked((ulong)(long)pair5.Value.GetValueOrDefault()));
-                        entry5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap5) + wrap5;
+                        mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap5) + wrap5;
                     }
-                    col5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry5) + entry5;  // Both
+                    col5 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Both
                 }
                 len += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)col5) + col5;  // Both (wrapped collection)
             }
@@ -1448,14 +1450,14 @@ partial class WrapMeasureModel
             {
                 foreach (var pair20 in tmp_System_Collections_Generic_Dictionary_string__string_)
                 {
-                    long entry20 = 0;
-                    if (pair20.Key != null) entry20 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair20.Key);
+                    mapEntry = 0;
+                    if (pair20.Key != null) mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair20.Key);
                     if (pair20.Value != null)
                     {
                         long wrap20 = 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawString(pair20.Value);
-                        entry20 += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap20) + wrap20;
+                        mapEntry += 1 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)wrap20) + wrap20;
                     }
-                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)entry20) + entry20;  // Far
+                    len += 2 + global::ProtoBuf.ProtoWriter.State.MeasureRawVarint64((ulong)mapEntry) + mapEntry;  // Far
                 }
             }
             return len;
