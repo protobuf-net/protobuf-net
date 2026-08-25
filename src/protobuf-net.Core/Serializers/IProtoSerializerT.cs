@@ -1,4 +1,4 @@
-﻿using ProtoBuf.Internal;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -449,7 +449,21 @@ namespace ProtoBuf.Serializers
             if (callback is not null)
             {
                 if (_value is T obj) callback.Invoke(obj, _context);
-                else if (_onBeforeDeserialize is not null) ThrowHelper.ThrowInvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
+                // CHAIN rather than refuse: every layer of a hierarchy may declare a
+                // before-deserialization callback, and the root's is handed down through
+                // ReadSubType's constructor - so a two-layer hierarchy reaches here with one already
+                // pending and threw "Only one pending ... is supported". Order is registration order,
+                // i.e. base before derived, which is the order the layers are read.
+                //
+                // NOTE the wrap rather than `+=`: the inherited callback arrived through a
+                // CONTRAVARIANT conversion, so its runtime delegate type is Action<TBase, ...> while
+                // this one is Action<TThisLayer, ...>, and Delegate.Combine refuses to multicast
+                // across two different delegate types ("Delegates must be of the same type"). The
+                // closure costs an allocation only in the multi-layer case, which is the rare one.
+                else if (_onBeforeDeserialize is { } pending)
+                {
+                    _onBeforeDeserialize = (obj, ctx) => { pending(obj, ctx); callback(obj, ctx); };
+                }
                 else _onBeforeDeserialize = callback;
             }
         }

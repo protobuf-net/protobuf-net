@@ -166,6 +166,40 @@ namespace ProtoBuf.AotConformance
             Assert.Contains("base-bd;", TraceOf(theirs));
         }
 
+        /// <summary>
+        /// The DESERIALIZE counterpart of <see cref="TheGeneratedModelAgreesWithRefEmitOnWhichCallbacksRun"/>,
+        /// which only ever covered the write.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This shape used to <b>throw</b> on the reference model - <i>"Only one pending
+        /// OnBeforeDeserialize callback is supported"</i> - because <c>SubTypeState&lt;T&gt;</c> had one
+        /// slot and every layer of a hierarchy registers into it (the root's is handed down through
+        /// <c>ReadSubType</c>). Chaining them removed the throw; this pins that it did <b>not</b>
+        /// change which callbacks run, which is the half a "does it still work" check would miss.
+        /// </para>
+        /// <para>
+        /// Note the traces are compared <b>literally</b>, order and all, rather than as sets: on
+        /// deserialize there is no measure pass to make the count path-dependent, so an exact match
+        /// is available here and is worth more than a set comparison.
+        /// </para>
+        /// </remarks>
+        [Fact]
+        public void TheGeneratedModelAgreesWithRefEmitOnDESERIALIZECallbacksToo()
+        {
+            var payload = new MemoryStream();
+            Reference().Serialize(payload, Derived(11, 12));
+            payload.Position = 0;
+            var baseType = Fixtures.GetType("AotFixtures.Callbacks.HookedBase")!;
+            var theirs = Reference().Deserialize(payload, null, baseType)!;
+
+            payload.Position = 0;
+            var mine = Generated().Deserialize(payload, null, baseType)!;
+
+            Assert.Equal(TraceOf(theirs), TraceOf(mine));
+            Assert.Equal("base-bd;base-ad;", TraceOf(theirs)); // root only, and in that order
+        }
+
         private sealed class Discard : IBufferWriter<byte>
         {
             private readonly byte[] _array = new byte[64 * 1024];
